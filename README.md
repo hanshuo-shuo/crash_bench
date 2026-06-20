@@ -1,5 +1,24 @@
 # CrashBench: A Benchmark for VLA Crash Recovery
 
+## Status (updated 2026-06-20)
+
+Pilot infrastructure is up and the VLA bridge is de-risked; authoring real pre-crash
+scenarios is the next step.
+
+- **Environment** — reproducible OpenVLA eval env on Northwestern Quest (Python 3.10 /
+  torch 2.2 / transformers 4.40.1 / flash-attn 2.5.5 + LIBERO). One-command rebuild and
+  every dependency fix documented in [`setup/`](setup/README.md).
+- **Nominal baseline** — OpenVLA × LIBERO-Spatial = **80.0% (400/500)**, matching the
+  official ~84.7%, so the observation/action bridge is correct (the sanity gate in
+  PLAN.md Phase 0). Per-task: `[.90 .92 .86 1.0 .68 .44 .90 .86 .82 .62]`.
+- **`crashbench/` package skeleton** — `Scenario` / predicates / LIBERO adapter / OpenVLA
+  policy / closed-loop eval / metrics, with passing pure-logic unit tests
+  ([`crashbench/README.md`](crashbench/README.md)). The closed loop runs end-to-end and
+  reuses OpenVLA's verified `run_libero_eval` bridge.
+
+**Next:** author the 5 pilot pre-crash scenarios (PLAN.md §11) — needs an interactive GPU
+session to pin down the `set_init_state` vector layout and the mujoco body names (currently
+marked `TODO(verify)`), then run `scripts/run_pilot.py` for the go/no-go crash-rate number.
 
 ## 1. One-line pitch
 

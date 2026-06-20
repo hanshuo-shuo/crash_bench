@@ -1,0 +1,17 @@
+# 环境与第三方代码(放 home,但不进 git)
+envs/
+third_party/
+
+# slurm 日志
+*.log
+setup/*_*.log
+
+# python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+*.egg-info/
+
+# eval 产物(大文件不进 git;场景/结果 json 仍可提交)
+results/*.mp4
+results/**/*.mp4
