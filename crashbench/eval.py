@@ -55,7 +55,7 @@ def run_episode(
     crash_pred = build_any(scenario.crash_predicates)
     success_pred = build_predicate(scenario.success_predicate)
 
-    obs = env.reset_to(scenario.init_state)
+    obs = env.reset_to(scenario.init_state, obstacles=getattr(scenario, "obstacles", None))
     sim = env.sim_view
     replay: list[np.ndarray] = []
 

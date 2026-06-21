@@ -21,7 +21,7 @@ class FakeSim:
         self._done, self._force, self._z, self._grasped = done, force, z, grasped
     @property
     def libero_done(self): return self._done
-    def max_contact_force(self, bodies): return self._force
+    def max_contact_force(self, bodies, against=None): return self._force
     def object_z(self, name): return self._z
     def is_grasped(self, name): return self._grasped
 

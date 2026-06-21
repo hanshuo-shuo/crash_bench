@@ -72,6 +72,10 @@ class Scenario:
 
     max_steps: int = 220                     # rollout horizon cap (suite-dependent)
     witness: Optional[np.ndarray] = None     # oracle recovery trajectory (Phase 2), proves recoverability
+    # static obstacles injected into the scene for env-collision scenarios (README §4.3 cat-1).
+    # Each: {"name": str, "pos": [x,y,z], "size": [sx,sy,sz], "type": "box"(default), "rgba": [...]?}.
+    # Static (jointless) bodies -> they add geoms but NO qpos/qvel DOF, so init_state stays valid.
+    obstacles: list[dict] = field(default_factory=list)
     metadata: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self):
@@ -96,6 +100,7 @@ class Scenario:
             "crash_predicates": [p.to_dict() for p in self.crash_predicates],
             "success_predicate": self.success_predicate.to_dict(),
             "max_steps": self.max_steps,
+            "obstacles": self.obstacles,
             "has_witness": self.witness is not None,
             "metadata": self.metadata,
         }
@@ -120,6 +125,7 @@ class Scenario:
             success_predicate=PredicateSpec.from_dict(meta["success_predicate"]),
             max_steps=meta.get("max_steps", 220),
             witness=witness,
+            obstacles=meta.get("obstacles", []),
             metadata=meta.get("metadata", {}),
         )
 

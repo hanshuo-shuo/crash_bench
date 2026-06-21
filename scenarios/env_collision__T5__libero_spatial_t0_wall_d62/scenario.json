@@ -1,0 +1,70 @@
+{
+  "id": "env_collision__T5__libero_spatial_t0_wall_d62",
+  "category": "env_collision",
+  "horizon": "T-5",
+  "task_suite": "libero_spatial",
+  "task_id": 0,
+  "instruction": "pick up the black bowl between the plate and the ramekin and place it on the plate",
+  "crash_predicates": [
+    {
+      "type": "contact_force",
+      "params": {
+        "bodies": [
+          "gripper0_leftfinger",
+          "gripper0_rightfinger",
+          "gripper0_finger_joint1_tip",
+          "gripper0_finger_joint2_tip",
+          "gripper0_right_gripper",
+          "robot0_right_hand",
+          "robot0_link7",
+          "robot0_link6",
+          "robot0_link5"
+        ],
+        "threshold": 30.0,
+        "against": [
+          "crash_wall"
+        ]
+      }
+    }
+  ],
+  "success_predicate": {
+    "type": "libero_task_success",
+    "params": {}
+  },
+  "max_steps": 220,
+  "obstacles": [
+    {
+      "name": "crash_wall",
+      "pos": [
+        -0.119,
+        0.121,
+        1.08
+      ],
+      "size": [
+        0.025,
+        0.08,
+        0.22
+      ],
+      "type": "box"
+    }
+  ],
+  "has_witness": false,
+  "metadata": {
+    "wall": "d62",
+    "frac": 0.62,
+    "wall_pos": [
+      -0.119,
+      0.121,
+      1.08
+    ],
+    "wall_size": [
+      0.025,
+      0.08,
+      0.22
+    ],
+    "target": "akita_black_bowl_1",
+    "scripted_steps_to_contact": 3,
+    "f_start": 0.0,
+    "note": "horizon from scripted-reach steps_to_contact (proxy); recalibrate per-policy in Phase 2"
+  }
+}

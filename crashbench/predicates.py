@@ -31,8 +31,10 @@ class SimView(Protocol):
         """Whether the underlying LIBERO task reports success (env.step `done`)."""
         ...
 
-    def max_contact_force(self, bodies: list[str]) -> float:
-        """Max magnitude of external contact force (N) on any of the named bodies."""
+    def max_contact_force(self, bodies: list[str], against: list[str] | None = None) -> float:
+        """Max magnitude of contact force (N) on any of the named bodies. If `against`
+        is given, only count contacts whose other body is in `against` (isolates an
+        env-collision from normal grasp contacts)."""
         ...
 
     def object_z(self, object_name: str) -> float:
@@ -49,10 +51,15 @@ Predicate = Callable[[SimView], bool]
 
 # ---- individual predicate builders -----------------------------------------
 
-def _contact_force(bodies: list[str], threshold: float) -> Predicate:
-    """CRASH if contact force on `bodies` exceeds `threshold` Newtons."""
+def _contact_force(bodies: list[str], threshold: float,
+                   against: list[str] | None = None) -> Predicate:
+    """CRASH if contact force on `bodies` exceeds `threshold` Newtons.
+
+    `against` (optional) restricts to contacts with a specific obstacle/wall body, so a
+    normal gripper-on-object grasp (~20-70 N) doesn't false-positive as a collision.
+    """
     def fn(sim: SimView) -> bool:
-        return sim.max_contact_force(bodies) > threshold
+        return sim.max_contact_force(bodies, against) > threshold
     return fn
 
 

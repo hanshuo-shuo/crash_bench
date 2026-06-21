@@ -1,9 +1,15 @@
 # CrashBench: A Benchmark for VLA Crash Recovery
 
-## Status (updated 2026-06-20)
+## Status (updated 2026-06-21)
 
-Pilot infrastructure is up and the VLA bridge is de-risked; authoring real pre-crash
-scenarios is the next step.
+Pilot decision gate passed: env-collision scenarios (visible wall on the grasp path) give an
+OpenVLA **crash rate of 100% (5/5)** — a clear go for the "VLAs have no pre-crash policy"
+direction. The substrate, VLA bridge, contact-force predicates, and a wall-injection scenario
+authoring pipeline are all working end-to-end.
+
+| Scenario (wall on the grasp path) | Crash (OpenVLA drives into it, VLA view) |
+|---|---|
+| ![env-collision scene](setup/figures/env_collision_scene.png) | ![crash](setup/figures/env_collision_crash.png) |
 
 - **Environment** — reproducible OpenVLA eval env on Northwestern Quest (Python 3.10 /
   torch 2.2 / transformers 4.40.1 / flash-attn 2.5.5 + LIBERO). One-command rebuild and
@@ -19,11 +25,25 @@ scenarios is the next step.
   table edge) and ran OpenVLA closed-loop. Crash rate 0% (all safe_abort) — but the rollout
   videos show OpenVLA never touches the displaced bowl: it reaches for the plate and stalls.
   The pipeline works; the finding is that a useful pre-crash must put the hazard ON the VLA's
-  nominal path. Full write-up: [`crashbench/PHASE1.md`](crashbench/PHASE1.md).
+  nominal path. That edge-bowl attempt is archived in
+  [`scenarios/legacy/`](scenarios/legacy/) + [`results/legacy/`](results/legacy/).
+- **Pivot → env-collision (cat-1) — pilot crash rate = 100% (5/5).** Same pipeline, hazard
+  now ON the grasp path: a static, **visible** wall is injected onto the gripper→bowl reach,
+  and OpenVLA drives straight into it. The `contact_force` predicate (previously a stub) is
+  wired to real MuJoCo contact forces (per-contact `mj_contactForce`, body-filtered, with an
+  `against` obstacle filter and a `FORCE_CLAMP` against penetration blow-ups) and verified
+  end-to-end. Wall injection adds a static (jointless) body, so `nq` is unchanged and saved
+  init_states stay valid. Polished pilot (all scenarios start clear of the wall, 3–9 step
+  approach windows): **crash 100%, impact 374 N, horizons 1×T-1 + 4×T-5**. Key gotchas, now
+  handled: robosuite rebuilds the sim on every `reset()` (re-fetch contacts live from
+  `env.sim`; reset walled scenes via `reset_from_xml_string` + `set_init_state`, never plain
+  `reset()`); the wall geom must be in render `group="1"` or the camera (hence the VLA) can't
+  see it. Full write-up: [`crashbench/PHASE1.md`](crashbench/PHASE1.md).
 
-**Next:** stronger scenario authoring (PLAN.md §4.4) — mid-rollout snapshots (let OpenVLA grasp
-the bowl, snapshot while it's airborne) or move the *place target* (plate) to the edge, so the
-VLA's own normal behavior runs into the crash. Then re-run the pilot for a non-trivial crash rate.
+**Decision (PLAN.md §0 gate):** 100% ≫ 50% → the "VLAs have no pre-crash policy" direction is
+a go. **Before it's a paper number** (Phase 2/3): add an OOD-but-not-crash control (README §14),
+witness/recoverability per scenario (§4.4), per-policy horizon calibration, and the other 6
+categories.
 
 ## 1. One-line pitch
 

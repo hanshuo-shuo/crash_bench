@@ -37,21 +37,78 @@ def add_openvla_to_path(openvla_root: str = DEFAULT_OPENVLA_ROOT) -> None:
         sys.path.insert(0, root)
 
 
+def inject_obstacles_xml(xml: str, obstacles: list[dict]) -> str:
+    """Insert static (jointless) obstacle bodies into a robosuite model XML string.
+
+    Each obstacle: {"name", "pos":[x,y,z], "size":[sx,sy,sz], "type"="box", "rgba"=[...]}.
+    Static bodies add geoms but NO qpos/qvel DOF, so the LIBERO state vector layout is
+    unchanged and saved init_states stay valid (verified in scripts/probe_wall_inject.py).
+
+    group="1" puts the geom in the VISUAL render group so the agentview camera (hence the
+    VLA) actually SEES the obstacle — a group-0 collision geom is invisible to the camera,
+    which would unfairly test crashing into an unperceivable wall. Collision is governed by
+    contype/conaffinity (=1), independent of the render group, so it still collides.
+    """
+    if not obstacles:
+        return xml
+    assert "</worldbody>" in xml, "model xml has no </worldbody> to inject into"
+    blocks = []
+    for o in obstacles:
+        px, py, pz = o["pos"]
+        sx, sy, sz = o["size"]
+        gtype = o.get("type", "box")
+        rgba = " ".join(str(v) for v in o.get("rgba", [0.85, 0.2, 0.2, 1.0]))
+        blocks.append(
+            f'<body name="{o["name"]}" pos="{px} {py} {pz}">'
+            f'<geom name="{o["name"]}_g" type="{gtype}" size="{sx} {sy} {sz}" '
+            f'rgba="{rgba}" group="1" contype="1" conaffinity="1"/></body>'
+        )
+    return xml.replace("</worldbody>", "".join(blocks) + "</worldbody>", 1)
+
+
+# Robot/gripper bodies that can legitimately strike the environment. Contact force
+# on these = an env-collision (README §4.3 cat-1). Verified body names from the live
+# LIBERO Panda model (scripts/probe_contact_force.py). The distal arm links never
+# touch anything in a nominal grasp, so force there is unambiguous collision; the
+# fingers DO press objects during a grasp (~20-70 N), so collision scenarios on the
+# gripper should use a high threshold or an explicit `against` obstacle body.
+ROBOT_CONTACT_BODIES = (
+    "gripper0_leftfinger", "gripper0_rightfinger",
+    "gripper0_finger_joint1_tip", "gripper0_finger_joint2_tip",
+    "gripper0_right_gripper", "robot0_right_hand",
+    "robot0_link7", "robot0_link6", "robot0_link5",
+)
+
+# Per-contact force ceiling (N). Real gripper-vs-rigid impacts read ~200-600 N; values far
+# above this come from MuJoCo soft-contact DEEP PENETRATION (a numerical blow-up, e.g. a
+# gripper jammed into a wall for many steps reading tens of thousands of N), not physics. We
+# clamp per contact so the impact-severity metric (README §5) stays physically meaningful.
+FORCE_CLAMP = 2000.0
+
+
 class LiberoSimView:
-    """Read-only view backing the predicates, sourced from the robosuite obs dict.
+    """Read-only view backing the predicates, sourced from the robosuite obs dict
+    plus live MuJoCo contact forces.
 
     Implements crashbench.predicates.SimView. Updated every step by LiberoEnv.
+
+    NOTE: robosuite REBUILDS the sim (new MjModel/MjData) on every env.reset(), so we
+    NEVER cache the raw mujoco structs — we re-fetch them live from env.sim on each
+    query (verified in scripts/probe_contact_force.py; caching across a reset reads a
+    dead sim and silently returns frozen/zero forces).
     """
 
     def __init__(self, env):
         self._env = env
         self._obs: dict = {}
         self._last_done = False
-        self.peak_force = 0.0  # not measured in the pilot (no contact-force predicate)
+        self.peak_force = 0.0  # running max contact force on robot bodies (impact severity)
 
     def update(self, obs: dict, done: bool) -> None:
         self._obs = obs or {}
         self._last_done = bool(done)
+        # track peak impact force on the robot for the impact-severity metric (README §5)
+        self.peak_force = max(self.peak_force, self.max_contact_force(list(ROBOT_CONTACT_BODIES)))
 
     @property
     def libero_done(self) -> bool:
@@ -79,15 +136,60 @@ class LiberoSimView:
         closed = float(np.sum(np.abs(grip))) < 0.06  # TODO(verify) gripper-closed threshold
         return near and closed
 
-    def max_contact_force(self, bodies: list[str]) -> float:
-        """Contact force is not read in the pilot (no contact-force predicate).
+    def _live_mj(self):
+        """Live raw (mujoco.MjModel, mujoco.MjData) from env.sim. Re-fetched every call
+        because robosuite rebuilds the sim on reset (see class docstring)."""
+        sim = self._env.sim
+        model = getattr(sim.model, "_model", sim.model)
+        data = getattr(sim.data, "_data", sim.data)
+        return model, data
 
-        TODO(Phase 2): wire mujoco contact forces (cfrc_ext) for env_collision scenarios.
+    def max_contact_force(self, bodies: list[str], against: list[str] | None = None) -> float:
+        """Max ||contact force|| (N) over contacts that touch any of `bodies`.
+
+        If `against` is given, only count contacts where the OTHER body is in `against`
+        (e.g. a specific wall/obstacle) — this isolates an env-collision from the normal
+        gripper-on-object grasp contacts. Force from mujoco's per-contact mj_contactForce
+        (verified in scripts/probe_contact_force.py: ~350-400 N gripper-vs-stove, ~20-70 N
+        gripper-vs-bowl grasp). Background static-clutter contacts are excluded because we
+        filter by body id.
         """
-        return 0.0
+        import mujoco
+
+        model, data = self._live_mj()
+
+        def ids(names):
+            out = set()
+            for n in names:
+                bid = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_BODY, n)
+                if bid >= 0:
+                    out.add(bid)
+            return out
+
+        want = ids(bodies)
+        if not want:
+            return 0.0
+        against_ids = ids(against) if against else None
+
+        res = np.zeros(6, dtype=np.float64)
+        peak = 0.0
+        for i in range(data.ncon):
+            c = data.contact[i]
+            b1 = int(model.geom_bodyid[c.geom1])
+            b2 = int(model.geom_bodyid[c.geom2])
+            hit1, hit2 = b1 in want, b2 in want
+            if not (hit1 or hit2):
+                continue
+            if against_ids is not None:
+                other = b2 if hit1 else b1
+                if other not in against_ids:
+                    continue
+            mujoco.mj_contactForce(model, data, i, res)
+            peak = max(peak, min(float(np.linalg.norm(res[:3])), FORCE_CLAMP))
+        return peak
 
     def _robot_bodies(self) -> list[str]:
-        return []
+        return list(ROBOT_CONTACT_BODIES)
 
 
 class LiberoEnv:
@@ -113,9 +215,24 @@ class LiberoEnv:
         return suite.get_task_init_states(self.task_id)
 
     # ---- rollout API (mirrors run_libero_eval.py) --------------------------
-    def reset_to(self, init_state: np.ndarray):
-        self.env.reset()
-        obs = self.env.set_init_state(init_state)
+    def reset_to(self, init_state: np.ndarray, obstacles: list[dict] | None = None):
+        """Reset to a pre-crash state. If `obstacles` are given, inject them as static
+        bodies first.
+
+        Obstacle flow (verified in scripts/probe_wall_inject.py): a plain env.reset()
+        rebuilds the scene from the BDDL task and would WIPE injected obstacles, so we
+        instead reset_from_xml_string(modified_xml) to rebuild WITH them, then set the
+        state directly (set_init_state does NOT call env.reset()).
+        """
+        if obstacles:
+            self.env.reset()                                   # clean rebuild from BDDL
+            xml = inject_obstacles_xml(self.env.sim.model.get_xml(), obstacles)
+            self.env.reset_from_xml_string(xml)                # rebuild WITH obstacles
+            obs = self.env.set_init_state(init_state)          # set state, no further reset
+        else:
+            self.env.reset()
+            obs = self.env.set_init_state(init_state)
+        self.sim_view.peak_force = 0.0                         # reset impact tracker per episode
         self.sim_view.update(obs, done=False)
         return obs
 
