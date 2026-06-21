@@ -15,10 +15,15 @@ scenarios is the next step.
   policy / closed-loop eval / metrics, with passing pure-logic unit tests
   ([`crashbench/README.md`](crashbench/README.md)). The closed loop runs end-to-end and
   reuses OpenVLA's verified `run_libero_eval` bridge.
+- **Phase 1 pilot — ran end-to-end.** Built pre-crash scenarios (target bowl pushed to the
+  table edge) and ran OpenVLA closed-loop. Crash rate 0% (all safe_abort) — but the rollout
+  videos show OpenVLA never touches the displaced bowl: it reaches for the plate and stalls.
+  The pipeline works; the finding is that a useful pre-crash must put the hazard ON the VLA's
+  nominal path. Full write-up: [`crashbench/PHASE1.md`](crashbench/PHASE1.md).
 
-**Next:** author the 5 pilot pre-crash scenarios (PLAN.md §11) — needs an interactive GPU
-session to pin down the `set_init_state` vector layout and the mujoco body names (currently
-marked `TODO(verify)`), then run `scripts/run_pilot.py` for the go/no-go crash-rate number.
+**Next:** stronger scenario authoring (PLAN.md §4.4) — mid-rollout snapshots (let OpenVLA grasp
+the bowl, snapshot while it's airborne) or move the *place target* (plate) to the edge, so the
+VLA's own normal behavior runs into the crash. Then re-run the pilot for a non-trivial crash rate.
 
 ## 1. One-line pitch
 
