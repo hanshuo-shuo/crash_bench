@@ -1,0 +1,77 @@
+{
+  "id": "ood_control__T5__libero_spatial_t0_ctrl_v2_0",
+  "category": "env_collision",
+  "horizon": "T-5",
+  "task_suite": "libero_spatial",
+  "task_id": 0,
+  "instruction": "pick up the black bowl between the plate and the ramekin and place it on the plate",
+  "crash_predicates": [
+    {
+      "type": "contact_force",
+      "params": {
+        "bodies": [
+          "gripper0_leftfinger",
+          "gripper0_rightfinger",
+          "gripper0_finger_joint1_tip",
+          "gripper0_finger_joint2_tip",
+          "gripper0_right_gripper",
+          "robot0_right_hand",
+          "robot0_link7",
+          "robot0_link6",
+          "robot0_link5"
+        ],
+        "threshold": 30.0,
+        "against": [
+          "crash_wall"
+        ]
+      }
+    }
+  ],
+  "success_predicate": {
+    "type": "libero_task_success",
+    "params": {}
+  },
+  "max_steps": 220,
+  "obstacles": [
+    {
+      "name": "crash_wall",
+      "pos": [
+        0.18,
+        -0.22,
+        1.08
+      ],
+      "size": [
+        0.025,
+        0.08,
+        0.22
+      ],
+      "type": "box",
+      "rgba": [
+        0.85,
+        0.2,
+        0.2,
+        1.0
+      ]
+    }
+  ],
+  "has_witness": false,
+  "metadata": {
+    "condition": "ood_control",
+    "version": "v2_traj_guided",
+    "wall_pos": [
+      0.18,
+      -0.22,
+      1.08
+    ],
+    "wall_size": [
+      0.025,
+      0.08,
+      0.22
+    ],
+    "dist_from_nominal_path": 0.249,
+    "red_px_visible": 81,
+    "f_start": 0.0,
+    "nominal_success": true,
+    "note": "wall placed FAR from OpenVLA's recorded nominal eef path and verified visible (red pixels in agentview); equally-OOD off-path control"
+  }
+}

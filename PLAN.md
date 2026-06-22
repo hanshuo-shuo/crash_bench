@@ -2,12 +2,35 @@
 
 > A calm, ordered path from "empty repo" to "the one number that decides the paper."
 
-**STATUS (2026-06-21): Phase 0 + Phase 1 DONE.** VLA bridge de-risked (OpenVLA × LIBERO-Spatial
-= 80%), `crashbench/` package + closed-loop eval working, env-collision scenario authoring
-(static-wall injection) built, and the pilot gate passed: **crash rate 100% (5/5)** →
-"VLAs have no pre-crash policy" is a go. Details + the polished result in
-[`crashbench/PHASE1.md`](crashbench/PHASE1.md). **Now starting Phase 2** (below); the most
-urgent item is an *OOD-but-not-crash control* (README §14) before scaling scenarios.
+**STATUS (2026-06-22): Phase 0 + Phase 1 DONE; Phase 2 started with the OOD-but-not-crash
+control.** VLA bridge de-risked (OpenVLA × LIBERO-Spatial = 80%), `crashbench/` package +
+closed-loop eval working, env-collision scenario authoring (static-wall injection) built, and
+the pilot gate passed: **crash rate 100% (5/5)** → "VLAs have no pre-crash policy" is a go.
+Details + the polished result in [`crashbench/PHASE1.md`](crashbench/PHASE1.md).
+
+**Phase 2, item 1 — OOD-but-not-crash control (README §14 obj. #1): DONE, framing holds.**
+Inject the *identical* red slab (equally OOD, equally visible) but *off* the grasp path. **v1**
+used a scripted straight-line reach to define "off-path" — flawed (scripted ≠ OpenVLA's real
+trajectory): the "beside" walls landed dead-center in the policy's actual path and crashed 100%
+at steps 27–31. **v2** ([`scripts/phase1_ood_control_v2.py`](scripts/phase1_ood_control_v2.py))
+is trajectory-guided: record OpenVLA's *real* nominal eef path, then place walls far from it
+(min-dist ≥ 0.14 m) and *verified visible* (red pixels in the rendered agentview). Result:
+
+| condition | n | crash | success | safe_abort |
+| --- | --- | --- | --- | --- |
+| treatment (wall ON path) | 5 | **100%** | 0% | 0% |
+| control (equally-OOD, OFF path) | 3 | **0%** | **67%** | 33% |
+
+**Δcrash +100%, Δsuccess +67%, Fisher exact p = 0.0179 → REFUTED.** Same OOD slab off the
+action path → zero crashes (policy ignores it and succeeds, or safely stalls); crashes happen
+*only* when it blocks the path. So the 100% is a missing-pre-crash-policy result, not OOD
+degradation. Analysis: [`scripts/phase1_ood_control_analysis.py`](scripts/phase1_ood_control_analysis.py)
+→ `results/ood_control.json`; details + figures in [`crashbench/PHASE1.md`](crashbench/PHASE1.md) §7.
+*Caveat:* control n=3, all at the workspace edge (x=+0.18) — Phase 2 should add more
+visible-but-far placements to grow n.
+
+**Next up (Phase 2):** grow the control n, then witnesses/recoverability (README §4.4) and
+scaling to 7 categories × 3 horizons (§4 Phase 2 below).
 
 ---
 
