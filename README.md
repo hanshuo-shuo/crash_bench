@@ -21,12 +21,10 @@ authoring pipeline are all working end-to-end.
   policy / closed-loop eval / metrics, with passing pure-logic unit tests
   ([`crashbench/README.md`](crashbench/README.md)). The closed loop runs end-to-end and
   reuses OpenVLA's verified `run_libero_eval` bridge.
-- **Phase 1 pilot — ran end-to-end.** Built pre-crash scenarios (target bowl pushed to the
-  table edge) and ran OpenVLA closed-loop. Crash rate 0% (all safe_abort) — but the rollout
-  videos show OpenVLA never touches the displaced bowl: it reaches for the plate and stalls.
-  The pipeline works; the finding is that a useful pre-crash must put the hazard ON the VLA's
-  nominal path. That edge-bowl attempt is archived in
-  [`scenarios/legacy/`](scenarios/legacy/) + [`results/legacy/`](results/legacy/).
+- **First attempt (edge-bowl) — dropped.** Pushed the target bowl to the table edge; crash 0%
+  (all safe_abort) because moving the target made OpenVLA go OOD and never touch it. Lesson:
+  the hazard must sit ON the VLA's nominal path. (Summary kept in `crashbench/PHASE1.md`; the
+  throwaway scenarios/results are not in the repo.)
 - **Pivot → env-collision (cat-1) — pilot crash rate = 100% (5/5).** Same pipeline, hazard
   now ON the grasp path: a static, **visible** wall is injected onto the gripper→bowl reach,
   and OpenVLA drives straight into it. The `contact_force` predicate (previously a stub) is

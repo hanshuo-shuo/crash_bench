@@ -1,8 +1,13 @@
 # CrashBench — Implementation Plan
 
 > A calm, ordered path from "empty repo" to "the one number that decides the paper."
-> Read this top-to-bottom once, then **only think about Phase 0 + Phase 1.** Everything
-> after that is real, but it does not exist for you yet.
+
+**STATUS (2026-06-21): Phase 0 + Phase 1 DONE.** VLA bridge de-risked (OpenVLA × LIBERO-Spatial
+= 80%), `crashbench/` package + closed-loop eval working, env-collision scenario authoring
+(static-wall injection) built, and the pilot gate passed: **crash rate 100% (5/5)** →
+"VLAs have no pre-crash policy" is a go. Details + the polished result in
+[`crashbench/PHASE1.md`](crashbench/PHASE1.md). **Now starting Phase 2** (below); the most
+urgent item is an *OOD-but-not-crash control* (README §14) before scaling scenarios.
 
 ---
 
