@@ -1,5 +1,5 @@
 {
-  "id": "ood_control__T5__libero_spatial_t0_ctrl_v2_2",
+  "id": "ood_control__T5__libero_spatial_t0_v3_02_twin",
   "category": "env_collision",
   "horizon": "T-5",
   "task_suite": "libero_spatial",
@@ -36,8 +36,8 @@
     {
       "name": "crash_wall",
       "pos": [
-        0.18,
-        0.28,
+        0.107,
+        -0.027,
         1.08
       ],
       "size": [
@@ -57,21 +57,17 @@
   "has_witness": false,
   "metadata": {
     "condition": "ood_control",
-    "version": "v2_traj_guided",
+    "version": "v3",
+    "group": "twin",
+    "matched_treatment": "d70",
     "wall_pos": [
-      0.18,
-      0.28,
+      0.107,
+      -0.027,
       1.08
     ],
-    "wall_size": [
-      0.025,
-      0.08,
-      0.22
-    ],
-    "dist_from_nominal_path": 0.146,
-    "red_px_visible": 281,
+    "dist_from_nominal_path": 0.18,
+    "red_px_visible": 567,
     "f_start": 0.0,
-    "nominal_success": true,
-    "note": "wall placed FAR from OpenVLA's recorded nominal eef path and verified visible (red pixels in agentview); equally-OOD off-path control"
+    "note": "equally-OOD slab placed off OpenVLA's recorded nominal path; clearance = min dist to that path"
   }
 }

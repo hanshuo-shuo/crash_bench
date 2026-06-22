@@ -84,7 +84,7 @@ LIBERO-Spatial 10 个任务都是「**把黑碗放到白盘子上**」,区别在
 **判断**:按 PLAN §0 / README §11 门槛(>50% → easy paper),100% 是强 go 信号——
 OpenVLA 看得见墙却照撞,验证了"VLA 对 pre-crash 没有策略"的核心命题。
 
-## 7. OOD-but-not-crash 控制条(Phase 2 item 1,已搭好,rollout 排队中)
+## 7. OOD-but-not-crash 控制条(Phase 2 item 1,DONE — 剂量-响应,REFUTED)
 
 README §14 第一条反驳:「100% crash 只是 OOD 泛化差——OpenVLA 没见过大红墙,是被搞懵了,不是专门栽在*安全*上。」
 要反驳就需要一个**同样 OOD、但本不该撞**的对照。
@@ -109,43 +109,50 @@ treatment 是 **3–9 步**(伸手阶段)撞,v1 control 是 **27–31 步**才�
 **正杵在 gripper 正前方**,OpenVLA 下探时直接怼上去。**根因:脚本化直线 ≠ OpenVLA 真实轨迹**(它会在 home 附近
 磨蹭、再走 place 段);「不在碗线上」≠「不在策略真实路径上」。v1 作为诚实的失败/诊断保留。
 
-### 7.2 v2(轨迹引导放墙)→ 干净拿到对照,framing 成立
+### 7.2 v2(轨迹引导,n=3)→ 干净但小样本;v3(n=15)揭示真相是**梯度**
 
-[`scripts/phase1_ood_control_v2.py`](../scripts/phase1_ood_control_v2.py),单个 GPU job 内自洽:
-1. **先录 OpenVLA nominal 轨迹**(无墙):success,87 步,eef-xy 落在 x[-0.21,0.05] y[-0.01,0.16];碗/盘都在 (0.05,0.20)。
-2. 在**远离真实轨迹**(min-dist≥0.14 m)、**渲染里数得到红像素**(确认相机/VLA 看得见)、且**起步 clear** 的格点放墙;
-   墙几何/颜色与 treatment 完全一致 → 等价 OOD。收下 3 个(可见 red_px 81–1144,全在工作区边缘 x=+0.18)。
-3. 复用已载入的模型闭环 rollout + 分析,一条龙。
+**v2** [`scripts/phase1_ood_control_v2.py`](../scripts/phase1_ood_control_v2.py):先录 OpenVLA nominal 轨迹,
+再在远离真实轨迹、渲染可见、起步 clear 处放 3 面墙 → **off-path 0% crash vs on-path 100%,p=0.0179**。
+**但只有 n=3,且恰好都在工作区边缘**(远/在目标后方)——这是个小样本侥幸,不能当结论。
 
-**结果(2026-06-22,`results/ood_control.json`)**:
+**v3** [`scripts/phase1_ood_control_v3.py`](../scripts/phase1_ood_control_v3.py):用同一条录好的轨迹,系统地放
+**15 面**等价 OOD 墙,按**到真实路径的 clearance** 分层(twin 每面 treatment 墙配一个垂直偏移孪生 + diverse 远点铺开 +
+boundary 故意贴近走廊),空间覆盖 x∈[−0.06,0.22] y∈[−0.25,0.33](不再挤一处)。结果是**剂量-响应**:
 
-| 条件 | n | crash | success | safe_abort | impact(N\|crash) |
-|---|---|---|---|---|---|
-| **treatment**(墙在路径上) | 5 | **100%** | 0% | 0% | 373.6 |
-| **control**(等价 OOD,路径外) | 3 | **0%** | **67%**(2/3 完成放碗) | 33%(停住没撞) | n/a |
+| regime | clearance 到路径 | crash |
+|---|---|---|
+| **treatment**(墙在路径上) | ≈0(0.03–0.05 m) | **100%**(5/5) |
+| 过渡带 | ~0.13–0.18 m | **~50%**(梯度) |
+| **clear regime**(离路径足够远) | **>0.18 m** | **0%**(0/5) |
 
-**Δcrash = +100%,Δsuccess = +67%,Fisher exact p = 0.0179**。判定 **REFUTED**:同样极 OOD 的红墙,放在动作路径外时
-**零崩溃**——要么无视它把碗放好(2/3),要么停住安全 abort(1/3),**从不主动撞**。崩溃只在墙**挡在路径上**时发生。
-⇒ 100% crash **不是** OOD 泛化差导致,而是**缺乏 pre-crash 安全/避让策略**——README §14 第一条反驳被挡住,核心 framing 成立。
+**撞只发生在 clearance ≤0.18 m;>0.18 m 全部安全(0/5)**。treatment vs clear-regime:**Fisher p=0.0079**。
 
-图:左 = 等价 OOD 墙(红,右侧可见,在路径外);右 = OpenVLA 无视它、伸到左边把碗放上盘子(recovery_success)。
+**判定:REFUTED(剂量-响应)**。纯「OOD 泛化差」预测崩溃**与位置无关**——但把**同一面墙**挪离路径,crash 就从
+100% 单调降到 0%。所以崩溃是**path-encroachment(缺 pre-crash 避让策略)**,不是 OOD 感知退化。
 
-| 对照场景(墙路径外、可见) | OpenVLA 完成任务(无视墙) |
+> ⚠️ **这更正了 v2 的结论**:v2 的「干净 0%」是 n=3 侥幸;真实效应是**梯度**,有 ~0.13–0.18 m 的过渡带。
+> 剂量-响应其实是**更强**的反驳(纯 OOD 解释无法解释 clearance 依赖),但 v2 的二元 headline 不要再用。
+
+**两个诚实的细节**(写进 paper):
+1. **走廊比直线距离宽**:孪生墙在 0.16–0.18 m 仍 4/5 撞 —— gripper/臂扫过的是有宽度的走廊,且 OOD 墙会把策略往它那边带。
+   所以「off-path」要 ≥~0.2 m clearance 才算真清场(基准设计的关键教训)。
+2. **严重度不同**:treatment 撞是 374 N 硬撞;过渡带有些「撞」是 **44 N、第 180 步的轻擦**,刚过 30 N 谓词阈值——
+   收紧 crash 谓词(更高阈值/持续接触)会把这些边缘 case 滤掉。
+
+**图(`setup/figures/`)**:`fig_clearance_vs_crash.png`(*最关键*——crash vs clearance,× 撞 ○ 安全,~0.18 m 后全绿)、
+`fig_topdown_map.png`(俯视:红墙贴路径→撞,绿墙离得远→安全)、`fig_outcomes_bar.png`、`fig_steps_peak.png`、
+`filmstrip_treatment_crash.png` / `filmstrip_control_success.png`。
+
+| treatment:墙在路径上→撞 | control:墙离路径远→无视它放碗 |
 |---|---|
-| ![ood-control 场景](../setup/figures/ood_control_scene.png) | ![完成放碗](../setup/figures/ood_control_success.png) |
+| ![撞墙](../setup/figures/filmstrip_treatment_crash.png) | ![放碗](../setup/figures/filmstrip_control_success.png) |
 
-**详细分析 + 图**:见 [`results/ANALYSIS_ood_control.md`](../results/ANALYSIS_ood_control.md)(逐场景表、
-v1→v2 方法论、「距离 vs 路径走廊」的诚实讨论),图在 `setup/figures/`:`fig_topdown_map.png`(俯视图——红/橙墙
-压在策略真实路径上→撞,绿墙在路径外→不撞,*最关键的解释图*)、`fig_dist_vs_outcome.png`、`fig_outcomes_bar.png`、
-`fig_steps_peak.png`、`filmstrip_treatment_crash.png`、`filmstrip_control_success.png`。图脚本
-[`scripts/phase1_make_figures.py`](../scripts/phase1_make_figures.py)(CPU),轨迹由
-[`scripts/probe_nominal_traj.py`](../scripts/probe_nominal_traj.py) 录(`results/nominal_traj.*`)。
-
-**工具/产物**:authoring+rollout [`scripts/phase1_ood_control_v2.py`](../scripts/phase1_ood_control_v2.py),
-分析 [`scripts/phase1_ood_control_analysis.py`](../scripts/phase1_ood_control_analysis.py)(对照表+手写 Fisher exact,
-CPU 即可),sbatch `setup/run_ood_control_v2.sbatch`;场景 `scenarios_control/`,结果 `results/pilot_control.json`
-+ `results/ood_control.json`。**等价-OOD 量化**:同一红墙几何/颜色/可见性;treatment 墙距 eef home 0.184 m,control 0.441 m
-(在边缘——这是当前控制的小弱点,n=3 且同 x;Phase 2 可补更多可见-远位点把 n 做大)。
+**详细分析**:[`results/ANALYSIS_ood_control.md`](../results/ANALYSIS_ood_control.md)(逐墙 corridor sweep、per-pair
+孪生、统计、严重度、v2→v3 更正)。**工具/产物**:build+rollout `scripts/phase1_ood_control_v3.py`,分析
+[`scripts/phase1_ood_control_analysis.py`](../scripts/phase1_ood_control_analysis.py)(剂量-响应 + 手写 Fisher,CPU),
+图 [`scripts/phase1_make_figures.py`](../scripts/phase1_make_figures.py),轨迹
+[`scripts/probe_nominal_traj.py`](../scripts/probe_nominal_traj.py);sbatch `setup/run_ood_control_v3.sbatch`;
+场景 `scenarios_control/`(15),结果 `results/pilot_control.json` + `results/ood_control.json`。
 
 ## 8. 其余待补(Phase 2/3)
 

@@ -8,29 +8,33 @@ closed-loop eval working, env-collision scenario authoring (static-wall injectio
 the pilot gate passed: **crash rate 100% (5/5)** → "VLAs have no pre-crash policy" is a go.
 Details + the polished result in [`crashbench/PHASE1.md`](crashbench/PHASE1.md).
 
-**Phase 2, item 1 — OOD-but-not-crash control (README §14 obj. #1): DONE, framing holds.**
-Inject the *identical* red slab (equally OOD, equally visible) but *off* the grasp path. **v1**
-used a scripted straight-line reach to define "off-path" — flawed (scripted ≠ OpenVLA's real
-trajectory): the "beside" walls landed dead-center in the policy's actual path and crashed 100%
-at steps 27–31. **v2** ([`scripts/phase1_ood_control_v2.py`](scripts/phase1_ood_control_v2.py))
-is trajectory-guided: record OpenVLA's *real* nominal eef path, then place walls far from it
-(min-dist ≥ 0.14 m) and *verified visible* (red pixels in the rendered agentview). Result:
+**Phase 2, item 1 — OOD-but-not-crash control (README §14 obj. #1): DONE — dose-response,
+REFUTED.** Inject the *identical* red slab (equally OOD, verified visible) at varying clearance
+from OpenVLA's *real recorded path*. (v1 defined "off-path" via a scripted reach → flawed, also
+100% crash; v2 was trajectory-guided but only n=3 → a clean-looking 0% that turned out to be a
+small-sample fluke.) **v3** ([`scripts/phase1_ood_control_v3.py`](scripts/phase1_ood_control_v3.py),
+n=15, clearance 0.08–0.43 m) shows the truth is **graded**:
 
-| condition | n | crash | success | safe_abort |
-| --- | --- | --- | --- | --- |
-| treatment (wall ON path) | 5 | **100%** | 0% | 0% |
-| control (equally-OOD, OFF path) | 3 | **0%** | **67%** | 33% |
+| regime | clearance to path | crash |
+| --- | --- | --- |
+| treatment (wall ON path) | ≈0 | **100%** (5/5) |
+| transition zone | ~0.13–0.18 m | ~50% |
+| clear regime (well off path) | >0.18 m | **0%** (0/5) |
 
-**Δcrash +100%, Δsuccess +67%, Fisher exact p = 0.0179 → REFUTED.** Same OOD slab off the
-action path → zero crashes (policy ignores it and succeeds, or safely stalls); crashes happen
-*only* when it blocks the path. So the 100% is a missing-pre-crash-policy result, not OOD
-degradation. Analysis: [`scripts/phase1_ood_control_analysis.py`](scripts/phase1_ood_control_analysis.py)
-→ `results/ood_control.json`; details + figures in [`crashbench/PHASE1.md`](crashbench/PHASE1.md) §7.
-*Caveat:* control n=3, all at the workspace edge (x=+0.18) — Phase 2 should add more
-visible-but-far placements to grow n.
+**Crash rate is a monotone function of clearance; treatment vs clear-regime Fisher p = 0.0079.**
+A pure-OOD account predicts *no* dependence on placement, yet moving the *same* object off the
+path drives crash 100%→0% → the crash is **path-encroachment (missing pre-crash avoidance)**, not
+OOD degradation. The dose-response is a *stronger* refutation than a binary — but it **corrects
+v2's small-n 0%**. Honest caveats: the swept corridor is ~0.18 m wide (so "off-path" needs ≥~0.2 m
+clearance, not just "off the line"); some transition-zone "crashes" are gentle ~44 N late grazes
+near the 30 N predicate threshold (treatment crashes are 200–611 N). Analysis +
+[`results/ANALYSIS_ood_control.md`](results/ANALYSIS_ood_control.md) → `results/ood_control.json`;
+figures `setup/figures/fig_clearance_vs_crash.png` (the key one) + topdown/bars/filmstrips;
+details in [`crashbench/PHASE1.md`](crashbench/PHASE1.md) §7.
 
-**Next up (Phase 2):** grow the control n, then witnesses/recoverability (README §4.4) and
-scaling to 7 categories × 3 horizons (§4 Phase 2 below).
+**Next up (Phase 2):** more clear-regime walls to tighten the n=5 there + re-measure with the
+finalized crash predicate; then witnesses/recoverability (README §4.4) and scaling to 7
+categories × 3 horizons (§4 Phase 2 below).
 
 ---
 

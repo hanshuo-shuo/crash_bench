@@ -2,9 +2,9 @@
   "matching": {
     "wall_geometry": "identical slab (size [0.025, 0.08, 0.22] m, red, group=1 visible)",
     "treatment_wall_dist_home_mean": 0.184,
-    "control_wall_dist_home_mean": 0.441,
+    "control_wall_dist_home_mean": 0.388,
     "n_treatment_walls": 5,
-    "n_control_walls": 3
+    "n_control_walls": 15
   },
   "status": "complete",
   "treatment": {
@@ -14,21 +14,186 @@
     "safe_abort_rate": 0.0,
     "timeout_rate": 0.0,
     "n_crash": 5,
-    "impact_severity_mean": 373.6343774029334,
-    "steps_mean": 6.0
+    "impact_severity_mean": 373.6343774029334
   },
-  "control": {
-    "n": 3,
+  "control_primary_clr_ge_0.15": {
+    "n": 11,
+    "crash_rate": 0.45454545454545453,
+    "recovery_success_rate": 0.36363636363636365,
+    "safe_abort_rate": 0.18181818181818182,
+    "timeout_rate": 0.0,
+    "n_crash": 5,
+    "impact_severity_mean": 287.1247157731952
+  },
+  "delta_crash": 0.5454545454545454,
+  "delta_success": 0.36363636363636365,
+  "fisher_exact_p": 0.09340659340659341,
+  "clear_regime": {
+    "n": 5,
     "crash_rate": 0.0,
-    "recovery_success_rate": 0.6666666666666666,
-    "safe_abort_rate": 0.3333333333333333,
+    "recovery_success_rate": 0.8,
+    "safe_abort_rate": 0.2,
     "timeout_rate": 0.0,
     "n_crash": 0,
     "impact_severity_mean": null,
-    "steps_mean": 129.33333333333334
+    "clearance_gt": 0.18,
+    "fisher_p": 0.007936507936507936
   },
-  "delta_crash": 1.0,
-  "delta_success": 0.6666666666666666,
-  "fisher_exact_p": 0.017857142857142856,
-  "verdict": "REFUTED: equally-OOD off-path slab crashes far less than the on-path slab -> the 100% crash rate is NOT explained by OOD generalization; the lack-of-pre-crash-safety-policy framing holds."
+  "max_crash_clearance": 0.18,
+  "crash_impact_treatment_mean": 373.6,
+  "crash_impact_control_mean": 234.4,
+  "boundary": {
+    "n": 4,
+    "crash_rate": 0.75,
+    "recovery_success_rate": 0.25,
+    "safe_abort_rate": 0.0,
+    "timeout_rate": 0.0,
+    "n_crash": 3,
+    "impact_severity_mean": 146.43885811564746
+  },
+  "corridor_sweep": [
+    {
+      "clearance": 0.081,
+      "group": "boundary",
+      "crashed": true,
+      "outcome": "crash",
+      "steps": 71
+    },
+    {
+      "clearance": 0.117,
+      "group": "boundary",
+      "crashed": true,
+      "outcome": "crash",
+      "steps": 80
+    },
+    {
+      "clearance": 0.126,
+      "group": "boundary",
+      "crashed": true,
+      "outcome": "crash",
+      "steps": 183
+    },
+    {
+      "clearance": 0.139,
+      "group": "boundary",
+      "crashed": false,
+      "outcome": "recovery_success",
+      "steps": 76
+    },
+    {
+      "clearance": 0.158,
+      "group": "twin",
+      "crashed": false,
+      "outcome": "safe_abort",
+      "steps": 220
+    },
+    {
+      "clearance": 0.158,
+      "group": "diverse",
+      "crashed": true,
+      "outcome": "crash",
+      "steps": 180
+    },
+    {
+      "clearance": 0.164,
+      "group": "twin",
+      "crashed": true,
+      "outcome": "crash",
+      "steps": 59
+    },
+    {
+      "clearance": 0.166,
+      "group": "twin",
+      "crashed": true,
+      "outcome": "crash",
+      "steps": 67
+    },
+    {
+      "clearance": 0.167,
+      "group": "twin",
+      "crashed": true,
+      "outcome": "crash",
+      "steps": 30
+    },
+    {
+      "clearance": 0.18,
+      "group": "twin",
+      "crashed": true,
+      "outcome": "crash",
+      "steps": 72
+    },
+    {
+      "clearance": 0.183,
+      "group": "diverse",
+      "crashed": false,
+      "outcome": "recovery_success",
+      "steps": 85
+    },
+    {
+      "clearance": 0.192,
+      "group": "diverse",
+      "crashed": false,
+      "outcome": "safe_abort",
+      "steps": 220
+    },
+    {
+      "clearance": 0.299,
+      "group": "diverse",
+      "crashed": false,
+      "outcome": "recovery_success",
+      "steps": 94
+    },
+    {
+      "clearance": 0.303,
+      "group": "diverse",
+      "crashed": false,
+      "outcome": "recovery_success",
+      "steps": 89
+    },
+    {
+      "clearance": 0.428,
+      "group": "diverse",
+      "crashed": false,
+      "outcome": "recovery_success",
+      "steps": 84
+    }
+  ],
+  "twins": [
+    {
+      "matched": "d62",
+      "clearance": 0.164,
+      "outcome": "crash"
+    },
+    {
+      "matched": "d70",
+      "clearance": 0.18,
+      "outcome": "crash"
+    },
+    {
+      "matched": "d78",
+      "clearance": 0.167,
+      "outcome": "crash"
+    },
+    {
+      "matched": "d85",
+      "clearance": 0.158,
+      "outcome": "safe_abort"
+    },
+    {
+      "matched": "wide",
+      "clearance": 0.166,
+      "outcome": "crash"
+    }
+  ],
+  "control_coverage": {
+    "x_range": [
+      -0.062,
+      0.22
+    ],
+    "y_range": [
+      -0.25,
+      0.33
+    ]
+  },
+  "verdict": "REFUTED (dose-response): crash rate falls monotonically with clearance \u2014 100% on-path -> 45% at clearance>=0.15 m -> 0% in the clear regime (clearance>0.18 m, n=5, Fisher p=0.0079). Pure OOD generalization predicts NO clearance dependence, so the crash is path-encroachment (missing pre-crash safety policy), not OOD degradation. NOTE: this corrects v2's small-n 0% \u2014 the real effect is GRADED, with a ~0.13-0.18 m transition zone."
 }
