@@ -41,14 +41,22 @@ V1 = [
 
 
 def load_walls(scn_glob, results_json):
-    res = {r["scenario_id"]: r for r in json.load(open(results_json))}
+    """Pair each scenario (wall) with its rollout outcome, AGGREGATING repeats (K rollouts/wall):
+    crashed = majority of repeats; crash_freq = fraction; steps/peakF = means."""
+    from collections import defaultdict
+    rows = defaultdict(list)
+    for r in json.load(open(results_json)):
+        rows[r["scenario_id"]].append(r)
     out = []
     for p in sorted(glob.glob(scn_glob)):
         m = json.load(open(p)); md = m["metadata"]
         pos = md.get("wall_pos") or m["obstacles"][0]["pos"]
-        r = res.get(m["id"], {})
-        out.append({"pos": pos[:2], "crashed": bool(r.get("crashed")),
-                    "steps": r.get("steps_to_event"), "peakF": r.get("peak_contact_force"),
+        rs = rows.get(m["id"], [])
+        nc = sum(int(x.get("crashed")) for x in rs); k = len(rs) or 1
+        out.append({"pos": pos[:2],
+                    "crashed": nc >= (k + 1) // 2, "crash_freq": nc / k, "trials": k,
+                    "steps": np.mean([x["steps_to_event"] for x in rs]) if rs else None,
+                    "peakF": np.mean([x["peak_contact_force"] for x in rs]) if rs else None,
                     "group": md.get("group"), "clearance": md.get("dist_from_nominal_path")})
     return out
 
@@ -67,8 +75,13 @@ def draw_wall(ax, xy, color, alpha=0.75):
 
 
 def main():
-    treat = load_walls("scenarios/*/scenario.json", "results/pilot.json")
-    ctrl = load_walls("scenarios_control/*/scenario.json", "results/pilot_control.json")
+    # prefer the finalized-predicate results (75 N, K repeats) if present
+    t_res = "results/pilot_final.json" if os.path.exists("results/pilot_final.json") else "results/pilot.json"
+    c_res = ("results/pilot_control_final.json" if os.path.exists("results/pilot_control_final.json")
+             else "results/pilot_control.json")
+    print(f"using results: {t_res} | {c_res}")
+    treat = load_walls("scenarios/*/scenario.json", t_res)
+    ctrl = load_walls("scenarios_control/*/scenario.json", c_res)
     json.dump(V1, open("results/pilot_control_v1.json", "w"), indent=2)
 
     traj_all, traj_ok, meta = nominal_path()
@@ -96,8 +109,10 @@ def main():
     for w in treat:
         draw_wall(ax, w["pos"], C_TREAT, alpha=0.7)
     for w in ctrl:
-        draw_wall(ax, w["pos"], C_CRASH if w["crashed"] else C_SAFE, alpha=0.4)
-        ax.scatter(*w["pos"], marker="x" if w["crashed"] else "o", s=22,
+        f = w.get("crash_freq", 1.0 if w["crashed"] else 0.0)
+        col = C_CRASH if f >= 0.99 else ("#ff7f0e" if f > 0 else C_SAFE)
+        draw_wall(ax, w["pos"], col, alpha=0.4)
+        ax.scatter(*w["pos"], marker="x" if f > 0 else "o", s=22,
                    color="k", facecolor="none", lw=0.9, zorder=6)
     handles, _ = ax.get_legend_handles_labels()
     handles += [Patch(facecolor=C_TREAT, edgecolor="k", label=f"treatment ON path (crash {sum(t['crashed'] for t in treat)}/{len(treat)})"),
@@ -114,17 +129,17 @@ def main():
     fig, ax = plt.subplots(figsize=(7.6, 3.8))
     rows = [("treatment\n(on path)", treat, C_TREAT, 2.0),
             ("control v1\n(mis-placed)", V1, C_V1, 1.0),
-            ("control v3\n(off path)", ctrl, C_SAFE, 0.0)]
+            ("control\n(off path)", ctrl, C_SAFE, 0.0)]
     for name, ws, c, y in rows:
         for k, w in enumerate(ws):
             yy = y + 0.10 * (k - len(ws) / 2)
-            crashed = w["crashed"]
-            ax.scatter(w["clr"], yy, marker="x" if crashed else "o", s=120,
-                       color=(C_CRASH if crashed else c),
-                       facecolor=((C_CRASH if crashed else "none")), lw=1.8, zorder=3)
+            f = w.get("crash_freq", 1.0 if w["crashed"] else 0.0)
+            col = C_CRASH if f >= 0.99 else ("#ff7f0e" if f > 0 else C_SAFE)  # red / orange / green
+            ax.scatter(w["clr"], yy, marker="x" if f > 0 else "o", s=120,
+                       color=col, facecolor=(col if f > 0 else "none"), lw=1.8, zorder=3)
     ax.axvline(0.18, color="gray", ls="--", lw=1)
     ax.text(0.183, -0.62, "crashes stop\n≈0.18 m", fontsize=8, color="gray")
-    ax.set_yticks([0, 1, 2]); ax.set_yticklabels(["v3 off-path", "v1 mis-placed", "treatment"])
+    ax.set_yticks([0, 1, 2]); ax.set_yticklabels(["control off-path", "v1 mis-placed", "treatment"])
     ax.set_ylim(-0.75, 2.5)
     ax.set_xlabel("clearance: min distance from wall to OpenVLA's real path (m)")
     ax.set_title("Crash vs clearance to the policy's path   (× crash   ○ no crash)")
@@ -187,7 +202,7 @@ def main():
 
     tv = sorted(glob.glob("results/pilot_videos/*wall_d70*.mp4")) or sorted(glob.glob("results/pilot_videos/*.mp4"))
     # a control success video: prefer a recovery_success scenario
-    succ_ids = [r["scenario_id"] for r in json.load(open("results/pilot_control.json"))
+    succ_ids = [r["scenario_id"] for r in json.load(open(c_res))
                 if r.get("outcome") == "recovery_success"]
     cv = ([f"results/ood_control_videos/{succ_ids[0]}.mp4"] if succ_ids else []) \
         or sorted(glob.glob("results/ood_control_videos/*.mp4"))

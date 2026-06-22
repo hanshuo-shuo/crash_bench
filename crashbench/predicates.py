@@ -52,14 +52,25 @@ Predicate = Callable[[SimView], bool]
 # ---- individual predicate builders -----------------------------------------
 
 def _contact_force(bodies: list[str], threshold: float,
-                   against: list[str] | None = None) -> Predicate:
-    """CRASH if contact force on `bodies` exceeds `threshold` Newtons.
+                   against: list[str] | None = None, hold_steps: int = 1) -> Predicate:
+    """CRASH if contact force on `bodies` exceeds `threshold` Newtons for `hold_steps`
+    consecutive control steps.
 
     `against` (optional) restricts to contacts with a specific obstacle/wall body, so a
     normal gripper-on-object grasp (~20-70 N) doesn't false-positive as a collision.
+
+    `hold_steps` (FINALIZED predicate, default 1 = legacy single-step) requires the contact
+    to PERSIST: a real env-collision is the robot pressing into the obstacle (force sustained
+    over many steps), whereas a transient single-step graze / numerical spike should not count.
+    The predicate is stateful (a per-episode counter); build_any/build_predicate construct a
+    fresh instance per episode, so the counter resets between episodes.
     """
+    state = {"n": 0}
+
     def fn(sim: SimView) -> bool:
-        return sim.max_contact_force(bodies, against) > threshold
+        over = sim.max_contact_force(bodies, against) > threshold
+        state["n"] = state["n"] + 1 if over else 0
+        return state["n"] >= hold_steps
     return fn
 
 
