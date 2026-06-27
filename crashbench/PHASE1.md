@@ -152,8 +152,19 @@ treatment 是 **3–9 步**(伸手阶段)撞,v1 control 是 **27–31 步**才�
 sbatch `setup/run_ood_control_v5.sbatch`;场景 `scenarios_control/`(21),结果 `results/{pilot,pilot_control}_final.json`
 + `results/ood_control_final.json`(30 N 旧版留档 `results/*pilot_control.json` / `ood_control.json`)。
 
-## 8. 其余待补(Phase 2/3)
+## 8. witness / 可恢复性(Phase 2 item 2,feasibility filter 已过)
 
-- **witness / 可恢复性**(README §4.4):每个场景需证明存在安全恢复(绕行或急停),否则不算"recoverable pre-crash"。
+README §4.4:每个场景必须有 witness(至少一条恢复轨迹),否则丢弃。
+[`scripts/phase2_witness.py`](../scripts/phase2_witness.py) 结果:
+- **safety-recoverability(safe-abort):5/5**,墙力 **0 N**——retreat→hold 全程避开墙 → **崩溃是可避免的、不是被逼的**,
+  5 个 pre-crash 状态都可恢复(场景公平)。witness 存进 `scenarios/*/witness.npy` + `metadata.witness`。
+- **task-completion(脚本化):0/5**——脚本化末端绕行能把 gripper 绕过墙,但**前臂/肘**还是会撞高墙(arm-body 碰撞,165–625 N)。
+  这正是 README §4.4 说的:task-completion witness 需要**关节空间 RRT\*(全身碰撞)或 teleop**。
+
+详见 [`results/WITNESS.md`](../results/WITNESS.md)。**下一步**:实现 RRT\*/teleop 出 task-completion witness(同时就是
+recovery-finetuning 的恢复演示数据)。
+
+## 9. 其余待补(Phase 2/3)
+
 - **per-policy horizon 校准**:用真实 rollout 而非脚本化伸手定 T-k。
 - **扩到 7 类 × 3 horizon × ~50 场景**(目前只有 env_collision 一类)。

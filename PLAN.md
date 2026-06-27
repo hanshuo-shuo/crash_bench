@@ -33,8 +33,18 @@ predicate). Analysis [`results/ANALYSIS_ood_control.md`](results/ANALYSIS_ood_co
 `results/ood_control_final.json`; figures `setup/figures/fig_clearance_vs_crash.png` (the key
 one) + topdown/bars/filmstrips; details in [`crashbench/PHASE1.md`](crashbench/PHASE1.md) §7.
 
-**Next up (Phase 2):** witnesses/recoverability (README §4.4 — prove each crash scenario has a
-safe recovery), then scaling to 7 categories × 3 horizons (§4 Phase 2 below).
+**Phase 2, item 2 — witnesses / recoverability (README §4.4): feasibility filter PASSED;
+recovery-demo witnesses need a planner.** Each scenario must have a recovery trajectory or be
+dropped. [`scripts/phase2_witness.py`](scripts/phase2_witness.py) → all **5/5 env_collision walls
+are recoverable** via a safe-abort witness (retreat→hold avoids the wall, force 0 N) → the
+OpenVLA crashes are *avoidable*, not forced (the scenarios are fair). Saved into
+`scenarios/*/witness.npy` + `metadata.witness`. **Task-completion witnesses (0/5 scripted)** —
+needed for the recovery-demo fine-tuning dataset — require a **joint-space RRT\* / teleop**: a
+scripted end-effector detour routes the gripper around the tall wall but the forearm/elbow still
+clip it (arm-body collision, 165–625 N). Details: [`results/WITNESS.md`](results/WITNESS.md).
+
+**Next up (Phase 2):** joint-space RRT\* (full-body collision) or teleop for task-completion
+witnesses (= recovery-demo data); then scaling to 7 categories × 3 horizons (§4 Phase 2 below).
 
 ---
 

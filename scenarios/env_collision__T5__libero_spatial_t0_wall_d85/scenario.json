@@ -49,7 +49,7 @@
       "type": "box"
     }
   ],
-  "has_witness": false,
+  "has_witness": true,
   "metadata": {
     "wall": "d85",
     "frac": 0.85,
@@ -66,6 +66,16 @@
     "target": "akita_black_bowl_1",
     "scripted_steps_to_contact": 6,
     "f_start": 0.0,
-    "note": "horizon from scripted-reach steps_to_contact (proxy); recalibrate per-policy in Phase 2"
+    "note": "horizon from scripted-reach steps_to_contact (proxy); recalibrate per-policy in Phase 2",
+    "witness": {
+      "type": "safe_abort",
+      "avoided": true,
+      "max_wall_force": 0.0,
+      "n_steps": 220,
+      "task_completion_witness": false,
+      "task_detour_success": false,
+      "task_detour_max_wall_force": 410.7,
+      "note": "safe-abort recovery (retreat+hold) avoids the wall -> pre-crash state is recoverable/avoidable. Task-completion witness needs RRT*/teleop (scripted eef detour hits arm-body collision on the tall wall)."
+    }
   }
 }
