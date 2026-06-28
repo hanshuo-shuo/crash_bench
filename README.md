@@ -1,15 +1,32 @@
 # CrashBench: A Benchmark for VLA Crash Recovery
 
-## Status (updated 2026-06-21)
+## Status (updated 2026-06-27)
 
-Pilot decision gate passed: env-collision scenarios (visible wall on the grasp path) give an
-OpenVLA **crash rate of 100% (5/5)** — a clear go for the "VLAs have no pre-crash policy"
-direction. The substrate, VLA bridge, contact-force predicates, and a wall-injection scenario
-authoring pipeline are all working end-to-end.
+> **New here? Read [OVERVIEW.md](OVERVIEW.md)** — a plain-English, image-rich tour of the whole
+> project (pain point → results → where the videos are). The one-page progress board is
+> [STATUS.md](STATUS.md).
+
+Pilot decision gate passed and the two headline reviewer-objection controls are now done.
+Env-collision scenarios (visible wall on the grasp path) give an OpenVLA **crash rate of
+100% (5/5)**, and we have ruled out the two obvious dismissals: the crash is **path-encroachment,
+not OOD generalization** (dose-response, Fisher **p = 0.0002**), and every scenario is **provably
+recoverable** (5/5 safe-abort witnesses), so the benchmark is fair. The substrate, VLA bridge,
+contact-force predicates, and the wall-injection authoring pipeline all run end-to-end.
+
+| Phase | Result |
+|---|---|
+| **0 — bridge de-risk** | OpenVLA × LIBERO-Spatial nominal **80% (400/500)** → bridge is correct |
+| **1 — pilot crash gate** | wall on the grasp path → **crash 100% (5/5)**, ~374 N impact |
+| **2-① — OOD control** | same wall moved off-path → **0% (0/33)**; dose-response in clearance, **p = 0.0002** → *not* just OOD |
+| **2-② — witness / fairness** | **5/5** safe-abort recoveries (0 N) → crashes were avoidable |
+| **2-③/④ — scale-up + RRT\* witness** | not started (7 categories × 3 horizons; joint-space recovery planner) |
 
 | Scenario (wall on the grasp path) | Crash (OpenVLA drives into it, VLA view) |
 |---|---|
 | ![env-collision scene](setup/figures/env_collision_scene.png) | ![crash](setup/figures/env_collision_crash.png) |
+
+Full analyses: [`results/ANALYSIS_ood_control.md`](results/ANALYSIS_ood_control.md) (the
+dose-response control) and [`results/WITNESS.md`](results/WITNESS.md) (recoverability).
 
 - **Environment** — reproducible OpenVLA eval env on Northwestern Quest (Python 3.10 /
   torch 2.2 / transformers 4.40.1 / flash-attn 2.5.5 + LIBERO). One-command rebuild and
@@ -39,9 +56,9 @@ authoring pipeline are all working end-to-end.
   see it. Full write-up: [`crashbench/PHASE1.md`](crashbench/PHASE1.md).
 
 **Decision (PLAN.md §0 gate):** 100% ≫ 50% → the "VLAs have no pre-crash policy" direction is
-a go. **Before it's a paper number** (Phase 2/3): add an OOD-but-not-crash control (README §14),
-witness/recoverability per scenario (§4.4), per-policy horizon calibration, and the other 6
-categories.
+a go. **Toward a paper number** (Phase 2/3): ✅ OOD-but-not-crash control (README §14, *done* —
+p=0.0002) and ✅ witness/recoverability per scenario (§4.4, *done* — 5/5); ⬜ still to do:
+per-policy horizon calibration and the other 6 categories.
 
 ## 1. One-line pitch
 
