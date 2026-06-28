@@ -218,6 +218,66 @@ crash" is written in there.
 > there in its representation (decodable at 99–100%), and it ignores it completely. This is a
 > **safety-policy gap, not a perception gap** — exactly the strongest version of the paper's claim.
 
+### 6.1 Wait — how is the crash "predicted"? (the method, plainly)
+
+A common confusion: *it sounds like magic that you can predict a crash from the model's insides.*
+It isn't. The key is **who is doing the predicting** — it is **not** OpenVLA. OpenVLA never says
+"I'm about to crash"; it only outputs motor commands. **We** bolt a tiny external reader onto its
+brain and peek.
+
+Three ingredients:
+
+1. **The model's brain-state.** Whenever OpenVLA looks at the image and is about to emit an action,
+   its network produces a vector of **4096 internal numbers** — think of it as a "brain scan" at
+   that instant. Every neural net has these; we just copy them out with a hook (no change to the
+   model). One scan per step: `h_t`.
+2. **The ground-truth answer.** The physics sim already records, for every step, whether a crash
+   happens within the next `T` steps. So each step gives a labeled pair: `(h_t, will_crash_soon)`.
+3. **The probe = one straight line.** A logistic regression: a single **weighted sum** of the 4096
+   numbers. If the sum is high → "about to crash"; low → "safe". We only *fit the weights* so that,
+   on steps whose answer we know, the line separates the crash-soon scans from the safe scans.
+
+**Why a result of ~100% proves the model "knows":** the probe is deliberately *trivial* (just a
+weighted sum — it can't reason on its own). If something this dumb can call the crash at 99–100%,
+the information *"I'm on a collision course"* must **already be written, explicitly, inside the
+model's own numbers.** The probe doesn't compute the answer — it just **reads** the answer the
+model already computed. (And it's tested on a **held-out scenario the probe never saw**, so it's
+not memorising; and on **off-path walls** it reads "safe", so it's decoding *crashing*, not
+*seeing a wall*.)
+
+> It's not fortune-telling either: the current frame already fixes the near future — like a photo
+> of a car 1 m from a wall, still driving forward. You don't predict the future from nothing; the
+> present state already implies it.
+
+```text
+# ---- collect (once, on the GPU) ----
+for each condition in {no-wall, wall-on-path, wall-off-path}:
+    for each scenario:
+        reset the sim (drop or keep the wall)
+        for each step t until the episode ends:
+            h_t        = OpenVLA's 4096 internal numbers at this step   # forward hook
+            action     = OpenVLA(image)            # the model just acts; never asked about crashing
+            step the sim with action
+        record, per step: h_t, and (from the sim) crash_step
+
+# ---- label ----
+y_t = 1  if a real crash happens within T steps after t   else 0        # T ∈ {1,3,5,10}
+
+# ---- the probe = a single weighted sum (logistic regression) ----
+def probe(h):  return  sigmoid( w · h + b )         # w: 4096 weights, b: bias
+
+# fit w,b by leave-ONE-SCENARIO-out so the probe is tested on data it never trained on:
+for held_out_scenario in scenarios:
+    train (w,b) on the OTHER scenarios' (h_t, y_t)
+    score the held-out scenario's frames with probe(h)
+AUC = how well those scores rank crash-soon frames above safe frames   # 0.5 = chance, 1.0 = perfect
+# result: AUC 0.99 (T-1) ... 1.00 (T-10)   ->  the crash is already in the representation
+```
+
+*Code: [`scripts/probe_selfreport.py`](scripts/probe_selfreport.py) (collect) and
+[`scripts/probe_selfreport_analysis.py`](scripts/probe_selfreport_analysis.py) (the probe, plain
+numpy — no sklearn). The hook lives in [`crashbench/policies/openvla_policy.py`](crashbench/policies/openvla_policy.py).*
+
 🔬 Full write-up: [results/ANALYSIS_selfreport.md](results/ANALYSIS_selfreport.md).
 
 ---
