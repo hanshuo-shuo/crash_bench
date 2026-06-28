@@ -15,10 +15,11 @@ VLA(如 OpenVLA)几乎只在**成功演示**上训练,没见过「快出事」�
 | **Phase 1** pilot 决策门 | ✅ 完成 | 注墙挡路 → crash **100% (5/5)**,强 go 信号 |
 | **Phase 2-①** OOD 对照 | ✅ 完成 | **剂量-响应,REFUTED**:撞是「挡路」不是「OOD 泛化差」,p=0.0002 |
 | **Phase 2-②** witness 可恢复性 | ✅ 完成 | 5/5 安全可恢复(崩溃可避免、场景公平);任务完成 witness 需 RRT* |
-| **Phase 2-③** 扩到 7 类×3 horizon | ⬜ 没开始 | 目前只有 env_collision 一类 |
-| **Phase 2-④** RRT*/teleop witness | ⬜ 没开始 | 出 recovery-demo 数据用 |
+| **Phase 2-③** self-report probe | ✅ 完成 | **「知道却不避」**:线性探针从冻结隐藏层解码撞击 **AUC 0.99–1.0**,临撞不减速,off-path confound 排除 → 是 policy/安全缺口不是感知缺口 |
+| **Phase 2-④** 扩到 7 类×3 horizon | ⬜ 没开始 | 目前只有 env_collision 一类 |
+| **Phase 2-⑤** RRT*/teleop witness | ⬜ 没开始 | 出 recovery-demo 数据用 |
 
-代码全部 commit + push 到 GitHub,`main` 最新 = `02895e6`。
+代码全部 commit + push 到 GitHub。详见 [`results/ANALYSIS_selfreport.md`](results/ANALYSIS_selfreport.md)、傻瓜版总览 [`OVERVIEW.md`](OVERVIEW.md)。
 
 ## 2. Phase 1:pilot crash rate = 100%
 

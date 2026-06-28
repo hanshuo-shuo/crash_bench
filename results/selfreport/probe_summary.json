@@ -1,0 +1,18 @@
+{
+  "probe_auc_by_T": {
+    "1": 0.993,
+    "3": 0.992,
+    "5": 0.998,
+    "10": 1.0
+  },
+  "behavior_braking_check": {
+    "action_mag_nowall_median": 0.5495,
+    "action_mag_wall_within2steps_median": 0.9598,
+    "note": "median action translation magnitude in the last <=2 steps before crash vs the no-wall baseline; not lower => the policy does not brake before impact"
+  },
+  "offpath_confound": {
+    "mean_crash_logit_offpath": -4.998,
+    "mean_crash_logit_wall_near": -0.297,
+    "mean_crash_logit_nowall": -5.284
+  }
+}

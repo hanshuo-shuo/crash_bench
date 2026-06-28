@@ -135,19 +135,18 @@ off_logit = logreg_score(full_model, (H[is_off] - mu) @ V) if is_off.sum() else 
 # ---------- (1) behavioral: action magnitude vs distance-to-wall ----------
 fig, ax = plt.subplots(1, 3, figsize=(15, 4.2))
 
-# panel A: action magnitude vs (eef_x - wall_x); wall vs nowall
-dx_wall = (eefx - wallx)[is_wall]
-# for nowall there is no wall; use the matched scenario's wall_x from the wall condition
-wallx_by_scen = {s: np.nanmedian(wallx[is_wall & (sid == s)]) for s in np.unique(sid[is_wall])}
-nw_wx = np.array([wallx_by_scen.get(s, np.nan) for s in sid])
-dx_nw = (eefx - nw_wx)[is_nowall]
-ax[0].scatter(dx_nw, actn[is_nowall], s=10, alpha=.4, c="tab:green", label="no wall")
-ax[0].scatter(dx_wall, actn[is_wall], s=10, alpha=.4, c="tab:red", label="wall on path")
-ax[0].axvline(0, color="k", lw=1, ls="--"); ax[0].set_xlim(-0.05, 0.35)
-ax[0].set_xlabel("eef_x − wall_x  (m; 0 = at the wall plane)")
+# panel A: action magnitude vs steps-until-crash (robust to arm-body collisions, where the
+# eef stays behind the tall wall). If the action does not shrink as crash nears -> no braking.
+nw_med = float(np.median(actn[is_nowall]))
+nw_q1, nw_q3 = np.percentile(actn[is_nowall], [25, 75])
+ax[0].axhspan(nw_q1, nw_q3, color="tab:green", alpha=.18, label="no-wall IQR")
+ax[0].axhline(nw_med, color="tab:green", ls="--", lw=1.3, label="no-wall median")
+ax[0].scatter(stc[is_wall], actn[is_wall], s=26, c="tab:red", alpha=.75, label="wall on path")
+ax[0].invert_xaxis()                                   # time flows left->right; crash at 0 (right)
+ax[0].set_xlabel("steps until crash  (0 = impact)")
 ax[0].set_ylabel("action translation magnitude")
-ax[0].set_title("(1) Behavior: no hesitation near the wall")
-ax[0].legend(loc="upper right")
+ax[0].set_title("(1) Behavior: no braking as crash nears")
+ax[0].legend(loc="lower left")
 
 # panel B: probe AUC vs T
 Ts = list(auc_by_T.keys()); As = [auc_by_T[t] for t in Ts]
@@ -197,13 +196,14 @@ plt.savefig(f"{FIG}/fig_selfreport_pca.png", dpi=130)
 print(f"wrote {FIG}/fig_selfreport_pca.png")
 
 # ---------- behavioral summary numbers ----------
-# mean action magnitude in the approach band 0<dx<0.1 (just before the wall plane)
-band_wall = is_wall & ((eefx - wallx) > 0) & ((eefx - wallx) < 0.1)
-band_nw = is_nowall & ((eefx - nw_wx) > 0) & ((eefx - nw_wx) < 0.1)
-summary["behavior_action_mag_approach_band"] = {
-    "wall": round(float(actn[band_wall].mean()), 4) if band_wall.sum() else None,
-    "nowall": round(float(actn[band_nw].mean()), 4) if band_nw.sum() else None,
-    "note": "mean action translation magnitude while 0<eef_x-wall_x<0.1 m (just before the wall)",
+# does the policy brake before impact? compare action magnitude in the last steps before crash
+# against the normal (no-wall) baseline. Not-lower => no anticipatory slowdown.
+near = is_wall & (stc >= 0) & (stc <= 2)
+summary["behavior_braking_check"] = {
+    "action_mag_nowall_median": round(float(np.median(actn[is_nowall])), 4),
+    "action_mag_wall_within2steps_median": round(float(np.median(actn[near])), 4) if near.sum() else None,
+    "note": "median action translation magnitude in the last <=2 steps before crash vs the "
+            "no-wall baseline; not lower => the policy does not brake before impact",
 }
 summary["offpath_confound"] = {
     "mean_crash_logit_offpath": round(float(off_logit.mean()), 3) if len(off_logit) else None,

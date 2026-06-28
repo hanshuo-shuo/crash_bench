@@ -193,7 +193,36 @@ would also double as training data for a fix later.)
 
 ---
 
-## 6. Summary — what you can claim today vs. what's left
+## 6. The killer result — it *knows* it's about to crash, and crashes anyway
+
+So far we've shown the robot crashes (§3) and that it's because the wall blocks the path (§4).
+But there's a deeper question that decides the whole paper:
+
+> *When it crashes — did the AI **not see it coming** (a perception problem), or did it **see it
+> coming and drive in anyway** (a safety problem)?*
+
+The second is the far more interesting (and damning) story. To test it: OpenVLA can't be *asked*
+"are you about to crash?" (it only outputs motor commands). So instead we read its **mind directly**
+— we train a tiny linear classifier on the AI's own internal brain-state to see if "I'm about to
+crash" is written in there.
+
+![Self-report probe: the crash is decodable, but the AI doesn't brake](setup/figures/fig_selfreport_probe.png)
+
+| Panel | What it shows |
+|---|---|
+| **(2) middle** | A simple linear read-out of the AI's brain-state predicts the crash **near-perfectly** (accuracy/AUC **0.99–1.00**). **The crash signal is fully present inside the model.** |
+| **(1) left** | Yet in the final steps before impact, the AI's motion is **as large as ever** (0.96 vs a normal 0.55) — **no braking, it drives in at full speed.** |
+| **(3) right** | The probe lights up *only* for a wall that's actually **about to be hit** — a wall sitting **off** to the side (visible, but safe) reads the same as **no wall at all**. So the model is encoding *"I will crash,"* not just *"there's a wall in the picture."* |
+
+> **The verdict: the model KNOWS but doesn't ACT.** The impending collision is sitting right
+> there in its representation (decodable at 99–100%), and it ignores it completely. This is a
+> **safety-policy gap, not a perception gap** — exactly the strongest version of the paper's claim.
+
+🔬 Full write-up: [results/ANALYSIS_selfreport.md](results/ANALYSIS_selfreport.md).
+
+---
+
+## 7. Summary — what you can claim today vs. what's left
 
 ### ✅ Solid claims you have right now
 
@@ -202,6 +231,7 @@ would also double as training data for a fix later.)
 | 1 | VLAs have **no pre-crash avoidance**: wall in the way → crash every time | **100%** (5/5) | `results/pilot_final.json` |
 | 2 | It's a **real safety gap, not just unfamiliarity** — *the key contribution* | dose-response, **p = 0.0002** | `results/ood_control_final.json` |
 | 3 | The benchmark is **fair** — every crash was avoidable | **5/5** recoverable, safe-stop = 0 N | `results/witness.json` |
+| 4 | It's a **safety gap, not a perception gap** — the model *knows* but doesn't act | probe **AUC 0.99–1.0** + no braking + off-path confound killed | `results/selfreport/probe_summary.json` |
 
 ### ⬜ Not done yet (the roadmap)
 
@@ -212,7 +242,7 @@ would also double as training data for a fix later.)
 
 ---
 
-## 7. Where to find the videos (mp4)
+## 8. Where to find the videos (mp4)
 
 Yes — **every scenario has a video.** They live in three folders under `results/`. Filenames
 encode the scenario: `T1`/`T5` = time-horizon, `wall_*`/`twin`/`diverse`/`boundary`/`beside` =
@@ -244,5 +274,6 @@ install, not project data.)*
 
 *Deep-dive docs: [STATUS.md](STATUS.md) (progress board) ·
 [results/ANALYSIS_ood_control.md](results/ANALYSIS_ood_control.md) (the dose-response analysis) ·
+[results/ANALYSIS_selfreport.md](results/ANALYSIS_selfreport.md) (the knows-but-doesn't-act probe) ·
 [results/WITNESS.md](results/WITNESS.md) (fairness/recoverability) ·
 [crashbench/PHASE1.md](crashbench/PHASE1.md) (pilot details).*
