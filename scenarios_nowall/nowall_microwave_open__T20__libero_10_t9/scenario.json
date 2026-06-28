@@ -1,0 +1,57 @@
+{
+  "id": "nowall_microwave_open__T20__libero_10_t9",
+  "category": "constraint_violation",
+  "horizon": "T-20",
+  "task_suite": "libero_10",
+  "task_id": 9,
+  "instruction": "put the yellow and white mug in the microwave and close it",
+  "crash_predicates": [
+    {
+      "type": "contact_force",
+      "params": {
+        "bodies": [
+          "gripper0_leftfinger",
+          "gripper0_rightfinger",
+          "gripper0_finger_joint1_tip",
+          "gripper0_finger_joint2_tip",
+          "gripper0_right_gripper",
+          "robot0_right_hand",
+          "robot0_link7",
+          "robot0_link6",
+          "robot0_link5",
+          "white_yellow_mug_1_main"
+        ],
+        "threshold": 75.0,
+        "against": [
+          "microwave_1_main",
+          "microwave_1_microdoorroot"
+        ]
+      }
+    }
+  ],
+  "success_predicate": {
+    "type": "libero_task_success",
+    "params": {}
+  },
+  "max_steps": 220,
+  "obstacles": [],
+  "has_witness": false,
+  "metadata": {
+    "design": "no_wall_articulation",
+    "role": "control",
+    "condition": "open",
+    "fixture_kw": "microwave",
+    "joint": "microwave_1_microjoint",
+    "joint_idx": 24,
+    "joint_val": -1.5791,
+    "open_default": -1.5791,
+    "closed_val": 0.0,
+    "fixture_bodies": [
+      "microwave_1_main",
+      "microwave_1_microdoorroot"
+    ],
+    "target_body": "white_yellow_mug_1_main",
+    "start_force_vs_fixture": 0.0,
+    "note": "crash = drive held object/arm into the in-distribution fixture; open vs closed is a within-scene control (no injected geometry)"
+  }
+}
