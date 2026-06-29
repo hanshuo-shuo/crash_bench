@@ -187,14 +187,52 @@ exactly why the §6b gating, rather than steering, is the right design.
 
 ## 7. Scope — why only the static wall works (3 honest negatives)
 
-To make this a *benchmark* we tried a second hazard type. None worked yet, each for a clear reason —
-recorded so they aren't blindly retried.
+To make this a *benchmark* we tried a second hazard type. None worked yet — but each failed for a
+clear, different reason. We record all three so they aren't blindly retried. (The static wall is
+strong because it satisfies all three conditions these break: the policy is *good at the path*, the
+obstacle *blocks the path*, and there is *no state round-trip*.)
 
-| Attempt | Result | Why it failed |
-|---|---|---|
-| **Microwave/drawer** blocks place path (libero-10) | closed 0/10 | OpenVLA-libero-10 is too weak on these long tasks — it often can't even grasp, so it never pushes hard into anything. *(breaks "good at the path")* |
-| **Familiar box on grasp path** (objcol) | on-path 0/9 | The grasp is a near-**vertical descent**, so it clears a short object — a short obstacle doesn't block a top-down reach. *(breaks "obstacle on the path")* |
-| **Perturbed grasp** (re-seat held bowl) | n/a | A live grasp **doesn't round-trip** through LIBERO's `set_init_state`: the saved state stores finger *position* but not the gripper *squeeze*, so the bowl drops on reset even with no perturbation. *(breaks "no state round-trip")* |
+### 7.1 Closed kitchen fixture (libero-10) — model too weak
+
+Close a microwave door / drawer to block the place path (open-vs-closed control).
+
+| Microwave closed (blocks path) | Microwave open (control) |
+|---|---|
+| ![closed](setup/figures/nowall_microwave_closed.png) | ![open](setup/figures/nowall_microwave_open.png) |
+
+![weak libero-10 fumbles the task](setup/figures/gif_nowall_microwave.gif)
+
+Closed **0/10**, open 2/10 (forces 17–70 N). **Why it failed:** OpenVLA-libero-10 is too weak on
+these long tasks — it often can't even grasp the object, so it stalls before reaching the door and
+never pushes hard into anything. *Breaks "good at the path."*
+
+### 7.2 Familiar object on the grasp path (objcol) — wrong geometry
+
+Put a familiar `cookies` box on the confident bowl-grasp path (clearance ≈ 1 cm), dose–response.
+
+![box on path](setup/figures/nowall_objcol_onpath_placement.png)
+
+![vertical descent clears the box](setup/figures/gif_objcol_onpath.gif)
+
+On-path **0/9**, control 0/3. **Why it failed:** the grasp is a near-**vertical descent**, so the
+gripper just passes over a short box — a low obstacle doesn't block a top-down reach the way a tall
+wall blocks a horizontal one. *Breaks "obstacle on the path."*
+
+### 7.3 Perturbed grasp (re-seat held bowl) — state doesn't round-trip
+
+Plan: take OpenVLA's own grasped-lift snapshot, re-seat the held bowl to one side (shaky grasp),
+resume, see if it drops.
+
+![grasped-lift snapshot](setup/figures/grasp_snapshot_lift.png)
+
+![control drops under a static hold](setup/figures/grasp_hold_control_dropped.gif)
+
+**Why it failed:** a live grasp **doesn't round-trip** through LIBERO's `set_init_state`. The saved
+state stores finger *position* but not the gripper *squeeze* (actuator force), so on reset the bowl
+falls — even with **no** perturbation, as the control above shows (peak finger force ≈ 1.5 N).
+*Breaks "no state round-trip."* Full diagnosis: [results/ANALYSIS_grasp.md](results/ANALYSIS_grasp.md).
+
+### 7.4 Takeaway
 
 **Takeaway:** the static on-path wall is the strongest test because it avoids all three traps (model
 competence, path geometry, state round-trip). The main results (§3–§6) don't need a second category.
