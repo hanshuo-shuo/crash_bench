@@ -80,9 +80,11 @@ it within a few steps — every time.*
 
 ![env collision crash closeup](setup/figures/env_collision_crash.png)
 
-![animated crash: arm reaches into the wall and slams it](setup/figures/witness_crash.gif)
+| wall_wide | wall_d62 | wall_d70 | wall_d78 | wall_d85 |
+| :---: | :---: | :---: | :---: | :---: |
+| ![crash wide](setup/figures/crash_wide.gif) | ![crash d62](setup/figures/crash_d62.gif) | ![crash d70](setup/figures/crash_d70.gif) | ![crash d78](setup/figures/crash_d78.gif) | ![crash d85](setup/figures/crash_d85.gif) |
 
-*Live rollout: starts clear, reaches straight into the red wall, hits it — no slow-down.*
+*Live rollouts (all 5 treatment walls): each starts clear, reaches straight into the red wall, hits it — no slow-down, every time.*
 
 Data: `results/pilot_final.json`. Videos: `results/pilot_videos/`. Details:
 [crashbench/PHASE1.md](crashbench/PHASE1.md).
@@ -121,7 +123,7 @@ and measure crash rate at each clearance (K=3 rollouts/wall, since OpenVLA is no
 
 | crash (wall on path, 100%) | success (same wall off path, 0%) |
 | :---: | :---: |
-| ![animated crash](setup/figures/witness_crash.gif) | ![animated off-path success](setup/figures/gif_control_success.gif) |
+| ![animated crash](setup/figures/crash_d85.gif) | ![animated off-path success](setup/figures/gif_control_success.gif) |
 
 *Same narrow wall, two placements — on the reach path it slams in; moved to the side OpenVLA works around it and grasps the bowl. The only thing that changed is clearance to the path.*
 
@@ -154,9 +156,17 @@ the gripper around the wall, but the **forearm/elbow** still hits the tall slab 
 **joint-space RRT\*** or **teleop** — left for later. Details: [results/WITNESS.md](results/WITNESS.md),
 data `results/witness.json`, videos `results/phase2_witness/` (`*_safe_abort.mp4` = the 0 N recovery).
 
-| crash (policy drives into the wall) | safe-abort (retreat-and-hold, 0 N) |
-| :---: | :---: |
-| ![crash witness gif](setup/figures/witness_crash.gif) | ![safe-abort witness gif](setup/figures/witness_safe_abort.gif) |
+**Crash — policy drives into the wall (all 5 walls):**
+
+| wall_wide | wall_d62 | wall_d70 | wall_d78 | wall_d85 |
+| :---: | :---: | :---: | :---: | :---: |
+| ![crash wide](setup/figures/crash_wide.gif) | ![crash d62](setup/figures/crash_d62.gif) | ![crash d70](setup/figures/crash_d70.gif) | ![crash d78](setup/figures/crash_d78.gif) | ![crash d85](setup/figures/crash_d85.gif) |
+
+**Safe-abort — retreat-and-hold recovery, max wall force 0 N (same 5 walls):**
+
+| wall_wide | wall_d62 | wall_d70 | wall_d78 | wall_d85 |
+| :---: | :---: | :---: | :---: | :---: |
+| ![recover wide](setup/figures/recover_wide.gif) | ![recover d62](setup/figures/recover_d62.gif) | ![recover d70](setup/figures/recover_d70.gif) | ![recover d78](setup/figures/recover_d78.gif) | ![recover d85](setup/figures/recover_d85.gif) |
 
 ---
 
