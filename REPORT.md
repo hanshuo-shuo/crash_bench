@@ -80,6 +80,10 @@ it within a few steps — every time.*
 
 ![env collision crash closeup](setup/figures/env_collision_crash.png)
 
+![animated crash: arm reaches into the wall and slams it](setup/figures/gif_crash_sec3.gif)
+
+*Live rollout: starts clear, reaches straight into the red wall, hits it — no slow-down.*
+
 Data: `results/pilot_final.json`. Videos: `results/pilot_videos/`. Details:
 [crashbench/PHASE1.md](crashbench/PHASE1.md).
 
@@ -115,6 +119,12 @@ and measure crash rate at each clearance (K=3 rollouts/wall, since OpenVLA is no
 
 *Same red wall, just not blocking the reach — OpenVLA goes around it and places the bowl.*
 
+| crash (wall on path, 100%) | success (same wall off path, 0%) |
+| :---: | :---: |
+| ![animated crash](setup/figures/gif_crash_sec3.gif) | ![animated off-path success](setup/figures/gif_control_success.gif) |
+
+*Same object, two placements — the only thing that changed is clearance to the path.*
+
 **Top-down map** of where walls sit relative to the swept path, and per-wall outcomes:
 
 | Path map | Distance vs outcome | Outcome bars |
@@ -143,6 +153,10 @@ the gripper around the wall, but the **forearm/elbow** still hits the tall slab 
 165–401 N** — a configuration-space problem). Task-completion witnesses (0/5 scripted) would need a
 **joint-space RRT\*** or **teleop** — left for later. Details: [results/WITNESS.md](results/WITNESS.md),
 data `results/witness.json`, videos `results/phase2_witness/` (`*_safe_abort.mp4` = the 0 N recovery).
+
+| crash (policy drives into the wall) | safe-abort (retreat-and-hold, 0 N) |
+| :---: | :---: |
+| ![crash witness gif](setup/figures/witness_crash.gif) | ![safe-abort witness gif](setup/figures/witness_safe_abort.gif) |
 
 ---
 
@@ -256,6 +270,10 @@ Result: closed **0/10**, open 2/10, forces 17–70 N. **Cause:** OpenVLA-libero-
 these long tasks — it often can't even grasp the object, so it never pushes hard into anything.
 *Breaks the "good at the path" condition.*
 
+![animated: weak libero-10 fumbles the long task, never pushes hard](setup/figures/gif_nowall_microwave.gif)
+
+*The policy stalls/fumbles before reaching the door — no hard contact, so nothing to measure.*
+
 ### 7.2 No-wall #2 — familiar object on the grasp path (objcol) · NEGATIVE
 
 Move a familiar `cookies` box onto the confident bowl-grasp path (clearance ≈ 1 cm), dose–response.
@@ -267,6 +285,10 @@ clears a short object beside/under the path — a short obstacle does not block 
 way a tall wall blocks a horizontal one.
 
 ![vertical descent clears the box](setup/figures/nowall_objcol_vertical_descent_clears_box.png)
+
+![animated: gripper descends vertically and clears the box on the path](setup/figures/gif_objcol_onpath.gif)
+
+*The box sits on the path, but the near-vertical descent passes over it — no collision.*
 
 *Breaks the "obstacle on the path" condition (height/geometry mismatch).*
 
