@@ -1,0 +1,215 @@
+{
+  "recon": {
+    "suite": "libero_spatial",
+    "task_id": 0,
+    "target": "akita_black_bowl_1",
+    "instruction": "pick up the black bowl between the plate and the ramekin and place it on the plate",
+    "nominal_success": true,
+    "lift_step": 65,
+    "rest_z": 0.8984,
+    "snapshot_state_len": 92,
+    "bowl_joint": "akita_black_bowl_1_joint0",
+    "bowl_qposadr": 9,
+    "bowl_init_idx": 10,
+    "bowl_xyz_at_snapshot": [
+      -0.0614,
+      0.1871,
+      0.9392
+    ],
+    "bowl_quat_at_snapshot": [
+      0.7157,
+      -0.069,
+      0.101,
+      0.6877
+    ],
+    "bowl_z_at_snapshot": 0.9384,
+    "gripper_joints": [
+      [
+        "gripper0_finger_joint1",
+        7,
+        2
+      ],
+      [
+        "gripper0_finger_joint2",
+        8,
+        2
+      ]
+    ],
+    "gripper_qpos_at_snapshot": [
+      0.0017,
+      -0.0031
+    ]
+  },
+  "candidates": [
+    {
+      "tag": "control",
+      "dxy": [
+        0.0,
+        0.0
+      ],
+      "tilt_deg": 0.0,
+      "verdict": "dropped_under_hold",
+      "hold_min_z": 0.8984,
+      "hold_end_z": 0.8984,
+      "hold_dxy": 0.0504,
+      "hold_peakF": 1.5
+    },
+    {
+      "tag": "t6",
+      "dxy": [
+        0.0,
+        0.0
+      ],
+      "tilt_deg": 6.0,
+      "verdict": "dropped_under_hold",
+      "hold_min_z": 0.8984,
+      "hold_end_z": 0.8984,
+      "hold_dxy": 0.0502,
+      "hold_peakF": 1.9
+    },
+    {
+      "tag": "t10",
+      "dxy": [
+        0.0,
+        0.0
+      ],
+      "tilt_deg": 10.0,
+      "verdict": "held",
+      "hold_min_z": 0.935,
+      "hold_end_z": 0.9576,
+      "hold_dxy": 0.043,
+      "hold_peakF": 50.4
+    },
+    {
+      "tag": "t14",
+      "dxy": [
+        0.0,
+        0.0
+      ],
+      "tilt_deg": 14.0,
+      "verdict": "dropped_under_hold",
+      "hold_min_z": 0.898,
+      "hold_end_z": 0.8984,
+      "hold_dxy": 0.073,
+      "hold_peakF": 34.7
+    },
+    {
+      "tag": "t18",
+      "dxy": [
+        0.0,
+        0.0
+      ],
+      "tilt_deg": 18.0,
+      "verdict": "dropped_under_hold",
+      "hold_min_z": 0.8981,
+      "hold_end_z": 0.8984,
+      "hold_dxy": 0.0622,
+      "hold_peakF": 0.3
+    },
+    {
+      "tag": "xp_m06",
+      "dxy": [
+        0.006,
+        0.0
+      ],
+      "tilt_deg": 0.0,
+      "verdict": "dropped_under_hold",
+      "hold_min_z": 0.8983,
+      "hold_end_z": 0.8984,
+      "hold_dxy": 0.0512,
+      "hold_peakF": 1.6
+    },
+    {
+      "tag": "xp_m11",
+      "dxy": [
+        0.011,
+        0.0
+      ],
+      "tilt_deg": 0.0,
+      "verdict": "dropped_under_hold",
+      "hold_min_z": 0.8983,
+      "hold_end_z": 0.8984,
+      "hold_dxy": 0.0397,
+      "hold_peakF": 95.6
+    },
+    {
+      "tag": "xm_m06",
+      "dxy": [
+        -0.006,
+        0.0
+      ],
+      "tilt_deg": 0.0,
+      "verdict": "held",
+      "hold_min_z": 0.9392,
+      "hold_end_z": 0.9574,
+      "hold_dxy": 0.0289,
+      "hold_peakF": 35.4
+    },
+    {
+      "tag": "xm_m11",
+      "dxy": [
+        -0.011,
+        0.0
+      ],
+      "tilt_deg": 0.0,
+      "verdict": "dropped_under_hold",
+      "hold_min_z": 0.8983,
+      "hold_end_z": 0.8984,
+      "hold_dxy": 0.0489,
+      "hold_peakF": 13.5
+    },
+    {
+      "tag": "yp_m06",
+      "dxy": [
+        0.0,
+        0.006
+      ],
+      "tilt_deg": 0.0,
+      "verdict": "dropped_under_hold",
+      "hold_min_z": 0.8984,
+      "hold_end_z": 0.8984,
+      "hold_dxy": 0.0542,
+      "hold_peakF": 4.2
+    },
+    {
+      "tag": "yp_m11",
+      "dxy": [
+        0.0,
+        0.011
+      ],
+      "tilt_deg": 0.0,
+      "verdict": "held",
+      "hold_min_z": 0.9392,
+      "hold_end_z": 0.9711,
+      "hold_dxy": 0.0214,
+      "hold_peakF": 30.2
+    },
+    {
+      "tag": "ym_m06",
+      "dxy": [
+        0.0,
+        -0.006
+      ],
+      "tilt_deg": 0.0,
+      "verdict": "dropped_under_hold",
+      "hold_min_z": 0.8984,
+      "hold_end_z": 0.8984,
+      "hold_dxy": 0.0431,
+      "hold_peakF": 1.5
+    },
+    {
+      "tag": "ym_m11",
+      "dxy": [
+        0.0,
+        -0.011
+      ],
+      "tilt_deg": 0.0,
+      "verdict": "held",
+      "hold_min_z": 0.9392,
+      "hold_end_z": 0.9725,
+      "hold_dxy": 0.0163,
+      "hold_peakF": 25.7
+    }
+  ],
+  "kept": 5
+}

@@ -1,9 +1,10 @@
 # CrashBench — The Simple (but Complete) Version
 
 *A no-jargon explainer of the whole project: the pain point, what we built, every result,
-and where to find the videos. Last updated 2026-06-27.*
+and where to find the videos. Last updated 2026-06-28 (project wrapped for writing).*
 
 > Want the terse one-pager instead? See [STATUS.md](STATUS.md).
+> Want the detailed, figure-rich technical report? See [REPORT.md](REPORT.md).
 > Want the math? See [results/ANALYSIS_ood_control.md](results/ANALYSIS_ood_control.md).
 
 ---
@@ -293,10 +294,27 @@ numpy — no sklearn). The hook lives in [`crashbench/policies/openvla_policy.py
 | 3 | The benchmark is **fair** — every crash was avoidable | **5/5** recoverable, safe-stop = 0 N | `results/witness.json` |
 | 4 | It's a **safety gap, not a perception gap** — the model *knows* but doesn't act | probe **AUC 0.99–1.0** + no braking + off-path confound killed | `results/selfreport/probe_summary.json` |
 
-### ⬜ Not done yet (the roadmap)
+### 🔎 Breadth we explored (honest scope)
 
-- **Scale up:** today there is **one** hazard type (env-collision walls). The plan is ~7 hazard
-  categories × 3 time-horizons × ~50 scenarios to make it a real benchmark.
+We tried to add a **second** hazard category beyond env-collision walls and hit three instructive
+walls — all recorded in [REPORT.md §7](REPORT.md). The static on-path wall works precisely because
+it (a) sits on a **high-competence** path, (b) is **tall enough to block** the reach, and (c) needs
+**no state round-trip**. Each negative broke one of those:
+
+- **Closed kitchen fixture (libero-10):** the policy is too low-competence on long tasks — it
+  barely grasps, so it never presses hard. *(breaks a)*
+- **Familiar object on the grasp path:** the grasp is a near-vertical descent that clears a short
+  object beside it. *(breaks b)*
+- **Precarious grasp (grasp_instability):** a live grasp **doesn't survive a state reset** — the
+  gripper's squeeze force isn't in the saved state, so the held object falls on reload regardless
+  of any perturbation. *(breaks c — see [results/ANALYSIS_grasp.md](results/ANALYSIS_grasp.md))*
+
+**Takeaway:** the headline science above does not need a second category; the static-obstacle
+instrument is the strong one. A future second category needs a *dynamics-perturbation, no-reset*
+design (e.g. a slippery object grasped live).
+
+### ⬜ Deferred (not blocking the paper)
+
 - **Task-completion recovery:** build the joint-space RRT\*/teleop planner so we have recoveries
   that *finish the task*, not just safely stop (also serves as fine-tuning data).
 
