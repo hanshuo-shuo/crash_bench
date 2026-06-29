@@ -17,12 +17,14 @@ from crashbench import metrics
 
 class FakeSim:
     """Stand-in for the env's SimView so predicates can be tested without robosuite."""
-    def __init__(self, done=False, force=0.0, z=1.0, grasped=True):
+    def __init__(self, done=False, force=0.0, z=1.0, grasped=True, xy=(0.0, 0.0)):
         self._done, self._force, self._z, self._grasped = done, force, z, grasped
+        self._xy = xy
     @property
     def libero_done(self): return self._done
     def max_contact_force(self, bodies, against=None): return self._force
     def object_z(self, name): return self._z
+    def object_xy(self, name): return self._xy
     def is_grasped(self, name): return self._grasped
 
 
@@ -52,6 +54,12 @@ def test_predicates():
     fell = build_predicate(PredicateSpec("object_fell", {"object_name": "bowl", "table_z": 0.41}))
     assert fell(FakeSim(z=0.30)) is True
     assert fell(FakeSim(z=0.45)) is False
+
+    # object_displaced: baseline captured on first call (post-settle), then horizontal move
+    disp = build_predicate(PredicateSpec("object_displaced", {"object_name": "box", "max_disp": 0.06}))
+    assert disp(FakeSim(xy=(0.0, 0.0))) is False        # first call sets baseline
+    assert disp(FakeSim(xy=(0.03, 0.0))) is False        # within tolerance
+    assert disp(FakeSim(xy=(0.10, 0.0))) is True         # swept > 6 cm
 
     drop = build_predicate(PredicateSpec("grasp_dropped", {"object_name": "bowl", "init_z": 0.95}))
     assert drop(FakeSim(grasped=False, z=0.70)) is True   # released and fell

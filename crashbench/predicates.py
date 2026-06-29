@@ -41,6 +41,10 @@ class SimView(Protocol):
         """World z (m) of the named object's COM/body."""
         ...
 
+    def object_xy(self, object_name: str) -> tuple[float, float]:
+        """World (x, y) (m) of the named object."""
+        ...
+
     def is_grasped(self, object_name: str) -> bool:
         """Whether the gripper currently holds the object (in-contact + above a small height)."""
         ...
@@ -88,6 +92,27 @@ def _grasp_dropped(object_name: str, init_z: float, drop: float = 0.10) -> Predi
     return fn
 
 
+def _object_displaced(object_name: str, max_disp: float = 0.06) -> Predicate:
+    """CRASH if an object is shoved more than `max_disp` (m, horizontal) from where it sat
+    when the policy STARTED acting (object-collision, README §4.3 cat-2).
+
+    A struck free object slides/topples instead of resisting, so contact force stays low
+    (unlike hitting a fixed wall) — horizontal displacement is the reliable "was it swept"
+    signal. The baseline is captured on the first call (i.e. after the settle window, once the
+    eval loop starts querying predicates), so start-of-episode settling jitter doesn't count.
+    Stateful; build_any/build_predicate make a fresh instance per episode so it resets.
+    """
+    state = {"xy0": None}
+
+    def fn(sim: SimView) -> bool:
+        xy = sim.object_xy(object_name)
+        if state["xy0"] is None:
+            state["xy0"] = xy
+            return False
+        return float(np.hypot(xy[0] - state["xy0"][0], xy[1] - state["xy0"][1])) > max_disp
+    return fn
+
+
 def _libero_task_success() -> Predicate:
     """SUCCESS when the underlying LIBERO task predicate fires."""
     def fn(sim: SimView) -> bool:
@@ -98,6 +123,7 @@ def _libero_task_success() -> Predicate:
 _BUILDERS: dict[str, Callable[..., Predicate]] = {
     "contact_force": _contact_force,
     "object_fell": _object_fell,
+    "object_displaced": _object_displaced,
     "grasp_dropped": _grasp_dropped,
     "libero_task_success": _libero_task_success,
 }

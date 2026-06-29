@@ -122,6 +122,18 @@ class LiberoSimView:
                            f"{[k for k in self._obs if k.endswith('_pos')]}")
         return float(np.asarray(self._obs[key])[2])
 
+    def object_xy(self, object_name: str) -> tuple[float, float]:
+        """World (x, y) (m) of an object, from obs `<object_name>_pos`. Used by the
+        object_displaced predicate (object-collision crashes, README §4.3 cat-2): a struck
+        object SLIDES rather than resisting, so displacement — not contact force — is the
+        reliable signal of being swept."""
+        key = f"{object_name}_pos"
+        if key not in self._obs:
+            raise KeyError(f"{key} not in obs; available object keys: "
+                           f"{[k for k in self._obs if k.endswith('_pos')]}")
+        p = np.asarray(self._obs[key])
+        return float(p[0]), float(p[1])
+
     def is_grasped(self, object_name: str) -> bool:
         """Heuristic grasp check: object near the eef AND gripper not fully open.
 
