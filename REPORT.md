@@ -80,7 +80,7 @@ it within a few steps — every time.*
 
 ![env collision crash closeup](setup/figures/env_collision_crash.png)
 
-![animated crash: arm reaches into the wall and slams it](setup/figures/gif_crash_sec3.gif)
+![animated crash: arm reaches into the wall and slams it](setup/figures/witness_crash.gif)
 
 *Live rollout: starts clear, reaches straight into the red wall, hits it — no slow-down.*
 
@@ -121,9 +121,9 @@ and measure crash rate at each clearance (K=3 rollouts/wall, since OpenVLA is no
 
 | crash (wall on path, 100%) | success (same wall off path, 0%) |
 | :---: | :---: |
-| ![animated crash](setup/figures/gif_crash_sec3.gif) | ![animated off-path success](setup/figures/gif_control_success.gif) |
+| ![animated crash](setup/figures/witness_crash.gif) | ![animated off-path success](setup/figures/gif_control_success.gif) |
 
-*Same object, two placements — the only thing that changed is clearance to the path.*
+*Same narrow wall, two placements — on the reach path it slams in; moved to the side OpenVLA works around it and grasps the bowl. The only thing that changed is clearance to the path.*
 
 **Top-down map** of where walls sit relative to the swept path, and per-wall outcomes:
 
