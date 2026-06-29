@@ -28,6 +28,7 @@ class OpenVLAPolicy:
         prompt_prefix: str = "",          # README §7 prompted-careful baseline
         openvla_root: str | None = None,
         capture_hidden: bool = False,     # self-report probe: export the LM's last hidden state
+        enable_steering: bool = False,    # Path 1-1b: install a WRITE hook on the final RMSNorm
     ):
         add_openvla_to_path(openvla_root) if openvla_root else add_openvla_to_path()
         from experiments.robot.robot_utils import get_model, get_image_resize_size
@@ -63,6 +64,17 @@ class OpenVLAPolicy:
         if capture_hidden:
             self._install_hidden_hook()
 
+        # Path 1-1b activation steering: subtract alpha * d_unit from the final RMSNorm output
+        # at EVERY token position (prefill context + each decoded action token). Because OpenVLA's
+        # action = discrete tokens off the LM head applied to this post-norm state, shifting it
+        # directly moves the action bins. d_unit is the probe's crash direction, so subtracting it
+        # pushes the model away from "I will crash". alpha=0 reproduces the bare policy exactly.
+        self._steer_vec_t = None          # torch tensor (hidden,), lazily materialized
+        self._steer_alpha = 0.0
+        self._steer_np = None             # numpy source vector (set via set_steering)
+        if enable_steering:
+            self._install_steer_hook()
+
     def _install_hidden_hook(self):
         # language_model = HF causal LM (Llama); .model.norm = final RMSNorm -> last hidden state.
         try:
@@ -80,6 +92,32 @@ class OpenVLAPolicy:
                 self._cap_vec = t[0, -1].detach().float().cpu().numpy()  # last token
 
         norm.register_forward_hook(_hook)
+
+    def _install_steer_hook(self):
+        import torch
+        try:
+            norm = self.model.language_model.model.norm
+        except AttributeError as e:  # pragma: no cover
+            raise RuntimeError("could not find language_model.model.norm for the steering hook") from e
+
+        def _steer(_mod, _inp, out):
+            if self._steer_alpha == 0.0 or self._steer_np is None:
+                return None                                    # no-op -> identical to bare policy
+            t = out[0] if isinstance(out, tuple) else out      # [B, seq, hidden]
+            if self._steer_vec_t is None or self._steer_vec_t.device != t.device \
+                    or self._steer_vec_t.dtype != t.dtype:
+                self._steer_vec_t = torch.as_tensor(self._steer_np, dtype=t.dtype, device=t.device)
+            t = t - self._steer_alpha * self._steer_vec_t      # broadcast over [B, seq, hidden]
+            return (t,) + tuple(out[1:]) if isinstance(out, tuple) else t
+
+        norm.register_forward_hook(_steer)
+
+    def set_steering(self, vec: np.ndarray | None, alpha: float) -> None:
+        """Set the steering direction (4096-d, e.g. Probe.steer_vector()) and strength alpha.
+        alpha=0 (or vec=None) disables steering -> bare policy. Requires enable_steering=True."""
+        self._steer_np = None if vec is None else np.asarray(vec, dtype=np.float32)
+        self._steer_vec_t = None                               # force re-materialize
+        self._steer_alpha = float(alpha)
 
     @property
     def resize_size(self) -> int:

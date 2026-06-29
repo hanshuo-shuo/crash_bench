@@ -229,6 +229,24 @@ Full writeup: [results/ANALYSIS_intervention.md](results/ANALYSIS_intervention.m
 [`scripts/phase3_intervention.py`](scripts/phase3_intervention.py),
 [`crashbench/probe.py`](crashbench/probe.py).
 
+### 6c. Negative control — naive activation steering does *not* brake (detector ≠ controller)
+
+A natural follow-up: is the probe *direction itself* a steering knob — push the hidden state away
+from "I will crash" and does the policy brake with no controller? We subtracted `alpha · d_unit`
+from OpenVLA's final RMSNorm output and swept alpha. **It does not work:** crash stays **100 % at
+every alpha** (0→80), force and action magnitude flat.
+
+![activation steering null](setup/figures/fig_steering.png)
+
+A diagnostic confirms this is a **true null, not a bug**: the hook fires (‖Δaction‖ grows to 0.73
+at alpha=1000, and the action *grows* rather than brakes), but the crash direction is **~90 %
+orthogonal to the action-token readout** — ‖W_action·d‖ = **0.74** of ‖W_full·d‖ = **7.69**. The
+direction that *decodes* "I will crash" is not the direction that *controls* the action. This is
+the mechanistic reason 1a's **structured gating** is the right design (you can't reuse a readout
+probe as a steering knob), and it differentiates CrashBench from SAE-steering work. The PLAN's
+mid-layer-injection fallback (where OpenVLA's signal is strongest) is deferred. Full writeup:
+[results/ANALYSIS_steering.md](results/ANALYSIS_steering.md).
+
 ---
 
 ## 7. Breadth exploration — one category works, three state-perturbation variants hit walls

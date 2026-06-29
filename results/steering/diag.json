@@ -1,0 +1,16 @@
+{
+  "note": "Diagnostic for the null steering sweep (scripts/phase3_steering_diag.py, GPU job 5414190). One fixed treatment observation, steering subtracts alpha*d_unit from the final RMSNorm output.",
+  "readout_projection": {
+    "W_full_dot_d_norm": 7.688,
+    "W_action256_dot_d_norm": 0.742,
+    "interpretation": "d_unit (probe crash direction) projects onto the LM-head logits with total norm 7.69, but only 0.742 of that lands on the 256 action-token bins -> the crash direction is ~90% orthogonal to the action readout. Logit shift on action bins per unit alpha is only ~0.74."
+  },
+  "action_shift_vs_alpha": [
+    {"alpha": 0,    "action": [0.439, 0.204, 0.342, 0.000, 0.075, 0.000, -1.000], "da_vs_alpha0": 0.0},
+    {"alpha": 20,   "action": [0.439, 0.204, 0.452, -0.025, 0.080, 0.000, -1.000], "da_vs_alpha0": 0.1128},
+    {"alpha": 80,   "action": [0.505, 0.107, -0.003, -0.032, -0.167, 0.000, -1.000], "da_vs_alpha0": 0.4383},
+    {"alpha": 200,  "action": [0.505, 0.107, -0.003, -0.011, 0.000, -0.034, -1.000], "da_vs_alpha0": 0.3733},
+    {"alpha": 1000, "action": [0.505, 0.873, 0.137, 0.014, 0.176, 0.145, -1.000], "da_vs_alpha0": 0.7251}
+  ],
+  "verdict": "Hook fires (action moves with alpha) -> not a bug. The action moves only at extreme alpha and NOT toward braking (magnitude grows at alpha=1000). Final-norm steering along the probe direction is a true null: the decodable crash direction is largely orthogonal to the action-control subspace at the readout."
+}

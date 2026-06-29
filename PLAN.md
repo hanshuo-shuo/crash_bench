@@ -100,7 +100,7 @@ OpenVLA×LIBERO-Spatial nominal **80%(400/500)**,匹配官方 → 桥正确,后�
 | 2-④a no-wall | 🟡 2×NEG | `results/ANALYSIS_nowall.md` |
 | 2-④b grasp | 🔴 NEG | `results/ANALYSIS_grasp.md` |
 | Path 1-1a 探针→干预 | ✅ **DONE(headline)** | crash 100%→0%、322N→0N、0/22 误触发;`crashbench/probe.py`/`recovery.py`/`policies/guarded_policy.py`、`scripts/phase3_intervention.py`、`results/ANALYSIS_intervention.md`、`fig_intervention.png` |
-| Path 1-1b 激活 steering | ⬜ TODO(加分) | §11.A 实验1b —— `probe.steer_vector()` 已就位,待加 openvla 写 hook |
+| Path 1-1b 激活 steering | 🟡 **NEGATIVE(已表征)** | readout 注入不刹车:crash 100% 全 alpha;诊断证明非 bug——crash 方向 ~90% 正交于 action readout(‖W_act·d‖=0.74/7.69)。强化"detector≠controller、1a 结构化干预才对"。`results/ANALYSIS_steering.md`、`fig_steering.png`。**fallback=中层注入(未做)** |
 | Path 3 跨策略 | ⬜ TODO(保险) | §11.B —— 新 `policies/pi0_policy.py`/`octo_policy.py`、`scripts/phase3_multipolicy.py` |
 | Stage 0 写作定位 | ⬜ TODO(先行) | §10 —— `RELATED.md` / 6 列对比表 |
 
