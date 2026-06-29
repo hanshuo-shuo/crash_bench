@@ -1,14 +1,4 @@
-# CrashBench — Technical Report
 
-*This is the long version with figures. For a plain-English summary see [OVERVIEW.md](OVERVIEW.md);
-for the one-page board see [STATUS.md](STATUS.md); for the per-result math see the
-`results/ANALYSIS_*.md` files linked below.*
-
-**Status (2026-06-28): done, ready for paper writing.** The main results are finished and stable.
-We also tried to add a second hazard type beyond the wall; one category works well, three other
-attempts did not, and we record why.
-
----
 
 ## 0. TL;DR — five main results
 
