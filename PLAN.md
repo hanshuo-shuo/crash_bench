@@ -99,7 +99,8 @@ OpenVLA×LIBERO-Spatial nominal **80%(400/500)**,匹配官方 → 桥正确,后�
 | 2-③ self-report probe | ✅ | AUC 0.99–1.0;`scripts/probe_selfreport*.py`、`results/selfreport/`、`results/ANALYSIS_selfreport.md` |
 | 2-④a no-wall | 🟡 2×NEG | `results/ANALYSIS_nowall.md` |
 | 2-④b grasp | 🔴 NEG | `results/ANALYSIS_grasp.md` |
-| Path 1 探针→干预 | ⬜ TODO(下一步,核心) | §11.A —— 新 `crashbench/probe.py`/`recovery.py`/`policies/guarded_policy.py`、`scripts/phase3_intervention.py` |
+| Path 1-1a 探针→干预 | ✅ **DONE(headline)** | crash 100%→0%、322N→0N、0/22 误触发;`crashbench/probe.py`/`recovery.py`/`policies/guarded_policy.py`、`scripts/phase3_intervention.py`、`results/ANALYSIS_intervention.md`、`fig_intervention.png` |
+| Path 1-1b 激活 steering | ⬜ TODO(加分) | §11.A 实验1b —— `probe.steer_vector()` 已就位,待加 openvla 写 hook |
 | Path 3 跨策略 | ⬜ TODO(保险) | §11.B —— 新 `policies/pi0_policy.py`/`octo_policy.py`、`scripts/phase3_multipolicy.py` |
 | Stage 0 写作定位 | ⬜ TODO(先行) | §10 —— `RELATED.md` / 6 列对比表 |
 
@@ -169,5 +170,7 @@ steering,把冲击从 ~250N 降到接近 0N**(跨多个 VLA 复现行为效应)�
 - 回归:`pytest tests/test_core.py` 通过;OpenVLA 既有 treatment/control 不变。
 
 ### 排期
-Stage 0(2 天)→ Stage 1(先 1a 拿 headline,再 1b)→ Stage 2(可并行)。**下周第一件事:1a,<1 GPU-day,
-拿"探针触发把冲击 ~250N→~0N"这个数字。**
+Stage 0(2 天)→ Stage 1(先 1a 拿 headline,再 1b)→ Stage 2(可并行)。**~~下周第一件事:1a~~ ✅ 已拿到:
+探针触发 crash 100%→0%、冲击 322N→0N、0/22 误触发(2026-06-29,A100 job 5412688,~18min)。**
+**下一步候选:** ① Stage 0 文献核实 + framing(0 GPU);② Path 1-1b activation steering(`steer_vector()` 已就位);
+③ Path 3 跨策略复现。

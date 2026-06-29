@@ -131,6 +131,30 @@ mu, V = pca_fit(H[pool], PCA_K)
 full_model = logreg_fit((H[pool] - mu) @ V, y[pool], l2=2.0)
 off_logit = logreg_score(full_model, (H[is_off] - mu) @ V) if is_off.sum() else np.array([])
 
+# ---------- persist the T=5 probe for the intervention experiment (Path 1-1a) ----------
+# crashbench/probe.py reloads these to score a single live hidden state h (4096d):
+#   z = (h - mu_pca) @ V_pca ; logit = [(z - mu_lr)/sd_lr, 1] . w_lr
+# The trigger threshold is set on the NEGATIVE pool (off-path + no-wall frames) so the guard
+# (almost) never fires when there is no on-path crash coming: thr = max negative logit + margin.
+mu_lr, sd_lr, w_lr = full_model
+nowall_logit = logreg_score(full_model, (H[is_nowall] - mu) @ V)
+neg_logits = np.concatenate([off_logit, nowall_logit]) if len(off_logit) else nowall_logit
+wall_logit = logreg_score(full_model, (H[is_wall] - mu) @ V)
+# margin = 10% of the on-path/off-path separation; keeps FPR=0 on the negative pool by construction
+thr = float(neg_logits.max() + 0.10 * (float(np.median(wall_logit[labels_for_T(5)[is_wall]])) - neg_logits.max()))
+np.savez(f"{IN}/probe_T5.npz",
+         mu_pca=mu.astype(np.float32), V_pca=V.astype(np.float32),
+         mu_lr=mu_lr.astype(np.float32), sd_lr=sd_lr.astype(np.float32),
+         w_lr=w_lr.astype(np.float32), thr=np.float32(thr), pca_k=np.int64(PCA_K))
+print(f"wrote {IN}/probe_T5.npz  thr={thr:.3f}  "
+      f"(neg max={neg_logits.max():.2f}, on-path<=5 median={np.median(wall_logit[labels_for_T(5)[is_wall]]):.2f})")
+summary["intervention_threshold"] = {
+    "thr": round(thr, 3),
+    "neg_pool_logit_max": round(float(neg_logits.max()), 3),
+    "neg_pool_logit_p99": round(float(np.percentile(neg_logits, 99)), 3),
+    "onpath_within5_logit_median": round(float(np.median(wall_logit[labels_for_T(5)[is_wall]])), 3),
+}
+
 
 # ---------- (1) behavioral: action magnitude vs distance-to-wall ----------
 fig, ax = plt.subplots(1, 3, figsize=(15, 4.2))

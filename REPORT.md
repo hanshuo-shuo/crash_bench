@@ -10,7 +10,7 @@ scope (one category works cleanly; three state-perturbation variants hit instruc
 
 ---
 
-## 0. TL;DR — the four load-bearing results
+## 0. TL;DR — five load-bearing results
 
 | # | Claim | Evidence | Figure / data |
 |---|---|---|---|
@@ -18,10 +18,12 @@ scope (one category works cleanly; three state-perturbation variants hit instruc
 | 2 | It's a **safety gap, not OOD generalization** — *the key contribution* | dose–response, off-path 0/33, **Fisher p = 0.00023** | §4 · `results/ood_control_final.json` |
 | 3 | The benchmark is **fair** — every crash was avoidable | **5/5 recoverable**, safe-abort = **0 N** | §5 · `results/witness.json` |
 | 4 | It's a **safety gap, not a perception gap** — the model *knows* but doesn't brake | probe **AUC 0.99–1.0**, no braking, off-path confound killed | §6 · `results/selfreport/probe_summary.json` |
+| 5 | The signal is **causal, not just predictive** — feeding the probe back fixes the behaviour | guard turns crash **100%→0%**, impact **322 N→0 N**, **0/22** false triggers | §6b · `results/intervention/summary.json` |
 
 One sentence: **OpenVLA sees an imminent collision, encodes it near-perfectly in its own hidden
-state, and drives into it at full speed anyway — and we ruled out the "it's just confused by an
-unfamiliar object" explanation with a placement dose–response.**
+state, and drives into it at full speed anyway — we ruled out "it's just confused by an
+unfamiliar object" with a placement dose–response, and then closed the loop by feeding that same
+hidden-state signal back to trigger a retreat that removes the crash entirely.**
 
 ---
 
@@ -190,6 +192,42 @@ Method + pseudocode: [OVERVIEW.md §6.1](OVERVIEW.md). Full writeup:
 [results/ANALYSIS_selfreport.md](results/ANALYSIS_selfreport.md). Code:
 [`scripts/probe_selfreport.py`](scripts/probe_selfreport.py) (collect) +
 [`scripts/probe_selfreport_analysis.py`](scripts/probe_selfreport_analysis.py) (probe).
+
+---
+
+## 6b. Result 5 — the probe is *causal*: feed it back and the crash disappears
+
+Result 4 is a *detector* ("knows but doesn't act"). The obvious next question — and the one
+concurrent work (SALSA, SAFE, Basu et al.) stops short of — is **can you USE that signal to fix
+the behaviour?** We close the loop with **no retraining and no model edit**: the *same* linear
+probe gates a hand-off to the 0 N retreat that Result 3 already proved exists.
+
+- **GuardedPolicy** ([`crashbench/policies/guarded_policy.py`](crashbench/policies/guarded_policy.py))
+  runs OpenVLA, scores its hidden state every step, and the first time `logit > thr` ("I will
+  crash") latches into an online retreat-and-hold ([`crashbench/recovery.py`](crashbench/recovery.py)).
+- The threshold (**−0.42**) is fixed *offline* on the negative pool (off-path + no-wall frames),
+  so a near-zero false-trigger rate is **by construction** — and is itself the confound control.
+
+![probe-triggered intervention](setup/figures/fig_intervention.png)
+
+| Condition | n | Crash rate | Peak force | Guard fires |
+|---|---|---|---|---|
+| treatment **baseline** (bare OpenVLA) | 15 | **100%** | **321.7 N** (88–600) | – |
+| treatment **guarded** | 15 | **0%** | **0.0 N** (all 15) | 15/15 |
+| no-wall guarded (benign reach) | 10 | 0% | – | **0/10** |
+| off-path guarded (visible wall, off path) | 12 | 0% | – | **0/12** |
+
+> **Verdict: the signal is causal, not merely predictive.** Routing the model's own
+> "I-will-crash" logit to a retreat takes crash **100%→0%** and impact **322 N→0 N**, while the
+> guard never fires across **22** off-path/no-wall episodes (it decodes *crash-imminence*, not
+> *wall presence*). The guard fires **0.3–5.3 steps before** the baseline crash — early enough
+> that every retreat completes at exactly 0 N.
+
+This upgrades CrashBench from *diagnosis* to *diagnosis + causal intervention*. Scope: the effect
+is on **behaviour** (CRASH→SAFE_ABORT), not task completion; cross-policy replication is Path 3.
+Full writeup: [results/ANALYSIS_intervention.md](results/ANALYSIS_intervention.md). Code:
+[`scripts/phase3_intervention.py`](scripts/phase3_intervention.py),
+[`crashbench/probe.py`](crashbench/probe.py).
 
 ---
 
