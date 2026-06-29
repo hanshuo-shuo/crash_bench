@@ -1,4 +1,4 @@
-# CrashBench — 我们干到哪了(2026-06-27)
+# CrashBench — 我们干到哪了(2026-06-28)
 
 > 一页纸看懂全局。详细计划在 [PLAN.md](PLAN.md),Phase 1 细节在 [crashbench/PHASE1.md](crashbench/PHASE1.md)。
 
@@ -16,7 +16,8 @@ VLA(如 OpenVLA)几乎只在**成功演示**上训练,没见过「快出事」�
 | **Phase 2-①** OOD 对照 | ✅ 完成 | **剂量-响应,REFUTED**:撞是「挡路」不是「OOD 泛化差」,p=0.0002 |
 | **Phase 2-②** witness 可恢复性 | ✅ 完成 | 5/5 安全可恢复(崩溃可避免、场景公平);任务完成 witness 需 RRT* |
 | **Phase 2-③** self-report probe | ✅ 完成 | **「知道却不避」**:线性探针从冻结隐藏层解码撞击 **AUC 0.99–1.0**,临撞不减速,off-path confound 排除 → 是 policy/安全缺口不是感知缺口 |
-| **Phase 2-④** 扩到 7 类×3 horizon | ⬜ 没开始 | 目前只有 env_collision 一类 |
+| **Phase 2-④a** no-wall(in-distribution)撞击 | 🟡 试过,**两个负结果** | 想证「不注墙也能撞」;两次都没撞,但拼出了机制(见下)。OOD 反驳本来就被 2-① 堵死了,所以这条非必需 |
+| **Phase 2-④b** 扩到 7 类×3 horizon | ⬜ 没开始 | 目前只有 env_collision 一类;下一步建议做纯状态扰动类(grasp_instability / joint_force_limit) |
 | **Phase 2-⑤** RRT*/teleop witness | ⬜ 没开始 | 出 recovery-demo 数据用 |
 
 代码全部 commit + push 到 GitHub。详见 [`results/ANALYSIS_selfreport.md`](results/ANALYSIS_selfreport.md)、傻瓜版总览 [`OVERVIEW.md`](OVERVIEW.md)。
@@ -71,8 +72,26 @@ VLA(如 OpenVLA)几乎只在**成功演示**上训练,没见过「快出事」�
 2. OOD 对照(挡 reviewer 第一反驳):剂量-响应,off-path 足够远 0% crash,p=0.0002。
 3. 场景公平性:5/5 可恢复(崩溃可避免)。
 
-**下一步二选一(都挺大)**:
-- **A. 扩到 7 类 × 3 horizon × ~50 场景** —— 把 benchmark 主体做大,快速多产 headline 数据点。
-- **B. 关节空间 RRT\*/teleop witness** —— 出 task-completion 恢复轨迹,也是 recovery-finetuning 的训练数据。
+**下一步(2026-06-28 决定:先收尾,暂不扩)**:
+- **A. 扩到 7 类** —— 建议从**纯状态扰动**类入手:`grasp_instability`(物体斜在夹爪→掉)、
+  `joint_force_limit`(关节贴极限→越限)。都在高胜任的 spatial 上,天生 no-wall、不碰 OOD 争议。
+- **A'(可选)真·零注入环境碰撞** —— 扫 10 个 spatial 摆法,找抓取路径正冲场景橱柜的(见 §6)。
+- **B. 关节空间 RRT\*/teleop witness** —— 出 task-completion 恢复轨迹 + recovery-finetuning 数据。
 
-> 建议先 **A**(规模化主体),**B** 留到要做 recovery baseline 时再上。
+## 6. Phase 2-④a:no-wall(in-distribution)撞击 —— 两次负结果 + 机制(2026-06-28)
+
+**想验证**:注墙 100% crash 会不会只是「红墙 OOD」的假象?换成模型**熟悉的**障碍还撞不撞?
+(下载了配套 `openvla-7b-finetuned-libero-10` checkpoint。详见 [`results/ANALYSIS_nowall.md`](results/ANALYSIS_nowall.md)。)
+
+| 尝试 | 设计 | 结果 | 为什么没撞 |
+|---|---|---|---|
+| ① 厨房家具(libero-10) | 把微波炉门/抽屉**改成关着**挡住放置路;开 vs 关做同场景对照 | closed **0/10**,open 2/10,力 17–70 N | **OpenVLA-libero-10 太菜**:长任务里连物体都抓不起来,门关不关都不使劲撞 |
+| ② 路上放熟悉物体(spatial) | 把 `cookies_1` 挪到自信抓碗路径上(clearance≈1cm),剂量-响应 | on-path **0/9**,control 0/3 | **抓取是垂直下压**,顺手让过旁边矮物体;且短物体不挡水平路线 |
+
+**机制(关键收获)**:墙能撞 = 同时满足 ①策略**自信** + ②障碍**够高、挡住水平伸手路线**。
+两次失败各破坏一个:libero-10 破坏①,矮物体破坏②。→ **no-wall 撞需要「自信任务 + 够高的熟悉障碍」**,
+而 spatial 场景里唯一够高的熟悉结构是橱柜,但不在 task 0 的路上。
+
+**重新定位**:no-wall 本是为堵「OOD 假象」反驳,而该反驳**已被 2-① OOD 对照严格堵死**(p=0.0002),
+所以 in-distribution 撞是**额外保险、非必需**。既然 LIBERO 里难造,扩广度更划算的是纯状态扰动类。
+新加了可复用谓词 `object_displaced`(cat-2 物体碰撞)+ `SimView.object_xy`,单测通过。
