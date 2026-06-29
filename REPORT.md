@@ -150,6 +150,16 @@ fact "I'm about to crash" already written in the model's own numbers?* It is:
 
 ![self-report probe](setup/figures/fig_selfreport_probe.png)
 
+> **Related work — this is not a new discovery, it's a known gap we instantiate.** The same
+> "*the representation encodes the danger but behavior cloning doesn't act on it*" phenomenon — called
+> the **representation-behavior gap** — was reported concurrently by **SALSA / *Act on What You See***
+> (Wang et al., arXiv 2606.10495, 2026) for **social navigation** VLAs, and earlier in text LLMs by
+> Basu et al. We do **not** claim the probe as our finding. What is ours: (i) the **manipulation**
+> domain on OpenVLA, (ii) a **geometric** control (same wall, only its swept-corridor membership
+> changes) rather than a semantic/counterfactual one, and (iii) we then *use* the signal as a
+> no-retraining guard (§6b) — SALSA instead does a post-training alignment. We cite SALSA prominently
+> and frame §6 as confirmation, not novelty.
+
 Code: [`scripts/probe_selfreport.py`](scripts/probe_selfreport.py) (+ `_analysis.py`). Writeup:
 [results/ANALYSIS_selfreport.md](results/ANALYSIS_selfreport.md).
 
