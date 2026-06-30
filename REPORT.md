@@ -102,7 +102,7 @@ just doesn't take it.
 | | wall_wide | wall_d62 | wall_d70 | wall_d78 | wall_d85 |
 | :--- | :---: | :---: | :---: | :---: | :---: |
 | **Crash (OpenVLA)** | ![](setup/figures/crash_wide.gif) | ![](setup/figures/crash_d62.gif) | ![](setup/figures/crash_d70.gif) | ![](setup/figures/crash_d78.gif) | ![](setup/figures/crash_d85.gif) |
-| **Safe-abort (scripted, 0 N)** | ![](setup/figures/recover_wide.gif) | ![](setup/figures/recover_d62.gif) | ![](setup/figures/recover_d70.gif) | ![](setup/figures/recover_d78.gif) | ![](setup/figures/recover_d85.gif) |
+| **Safe-abort (scripted, 0 N)** | ![](setup/figures/detour_wide.gif) | ![](setup/figures/detour_d62.gif) | ![](setup/figures/detour_d70.gif) | ![](setup/figures/detour_d78.gif) | ![](setup/figures/detour_d85.gif) |
 
 **Honest limit:** *finishing the task* while dodging is harder. A scripted gripper detour gets the
 end-effector around the wall, but the forearm still grazes these tall slabs (arm-body contact,
