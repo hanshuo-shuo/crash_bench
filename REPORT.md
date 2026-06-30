@@ -223,16 +223,8 @@ round-trips cleanly.
 
 ---
 
-## 8. Status & open questions
+## 8. open questions
 
-**What's solid:**
-1. 100% crash on-path (15/15), no avoidance.
-2. Placement matters: off-path 0/33 — not just strange-object confusion.
-3. Crash is avoidable: 5/5 scripted 0 N recovery.
-4. Collision decodable from the hidden state (AUC 0.99–1.0), yet no braking.
-5. *Preliminary:* probe-triggered retreat → crash 100%→0% (stops only, no task completion).
-
-**Honest gaps:**
 - Only **one hazard type** works (static wall). A benchmark needs ≥2; the second-category route is
   open (§7).
 - The "fix" only **stops**, it doesn't **complete** the task — we have no recovery policy that both
@@ -240,19 +232,9 @@ round-trips cleanly.
 - **Framing question for the group:** is the cleanest story (a) *"VLAs have no safety/avoidance
   behavior because they were never trained for it"* + the probe/guard as a mitigation, or (b) pivot
   to an explicitly safety-related task / build a recovery policy? §4 shows placement matters but does
-  **not** prove the model reasons about physics — we should decide how hard to lean on it.
-- Single policy (OpenVLA), single sim (LIBERO) — no cross-policy / cross-sim replication yet.
+  **not** prove the model reasons about physics.
+- Single policy (OpenVLA), single sim (LIBERO).
 
----
+TODO:
 
-## 9. Repository map
 
-| Path | What |
-|---|---|
-| [`crashbench/`](crashbench/) | engine: scenario, predicates, eval loop, OpenVLA policy, LIBERO adapter, guard |
-| `scenarios/`, `scenarios_control/` | 5 treatment + 21 control walls |
-| `scripts/phase1_*`, `phase2_*`, `phase3_*`, `probe_selfreport*` | build/run, witnesses, intervention, probe |
-| `results/*.json`, `results/ANALYSIS_*.md` | raw rollouts + per-result deep dives |
-| `setup/figures/`, `results/*_videos/` | figures and videos |
-
-*Companion docs: [OVERVIEW.md](OVERVIEW.md) · [STATUS.md](STATUS.md) · [PLAN.md](PLAN.md) · [README.md](README.md).*
