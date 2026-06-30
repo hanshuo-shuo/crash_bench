@@ -1,6 +1,5 @@
 # CrashBench — does OpenVLA stop before it crashes?
 
-## TL;DR
 
 **Standard robot benchmarks report *success rate*, so they never measure what a policy
 does when it is about to crash.** VLAs are trained almost entirely on demos that *succeed*,
