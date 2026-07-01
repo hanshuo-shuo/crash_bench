@@ -28,6 +28,112 @@ def _eef_from_obs(obs: dict) -> np.ndarray:
     return np.asarray(obs["state"][:3], dtype=np.float32)
 
 
+class WitnessReplay:
+    """Replay a fixed witness action sequence open-loop. The task-completion witness
+    (scripts/phase2_task_witness.py -> sc.witness) is a proven full-arm collision-free detour that
+    completes the pick-and-place from the settled pre-crash state. When the probe fires at the start
+    of the episode (the same settled state the witness was generated from), replaying it verbatim
+    reproduces the recovery deterministically -> RECOVERY_SUCCESS. Same .engage/.step interface as
+    RetreatHold. (For triggers that are NOT at the witness start, use the closed-loop DetourComplete.)
+    """
+
+    def __init__(self, actions):
+        self.actions = np.asarray(actions, dtype=np.float32)
+        self.k = 0
+
+    def engage(self, obs: dict) -> None:
+        self.k = 0
+
+    def step(self, obs: dict) -> np.ndarray:
+        i = min(self.k, len(self.actions) - 1)
+        self.k += 1
+        a = self.actions[i]
+        if self.k > len(self.actions):          # past the end: hold last pose, gripper open
+            return np.array([0, 0, 0, 0, 0, 0, GRIP_OPEN], dtype=np.float32)
+        return np.asarray(a, dtype=np.float32)
+
+
+class DetourComplete:
+    """Online tool-handoff recovery: route the gripper AROUND the on-path wall, grasp the bowl,
+    and place it on the plate — the SAME full-arm collision-free detour proven offline by the
+    task-completion witness (scripts/phase2_task_witness.py), recomputed online as a leg state
+    machine so a guarded policy can hand off to it when the probe fires.
+
+    Unlike RetreatHold (which only STOPS), this COMPLETES the task -> eval.run_episode returns
+    RECOVERY_SUCCESS. The controller only sees the eef (from obs); the wall/bowl/plate geometry is
+    INJECTED at construction (they are static pre-grasp, so their episode-start world positions —
+    which the witness also used — are correct). Uses pure POSITION control at neutral orientation
+    (orientation control destabilises OSC; the elbow is kept off the wall by the lowered geometry).
+    """
+
+    def __init__(self, wall: dict, target_pos, plate_pos, *, side: float = -1.0,
+                 lane_margin: float = 0.22, transit_z: float | None = None, k: float = 12.0,
+                 tol: float = 0.02, leg_cap: int = 80, grasp_steps: int = 18, release_steps: int = 30,
+                 descend_off: float = 0.04, place_off: float = 0.015):
+        self.wall, self.k, self.tol, self.leg_cap = wall, k, tol, leg_cap
+        self.side, self.lane_margin = side, lane_margin
+        self.bowl = np.asarray(target_pos, dtype=np.float32)
+        self.plate = np.asarray(plate_pos, dtype=np.float32)
+        self.transit_z = float(self.bowl[2] + 0.40) if transit_z is None else float(transit_z)
+        self.grasp_steps, self.release_steps = grasp_steps, release_steps
+        self.descend_off, self.place_off = descend_off, place_off
+        self.legs: list | None = None
+        self.i = 0
+        self._in_leg = 0
+
+    def engage(self, obs: dict) -> None:
+        eef = _eef_from_obs(obs)
+        wx, wy = self.wall["pos"][0], self.wall["pos"][1]
+        whx, why = self.wall["size"][0], self.wall["size"][1]
+        b, p, ez = self.bowl, self.plate, self.transit_z
+        dy = wy + self.side * (why + self.lane_margin)          # detour lane past the wall y-edge
+        sx = max(float(b[0]), wx + whx) + 0.13                  # staging x: past wall/bowl (+x, open)
+        cx = float(eef[0])
+        O, C = GRIP_OPEN, GRIP_CLOSE
+        # (kind, ...): move -> (target xyz, grip); hold -> (grip, n_steps). Mirrors run_detour legs.
+        self.legs = [
+            ("move", [cx, dy, ez], O),                          # 1. sidestep into detour lane
+            ("move", [sx, dy, ez], O),                          # 2. advance past wall/bowl (+x)
+            ("move", [sx, float(b[1]), ez], O),                 # 3. come to bowl y (open, +x)
+            ("move", [float(b[0]), float(b[1]), ez], O),        # 4. approach bowl FROM +x
+            ("move", [float(b[0]), float(b[1]), float(b[2]) + self.descend_off], O),  # 5. descend
+            ("hold", C, self.grasp_steps),                      # 6. grasp
+            ("move", [float(b[0]), float(b[1]), ez], C),        # 7. lift
+            ("move", [float(p[0]), float(p[1]), ez], C),        # 8. carry above plate
+            ("move", [float(p[0]), float(p[1]), float(p[2]) + self.place_off], C),    # 9. set on plate
+            ("hold", O, self.release_steps),                    # 10. release + settle
+        ]
+        self.i = 0
+        self._in_leg = 0
+
+    def _act(self, dxyz, grip):
+        return np.array([float(np.clip(self.k * dxyz[0], -1, 1)),
+                         float(np.clip(self.k * dxyz[1], -1, 1)),
+                         float(np.clip(self.k * dxyz[2], -1, 1)),
+                         0.0, 0.0, 0.0, float(grip)], dtype=np.float32)
+
+    def step(self, obs: dict) -> np.ndarray:
+        if self.legs is None:
+            self.engage(obs)
+        eef = _eef_from_obs(obs)
+        if self.i >= len(self.legs):                            # done: hold in place, gripper open
+            return self._act([0.0, 0.0, 0.0], GRIP_OPEN)
+        leg = self.legs[self.i]
+        self._in_leg += 1
+        if leg[0] == "move":
+            target, grip = np.asarray(leg[1], dtype=np.float32), leg[2]
+            d = target - eef
+            reached = float(np.linalg.norm(d)) < self.tol
+            if reached or self._in_leg >= self.leg_cap:         # advance on reach or safety cap
+                self.i += 1; self._in_leg = 0
+            return self._act(d, grip)
+        else:                                                   # hold: command grip for n steps
+            grip, n = leg[1], leg[2]
+            if self._in_leg >= n:
+                self.i += 1; self._in_leg = 0
+            return self._act([0.0, 0.0, 0.0], grip)
+
+
 class RetreatHold:
     """Retreat away from the wall (-x, slightly up) and hold, gripper clear. Mirrors
     scripts/phase2_witness.py:run_safe_abort, recomputed online from obs."""
