@@ -172,6 +172,9 @@ recovery,并端到端跑通 `RECOVERY_SUCCESS`。详细写在 [REPORT.md §6c](R
 
 ## 8. 下一步(交接)
 
+> **完整前瞻计划(排期/Path/场景族/模型/baseline)现已整合到唯一入口 [ROADMAP.md](ROADMAP.md)。**
+> 本节只保留 witness/微调的具体交接细节与踩坑,供接手时直接照做。
+
 **当前干净状态**:d62 的 task-witness + Phase 3 链路已完成并 commit+push(`961571e`)。下面两条可选,互相独立。
 
 ### 选项 A —— 多拿几条 witness(d70/d78/d85)
