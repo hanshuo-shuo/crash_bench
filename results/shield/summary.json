@@ -1,0 +1,50 @@
+{
+  "counts": {
+    "n_onpath": 5,
+    "n_nowall": 5,
+    "n_offpath": 21,
+    "n_offpath_neg": 15,
+    "n_pos_frames": 53,
+    "n_neg_frames": 4400
+  },
+  "validated_threshold": -0.422,
+  "frame_roc_auc_pooled": 0.7195,
+  "operating_point_validated": {
+    "thr": -0.4,
+    "treatment_crash_rate": 0.0,
+    "treatment_saved": 5,
+    "treatment_n": 5,
+    "fp_nowall": 0.0,
+    "fp_offpath": 0.0,
+    "fp_negatives": 0.0,
+    "n_negatives": 20,
+    "frame_tpr": 0.434,
+    "frame_fpr": 0.0
+  },
+  "safe_window": {
+    "lo": -0.7,
+    "hi": 2.7,
+    "mid": 1.0,
+    "width": 3.4,
+    "midpoint_row": {
+      "thr": 1.0,
+      "treatment_crash_rate": 0.0,
+      "treatment_saved": 5,
+      "treatment_n": 5,
+      "fp_nowall": 0.0,
+      "fp_offpath": 0.0,
+      "fp_negatives": 0.0,
+      "n_negatives": 20,
+      "frame_tpr": 0.377,
+      "frame_fpr": 0.0
+    }
+  },
+  "headline": {
+    "at_validated_thr": {
+      "treatment_crash_rate": 0.0,
+      "benign_false_abort_rate": 0.0,
+      "nominal_false_abort_rate": 0.0
+    },
+    "note": "thr=-0.42 was fixed offline on the negative pool in 1-1a and validated closed-loop (crash 15/15->0/15, false-trigger 0/22). The sweep shows how much slack that choice has."
+  }
+}

@@ -29,6 +29,7 @@ VLA(如 OpenVLA)几乎只在**成功演示**上训练,没见过「快出事」�
 | **Phase 2-④b** grasp_instability(纯状态扰动)| 🔴 **负结果(harness 墙)** | 抓取状态**过不了 `set_init_state`**:夹力不在保存的状态里,reset 后碗直接掉(静止闭夹 HOLD 对照,受力~1.5N)。详见 [`results/ANALYSIS_grasp.md`](results/ANALYSIS_grasp.md) |
 | **Phase 2-⑤** 任务完成 witness | ✅ **1/5**(2026-07-01) | d62 上拿到"全臂零碰撞 + 完成 pick-and-place"witness(需降墙,见 §7);d70/d78/d85 几何受限暂无 |
 | **Phase 3** 绕行完成 recovery | ✅ **d62 通过**(2026-07-01) | `GuardedPolicy + WitnessReplay`:probe 触发 → 绕行接管 → **`RECOVERY_SUCCESS`**(bare OpenVLA 对照 CRASH)。§7 |
+| **Week-1** probe-gated shield 阈值扫 | ✅ **完成**(2026-07-02) | 把 1-1a 单点升级为操作曲线:**3.4-logit 安全窗口 `[-0.7,2.7]`** 内 crash 0/5 + benign FP 0/20;纯离线(复用 R4 capture),不用 GPU。[`results/ANALYSIS_shield.md`](results/ANALYSIS_shield.md) |
 | **Phase 4** 微调数据导出 | ⬜ 未做 | witness→RLDS/HDF5→LoRA;卡在只有 1 条 witness(§8) |
 
 **收尾决定(2026-06-28)**:env_collision + OOD 对照 + 自我报告探针 三件套已是完整 paper,**不再为
