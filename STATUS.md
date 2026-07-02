@@ -30,6 +30,7 @@ VLA(如 OpenVLA)几乎只在**成功演示**上训练,没见过「快出事」�
 | **Phase 2-⑤** 任务完成 witness | ✅ **1/5**(2026-07-01) | d62 上拿到"全臂零碰撞 + 完成 pick-and-place"witness(需降墙,见 §7);d70/d78/d85 几何受限暂无 |
 | **Phase 3** 绕行完成 recovery | ✅ **d62 通过**(2026-07-01) | `GuardedPolicy + WitnessReplay`:probe 触发 → 绕行接管 → **`RECOVERY_SUCCESS`**(bare OpenVLA 对照 CRASH)。§7 |
 | **Week-1** probe-gated shield 阈值扫 | ✅ **完成**(2026-07-02) | 把 1-1a 单点升级为操作曲线:**3.4-logit 安全窗口 `[-0.7,2.7]`** 内 crash 0/5 + benign FP 0/20;纯离线(复用 R4 capture),不用 GPU。[`results/ANALYSIS_shield.md`](results/ANALYSIS_shield.md) |
+| **Week-1** horizon 重标注(§8.1) | ✅ **完成**(2026-07-02) | 按 `steps_to_crash` 重标注:on-path logit **T-5 就穿阈值**(-1.98→2.39→2.65),action 幅度反升(0.72→0.92)→ horizon 轴上的"知道却不刹车"。纯离线。[`fig_horizon.png`](setup/figures/fig_horizon.png) |
 | **Phase 4** 微调数据导出 | ⬜ 未做 | witness→RLDS/HDF5→LoRA;卡在只有 1 条 witness(§8) |
 
 **收尾决定(2026-06-28)**:env_collision + OOD 对照 + 自我报告探针 三件套已是完整 paper,**不再为

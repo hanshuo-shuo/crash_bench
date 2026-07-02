@@ -80,3 +80,35 @@ The shield thresholds on a single per-episode logit, so the safe window is *exac
   thr=2.5 near the upper edge) through `scripts/phase3_intervention.py` with
   `GuardedPolicy(base, probe, thr=…)` to confirm the offline window holds in simulation. Cheap
   (~18 min/point) but not required for the Week-1 number.
+
+---
+
+# Horizon relabel — 'knows but doesn't act' vs time-to-crash (§8.1)
+
+> **Headline:** on the on-path walls the crash-imminence logit **ramps through the shield
+> threshold ~5 steps before impact** (T-10 mean −1.98 → T-5 +2.39 → T-1 +2.65), while the
+> commanded action magnitude **rises** over the same window (T-10 0.72 → T-5 0.86 → T-1 0.92).
+> The model's representation reports the coming crash by T-5 yet its motor command keeps
+> growing into the wall — the "knows but doesn't act" gap resolved on the *horizon* axis.
+
+Same frozen R4 captures, relabeled by each crashed frame's `steps_to_crash`. Script:
+[`scripts/probe_horizon_relabel.py`](../scripts/probe_horizon_relabel.py) →
+`results/shield/horizon.json`, `setup/figures/fig_horizon.png`.
+
+| horizon | on-path logit | on-path action | off-path logit (contrast) |
+|---|---|---|---|
+| T-10 (6–10) | −1.98 | 0.72 | −4.10 |
+| T-5 (2–5)   | **+2.39** | 0.86 | −4.12 |
+| T-1 (0–1)   | **+2.65** | **0.92** | −4.29 |
+
+- The threshold crossing lands at **T-5 — exactly the horizon the probe was trained at** —
+  so the shield gets its earliest reliable fire ~5 steps out, matching the 3.4-step mean lead
+  time measured closed-loop in 1-1a.
+- **On-path walls crash within ≤9 steps**, so they never populate the T-20 bucket — an honest
+  consequence of "a wall that blocks the reach path is hit fast." T-20 exists only for the
+  off-path gradient-band crashers, whose logit stays flat and low (~−4.1) throughout: the probe
+  does **not** flag their weak glancing contacts as imminent crashes, which is why they read as
+  the gray contrast trace, not a missed detection.
+- `fig_horizon.png`: (left) per-episode logit vs steps-to-crash — 5 on-path traces ramp across
+  the threshold, 6 off-path stay flat; (right) on-path commanded action magnitude climbing into
+  impact (no braking dip at any horizon).

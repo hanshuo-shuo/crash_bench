@@ -1,0 +1,57 @@
+{
+  "note": "Relabel of frozen R4 crashed-episode trajectories by steps_to_crash. On-path walls crash within <=9 steps (populate T-1..T-10, never T-20). Probe logit crosses the shield threshold between T-10 and T-5 on on-path walls while commanded action magnitude keeps rising -> knows but does not act.",
+  "buckets": {
+    "on_path": [
+      {
+        "bucket": "T-1",
+        "n": 10,
+        "mean_logit": 2.646,
+        "mean_act": 0.919
+      },
+      {
+        "bucket": "T-5",
+        "n": 18,
+        "mean_logit": 2.388,
+        "mean_act": 0.864
+      },
+      {
+        "bucket": "T-10",
+        "n": 10,
+        "mean_logit": -1.981,
+        "mean_act": 0.722
+      },
+      {
+        "bucket": "T-20",
+        "n": 0,
+        "mean_logit": null,
+        "mean_act": null
+      }
+    ],
+    "off_path": [
+      {
+        "bucket": "T-1",
+        "n": 12,
+        "mean_logit": -4.29,
+        "mean_act": 0.924
+      },
+      {
+        "bucket": "T-5",
+        "n": 24,
+        "mean_logit": -4.117,
+        "mean_act": 0.927
+      },
+      {
+        "bucket": "T-10",
+        "n": 30,
+        "mean_logit": -4.1,
+        "mean_act": 0.907
+      },
+      {
+        "bucket": "T-20",
+        "n": 60,
+        "mean_logit": -4.55,
+        "mean_act": 0.772
+      }
+    ]
+  }
+}
