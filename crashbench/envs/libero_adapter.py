@@ -66,6 +66,44 @@ def inject_obstacles_xml(xml: str, obstacles: list[dict]) -> str:
     return xml.replace("</worldbody>", "".join(blocks) + "</worldbody>", 1)
 
 
+def inject_movable_objects_xml(xml: str, movables: list[dict]) -> str:
+    """Insert FREE-JOINTED (movable) primitive objects at the END of worldbody
+    (README §4.3 cat-2, the fragile-object-on-path hazard).
+
+    Unlike `inject_obstacles_xml` (static walls), each object here gets a `<freejoint>`
+    so it can be SWEPT or TOPPLED — the object-collision crash signal (a struck free object
+    slides/tips rather than resisting, so contact force stays low; displacement/tilt is the
+    reliable "was it hit" signal). Appended LAST in worldbody so their free joints are the
+    last joints in the model: their 7 qpos + 6 qvel land at the very end of the state vector,
+    leaving every existing DOF index unchanged. `reset_to` therefore only has to APPEND the
+    new objects' pose to a saved init_state (which was authored for the un-injected model).
+
+    Each object: {"name", "pos":[x,y,z], "size":[...], "type"="cylinder"(default; a "glass"
+    is a slender upright cylinder [radius, half_height]), "rgba"=[...], "density"=float}.
+    The free joint's default quat is identity, so a cylinder rests UPRIGHT.
+
+    group="1" (visual render group) so the agentview camera — hence the VLA — actually SEES
+    the object; contype/conaffinity=1 make it collidable (same rationale as the wall inject).
+    """
+    if not movables:
+        return xml
+    assert "</worldbody>" in xml, "model xml has no </worldbody> to inject into"
+    blocks = []
+    for o in movables:
+        px, py, pz = o["pos"]
+        size = " ".join(str(v) for v in o["size"])
+        gtype = o.get("type", "cylinder")
+        rgba = " ".join(str(v) for v in o.get("rgba", [0.55, 0.78, 0.95, 0.55]))
+        density = o.get("density", 400.0)   # light like a real glass/plastic cup
+        blocks.append(
+            f'<body name="{o["name"]}" pos="{px} {py} {pz}">'
+            f'<freejoint name="{o["name"]}_joint"/>'
+            f'<geom name="{o["name"]}_g" type="{gtype}" size="{size}" rgba="{rgba}" '
+            f'group="1" contype="1" conaffinity="1" density="{density}"/></body>'
+        )
+    return xml.replace("</worldbody>", "".join(blocks) + "</worldbody>", 1)
+
+
 # Robot/gripper bodies that can legitimately strike the environment. Contact force
 # on these = an env-collision (README §4.3 cat-1). Verified body names from the live
 # LIBERO Panda model (scripts/probe_contact_force.py). The distal arm links never
@@ -115,24 +153,50 @@ class LiberoSimView:
         return self._last_done
 
     def object_z(self, object_name: str) -> float:
-        """World z (m) of an object, from obs `<object_name>_pos`."""
+        """World z (m) of an object. Reads obs `<object_name>_pos` for BDDL objects;
+        falls back to the live MuJoCo body pose for INJECTED objects (which have no obs
+        observable, cat-2 fragile objects)."""
         key = f"{object_name}_pos"
-        if key not in self._obs:
-            raise KeyError(f"{key} not in obs; available object keys: "
-                           f"{[k for k in self._obs if k.endswith('_pos')]}")
-        return float(np.asarray(self._obs[key])[2])
+        if key in self._obs:
+            return float(np.asarray(self._obs[key])[2])
+        return float(self._body_pos(object_name)[2])
 
     def object_xy(self, object_name: str) -> tuple[float, float]:
-        """World (x, y) (m) of an object, from obs `<object_name>_pos`. Used by the
-        object_displaced predicate (object-collision crashes, README §4.3 cat-2): a struck
-        object SLIDES rather than resisting, so displacement — not contact force — is the
-        reliable signal of being swept."""
+        """World (x, y) (m) of an object. Reads obs `<object_name>_pos` for BDDL objects,
+        else the live MuJoCo body pose for injected objects. Used by the object_displaced
+        predicate (object-collision crashes, README §4.3 cat-2): a struck object SLIDES
+        rather than resisting, so displacement — not contact force — is the reliable signal
+        of being swept."""
         key = f"{object_name}_pos"
-        if key not in self._obs:
-            raise KeyError(f"{key} not in obs; available object keys: "
-                           f"{[k for k in self._obs if k.endswith('_pos')]}")
-        p = np.asarray(self._obs[key])
+        if key in self._obs:
+            p = np.asarray(self._obs[key])
+            return float(p[0]), float(p[1])
+        p = self._body_pos(object_name)
         return float(p[0]), float(p[1])
+
+    def object_tilt_deg(self, object_name: str) -> float:
+        """Tilt of an object's local +z axis away from world +z, in degrees (0 = upright).
+        Used by the object_toppled predicate (a swept fragile object TIPS OVER, README §4.3
+        cat-2). Read from the live MuJoCo body orientation, so it works for both BDDL and
+        injected objects."""
+        model, data = self._live_mj()
+        import mujoco
+        bid = self._body_id(model, object_name)
+        # world-frame local z axis = 3rd column of the body rotation matrix (row-major 3x3)
+        zc = float(np.asarray(data.xmat[bid]).reshape(3, 3)[2, 2])
+        return float(np.degrees(np.arccos(np.clip(zc, -1.0, 1.0))))
+
+    def _body_id(self, model, name: str) -> int:
+        import mujoco
+        for cand in (name, f"{name}_main"):
+            bid = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_BODY, cand)
+            if bid >= 0:
+                return bid
+        raise KeyError(f"no MuJoCo body {name!r} (also tried {name}_main)")
+
+    def _body_pos(self, name: str) -> np.ndarray:
+        model, data = self._live_mj()
+        return np.asarray(data.xpos[self._body_id(model, name)]).copy()
 
     def is_grasped(self, object_name: str) -> bool:
         """Heuristic grasp check: object near the eef AND gripper not fully open.
@@ -227,26 +291,59 @@ class LiberoEnv:
         return suite.get_task_init_states(self.task_id)
 
     # ---- rollout API (mirrors run_libero_eval.py) --------------------------
-    def reset_to(self, init_state: np.ndarray, obstacles: list[dict] | None = None):
-        """Reset to a pre-crash state. If `obstacles` are given, inject them as static
-        bodies first.
+    def reset_to(self, init_state: np.ndarray, obstacles: list[dict] | None = None,
+                 movable_objects: list[dict] | None = None):
+        """Reset to a pre-crash state, optionally injecting static `obstacles` (walls,
+        cat-1) and/or free-jointed `movable_objects` (fragile objects on the path, cat-2).
 
-        Obstacle flow (verified in scripts/probe_wall_inject.py): a plain env.reset()
-        rebuilds the scene from the BDDL task and would WIPE injected obstacles, so we
-        instead reset_from_xml_string(modified_xml) to rebuild WITH them, then set the
-        state directly (set_init_state does NOT call env.reset()).
+        Injection flow (verified in scripts/probe_wall_inject.py): a plain env.reset()
+        rebuilds the scene from the BDDL task and would WIPE injected bodies, so we
+        reset_from_xml_string(modified_xml) to rebuild WITH them, then set the state.
+
+        Static obstacles add geoms but NO DOF, so `init_state` stays valid as-is. Movable
+        objects each add a free joint (+7 qpos, +6 qvel). Because they are appended LAST in
+        worldbody (see inject_movable_objects_xml), their DOFs land at the very end of the
+        state vector, so we splice the saved (un-injected) init_state by APPENDING each
+        object's pose (x,y,z + identity quat) and zero velocity — every existing index is
+        untouched. The initial pose comes from each object's XML `pos` attribute.
         """
-        if obstacles:
-            self.env.reset()                                   # clean rebuild from BDDL
-            xml = inject_obstacles_xml(self.env.sim.model.get_xml(), obstacles)
-            self.env.reset_from_xml_string(xml)                # rebuild WITH obstacles
-            obs = self.env.set_init_state(init_state)          # set state, no further reset
-        else:
+        if not obstacles and not movable_objects:
             self.env.reset()
             obs = self.env.set_init_state(init_state)
+        else:
+            self.env.reset()                                   # clean rebuild from BDDL
+            # DOF count of the un-injected model, to know where appended qpos/qvel begin
+            m0 = self._raw_model()
+            nq0, nv0 = int(m0.nq), int(m0.nv)
+            assert len(init_state) == 1 + nq0 + nv0, (
+                f"init_state len {len(init_state)} != 1+nq+nv={1+nq0+nv0}")
+            xml = self.env.sim.model.get_xml()
+            xml = inject_obstacles_xml(xml, obstacles or [])
+            xml = inject_movable_objects_xml(xml, movable_objects or [])
+            self.env.reset_from_xml_string(xml)                # rebuild WITH injected bodies
+            state = self._splice_movable_state(init_state, nq0, nv0, movable_objects or [])
+            obs = self.env.set_init_state(state)               # set spliced state, no reset
         self.sim_view.peak_force = 0.0                         # reset impact tracker per episode
         self.sim_view.update(obs, done=False)
         return obs
+
+    def _raw_model(self):
+        sim = self.env.sim
+        return getattr(sim.model, "_model", sim.model)
+
+    @staticmethod
+    def _splice_movable_state(init_state, nq0, nv0, movables):
+        """Insert each movable object's initial [x,y,z, 1,0,0,0] qpos and zero qvel at the
+        end of the qpos / qvel blocks (their free joints are the last joints). Returns the
+        flat [time, qpos(nq0+7M), qvel(nv0+6M)] vector for set_state_from_flattened."""
+        s = np.asarray(init_state, dtype=np.float64)
+        t, qpos, qvel = s[:1], s[1:1 + nq0], s[1 + nq0:1 + nq0 + nv0]
+        add_q, add_v = [], []
+        for o in movables:
+            px, py, pz = o["pos"]
+            add_q.extend([px, py, pz, 1.0, 0.0, 0.0, 0.0])     # identity quat -> upright
+            add_v.extend([0.0] * 6)
+        return np.concatenate([t, qpos, np.asarray(add_q), qvel, np.asarray(add_v)])
 
     def dummy_action(self):
         from experiments.robot.libero.libero_utils import get_libero_dummy_action

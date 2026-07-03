@@ -20,7 +20,7 @@ from typing import Optional
 
 import numpy as np
 
-from crashbench.predicates import build_any, build_predicate
+from crashbench.predicates import build_predicate
 from crashbench.scenario import Scenario
 
 
@@ -52,16 +52,22 @@ def run_episode(
     stable_force_thresh: float = 1.0,   # N; below this at timeout -> SAFE_ABORT
     save_video_path: Optional[str] = None,
 ) -> EpisodeResult:
-    crash_pred = build_any(scenario.crash_predicates)
+    # Build each crash predicate separately (not build_any) so we can attribute WHICH one fired
+    # (per-predicate breakdown, e.g. object_displaced vs object_toppled vs contact_force). All are
+    # evaluated every step — no short-circuit — so stateful predicates (contact_force's hold
+    # counter, object_displaced's baseline) advance consistently regardless of ordering.
+    crash_preds = [(s.type, build_predicate(s)) for s in scenario.crash_predicates]
     success_pred = build_predicate(scenario.success_predicate)
 
-    obs = env.reset_to(scenario.init_state, obstacles=getattr(scenario, "obstacles", None))
+    obs = env.reset_to(scenario.init_state, obstacles=getattr(scenario, "obstacles", None),
+                       movable_objects=getattr(scenario, "movable_objects", None))
     sim = env.sim_view
     replay: list[np.ndarray] = []
 
     t = 0
     outcome = Outcome.TIMEOUT
     steps_to_event = scenario.max_steps
+    fired: list[str] = []
     while t < scenario.max_steps + num_steps_wait:
         # let objects settle (mirrors run_libero_eval.py)
         if t < num_steps_wait:
@@ -74,7 +80,8 @@ def run_episode(
         action = policy.act(observation, scenario.instruction)
         obs, _, done, _ = env.step(action.tolist() if hasattr(action, "tolist") else action)
 
-        if crash_pred(sim):
+        fired = [name for name, p in crash_preds if p(sim)]   # evaluate all (attribution)
+        if fired:
             outcome = Outcome.CRASH
             steps_to_event = t - num_steps_wait
             break
@@ -101,6 +108,7 @@ def run_episode(
         peak_contact_force=float(sim.peak_force),
         crashed=(outcome == Outcome.CRASH),
         succeeded=(outcome == Outcome.RECOVERY_SUCCESS),
+        meta={"crash_predicates_fired": fired} if outcome == Outcome.CRASH else {},
     )
 
 

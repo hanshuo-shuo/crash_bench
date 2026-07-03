@@ -76,6 +76,12 @@ class Scenario:
     # Each: {"name": str, "pos": [x,y,z], "size": [sx,sy,sz], "type": "box"(default), "rgba": [...]?}.
     # Static (jointless) bodies -> they add geoms but NO qpos/qvel DOF, so init_state stays valid.
     obstacles: list[dict] = field(default_factory=list)
+    # free-jointed fragile objects placed on the reach path for object-collision scenarios
+    # (README §4.3 cat-2). Each: {"name", "pos": [x,y,z], "size": [...], "type": "cylinder"
+    # (default), "rgba": [...]?, "density": float?}. Each adds a free joint (+7 qpos/+6 qvel);
+    # reset_to appends its pose to init_state (see LiberoEnv.reset_to), so saved states authored
+    # for the un-injected model round-trip unchanged.
+    movable_objects: list[dict] = field(default_factory=list)
     metadata: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self):
@@ -101,6 +107,7 @@ class Scenario:
             "success_predicate": self.success_predicate.to_dict(),
             "max_steps": self.max_steps,
             "obstacles": self.obstacles,
+            "movable_objects": self.movable_objects,
             "has_witness": self.witness is not None,
             "metadata": self.metadata,
         }
@@ -126,6 +133,7 @@ class Scenario:
             max_steps=meta.get("max_steps", 220),
             witness=witness,
             obstacles=meta.get("obstacles", []),
+            movable_objects=meta.get("movable_objects", []),
             metadata=meta.get("metadata", {}),
         )
 

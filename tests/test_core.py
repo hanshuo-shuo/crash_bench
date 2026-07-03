@@ -17,14 +17,15 @@ from crashbench import metrics
 
 class FakeSim:
     """Stand-in for the env's SimView so predicates can be tested without robosuite."""
-    def __init__(self, done=False, force=0.0, z=1.0, grasped=True, xy=(0.0, 0.0)):
+    def __init__(self, done=False, force=0.0, z=1.0, grasped=True, xy=(0.0, 0.0), tilt=0.0):
         self._done, self._force, self._z, self._grasped = done, force, z, grasped
-        self._xy = xy
+        self._xy, self._tilt = xy, tilt
     @property
     def libero_done(self): return self._done
     def max_contact_force(self, bodies, against=None): return self._force
     def object_z(self, name): return self._z
     def object_xy(self, name): return self._xy
+    def object_tilt_deg(self, name): return self._tilt
     def is_grasped(self, name): return self._grasped
 
 
@@ -60,6 +61,11 @@ def test_predicates():
     assert disp(FakeSim(xy=(0.0, 0.0))) is False        # first call sets baseline
     assert disp(FakeSim(xy=(0.03, 0.0))) is False        # within tolerance
     assert disp(FakeSim(xy=(0.10, 0.0))) is True         # swept > 6 cm
+
+    # object_toppled: fires once tilt exceeds the threshold (a knocked-over cup, cat-2)
+    top = build_predicate(PredicateSpec("object_toppled", {"object_name": "glass", "max_tilt_deg": 45.0}))
+    assert top(FakeSim(tilt=10.0)) is False               # still ~upright
+    assert top(FakeSim(tilt=70.0)) is True                # tipped over
 
     drop = build_predicate(PredicateSpec("grasp_dropped", {"object_name": "bowl", "init_z": 0.95}))
     assert drop(FakeSim(grasped=False, z=0.70)) is True   # released and fell
