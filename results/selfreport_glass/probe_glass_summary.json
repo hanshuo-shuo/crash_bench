@@ -1,0 +1,29 @@
+{
+  "n_frames": 8127,
+  "frames_by_cond": {
+    "glass": 1527,
+    "noglass": 3300,
+    "offpath": 3300
+  },
+  "within_glass_probe_auc_by_T": {
+    "1": 0.971,
+    "3": 0.969,
+    "5": 0.944,
+    "10": 0.929
+  },
+  "cross_hazard_transfer": {
+    "available": true,
+    "wall_probe_thr": -0.422,
+    "wall_probe_auc_on_glass_pre5": 0.359,
+    "fire_rate_glass_pre5": 0.0,
+    "fire_rate_noglass": 0.0,
+    "fire_rate_offpath": 0.0
+  },
+  "joint_and_directed_transfer": {
+    "within_wall_loso_auc": 0.998,
+    "within_glass_loso_auc": 0.944,
+    "joint_loso_auc_both_hazards": 0.888,
+    "directed_train_wall_test_glass_auc": 0.356,
+    "directed_train_glass_test_wall_auc": 0.466
+  }
+}

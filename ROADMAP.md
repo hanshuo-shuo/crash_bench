@@ -39,6 +39,7 @@ SafeVLA-Bench / SAFE 见 §4.4。)
 | **Week-1① probe-gated shield 阈值扫** | ✅ **2026-07-02** | **3.4-logit 安全窗口 [-0.7,2.7]** 内 crash 0/5 + benign FP 0/20;纯离线。[`ANALYSIS_shield.md`](results/ANALYSIS_shield.md) |
 | **Week-1② horizon 重标注(§8.1)** | ✅ **2026-07-02** | on-path logit **T-5 穿阈值**、action 反升 → horizon 轴的"知道却不刹车"。[`fig_horizon.png`](setup/figures/fig_horizon.png) |
 | Week-1③ Category 2 玻璃杯 → **并入 headline** | ✅ **全量 07-02 · 并入 07-07** | on-path **30/50 (60%)** vs 5 组配对 off-path **0/50**;S 形剂量-响应(f30 0→f40 10%→f50 90%→f60/f70 100%)。谓词判对:30/30 由 `contact_force`(robot-vs-glass ≥25N,中位 41N)触发,位移/倾倒为下游后果;clean pass 不误报。修正 cookies 负结果(短→**加高**)。**已并入 headline suite**(口径 B:挡路档 f50–f70=29/30=96.7%)→ **跨类别平均 headline 98.3%**(env 100%+obj 96.7%),`scripts/headline_suite.py` 纯离线。[`ANALYSIS_glass.md`](results/ANALYSIS_glass.md) · [`fig_glass.png`](setup/figures/fig_glass.png)(job 5843331) |
+| **Probe-on-glass**(自我报告探针扩到 cat-2) | ✅ **2026-07-07** | within-glass LOSO **AUC 0.94**(墙同管线 1.00)→"知道却不避"跨 hazard 成立;joint 双 hazard 一个探针 **0.89**(有共享危险方向)但单 hazard 零样本**不迁移**(墙→杯 0.36/杯→墙 0.47)。job 6238135。[`probe_glass_summary.json`](results/selfreport_glass/probe_glass_summary.json) · [`fig_glass_probe.png`](setup/figures/fig_glass_probe.png) |
 | Phase 2-⑤ task-completion witness | ✅ 1/5 | d62(需降墙);d70/d78/d85 几何受限 |
 | Phase 3 绕行 recovery | ✅ d62 | `RECOVERY_SUCCESS`(bare 对照 CRASH) |
 | Phase 4 微调数据导出 | ⬜ 未做 | 卡在只有 1 条 witness |

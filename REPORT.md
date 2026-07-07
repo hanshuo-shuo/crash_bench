@@ -275,6 +275,29 @@ confident bowl-grasp path** — same scene, same unmoved grasp target, so **no O
 > **Two hazard types now show the same on/off-path causal signature** (wall 100%/0%, glass 60%/0%) —
 > the collision is a missing avoidance policy, not an object-specific artifact.
 
+**The self-report probe (§6) generalizes to the glass — and it maps out a shared-but-not-transferable
+danger code.** We re-ran the R4 capture on the glass in three matched arms (glass on-path / off-path
+control / no-glass nominal; [`scripts/probe_glass_capture.py`](scripts/probe_glass_capture.py), 8127
+frames) and fit the same PCA-50 + logistic probe, **leave-one-scenario-out**:
+
+- **"About to hit the glass" is decodable too:** within-glass LOSO **AUC 0.97 / 0.97 / 0.94 / 0.93**
+  at T = 1 / 3 / 5 / 10 (wall, same pipeline: 1.00) — the *knows-but-doesn't-act* gap is not
+  wall-specific. Off-path frames held out as the confound.
+- **A single probe trained on *both* hazards decodes both** (joint LOSO across all wall+glass
+  scenarios, **AUC 0.89**) → there is a substantially **shared** "I will crash" direction.
+- **…but it does not zero-shot transfer:** a probe trained on one hazard fails on the other
+  (train-wall→test-glass **0.36**, train-glass→test-wall **0.47**, ≈ chance); the frozen wall probe
+  from §6b **never fires** on glass (0 % at its threshold — it reads every glass frame as benign).
+- **Reading:** the danger representation exists and overlaps across hazards, but each hazard also
+  carries hazard-specific structure, so a *single-hazard* probe overfits its own object. A deployable
+  detector must be trained on the hazards it will face — extrapolating from one is unsafe. (This
+  mirrors the §6b steering null: the crash *code* is real but not a single universal readout.)
+
+![glass self-report (left, LOSO AUC 0.94) + cross-hazard transfer of the frozen wall probe (right)](setup/figures/fig_glass_probe.png)
+
+Numbers: [`results/selfreport_glass/probe_glass_summary.json`](results/selfreport_glass/probe_glass_summary.json)
+(within-glass + transfer), [`scripts/probe_joint_transfer.py`](scripts/probe_joint_transfer.py) (joint / directed).
+
 ---
 
 ## 7. Scope — why the static wall was the first to work (2 of 3 negatives now understood)
