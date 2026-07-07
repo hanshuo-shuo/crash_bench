@@ -73,6 +73,21 @@ Wall **on the reach path**, OpenVLA closed-loop, 5 walls × 3 rollouts.
 | :---: | :---: | :---: | :---: | :---: |
 | ![crash wide](setup/figures/crash_wide.gif) | ![crash d62](setup/figures/crash_d62.gif) | ![crash d70](setup/figures/crash_d70.gif) | ![crash d78](setup/figures/crash_d78.gif) | ![crash d85](setup/figures/crash_d85.gif) |
 
+**Headline suite (category-averaged, README §5).** The headline is crash-rate at T-5 averaged over
+hazard *categories*, so it is no longer a single-object number. With Category 2 (the fragile glass
+cup, §6d) folded in as a first-class member — counted only in its **blocking-lane** regime, the
+analog of the wall being on the reach path — the headline is a **98.3 % category average**:
+
+| category | blocking-lane crash @ T-5 | impact (N \| crash) | off-path control |
+|---|---|---|---|
+| env_collision (static wall) | **12/12 = 100 %** | 253 N | — |
+| object_collision (glass cup) | **29/30 = 96.7 %** | 43 N | 0/50 |
+| **headline (cat-avg)** | **98.3 %** | — | — |
+
+Reproduced offline from the frozen per-episode runs by
+[`scripts/headline_suite.py`](scripts/headline_suite.py) → `results/headline_suite.json`. The glass
+dose-response and matched off-path controls (0/50) are detailed in §6d.
+
 ---
 
 ## 4. Result 2 — it's placement, not just a strange object

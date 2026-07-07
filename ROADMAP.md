@@ -38,7 +38,7 @@ SafeVLA-Bench / SAFE 见 §4.4。)
 | Path 1-1b 激活 steering | 🟡 NEGATIVE | detector≠controller(crash 方向~正交 action readout) |
 | **Week-1① probe-gated shield 阈值扫** | ✅ **2026-07-02** | **3.4-logit 安全窗口 [-0.7,2.7]** 内 crash 0/5 + benign FP 0/20;纯离线。[`ANALYSIS_shield.md`](results/ANALYSIS_shield.md) |
 | **Week-1② horizon 重标注(§8.1)** | ✅ **2026-07-02** | on-path logit **T-5 穿阈值**、action 反升 → horizon 轴的"知道却不刹车"。[`fig_horizon.png`](setup/figures/fig_horizon.png) |
-| Week-1③ Category 2 玻璃杯原型 | ✅ **全量 2026-07-02** | on-path **30/50 (60%)** vs 5 组配对 off-path **0/50**;S 形剂量-响应(f30 0→f40 10%→f50 90%→f60/f70 100%)。谓词判对:30/30 由 `contact_force`(robot-vs-glass ≥25N,中位 41N)触发,位移/倾倒为下游后果;clean pass 不误报。修正 cookies 负结果(短→**加高**)。注入式可倒杯基元 + GPU-free 全验证。[`ANALYSIS_glass.md`](results/ANALYSIS_glass.md) · [`fig_glass.png`](setup/figures/fig_glass.png)(job 5843331) |
+| Week-1③ Category 2 玻璃杯 → **并入 headline** | ✅ **全量 07-02 · 并入 07-07** | on-path **30/50 (60%)** vs 5 组配对 off-path **0/50**;S 形剂量-响应(f30 0→f40 10%→f50 90%→f60/f70 100%)。谓词判对:30/30 由 `contact_force`(robot-vs-glass ≥25N,中位 41N)触发,位移/倾倒为下游后果;clean pass 不误报。修正 cookies 负结果(短→**加高**)。**已并入 headline suite**(口径 B:挡路档 f50–f70=29/30=96.7%)→ **跨类别平均 headline 98.3%**(env 100%+obj 96.7%),`scripts/headline_suite.py` 纯离线。[`ANALYSIS_glass.md`](results/ANALYSIS_glass.md) · [`fig_glass.png`](setup/figures/fig_glass.png)(job 5843331) |
 | Phase 2-⑤ task-completion witness | ✅ 1/5 | d62(需降墙);d70/d78/d85 几何受限 |
 | Phase 3 绕行 recovery | ✅ d62 | `RECOVERY_SUCCESS`(bare 对照 CRASH) |
 | Phase 4 微调数据导出 | ⬜ 未做 | 卡在只有 1 条 witness |
@@ -61,7 +61,8 @@ SafeVLA-Bench / SAFE 见 §4.4。)
 - **Category 2 物体碰撞 ✅ 原型 done(2026-07-02)** — 注入式**可倒玻璃杯**放 nominal path 上、目标物不动
   (不触发 OOD);predicate = 倾倒角(`object_toppled`)/位移(`object_displaced`)/接触力,均单测+GPU-free 验过。
   全量(K=10,5 组配对):on-path **60%** vs off-path **0%**,S 形剂量-响应,30/30 由 contact_force(≥25N)触发。
-  基元(`inject_movable_objects_xml` + `reset_to` 拼接)复用现有 pipeline。**下一步 = 并入 headline suite +
+  基元(`inject_movable_objects_xml` + `reset_to` 拼接)复用现有 pipeline。**✅ 已并入 headline suite(07-07,
+  口径 B:挡路档 f50–f70=96.7%)→ 跨类别平均 headline 98.3%(`scripts/headline_suite.py`)。下一步 =
   Path 3 跨策略复现(OpenVLA-OFT/π0)。**
 - **Category 5 抓取失稳(新增,需修管线)** — snapshot-reset 存不下夹爪挤压力(**已 documented failure**,
   STATUS §6.2)。**正确做法 = no-reset:** 改物理属性(降摩擦/加重)+ 从 t=0 活体抓取,或换 `joint_force_limit`
@@ -98,8 +99,10 @@ GR00T N1 / Octo 标 **stretch**,不承诺。核心主张至少要在 **2 个模�
 
 ## 7. 立刻可动手(下一步优先级)
 
-1. ~~**Category 2 玻璃杯原型 + 全量**~~ ✅ **done(2026-07-02,job 5843331)** — on-path 60% / off-path 0%,
-   S 形剂量-响应,contact_force 归因 30/30。**下一步 = 并入 headline suite + Path 3 跨策略复现。**
+1. ~~**Category 2 玻璃杯原型 + 全量 + 并入 headline suite**~~ ✅ **done(全量 07-02;并入 07-07)** —
+   on-path 60% / off-path 0%,S 形剂量-响应,contact_force 归因 30/30。**已并入 headline suite**(口径 B:
+   只算挡路档 f50–f70 = 29/30 = 96.7%)→ headline 升级为 **跨类别平均 98.3%**(env_collision 100% +
+   object_collision 96.7%),`scripts/headline_suite.py` 纯离线复现。**下一步 = Path 3 跨策略复现。**
 2. Path 3 起步:OpenVLA-OFT(同库近零成本)在现有 on/off-path 协议上复现 crash 100%/0%。
 3. (可选,便宜)shield 闭环复核:`GuardedPolicy(base, probe, thr=1.0)` 跑安全窗口中点,~18 min/点确认离线曲线。
 
