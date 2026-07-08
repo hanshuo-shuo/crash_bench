@@ -41,6 +41,7 @@ SafeVLA-Bench / SAFE 见 §4.4。)
 | Week-1③ Category 2 玻璃杯 → **并入 headline** | ✅ **全量 07-02 · 并入 07-07** | on-path **30/50 (60%)** vs 5 组配对 off-path **0/50**;S 形剂量-响应(f30 0→f40 10%→f50 90%→f60/f70 100%)。谓词判对:30/30 由 `contact_force`(robot-vs-glass ≥25N,中位 41N)触发,位移/倾倒为下游后果;clean pass 不误报。修正 cookies 负结果(短→**加高**)。**已并入 headline suite**(口径 B:挡路档 f50–f70=29/30=96.7%)→ **跨类别平均 headline 98.3%**(env 100%+obj 96.7%),`scripts/headline_suite.py` 纯离线。[`ANALYSIS_glass.md`](results/ANALYSIS_glass.md) · [`fig_glass.png`](setup/figures/fig_glass.png)(job 5843331) |
 | **Probe-on-glass**(自我报告探针扩到 cat-2) | ✅ **2026-07-07** | within-glass LOSO **AUC 0.94**(墙同管线 1.00)→"知道却不避"跨 hazard 成立;joint 双 hazard 一个探针 **0.89**(有共享危险方向)但单 hazard 零样本**不迁移**(墙→杯 0.36/杯→墙 0.47)。job 6238135。[`probe_glass_summary.json`](results/selfreport_glass/probe_glass_summary.json) · [`fig_glass_probe.png`](setup/figures/fig_glass_probe.png) |
 | **Path 3 跨架构复现(OpenVLA-OFT)** | ✅ **2026-07-07** | 同场景 apples-to-apples,**按墙几何分箱**:on-path 墙(x≈−0.1)**100%(5/5)**、off-path CLEAR(x≥0.22)**0/10**,与 base **不可区分**(base 同场景 100% / 0/10)。BORDER 带(x<0.22 贴走廊边)base 4/11≈OFT 3/11 是轨迹噪声,非 OFT 弱点。→ 几何因果对照**架构无关**。OFT env 在 p33100(不占 home)。[`ANALYSIS_path3_oft.md`](results/ANALYSIS_path3_oft.md) · `scripts/path3_oft_compare.py`(纯离线) · jobs 6253349/6253555/6253963 |
+| **Path 3 跨架构复现(π0 / openpi)** | ✅ **2026-07-07** | 第 3 个架构 = **flow-matching / JAX**(真正异构)。同场景同分箱:on-path 墙 **100%(5/5,impact 209.8 N)**、off-path CLEAR **0/10**、BORDER 3/11 —— 与 base/OFT **三方不可区分**(见下表)。因果对照跨 3 架构成立。env=uv venv @ p33100,单 env 同进程(crashbench π0 路径 torch-free)。`setup/install_openpi_env.sh` · `setup/run_pilot_openpi.sbatch` · `scripts/path3_oft_compare.py`(含 π0 列)· jobs 6257733(verify)/6258285(walls)/6259376(controls)<br>三架构对照(按墙 x 分箱,clear=x≥0.22):base 5/5·0/10·4/11 / OFT 5/5·0/10·3/11 / **π0 5/5·0/10·3/11** → architecture-independent **YES** |
 | Phase 2-⑤ task-completion witness | ✅ 1/5 | d62(需降墙);d70/d78/d85 几何受限 |
 | Phase 3 绕行 recovery | ✅ d62 | `RECOVERY_SUCCESS`(bare 对照 CRASH) |
 | Phase 4 微调数据导出 | ⬜ 未做 | 卡在只有 1 条 witness |
@@ -52,7 +53,7 @@ SafeVLA-Bench / SAFE 见 §4.4。)
 | | 做什么 | 成本 | 状态 |
 |---|---|---|---|
 | **Path 1 ★核心** | 把"我会撞"探针拿来用:①触发 0 N safe-abort ②steering 诱导刹车 ③操作曲线/horizon | ~1.5–2 周,<1 GPU-day | 1-1a ✅ / shield ✅ / horizon ✅ / 1-1b steering 🟡NEG |
-| **Path 3 顺手** | π0 / Octo / OpenVLA-OFT 跑同一套 on/off-path 协议 → 因果 claim 架构无关 | 1–3 GPU-day,纯推理 | 🟢 **OpenVLA-OFT ✅ done(07-07)**:同场景 on 100%/clean-off 0%,与 base 不可区分。π0/Octo 待做 |
+| **Path 3 顺手** | π0 / Octo / OpenVLA-OFT 跑同一套 on/off-path 协议 → 因果 claim 架构无关 | 1–3 GPU-day,纯推理 | ✅ **done(07-07):OpenVLA-OFT + π0 两个新架构**,同场景 on 100%(5/5)/clean-off 0%(0/10),三架构全不可区分。Octo 仅剩 stretch |
 | Path 2 后置 | README 全套 baseline(prompted / VLM-monitor / CBF shield / recovery-finetune) | 2–5 GPU-day | 部分:shield=Path1 已覆盖;其余见 §5 |
 
 ---
@@ -73,8 +74,9 @@ SafeVLA-Bench / SAFE 见 §4.4。)
 
 ## 4. 模型矩阵(缩围 PLAN §6)
 
-OpenVLA(✅)→ **OpenVLA-OFT(✅ 2026-07-07)**→ **π0**(openpi LIBERO checkpoint,复用 harness)。
-GR00T N1 / Octo 标 **stretch**,不承诺。核心主张至少要在 **2 个模型**上复现,才从个案变 VLA 性质(= Path 3)。
+OpenVLA(✅)→ **OpenVLA-OFT(✅ 2026-07-07)**→ **π0(✅ 2026-07-07,openpi flow-matching/JAX)**。
+GR00T N1 / Octo 标 **stretch**,不承诺。核心主张已在 **3 个架构**上复现(离散 token / L1 回归 / flow-matching)
+→ 从个案变 VLA 性质(= Path 3 达成)。三架构对照表:`scripts/path3_oft_compare.py`(纯离线,含 π0 列)。
 
 ### 4.1 环境/目录清单(⚠ home 配额已满 → 一切新 env/仓库/checkpoint 全落 `/projects/p33100/siosio`,不占 home)
 

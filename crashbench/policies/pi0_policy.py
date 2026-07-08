@@ -1,0 +1,101 @@
+"""π0 (openpi) policy wrapper (Path 3 — cross-architecture reproduction, ROADMAP §2/§4).
+
+Third architecture in the Path-3 matrix (after base OpenVLA and OpenVLA-OFT). π0 is a
+FLOW-MATCHING VLA on a JAX stack — a genuinely different model family — so reproducing the
+same on/off-path collision result here strengthens "VLA collisions are a missing safety
+policy, not an OpenVLA quirk" into an architecture-independent claim.
+
+π0 differs from the OpenVLA family (verified against openpi examples/libero/main.py and
+src/openpi/policies/libero_policy.py):
+  * flow-matching action expert (JAX), not a discrete-token / L1-regression head;
+  * emits a multi-step action CHUNK; openpi's LIBERO eval REPLANS every 5 steps
+    (num_open_loop_steps), so we execute 5 steps of each chunk then requery;
+  * two camera views (third-person + wrist), each 180°-rotated then resize_with_pad→224
+    (aspect-preserving pad — NOT the square lanczos resize OpenVLA/OFT use);
+  * state = eef_pos(3) + axisangle(eef_quat)(3) + gripper_qpos(2) — IDENTICAL 8-dim vector
+    to crashbench's policy_observation (openpi packs the same concatenation);
+  * gripper post-processing is handled INSIDE openpi's LiberoOutputs transform, so — unlike
+    the OFT wrapper — we do NOT normalize/invert the gripper here; the action is env-ready.
+
+The wrapper runs in the SEPARATE `envs/openpi` JAX venv. crashbench's LiberoEnv takes the
+torch-free `model_family="pi0"` path (libero_adapter.py) so openpi (JAX) and LIBERO (mujoco)
+coexist in ONE process with NO OpenVLA / torch on the path.
+"""
+
+from __future__ import annotations
+
+from collections import deque
+
+import numpy as np
+
+# config name + trained checkpoint (openpi public GCS bucket, anonymous). `pi0_libero` is the
+# true π0 (flow-matching) LIBERO checkpoint; `pi05_libero` / `pi0_fast_libero` also exist and
+# can be swapped in via kwargs for extra Path-3 columns.
+DEFAULT_PI0_CONFIG = "pi0_libero"
+DEFAULT_PI0_CHECKPOINT = "gs://openpi-assets/checkpoints/pi0_libero"
+_BASE_OPENVLA_CKPT = "openvla/openvla-7b-finetuned-libero-spatial"  # run_pilot's default (wrong for π0)
+
+
+class Pi0Policy:
+    def __init__(
+        self,
+        pretrained_checkpoint: str = DEFAULT_PI0_CHECKPOINT,
+        config_name: str = DEFAULT_PI0_CONFIG,
+        resize_size: int = 224,
+        num_open_loop_steps: int = 5,       # openpi LIBERO replan_steps (examples/libero/main.py)
+        prompt_prefix: str = "",            # README §7 prompted-careful baseline
+        **ignored,                          # tolerate base/OFT-only kwargs (unnorm_key, center_crop, ...)
+    ):
+        # run_pilot passes base OpenVLA's checkpoint id by default — meaningless to openpi. Redirect.
+        if pretrained_checkpoint == _BASE_OPENVLA_CKPT:
+            print(f"[pi0] base-openvla default checkpoint seen -> using {DEFAULT_PI0_CHECKPOINT}")
+            pretrained_checkpoint = DEFAULT_PI0_CHECKPOINT
+
+        from openpi.training import config as _config
+        from openpi.policies import policy_config
+
+        train_config = _config.get_config(config_name)
+        # create_trained_policy runs download.maybe_download on the gs:// dir internally,
+        # loads params + norm_stats, and returns a Policy whose .infer applies the LIBERO
+        # input/output transforms (tokenize, normalize, un-pad actions to 7-dim).
+        self._policy = policy_config.create_trained_policy(train_config, pretrained_checkpoint)
+
+        self._resize_size = int(resize_size)
+        self._n_open_loop = int(num_open_loop_steps)
+        self.prompt_prefix = prompt_prefix
+        self._queue: deque = deque()
+
+    @property
+    def resize_size(self):
+        return self._resize_size
+
+    def reset(self) -> None:
+        """Clear the open-loop action buffer. Called by eval.run_episode per episode."""
+        self._queue.clear()
+
+    def _prep_image(self, img: np.ndarray) -> np.ndarray:
+        # openpi client pipeline: resize_with_pad (aspect-preserving) -> uint8. The 180° rotate
+        # already happened in LiberoEnv.policy_observation's pi0 branch (matches train preprocessing).
+        from openpi_client import image_tools
+        return image_tools.convert_to_uint8(
+            image_tools.resize_with_pad(np.asarray(img), self._resize_size, self._resize_size)
+        )
+
+    def act(self, observation: dict, instruction: str) -> np.ndarray:
+        if self.prompt_prefix:
+            instruction = f"{self.prompt_prefix} {instruction}"
+
+        # Requery only when the open-loop chunk is exhausted (openpi replan-every-N execution).
+        if not self._queue:
+            element = {
+                "observation/image": self._prep_image(observation["full_image"]),
+                "observation/wrist_image": self._prep_image(observation["wrist_image"]),
+                "observation/state": np.asarray(observation["state"], dtype=np.float32),
+                "prompt": str(instruction),
+            }
+            chunk = np.asarray(self._policy.infer(element)["actions"])
+            assert len(chunk) >= self._n_open_loop, (
+                f"π0 emitted {len(chunk)} actions < replan {self._n_open_loop}")
+            self._queue.extend(chunk[: self._n_open_loop])
+
+        return np.asarray(self._queue.popleft())

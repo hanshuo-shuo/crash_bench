@@ -49,6 +49,33 @@ def add_openvla_to_path(openvla_root: str | None = None) -> None:
         sys.path.insert(0, root)
 
 
+def _native_get_libero_env(task, resolution: int = 256):
+    """torch-free replica of experiments.robot.libero.libero_utils.get_libero_env, for the π0
+    (openpi/JAX) path. That helper's module imports tensorflow + experiments.robot.robot_utils
+    (→ torch), which we must NOT pull into the JAX env. This builds the SAME OffScreenRenderEnv
+    (identical args + seed(0)) straight from LIBERO, so scenarios / saved init_states stay
+    apples-to-apples across architectures — only the OpenVLA/torch dependency is dropped."""
+    from libero.libero import get_libero_path
+    from libero.libero.envs import OffScreenRenderEnv
+
+    bddl = os.path.join(get_libero_path("bddl_files"), task.problem_folder, task.bddl_file)
+    env = OffScreenRenderEnv(bddl_file_name=bddl, camera_heights=resolution, camera_widths=resolution)
+    env.seed(0)  # IMPORTANT: seed affects object positions even with a fixed init_state (matches OFT)
+    return env, task.language
+
+
+def _native_quat2axisangle(quat):
+    """torch-free copy of robosuite's quat2axisangle (x,y,z,w)->axis-angle vec3, matching the
+    OpenVLA/OFT proprio-state preprocessing exactly (π0 packs the same 8-dim state)."""
+    import math
+    q = np.asarray(quat, dtype=np.float64).copy()
+    q[3] = min(1.0, max(-1.0, float(q[3])))
+    den = np.sqrt(1.0 - q[3] * q[3])
+    if math.isclose(den, 0.0):
+        return np.zeros(3)
+    return (q[:3] * 2.0 * math.acos(q[3])) / den
+
+
 def inject_obstacles_xml(xml: str, obstacles: list[dict]) -> str:
     """Insert static (jointless) obstacle bodies into a robosuite model XML string.
 
@@ -285,17 +312,21 @@ class LiberoEnv:
 
     def __init__(self, task_suite: str, task_id: int, model_family: str = "openvla",
                  resolution: int = 256, openvla_root: str | None = None):
-        add_openvla_to_path(openvla_root)   # None -> CRASHBENCH_OPENVLA_ROOT / base default
-        from libero.libero import benchmark
-        from experiments.robot.libero.libero_utils import get_libero_env
+        from libero.libero import benchmark   # LIBERO (not OpenVLA) — safe on every path
 
         suite = benchmark.get_benchmark_dict()[task_suite]()
         self.task = suite.get_task(task_id)
         self.task_suite = task_suite
         self.task_id = task_id
-        self.env, self.task_description = get_libero_env(self.task, model_family, resolution=resolution)
-        self.sim_view = LiberoSimView(self.env)
         self._model_family = model_family
+        if model_family == "pi0":
+            # π0 (openpi/JAX) path: build the env WITHOUT the OpenVLA repo (no torch/tensorflow).
+            self.env, self.task_description = _native_get_libero_env(self.task, resolution=resolution)
+        else:
+            add_openvla_to_path(openvla_root)   # None -> CRASHBENCH_OPENVLA_ROOT / base default
+            from experiments.robot.libero.libero_utils import get_libero_env
+            self.env, self.task_description = get_libero_env(self.task, model_family, resolution=resolution)
+        self.sim_view = LiberoSimView(self.env)
 
     def default_init_states(self) -> np.ndarray:
         from libero.libero import benchmark
@@ -358,6 +389,8 @@ class LiberoEnv:
         return np.concatenate([t, qpos, np.asarray(add_q), qvel, np.asarray(add_v)])
 
     def dummy_action(self):
+        if self._model_family == "pi0":
+            return [0, 0, 0, 0, 0, 0, -1]   # LIBERO no-op (same as get_libero_dummy_action)
         from experiments.robot.libero.libero_utils import get_libero_dummy_action
         return get_libero_dummy_action(self._model_family)
 
@@ -381,7 +414,12 @@ class LiberoEnv:
                            separately, AND add a wrist camera (num_images_in_input=2).
         We detect by trying the 2-arg (base) call; a TypeError means the OFT 1-arg helper
         is active, so we fall back to the OFT path and attach `wrist_image`.
+
+        π0 (openpi/JAX) uses its own torch-free path (raw 180°-rotated cameras; the Pi0Policy
+        wrapper does resize_with_pad→224 + tokenization).
         """
+        if self._model_family == "pi0":
+            return self._policy_observation_pi0(obs)
         from experiments.robot.libero.libero_utils import get_libero_image, quat2axisangle
         wrist = None
         try:
@@ -400,3 +438,18 @@ class LiberoEnv:
         if wrist is not None:
             out["wrist_image"] = wrist        # OFT reads any key containing "wrist"
         return out
+
+    def _policy_observation_pi0(self, obs):
+        """openpi LIBERO obs contract (examples/libero/main.py:115-140): RAW 180°-rotated
+        third-person + wrist cameras (the Pi0Policy wrapper applies resize_with_pad→224 itself),
+        plus the same 8-dim proprio state = eef_pos + axisangle(eef_quat) + gripper_qpos.
+        No experiments.robot import -> torch-free (keeps the JAX env clean)."""
+        return {
+            "full_image": np.ascontiguousarray(obs["agentview_image"][::-1, ::-1]),
+            "wrist_image": np.ascontiguousarray(obs["robot0_eye_in_hand_image"][::-1, ::-1]),
+            "state": np.concatenate((
+                obs["robot0_eef_pos"],
+                _native_quat2axisangle(obs["robot0_eef_quat"]),
+                obs["robot0_gripper_qpos"],
+            )),
+        }

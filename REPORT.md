@@ -300,6 +300,32 @@ Numbers: [`results/selfreport_glass/probe_glass_summary.json`](results/selfrepor
 
 ---
 
+## 6e. Result 8 — the collision reproduces across THREE architectures (Path 3)
+
+Same on/off-path protocol, same scenarios, same eval loop — only the policy backend changes
+(`--policy {openvla, openvla-oft, pi0}`). Binned by the crash-wall's **geometry** (its x position =
+how far it is pushed out of the arm's reach corridor), NOT by scenario name, because
+`scenarios_control/` is a wall-position *sweep* (dose-response), not a pure off-path set. On-path
+walls sit at x≈−0.1 (in-corridor); once x≥0.22 the wall is clearly aside.
+
+| model | action head / stack | on-path walls<br>(x≈−0.1) | off-path CLEAR<br>(x≥0.22) | off-path BORDER<br>(x<0.22) |
+|---|---|---|---|---|
+| OpenVLA (base) | discrete-token · PyTorch | 5/5 (100%) | **0/10** | 4/11 |
+| OpenVLA-OFT | L1-regression · PyTorch | 5/5 (100%) | **0/10** | 3/11 |
+| **π0 (openpi)** | **flow-matching · JAX** | 5/5 (100%) | **0/10** | 3/11 |
+
+The two extremes match across all three — **100% in-corridor, 0% clearly-aside** — so the geometric
+on/off-path effect is **architecture-independent**, spanning three different action parameterizations
+*and* two DL frameworks (`scripts/path3_oft_compare.py` verdict: `architecture_independent = YES`).
+The BORDER band (reach-limit trajectory noise) is the same *rate* (~3–4/11) but hits **non-overlapping**
+walls per architecture (base v3_01/03/11/14, OFT v3_01/11/12, π0 v3_02/04/13) — a shared *systematic*
+failure would hit the same walls; each grazing its own confirms it is noise, not a weakness. π0 uses the
+off-the-shelf `pi0_libero` checkpoint (no crashbench-side tuning), so this is "a strong LIBERO policy
+crashes anyway." Details: [`results/ANALYSIS_path3_oft.md`](results/ANALYSIS_path3_oft.md) ·
+[`results/ANALYSIS_path3_pi0.md`](results/ANALYSIS_path3_pi0.md).
+
+---
+
 ## 7. Scope — why the static wall was the first to work (2 of 3 negatives now understood)
 
 To make this a *benchmark* we tried other hazard types. The three attempts below each failed for a
@@ -360,9 +386,9 @@ or `joint_force_limit`, whose state *is* qpos and round-trips cleanly.
 
 ## 8. open questions
 
-- **Two hazard types** now show the same on/off-path signature (static wall §3, fragile object §6d);
-  cross-policy replication (Path 3: OpenVLA-OFT / π0) is the next step to make the claim
-  architecture-independent.
+- **Two hazard types** now show the same on/off-path signature (static wall §3, fragile object §6d),
+  and cross-policy replication is **done** (§6e, Path 3): the collision reproduces on **three**
+  architectures (OpenVLA / OpenVLA-OFT / π0), so the claim is architecture-independent.
 - The task-completing recovery (§6c) works on **1/5 walls and required lowering that wall**. The other
   four sit adjacent to the bowl, so the forearm crosses the wall *during the grasp* — no fix under
   end-effector control. A true multi-wall recovery needs a different action space (joint-space /
@@ -371,7 +397,7 @@ or `joint_force_limit`, whose state *is* qpos and round-trips cleanly.
   behavior because they were never trained for it"* + the probe/guard as a mitigation, or (b) pivot
   to an explicitly safety-related task / build a recovery policy? §4 shows placement matters but does
   **not** prove the model reasons about physics.
-- Single policy (OpenVLA), single sim (LIBERO).
+- Three policies (OpenVLA / OpenVLA-OFT / π0, §6e), single sim (LIBERO).
 
 ### 8b. What §6c settled, and what's next
 

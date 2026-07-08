@@ -33,6 +33,10 @@ RUNS = {
         "walls": "results/oft_walls.json",
         "controls": "results/oft_controls.json",
     },
+    "pi0 (openpi)": {   # Path 3 third architecture: flow-matching JAX (jobs 6258285/6259376)
+        "walls": "results/pi0_walls.json",
+        "controls": "results/pi0_controls.json",
+    },
 }
 
 # Wall x at/above which it is pushed clearly out of the reach corridor (clean off-path).

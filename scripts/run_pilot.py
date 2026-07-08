@@ -21,7 +21,7 @@ from pathlib import Path
 
 from crashbench.scenario import load_all
 from crashbench.envs import LiberoEnv
-from crashbench.policies import build_policy, available_backends
+from crashbench.policies import build_policy, available_backends, canonical_name
 from crashbench.eval import run_episode
 from crashbench import metrics
 
@@ -56,9 +56,14 @@ def main():
         prompt_prefix=args.prompt_prefix,
     )
 
+    # π0 (openpi/JAX) needs the torch-free env path (no OpenVLA repo on sys.path); every other
+    # backend keeps the OpenVLA "experiments.robot" path. Only the env builder differs — scenarios
+    # and init_states are identical, so the on/off-path protocol stays apples-to-apples.
+    env_family = "pi0" if canonical_name(args.policy) == "pi0" else "openvla"
+
     results = []
     for sc in scenarios:
-        env = LiberoEnv(sc.task_suite, sc.task_id)   # TODO(perf): cache env per (suite,task_id)
+        env = LiberoEnv(sc.task_suite, sc.task_id, model_family=env_family)   # TODO(perf): cache env per (suite,task_id)
         video = f"{args.video_dir}/{sc.id}.mp4" if args.video_dir else None
         res = run_episode(sc, env, policy, save_video_path=video)
         results.append(res)
