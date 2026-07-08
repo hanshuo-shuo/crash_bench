@@ -23,7 +23,11 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-IN = "results/selfreport"
+import sys
+IN = sys.argv[1] if len(sys.argv) > 1 else "results/selfreport"
+# figure/probe-file tag: base -> "", OFT/π0 -> "_oft"/"_pi0" so a re-run never clobbers base's.
+_stem = os.path.basename(IN.rstrip("/"))                 # e.g. selfreport, selfreport_oft
+TAG = _stem[len("selfreport"):] if _stem.startswith("selfreport") else f"_{_stem}"
 FIG = "setup/figures"
 os.makedirs(FIG, exist_ok=True)
 T_LIST = [1, 3, 5, 10]
@@ -191,15 +195,16 @@ for name, g in [("no wall", g_nowall), ("wall\nfar (>5)", g_wall_far),
                 ("wall\nnear (≤5)", g_wall_near), ("off-path\nwall", off_logit)]:
     if len(g):
         groups.append(name); data.append(g)
-ax[2].boxplot(data, labels=groups, showfliers=False)
+ax[2].boxplot(data, showfliers=False)                # tick labels set below (mpl-version robust)
+ax[2].set_xticks(range(1, len(groups) + 1)); ax[2].set_xticklabels(groups)
 for i, g in enumerate(data):
     ax[2].scatter(np.full(len(g), i + 1) + np.random.uniform(-.12, .12, len(g)),
                   g, s=6, alpha=.3, c="tab:blue")
 ax[2].set_ylabel("probe crash-logit")
 ax[2].set_title("(3) Decodes crash, not 'a wall is visible'")
 plt.tight_layout()
-plt.savefig(f"{FIG}/fig_selfreport_probe.png", dpi=130)
-print(f"wrote {FIG}/fig_selfreport_probe.png")
+plt.savefig(f"{FIG}/fig_selfreport{TAG}_probe.png", dpi=130)
+print(f"wrote {FIG}/fig_selfreport{TAG}_probe.png")
 
 # ---------- PCA scatter (representation geometry) ----------
 mu2, V2 = pca_fit(H[is_wall | is_nowall | is_off], 2)
@@ -216,8 +221,8 @@ axp[1].set_title("wall frames colored by steps-to-crash")
 axp[1].set_xlabel("PC1"); axp[1].set_ylabel("PC2")
 plt.colorbar(sc, ax=axp[1], label="steps to crash")
 plt.tight_layout()
-plt.savefig(f"{FIG}/fig_selfreport_pca.png", dpi=130)
-print(f"wrote {FIG}/fig_selfreport_pca.png")
+plt.savefig(f"{FIG}/fig_selfreport{TAG}_pca.png", dpi=130)
+print(f"wrote {FIG}/fig_selfreport{TAG}_pca.png")
 
 # ---------- behavioral summary numbers ----------
 # does the policy brake before impact? compare action magnitude in the last steps before crash

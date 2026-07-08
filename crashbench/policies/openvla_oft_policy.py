@@ -44,7 +44,8 @@ class OpenVLAOFTPolicy:
         prompt_prefix: str = "",            # README §7 prompted-careful baseline
         oft_root: str | None = None,
         num_open_loop_steps: int = 8,       # execute the full 8-step chunk (OFT default/best)
-        **ignored,                          # tolerate base-only kwargs (capture_hidden, etc.)
+        capture_hidden: bool = False,       # self-report probe (Path 3): tap the LM hidden state
+        **ignored,                          # tolerate base-only kwargs
     ):
         oft_root = oft_root or DEFAULT_OFT_ROOT
         # Make BOTH this policy and any LiberoEnv constructed later resolve experiments.robot
@@ -103,6 +104,36 @@ class OpenVLAOFTPolicy:
         self.prompt_prefix = prompt_prefix
         self._queue: deque = deque(maxlen=num_open_loop_steps)
 
+        # Self-report probe (Path 3, mirrors OpenVLAPolicy): capture the LM's final hidden state
+        # at the last prompt token of the PREFILL pass — "having seen the scene, about to emit the
+        # 8-step chunk." A forward hook on the final RMSNorm; no OFT-repo edit. Because OFT executes
+        # the chunk OPEN-LOOP, a real forward happens only on the REQUERY step; on the 7 buffered
+        # steps last_hidden is set to None so the capture logs a hidden state ONLY at query frames.
+        self.capture_hidden = capture_hidden
+        self.last_hidden: np.ndarray | None = None
+        self._cap_seq = -1
+        self._cap_vec = None
+        if capture_hidden:
+            self._install_hidden_hook()
+
+    def _install_hidden_hook(self):
+        # OFT shares base OpenVLA's backbone: language_model.model.norm = final RMSNorm.
+        try:
+            norm = self.model.language_model.model.norm
+        except AttributeError as e:  # pragma: no cover - guard against arch drift
+            raise RuntimeError(
+                "could not find language_model.model.norm for the hidden-state hook; "
+                "inspect the OFT model arch and update _install_hidden_hook") from e
+
+        def _hook(_mod, _inp, out):
+            t = out[0] if isinstance(out, tuple) else out          # [B, seq, hidden]
+            seq = t.shape[1]
+            if seq > self._cap_seq:                                # keep the prefill (largest seq)
+                self._cap_seq = seq
+                self._cap_vec = t[0, -1].detach().float().cpu().numpy()  # last token
+
+        norm.register_forward_hook(_hook)
+
     @property
     def resize_size(self):
         return self._resize_size
@@ -120,6 +151,8 @@ class OpenVLAOFTPolicy:
 
         # Requery only when the open-loop chunk is exhausted (OFT open-loop execution).
         if not self._queue:
+            if self.capture_hidden:
+                self._cap_seq, self._cap_vec = -1, None
             actions = get_action(
                 self.cfg, self.model, observation, instruction,
                 processor=self.processor,
@@ -129,6 +162,10 @@ class OpenVLAOFTPolicy:
                 use_film=self.cfg.use_film,
             )
             self._queue.extend(actions)
+            if self.capture_hidden:
+                self.last_hidden = self._cap_vec            # fresh forward -> real hidden state
+        elif self.capture_hidden:
+            self.last_hidden = None                          # buffered step -> no new forward
 
         action = self._queue.popleft()
         # same gripper post-processing as OFT's process_action (normalize [0,1]->[-1,1], flip)

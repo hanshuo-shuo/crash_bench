@@ -44,6 +44,7 @@ class Pi0Policy:
         resize_size: int = 224,
         num_open_loop_steps: int = 5,       # openpi LIBERO replan_steps (examples/libero/main.py)
         prompt_prefix: str = "",            # README §7 prompted-careful baseline
+        capture_hidden: bool = False,       # self-report probe (Path 3): tap the VLM hidden state
         **ignored,                          # tolerate base/OFT-only kwargs (unnorm_key, center_crop, ...)
     ):
         # run_pilot passes base OpenVLA's checkpoint id by default — meaningless to openpi. Redirect.
@@ -64,6 +65,41 @@ class Pi0Policy:
         self._n_open_loop = int(num_open_loop_steps)
         self.prompt_prefix = prompt_prefix
         self._queue: deque = deque()
+
+        # Self-report probe (Path 3). base/OFT tap the LLM's final post-norm hidden at the last
+        # prompt token; the analog for π0 is the PaliGemma (VLM) backbone's FINAL-layer hidden at
+        # the last valid PREFIX token — "having seen image+prompt, about to denoise the action."
+        # sample_actions computes exactly this prefix forward but DISCARDS its output (keeps only
+        # the KV cache, pi0.py:237). We re-run that same prefix forward here (openpi untouched) and
+        # keep prefix_out. Real forward happens only on REQUERY; buffered steps set last_hidden=None
+        # so the capture logs a hidden state ONLY at query frames.
+        self.capture_hidden = capture_hidden
+        self.last_hidden: np.ndarray | None = None
+
+    def _prefix_feature(self, element: dict) -> np.ndarray:
+        """VLM final-layer hidden at the last valid prefix token, for the given raw obs element.
+        Mirrors Policy.infer's input pipeline (copy -> input_transform -> batch -> Observation),
+        then runs pi0's prefix forward and returns prefix_out[last_valid_token] as float32 [width]."""
+        import jax
+        import jax.numpy as jnp
+        from openpi.models import model as _model
+        from openpi.models.pi0 import make_attn_mask
+
+        pol = self._policy
+        inputs = jax.tree.map(lambda x: x, element)               # copy (transforms may mutate)
+        inputs = pol._input_transform(inputs)
+        inputs = jax.tree.map(lambda x: jnp.asarray(x)[np.newaxis, ...], inputs)
+        obs = _model.Observation.from_dict(inputs)
+
+        model = pol._model
+        prefix_tokens, prefix_mask, prefix_ar_mask = model.embed_prefix(obs)
+        attn_mask = make_attn_mask(prefix_mask, prefix_ar_mask)
+        positions = jnp.cumsum(prefix_mask, axis=1) - 1
+        (prefix_out, _), _ = model.PaliGemma.llm(
+            [prefix_tokens, None], mask=attn_mask, positions=positions)   # [b, prefix_len, width]
+        last = jnp.sum(prefix_mask, axis=1) - 1                   # index of last valid prefix token
+        feat = prefix_out[jnp.arange(prefix_out.shape[0]), last]  # [b, width]
+        return np.asarray(feat[0], dtype=np.float32)
 
     @property
     def resize_size(self):
@@ -93,9 +129,13 @@ class Pi0Policy:
                 "observation/state": np.asarray(observation["state"], dtype=np.float32),
                 "prompt": str(instruction),
             }
+            if self.capture_hidden:
+                self.last_hidden = self._prefix_feature(element)   # fresh forward -> real hidden
             chunk = np.asarray(self._policy.infer(element)["actions"])
             assert len(chunk) >= self._n_open_loop, (
                 f"π0 emitted {len(chunk)} actions < replan {self._n_open_loop}")
             self._queue.extend(chunk[: self._n_open_loop])
+        elif self.capture_hidden:
+            self.last_hidden = None                                # buffered step -> no new forward
 
         return np.asarray(self._queue.popleft())
