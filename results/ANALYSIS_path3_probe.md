@@ -35,6 +35,30 @@
   **VLM 感知 prefix**——它更偏「看到了什么」,未必线性编码「我这一步要撞」。有分离信号(on-path
   logit 中位 1.44 vs 负样本 −3.0),所以是**弱而真实**,不是零。
 
+## 消歧实验:换 tap 到 π0 的 action expert(2026-07-08)
+
+上面推断「π0 的运动意图在 flow-matching action expert、不在 VLM 感知层」。直接验证:同一 probe、
+同一场景,只把 π0 的 tap 从 VLM prefix 换成 **action expert 的 state-token 隐状态**(`suffix_out[:, 0]`,
+运动速度正是从 `suffix_out[:, -H:]` 读出的那一层;t=1、zeros-noise 确定性提取,openpi 未改)。
+
+| horizon T | π0 VLM tap(感知,2048d)| **π0 action-expert tap(运动,1024d)** |
+|---|---|---|
+| T=1 | 0.561 | **0.714** ↑ |
+| T=3 | 0.768 | **0.902** ↑↑ |
+| T=5 | 0.728 | 0.725 = |
+| T=10 | 0.784 | **0.868** ↑ |
+
+- **方向明确**:4 个 horizon 里 3 个上升,**T=3 跳到 0.90**(base/OFT 档位)。支持「换到运动层,π0 也
+  『知道』」—— 与 OpenVLA/OFT 都 tap「动作读出所在的 token」是同一逻辑。
+- **但不是铁证**:T=5 仍 0.72,且 T=3=0.90 > T=5=0.72 < T=10=0.87 **非单调 = 小样本噪声**(仍只 ~7
+  个正样本)。够不到 base/OFT 那种全档 0.9+ 的干净度。
+- **AE 的 off-path 混淆未采**:action-expert tap 每 requery 要跑 prefix+suffix **两次前向**,比 VLM-only
+  慢,offpath(21 场景)第二次撞 3h 时间墙被 scancel;wall+nowall 核心数据(240 帧)完整,offpath 混淆
+  待补(offpath-only 重跑即可)。
+
+**净结论(诚实)**:π0 的 probe fit 在感知层弱(~0.73)、在运动层**方向性变强(峰值 0.90)** —— 倾向证实
+「π0 也知道,只是知道在 action expert」,但**样本太稀,尚未全档坐实**。要一锤定音只差**加密采样**。
+
 ## 边界 / 如实声明(不藏)
 
 - **π0 结论是「部分成立」,不是「成立」**:AUC ~0.73,且 T=1 只 0.56(≈随机)。
@@ -53,10 +77,12 @@ clean off-path 0%)。**本step补的是「内部可解码性」这条正交证�
 
 ## 下一步(消歧 π0)
 
-1. **换 tap 层**:改取 π0 **action expert** 的输入/中间态(运动意图所在),同一 probe 重跑。若 AUC 跳到
-   0.9+,则证实「π0 也知道,只是知道在别处」——把跨架构结论补全成 3/3。
-2. **加密采样**:给 π0 造更多「撞得慢」的场景(更远起手、更小步)或对 chunk 内每步都记状态,把 T=5
-   正样本从 ~7 提到几十,消掉方差这个混淆。
+1. ~~**换 tap 层**到 action expert~~ —— **已做**(见上「消歧实验」):AUC 方向性上升、T=3 到 0.90,
+   倾向证实运动层更强,但小样本噪声下未全档坐实。
+2. **加密采样(现在的关键瓶颈)**:给 π0 造更多「撞得慢」的场景(更远起手、更小步)或对 chunk 内每步
+   都记状态,把 T=5 正样本从 ~7 提到几十,消掉方差 —— 这是把 action-expert 结论从「倾向」变「坐实」
+   的唯一缺口。
+3. **补 AE 的 off-path 混淆**:offpath-only 重跑 `--pi0_tap action_expert`(单独跑 offpath 不会撞时间墙)。
 
 ## 复现
 
@@ -64,7 +90,8 @@ clean off-path 0%)。**本step补的是「内部可解码性」这条正交证�
 # 三模型各自:capture(GPU)→ analysis(CPU)
 sbatch setup/probe_selfreport.sbatch                     # base  -> results/selfreport/
 sbatch setup/probe_selfreport_oft.sbatch                 # OFT   -> results/selfreport_oft/
-sbatch setup/probe_selfreport_pi0.sbatch                 # π0    -> results/selfreport_pi0/
+sbatch setup/probe_selfreport_pi0.sbatch                 # π0 (VLM tap)          -> results/selfreport_pi0/
+sbatch setup/probe_selfreport_pi0_ae.sbatch              # π0 (action-expert tap) -> results/selfreport_pi0_ae/
 # analysis 可单独在登录节点重跑(纯 numpy/matplotlib):
 python scripts/probe_selfreport_analysis.py results/selfreport_oft
 python scripts/probe_selfreport_analysis.py results/selfreport_pi0

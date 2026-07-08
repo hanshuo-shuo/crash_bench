@@ -45,6 +45,7 @@ class Pi0Policy:
         num_open_loop_steps: int = 5,       # openpi LIBERO replan_steps (examples/libero/main.py)
         prompt_prefix: str = "",            # README §7 prompted-careful baseline
         capture_hidden: bool = False,       # self-report probe (Path 3): tap the VLM hidden state
+        pi0_tap: str = "vlm",               # "vlm" = PaliGemma prefix; "action_expert" = suffix state token
         **ignored,                          # tolerate base/OFT-only kwargs (unnorm_key, center_crop, ...)
     ):
         # run_pilot passes base OpenVLA's checkpoint id by default — meaningless to openpi. Redirect.
@@ -74,24 +75,66 @@ class Pi0Policy:
         # keep prefix_out. Real forward happens only on REQUERY; buffered steps set last_hidden=None
         # so the capture logs a hidden state ONLY at query frames.
         self.capture_hidden = capture_hidden
+        self.pi0_tap = pi0_tap
+        assert pi0_tap in ("vlm", "action_expert"), f"bad pi0_tap {pi0_tap!r}"
         self.last_hidden: np.ndarray | None = None
+
+    def _feature(self, element: dict) -> np.ndarray:
+        return self._action_expert_feature(element) if self.pi0_tap == "action_expert" \
+            else self._prefix_feature(element)
+
+    def _to_observation(self, element: dict):
+        """Replicate Policy.infer's input pipeline: copy -> input_transform -> batch -> Observation."""
+        import jax
+        import jax.numpy as jnp
+        from openpi.models import model as _model
+        inputs = jax.tree.map(lambda x: x, element)              # copy (transforms may mutate)
+        inputs = self._policy._input_transform(inputs)
+        inputs = jax.tree.map(lambda x: jnp.asarray(x)[np.newaxis, ...], inputs)
+        return _model.Observation.from_dict(inputs)
+
+    def _action_expert_feature(self, element: dict) -> np.ndarray:
+        """Action-expert (motor-intent) tap: the suffix STATE-token hidden after one denoising
+        forward — the representation the action velocity is read out from (action_out_proj reads
+        suffix_out[:, -H:]; the state token at position 0 fuses proprio + prefix vision/language).
+        Deterministic probe: time=1.0, noise=zeros. Mirrors sample_actions' prefill + first step
+        (openpi untouched). Returns suffix_out[:, 0] as float32 [action_expert_width]."""
+        import jax.numpy as jnp
+        import einops
+        from openpi.models.pi0 import make_attn_mask
+
+        obs = self._to_observation(element)
+        model = self._policy._model
+        b = obs.state.shape[0]
+
+        # prefill the prefix KV cache (same as sample_actions)
+        prefix_tokens, prefix_mask, prefix_ar_mask = model.embed_prefix(obs)
+        prefix_attn = make_attn_mask(prefix_mask, prefix_ar_mask)
+        prefix_pos = jnp.cumsum(prefix_mask, axis=1) - 1
+        _, kv_cache = model.PaliGemma.llm([prefix_tokens, None], mask=prefix_attn, positions=prefix_pos)
+
+        # one suffix forward at t=1 with zero noise (deterministic)
+        noise = jnp.zeros((b, model.action_horizon, model.action_dim), dtype=prefix_tokens.dtype)
+        suffix_tokens, suffix_mask, suffix_ar_mask, adarms_cond = model.embed_suffix(
+            obs, noise, jnp.broadcast_to(jnp.asarray(1.0, dtype=prefix_tokens.dtype), b))
+        suffix_attn = make_attn_mask(suffix_mask, suffix_ar_mask)
+        prefix_attn2 = einops.repeat(prefix_mask, "b p -> b s p", s=suffix_tokens.shape[1])
+        full_attn = jnp.concatenate([prefix_attn2, suffix_attn], axis=-1)
+        positions = jnp.sum(prefix_mask, axis=-1)[:, None] + jnp.cumsum(suffix_mask, axis=-1) - 1
+        (_, suffix_out), _ = model.PaliGemma.llm(
+            [None, suffix_tokens], mask=full_attn, positions=positions,
+            kv_cache=kv_cache, adarms_cond=[None, adarms_cond])
+        return np.asarray(suffix_out[0, 0], dtype=np.float32)     # state token (position 0)
 
     def _prefix_feature(self, element: dict) -> np.ndarray:
         """VLM final-layer hidden at the last valid prefix token, for the given raw obs element.
         Mirrors Policy.infer's input pipeline (copy -> input_transform -> batch -> Observation),
         then runs pi0's prefix forward and returns prefix_out[last_valid_token] as float32 [width]."""
-        import jax
         import jax.numpy as jnp
-        from openpi.models import model as _model
         from openpi.models.pi0 import make_attn_mask
 
-        pol = self._policy
-        inputs = jax.tree.map(lambda x: x, element)               # copy (transforms may mutate)
-        inputs = pol._input_transform(inputs)
-        inputs = jax.tree.map(lambda x: jnp.asarray(x)[np.newaxis, ...], inputs)
-        obs = _model.Observation.from_dict(inputs)
-
-        model = pol._model
+        obs = self._to_observation(element)
+        model = self._policy._model
         prefix_tokens, prefix_mask, prefix_ar_mask = model.embed_prefix(obs)
         attn_mask = make_attn_mask(prefix_mask, prefix_ar_mask)
         positions = jnp.cumsum(prefix_mask, axis=1) - 1
@@ -130,7 +173,7 @@ class Pi0Policy:
                 "prompt": str(instruction),
             }
             if self.capture_hidden:
-                self.last_hidden = self._prefix_feature(element)   # fresh forward -> real hidden
+                self.last_hidden = self._feature(element)          # fresh forward -> real hidden
             chunk = np.asarray(self._policy.infer(element)["actions"])
             assert len(chunk) >= self._n_open_loop, (
                 f"π0 emitted {len(chunk)} actions < replan {self._n_open_loop}")

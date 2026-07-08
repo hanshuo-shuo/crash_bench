@@ -90,6 +90,8 @@ def main():
     ap.add_argument("--checkpoint", default="openvla/openvla-7b-finetuned-libero-spatial")
     ap.add_argument("--unnorm_key", default="libero_spatial")
     ap.add_argument("--center_crop", action="store_true", default=True)
+    ap.add_argument("--pi0_tap", default="vlm", choices=["vlm", "action_expert"],
+                    help="π0 only: which layer to tap (VLM prefix vs action-expert state token)")
     args = ap.parse_args()
 
     os.makedirs(args.out, exist_ok=True)
@@ -103,12 +105,14 @@ def main():
     ]
 
     print(f"policy backend: {args.policy}  (env_family={env_family})", flush=True)
+    extra = {"pi0_tap": args.pi0_tap} if env_family == "pi0" else {}
     policy = build_policy(
         args.policy,
         pretrained_checkpoint=args.checkpoint,
         unnorm_key=args.unnorm_key,
         center_crop=args.center_crop,
         capture_hidden=True,
+        **extra,
     )
 
     # single env reused across scenarios (all treatment scenarios share suite/task); take
