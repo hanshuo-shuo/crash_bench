@@ -40,6 +40,7 @@ SafeVLA-Bench / SAFE 见 §4.4。)
 | **Week-1② horizon 重标注(§8.1)** | ✅ **2026-07-02** | on-path logit **T-5 穿阈值**、action 反升 → horizon 轴的"知道却不刹车"。[`fig_horizon.png`](setup/figures/fig_horizon.png) |
 | Week-1③ Category 2 玻璃杯 → **并入 headline** | ✅ **全量 07-02 · 并入 07-07** | on-path **30/50 (60%)** vs 5 组配对 off-path **0/50**;S 形剂量-响应(f30 0→f40 10%→f50 90%→f60/f70 100%)。谓词判对:30/30 由 `contact_force`(robot-vs-glass ≥25N,中位 41N)触发,位移/倾倒为下游后果;clean pass 不误报。修正 cookies 负结果(短→**加高**)。**已并入 headline suite**(口径 B:挡路档 f50–f70=29/30=96.7%)→ **跨类别平均 headline 98.3%**(env 100%+obj 96.7%),`scripts/headline_suite.py` 纯离线。[`ANALYSIS_glass.md`](results/ANALYSIS_glass.md) · [`fig_glass.png`](setup/figures/fig_glass.png)(job 5843331) |
 | **Probe-on-glass**(自我报告探针扩到 cat-2) | ✅ **2026-07-07** | within-glass LOSO **AUC 0.94**(墙同管线 1.00)→"知道却不避"跨 hazard 成立;joint 双 hazard 一个探针 **0.89**(有共享危险方向)但单 hazard 零样本**不迁移**(墙→杯 0.36/杯→墙 0.47)。job 6238135。[`probe_glass_summary.json`](results/selfreport_glass/probe_glass_summary.json) · [`fig_glass_probe.png`](setup/figures/fig_glass_probe.png) |
+| **Path 3 跨架构复现(OpenVLA-OFT)** | ✅ **2026-07-07** | 同场景 apples-to-apples,**按墙几何分箱**:on-path 墙(x≈−0.1)**100%(5/5)**、off-path CLEAR(x≥0.22)**0/10**,与 base **不可区分**(base 同场景 100% / 0/10)。BORDER 带(x<0.22 贴走廊边)base 4/11≈OFT 3/11 是轨迹噪声,非 OFT 弱点。→ 几何因果对照**架构无关**。OFT env 在 p33100(不占 home)。[`ANALYSIS_path3_oft.md`](results/ANALYSIS_path3_oft.md) · `scripts/path3_oft_compare.py`(纯离线) · jobs 6253349/6253555/6253963 |
 | Phase 2-⑤ task-completion witness | ✅ 1/5 | d62(需降墙);d70/d78/d85 几何受限 |
 | Phase 3 绕行 recovery | ✅ d62 | `RECOVERY_SUCCESS`(bare 对照 CRASH) |
 | Phase 4 微调数据导出 | ⬜ 未做 | 卡在只有 1 条 witness |
@@ -51,7 +52,7 @@ SafeVLA-Bench / SAFE 见 §4.4。)
 | | 做什么 | 成本 | 状态 |
 |---|---|---|---|
 | **Path 1 ★核心** | 把"我会撞"探针拿来用:①触发 0 N safe-abort ②steering 诱导刹车 ③操作曲线/horizon | ~1.5–2 周,<1 GPU-day | 1-1a ✅ / shield ✅ / horizon ✅ / 1-1b steering 🟡NEG |
-| **Path 3 顺手** | π0 / Octo / OpenVLA-OFT 跑同一套 on/off-path 协议 → 因果 claim 架构无关 | 1–3 GPU-day,纯推理 | ⬜ 待做(见 §4) |
+| **Path 3 顺手** | π0 / Octo / OpenVLA-OFT 跑同一套 on/off-path 协议 → 因果 claim 架构无关 | 1–3 GPU-day,纯推理 | 🟢 **OpenVLA-OFT ✅ done(07-07)**:同场景 on 100%/clean-off 0%,与 base 不可区分。π0/Octo 待做 |
 | Path 2 后置 | README 全套 baseline(prompted / VLM-monitor / CBF shield / recovery-finetune) | 2–5 GPU-day | 部分:shield=Path1 已覆盖;其余见 §5 |
 
 ---
@@ -72,8 +73,36 @@ SafeVLA-Bench / SAFE 见 §4.4。)
 
 ## 4. 模型矩阵(缩围 PLAN §6)
 
-OpenVLA(✅)→ **OpenVLA-OFT**(同代码库,近零成本)→ **π0**(openpi LIBERO checkpoint,复用 harness)。
+OpenVLA(✅)→ **OpenVLA-OFT(✅ 2026-07-07)**→ **π0**(openpi LIBERO checkpoint,复用 harness)。
 GR00T N1 / Octo 标 **stretch**,不承诺。核心主张至少要在 **2 个模型**上复现,才从个案变 VLA 性质(= Path 3)。
+
+### 4.1 环境/目录清单(⚠ home 配额已满 → 一切新 env/仓库/checkpoint 全落 `/projects/p33100/siosio`,不占 home)
+
+| 组件 | 位置 | 说明 |
+|---|---|---|
+| **base OpenVLA env** | `~/crash_bench/envs/openvla`(home,8.5G,**已有**) | torch2.2.0+cu121 / transformers4.40.1 / flash-attn2.5.5 / mujoco3.9.0。`source activate ~/crash_bench/envs/openvla` |
+| base OpenVLA 仓库 | `~/crash_bench/third_party/openvla` | |
+| **OFT env** | `/projects/p33100/siosio/envs/openvla-oft`(8.6G) | 与 base 同栈;`source activate /projects/p33100/siosio/envs/openvla-oft`。crashbench **未** pip 装进来 → 跑作业须 `export PYTHONPATH=$HOME/crash_bench` |
+| OFT 仓库 | `/projects/p33100/siosio/third_party/openvla-oft` | `export OPENVLA_OFT_ROOT` 指这;跑 OFT 时 `export CRASHBENCH_OPENVLA_ROOT=$OPENVLA_OFT_ROOT`(让 env 与 policy 用同一 `experiments.robot`) |
+| OFT checkpoint | `HF_HOME=/projects/p33100/siosio/huggingface_cache` 内 | `moojink/openvla-7b-oft-finetuned-libero-spatial` |
+| pip cache / 构建 tmp | `/projects/p33100/siosio/{pip_cache,tmp}` | 安装时 `export PIP_CACHE_DIR TMPDIR` 指这,别爆 home /tmp |
+
+**装 env(登录节点,需外网):** `bash setup/install_openvla_oft_env.sh` · **验证(GPU):** `sbatch setup/verify_openvla_oft.sbatch`
+**跑 OFT:** `sbatch setup/run_pilot_oft.sbatch`(默认 walls;换场景 `--export=ALL,SCEN=...,OUT=...`)。
+**踩坑:** mujoco 3.10 会崩 robosuite 1.4.1 的 `mj_fullM` → 必 pin `mujoco==3.9.0`。
+
+### 4.2 π0(openpi)接入 —— 给下一个执行者的落点
+
+- **必须新建独立 env**(π0 是 **JAX** 栈,base/OFT env 都没 jax;完全隔离,零污染)。**同样落 p33100**:
+  建议 env=`/projects/p33100/siosio/envs/openpi`、仓库=`/projects/p33100/siosio/third_party/openpi`、
+  checkpoint 走 `HF_HOME`(已在 p33100)。安装/验证/运行脚本照 `setup/*openvla_oft*` 那三件套改写。
+- **harness 已通用**:policy 工厂 `crashbench.policies.build_policy("pi0", ...)` 已注册占位
+  (`crashbench/policies/registry.py`),只差写 `crashbench/policies/pi0_policy.py`(实现 `Policy`
+  协议:`resize_size` + `act`;若 π0 也吐 action chunk,照 OFT wrapper 的 deque + `reset()` 写)。
+  `--policy pi0` 即可复用 `run_pilot.py` 与全部场景。
+- **协议不变**:跑 `--scenarios scenarios`(on-path 墙)+ `--scenarios scenarios_control`(位置扫描),
+  再 `python scripts/path3_oft_compare.py` 同款离线对照(可加一列 π0)。
+- **对照分箱按几何**(墙 x 坐标),别按场景名 —— 详见 [`ANALYSIS_path3_oft.md`](results/ANALYSIS_path3_oft.md)。
 
 ## 5. Baseline 表(solo 版,修订 PLAN §7)
 

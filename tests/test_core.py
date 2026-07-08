@@ -95,8 +95,50 @@ def test_metrics():
     print(metrics.report(rs))
 
 
+def test_policy_registry():
+    """Path 3 dispatch wiring — login-node safe (no GPU, no model load).
+
+    resolve_policy_cls only imports the wrapper module, it does NOT instantiate
+    (that would load a multi-GB model). So the OpenVLA class must resolve here,
+    unknown names must raise ValueError, and a registered-but-uninstalled backend
+    must raise an actionable RuntimeError rather than a bare ImportError.
+    """
+    from crashbench.policies import (
+        build_policy, resolve_policy_cls, canonical_name, available_backends,
+    )
+
+    assert "openvla" in available_backends()
+    assert canonical_name("OpenVLA-7B") == "openvla"     # alias + case-insensitive
+    assert canonical_name("oft") == "openvla-oft"
+
+    # openvla wrapper module imports fine in this env (torch+transformers present)
+    from crashbench.policies.openvla_policy import OpenVLAPolicy
+    assert resolve_policy_cls("openvla") is OpenVLAPolicy
+
+    # unknown backend -> ValueError with the known list
+    try:
+        canonical_name("gpt5-vla")
+        assert False, "expected ValueError for unknown backend"
+    except ValueError as e:
+        assert "unknown policy backend" in str(e)
+
+    # a registered backend whose module is missing -> actionable RuntimeError
+    # (carries the "stand it up in a SEPARATE env" hint), not a raw ImportError.
+    try:
+        resolve_policy_cls("pi0")
+        raised = None
+    except RuntimeError as e:
+        raised = str(e)
+    except ImportError:
+        assert False, "missing backend should raise RuntimeError, not bare ImportError"
+    # if openpi ever gets installed this becomes a no-op; today it must be the hint
+    if raised is not None:
+        assert "SEPARATE" in raised or "separate" in raised
+
+
 if __name__ == "__main__":
     test_scenario_roundtrip()
     test_predicates()
     test_metrics()
+    test_policy_registry()
     print("\nall core tests passed ✓")

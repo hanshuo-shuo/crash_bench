@@ -64,6 +64,12 @@ def run_episode(
     sim = env.sim_view
     replay: list[np.ndarray] = []
 
+    # Chunked policies (e.g. OpenVLA-OFT executes an 8-step open-loop action chunk) buffer
+    # actions across steps; clear that buffer at episode start so leftovers from the previous
+    # scenario never leak in. No-op for single-step policies (base OpenVLA has no reset()).
+    if hasattr(policy, "reset"):
+        policy.reset()
+
     t = 0
     outcome = Outcome.TIMEOUT
     steps_to_event = scenario.max_steps

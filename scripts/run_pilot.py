@@ -21,7 +21,7 @@ from pathlib import Path
 
 from crashbench.scenario import load_all
 from crashbench.envs import LiberoEnv
-from crashbench.policies import OpenVLAPolicy
+from crashbench.policies import build_policy, available_backends
 from crashbench.eval import run_episode
 from crashbench import metrics
 
@@ -29,6 +29,8 @@ from crashbench import metrics
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--scenarios", default="scenarios", help="dir of scenario subdirs")
+    ap.add_argument("--policy", default="openvla",
+                    help=f"VLA backend (Path 3 cross-policy). one of {available_backends()}")
     ap.add_argument("--checkpoint", default="openvla/openvla-7b-finetuned-libero-spatial")
     ap.add_argument("--unnorm_key", default="libero_spatial")
     ap.add_argument("--center_crop", action="store_true", default=True)
@@ -43,8 +45,11 @@ def main():
                          f"(scripts/author_scenario.py)")
     print(f"loaded {len(scenarios)} scenarios")
 
-    # load policy once (expensive); reuse across scenarios
-    policy = OpenVLAPolicy(
+    # load policy once (expensive); reuse across scenarios. Same on/off-path protocol,
+    # only the backend changes -> Path 3 architecture-independence claim.
+    print(f"policy backend: {args.policy}")
+    policy = build_policy(
+        args.policy,
         pretrained_checkpoint=args.checkpoint,
         unnorm_key=args.unnorm_key,
         center_crop=args.center_crop,

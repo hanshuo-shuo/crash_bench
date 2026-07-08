@@ -27,12 +27,24 @@ from pathlib import Path
 
 import numpy as np
 
-DEFAULT_OPENVLA_ROOT = os.path.expanduser("~/crash_bench/third_party/openvla")
+def _default_openvla_root() -> str:
+    """Repo whose `experiments.robot.*` we import. Defaults to base OpenVLA, but the
+    env var CRASHBENCH_OPENVLA_ROOT overrides it — Path 3 (OpenVLA-OFT) sets this to the
+    OFT repo so BOTH the env builder and the OFT policy resolve the SAME `experiments.robot`
+    namespace (the two repos share that package name and cannot coexist in one process).
+    Resolved per-call (not a frozen import-time constant) so a policy can set the env var
+    before any LiberoEnv is constructed."""
+    return os.environ.get("CRASHBENCH_OPENVLA_ROOT") or os.path.expanduser(
+        "~/crash_bench/third_party/openvla")
 
 
-def add_openvla_to_path(openvla_root: str = DEFAULT_OPENVLA_ROOT) -> None:
-    """Put the OpenVLA repo on sys.path so `experiments.robot.*` imports resolve."""
-    root = str(Path(openvla_root).resolve())
+DEFAULT_OPENVLA_ROOT = _default_openvla_root()   # back-compat module constant (base default)
+
+
+def add_openvla_to_path(openvla_root: str | None = None) -> None:
+    """Put the OpenVLA (or OFT) repo on sys.path so `experiments.robot.*` imports resolve.
+    openvla_root=None -> resolve via CRASHBENCH_OPENVLA_ROOT / base default."""
+    root = str(Path(openvla_root or _default_openvla_root()).resolve())
     if root not in sys.path:
         sys.path.insert(0, root)
 
@@ -272,8 +284,8 @@ class LiberoEnv:
     """Thin wrapper over a LIBERO task env using OpenVLA's verified helpers."""
 
     def __init__(self, task_suite: str, task_id: int, model_family: str = "openvla",
-                 resolution: int = 256, openvla_root: str = DEFAULT_OPENVLA_ROOT):
-        add_openvla_to_path(openvla_root)
+                 resolution: int = 256, openvla_root: str | None = None):
+        add_openvla_to_path(openvla_root)   # None -> CRASHBENCH_OPENVLA_ROOT / base default
         from libero.libero import benchmark
         from experiments.robot.libero.libero_utils import get_libero_env
 
@@ -359,12 +371,32 @@ class LiberoEnv:
         return get_libero_image(obs, resize_size)
 
     def policy_observation(self, obs, resize_size):
-        """Build the dict OpenVLA's get_action expects (image + proprio state)."""
+        """Build the dict the active VLA's get_action expects (image[s] + proprio state).
+
+        Auto-adapts to whichever repo is on sys.path (base OpenVLA vs OpenVLA-OFT), which
+        have DIFFERENT `get_libero_image` signatures:
+          * base OpenVLA:  get_libero_image(obs, resize_size)  -> already-resized image,
+                           single third-person view, no wrist.
+          * OpenVLA-OFT:   get_libero_image(obs)               -> raw image; resize
+                           separately, AND add a wrist camera (num_images_in_input=2).
+        We detect by trying the 2-arg (base) call; a TypeError means the OFT 1-arg helper
+        is active, so we fall back to the OFT path and attach `wrist_image`.
+        """
         from experiments.robot.libero.libero_utils import get_libero_image, quat2axisangle
-        img = get_libero_image(obs, resize_size)
-        return {
+        wrist = None
+        try:
+            img = get_libero_image(obs, resize_size)          # base OpenVLA signature
+        except TypeError:
+            from experiments.robot.libero.libero_utils import get_libero_wrist_image
+            from experiments.robot.openvla_utils import resize_image_for_policy
+            img = resize_image_for_policy(get_libero_image(obs), resize_size)   # OFT
+            wrist = resize_image_for_policy(get_libero_wrist_image(obs), resize_size)
+        out = {
             "full_image": img,
             "state": np.concatenate(
                 (obs["robot0_eef_pos"], quat2axisangle(obs["robot0_eef_quat"]), obs["robot0_gripper_qpos"])
             ),
         }
+        if wrist is not None:
+            out["wrist_image"] = wrist        # OFT reads any key containing "wrist"
+        return out
