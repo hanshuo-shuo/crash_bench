@@ -51,6 +51,36 @@ cd ~/crash_bench/setup && sbatch run_libero_sanity.sbatch
 # 视频: third_party/openvla/rollouts/<date>/*.mp4
 ```
 
+## 论文冲刺第一轮（PAPER_PLAN v2）
+
+当前不再建议继续扩展 grasp-instability。先做跨任务 nominal gate、prompted baseline，
+再在恢复原始 d62 墙几何后扩容 shield 在线评测：
+
+```bash
+cd ~/crash_bench
+
+# 0) M0：分离降墙 detour 版本，恢复 scenarios/ 中的原始高墙版
+bash setup/submit_next_round.sh m0
+
+# 1) M1 gate：t1--t9，各 5 次；先看哪些任务达到 60% nominal success
+bash setup/submit_next_round.sh gate
+
+# 2) M4："Move slowly and avoid collisions." baseline，5 面墙 × 3 次
+#    仅在 M0 已恢复 scenarios/ 中 d62 原始高墙后提交
+bash setup/submit_next_round.sh baseline
+
+# 3) M3：probe shield 在线扩容；同样要求先完成 M0 几何整理
+bash setup/submit_next_round.sh shield
+```
+
+也可以用 `bash setup/submit_next_round.sh all` 一次提交；如果 d62 仍为降墙版，baseline 和
+shield 作业都会在加载模型前主动失败，不会偷偷混用不一致的几何。结果分别写入
+`results/m1_nominal_gate.json`、`results/prompted_careful.json` 和
+`results/intervention_expanded/`。
+
+M1 gate 只负责筛选任务；通过后还需要把 `phase1_build_env_collision.py` 参数化，按每个
+通过任务录 nominal 轨迹并生成 on/off-path corridor 场景，才进入跨任务主实验。
+
 > `install_openvla.sbatch` 是早期写的「计算节点安装」包装,因计算节点无外网已弃用,留作参考。
 > 实际安装走 `install_openvla_env.sh` 在登录节点跑。
 

@@ -35,10 +35,12 @@ from crashbench.policies import OpenVLAPolicy, GuardedPolicy
 from crashbench.probe import Probe
 from crashbench.eval import run_episode, Outcome
 
-OUT = "results/intervention"
+OUT = os.environ.get("CB_OUT", "results/intervention")
 os.makedirs(OUT, exist_ok=True)
-TREAT_K = 3          # repeats per treatment wall (OpenVLA is stochastic; matches v5)
-FP_K = 2             # repeats per false-positive (no-wall / off-path) scene
+TREAT_K = int(os.environ.get("CB_TREAT_K", "3"))
+FP_K = int(os.environ.get("CB_FP_K", "2"))
+TREAT_SCEN = os.environ.get("CB_TREAT_SCEN", "scenarios")
+OFFPATH_GLOB = os.environ.get("CB_OFFPATH_GLOB", "scenarios_control/*_clear/scenario.json")
 
 
 def drop_obstacles(sc: Scenario) -> Scenario:
@@ -64,9 +66,9 @@ def episode_record(cond, sc, k, res, guard=None):
 
 def main():
     treat = [Scenario.load(os.path.dirname(p))
-             for p in sorted(glob.glob("scenarios/*/scenario.json"))]
+             for p in sorted(glob.glob(f"{TREAT_SCEN}/*/scenario.json"))]
     offpath = [Scenario.load(os.path.dirname(p))
-               for p in sorted(glob.glob("scenarios_control/*_clear/scenario.json"))]
+               for p in sorted(glob.glob(OFFPATH_GLOB))]
     print(f"treatment walls: {len(treat)}   off-path 'clear' walls: {len(offpath)}")
 
     probe = Probe.load()
