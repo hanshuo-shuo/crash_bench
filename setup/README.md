@@ -78,6 +78,27 @@ shield 作业都会在加载模型前主动失败，不会偷偷混用不一致�
 `results/m1_nominal_gate.json`、`results/prompted_careful.json` 和
 `results/intervention_expanded/`。
 
+## 墙体法向 braking 诊断
+
+不能用总 action magnitude 推断“没有刹车”：增大的量可能来自竖直、旋转或夹爪。下面的作业对
+每个动作计算末端到注入墙体最近表面的方向 `n_to_wall`，并记录 `action_xyz · n_to_wall`、真实
+末端接近速度、下一步 clearance 变化和 TTC；同时跑同一初始状态的去墙反事实。结果写到
+`results/wall_directed_braking/`，其中 `summary.json` 给出 final 2 steps 相对早期的
+obstacle-directed braking ratio，`wall_directed_braking.png` 是随撞击临近的四个量。
+
+```bash
+cd ~/crash_bench
+bash setup/submit_wall_directed_braking.sh
+
+# 建议的稳健性版本：每个场景 5 次；默认是 3 次
+CB_REPEATS=5 bash setup/submit_wall_directed_braking.sh
+```
+
+作业提交后可用 `squeue -j <jobid>` 查看状态，完成后看
+`cat results/wall_directed_braking/summary.json`。只有当 near-impact 的朝墙动作投影没有下降、
+clearance 仍在下降、真实朝墙速度仍为正且 TTC 没有被拉长时，才可以严格写“the policy does not
+brake”。
+
 M1 gate 只负责筛选任务；通过后还需要把 `phase1_build_env_collision.py` 参数化，按每个
 通过任务录 nominal 轨迹并生成 on/off-path corridor 场景，才进入跨任务主实验。
 
