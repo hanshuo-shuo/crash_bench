@@ -342,6 +342,34 @@ crashes anyway." Details: [`results/ANALYSIS_path3_oft.md`](results/ANALYSIS_pat
 
 ---
 
+### Cross-architecture probe fit
+
+The same frozen-capture probe fit (PCA-50 + L2 logistic regression, leave-one-scenario-out) asks a
+separate question from the crash-rate result above: **is imminent collision linearly decodable from
+the policy's own hidden state?** The values below are copied from
+[`results/ANALYSIS_path3_probe.md`](results/ANALYSIS_path3_probe.md) and the four probe summaries.
+
+| Model | hidden-state tap | AUC (T=1 / 3 / 5 / 10) | off-path confound | Pre-crash braking observed? |
+|---|---|---|---|---|
+| **OpenVLA (base)** | LLM final token, post-norm | **0.993 / 0.992 / 0.998 / 1.000** | on **−0.297** vs off **−4.998** ≈ no-wall **−5.284** | **No** — 0.960 vs 0.550 translation magnitude |
+| **OpenVLA-OFT** | LLM final token, post-norm | — / **0.987 / 0.903 / 0.919** | on **−1.922** vs off **−4.797** ≈ no-wall **−4.841** | **No** — 0.973 vs 0.498 translation magnitude |
+| **π0 / openpi (VLM tap)** | PaliGemma VLM final prefix token | 0.561 / 0.768 / 0.728 / 0.784 | on **−3.111** vs off **−4.920** ≈ no-wall **−4.897** | **No** — 0.820 vs 0.665 translation magnitude |
+| **π0 / openpi (action-expert tap)** | action-expert state token (`suffix_out[:, 0]`) | 0.714 / **0.902** / 0.725 / 0.868 | **Not collected** for this tap | **No** — 0.844 vs 0.605 translation magnitude |
+
+Here “off-path confound” compares the mean crash logit on the clearly safe off-path wall with the
+on-path wall and no-wall reference. For the action-expert tap, the off-path rerun was not completed,
+so no confound claim is made for that row. The braking check is an action-translation-magnitude
+check; it is not a whole-arm, wall-normal braking proof.
+
+The interpretation is deliberately asymmetric. **OpenVLA is very strong** (AUC about 0.99–1.00),
+and **OpenVLA-OFT is also strong**, including **0.903 at T=5**. For **π0**, the VLM tap is weak,
+while the action-expert tap is stronger (peaking at **0.902 at T=3**) but non-monotonic and affected
+by sparse positives. Thus π0 is **partial/tap-dependent**, not a result to inflate into the same
+strength as OpenVLA or OFT. Across the experiments, the supported claim is that **collision
+imminence is linearly decodable in the model's internal representation**; it is not that all three
+architectures encode it with equal strength. None of the four tap-level checks shows pre-crash
+braking.
+
 ## 7. Scope — why the static wall was the first to work (2 of 3 negatives now understood)
 
 To make this a *benchmark* we tried other hazard types. The three attempts below each failed for a
