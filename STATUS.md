@@ -22,7 +22,7 @@ VLA(如 OpenVLA)几乎只在**成功演示**上训练,没见过「快出事」�
 | **Phase 1** pilot 决策门 | ✅ 完成 | 注墙挡路 → crash **100% (5/5)**,强 go 信号 |
 | **Phase 2-①** OOD 对照 | ✅ 完成 | **剂量-响应,REFUTED**:撞是「挡路」不是「OOD 泛化差」,p=0.0002 |
 | **Phase 2-②** witness 可恢复性 | ✅ 完成 | 5/5 安全可恢复(崩溃可避免、场景公平);任务完成 witness 需 RRT* |
-| **Phase 2-③** self-report probe | ✅ 完成 | **「知道却不避」**:线性探针从冻结隐藏层解码撞击 **AUC 0.99–1.0**,临撞不减速,off-path confound 排除 → 是 policy/安全缺口不是感知缺口 |
+| **Phase 2-③** self-report probe | ✅ 完成 | **「知道却不避」**:线性探针从冻结隐藏层解码撞击 **AUC 0.99–1.0**; 几何对齐复验中，临撞朝墙 command 在 **22/25** 条 episode 增大、末窗无 EEF retreat，off-path confound 排除 → 是 policy/安全缺口不是感知缺口 |
 | **Path 1-1a** 探针→因果干预 | ✅ 完成 | **「信号是因果的」**:同一探针触发 retreat → crash **100%→0%**、冲击 **322N→0N**,off-path/no-wall **0/22** 误触发。把诊断升级为因果干预(§见下 / [`results/ANALYSIS_intervention.md`](results/ANALYSIS_intervention.md)) |
 | **Path 1-1b** 激活 steering | 🟡 NEGATIVE | readout 注入不刹车(crash 100% 全 alpha)。诊断证非 bug:crash 方向~90%正交于 action readout → **detector≠controller**,反证 1a 结构化干预才对。fallback=中层注入(未做)。[`results/ANALYSIS_steering.md`](results/ANALYSIS_steering.md) |
 | **Phase 2-④a** no-wall(in-distribution)撞击 | 🟡 **两个负结果** | 想证「不注墙也能撞」;两次都没撞,但拼出了机制(见下)。OOD 反驳本来就被 2-① 堵死了,所以这条非必需 |

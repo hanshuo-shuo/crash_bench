@@ -9,12 +9,14 @@ puts OpenVLA into a pre-crash state and measures the **crash rate** instead.
 One clean result, plus a preliminary fix:
 
 1. **OpenVLA drives into a clearly visible wall on its reach path — 100% of the time (15/15).**
-   No slow-down. (§3)
+   A follow-up, geometry-aligned diagnostic confirms that its final commands do not brake *toward
+   the wall* (§6).
 2. **It is not just "weird object confusion."** Move the *same* wall off the path and the crash
    disappears (0/33). So *where* the wall is matters — placement, not novelty. (§4)
 3. **The crash is avoidable.** A scripted retreat reaches 0 N on all 5 walls and the test isn't rigged. (§5)
 4. **The coming collision is already in the model's hidden state.** A simple linear probe predicts
-   the crash at ~100% AUC before impact — yet the policy never brakes. It "has the information"
+   the crash at ~100% AUC before impact; across 5 walls × 5 repeats, the final wall-directed
+   command increases in 22/25 episodes and never commands EEF retreat. It "has the information"
    but doesn't act on it. (§6)
 5. **Preliminary:** feed that probe signal into a retreat and the crash goes **100% → 0%**. This only
    *stops* the arm; it does not finish the task. A first step, not a solution. (§6b)
@@ -142,8 +144,14 @@ fact "I'm about to crash" already written in the model's own numbers?* It is:
 
 - **Decodable:** the probe predicts the crash at **AUC 0.99–1.0** before impact. The information is
   clearly there.
-- **No braking:** in the last ≤2 steps before impact the action is actually *bigger* than a normal
-  step (action magnitude **0.96 vs 0.55**) — it speeds in, not slows.
+- **No obstacle-directed braking (geometry-aligned):** the prior action-norm comparison (**0.96 vs
+  0.55**) is only a coarse cue: norm can increase in vertical, rotational, or gripper dimensions.
+  We therefore reran the five walls five times each and projected each translational command onto
+  the unit vector from EEF to the closest wall surface. In the final 0–2 actions before impact,
+  that wall-directed command **increased in 22/25 episodes** (equal in 2, decreased in 1); realized
+  wall-directed EEF velocity increased in **24/25**, and clearance closed faster in **24/25**. No
+  final-window action commanded EEF retreat. All 25 wall rollouts crashed; their matched no-wall
+  rollouts were 0/25 crashes.
 - **It's "crash coming," not "wall present":** the probe stays quiet for an off-path (visible but
   safe) wall — it reads like *no wall at all*. So it's tracking the collision, not just the pixels.
 
@@ -151,12 +159,21 @@ fact "I'm about to crash" already written in the model's own numbers?* It is:
 
 ![self-report probe](setup/figures/fig_selfreport_probe.png)
 
+The paired, episode-balanced braking ratio (near-impact positive wall projection / early positive
+wall projection) has median **1.195** (IQR **1.08–1.71**); a value below one would be evidence of
+command braking. The raw pooled-step ratio is 12.09, but it is dominated by long d62 trajectories,
+so we do **not** use it as a headline effect size. This directional check is stronger than action
+magnitude, but its clearance/TTC are EEF-to-wall quantities: the crash predicate also includes
+forearm links, so it is not a whole-arm signed-distance proof. Full data interpretation:
+`results/ANALYSIS_selfreport.md` (wall-directed follow-up).
+
 **On the horizon axis.** Relabelling the same frozen captures by each frame's *steps-to-crash*
 shows the same gap in time: the crash-imminence logit ramps **through the shield threshold ~5 steps
 before impact** (T-10 mean −1.98 → T-5 **+2.39** → T-1 **+2.65**), while the commanded action
-magnitude **rises** over the exact same window (0.72 → 0.86 → **0.92**). It knows by T-5 and keeps
-accelerating into the wall. Off-path walls stay flat and low (~−4.1) throughout — the probe does not
-flag their safe glancing contacts.
+magnitude **rises** over the exact same window (0.72 → 0.86 → **0.92**). Magnitude alone does not
+set direction; the wall-normal follow-up above shows that this information is not converted into a
+sustained obstacle-directed brake. Off-path walls stay flat and low (~−4.1) throughout — the probe
+does not flag their safe glancing contacts.
 
 ![horizon relabel — logit crosses threshold at T-5 while action keeps climbing](setup/figures/fig_horizon.png)
 
@@ -413,5 +430,3 @@ Remaining, if we push further:
 - **Consumer ② fine-tune** — export the witness to RLDS/HDF5 (`regenerate_libero_dataset.py` schema →
   `rlds_dataset_builder` → TFDS) and LoRA-finetune OpenVLA, **mixing in original libero_spatial demos**
   (one 332-step trajectory alone overfits). Blocked on having more than one witness.
-
-

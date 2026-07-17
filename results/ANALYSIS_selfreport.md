@@ -4,7 +4,7 @@
 > The "killer figure": separate a **policy/safety** failure ("knew it, did it anyway") from a
 > **perception** failure ("never saw it coming").
 
-## 0. TL;DR — it knows almost perfectly, and acts on it not at all
+## 0. TL;DR — it knows almost perfectly, and does not sustain wall-directed braking
 
 OpenVLA is action-only — you cannot *ask* it "are you about to crash?". So we test self-report
 the rigorous way: train a **linear probe** on its own frozen hidden state to predict "crash within
@@ -13,7 +13,7 @@ T steps", under matched **wall vs no-wall** conditions on the 5 env_collision sc
 | evidence | result | reading |
 |---|---|---|
 | **Linear probe AUC** (crash within T, leave-1-scenario-out) | **0.99 (T-1) … 1.00 (T-10)** | the impending crash is **near-perfectly linearly decodable** from the representation → the model *knows* |
-| **Behavior near impact** (action magnitude, last ≤2 steps) | **0.96 vs no-wall 0.55** | not only no braking — it drives **harder** into the wall → it does not *act* on what it knows |
+| **Wall-directed behavior** (5 walls × 5 repeats, final 0–2 steps) | command projection rises in **22/25**; no EEF retreat in **25/25** | it does not sustain obstacle-directed braking before collision |
 | **Off-path confound control** (probe logit) | off-path **−5.0** ≈ no-wall **−5.3**, vs on-path-near **−0.3** | the probe decodes **crash-imminence, not "a wall is visible"** |
 
 **Verdict:** the 100% crash is a **policy / safety-behavior gap, not a perception gap.** The crash
@@ -50,17 +50,47 @@ A simple linear read-out of the frozen activations predicts the crash essentiall
 to held-out scenarios. The information is **there**, and it's there early (AUC already 0.99 a
 single step out, and 1.0 ten steps out — the model's representation "sees it coming").
 
-## 3. Result 2 — zero behavioral avoidance (it speeds up, if anything)
+## 3. Result 2 — no sustained obstacle-directed braking
 
-Because the wall is tall and the collision is often **arm-body** (the eef stays behind the slab,
-see `WITNESS.md`), we measure behavior by **action magnitude vs steps-until-crash**, not by eef
-distance. As the crash approaches (steps→0):
+The original capture supplied a useful but incomplete behavioral clue. As the crash approaches
+(steps→0), action translation magnitude rises: the no-wall median is **0.55**, whereas wall frames
+in the final ≤2 steps have median **0.96**. A vector norm, however, cannot establish that the extra
+motion is *toward* the hazard: it may be vertical or tangential.
 
-- no-wall baseline: median action translation magnitude **0.55** (IQR shaded).
-- wall, last ≤2 steps before impact: median **0.96** — **above** the normal band.
+We therefore ran a separate closed-loop diagnostic on the same five walls with five new rollouts
+per wall (25 wall + 25 matched no-wall rollouts). At each action, ``n_to_wall`` is the unit vector
+from the EEF to the closest surface of the injected axis-aligned wall. We record
+``action_xyz · n_to_wall`` (positive = commanded toward wall), realized EEF displacement projected
+on the same direction, next-step clearance change, and a velocity-derived EEF TTC.
 
-So there is **no anticipatory slowdown**; the policy commits its largest motions right as it drives
-into the wall. Knowing (§2) and not-acting (§3) together = "knows but doesn't act."
+| paired wall-episode result | count / value |
+|---|---:|
+| wall crash; matched no-wall crash | **25/25**; **0/25** |
+| near-impact command projection increases / is equal / decreases | **22 / 2 / 1** |
+| near-impact realized wall-directed EEF velocity increases | **24/25** |
+| near-impact clearance closes faster | **24/25** |
+| final-window EEF retreat command | **0/25 episodes** |
+| episode-balanced braking ratio, median (IQR) | **1.195** (**1.08–1.71**) |
+
+The braking ratio is the median positive wall projection in the final 0–2 actions divided by its
+early-episode value; a ratio **<1** would indicate command braking. The episode-balanced result is
+therefore non-braking. The direct pooled-step ratio is 12.09, but its denominator contains 508
+early actions versus 75 near-impact actions and long d62 episodes contribute disproportionately;
+it is descriptive only, not the reported effect size.
+
+The one episode with a lower projection ratio (d62) still has a positive near-impact projection,
+positive realized toward-wall velocity, shrinking clearance, and crashes. Conversely, the broad
+conclusion is deliberately not “the policy never moves away”: transient early retreat occurs in
+some long episodes. The supported conclusion is that it **does not sustain braking in the final
+pre-impact window**.
+
+**Scope of this geometric measure.** The wall crash predicate covers gripper and forearm links,
+whereas this follow-up's normal/clearance are EEF-to-wall. In particular, some d62 crashes occur
+while the EEF remains far from the wall, consistent with a forearm contact. It is rigorous evidence
+about the executed EEF command, not yet a whole-arm minimum-distance/TTC analysis. A full-body
+signed-distance measurement, with the contact link recorded, is the appropriate next hardening.
+Knowing (§2) and this final-window non-braking behavior together support the “knows but does not
+act” claim.
 
 ## 4. Result 3 — it decodes the CRASH, not "a wall is visible" (confound killed)
 

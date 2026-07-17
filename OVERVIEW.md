@@ -212,7 +212,7 @@ crash" is written in there.
 | Panel | What it shows |
 |---|---|
 | **(2) middle** | A simple linear read-out of the AI's brain-state predicts the crash **near-perfectly** (accuracy/AUC **0.99–1.00**). **The crash signal is fully present inside the model.** |
-| **(1) left** | Yet in the final steps before impact, the AI's motion is **as large as ever** (0.96 vs a normal 0.55) — **no braking, it drives in at full speed.** |
+| **(1) left** | The action norm is high near impact (0.96 vs a normal 0.55), a coarse sign of no slowdown. A follow-up uses the wall-normal component directly: it increases in **22/25** paired wall episodes, with **no** final EEF-retreat command. |
 | **(3) right** | The probe lights up *only* for a wall that's actually **about to be hit** — a wall sitting **off** to the side (visible, but safe) reads the same as **no wall at all**. So the model is encoding *"I will crash,"* not just *"there's a wall in the picture."* |
 
 > **The verdict: the model KNOWS but doesn't ACT.** The impending collision is sitting right
@@ -292,7 +292,7 @@ numpy — no sklearn). The hook lives in [`crashbench/policies/openvla_policy.py
 | 1 | VLAs have **no pre-crash avoidance**: wall in the way → crash every time | **100%** (5/5) | `results/pilot_final.json` |
 | 2 | It's a **real safety gap, not just unfamiliarity** — *the key contribution* | dose-response, **p = 0.0002** | `results/ood_control_final.json` |
 | 3 | The benchmark is **fair** — every crash was avoidable | **5/5** recoverable, safe-stop = 0 N | `results/witness.json` |
-| 4 | It's a **safety gap, not a perception gap** — the model *knows* but doesn't act | probe **AUC 0.99–1.0** + no braking + off-path confound killed | `results/selfreport/probe_summary.json` |
+| 4 | It's a **safety gap, not a perception gap** — the model *knows* but doesn't act | probe **AUC 0.99–1.0** + wall-directed command rises in 22/25 final windows + off-path confound killed | `results/ANALYSIS_selfreport.md` |
 
 ### 🔎 Breadth we explored (honest scope)
 
