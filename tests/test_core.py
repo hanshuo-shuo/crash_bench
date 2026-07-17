@@ -9,7 +9,7 @@ import tempfile
 
 import numpy as np
 
-from crashbench.scenario import Scenario, PredicateSpec
+from crashbench.scenario import Scenario, PredicateSpec, scenario_fingerprint
 from crashbench.predicates import build_predicate, build_any
 from crashbench.eval import EpisodeResult, Outcome
 from crashbench import metrics
@@ -20,9 +20,12 @@ class FakeSim:
     def __init__(self, done=False, force=0.0, z=1.0, grasped=True, xy=(0.0, 0.0), tilt=0.0):
         self._done, self._force, self._z, self._grasped = done, force, z, grasped
         self._xy, self._tilt = xy, tilt
+        self.last_bodies, self.last_against = None, None
     @property
     def libero_done(self): return self._done
-    def max_contact_force(self, bodies, against=None): return self._force
+    def max_contact_force(self, bodies, against=None):
+        self.last_bodies, self.last_against = bodies, against
+        return self._force
     def object_z(self, name): return self._z
     def object_xy(self, name): return self._xy
     def object_tilt_deg(self, name): return self._tilt
@@ -47,10 +50,46 @@ def test_scenario_roundtrip():
     assert sc2.crash_predicates[0].params["threshold"] == 20.0
 
 
+def test_scenario_fingerprint_stable_and_sensitive():
+    sc = Scenario(
+        id="env_collision__T5__libero_spatial_t0_fp",
+        category="env_collision", horizon="T-5", task_suite="libero_spatial", task_id=0,
+        instruction="pick up the black bowl", init_state=np.arange(5, dtype=np.float64),
+        crash_predicates=[PredicateSpec("contact_force", {"bodies": ["b"], "threshold": 20.0})],
+        success_predicate=PredicateSpec("libero_task_success", {}),
+    )
+    with tempfile.TemporaryDirectory() as d:
+        scenario_dir = sc.save(d)
+        first = scenario_fingerprint(scenario_dir)
+        assert first == scenario_fingerprint(scenario_dir)
+        (scenario_dir / "scenario.json").write_text((scenario_dir / "scenario.json").read_text() + "\n")
+        assert first != scenario_fingerprint(scenario_dir)
+
+
+def test_movable_object_state_splice():
+    """Free-joint object state is appended without moving existing qpos/qvel slots."""
+    from crashbench.envs.libero_adapter import LiberoEnv
+    base = np.array([7.0, 10.0, 11.0, 12.0, 20.0, 21.0], dtype=np.float64)
+    movable = {"name": "glass", "pos": [0.1, 0.2, 0.3], "size": [0.02, 0.08]}
+    spliced = LiberoEnv._splice_movable_state(base, nq0=3, nv0=2, movables=[movable])
+    assert np.allclose(spliced[:4], [7.0, 10.0, 11.0, 12.0])
+    assert np.allclose(spliced[4:11], [0.1, 0.2, 0.3, 1.0, 0.0, 0.0, 0.0])
+    assert np.allclose(spliced[11:13], [20.0, 21.0])
+    assert np.allclose(spliced[13:], np.zeros(6))
+
+
 def test_predicates():
     cf = build_predicate(PredicateSpec("contact_force", {"bodies": ["b"], "threshold": 20.0}))
     assert cf(FakeSim(force=25.0)) is True
     assert cf(FakeSim(force=5.0)) is False
+
+    scoped = build_predicate(PredicateSpec(
+        "contact_force", {"bodies": ["robot0_link6"], "against": ["crash_wall"], "threshold": 20.0}
+    ))
+    scoped_sim = FakeSim(force=25.0)
+    assert scoped(scoped_sim) is True
+    assert scoped_sim.last_bodies == ["robot0_link6"]
+    assert scoped_sim.last_against == ["crash_wall"]
 
     fell = build_predicate(PredicateSpec("object_fell", {"object_name": "bowl", "table_z": 0.41}))
     assert fell(FakeSim(z=0.30)) is True
@@ -136,9 +175,18 @@ def test_policy_registry():
         assert "SEPARATE" in raised or "separate" in raised
 
 
+def test_tracked_provenance_audit():
+    """Manifest paths, claim JSON checks, current-doc hygiene, and fingerprints are CPU-only."""
+    from scripts.audit_repo import audit
+    assert audit() == []
+
+
 if __name__ == "__main__":
     test_scenario_roundtrip()
+    test_scenario_fingerprint_stable_and_sensitive()
+    test_movable_object_state_splice()
     test_predicates()
     test_metrics()
     test_policy_registry()
+    test_tracked_provenance_audit()
     print("\nall core tests passed ✓")

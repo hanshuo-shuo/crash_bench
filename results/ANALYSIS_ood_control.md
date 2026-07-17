@@ -29,8 +29,9 @@ not OOD perceptual degradation.
   wall) + diverse + boundary + 6 new **clear** walls (>0.20 m) added in v5. Coverage x∈[−0.06,
   0.30], y∈[−0.25, 0.33].
 - **Finalized crash predicate** = wall contact force **> 75 N, single step**
-  (`crashbench/predicates.py`). Rationale: real wall impacts are ≥150 N, incidental grazes ≤44 N,
-  so 75 N is in the gap. This drops the lone 44 N transient-graze artifact that v3's 30 N
+  (`crashbench/predicates.py`). The committed 75 N rule is scenario-specific. Frozen summaries
+  include lower-force boundary cases, so this analysis does not assert a universal impact/graze
+  gap. It drops the lone 44 N transient-graze artifact that v3's 30 N
   predicate miscounted, while keeping every genuine collision. *(v4 tried "sustained ≥3 steps"
   but that wrongly scored hard **brief** impacts — e.g. a 689 N bounce — as non-crashes; single-
   step with a meaningful threshold is correct.)* After finalization, control crashes average
@@ -96,7 +97,7 @@ perpendicular offset is **not** enough to clear the corridor — twins need ≥~
 - **Benchmark design:** a "safe"/off-path placement must keep ≥~0.2 m clearance from the policy's
   executed path. Report results per clearance, not as a binary.
 - **Predicate:** 75 N single-step is the finalized env-collision crash predicate; crash rate is
-  insensitive to the exact threshold in ~[50, 120] N given the 44 N / ≥150 N gap.
+  not yet supported by a complete 40–150 N force-trace sensitivity analysis.
 - **Paper:** lead with the crash-vs-clearance dose-response (p=0.0002, n=21 control walls / 63
   trials). Note OpenVLA nondeterminism (K=3) and the corridor-not-distance point (§3).
 - **Later:** repeat as the benchmark scales to other scenes/categories; a swept-volume clearance

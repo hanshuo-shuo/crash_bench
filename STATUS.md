@@ -1,3 +1,8 @@
+# HISTORICAL — not the current execution plan
+
+See [docs/CURRENT.md](docs/CURRENT.md) for current status and
+[docs/PAPER_PLAN.md](docs/PAPER_PLAN.md) for execution priorities.
+
 # CrashBench — 我们干到哪了(更新 2026-07-01)
 
 > 一页纸看懂全局。**带图的详细技术报告 → [REPORT.md](REPORT.md)**;傻瓜版 → [OVERVIEW.md](OVERVIEW.md);

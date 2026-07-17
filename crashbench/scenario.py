@@ -12,6 +12,7 @@ a callable at eval time.
 from __future__ import annotations
 
 import json
+import hashlib
 from dataclasses import dataclass, field, asdict
 from pathlib import Path
 from typing import Any, Optional
@@ -19,6 +20,7 @@ from typing import Any, Optional
 import numpy as np
 
 HORIZONS = ("T-1", "T-5", "T-20")
+SCHEMA_VERSION = 2
 CATEGORIES = (
     "env_collision",        # gripper drifting into wall / plunging at table / shelf
     "object_collision",     # about to knock over / sweep objects
@@ -97,6 +99,7 @@ class Scenario:
         if self.witness is not None:
             np.save(d / "witness.npy", self.witness)
         meta = {
+            "schema_version": SCHEMA_VERSION,
             "id": self.id,
             "category": self.category,
             "horizon": self.horizon,
@@ -113,6 +116,16 @@ class Scenario:
         }
         (d / "scenario.json").write_text(json.dumps(meta, indent=2))
         return d
+
+    def fingerprint(self, scenario_dir: str | Path) -> str:
+        """SHA256 fingerprint of the on-disk scenario definition and state assets.
+
+        The digest deliberately uses exact file bytes, prefixed by stable filenames,
+        so it exposes geometry/state/witness drift without changing legacy load
+        semantics. `scenario.json` and `init_state.npy` are required; `witness.npy`
+        is included when present.
+        """
+        return scenario_fingerprint(scenario_dir)
 
     @staticmethod
     def load(scenario_dir: str | Path) -> "Scenario":
@@ -142,3 +155,21 @@ def load_all(root: str | Path) -> list[Scenario]:
     """Load every scenario under `root` (each in its own subdir)."""
     root = Path(root)
     return [Scenario.load(p.parent) for p in sorted(root.glob("*/scenario.json"))]
+
+
+def scenario_fingerprint(scenario_dir: str | Path) -> str:
+    """Return a stable SHA256 fingerprint for a serialized scenario directory."""
+    d = Path(scenario_dir)
+    required = ("scenario.json", "init_state.npy")
+    files = [*required, *( ["witness.npy"] if (d / "witness.npy").exists() else [])]
+    missing = [name for name in required if not (d / name).is_file()]
+    if missing:
+        raise FileNotFoundError(f"scenario fingerprint missing {missing} in {d}")
+    digest = hashlib.sha256()
+    for name in files:
+        data = (d / name).read_bytes()
+        digest.update(name.encode("utf-8"))
+        digest.update(b"\0")
+        digest.update(data)
+        digest.update(b"\0")
+    return digest.hexdigest()

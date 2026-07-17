@@ -116,8 +116,9 @@ treatment 是 **3–9 步**(伸手阶段)撞,v1 control 是 **27–31 步**才�
 (false negative);**v5** 修好谓词 + 加重复 + 补 clear 墙,拿到扎实结论。
 
 **v5 最终设定**([`scripts/phase1_ood_control_v5.py`](../scripts/phase1_ood_control_v5.py)):
-- **最终版 crash 谓词** = 墙接触力 **>75 N,单步**([`crashbench/predicates.py`](predicates.py))。理由:真撞 ≥150 N、
-  蹭一下 ≤44 N,75 N 卡在中间,滤掉 v3 那个 44 N 的蹭、保留所有真撞。(单步即可;持续-N-步是错的,会漏掉硬反弹。)
+- **最终版 crash 谓词** = 墙接触力 **>75 N,单步**([`crashbench/predicates.py`](predicates.py))。这是当前
+  scenario-specific 定义；冻结汇总包含较低力的边界 case，因此不能继续声称普适的撞击/擦碰 force gap。
+  单步即可；持续-N-步会漏掉硬反弹。
 - **每面墙重复 3 次**:发现 **OpenVLA 跑起来不确定**(同场景 v3/v4 结果不同),单跑在过渡带有噪声;重复 3 次取平均。
 - **补 6 面 clear 墙**(clearance>0.20),控制墙共 **21 面 / 63 trials**,空间覆盖 x∈[−0.06,0.30] y∈[−0.25,0.33]。
 

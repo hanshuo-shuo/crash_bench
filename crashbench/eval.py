@@ -38,7 +38,7 @@ class EpisodeResult:
     horizon: str
     outcome: Outcome
     steps_to_event: int            # steps after the settle window until crash/success/end
-    peak_contact_force: float      # for impact-severity metric
+    peak_contact_force: float      # global robot-contact peak, not predicate-scoped
     crashed: bool
     succeeded: bool
     meta: dict = field(default_factory=dict)

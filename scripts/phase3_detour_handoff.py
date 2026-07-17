@@ -1,7 +1,8 @@
 #!/usr/bin/env python
-"""Phase 3 — consumer ①: probe-triggered DETOUR-COMPLETE tool hand-off (end-to-end).
+"""Historical low-wall d62 detour existence demo (not a general recovery runner).
 
-Proves the full chain on d62: bare OpenVLA CRASHes into the (lowered, still-valid) wall; the same
+Demonstrates the full chain only on the separately identified lowered d62 wall: bare OpenVLA
+crashes into that low-wall geometry; the same
 policy wrapped in GuardedPolicy with recovery=DetourComplete detects imminent crash via the probe,
 hands off to the witnessed full-arm collision-free detour, and COMPLETES the pick-and-place ->
 eval.run_episode returns RECOVERY_SUCCESS (not CRASH, not just SAFE_ABORT).
@@ -27,7 +28,7 @@ from crashbench.probe import Probe
 from crashbench.recovery import DetourComplete, WitnessReplay
 from crashbench.eval import run_episode, Outcome
 
-SCEN = "scenarios/env_collision__T5__libero_spatial_t0_wall_d62"
+SCEN = "scenarios_detour_lowwall/env_collision__T5__libero_spatial_t0_wall_d62__lowwall_detour_v1"
 TARGET, PLATE = "akita_black_bowl_1", "plate_1"
 RECOVERY_MAX_STEPS = 500          # witness detour is ~379 steps; crash-horizon (220) is too short
 OUT = "results/phase3_detour"

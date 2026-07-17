@@ -2,7 +2,7 @@
 # M3: online probe shield expansion.
 #
 # IMPORTANT: run the M0 geometry hygiene first. The committed scenarios/d62 wall must be
-# restored to the original tall geometry; the lowered d62 belongs in scenarios_detour/ only.
+# restored to the original tall geometry; the lowered d62 belongs in scenarios_detour_lowwall/ only.
 # This preflight refuses to mix the lowered detour geometry into the original shield dataset.
 #
 # Default budget: 5 treatment walls x 3 = 15 baseline + 15 guarded episodes, and 5 no-wall
@@ -38,7 +38,7 @@ half_z = float(d["obstacles"][0]["size"][2])
 if abs(half_z - 0.22) > 1e-6:
     raise SystemExit(
         f"M0 geometry check failed: {p} has wall half-height {half_z}; "
-        "restore the original 0.22 in scenarios/ and keep the lowered copy in scenarios_detour/."
+        "restore the original 0.22 in scenarios/ and keep the lowered copy in scenarios_detour_lowwall/."
     )
 print(f"M0 geometry check passed: d62 wall half-height={half_z}")
 PY

@@ -65,8 +65,9 @@ The shield thresholds on a single per-episode logit, so the safe window is *exac
 
 ## Scope / honesty
 
-- **Small episode n** (5 on-path, 5 no-wall, 15 off-path-clear). The *frame* pool behind it is
-  large (509 imminent / 4400 benign), but the shield metrics are episode-level, so the window
+- **Small episode n** (5 on-path, 5 no-wall, 15 off-path-clear). The *frame* pool behind it has
+  53 imminent frames and 4,400 benign frames; 509 is the broader pre-crash-frame count, not the
+  imminent-frame count. Shield metrics are episode-level, so the window
   edges are set by single worst-case episodes (both edges happen to be the d85 wall). The
   closed-loop 1-1a run (K-repeats → 15/10/12) is the statistically harder validation; this
   sweep shows the *slack around* that operated point.

@@ -3,8 +3,9 @@
 > **Result:** subtracting `alpha · d_unit` (the probe's crash direction) from OpenVLA's final
 > RMSNorm output does **not** brake the crash — crash stays **100 % at every alpha** (0→80),
 > peak force is flat/noisy, action magnitude is unchanged (~0.8). A diagnostic proves this is a
-> **true null, not a bug**: the hook fires (the action moves with alpha), but the crash direction
-> is **~90 % orthogonal to the action-token readout** (‖W_action·d‖ = 0.74 of ‖W_full·d‖ = 7.69),
+> **true null, not a bug**: the hook fires (the action moves with alpha), but less than 10% of the
+> probe-direction readout norm is retained on the action-token slice (‖W_action·d‖ = 0.74 of
+> ‖W_full·d‖ = 7.69),
 > so nudging it barely touches the action bins and, when alpha is large enough to matter, moves
 > the action in an arbitrary (non-braking) direction. **The direction that *decodes* "I will
 > crash" is not the direction that *controls* the action.** This is exactly why 1a's *structured
@@ -54,8 +55,9 @@ small-n noise, n=5; it does not trend with alpha.)
 - **Hook fires** — ‖action(alpha) − action(0)‖ = 0 → 0.11 → 0.44 → 0.37 → **0.73** at alpha=1000.
   The action *does* move, so steering is active (not a no-op bug). At alpha=1000 the action even
   *grows* (`[0.505, 0.873, …]`) — the opposite of braking.
-- **Readout is ~orthogonal** — ‖W_full · d‖ = **7.688**, but ‖W_action(256) · d‖ = **0.742**.
-  Only ~10 % of the crash direction's readout energy lands on the 256 action-token bins; the rest
+- **Readout norm is concentrated outside action tokens** — ‖W_full · d‖ = **7.688**, but
+  ‖W_action(256) · d‖ = **0.742**. Less than 10 % of the probe-direction readout norm is retained
+  on the 256 action-token slice; this is a norm ratio, not a measured angle. The rest
   shifts non-action vocab. So the per-unit-alpha action-logit shift is tiny, and you only perturb
   actions at absurd alpha — in an uncontrolled, non-braking direction.
 

@@ -220,6 +220,9 @@ def make_figure(rows, eps, anchor, safe_window, path):
 
 
 def main():
+    outputs = [f"{OUT}/sweep.json", f"{OUT}/summary.json"]
+    if any(os.path.exists(p) for p in outputs) and os.environ.get("CB_OVERWRITE") != "1":
+        raise SystemExit("refusing to overwrite shield outputs; set a new output root or CB_OVERWRITE=1 after review")
     eps, probe = load_episodes()
     thresholds = np.round(np.arange(-6.0, 6.01, 0.1), 4)
     rows, counts = sweep(eps, thresholds)

@@ -1,4 +1,4 @@
-"""Probe-guarded policy (Path 1-1a headline, PLAN.md §11 Stage 1).
+"""Probe-guarded policy for the scoped base-wall intervention.
 
 Wraps a base VLA (OpenVLA, capture_hidden=True) with the frozen self-report probe. On
 every step it runs the base policy, reads the base's last hidden state, and scores the
@@ -7,10 +7,9 @@ through unchanged. The first time the logit crosses threshold ("I am about to cr
 LATCHES into abort: it hands control to an online RetreatHold controller for the rest of
 the episode (retreat from the wall + hold, the witnessed 0 N safe recovery).
 
-This turns the probe from a passive *detector* (R4: "knows but does not act") into a
-causal *intervention* — using the model's own "I will crash" signal to fix the behaviour.
-The wrapper is model-agnostic via the Policy protocol, so `crashbench.eval.run_episode`
-drives it identically to the bare policy and the two are directly comparable.
+The validated scope is OpenVLA base, a wall-trained probe, the on-path wall crash mode, and
+a structured RetreatHold controller. It is not general collision avoidance or general recovery.
+The wrapper is model-agnostic at the interface level, but that does not expand the evidence scope.
 """
 
 from __future__ import annotations
@@ -23,7 +22,7 @@ from crashbench.recovery import RetreatHold
 
 class GuardedPolicy:
     def __init__(self, base, probe: Probe, thr: float | None = None, recovery=None):
-        """base: an OpenVLAPolicy(capture_hidden=True). probe: a loaded Probe.
+        """base: a hidden-state-capable policy; probe: a loaded wall probe.
         thr: override the probe's stored threshold (else uses probe.thr)."""
         self.base = base
         self.probe = probe

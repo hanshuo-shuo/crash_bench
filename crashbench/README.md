@@ -1,45 +1,40 @@
-# crashbench/ — package layout & usage
+# `crashbench` package
 
-The Python package implementing CrashBench (PLAN.md §5). Substrate = LIBERO/robosuite,
-reusing OpenVLA's verified obs/action bridge.
+This package contains the reusable simulation-facing substrate for the controlled
+CrashBench studies. Experiment-specific logic remains in `scripts/`.
 
-## Modules
-
-| file | what |
+| Module | Current role |
 |---|---|
-| `scenario.py` | `Scenario` dataclass (PLAN §2) + `PredicateSpec`; JSON+npy save/load |
-| `predicates.py` | crash/success predicates from specs (PLAN §3): `contact_force`, `object_fell`, `grasp_dropped`, `libero_task_success`. Query a `SimView`, never vision |
-| `envs/libero_adapter.py` | `LiberoEnv` wraps the exact `run_libero_eval.py` API (reset / set_init_state / step / render); `LiberoSimView` reads mujoco for predicates |
-| `policies/openvla_policy.py` | `OpenVLAPolicy` wraps OpenVLA `get_model`/`get_action` (+ gripper normalize/invert). `prompt_prefix` = README §7 prompted-careful baseline |
-| `eval.py` | `run_episode` closed loop → `Outcome` ∈ {crash, recovery_success, safe_abort, timeout} + `EpisodeResult` |
-| `metrics.py` | the 4 README §5 metrics + by-horizon / by-category breakdowns + headline crash@T-5 |
+| `scenario.py` | backward-compatible scenario serialization, schema version on new saves, and SHA256 fingerprints |
+| `predicates.py` | state-based predicates; wall scenarios use scoped single-step contact force by default |
+| `envs/libero_adapter.py` | LIBERO/MuJoCo bridge, static wall injection, movable-object injection/state splice, live contact force |
+| `eval.py` | model-agnostic closed-loop episode runner with stable `CRASH`, `RECOVERY_SUCCESS`, `SAFE_ABORT`, and `TIMEOUT` semantics |
+| `policies/` | OpenVLA, OFT, pi0 adapters and the narrowly scoped probe guard |
+| `probe.py` | frozen probe utilities |
+| `recovery.py` | online `RetreatHold`, open-loop `WitnessReplay`, and experimental `DetourComplete` |
 
-Entry points: `scripts/run_pilot.py` (the go/no-go number), `scripts/author_scenario.py` (snapshot a pre-crash state).
+Current verified status:
 
-## Status (2026-06-19)
+- MuJoCo contact force, visible obstacle injection, and movable glass-object state
+  splicing are implemented and used by tracked studies.
+- OpenVLA, OpenVLA-OFT, and pi0 backends are wired into the common evaluation
+  interface.
+- Probe, guard, and structured safe-abort recovery exist.
+- `DetourComplete` is experimental and not a stable/general task-completion
+  recovery solution. The tracked d62 task completion is a low-wall existence demo.
+- The `grasp_dropped` helper still uses an explicitly marked heuristic grasp check;
+  it is not a validated core result path.
 
-- ✅ Core logic done & unit-tested (`tests/test_core.py`, no GPU needed): serialization, predicates, metrics.
-- ⚠️ **Marked `TODO(verify)`** — needs confirming on a real LIBERO env before crash numbers are trustworthy:
-  1. `libero_adapter.py`: mujoco body/geom names for contact force, object z, and the real `_check_grasp` wiring.
-  2. `author_scenario.py`: the flattened `set_init_state` vector layout — which indices move the eef / an object.
-     The `perturb_*` functions are **stubs that return the state unchanged**; fill them in after inspecting a live env.
-
-So the harness runs end-to-end, but **authoring real pre-crash states is the remaining Phase-1 work**
-(PLAN §4 Phase 1 step 1). Verify the bridge first by reproducing the nominal LIBERO success rate through
-`LiberoEnv` (should match the 66.7% sanity / full-run number), then perturb states and confirm by re-rendering.
-
-## Quick test (any node, no GPU)
-
-```bash
-source activate ~/crash_bench/envs/openvla
-pip install -e .            # makes `crashbench` importable
-python tests/test_core.py   # -> all core tests passed ✓
-```
-
-## Run the pilot (GPU node)
+## Zero-GPU checks
 
 ```bash
-MUJOCO_GL=egl python scripts/run_pilot.py \
-  --scenarios scenarios --checkpoint openvla/openvla-7b-finetuned-libero-spatial \
-  --unnorm_key libero_spatial --out results/pilot.json
+pip install -e .
+python -m pytest tests -q
+python scripts/audit_repo.py
 ```
+
+## GPU evaluation
+
+Use the experiment and sbatch pairing in `docs/EXPERIMENT_INDEX.md`. New outputs
+must use a new path and be registered in `results/manifest.json`; do not overwrite
+frozen summaries.

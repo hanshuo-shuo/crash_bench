@@ -55,7 +55,7 @@ bars = ax[2].bar(["action-token\nlogits (256)", "full vocab\nlogits"], [pf_act, 
 for b, v in zip(bars, [pf_act, pf_full]):
     ax[2].text(b.get_x() + b.get_width() / 2, v + 0.1, f"{v:.2f}", ha="center", fontsize=11)
 ax[2].set_ylabel("||W @ d_unit||  (logit shift / unit alpha)")
-ax[2].set_title("(3) WHY: crash direction is ~orthogonal\nto the action readout (0.74 of 7.69)")
+ax[2].set_title("(3) WHY: <10% of readout norm remains\non the action-token slice (0.74 of 7.69)")
 
 plt.tight_layout()
 plt.savefig(f"{FIG}/fig_steering.png", dpi=130)

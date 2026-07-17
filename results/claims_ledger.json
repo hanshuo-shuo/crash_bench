@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "source_document": "docs/CLAIMS.md",
+  "claims": [
+    {"id":"C0","result_files":[],"status":"provisional","abstract":false,"notes":"Historical nominal result is cited but its tracked result file is missing."},
+    {"id":"C1","result_files":["results/ood_control_final.json"],"status":"frozen","abstract":true,"checks":[{"path":"treatment.n","equals":15},{"path":"treatment.n_crash","equals":15},{"path":"clear_regime.n_trials","equals":33},{"path":"clear_regime.trials_crashed","equals":0},{"path":"fisher_exact_p","equals":0.00022893772893772894}]},
+    {"id":"C2","result_files":["results/path3_oft_summary.json"],"status":"frozen","abstract":true,"checks":[{"path":"models.OpenVLA (base).on_path_walls.crash","equals":5},{"path":"models.OpenVLA-OFT.off_path_clear.crash","equals":0},{"path":"models.pi0 (openpi).off_path_clear.n","equals":10}]},
+    {"id":"C3","result_files":["results/selfreport/probe_summary.json","results/selfreport_oft/probe_summary.json"],"status":"frozen","abstract":true,"checks":[{"path":"probe_auc_by_T.5","equals":0.998},{"file":"results/selfreport_oft/probe_summary.json","path":"probe_auc_by_T.5","equals":0.903}]},
+    {"id":"C4","result_files":["results/selfreport_pi0/probe_summary.json","results/selfreport_pi0_ae/probe_summary.json"],"status":"frozen","abstract":false,"checks":[{"path":"probe_auc_by_T.5","equals":0.728}]},
+    {"id":"C5","result_files":["results/selfreport/probe_summary.json","results/selfreport_oft/probe_summary.json","results/selfreport_pi0/probe_summary.json"],"status":"frozen","abstract":false,"checks":[{"path":"behavior_braking_check.action_mag_wall_within2steps_median","equals":0.9598}]},
+    {"id":"C6","result_files":["results/witness.json"],"status":"frozen","abstract":false,"checks":[]},
+    {"id":"C7","result_files":["results/intervention/summary.json","results/intervention/episodes.json"],"status":"frozen","abstract":true,"checks":[{"path":"treatment_baseline.n_crash","equals":15},{"path":"treatment_guarded.n_crash","equals":0},{"path":"headline.peak_force_baseline_to_guarded.0","equals":321.7},{"path":"headline.peak_force_baseline_to_guarded.1","equals":0.0},{"path":"headline.thr","equals":-0.422}]},
+    {"id":"C8","result_files":["results/shield/summary.json","results/shield/sweep.json"],"status":"frozen","abstract":false,"checks":[{"path":"counts.n_pos_frames","equals":53},{"path":"safe_window.mid","equals":1.0},{"path":"validated_threshold","equals":-0.422}]},
+    {"id":"C9","result_files":["results/glass_prototype.json"],"status":"frozen","abstract":false,"checks":[{"array_length":100}]},
+    {"id":"C10","result_files":["results/selfreport_glass/probe_glass_summary.json"],"status":"frozen","abstract":false,"checks":[]},
+    {"id":"C11","result_files":["results/steering/summary.json","results/steering/diag.json"],"status":"frozen","abstract":false,"checks":[{"file":"results/steering/diag.json","path":"readout_projection.W_action256_dot_d_norm","equals":0.742},{"file":"results/steering/diag.json","path":"readout_projection.W_full_dot_d_norm","equals":7.688}]},
+    {"id":"C12","result_files":["results/phase2_task_witness/summary.json"],"status":"frozen","abstract":false,"checks":[{"array_length":1}]}
+  ]
+}

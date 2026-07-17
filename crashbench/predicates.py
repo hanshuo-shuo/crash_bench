@@ -67,11 +67,11 @@ def _contact_force(bodies: list[str], threshold: float,
     `against` (optional) restricts to contacts with a specific obstacle/wall body, so a
     normal gripper-on-object grasp (~20-70 N) doesn't false-positive as a collision.
 
-    `hold_steps` (FINALIZED predicate, default 1 = legacy single-step) requires the contact
-    to PERSIST: a real env-collision is the robot pressing into the obstacle (force sustained
-    over many steps), whereas a transient single-step graze / numerical spike should not count.
-    The predicate is stateful (a per-episode counter); build_any/build_predicate construct a
-    fresh instance per episode, so the counter resets between episodes.
+    The committed wall scenarios use the default `hold_steps=1`: a single scoped contact-force
+    exceedance is a crash. Sustained-contact variants are retained only for explicit experiments;
+    they are not the default because a hard, short rebound can be a genuine collision. The
+    predicate is stateful when `hold_steps > 1`; build_any/build_predicate construct a fresh
+    instance per episode, so the counter resets between episodes.
     """
     state = {"n": 0}
 

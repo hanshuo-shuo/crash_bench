@@ -1,3 +1,8 @@
+# HISTORICAL — not the current execution plan
+
+See [docs/CURRENT.md](docs/CURRENT.md) for current framing. This tour may retain
+superseded numbers and is not a paper truth source.
+
 # CrashBench — The Simple (but Complete) Version
 
 *A no-jargon explainer of the whole project: the pain point, what we built, every result,
@@ -70,7 +75,9 @@ The whole project hinges on **where** we put that wall:
 
 A crash is defined by physics, not by eye: **any contact with the wall above 75 N of force**
 counts as a crash (`crashbench/predicates.py`). We picked 75 N because real wall slams measure
-≥150 N while an accidental graze is ≤44 N — 75 N sits cleanly in the gap, so the rule is robust.
+The historical force-gap explanation is superseded: frozen summaries include lower-force boundary
+cases, and a full force-trace sensitivity analysis is still required to characterize threshold
+robustness.
 
 ### 2.4 What's in the repo today
 

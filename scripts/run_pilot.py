@@ -37,6 +37,8 @@ def main():
     ap.add_argument("--prompt_prefix", default="", help="README §7 prompted-careful baseline")
     ap.add_argument("--out", default="results/pilot.json")
     ap.add_argument("--video_dir", default=None, help="optional dir to dump rollout MP4s")
+    ap.add_argument("--overwrite", action="store_true",
+                    help="allow replacing an existing result file (unsafe for frozen outputs)")
     args = ap.parse_args()
 
     scenarios = load_all(args.scenarios)
@@ -73,6 +75,8 @@ def main():
     print("\n" + metrics.report(results))
 
     out = Path(args.out)
+    if out.exists() and not args.overwrite:
+        raise SystemExit(f"refusing to overwrite {out}; choose a new --out or pass --overwrite after review")
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps([r.__dict__ | {"outcome": r.outcome.value} for r in results], indent=2))
     print(f"\nwrote {out}")

@@ -1,3 +1,10 @@
+# HISTORICAL — not the current execution plan
+
+The current execution plan is [docs/PAPER_PLAN.md](docs/PAPER_PLAN.md). This
+file is retained as a dated planning record and may contain superseded scope,
+status, external-reference statements, and the deprecated selected-band
+cross-category headline.
+
 # CrashBench — 顶会冲刺计划 v2(ICLR 2027 主攻 · 2026-07-13 审计修订版)
 
 > **这是什么:** 从"手里的结果"到"一篇 ICLR/CoRL 级论文"的执行计划,**取代 [ROADMAP.md](ROADMAP.md) 的

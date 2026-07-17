@@ -1,3 +1,7 @@
+# HISTORICAL — not the current execution plan
+
+See [docs/PAPER_PLAN.md](docs/PAPER_PLAN.md) for the current plan.
+
 # CrashBench — 战略分析与文献定位(2026-06-28)
 
 > 这份文档回答三个问题:**①我们到哪了、②为什么会"卡住"、③结合文献该往哪走。**

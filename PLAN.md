@@ -1,3 +1,7 @@
+# HISTORICAL — not the current execution plan
+
+See [docs/PAPER_PLAN.md](docs/PAPER_PLAN.md) for the current plan.
+
 # CrashBench — Implementation Plan
 
 > 从"空仓库"到"决定 paper 的那个数字",再到 main-track 升级。

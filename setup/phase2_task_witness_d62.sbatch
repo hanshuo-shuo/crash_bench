@@ -1,5 +1,6 @@
 #!/bin/bash
-# Phase 1 (pragmatic): task-completion witness sweep on the easiest wall (d62), NO save.
+# Historical low-wall d62 task-completion witness sweep, NO save. Never use it to
+# lower or overwrite the tall-wall treatment in scenarios/.
 # First pass: read per-body wall force to see if raising transit height + widening the detour
 # lane clears the elbow, or whether we need the wrist pose term / a wall-height reduction.
 #   cd ~/crash_bench/setup && sbatch phase2_task_witness_d62.sbatch
@@ -21,5 +22,5 @@ module load mamba/24.3.0
 source activate "$HOME/crash_bench/envs/openvla"
 export PYTHONNOUSERSITE=1 MUJOCO_GL=egl PYOPENGL_PLATFORM=egl
 cd "$HOME/crash_bench"
-python scripts/phase2_task_witness.py --scenarios 'scenarios/env_collision__T5__libero_spatial_t0_wall_d62' --sweep
+python scripts/phase2_task_witness.py --scenarios 'scenarios_detour_lowwall/env_collision__T5__libero_spatial_t0_wall_d62__lowwall_detour_v1' --sweep
 echo "DONE @ $(date)"

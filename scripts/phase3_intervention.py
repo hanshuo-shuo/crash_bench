@@ -65,6 +65,9 @@ def episode_record(cond, sc, k, res, guard=None):
 
 
 def main():
+    outputs = [f"{OUT}/episodes.json", f"{OUT}/summary.json"]
+    if any(os.path.exists(p) for p in outputs) and os.environ.get("CB_OVERWRITE") != "1":
+        raise SystemExit("refusing to overwrite intervention outputs; set a new CB_OUT or CB_OVERWRITE=1 after review")
     treat = [Scenario.load(os.path.dirname(p))
              for p in sorted(glob.glob(f"{TREAT_SCEN}/*/scenario.json"))]
     offpath = [Scenario.load(os.path.dirname(p))

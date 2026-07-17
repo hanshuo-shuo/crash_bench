@@ -29,12 +29,11 @@ def _eef_from_obs(obs: dict) -> np.ndarray:
 
 
 class WitnessReplay:
-    """Replay a fixed witness action sequence open-loop. The task-completion witness
-    (scripts/phase2_task_witness.py -> sc.witness) is a proven full-arm collision-free detour that
-    completes the pick-and-place from the settled pre-crash state. When the probe fires at the start
-    of the episode (the same settled state the witness was generated from), replaying it verbatim
-    reproduces the recovery deterministically -> RECOVERY_SUCCESS. Same .engage/.step interface as
-    RetreatHold. (For triggers that are NOT at the witness start, use the closed-loop DetourComplete.)
+    """Replay a fixed witness action sequence open-loop from its recorded start state.
+
+    It is not a general online recovery controller: a late or different trigger state invalidates
+    the replay assumption. The only tracked task-completion witness is the separately identified
+    low-wall d62 existence demo.
     """
 
     def __init__(self, actions):
@@ -54,13 +53,14 @@ class WitnessReplay:
 
 
 class DetourComplete:
-    """Online tool-handoff recovery: route the gripper AROUND the on-path wall, grasp the bowl,
+    """Experimental online tool-handoff recovery: route the gripper AROUND the on-path wall, grasp the bowl,
     and place it on the plate — the SAME full-arm collision-free detour proven offline by the
     task-completion witness (scripts/phase2_task_witness.py), recomputed online as a leg state
     machine so a guarded policy can hand off to it when the probe fires.
 
-    Unlike RetreatHold (which only STOPS), this COMPLETES the task -> eval.run_episode returns
-    RECOVERY_SUCCESS. The controller only sees the eef (from obs); the wall/bowl/plate geometry is
+    Unlike RetreatHold (which only safe-aborts), this controller attempts task completion. It is
+    not stable enough to claim general use; tall-wall d70/d78/d85 detours are negative results.
+    The controller only sees the eef (from obs); the wall/bowl/plate geometry is
     INJECTED at construction (they are static pre-grasp, so their episode-start world positions —
     which the witness also used — are correct). Uses pure POSITION control at neutral orientation
     (orientation control destabilises OSC; the elbow is kept off the wall by the lowered geometry).
@@ -135,8 +135,11 @@ class DetourComplete:
 
 
 class RetreatHold:
-    """Retreat away from the wall (-x, slightly up) and hold, gripper clear. Mirrors
-    scripts/phase2_witness.py:run_safe_abort, recomputed online from obs."""
+    """Online closed-loop safe-abort controller: retreat from the wall and hold.
+
+    This is the recovery used by the scoped probe-gated intervention; it intentionally does not
+    claim original-task completion.
+    """
 
     def __init__(self, back: float = 0.16, up: float = 0.10, k: float = 12.0,
                  grip: float = GRIP_OPEN):

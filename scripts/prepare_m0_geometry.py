@@ -9,7 +9,7 @@ pre-detour Git commit to restore the original scenario files exactly.
 Run from the repository root:
     python3 scripts/prepare_m0_geometry.py
 
-It is intentionally conservative: an existing ``scenarios_detour/<d62>`` directory is not
+It is intentionally conservative: an existing ``scenarios_detour_lowwall/<d62>`` directory is not
 overwritten unless ``--force`` is supplied.
 """
 
@@ -25,7 +25,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SCENARIO_ID = "env_collision__T5__libero_spatial_t0_wall_d62"
 CURRENT = ROOT / "scenarios" / SCENARIO_ID
-DETOUR = ROOT / "scenarios_detour" / SCENARIO_ID
+DETOUR_ROOT = ROOT / "scenarios_detour_lowwall"
+DETOUR_ID = f"{SCENARIO_ID}__lowwall_detour_v1"
+DETOUR = DETOUR_ROOT / DETOUR_ID
 ORIGINAL_COMMIT = "02895e6"
 RELATIVE = Path("scenarios") / SCENARIO_ID
 
@@ -38,7 +40,7 @@ def git_bytes(path: Path) -> bytes:
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--force", action="store_true",
-                    help="replace an existing scenarios_detour/d62 copy")
+                    help="replace an existing scenarios_detour_lowwall/d62 copy")
     args = ap.parse_args()
 
     if not CURRENT.is_dir():
@@ -55,6 +57,24 @@ def main() -> None:
         shutil.rmtree(DETOUR)
     DETOUR.parent.mkdir(parents=True, exist_ok=True)
     shutil.copytree(CURRENT, DETOUR)
+
+    # A geometry-changing derivative must never retain the treatment ID. Preserve
+    # the existing witness and add explicit provenance before restoring CURRENT.
+    detour_json = DETOUR / "scenario.json"
+    detour_data = json.loads(detour_json.read_text())
+    detour_data["id"] = DETOUR_ID
+    detour_data.setdefault("metadata", {})["detour_variant"] = {
+        "parent_scenario_id": SCENARIO_ID,
+        "parent_git_commit": ORIGINAL_COMMIT,
+        "original_wall_size": [0.025, 0.08, 0.22],
+        "modified_wall_size": detour_data["obstacles"][0]["size"],
+        "modification_reason": "Full-arm OSC detour could not clear the tall wall; the low wall is retained only as a task-completion existence demo.",
+        "openvla_validity_rerun": "Recorded in the pre-existing low-wall metadata as validity-checked; no rerun is performed by this migration.",
+        "witness_type": "task_detour",
+        "recovery_limitations": "Task completion is demonstrated only for this low-wall geometry and recorded start state; tall-wall d70/d78/d85 detours remain negative results.",
+    }
+    detour_data.setdefault("metadata", {}).pop("wall_lowered", None)
+    detour_json.write_text(json.dumps(detour_data, indent=2) + "\n")
 
     # Restore the exact pre-detour JSON and binary state/witness from Git history.
     for name in ("scenario.json", "init_state.npy", "witness.npy"):

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Diagnose why the fmax=0 detour clears the wall but doesn't complete the task (grasp vs place).
+# Historical low-wall d62 diagnostic. Never mutate the tall-wall treatment in scenarios/.
 #   cd ~/crash_bench/setup && sbatch phase2_task_witness_diag.sbatch
 #SBATCH --account=p33100
 #SBATCH --partition=gengpu
@@ -19,5 +19,5 @@ module load mamba/24.3.0
 source activate "$HOME/crash_bench/envs/openvla"
 export PYTHONNOUSERSITE=1 MUJOCO_GL=egl PYOPENGL_PLATFORM=egl
 cd "$HOME/crash_bench"
-python scripts/phase2_task_witness.py --scenarios 'scenarios/env_collision__T5__libero_spatial_t0_wall_d62' --diag
+python scripts/phase2_task_witness.py --scenarios 'scenarios_detour_lowwall/env_collision__T5__libero_spatial_t0_wall_d62__lowwall_detour_v1' --diag
 echo "DONE @ $(date)"

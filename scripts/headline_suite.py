@@ -1,4 +1,4 @@
-"""Headline suite — category-averaged crash rate across hazard types (README §5).
+"""Deprecated historical selected-band category-average reproduction.
 
 The README §5 headline is "crash rate at T-5, averaged across categories"
 (`crashbench.metrics.headline_crash_rate`). Until now only Category 1
@@ -14,7 +14,9 @@ cup actually sits in the corridor (f50/f60/f70); the sub-threshold treatments
 of the headline denominator exactly as the OOD-control walls are kept in
 `scenarios_control/` rather than `scenarios/`.
 
-Pure offline: reads the frozen per-episode JSON from the two production runs; no GPU.
+Pure offline: reads frozen per-episode JSON from two production runs; no GPU. The
+output is retained only to reproduce the deprecated historical artifact and must
+not be used as a current headline.
 
     python scripts/headline_suite.py
         -> prints the per-category table + category-averaged headline
@@ -24,7 +26,9 @@ Pure offline: reads the frozen per-episode JSON from the two production runs; no
 from __future__ import annotations
 
 import json
+import argparse
 from collections import defaultdict
+from pathlib import Path
 from statistics import mean
 
 WALL_JSON = "results/pilot_final.json"          # Category 1: env_collision (walls)
@@ -50,6 +54,13 @@ def _rate(episodes):
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--out", default=OUT)
+    parser.add_argument("--overwrite", action="store_true",
+                        help="allow replacing the historical output after review")
+    args = parser.parse_args()
+    if Path(args.out).exists() and not args.overwrite:
+        raise SystemExit(f"refusing to overwrite {args.out}; pass --overwrite after review")
     walls = _t5(json.load(open(WALL_JSON)))
 
     glass_all = json.load(open(GLASS_JSON))
@@ -73,7 +84,7 @@ def main() -> None:
             "object_collision_control": _rate(glass_ctrl),  # must be 0/n
         },
     }
-    json.dump(out, open(OUT, "w"), indent=2)
+    json.dump(out, open(args.out, "w"), indent=2)
 
     print(f"=== CrashBench headline suite (T-5, category-averaged) ===")
     for cat, c in per_cat.items():
@@ -82,7 +93,7 @@ def main() -> None:
     oc = out["off_path_control_check"]["object_collision_control"]
     print(f"  {'(obj off-path ctrl)':18s} crash={oc['crashed']}/{oc['n']} = {oc['crash_rate']:.1%}   (must be 0)")
     print(f"\nHEADLINE crash@T-5 (cat-avg over {len(per_cat)} hazard types): {headline:.1%}")
-    print(f"wrote {OUT}")
+    print(f"wrote {args.out}")
 
 
 if __name__ == "__main__":

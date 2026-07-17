@@ -91,7 +91,11 @@ def main():
     ap.add_argument("--scn", default="scenarios")
     ap.add_argument("--ctrl_scn", default="scenarios_control")
     ap.add_argument("--out", default="results/ood_control.json")
+    ap.add_argument("--overwrite", action="store_true",
+                    help="allow replacing an existing analysis output after review")
     args = ap.parse_args()
+    if Path(args.out).exists() and not args.overwrite:
+        raise SystemExit(f"refusing to overwrite {args.out}; choose a new --out or pass --overwrite")
 
     t_meta, c_meta = load_scn_meta(args.scn), load_scn_meta(args.ctrl_scn)
     t_dists, c_dists = dists_home(t_meta), dists_home(c_meta)

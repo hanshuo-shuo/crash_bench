@@ -1,3 +1,8 @@
+# HISTORICAL — not the current execution plan
+
+See [docs/PAPER_PLAN.md](docs/PAPER_PLAN.md) for the current plan. This record
+contains the deprecated selected-band cross-category headline; do not cite it.
+
 # CrashBench — ROADMAP(唯一的"下一步"入口 · 更新 2026-07-02)
 
 > **这是什么:** 项目**前瞻/计划**的唯一权威文档。把原先散在三处的下一步(旧 `下一步计划_v2`、
