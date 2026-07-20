@@ -1,0 +1,4740 @@
+{
+  "analysis": {
+    "name": "task_phase_confound",
+    "T": 5,
+    "read_only_inputs": true,
+    "primary_offpath_definition": "cond == offpath and crashed_episode == false",
+    "reason_for_excluding_offpath_crashes": "wall-visibility control should not also be a collision control",
+    "collision_window_definition": "cond == wall, crashed_episode == true, 0 <= steps_to_crash <= T",
+    "loso_group_definition": "five on-path scenario IDs; paired no-wall rows share the held-out ID; off-path controls remain available in each fold",
+    "positive_rows_for_matching": 29,
+    "source_row_indices": [
+      1100,
+      1101,
+      1102,
+      1103,
+      1104,
+      1152,
+      1153,
+      1154,
+      1155,
+      1156,
+      1157,
+      1160,
+      1161,
+      1162,
+      1163,
+      1164,
+      1165,
+      1169,
+      1170,
+      1171,
+      1172,
+      1173,
+      1174,
+      1179,
+      1180,
+      1181,
+      1182,
+      1183,
+      1184
+    ],
+    "condition_counts": {
+      "nowall": 1100,
+      "offpath": 3838,
+      "wall": 85
+    }
+  },
+  "inputs": {
+    "capture_dir": "results/selfreport",
+    "hidden_file": "results/selfreport/hidden.npz",
+    "meta_file": "results/selfreport/meta.json",
+    "probe_file": "results/selfreport/probe_T5.npz",
+    "hidden_shape": [
+      5023,
+      4096
+    ],
+    "hidden_dtype_on_disk": "float16",
+    "sha256": {
+      "hidden.npz": "8319c5276d8a3b38c03e95703157a1c9ee12fa62fcbbc644064a164edbe0da90",
+      "meta.json": "0d378488ccb2e556aa29614b4cda6b0461c9cb04017abe1af5f1f2a7483ea9f1",
+      "probe_T5.npz": "aa62199d615dd12f17c1b1388c4a342ac7bea0301ec7ea98589933b030f3940c"
+    }
+  },
+  "pool": {
+    "pool_rows": 4705,
+    "positive_rows": 29,
+    "negative_rows": 4676,
+    "offpath_safe_rows": 3520,
+    "offpath_episode_rows_excluded_due_to_crash": 318
+  },
+  "timestep_matching": {
+    "summary": {
+      "onpath": {
+        "q25": 0.979499340057373,
+        "median": 1.4817657470703125,
+        "q75": 2.186534881591797
+      },
+      "offpath_safe": {
+        "n": 29,
+        "onpath_collision_window_logit": {
+          "q25": 0.979499340057373,
+          "median": 1.4817657470703125,
+          "q75": 2.186534881591797
+        },
+        "control_logit": {
+          "q25": -4.272547721862793,
+          "median": -3.6693382263183594,
+          "q75": -3.367213487625122
+        },
+        "paired_delta_onpath_minus_control": {
+          "q25": 4.422984600067139,
+          "median": 5.095140218734741,
+          "q75": 6.137206554412842
+        },
+        "mean_onpath_logit": 1.6437372996889312,
+        "mean_control_logit": -3.6404269317100786,
+        "mean_paired_delta": 5.28416423139901,
+        "mean_abs_timestep_difference": 0.0,
+        "max_abs_timestep_difference": 0
+      },
+      "nowall": {
+        "n": 29,
+        "onpath_collision_window_logit": {
+          "q25": 0.979499340057373,
+          "median": 1.4817657470703125,
+          "q75": 2.186534881591797
+        },
+        "control_logit": {
+          "q25": -9.03302001953125,
+          "median": -7.793487548828125,
+          "q75": -7.561928749084473
+        },
+        "paired_delta_onpath_minus_control": {
+          "q25": 8.833378314971924,
+          "median": 9.35099172592163,
+          "q75": 10.508101463317871
+        },
+        "mean_onpath_logit": 1.6437372996889312,
+        "mean_control_logit": -8.095848593218573,
+        "mean_paired_delta": 9.739585892907504,
+        "mean_abs_timestep_difference": 0.0,
+        "max_abs_timestep_difference": 0
+      }
+    },
+    "details": {
+      "matching": "timestep",
+      "n_pairs": 29,
+      "pairs": [
+        {
+          "onpath": {
+            "row_index": 1100,
+            "cond": "wall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 0,
+            "steps_to_crash": 4,
+            "eef_xyz": [
+              -0.21124163269996643,
+              -0.011090601794421673,
+              1.174249529838562
+            ],
+            "action_magnitude": 0.5992948412895203,
+            "probe_logit": 2.426490306854248
+          },
+          "offpath_safe": {
+            "row_index": 1185,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 0,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.21124163269996643,
+              -0.011090601794421673,
+              1.174249529838562
+            ],
+            "action_magnitude": 0.7842331528663635,
+            "probe_logit": -3.917180061340332
+          },
+          "nowall": {
+            "row_index": 0,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 0,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.21124163269996643,
+              -0.011090601794421673,
+              1.174249529838562
+            ],
+            "action_magnitude": 0.10721790045499802,
+            "probe_logit": -6.406888008117676
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 0
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1101,
+            "cond": "wall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 1,
+            "steps_to_crash": 3,
+            "eef_xyz": [
+              -0.20947888493537903,
+              -0.009434817358851433,
+              1.1746296882629395
+            ],
+            "action_magnitude": 0.5954450368881226,
+            "probe_logit": 1.7095580101013184
+          },
+          "offpath_safe": {
+            "row_index": 1186,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 1,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.20841754972934723,
+              -0.008489610627293587,
+              1.1746907234191895
+            ],
+            "action_magnitude": 0.8103320598602295,
+            "probe_logit": -3.385582208633423
+          },
+          "nowall": {
+            "row_index": 1,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 1,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.21124617755413055,
+              -0.01053674053400755,
+              1.1742368936538696
+            ],
+            "action_magnitude": 0.2361244559288025,
+            "probe_logit": -6.519123077392578
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 0
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1102,
+            "cond": "wall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 2,
+            "steps_to_crash": 2,
+            "eef_xyz": [
+              -0.20589888095855713,
+              -0.006557950749993324,
+              1.176733374595642
+            ],
+            "action_magnitude": 0.7706578373908997,
+            "probe_logit": 1.3183231353759766
+          },
+          "offpath_safe": {
+            "row_index": 1187,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 2,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.2033969908952713,
+              -0.0034489103127270937,
+              1.1753723621368408
+            ],
+            "action_magnitude": 1.0336217880249023,
+            "probe_logit": -3.587617874145508
+          },
+          "nowall": {
+            "row_index": 2,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 2,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.21078898012638092,
+              -0.008818141184747219,
+              1.1741960048675537
+            ],
+            "action_magnitude": 0.10721790045499802,
+            "probe_logit": -7.891123294830322
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 0
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1103,
+            "cond": "wall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 3,
+            "steps_to_crash": 1,
+            "eef_xyz": [
+              -0.20116427540779114,
+              -0.0034243992995470762,
+              1.1796519756317139
+            ],
+            "action_magnitude": 0.6280030012130737,
+            "probe_logit": 1.4817657470703125
+          },
+          "offpath_safe": {
+            "row_index": 1188,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 3,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.19644884765148163,
+              0.002431882545351982,
+              1.1751176118850708
+            ],
+            "action_magnitude": 1.0277270078659058,
+            "probe_logit": -2.5695600509643555
+          },
+          "nowall": {
+            "row_index": 3,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 3,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.21044139564037323,
+              -0.006956988945603371,
+              1.1740729808807373
+            ],
+            "action_magnitude": 0.10721790045499802,
+            "probe_logit": -7.793487548828125
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 0
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1104,
+            "cond": "wall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 4,
+            "steps_to_crash": 0,
+            "eef_xyz": [
+              -0.19664977490901947,
+              -0.0003110860416200012,
+              1.182701587677002
+            ],
+            "action_magnitude": 0.7886972427368164,
+            "probe_logit": 1.2659730911254883
+          },
+          "offpath_safe": {
+            "row_index": 1189,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 4,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.18802717328071594,
+              0.008243237622082233,
+              1.1750190258026123
+            ],
+            "action_magnitude": 1.0023689270019531,
+            "probe_logit": -2.598432779312134
+          },
+          "nowall": {
+            "row_index": 4,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 4,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.21038757264614105,
+              -0.00548867741599679,
+              1.1740286350250244
+            ],
+            "action_magnitude": 0.10721790045499802,
+            "probe_logit": -7.683809280395508
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 0
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1152,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d62",
+            "t": 47,
+            "steps_to_crash": 5,
+            "eef_xyz": [
+              0.010928812436759472,
+              0.13364970684051514,
+              0.9755157232284546
+            ],
+            "action_magnitude": 0.15822017192840576,
+            "probe_logit": 0.950136661529541
+          },
+          "offpath_safe": {
+            "row_index": 1232,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 47,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.07008547335863113,
+              0.15304696559906006,
+              0.9469519257545471
+            ],
+            "action_magnitude": 0.8123836517333984,
+            "probe_logit": -3.658194065093994
+          },
+          "nowall": {
+            "row_index": 47,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 47,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.03209172561764717,
+              0.13567160069942474,
+              0.9761801958084106
+            ],
+            "action_magnitude": 1.1301661729812622,
+            "probe_logit": -7.1796112060546875
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 0
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1153,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d62",
+            "t": 48,
+            "steps_to_crash": 4,
+            "eef_xyz": [
+              0.009217566810548306,
+              0.13557662069797516,
+              0.9681801795959473
+            ],
+            "action_magnitude": 0.19894973933696747,
+            "probe_logit": 1.8646588325500488
+          },
+          "offpath_safe": {
+            "row_index": 1233,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 48,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.06847391277551651,
+              0.1529930830001831,
+              0.9554031491279602
+            ],
+            "action_magnitude": 0.8536834716796875,
+            "probe_logit": -4.272547721862793
+          },
+          "nowall": {
+            "row_index": 48,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 48,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.03850247338414192,
+              0.1362488865852356,
+              0.9649811387062073
+            ],
+            "action_magnitude": 1.1415140628814697,
+            "probe_logit": -7.486332893371582
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 0
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1154,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d62",
+            "t": 49,
+            "steps_to_crash": 3,
+            "eef_xyz": [
+              0.008816839195787907,
+              0.1369689553976059,
+              0.9650881290435791
+            ],
+            "action_magnitude": 0.19894973933696747,
+            "probe_logit": 1.7853822708129883
+          },
+          "offpath_safe": {
+            "row_index": 1234,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 49,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.06662029027938843,
+              0.15319129824638367,
+              0.9646122455596924
+            ],
+            "action_magnitude": 0.7850337624549866,
+            "probe_logit": -4.590697288513184
+          },
+          "nowall": {
+            "row_index": 49,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 49,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.045641541481018066,
+              0.13681602478027344,
+              0.9537070393562317
+            ],
+            "action_magnitude": 1.1107940673828125,
+            "probe_logit": -7.561928749084473
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 0
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1155,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d62",
+            "t": 50,
+            "steps_to_crash": 2,
+            "eef_xyz": [
+              0.00896947830915451,
+              0.13822834193706512,
+              0.9628707766532898
+            ],
+            "action_magnitude": 0.15822017192840576,
+            "probe_logit": 1.8891425132751465
+          },
+          "offpath_safe": {
+            "row_index": 1235,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 50,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.06426120549440384,
+              0.15237432718276978,
+              0.9739391803741455
+            ],
+            "action_magnitude": 0.7850337624549866,
+            "probe_logit": -4.933131217956543
+          },
+          "nowall": {
+            "row_index": 50,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 50,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.053179193288087845,
+              0.13740181922912598,
+              0.9422044157981873
+            ],
+            "action_magnitude": 0.6202125549316406,
+            "probe_logit": -7.527225494384766
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 0
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1156,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d62",
+            "t": 51,
+            "steps_to_crash": 1,
+            "eef_xyz": [
+              0.008263240568339825,
+              0.13979102671146393,
+              0.9603814482688904
+            ],
+            "action_magnitude": 0.19595418870449066,
+            "probe_logit": 0.979499340057373
+          },
+          "offpath_safe": {
+            "row_index": 1236,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 51,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.06116804853081703,
+              0.151184543967247,
+              0.98331218957901
+            ],
+            "action_magnitude": 1.027119755744934,
+            "probe_logit": -4.938725471496582
+          },
+          "nowall": {
+            "row_index": 51,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 51,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.05969966948032379,
+              0.13777215778827667,
+              0.9325901865959167
+            ],
+            "action_magnitude": 0.4533843994140625,
+            "probe_logit": -6.858079433441162
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 0
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1157,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d62",
+            "t": 52,
+            "steps_to_crash": 0,
+            "eef_xyz": [
+              0.0072761885821819305,
+              0.1412513256072998,
+              0.9577025175094604
+            ],
+            "action_magnitude": 0.4279433488845825,
+            "probe_logit": -0.14252710342407227
+          },
+          "offpath_safe": {
+            "row_index": 1237,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 52,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.05720580369234085,
+              0.15090198814868927,
+              0.993859052658081
+            ],
+            "action_magnitude": 1.0031579732894897,
+            "probe_logit": -5.055165767669678
+          },
+          "nowall": {
+            "row_index": 52,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 52,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.06520211696624756,
+              0.1376793086528778,
+              0.9259697794914246
+            ],
+            "action_magnitude": 0.16806329786777496,
+            "probe_logit": -6.2364912033081055
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 0
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1160,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d70",
+            "t": 2,
+            "steps_to_crash": 5,
+            "eef_xyz": [
+              -0.2063959836959839,
+              -0.0052605182863771915,
+              1.1747862100601196
+            ],
+            "action_magnitude": 0.7917676568031311,
+            "probe_logit": -0.8394007682800293
+          },
+          "offpath_safe": {
+            "row_index": 1187,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 2,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.2033969908952713,
+              -0.0034489103127270937,
+              1.1753723621368408
+            ],
+            "action_magnitude": 1.0336217880249023,
+            "probe_logit": -3.587617874145508
+          },
+          "nowall": {
+            "row_index": 2,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 2,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.21078898012638092,
+              -0.008818141184747219,
+              1.1741960048675537
+            ],
+            "action_magnitude": 0.10721790045499802,
+            "probe_logit": -7.891123294830322
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 0
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1161,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d70",
+            "t": 3,
+            "steps_to_crash": 4,
+            "eef_xyz": [
+              -0.20217615365982056,
+              -0.0014529122272506356,
+              1.1763163805007935
+            ],
+            "action_magnitude": 0.7990365624427795,
+            "probe_logit": -0.2047576904296875
+          },
+          "offpath_safe": {
+            "row_index": 1188,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 3,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.19644884765148163,
+              0.002431882545351982,
+              1.1751176118850708
+            ],
+            "action_magnitude": 1.0277270078659058,
+            "probe_logit": -2.5695600509643555
+          },
+          "nowall": {
+            "row_index": 3,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 3,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.21044139564037323,
+              -0.006956988945603371,
+              1.1740729808807373
+            ],
+            "action_magnitude": 0.10721790045499802,
+            "probe_logit": -7.793487548828125
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 0
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1162,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d70",
+            "t": 4,
+            "steps_to_crash": 3,
+            "eef_xyz": [
+              -0.1952318251132965,
+              0.003321840427815914,
+              1.1780295372009277
+            ],
+            "action_magnitude": 1.0016363859176636,
+            "probe_logit": 1.155494213104248
+          },
+          "offpath_safe": {
+            "row_index": 1189,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 4,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.18802717328071594,
+              0.008243237622082233,
+              1.1750190258026123
+            ],
+            "action_magnitude": 1.0023689270019531,
+            "probe_logit": -2.598432779312134
+          },
+          "nowall": {
+            "row_index": 4,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 4,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.21038757264614105,
+              -0.00548867741599679,
+              1.1740286350250244
+            ],
+            "action_magnitude": 0.10721790045499802,
+            "probe_logit": -7.683809280395508
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 0
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1163,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d70",
+            "t": 5,
+            "steps_to_crash": 2,
+            "eef_xyz": [
+              -0.18662795424461365,
+              0.009135084226727486,
+              1.178450345993042
+            ],
+            "action_magnitude": 0.8254525661468506,
+            "probe_logit": 1.3046774864196777
+          },
+          "offpath_safe": {
+            "row_index": 1190,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 5,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.17882338166236877,
+              0.014302696101367474,
+              1.1750437021255493
+            ],
+            "action_magnitude": 1.0502721071243286,
+            "probe_logit": -3.696176528930664
+          },
+          "nowall": {
+            "row_index": 5,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 5,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.21037890017032623,
+              -0.004089442081749439,
+              1.1740105152130127
+            ],
+            "action_magnitude": 0.1373485028743744,
+            "probe_logit": -7.987550735473633
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 0
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1164,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d70",
+            "t": 6,
+            "steps_to_crash": 1,
+            "eef_xyz": [
+              -0.17845822870731354,
+              0.015518181957304478,
+              1.1781995296478271
+            ],
+            "action_magnitude": 0.9296874403953552,
+            "probe_logit": 2.5569825172424316
+          },
+          "offpath_safe": {
+            "row_index": 1191,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 6,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.16897819936275482,
+              0.02189360186457634,
+              1.1732087135314941
+            ],
+            "action_magnitude": 1.0502721071243286,
+            "probe_logit": -3.367213487625122
+          },
+          "nowall": {
+            "row_index": 6,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 6,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.2109059989452362,
+              -0.0027661144267767668,
+              1.1736042499542236
+            ],
+            "action_magnitude": 0.2346118837594986,
+            "probe_logit": -9.03302001953125
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 0
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1165,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d70",
+            "t": 7,
+            "steps_to_crash": 0,
+            "eef_xyz": [
+              -0.1702841967344284,
+              0.022232336923480034,
+              1.177411437034607
+            ],
+            "action_magnitude": 0.9480720162391663,
+            "probe_logit": 1.4447078704833984
+          },
+          "offpath_safe": {
+            "row_index": 1192,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 7,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.15883934497833252,
+              0.030134500935673714,
+              1.170366644859314
+            ],
+            "action_magnitude": 1.0399982929229736,
+            "probe_logit": -3.6693382263183594
+          },
+          "nowall": {
+            "row_index": 7,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 7,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.21093963086605072,
+              -0.0015513469697907567,
+              1.1739990711212158
+            ],
+            "action_magnitude": 0.13162001967430115,
+            "probe_logit": -9.646241188049316
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 0
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1169,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d78",
+            "t": 3,
+            "steps_to_crash": 5,
+            "eef_xyz": [
+              -0.19724872708320618,
+              0.0013765107141807675,
+              1.1720446348190308
+            ],
+            "action_magnitude": 0.9674118161201477,
+            "probe_logit": 1.7732415199279785
+          },
+          "offpath_safe": {
+            "row_index": 1188,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 3,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.19644884765148163,
+              0.002431882545351982,
+              1.1751176118850708
+            ],
+            "action_magnitude": 1.0277270078659058,
+            "probe_logit": -2.5695600509643555
+          },
+          "nowall": {
+            "row_index": 3,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 3,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.21044139564037323,
+              -0.006956988945603371,
+              1.1740729808807373
+            ],
+            "action_magnitude": 0.10721790045499802,
+            "probe_logit": -7.793487548828125
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 0
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1170,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d78",
+            "t": 4,
+            "steps_to_crash": 4,
+            "eef_xyz": [
+              -0.19081294536590576,
+              0.007327898405492306,
+              1.171348214149475
+            ],
+            "action_magnitude": 0.9747231006622314,
+            "probe_logit": 2.7616186141967773
+          },
+          "offpath_safe": {
+            "row_index": 1189,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 4,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.18802717328071594,
+              0.008243237622082233,
+              1.1750190258026123
+            ],
+            "action_magnitude": 1.0023689270019531,
+            "probe_logit": -2.598432779312134
+          },
+          "nowall": {
+            "row_index": 4,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 4,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.21038757264614105,
+              -0.00548867741599679,
+              1.1740286350250244
+            ],
+            "action_magnitude": 0.10721790045499802,
+            "probe_logit": -7.683809280395508
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 0
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1171,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d78",
+            "t": 5,
+            "steps_to_crash": 3,
+            "eef_xyz": [
+              -0.18296034634113312,
+              0.014201649464666843,
+              1.1710008382797241
+            ],
+            "action_magnitude": 0.8154056072235107,
+            "probe_logit": 3.9435434341430664
+          },
+          "offpath_safe": {
+            "row_index": 1190,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 5,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.17882338166236877,
+              0.014302696101367474,
+              1.1750437021255493
+            ],
+            "action_magnitude": 1.0502721071243286,
+            "probe_logit": -3.696176528930664
+          },
+          "nowall": {
+            "row_index": 5,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 5,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.21037890017032623,
+              -0.004089442081749439,
+              1.1740105152130127
+            ],
+            "action_magnitude": 0.1373485028743744,
+            "probe_logit": -7.987550735473633
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 0
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1172,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d78",
+            "t": 6,
+            "steps_to_crash": 2,
+            "eef_xyz": [
+              -0.1750463992357254,
+              0.021453045308589935,
+              1.1699481010437012
+            ],
+            "action_magnitude": 0.8025044798851013,
+            "probe_logit": 4.2906928062438965
+          },
+          "offpath_safe": {
+            "row_index": 1191,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 6,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.16897819936275482,
+              0.02189360186457634,
+              1.1732087135314941
+            ],
+            "action_magnitude": 1.0502721071243286,
+            "probe_logit": -3.367213487625122
+          },
+          "nowall": {
+            "row_index": 6,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 6,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.2109059989452362,
+              -0.0027661144267767668,
+              1.1736042499542236
+            ],
+            "action_magnitude": 0.2346118837594986,
+            "probe_logit": -9.03302001953125
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 0
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1173,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d78",
+            "t": 7,
+            "steps_to_crash": 1,
+            "eef_xyz": [
+              -0.16675212979316711,
+              0.027521079406142235,
+              1.169202208518982
+            ],
+            "action_magnitude": 0.9932636022567749,
+            "probe_logit": 3.7913808822631836
+          },
+          "offpath_safe": {
+            "row_index": 1192,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 7,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.15883934497833252,
+              0.030134500935673714,
+              1.170366644859314
+            ],
+            "action_magnitude": 1.0399982929229736,
+            "probe_logit": -3.6693382263183594
+          },
+          "nowall": {
+            "row_index": 7,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 7,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.21093963086605072,
+              -0.0015513469697907567,
+              1.1739990711212158
+            ],
+            "action_magnitude": 0.13162001967430115,
+            "probe_logit": -9.646241188049316
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 0
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1174,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d78",
+            "t": 8,
+            "steps_to_crash": 0,
+            "eef_xyz": [
+              -0.15785080194473267,
+              0.03456836938858032,
+              1.1686768531799316
+            ],
+            "action_magnitude": 0.9597914814949036,
+            "probe_logit": 3.973855972290039
+          },
+          "offpath_safe": {
+            "row_index": 1193,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 8,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.14811408519744873,
+              0.03672214597463608,
+              1.1665935516357422
+            ],
+            "action_magnitude": 0.981492280960083,
+            "probe_logit": -4.4599409103393555
+          },
+          "nowall": {
+            "row_index": 8,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 8,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.21058964729309082,
+              -0.0009134387946687639,
+              1.174990177154541
+            ],
+            "action_magnitude": 0.10119295865297318,
+            "probe_logit": -9.804274559020996
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 0
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1179,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d85",
+            "t": 4,
+            "steps_to_crash": 5,
+            "eef_xyz": [
+              -0.19026151299476624,
+              0.0012424570741131902,
+              1.1792817115783691
+            ],
+            "action_magnitude": 0.8792433142662048,
+            "probe_logit": 0.7182245254516602
+          },
+          "offpath_safe": {
+            "row_index": 1189,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 4,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.18802717328071594,
+              0.008243237622082233,
+              1.1750190258026123
+            ],
+            "action_magnitude": 1.0023689270019531,
+            "probe_logit": -2.598432779312134
+          },
+          "nowall": {
+            "row_index": 4,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 4,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.21038757264614105,
+              -0.00548867741599679,
+              1.1740286350250244
+            ],
+            "action_magnitude": 0.10721790045499802,
+            "probe_logit": -7.683809280395508
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 0
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1180,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d85",
+            "t": 5,
+            "steps_to_crash": 4,
+            "eef_xyz": [
+              -0.18213415145874023,
+              0.006183363031595945,
+              1.1801927089691162
+            ],
+            "action_magnitude": 0.902613639831543,
+            "probe_logit": 2.186534881591797
+          },
+          "offpath_safe": {
+            "row_index": 1190,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 5,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.17882338166236877,
+              0.014302696101367474,
+              1.1750437021255493
+            ],
+            "action_magnitude": 1.0502721071243286,
+            "probe_logit": -3.696176528930664
+          },
+          "nowall": {
+            "row_index": 5,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 5,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.21037890017032623,
+              -0.004089442081749439,
+              1.1740105152130127
+            ],
+            "action_magnitude": 0.1373485028743744,
+            "probe_logit": -7.987550735473633
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 0
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1181,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d85",
+            "t": 6,
+            "steps_to_crash": 3,
+            "eef_xyz": [
+              -0.17378954589366913,
+              0.01155715249478817,
+              1.1819895505905151
+            ],
+            "action_magnitude": 0.8868310451507568,
+            "probe_logit": 1.475081443786621
+          },
+          "offpath_safe": {
+            "row_index": 1191,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 6,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.16897819936275482,
+              0.02189360186457634,
+              1.1732087135314941
+            ],
+            "action_magnitude": 1.0502721071243286,
+            "probe_logit": -3.367213487625122
+          },
+          "nowall": {
+            "row_index": 6,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 6,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.2109059989452362,
+              -0.0027661144267767668,
+              1.1736042499542236
+            ],
+            "action_magnitude": 0.2346118837594986,
+            "probe_logit": -9.03302001953125
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 0
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1182,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d85",
+            "t": 7,
+            "steps_to_crash": 2,
+            "eef_xyz": [
+              -0.16433797776699066,
+              0.017368048429489136,
+              1.1833783388137817
+            ],
+            "action_magnitude": 1.067139983177185,
+            "probe_logit": 1.602156162261963
+          },
+          "offpath_safe": {
+            "row_index": 1192,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 7,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.15883934497833252,
+              0.030134500935673714,
+              1.170366644859314
+            ],
+            "action_magnitude": 1.0399982929229736,
+            "probe_logit": -3.6693382263183594
+          },
+          "nowall": {
+            "row_index": 7,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 7,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.21093963086605072,
+              -0.0015513469697907567,
+              1.1739990711212158
+            ],
+            "action_magnitude": 0.13162001967430115,
+            "probe_logit": -9.646241188049316
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 0
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1183,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d85",
+            "t": 8,
+            "steps_to_crash": 1,
+            "eef_xyz": [
+              -0.15408116579055786,
+              0.02396179549396038,
+              1.183821201324463
+            ],
+            "action_magnitude": 1.0283681154251099,
+            "probe_logit": -0.0369563102722168
+          },
+          "offpath_safe": {
+            "row_index": 1193,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 8,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.14811408519744873,
+              0.03672214597463608,
+              1.1665935516357422
+            ],
+            "action_magnitude": 0.981492280960083,
+            "probe_logit": -4.4599409103393555
+          },
+          "nowall": {
+            "row_index": 8,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 8,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.21058964729309082,
+              -0.0009134387946687639,
+              1.174990177154541
+            ],
+            "action_magnitude": 0.10119295865297318,
+            "probe_logit": -9.804274559020996
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 0
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1184,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d85",
+            "t": 9,
+            "steps_to_crash": 0,
+            "eef_xyz": [
+              -0.14361834526062012,
+              0.031554874032735825,
+              1.1833076477050781
+            ],
+            "action_magnitude": 1.045419692993164,
+            "probe_logit": 0.24290132522583008
+          },
+          "offpath_safe": {
+            "row_index": 1194,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 9,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.1374422162771225,
+              0.04276662692427635,
+              1.1623364686965942
+            ],
+            "action_magnitude": 1.0390270948410034,
+            "probe_logit": -4.425443649291992
+          },
+          "nowall": {
+            "row_index": 9,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 9,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.2101464718580246,
+              -0.0003244873369112611,
+              1.1757081747055054
+            ],
+            "action_magnitude": 0.13162001967430115,
+            "probe_logit": -9.496997833251953
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 0
+          }
+        }
+      ]
+    }
+  },
+  "timestep_eef_action_nn_matching": {
+    "summary": {
+      "onpath": {
+        "q25": 0.979499340057373,
+        "median": 1.4817657470703125,
+        "q75": 2.186534881591797
+      },
+      "offpath_safe": {
+        "n": 29,
+        "onpath_collision_window_logit": {
+          "q25": 0.979499340057373,
+          "median": 1.4817657470703125,
+          "q75": 2.186534881591797
+        },
+        "control_logit": {
+          "q25": -5.022795677185059,
+          "median": -3.385582208633423,
+          "q75": -2.9589457511901855
+        },
+        "paired_delta_onpath_minus_control": {
+          "q25": 4.352357387542725,
+          "median": 5.101565837860107,
+          "q75": 6.728549480438232
+        },
+        "mean_onpath_logit": 1.6437372996889312,
+        "mean_control_logit": -3.824644549139615,
+        "mean_paired_delta": 5.468381848828546,
+        "mean_abs_timestep_difference": 3.586206896551724,
+        "max_abs_timestep_difference": 13,
+        "nn_distance": {
+          "q25": 0.08880235232768234,
+          "median": 0.1280000336141604,
+          "q75": 0.18981745783235737
+        }
+      },
+      "nowall": {
+        "n": 29,
+        "onpath_collision_window_logit": {
+          "q25": 0.979499340057373,
+          "median": 1.4817657470703125,
+          "q75": 2.186534881591797
+        },
+        "control_logit": {
+          "q25": -5.276991844177246,
+          "median": -4.85915470123291,
+          "q75": -2.9540555477142334
+        },
+        "paired_delta_onpath_minus_control": {
+          "q25": 4.753669261932373,
+          "median": 6.227128505706787,
+          "q75": 7.121726751327515
+        },
+        "mean_onpath_logit": 1.6437372996889312,
+        "mean_control_logit": -4.206392501962596,
+        "mean_paired_delta": 5.850129801651527,
+        "mean_abs_timestep_difference": 3.9655172413793105,
+        "max_abs_timestep_difference": 13,
+        "nn_distance": {
+          "q25": 0.11271997393857744,
+          "median": 0.18754607629423814,
+          "q75": 0.29169796630853567
+        }
+      }
+    },
+    "details": {
+      "matching": "timestep_eef_action_nn",
+      "n_pairs": 29,
+      "pairs": [
+        {
+          "onpath": {
+            "row_index": 1100,
+            "cond": "wall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 0,
+            "steps_to_crash": 4,
+            "eef_xyz": [
+              -0.21124163269996643,
+              -0.011090601794421673,
+              1.174249529838562
+            ],
+            "action_magnitude": 0.5992948412895203,
+            "probe_logit": 2.426490306854248
+          },
+          "offpath_safe": {
+            "row_index": 2874,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_09_diverse",
+            "t": 4,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.21091531217098236,
+              -0.007674678228795528,
+              1.1769357919692993
+            ],
+            "action_magnitude": 0.6031057238578796,
+            "probe_logit": -5.399437427520752,
+            "match_distance_standardized": 0.09691660189218526
+          },
+          "nowall": {
+            "row_index": 664,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d78",
+            "t": 4,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.21016079187393188,
+              -0.009800268337130547,
+              1.1752671003341675
+            ],
+            "action_magnitude": 0.5591192245483398,
+            "probe_logit": -6.074029922485352,
+            "match_distance_standardized": 0.11987103080057628
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 4,
+            "nowall": 4
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1101,
+            "cond": "wall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 1,
+            "steps_to_crash": 3,
+            "eef_xyz": [
+              -0.20947888493537903,
+              -0.009434817358851433,
+              1.1746296882629395
+            ],
+            "action_magnitude": 0.5954450368881226,
+            "probe_logit": 1.7095580101013184
+          },
+          "offpath_safe": {
+            "row_index": 2874,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_09_diverse",
+            "t": 4,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.21091531217098236,
+              -0.007674678228795528,
+              1.1769357919692993
+            ],
+            "action_magnitude": 0.6031057238578796,
+            "probe_logit": -5.399437427520752,
+            "match_distance_standardized": 0.06954844143957982
+          },
+          "nowall": {
+            "row_index": 664,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d78",
+            "t": 4,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.21016079187393188,
+              -0.009800268337130547,
+              1.1752671003341675
+            ],
+            "action_magnitude": 0.5591192245483398,
+            "probe_logit": -6.074029922485352,
+            "match_distance_standardized": 0.10072218797356002
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 3,
+            "nowall": 3
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1102,
+            "cond": "wall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 2,
+            "steps_to_crash": 2,
+            "eef_xyz": [
+              -0.20589888095855713,
+              -0.006557950749993324,
+              1.176733374595642
+            ],
+            "action_magnitude": 0.7706578373908997,
+            "probe_logit": 1.3183231353759766
+          },
+          "offpath_safe": {
+            "row_index": 1186,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 1,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.20841754972934723,
+              -0.008489610627293587,
+              1.1746907234191895
+            ],
+            "action_magnitude": 0.8103320598602295,
+            "probe_logit": -3.385582208633423,
+            "match_distance_standardized": 0.11202093069619092
+          },
+          "nowall": {
+            "row_index": 444,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d70",
+            "t": 4,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.21038757264614105,
+              -0.00548867741599679,
+              1.1740286350250244
+            ],
+            "action_magnitude": 0.7532318234443665,
+            "probe_logit": -7.51302433013916,
+            "match_distance_standardized": 0.08770254256208557
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 1,
+            "nowall": 2
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1103,
+            "cond": "wall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 3,
+            "steps_to_crash": 1,
+            "eef_xyz": [
+              -0.20116427540779114,
+              -0.0034243992995470762,
+              1.1796519756317139
+            ],
+            "action_magnitude": 0.6280030012130737,
+            "probe_logit": 1.4817657470703125
+          },
+          "offpath_safe": {
+            "row_index": 1474,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_02_twin",
+            "t": 3,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.20419517159461975,
+              -0.00470910407602787,
+              1.1731151342391968
+            ],
+            "action_magnitude": 0.6645593047142029,
+            "probe_logit": -3.902714729309082,
+            "match_distance_standardized": 0.1280000336141604
+          },
+          "nowall": {
+            "row_index": 667,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d78",
+            "t": 7,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.19769440591335297,
+              -0.0049138800241053104,
+              1.1777485609054565
+            ],
+            "action_magnitude": 0.5591192245483398,
+            "probe_logit": -4.946418762207031,
+            "match_distance_standardized": 0.18754607629423814
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 4
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1104,
+            "cond": "wall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 4,
+            "steps_to_crash": 0,
+            "eef_xyz": [
+              -0.19664977490901947,
+              -0.0003110860416200012,
+              1.182701587677002
+            ],
+            "action_magnitude": 0.7886972427368164,
+            "probe_logit": 1.2659730911254883
+          },
+          "offpath_safe": {
+            "row_index": 2000,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_05_diverse",
+            "t": 10,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.19361262023448944,
+              -0.002285899594426155,
+              1.1800909042358398
+            ],
+            "action_magnitude": 0.8137907385826111,
+            "probe_logit": -3.835592746734619,
+            "match_distance_standardized": 0.12867849651840554
+          },
+          "nowall": {
+            "row_index": 227,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d62",
+            "t": 7,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.19200953841209412,
+              -0.00016808182408567518,
+              1.179547905921936
+            ],
+            "action_magnitude": 0.7917676568031311,
+            "probe_logit": -3.4876961708068848,
+            "match_distance_standardized": 0.08608188429929278
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 6,
+            "nowall": 3
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1152,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d62",
+            "t": 47,
+            "steps_to_crash": 5,
+            "eef_xyz": [
+              0.010928812436759472,
+              0.13364970684051514,
+              0.9755157232284546
+            ],
+            "action_magnitude": 0.15822017192840576,
+            "probe_logit": 0.950136661529541
+          },
+          "offpath_safe": {
+            "row_index": 3443,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_12_boundary",
+            "t": 60,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.012908908538520336,
+              0.15386487543582916,
+              0.9706361889839172
+            ],
+            "action_magnitude": 0.3068218529224396,
+            "probe_logit": -5.749050140380859,
+            "match_distance_standardized": 0.648702347663723
+          },
+          "nowall": {
+            "row_index": 934,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d85",
+            "t": 54,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.019438669085502625,
+              0.1501886546611786,
+              0.948724091053009
+            ],
+            "action_magnitude": 0.1561601608991623,
+            "probe_logit": -5.276991844177246,
+            "match_distance_standardized": 0.6130401602561761
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 13,
+            "nowall": 7
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1153,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d62",
+            "t": 48,
+            "steps_to_crash": 4,
+            "eef_xyz": [
+              0.009217566810548306,
+              0.13557662069797516,
+              0.9681801795959473
+            ],
+            "action_magnitude": 0.19894973933696747,
+            "probe_logit": 1.8646588325500488
+          },
+          "offpath_safe": {
+            "row_index": 3443,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_12_boundary",
+            "t": 60,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.012908908538520336,
+              0.15386487543582916,
+              0.9706361889839172
+            ],
+            "action_magnitude": 0.3068218529224396,
+            "probe_logit": -5.749050140380859,
+            "match_distance_standardized": 0.5569411426042888
+          },
+          "nowall": {
+            "row_index": 934,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d85",
+            "t": 54,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.019438669085502625,
+              0.1501886546611786,
+              0.948724091053009
+            ],
+            "action_magnitude": 0.1561601608991623,
+            "probe_logit": -5.276991844177246,
+            "match_distance_standardized": 0.5418152114237598
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 12,
+            "nowall": 6
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1154,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d62",
+            "t": 49,
+            "steps_to_crash": 3,
+            "eef_xyz": [
+              0.008816839195787907,
+              0.1369689553976059,
+              0.9650881290435791
+            ],
+            "action_magnitude": 0.19894973933696747,
+            "probe_logit": 1.7853822708129883
+          },
+          "offpath_safe": {
+            "row_index": 3443,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_12_boundary",
+            "t": 60,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.012908908538520336,
+              0.15386487543582916,
+              0.9706361889839172
+            ],
+            "action_magnitude": 0.3068218529224396,
+            "probe_logit": -5.749050140380859,
+            "match_distance_standardized": 0.5359901455016196
+          },
+          "nowall": {
+            "row_index": 934,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d85",
+            "t": 54,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.019438669085502625,
+              0.1501886546611786,
+              0.948724091053009
+            ],
+            "action_magnitude": 0.1561601608991623,
+            "probe_logit": -5.276991844177246,
+            "match_distance_standardized": 0.5062115509961841
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 11,
+            "nowall": 5
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1155,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d62",
+            "t": 50,
+            "steps_to_crash": 2,
+            "eef_xyz": [
+              0.00896947830915451,
+              0.13822834193706512,
+              0.9628707766532898
+            ],
+            "action_magnitude": 0.15822017192840576,
+            "probe_logit": 1.8891425132751465
+          },
+          "offpath_safe": {
+            "row_index": 3444,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_12_boundary",
+            "t": 61,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.016382167115807533,
+              0.15408125519752502,
+              0.9664212465286255
+            ],
+            "action_magnitude": 0.28708919882774353,
+            "probe_logit": -5.747091770172119,
+            "match_distance_standardized": 0.5745858583247142
+          },
+          "nowall": {
+            "row_index": 934,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d85",
+            "t": 54,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.019438669085502625,
+              0.1501886546611786,
+              0.948724091053009
+            ],
+            "action_magnitude": 0.1561601608991623,
+            "probe_logit": -5.276991844177246,
+            "match_distance_standardized": 0.47228874129907383
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 11,
+            "nowall": 4
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1156,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d62",
+            "t": 51,
+            "steps_to_crash": 1,
+            "eef_xyz": [
+              0.008263240568339825,
+              0.13979102671146393,
+              0.9603814482688904
+            ],
+            "action_magnitude": 0.19595418870449066,
+            "probe_logit": 0.979499340057373
+          },
+          "offpath_safe": {
+            "row_index": 3443,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_12_boundary",
+            "t": 60,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.012908908538520336,
+              0.15386487543582916,
+              0.9706361889839172
+            ],
+            "action_magnitude": 0.3068218529224396,
+            "probe_logit": -5.749050140380859,
+            "match_distance_standardized": 0.5062945944048853
+          },
+          "nowall": {
+            "row_index": 934,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d85",
+            "t": 54,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.019438669085502625,
+              0.1501886546611786,
+              0.948724091053009
+            ],
+            "action_magnitude": 0.1561601608991623,
+            "probe_logit": -5.276991844177246,
+            "match_distance_standardized": 0.44887375579176814
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 9,
+            "nowall": 3
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1157,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d62",
+            "t": 52,
+            "steps_to_crash": 0,
+            "eef_xyz": [
+              0.0072761885821819305,
+              0.1412513256072998,
+              0.9577025175094604
+            ],
+            "action_magnitude": 0.4279433488845825,
+            "probe_logit": -0.14252710342407227
+          },
+          "offpath_safe": {
+            "row_index": 3442,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_12_boundary",
+            "t": 59,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.00837191566824913,
+              0.15410318970680237,
+              0.978687584400177
+            ],
+            "action_magnitude": 0.5193859338760376,
+            "probe_logit": -5.022795677185059,
+            "match_distance_standardized": 0.4784566331772877
+          },
+          "nowall": {
+            "row_index": 933,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d85",
+            "t": 53,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.019778244197368622,
+              0.14899177849292755,
+              0.9493255615234375
+            ],
+            "action_magnitude": 0.490122526884079,
+            "probe_logit": -5.097817420959473,
+            "match_distance_standardized": 0.4235863063560565
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 7,
+            "nowall": 1
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1160,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d70",
+            "t": 2,
+            "steps_to_crash": 5,
+            "eef_xyz": [
+              -0.2063959836959839,
+              -0.0052605182863771915,
+              1.1747862100601196
+            ],
+            "action_magnitude": 0.7917676568031311,
+            "probe_logit": -0.8394007682800293
+          },
+          "offpath_safe": {
+            "row_index": 1186,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 1,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.20841754972934723,
+              -0.008489610627293587,
+              1.1746907234191895
+            ],
+            "action_magnitude": 0.8103320598602295,
+            "probe_logit": -3.385582208633423,
+            "match_distance_standardized": 0.08237039135933337
+          },
+          "nowall": {
+            "row_index": 444,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d70",
+            "t": 4,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.21038757264614105,
+              -0.00548867741599679,
+              1.1740286350250244
+            ],
+            "action_magnitude": 0.7532318234443665,
+            "probe_logit": -7.51302433013916,
+            "match_distance_standardized": 0.11181657837125097
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 1,
+            "nowall": 2
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1161,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d70",
+            "t": 3,
+            "steps_to_crash": 4,
+            "eef_xyz": [
+              -0.20217615365982056,
+              -0.0014529122272506356,
+              1.1763163805007935
+            ],
+            "action_magnitude": 0.7990365624427795,
+            "probe_logit": -0.2047576904296875
+          },
+          "offpath_safe": {
+            "row_index": 1186,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 1,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.20841754972934723,
+              -0.008489610627293587,
+              1.1746907234191895
+            ],
+            "action_magnitude": 0.8103320598602295,
+            "probe_logit": -3.385582208633423,
+            "match_distance_standardized": 0.1639558112813473
+          },
+          "nowall": {
+            "row_index": 227,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d62",
+            "t": 7,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.19200953841209412,
+              -0.00016808182408567518,
+              1.179547905921936
+            ],
+            "action_magnitude": 0.7917676568031311,
+            "probe_logit": -3.4876961708068848,
+            "match_distance_standardized": 0.15468102184396304
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 2,
+            "nowall": 4
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1162,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d70",
+            "t": 4,
+            "steps_to_crash": 3,
+            "eef_xyz": [
+              -0.1952318251132965,
+              0.003321840427815914,
+              1.1780295372009277
+            ],
+            "action_magnitude": 1.0016363859176636,
+            "probe_logit": 1.155494213104248
+          },
+          "offpath_safe": {
+            "row_index": 1476,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_02_twin",
+            "t": 5,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.19593752920627594,
+              0.0012764654820784926,
+              1.174290418624878
+            ],
+            "action_magnitude": 0.9932501912117004,
+            "probe_logit": -2.9589457511901855,
+            "match_distance_standardized": 0.06606220302809124
+          },
+          "nowall": {
+            "row_index": 447,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d70",
+            "t": 7,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.20208565890789032,
+              0.003020503791049123,
+              1.1753487586975098
+            ],
+            "action_magnitude": 0.9860526919364929,
+            "probe_logit": -5.816699981689453,
+            "match_distance_standardized": 0.11271997393857744
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 1,
+            "nowall": 3
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1163,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d70",
+            "t": 5,
+            "steps_to_crash": 2,
+            "eef_xyz": [
+              -0.18662795424461365,
+              0.009135084226727486,
+              1.178450345993042
+            ],
+            "action_magnitude": 0.8254525661468506,
+            "probe_logit": 1.3046774864196777
+          },
+          "offpath_safe": {
+            "row_index": 3096,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_10_diverse",
+            "t": 6,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.1857670545578003,
+              0.008129633963108063,
+              1.1819686889648438
+            ],
+            "action_magnitude": 0.8379108905792236,
+            "probe_logit": -1.9359636306762695,
+            "match_distance_standardized": 0.059170780288122955
+          },
+          "nowall": {
+            "row_index": 448,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d70",
+            "t": 8,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.1941603571176529,
+              0.007429082412272692,
+              1.1761798858642578
+            ],
+            "action_magnitude": 0.8221081495285034,
+            "probe_logit": -2.9540555477142334,
+            "match_distance_standardized": 0.11718003929659754
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 1,
+            "nowall": 3
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1164,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d70",
+            "t": 6,
+            "steps_to_crash": 1,
+            "eef_xyz": [
+              -0.17845822870731354,
+              0.015518181957304478,
+              1.1781995296478271
+            ],
+            "action_magnitude": 0.9296874403953552,
+            "probe_logit": 2.5569825172424316
+          },
+          "offpath_safe": {
+            "row_index": 1479,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_02_twin",
+            "t": 8,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.17470574378967285,
+              0.01679813675582409,
+              1.1762233972549438
+            ],
+            "action_magnitude": 0.9221667051315308,
+            "probe_logit": -3.1770260334014893,
+            "match_distance_standardized": 0.06989737619799659
+          },
+          "nowall": {
+            "row_index": 450,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d70",
+            "t": 10,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.17762234807014465,
+              0.02065315470099449,
+              1.1760929822921753
+            ],
+            "action_magnitude": 0.9999994039535522,
+            "probe_logit": -2.3349862098693848,
+            "match_distance_standardized": 0.20830969416701725
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 2,
+            "nowall": 4
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1165,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d70",
+            "t": 7,
+            "steps_to_crash": 0,
+            "eef_xyz": [
+              -0.1702841967344284,
+              0.022232336923480034,
+              1.177411437034607
+            ],
+            "action_magnitude": 0.9480720162391663,
+            "probe_logit": 1.4447078704833984
+          },
+          "offpath_safe": {
+            "row_index": 1479,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_02_twin",
+            "t": 8,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.17470574378967285,
+              0.01679813675582409,
+              1.1762233972549438
+            ],
+            "action_magnitude": 0.9221667051315308,
+            "probe_logit": -3.1770260334014893,
+            "match_distance_standardized": 0.13613995851502858
+          },
+          "nowall": {
+            "row_index": 450,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d70",
+            "t": 10,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.17762234807014465,
+              0.02065315470099449,
+              1.1760929822921753
+            ],
+            "action_magnitude": 0.9999994039535522,
+            "probe_logit": -2.3349862098693848,
+            "match_distance_standardized": 0.1683340210649825
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 1,
+            "nowall": 3
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1169,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d78",
+            "t": 3,
+            "steps_to_crash": 5,
+            "eef_xyz": [
+              -0.19724872708320618,
+              0.0013765107141807675,
+              1.1720446348190308
+            ],
+            "action_magnitude": 0.9674118161201477,
+            "probe_logit": 1.7732415199279785
+          },
+          "offpath_safe": {
+            "row_index": 1476,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_02_twin",
+            "t": 5,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.19593752920627594,
+              0.0012764654820784926,
+              1.174290418624878
+            ],
+            "action_magnitude": 0.9932501912117004,
+            "probe_logit": -2.9589457511901855,
+            "match_distance_standardized": 0.07713241462315432
+          },
+          "nowall": {
+            "row_index": 447,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d70",
+            "t": 7,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.20208565890789032,
+              0.003020503791049123,
+              1.1753487586975098
+            ],
+            "action_magnitude": 0.9860526919364929,
+            "probe_logit": -5.816699981689453,
+            "match_distance_standardized": 0.11206903909106669
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 2,
+            "nowall": 4
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1170,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d78",
+            "t": 4,
+            "steps_to_crash": 4,
+            "eef_xyz": [
+              -0.19081294536590576,
+              0.007327898405492306,
+              1.171348214149475
+            ],
+            "action_magnitude": 0.9747231006622314,
+            "probe_logit": 2.7616186141967773
+          },
+          "offpath_safe": {
+            "row_index": 1189,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 4,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.18802717328071594,
+              0.008243237622082233,
+              1.1750190258026123
+            ],
+            "action_magnitude": 1.0023689270019531,
+            "probe_logit": -2.598432779312134,
+            "match_distance_standardized": 0.09010730457489058
+          },
+          "nowall": {
+            "row_index": 447,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d70",
+            "t": 7,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.20208565890789032,
+              0.003020503791049123,
+              1.1753487586975098
+            ],
+            "action_magnitude": 0.9860526919364929,
+            "probe_logit": -5.816699981689453,
+            "match_distance_standardized": 0.18355986954584302
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 3
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1171,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d78",
+            "t": 5,
+            "steps_to_crash": 3,
+            "eef_xyz": [
+              -0.18296034634113312,
+              0.014201649464666843,
+              1.1710008382797241
+            ],
+            "action_magnitude": 0.8154056072235107,
+            "probe_logit": 3.9435434341430664
+          },
+          "offpath_safe": {
+            "row_index": 3096,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_10_diverse",
+            "t": 6,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.1857670545578003,
+              0.008129633963108063,
+              1.1819686889648438
+            ],
+            "action_magnitude": 0.8379108905792236,
+            "probe_logit": -1.9359636306762695,
+            "match_distance_standardized": 0.18981745783235737
+          },
+          "nowall": {
+            "row_index": 448,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d70",
+            "t": 8,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.1941603571176529,
+              0.007429082412272692,
+              1.1761798858642578
+            ],
+            "action_magnitude": 0.8221081495285034,
+            "probe_logit": -2.9540555477142334,
+            "match_distance_standardized": 0.21108398841098716
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 1,
+            "nowall": 3
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1172,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d78",
+            "t": 6,
+            "steps_to_crash": 2,
+            "eef_xyz": [
+              -0.1750463992357254,
+              0.021453045308589935,
+              1.1699481010437012
+            ],
+            "action_magnitude": 0.8025044798851013,
+            "probe_logit": 4.2906928062438965
+          },
+          "offpath_safe": {
+            "row_index": 3393,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_12_boundary",
+            "t": 10,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.18478138744831085,
+              0.018439358100295067,
+              1.1800296306610107
+            ],
+            "action_magnitude": 0.8855226039886475,
+            "probe_logit": -2.408695697784424,
+            "match_distance_standardized": 0.28097056548463856
+          },
+          "nowall": {
+            "row_index": 19,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 19,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.17966727912425995,
+              0.024752911180257797,
+              1.1859718561172485
+            ],
+            "action_magnitude": 0.7634800672531128,
+            "probe_logit": -2.831033945083618,
+            "match_distance_standardized": 0.3105498822938298
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 4,
+            "nowall": 13
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1173,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d78",
+            "t": 7,
+            "steps_to_crash": 1,
+            "eef_xyz": [
+              -0.16675212979316711,
+              0.027521079406142235,
+              1.169202208518982
+            ],
+            "action_magnitude": 0.9932636022567749,
+            "probe_logit": 3.7913808822631836
+          },
+          "offpath_safe": {
+            "row_index": 1192,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 7,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.15883934497833252,
+              0.030134500935673714,
+              1.170366644859314
+            ],
+            "action_magnitude": 1.0399982929229736,
+            "probe_logit": -3.6693382263183594,
+            "match_distance_standardized": 0.16166224907404023
+          },
+          "nowall": {
+            "row_index": 450,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d70",
+            "t": 10,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.17762234807014465,
+              0.02065315470099449,
+              1.1760929822921753
+            ],
+            "action_magnitude": 0.9999994039535522,
+            "probe_logit": -2.3349862098693848,
+            "match_distance_standardized": 0.21653434262226948
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 3
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1174,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d78",
+            "t": 8,
+            "steps_to_crash": 0,
+            "eef_xyz": [
+              -0.15785080194473267,
+              0.03456836938858032,
+              1.1686768531799316
+            ],
+            "action_magnitude": 0.9597914814949036,
+            "probe_logit": 3.973855972290039
+          },
+          "offpath_safe": {
+            "row_index": 1193,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 8,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.14811408519744873,
+              0.03672214597463608,
+              1.1665935516357422
+            ],
+            "action_magnitude": 0.981492280960083,
+            "probe_logit": -4.4599409103393555,
+            "match_distance_standardized": 0.1455312277208539
+          },
+          "nowall": {
+            "row_index": 452,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d70",
+            "t": 12,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.15656685829162598,
+              0.032951660454273224,
+              1.1766108274459839
+            ],
+            "action_magnitude": 1.0648174285888672,
+            "probe_logit": -2.138181686401367,
+            "match_distance_standardized": 0.28160131428854923
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 4
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1179,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d85",
+            "t": 4,
+            "steps_to_crash": 5,
+            "eef_xyz": [
+              -0.19026151299476624,
+              0.0012424570741131902,
+              1.1792817115783691
+            ],
+            "action_magnitude": 0.8792433142662048,
+            "probe_logit": 0.7182245254516602
+          },
+          "offpath_safe": {
+            "row_index": 3095,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_10_diverse",
+            "t": 5,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.19254571199417114,
+              0.004439824260771275,
+              1.1804083585739136
+            ],
+            "action_magnitude": 0.9202173948287964,
+            "probe_logit": -3.252422571182251,
+            "match_distance_standardized": 0.12214538115522071
+          },
+          "nowall": {
+            "row_index": 448,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d70",
+            "t": 8,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.1941603571176529,
+              0.007429082412272692,
+              1.1761798858642578
+            ],
+            "action_magnitude": 0.8221081495285034,
+            "probe_logit": -2.9540555477142334,
+            "match_distance_standardized": 0.202817695934262
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 1,
+            "nowall": 4
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1180,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d85",
+            "t": 5,
+            "steps_to_crash": 4,
+            "eef_xyz": [
+              -0.18213415145874023,
+              0.006183363031595945,
+              1.1801927089691162
+            ],
+            "action_magnitude": 0.902613639831543,
+            "probe_logit": 2.186534881591797
+          },
+          "offpath_safe": {
+            "row_index": 1478,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_02_twin",
+            "t": 7,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.18211616575717926,
+              0.010642229579389095,
+              1.1759967803955078
+            ],
+            "action_magnitude": 0.9251388907432556,
+            "probe_logit": -2.1658225059509277,
+            "match_distance_standardized": 0.11780693603208137
+          },
+          "nowall": {
+            "row_index": 891,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d85",
+            "t": 11,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.18224555253982544,
+              0.002139862859621644,
+              1.182497501373291
+            ],
+            "action_magnitude": 0.963251531124115,
+            "probe_logit": -0.36371946334838867,
+            "match_distance_standardized": 0.19292119288446205
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 2,
+            "nowall": 6
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1181,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d85",
+            "t": 6,
+            "steps_to_crash": 3,
+            "eef_xyz": [
+              -0.17378954589366913,
+              0.01155715249478817,
+              1.1819895505905151
+            ],
+            "action_magnitude": 0.8868310451507568,
+            "probe_logit": 1.475081443786621
+          },
+          "offpath_safe": {
+            "row_index": 1479,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_02_twin",
+            "t": 8,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.17470574378967285,
+              0.01679813675582409,
+              1.1762233972549438
+            ],
+            "action_magnitude": 0.9221667051315308,
+            "probe_logit": -3.1770260334014893,
+            "match_distance_standardized": 0.1532551287269919
+          },
+          "nowall": {
+            "row_index": 891,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d85",
+            "t": 11,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.18224555253982544,
+              0.002139862859621644,
+              1.182497501373291
+            ],
+            "action_magnitude": 0.963251531124115,
+            "probe_logit": -0.36371946334838867,
+            "match_distance_standardized": 0.29169796630853567
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 2,
+            "nowall": 5
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1182,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d85",
+            "t": 7,
+            "steps_to_crash": 2,
+            "eef_xyz": [
+              -0.16433797776699066,
+              0.017368048429489136,
+              1.1833783388137817
+            ],
+            "action_magnitude": 1.067139983177185,
+            "probe_logit": 1.602156162261963
+          },
+          "offpath_safe": {
+            "row_index": 4593,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v5_19_clear",
+            "t": 10,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.16576474905014038,
+              0.014962667599320412,
+              1.1818370819091797
+            ],
+            "action_magnitude": 1.049756407737732,
+            "probe_logit": -2.7882752418518066,
+            "match_distance_standardized": 0.0825057771516007
+          },
+          "nowall": {
+            "row_index": 230,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d62",
+            "t": 10,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.1654261350631714,
+              0.013857127167284489,
+              1.1848828792572021
+            ],
+            "action_magnitude": 1.0786393880844116,
+            "probe_logit": -3.6152074337005615,
+            "match_distance_standardized": 0.08970358586475788
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 3,
+            "nowall": 3
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1183,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d85",
+            "t": 8,
+            "steps_to_crash": 1,
+            "eef_xyz": [
+              -0.15408116579055786,
+              0.02396179549396038,
+              1.183821201324463
+            ],
+            "action_magnitude": 1.0283681154251099,
+            "probe_logit": -0.0369563102722168
+          },
+          "offpath_safe": {
+            "row_index": 3099,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_10_diverse",
+            "t": 9,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.16015447676181793,
+              0.024722734466195107,
+              1.1865837574005127
+            ],
+            "action_magnitude": 1.0308769941329956,
+            "probe_logit": -4.3433990478515625,
+            "match_distance_standardized": 0.08880235232768234
+          },
+          "nowall": {
+            "row_index": 231,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d62",
+            "t": 11,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.15497702360153198,
+              0.019825628027319908,
+              1.1861997842788696
+            ],
+            "action_magnitude": 1.0062782764434814,
+            "probe_logit": -3.9184443950653076,
+            "match_distance_standardized": 0.11103667609280901
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 1,
+            "nowall": 3
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1184,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d85",
+            "t": 9,
+            "steps_to_crash": 0,
+            "eef_xyz": [
+              -0.14361834526062012,
+              0.031554874032735825,
+              1.1833076477050781
+            ],
+            "action_magnitude": 1.045419692993164,
+            "probe_logit": 0.24290132522583008
+          },
+          "offpath_safe": {
+            "row_index": 4595,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v5_19_clear",
+            "t": 12,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.14388500154018402,
+              0.027653170749545097,
+              1.1824545860290527
+            ],
+            "action_magnitude": 1.0420218706130981,
+            "probe_logit": -3.447451114654541,
+            "match_distance_standardized": 0.08934481873620688
+          },
+          "nowall": {
+            "row_index": 232,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d62",
+            "t": 12,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.1442418098449707,
+              0.02569599822163582,
+              1.1872928142547607
+            ],
+            "action_magnitude": 1.0783216953277588,
+            "probe_logit": -4.85915470123291,
+            "match_distance_standardized": 0.1535807706799079
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 3,
+            "nowall": 3
+          }
+        }
+      ]
+    }
+  },
+  "all_offpath_timestep_sensitivity": {
+    "summary": {
+      "onpath": {
+        "q25": 0.979499340057373,
+        "median": 1.4817657470703125,
+        "q75": 2.186534881591797
+      },
+      "offpath_safe": {
+        "n": 29,
+        "onpath_collision_window_logit": {
+          "q25": 0.979499340057373,
+          "median": 1.4817657470703125,
+          "q75": 2.186534881591797
+        },
+        "control_logit": {
+          "q25": -4.272547721862793,
+          "median": -3.6693382263183594,
+          "q75": -3.367213487625122
+        },
+        "paired_delta_onpath_minus_control": {
+          "q25": 4.422984600067139,
+          "median": 5.095140218734741,
+          "q75": 6.137206554412842
+        },
+        "mean_onpath_logit": 1.6437372996889312,
+        "mean_control_logit": -3.6404269317100786,
+        "mean_paired_delta": 5.28416423139901,
+        "mean_abs_timestep_difference": 0.0,
+        "max_abs_timestep_difference": 0
+      },
+      "nowall": {
+        "n": 29,
+        "onpath_collision_window_logit": {
+          "q25": 0.979499340057373,
+          "median": 1.4817657470703125,
+          "q75": 2.186534881591797
+        },
+        "control_logit": {
+          "q25": -9.03302001953125,
+          "median": -7.793487548828125,
+          "q75": -7.561928749084473
+        },
+        "paired_delta_onpath_minus_control": {
+          "q25": 8.833378314971924,
+          "median": 9.35099172592163,
+          "q75": 10.508101463317871
+        },
+        "mean_onpath_logit": 1.6437372996889312,
+        "mean_control_logit": -8.095848593218573,
+        "mean_paired_delta": 9.739585892907504,
+        "mean_abs_timestep_difference": 0.0,
+        "max_abs_timestep_difference": 0
+      }
+    },
+    "details": {
+      "matching": "timestep",
+      "n_pairs": 29,
+      "pairs": [
+        {
+          "onpath": {
+            "row_index": 1100,
+            "cond": "wall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 0,
+            "steps_to_crash": 4,
+            "eef_xyz": [
+              -0.21124163269996643,
+              -0.011090601794421673,
+              1.174249529838562
+            ],
+            "action_magnitude": 0.5992948412895203,
+            "probe_logit": 2.426490306854248
+          },
+          "offpath_safe": {
+            "row_index": 1185,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 0,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.21124163269996643,
+              -0.011090601794421673,
+              1.174249529838562
+            ],
+            "action_magnitude": 0.7842331528663635,
+            "probe_logit": -3.917180061340332
+          },
+          "nowall": {
+            "row_index": 0,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 0,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.21124163269996643,
+              -0.011090601794421673,
+              1.174249529838562
+            ],
+            "action_magnitude": 0.10721790045499802,
+            "probe_logit": -6.406888008117676
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 0
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1101,
+            "cond": "wall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 1,
+            "steps_to_crash": 3,
+            "eef_xyz": [
+              -0.20947888493537903,
+              -0.009434817358851433,
+              1.1746296882629395
+            ],
+            "action_magnitude": 0.5954450368881226,
+            "probe_logit": 1.7095580101013184
+          },
+          "offpath_safe": {
+            "row_index": 1186,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 1,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.20841754972934723,
+              -0.008489610627293587,
+              1.1746907234191895
+            ],
+            "action_magnitude": 0.8103320598602295,
+            "probe_logit": -3.385582208633423
+          },
+          "nowall": {
+            "row_index": 1,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 1,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.21124617755413055,
+              -0.01053674053400755,
+              1.1742368936538696
+            ],
+            "action_magnitude": 0.2361244559288025,
+            "probe_logit": -6.519123077392578
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 0
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1102,
+            "cond": "wall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 2,
+            "steps_to_crash": 2,
+            "eef_xyz": [
+              -0.20589888095855713,
+              -0.006557950749993324,
+              1.176733374595642
+            ],
+            "action_magnitude": 0.7706578373908997,
+            "probe_logit": 1.3183231353759766
+          },
+          "offpath_safe": {
+            "row_index": 1187,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 2,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.2033969908952713,
+              -0.0034489103127270937,
+              1.1753723621368408
+            ],
+            "action_magnitude": 1.0336217880249023,
+            "probe_logit": -3.587617874145508
+          },
+          "nowall": {
+            "row_index": 2,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 2,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.21078898012638092,
+              -0.008818141184747219,
+              1.1741960048675537
+            ],
+            "action_magnitude": 0.10721790045499802,
+            "probe_logit": -7.891123294830322
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 0
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1103,
+            "cond": "wall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 3,
+            "steps_to_crash": 1,
+            "eef_xyz": [
+              -0.20116427540779114,
+              -0.0034243992995470762,
+              1.1796519756317139
+            ],
+            "action_magnitude": 0.6280030012130737,
+            "probe_logit": 1.4817657470703125
+          },
+          "offpath_safe": {
+            "row_index": 1188,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 3,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.19644884765148163,
+              0.002431882545351982,
+              1.1751176118850708
+            ],
+            "action_magnitude": 1.0277270078659058,
+            "probe_logit": -2.5695600509643555
+          },
+          "nowall": {
+            "row_index": 3,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 3,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.21044139564037323,
+              -0.006956988945603371,
+              1.1740729808807373
+            ],
+            "action_magnitude": 0.10721790045499802,
+            "probe_logit": -7.793487548828125
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 0
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1104,
+            "cond": "wall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 4,
+            "steps_to_crash": 0,
+            "eef_xyz": [
+              -0.19664977490901947,
+              -0.0003110860416200012,
+              1.182701587677002
+            ],
+            "action_magnitude": 0.7886972427368164,
+            "probe_logit": 1.2659730911254883
+          },
+          "offpath_safe": {
+            "row_index": 1189,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 4,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.18802717328071594,
+              0.008243237622082233,
+              1.1750190258026123
+            ],
+            "action_magnitude": 1.0023689270019531,
+            "probe_logit": -2.598432779312134
+          },
+          "nowall": {
+            "row_index": 4,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 4,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.21038757264614105,
+              -0.00548867741599679,
+              1.1740286350250244
+            ],
+            "action_magnitude": 0.10721790045499802,
+            "probe_logit": -7.683809280395508
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 0
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1152,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d62",
+            "t": 47,
+            "steps_to_crash": 5,
+            "eef_xyz": [
+              0.010928812436759472,
+              0.13364970684051514,
+              0.9755157232284546
+            ],
+            "action_magnitude": 0.15822017192840576,
+            "probe_logit": 0.950136661529541
+          },
+          "offpath_safe": {
+            "row_index": 1232,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 47,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.07008547335863113,
+              0.15304696559906006,
+              0.9469519257545471
+            ],
+            "action_magnitude": 0.8123836517333984,
+            "probe_logit": -3.658194065093994
+          },
+          "nowall": {
+            "row_index": 47,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 47,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.03209172561764717,
+              0.13567160069942474,
+              0.9761801958084106
+            ],
+            "action_magnitude": 1.1301661729812622,
+            "probe_logit": -7.1796112060546875
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 0
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1153,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d62",
+            "t": 48,
+            "steps_to_crash": 4,
+            "eef_xyz": [
+              0.009217566810548306,
+              0.13557662069797516,
+              0.9681801795959473
+            ],
+            "action_magnitude": 0.19894973933696747,
+            "probe_logit": 1.8646588325500488
+          },
+          "offpath_safe": {
+            "row_index": 1233,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 48,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.06847391277551651,
+              0.1529930830001831,
+              0.9554031491279602
+            ],
+            "action_magnitude": 0.8536834716796875,
+            "probe_logit": -4.272547721862793
+          },
+          "nowall": {
+            "row_index": 48,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 48,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.03850247338414192,
+              0.1362488865852356,
+              0.9649811387062073
+            ],
+            "action_magnitude": 1.1415140628814697,
+            "probe_logit": -7.486332893371582
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 0
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1154,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d62",
+            "t": 49,
+            "steps_to_crash": 3,
+            "eef_xyz": [
+              0.008816839195787907,
+              0.1369689553976059,
+              0.9650881290435791
+            ],
+            "action_magnitude": 0.19894973933696747,
+            "probe_logit": 1.7853822708129883
+          },
+          "offpath_safe": {
+            "row_index": 1234,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 49,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.06662029027938843,
+              0.15319129824638367,
+              0.9646122455596924
+            ],
+            "action_magnitude": 0.7850337624549866,
+            "probe_logit": -4.590697288513184
+          },
+          "nowall": {
+            "row_index": 49,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 49,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.045641541481018066,
+              0.13681602478027344,
+              0.9537070393562317
+            ],
+            "action_magnitude": 1.1107940673828125,
+            "probe_logit": -7.561928749084473
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 0
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1155,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d62",
+            "t": 50,
+            "steps_to_crash": 2,
+            "eef_xyz": [
+              0.00896947830915451,
+              0.13822834193706512,
+              0.9628707766532898
+            ],
+            "action_magnitude": 0.15822017192840576,
+            "probe_logit": 1.8891425132751465
+          },
+          "offpath_safe": {
+            "row_index": 1235,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 50,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.06426120549440384,
+              0.15237432718276978,
+              0.9739391803741455
+            ],
+            "action_magnitude": 0.7850337624549866,
+            "probe_logit": -4.933131217956543
+          },
+          "nowall": {
+            "row_index": 50,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 50,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.053179193288087845,
+              0.13740181922912598,
+              0.9422044157981873
+            ],
+            "action_magnitude": 0.6202125549316406,
+            "probe_logit": -7.527225494384766
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 0
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1156,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d62",
+            "t": 51,
+            "steps_to_crash": 1,
+            "eef_xyz": [
+              0.008263240568339825,
+              0.13979102671146393,
+              0.9603814482688904
+            ],
+            "action_magnitude": 0.19595418870449066,
+            "probe_logit": 0.979499340057373
+          },
+          "offpath_safe": {
+            "row_index": 1236,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 51,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.06116804853081703,
+              0.151184543967247,
+              0.98331218957901
+            ],
+            "action_magnitude": 1.027119755744934,
+            "probe_logit": -4.938725471496582
+          },
+          "nowall": {
+            "row_index": 51,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 51,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.05969966948032379,
+              0.13777215778827667,
+              0.9325901865959167
+            ],
+            "action_magnitude": 0.4533843994140625,
+            "probe_logit": -6.858079433441162
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 0
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1157,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d62",
+            "t": 52,
+            "steps_to_crash": 0,
+            "eef_xyz": [
+              0.0072761885821819305,
+              0.1412513256072998,
+              0.9577025175094604
+            ],
+            "action_magnitude": 0.4279433488845825,
+            "probe_logit": -0.14252710342407227
+          },
+          "offpath_safe": {
+            "row_index": 1237,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 52,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.05720580369234085,
+              0.15090198814868927,
+              0.993859052658081
+            ],
+            "action_magnitude": 1.0031579732894897,
+            "probe_logit": -5.055165767669678
+          },
+          "nowall": {
+            "row_index": 52,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 52,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.06520211696624756,
+              0.1376793086528778,
+              0.9259697794914246
+            ],
+            "action_magnitude": 0.16806329786777496,
+            "probe_logit": -6.2364912033081055
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 0
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1160,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d70",
+            "t": 2,
+            "steps_to_crash": 5,
+            "eef_xyz": [
+              -0.2063959836959839,
+              -0.0052605182863771915,
+              1.1747862100601196
+            ],
+            "action_magnitude": 0.7917676568031311,
+            "probe_logit": -0.8394007682800293
+          },
+          "offpath_safe": {
+            "row_index": 1187,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 2,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.2033969908952713,
+              -0.0034489103127270937,
+              1.1753723621368408
+            ],
+            "action_magnitude": 1.0336217880249023,
+            "probe_logit": -3.587617874145508
+          },
+          "nowall": {
+            "row_index": 2,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 2,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.21078898012638092,
+              -0.008818141184747219,
+              1.1741960048675537
+            ],
+            "action_magnitude": 0.10721790045499802,
+            "probe_logit": -7.891123294830322
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 0
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1161,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d70",
+            "t": 3,
+            "steps_to_crash": 4,
+            "eef_xyz": [
+              -0.20217615365982056,
+              -0.0014529122272506356,
+              1.1763163805007935
+            ],
+            "action_magnitude": 0.7990365624427795,
+            "probe_logit": -0.2047576904296875
+          },
+          "offpath_safe": {
+            "row_index": 1188,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 3,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.19644884765148163,
+              0.002431882545351982,
+              1.1751176118850708
+            ],
+            "action_magnitude": 1.0277270078659058,
+            "probe_logit": -2.5695600509643555
+          },
+          "nowall": {
+            "row_index": 3,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 3,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.21044139564037323,
+              -0.006956988945603371,
+              1.1740729808807373
+            ],
+            "action_magnitude": 0.10721790045499802,
+            "probe_logit": -7.793487548828125
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 0
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1162,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d70",
+            "t": 4,
+            "steps_to_crash": 3,
+            "eef_xyz": [
+              -0.1952318251132965,
+              0.003321840427815914,
+              1.1780295372009277
+            ],
+            "action_magnitude": 1.0016363859176636,
+            "probe_logit": 1.155494213104248
+          },
+          "offpath_safe": {
+            "row_index": 1189,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 4,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.18802717328071594,
+              0.008243237622082233,
+              1.1750190258026123
+            ],
+            "action_magnitude": 1.0023689270019531,
+            "probe_logit": -2.598432779312134
+          },
+          "nowall": {
+            "row_index": 4,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 4,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.21038757264614105,
+              -0.00548867741599679,
+              1.1740286350250244
+            ],
+            "action_magnitude": 0.10721790045499802,
+            "probe_logit": -7.683809280395508
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 0
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1163,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d70",
+            "t": 5,
+            "steps_to_crash": 2,
+            "eef_xyz": [
+              -0.18662795424461365,
+              0.009135084226727486,
+              1.178450345993042
+            ],
+            "action_magnitude": 0.8254525661468506,
+            "probe_logit": 1.3046774864196777
+          },
+          "offpath_safe": {
+            "row_index": 1190,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 5,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.17882338166236877,
+              0.014302696101367474,
+              1.1750437021255493
+            ],
+            "action_magnitude": 1.0502721071243286,
+            "probe_logit": -3.696176528930664
+          },
+          "nowall": {
+            "row_index": 5,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 5,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.21037890017032623,
+              -0.004089442081749439,
+              1.1740105152130127
+            ],
+            "action_magnitude": 0.1373485028743744,
+            "probe_logit": -7.987550735473633
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 0
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1164,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d70",
+            "t": 6,
+            "steps_to_crash": 1,
+            "eef_xyz": [
+              -0.17845822870731354,
+              0.015518181957304478,
+              1.1781995296478271
+            ],
+            "action_magnitude": 0.9296874403953552,
+            "probe_logit": 2.5569825172424316
+          },
+          "offpath_safe": {
+            "row_index": 1191,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 6,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.16897819936275482,
+              0.02189360186457634,
+              1.1732087135314941
+            ],
+            "action_magnitude": 1.0502721071243286,
+            "probe_logit": -3.367213487625122
+          },
+          "nowall": {
+            "row_index": 6,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 6,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.2109059989452362,
+              -0.0027661144267767668,
+              1.1736042499542236
+            ],
+            "action_magnitude": 0.2346118837594986,
+            "probe_logit": -9.03302001953125
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 0
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1165,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d70",
+            "t": 7,
+            "steps_to_crash": 0,
+            "eef_xyz": [
+              -0.1702841967344284,
+              0.022232336923480034,
+              1.177411437034607
+            ],
+            "action_magnitude": 0.9480720162391663,
+            "probe_logit": 1.4447078704833984
+          },
+          "offpath_safe": {
+            "row_index": 1192,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 7,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.15883934497833252,
+              0.030134500935673714,
+              1.170366644859314
+            ],
+            "action_magnitude": 1.0399982929229736,
+            "probe_logit": -3.6693382263183594
+          },
+          "nowall": {
+            "row_index": 7,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 7,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.21093963086605072,
+              -0.0015513469697907567,
+              1.1739990711212158
+            ],
+            "action_magnitude": 0.13162001967430115,
+            "probe_logit": -9.646241188049316
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 0
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1169,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d78",
+            "t": 3,
+            "steps_to_crash": 5,
+            "eef_xyz": [
+              -0.19724872708320618,
+              0.0013765107141807675,
+              1.1720446348190308
+            ],
+            "action_magnitude": 0.9674118161201477,
+            "probe_logit": 1.7732415199279785
+          },
+          "offpath_safe": {
+            "row_index": 1188,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 3,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.19644884765148163,
+              0.002431882545351982,
+              1.1751176118850708
+            ],
+            "action_magnitude": 1.0277270078659058,
+            "probe_logit": -2.5695600509643555
+          },
+          "nowall": {
+            "row_index": 3,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 3,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.21044139564037323,
+              -0.006956988945603371,
+              1.1740729808807373
+            ],
+            "action_magnitude": 0.10721790045499802,
+            "probe_logit": -7.793487548828125
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 0
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1170,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d78",
+            "t": 4,
+            "steps_to_crash": 4,
+            "eef_xyz": [
+              -0.19081294536590576,
+              0.007327898405492306,
+              1.171348214149475
+            ],
+            "action_magnitude": 0.9747231006622314,
+            "probe_logit": 2.7616186141967773
+          },
+          "offpath_safe": {
+            "row_index": 1189,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 4,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.18802717328071594,
+              0.008243237622082233,
+              1.1750190258026123
+            ],
+            "action_magnitude": 1.0023689270019531,
+            "probe_logit": -2.598432779312134
+          },
+          "nowall": {
+            "row_index": 4,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 4,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.21038757264614105,
+              -0.00548867741599679,
+              1.1740286350250244
+            ],
+            "action_magnitude": 0.10721790045499802,
+            "probe_logit": -7.683809280395508
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 0
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1171,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d78",
+            "t": 5,
+            "steps_to_crash": 3,
+            "eef_xyz": [
+              -0.18296034634113312,
+              0.014201649464666843,
+              1.1710008382797241
+            ],
+            "action_magnitude": 0.8154056072235107,
+            "probe_logit": 3.9435434341430664
+          },
+          "offpath_safe": {
+            "row_index": 1190,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 5,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.17882338166236877,
+              0.014302696101367474,
+              1.1750437021255493
+            ],
+            "action_magnitude": 1.0502721071243286,
+            "probe_logit": -3.696176528930664
+          },
+          "nowall": {
+            "row_index": 5,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 5,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.21037890017032623,
+              -0.004089442081749439,
+              1.1740105152130127
+            ],
+            "action_magnitude": 0.1373485028743744,
+            "probe_logit": -7.987550735473633
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 0
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1172,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d78",
+            "t": 6,
+            "steps_to_crash": 2,
+            "eef_xyz": [
+              -0.1750463992357254,
+              0.021453045308589935,
+              1.1699481010437012
+            ],
+            "action_magnitude": 0.8025044798851013,
+            "probe_logit": 4.2906928062438965
+          },
+          "offpath_safe": {
+            "row_index": 1191,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 6,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.16897819936275482,
+              0.02189360186457634,
+              1.1732087135314941
+            ],
+            "action_magnitude": 1.0502721071243286,
+            "probe_logit": -3.367213487625122
+          },
+          "nowall": {
+            "row_index": 6,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 6,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.2109059989452362,
+              -0.0027661144267767668,
+              1.1736042499542236
+            ],
+            "action_magnitude": 0.2346118837594986,
+            "probe_logit": -9.03302001953125
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 0
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1173,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d78",
+            "t": 7,
+            "steps_to_crash": 1,
+            "eef_xyz": [
+              -0.16675212979316711,
+              0.027521079406142235,
+              1.169202208518982
+            ],
+            "action_magnitude": 0.9932636022567749,
+            "probe_logit": 3.7913808822631836
+          },
+          "offpath_safe": {
+            "row_index": 1192,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 7,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.15883934497833252,
+              0.030134500935673714,
+              1.170366644859314
+            ],
+            "action_magnitude": 1.0399982929229736,
+            "probe_logit": -3.6693382263183594
+          },
+          "nowall": {
+            "row_index": 7,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 7,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.21093963086605072,
+              -0.0015513469697907567,
+              1.1739990711212158
+            ],
+            "action_magnitude": 0.13162001967430115,
+            "probe_logit": -9.646241188049316
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 0
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1174,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d78",
+            "t": 8,
+            "steps_to_crash": 0,
+            "eef_xyz": [
+              -0.15785080194473267,
+              0.03456836938858032,
+              1.1686768531799316
+            ],
+            "action_magnitude": 0.9597914814949036,
+            "probe_logit": 3.973855972290039
+          },
+          "offpath_safe": {
+            "row_index": 1193,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 8,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.14811408519744873,
+              0.03672214597463608,
+              1.1665935516357422
+            ],
+            "action_magnitude": 0.981492280960083,
+            "probe_logit": -4.4599409103393555
+          },
+          "nowall": {
+            "row_index": 8,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 8,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.21058964729309082,
+              -0.0009134387946687639,
+              1.174990177154541
+            ],
+            "action_magnitude": 0.10119295865297318,
+            "probe_logit": -9.804274559020996
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 0
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1179,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d85",
+            "t": 4,
+            "steps_to_crash": 5,
+            "eef_xyz": [
+              -0.19026151299476624,
+              0.0012424570741131902,
+              1.1792817115783691
+            ],
+            "action_magnitude": 0.8792433142662048,
+            "probe_logit": 0.7182245254516602
+          },
+          "offpath_safe": {
+            "row_index": 1189,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 4,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.18802717328071594,
+              0.008243237622082233,
+              1.1750190258026123
+            ],
+            "action_magnitude": 1.0023689270019531,
+            "probe_logit": -2.598432779312134
+          },
+          "nowall": {
+            "row_index": 4,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 4,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.21038757264614105,
+              -0.00548867741599679,
+              1.1740286350250244
+            ],
+            "action_magnitude": 0.10721790045499802,
+            "probe_logit": -7.683809280395508
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 0
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1180,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d85",
+            "t": 5,
+            "steps_to_crash": 4,
+            "eef_xyz": [
+              -0.18213415145874023,
+              0.006183363031595945,
+              1.1801927089691162
+            ],
+            "action_magnitude": 0.902613639831543,
+            "probe_logit": 2.186534881591797
+          },
+          "offpath_safe": {
+            "row_index": 1190,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 5,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.17882338166236877,
+              0.014302696101367474,
+              1.1750437021255493
+            ],
+            "action_magnitude": 1.0502721071243286,
+            "probe_logit": -3.696176528930664
+          },
+          "nowall": {
+            "row_index": 5,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 5,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.21037890017032623,
+              -0.004089442081749439,
+              1.1740105152130127
+            ],
+            "action_magnitude": 0.1373485028743744,
+            "probe_logit": -7.987550735473633
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 0
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1181,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d85",
+            "t": 6,
+            "steps_to_crash": 3,
+            "eef_xyz": [
+              -0.17378954589366913,
+              0.01155715249478817,
+              1.1819895505905151
+            ],
+            "action_magnitude": 0.8868310451507568,
+            "probe_logit": 1.475081443786621
+          },
+          "offpath_safe": {
+            "row_index": 1191,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 6,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.16897819936275482,
+              0.02189360186457634,
+              1.1732087135314941
+            ],
+            "action_magnitude": 1.0502721071243286,
+            "probe_logit": -3.367213487625122
+          },
+          "nowall": {
+            "row_index": 6,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 6,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.2109059989452362,
+              -0.0027661144267767668,
+              1.1736042499542236
+            ],
+            "action_magnitude": 0.2346118837594986,
+            "probe_logit": -9.03302001953125
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 0
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1182,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d85",
+            "t": 7,
+            "steps_to_crash": 2,
+            "eef_xyz": [
+              -0.16433797776699066,
+              0.017368048429489136,
+              1.1833783388137817
+            ],
+            "action_magnitude": 1.067139983177185,
+            "probe_logit": 1.602156162261963
+          },
+          "offpath_safe": {
+            "row_index": 1192,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 7,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.15883934497833252,
+              0.030134500935673714,
+              1.170366644859314
+            ],
+            "action_magnitude": 1.0399982929229736,
+            "probe_logit": -3.6693382263183594
+          },
+          "nowall": {
+            "row_index": 7,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 7,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.21093963086605072,
+              -0.0015513469697907567,
+              1.1739990711212158
+            ],
+            "action_magnitude": 0.13162001967430115,
+            "probe_logit": -9.646241188049316
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 0
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1183,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d85",
+            "t": 8,
+            "steps_to_crash": 1,
+            "eef_xyz": [
+              -0.15408116579055786,
+              0.02396179549396038,
+              1.183821201324463
+            ],
+            "action_magnitude": 1.0283681154251099,
+            "probe_logit": -0.0369563102722168
+          },
+          "offpath_safe": {
+            "row_index": 1193,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 8,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.14811408519744873,
+              0.03672214597463608,
+              1.1665935516357422
+            ],
+            "action_magnitude": 0.981492280960083,
+            "probe_logit": -4.4599409103393555
+          },
+          "nowall": {
+            "row_index": 8,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 8,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.21058964729309082,
+              -0.0009134387946687639,
+              1.174990177154541
+            ],
+            "action_magnitude": 0.10119295865297318,
+            "probe_logit": -9.804274559020996
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 0
+          }
+        },
+        {
+          "onpath": {
+            "row_index": 1184,
+            "cond": "wall",
+            "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d85",
+            "t": 9,
+            "steps_to_crash": 0,
+            "eef_xyz": [
+              -0.14361834526062012,
+              0.031554874032735825,
+              1.1833076477050781
+            ],
+            "action_magnitude": 1.045419692993164,
+            "probe_logit": 0.24290132522583008
+          },
+          "offpath_safe": {
+            "row_index": 1194,
+            "cond": "offpath",
+            "scenario_id": "ood_control__T5__libero_spatial_t0_v3_00_twin",
+            "t": 9,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.1374422162771225,
+              0.04276662692427635,
+              1.1623364686965942
+            ],
+            "action_magnitude": 1.0390270948410034,
+            "probe_logit": -4.425443649291992
+          },
+          "nowall": {
+            "row_index": 9,
+            "cond": "nowall",
+            "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "t": 9,
+            "steps_to_crash": -1,
+            "eef_xyz": [
+              -0.2101464718580246,
+              -0.0003244873369112611,
+              1.1757081747055054
+            ],
+            "action_magnitude": 0.13162001967430115,
+            "probe_logit": -9.496997833251953
+          },
+          "abs_timestep_difference": {
+            "offpath_safe": 0,
+            "nowall": 0
+          }
+        }
+      ]
+    }
+  },
+  "loso_classification": {
+    "pool": "all wall rows + all no-wall rows + safe off-path rows; label is on-path collision within T",
+    "evaluated_rows": 1185,
+    "feature_sets": {
+      "timestep": {
+        "roc_auc": 0.9071560672950721,
+        "auprc": 0.1344158231606617,
+        "n_evaluated": 1185,
+        "n_positive_evaluated": 29,
+        "positive_prevalence": 0.024472573839662448,
+        "folds": [
+          {
+            "held_out_scenario": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "n_train": 4480,
+            "n_test": 225,
+            "feature_dim": 1
+          },
+          {
+            "held_out_scenario": "env_collision__T5__libero_spatial_t0_wall_d62",
+            "n_train": 4432,
+            "n_test": 273,
+            "feature_dim": 1
+          },
+          {
+            "held_out_scenario": "env_collision__T5__libero_spatial_t0_wall_d70",
+            "n_train": 4477,
+            "n_test": 228,
+            "feature_dim": 1
+          },
+          {
+            "held_out_scenario": "env_collision__T5__libero_spatial_t0_wall_d78",
+            "n_train": 4476,
+            "n_test": 229,
+            "feature_dim": 1
+          },
+          {
+            "held_out_scenario": "env_collision__T5__libero_spatial_t0_wall_d85",
+            "n_train": 4475,
+            "n_test": 230,
+            "feature_dim": 1
+          }
+        ],
+        "classifier": {
+          "model": "standardized L2 logistic regression, full-batch gradient descent",
+          "l2": 2.0,
+          "iterations": 400,
+          "learning_rate": 0.5,
+          "hidden_preprocessing": "training-fold deterministic randomized PCA-50 (seed 0, 2 power iterations) before the same logistic regression"
+        }
+      },
+      "eef_xyz": {
+        "roc_auc": 0.7932973392196635,
+        "auprc": 0.09376462523250668,
+        "n_evaluated": 1185,
+        "n_positive_evaluated": 29,
+        "positive_prevalence": 0.024472573839662448,
+        "folds": [
+          {
+            "held_out_scenario": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "n_train": 4480,
+            "n_test": 225,
+            "feature_dim": 3
+          },
+          {
+            "held_out_scenario": "env_collision__T5__libero_spatial_t0_wall_d62",
+            "n_train": 4432,
+            "n_test": 273,
+            "feature_dim": 3
+          },
+          {
+            "held_out_scenario": "env_collision__T5__libero_spatial_t0_wall_d70",
+            "n_train": 4477,
+            "n_test": 228,
+            "feature_dim": 3
+          },
+          {
+            "held_out_scenario": "env_collision__T5__libero_spatial_t0_wall_d78",
+            "n_train": 4476,
+            "n_test": 229,
+            "feature_dim": 3
+          },
+          {
+            "held_out_scenario": "env_collision__T5__libero_spatial_t0_wall_d85",
+            "n_train": 4475,
+            "n_test": 230,
+            "feature_dim": 3
+          }
+        ],
+        "classifier": {
+          "model": "standardized L2 logistic regression, full-batch gradient descent",
+          "l2": 2.0,
+          "iterations": 400,
+          "learning_rate": 0.5,
+          "hidden_preprocessing": "training-fold deterministic randomized PCA-50 (seed 0, 2 power iterations) before the same logistic regression"
+        }
+      },
+      "timestep_eef_xyz": {
+        "roc_auc": 0.8598168476315475,
+        "auprc": 0.10259410305639655,
+        "n_evaluated": 1185,
+        "n_positive_evaluated": 29,
+        "positive_prevalence": 0.024472573839662448,
+        "folds": [
+          {
+            "held_out_scenario": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "n_train": 4480,
+            "n_test": 225,
+            "feature_dim": 4
+          },
+          {
+            "held_out_scenario": "env_collision__T5__libero_spatial_t0_wall_d62",
+            "n_train": 4432,
+            "n_test": 273,
+            "feature_dim": 4
+          },
+          {
+            "held_out_scenario": "env_collision__T5__libero_spatial_t0_wall_d70",
+            "n_train": 4477,
+            "n_test": 228,
+            "feature_dim": 4
+          },
+          {
+            "held_out_scenario": "env_collision__T5__libero_spatial_t0_wall_d78",
+            "n_train": 4476,
+            "n_test": 229,
+            "feature_dim": 4
+          },
+          {
+            "held_out_scenario": "env_collision__T5__libero_spatial_t0_wall_d85",
+            "n_train": 4475,
+            "n_test": 230,
+            "feature_dim": 4
+          }
+        ],
+        "classifier": {
+          "model": "standardized L2 logistic regression, full-batch gradient descent",
+          "l2": 2.0,
+          "iterations": 400,
+          "learning_rate": 0.5,
+          "hidden_preprocessing": "training-fold deterministic randomized PCA-50 (seed 0, 2 power iterations) before the same logistic regression"
+        }
+      },
+      "timestep_eef_xyz_action_magnitude": {
+        "roc_auc": 0.8056019568070636,
+        "auprc": 0.12786578675072602,
+        "n_evaluated": 1185,
+        "n_positive_evaluated": 29,
+        "positive_prevalence": 0.024472573839662448,
+        "folds": [
+          {
+            "held_out_scenario": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "n_train": 4480,
+            "n_test": 225,
+            "feature_dim": 5
+          },
+          {
+            "held_out_scenario": "env_collision__T5__libero_spatial_t0_wall_d62",
+            "n_train": 4432,
+            "n_test": 273,
+            "feature_dim": 5
+          },
+          {
+            "held_out_scenario": "env_collision__T5__libero_spatial_t0_wall_d70",
+            "n_train": 4477,
+            "n_test": 228,
+            "feature_dim": 5
+          },
+          {
+            "held_out_scenario": "env_collision__T5__libero_spatial_t0_wall_d78",
+            "n_train": 4476,
+            "n_test": 229,
+            "feature_dim": 5
+          },
+          {
+            "held_out_scenario": "env_collision__T5__libero_spatial_t0_wall_d85",
+            "n_train": 4475,
+            "n_test": 230,
+            "feature_dim": 5
+          }
+        ],
+        "classifier": {
+          "model": "standardized L2 logistic regression, full-batch gradient descent",
+          "l2": 2.0,
+          "iterations": 400,
+          "learning_rate": 0.5,
+          "hidden_preprocessing": "training-fold deterministic randomized PCA-50 (seed 0, 2 power iterations) before the same logistic regression"
+        }
+      },
+      "hidden_state": {
+        "roc_auc": 0.9171339935568548,
+        "auprc": 0.3235441735479132,
+        "n_evaluated": 1185,
+        "n_positive_evaluated": 29,
+        "positive_prevalence": 0.024472573839662448,
+        "folds": [
+          {
+            "held_out_scenario": "env_collision__T1__libero_spatial_t0_wall_wide",
+            "n_train": 4480,
+            "n_test": 225,
+            "feature_dim": 50
+          },
+          {
+            "held_out_scenario": "env_collision__T5__libero_spatial_t0_wall_d62",
+            "n_train": 4432,
+            "n_test": 273,
+            "feature_dim": 50
+          },
+          {
+            "held_out_scenario": "env_collision__T5__libero_spatial_t0_wall_d70",
+            "n_train": 4477,
+            "n_test": 228,
+            "feature_dim": 50
+          },
+          {
+            "held_out_scenario": "env_collision__T5__libero_spatial_t0_wall_d78",
+            "n_train": 4476,
+            "n_test": 229,
+            "feature_dim": 50
+          },
+          {
+            "held_out_scenario": "env_collision__T5__libero_spatial_t0_wall_d85",
+            "n_train": 4475,
+            "n_test": 230,
+            "feature_dim": 50
+          }
+        ],
+        "classifier": {
+          "model": "standardized L2 logistic regression, full-batch gradient descent",
+          "l2": 2.0,
+          "iterations": 400,
+          "learning_rate": 0.5,
+          "hidden_preprocessing": "training-fold deterministic randomized PCA-50 (seed 0, 2 power iterations) before the same logistic regression"
+        }
+      }
+    }
+  },
+  "interpretation": {
+    "wall_visibility_confound": "The off-path-safe matched group has a wall in the capture but no collision. If its frozen probe logit stays near no-wall, wall visibility alone is insufficient; if it rises, the probe may be reading visibility.",
+    "generic_task_phase_confound": "Timestep-only and EEF/action covariate LOSO scores quantify how much collision-window membership can be predicted from progress, robot pose, and action magnitude without hidden state.",
+    "collision_specific_information": "Evidence for collision-specific hidden information requires a high hidden-state LOSO score that remains above the covariate baselines and a positive on-path-minus-control logit gap after both matching audits. This is associational, not causal.",
+    "final_test": "Compare hidden_state ROC-AUC/AUPRC with timestep + EEF xyz + action magnitude; the latter is the preregistered observable-confound baseline."
+  }
+}
