@@ -315,6 +315,95 @@ Numbers: [`results/selfreport_glass/probe_glass_summary.json`](results/selfrepor
 
 ---
 
+## 6.5. Strict OOF task-phase confound audit
+
+The earlier frozen-probe summary is not sufficient for the task-phase question because a
+full-data probe can make the matched-logit comparison optimistic. We therefore reran only the
+analysis on the existing `results/selfreport/hidden.npz` and `meta.json`; no VLA rollout or hidden
+capture was rerun, and the full-data frozen probe is not the primary result.
+
+### Strict OOF matched logits
+
+Each of the five folds holds out one on-path wall scenario. Its probe is fitted only on the other
+four wall scenarios and their four paired nowall scenarios, with training-fold PCA-50 and logistic
+standardization. The held-out wall collision-window rows, paired nowall rows, and safe off-path
+matches are then scored by that fold's probe.
+
+Controls are scenario-balanced: at each source timestep, a matching row is selected separately in
+each control scenario, averaged within scenario, and only then averaged across scenarios. Five
+off-path scenarios that contained a crash are excluded from the clean visibility-control pool.
+
+| held-out wall | n | wall logit | off-path control | paired nowall | wall − nowall |
+|---|---:|---:|---:|---:|---:|
+| wide | 5 | -2.171 | -6.413 | -7.256 | 5.085 |
+| d62 | 6 | -5.454 | -5.210 | -5.832 | 0.378 |
+| d70 | 6 | -0.702 | -5.749 | -6.556 | 5.854 |
+| d78 | 6 | -1.188 | -5.236 | -4.979 | 3.791 |
+| d85 | 6 | -0.493 | -5.003 | -5.129 | 4.637 |
+
+Across held-out scenarios, wall−nowall is macro mean **3.949**, median **4.637**, range
+**0.378–5.854**. Wall−off-path is macro mean **3.521**, median **4.242**, range
+**−0.244–5.047**. The d62 fold is weaker, so this is not a claim that every scenario has the
+same effect size.
+
+The off-path control has **464 assignments, 256 unique control rows, and 208 reuse events**;
+the paired nowall control has **29/29/0**. Each of the 16 safe off-path scenarios is used 29 times,
+with 16 unique rows and 13 reuse events. Full per-scenario usage counts are in
+`strict_oof_matched_logits.summary.control_usage` in the JSON result.
+
+### Observable baselines and scenario-level metrics
+
+The classification pool is wall plus paired nowall, with one wall/nowall scenario pair held out per
+fold. We evaluate linear logistic and a small nonlinear 16-unit tanh MLP on timestep, EEF xyz,
+action magnitude, all combinations, hidden only, and hidden plus covariates. AUPRC is primary;
+ROC-AUC is auxiliary.
+
+| model/input | macro AUPRC | macro ROC-AUC |
+|---|---:|---:|
+| linear / timestep | 0.260 | 0.901 |
+| linear / EEF xyz | 0.187 | 0.848 |
+| linear / action magnitude | 0.042 | 0.558 |
+| linear / timestep + EEF xyz | 0.209 | 0.867 |
+| linear / timestep + action magnitude | 0.213 | 0.887 |
+| linear / EEF xyz + action magnitude | 0.261 | 0.820 |
+| linear / all measured covariates | 0.329 | 0.824 |
+| linear / hidden only | **0.716** | 0.903 |
+| linear / hidden + covariates | 0.743 | 0.900 |
+| MLP / timestep + action magnitude — strongest observable | **0.442** | 0.907 |
+| MLP / hidden only | 0.487 | 0.789 |
+| MLP / hidden + covariates | 0.612 | 0.839 |
+
+The strongest observable baseline is selected from the OOF observable candidates by macro AUPRC,
+not simply taken to be the complete linear covariate model. The primary comparison is linear
+hidden-only AUPRC **0.716** versus nonlinear timestep + action-magnitude AUPRC **0.442**.
+
+| held-out wall | hidden AUPRC / ROC-AUC | strongest observable AUPRC / ROC-AUC |
+|---|---:|---:|
+| wide | 1.000 / 1.000 | 1.000 / 1.000 |
+| d62 | 0.026 / 0.531 | 0.036 / 0.665 |
+| d70 | 0.944 / 0.998 | 0.774 / 0.992 |
+| d78 | 0.693 / 0.990 | 0.158 / 0.922 |
+| d85 | 0.915 / 0.998 | 0.245 / 0.953 |
+
+The paired scenario-level AUPRC difference is **0.273**. A 20,000-replicate scenario bootstrap
+gives a 95% percentile interval of **0.030–0.516**; the exact grouped sign permutation over five
+scenarios gives two-sided **p = 0.25**. Continuous frames are not treated as independent
+significance samples.
+
+Measured task progress, EEF pose, and action magnitude do contain predictive information, so stage
+information is present in the capture. The hidden result remains higher than the strongest
+observable candidate, but this does not claim that all task-phase confounds have been excluded.
+The result is associational frozen-capture evidence and does not establish a pure or causal
+collision representation.
+
+**Final conclusion:** Hidden states contain additional collision-predictive information beyond measured task progress, EEF pose, and action magnitude.
+
+Reproduction script: [`scripts/task_phase_confound_analysis.py`](scripts/task_phase_confound_analysis.py)
+· JSON: [`results/task_phase_confound/task_phase_confound.json`](results/task_phase_confound/task_phase_confound.json)
+· Figure: [`results/task_phase_confound/task_phase_confound_summary.png`](results/task_phase_confound/task_phase_confound_summary.png)
+
+---
+
 ## 6e. Result 8 — the collision reproduces across THREE architectures (Path 3)
 
 Same on/off-path protocol, same scenarios, same eval loop — only the policy backend changes
