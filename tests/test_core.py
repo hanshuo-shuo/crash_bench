@@ -13,6 +13,9 @@ from crashbench.scenario import Scenario, PredicateSpec
 from crashbench.predicates import build_predicate, build_any
 from crashbench.eval import EpisodeResult, Outcome
 from crashbench import metrics
+from crashbench.behavior import (
+    aabb_clearance, obstacle_direction, project_toward_obstacle, time_to_contact,
+)
 
 
 class FakeSim:
@@ -134,6 +137,18 @@ def test_policy_registry():
     # if openpi ever gets installed this becomes a no-op; today it must be the hint
     if raised is not None:
         assert "SEPARATE" in raised or "separate" in raised
+
+
+def test_behavior_metrics_are_directional():
+    wall = {"pos": [0.0, 0.0, 0.0], "size": [0.1, 0.2, 0.3]}
+    point = np.array([-0.5, 0.0, 0.0])
+    n = obstacle_direction(point, wall)
+    assert np.allclose(n, [1.0, 0.0, 0.0])
+    assert np.isclose(aabb_clearance(point, wall), 0.4)
+    assert project_toward_obstacle([0.2, 0.3, 0.0], n) > 0
+    assert project_toward_obstacle([-0.2, 0.0, 0.0], n) < 0
+    assert np.isclose(time_to_contact(0.4, 0.1), 4.0)
+    assert np.isinf(time_to_contact(0.4, -0.1))
 
 
 if __name__ == "__main__":

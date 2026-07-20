@@ -18,6 +18,7 @@ every logged row is a genuine hidden state, at its true timestep. Output (schema
 probe_selfreport.py, consumed by probe_selfreport_analysis.py IN=<out dir>):
     <out>/hidden.npz   (H: [N, hidden] float16)
     <out>/meta.json    (per-row metadata, aligned to H)
+    <out>/behavior.json (every executed action, including chunk-buffered steps)
 
 GPU node:  sbatch setup/probe_selfreport_oft.sbatch   |   sbatch setup/probe_selfreport_pi0.sbatch
 """
@@ -36,6 +37,12 @@ from crashbench.envs import LiberoEnv
 from crashbench.envs.libero_adapter import ROBOT_CONTACT_BODIES
 from crashbench.policies import build_policy, canonical_name
 from crashbench.predicates import build_any
+from crashbench.behavior import (
+    aabb_clearance,
+    obstacle_direction,
+    project_toward_obstacle,
+    time_to_contact,
+)
 
 SETTLE = 10
 
@@ -65,17 +72,46 @@ def rollout(env, policy, sc, drop_wall: bool):
         action = policy.act(observation, sc.instruction)
         h = policy.last_hidden
         eef = np.asarray(obs["robot0_eef_pos"], dtype=np.float32)
+        if wall is not None:
+            wall_n = obstacle_direction(eef, wall).astype(np.float32)
+            clearance = aabb_clearance(eef, wall)
+            action_toward_wall = project_toward_obstacle(action[:3], wall_n)
+        else:
+            wall_n = np.full(3, np.nan, dtype=np.float32)
+            clearance = float("nan")
+            action_toward_wall = float("nan")
         wf = wall_force(sim)
-        steps.append({
+        step = {
             "t": t,
             "hidden": None if h is None else np.asarray(h).astype(np.float16),
             "act_xyz_norm": float(np.linalg.norm(np.asarray(action[:3], dtype=np.float32))),
+            "action_toward_wall": float(action_toward_wall),
             "gripper": float(action[6]),
             "wall_force": float(wf),
             "eef_x": float(eef[0]), "eef_y": float(eef[1]), "eef_z": float(eef[2]),
             "wall_x": float(wall["pos"][0]) if wall else float("nan"),
-        })
+            "wall_nx": float(wall_n[0]), "wall_ny": float(wall_n[1]), "wall_nz": float(wall_n[2]),
+            "clearance": float(clearance),
+        }
         obs, _, _, _ = env.step(action.tolist())
+        next_eef = np.asarray(obs["robot0_eef_pos"], dtype=np.float32)
+        if wall is not None:
+            eef_velocity_toward_wall = project_toward_obstacle(next_eef - eef, wall_n)
+            next_clearance = aabb_clearance(next_eef, wall)
+            clearance_delta = next_clearance - clearance
+            ttc = time_to_contact(clearance, eef_velocity_toward_wall)
+        else:
+            eef_velocity_toward_wall = float("nan")
+            next_clearance = float("nan")
+            clearance_delta = float("nan")
+            ttc = float("nan")
+        step.update({
+            "next_clearance": float(next_clearance),
+            "clearance_delta": float(clearance_delta),
+            "eef_velocity_toward_wall": float(eef_velocity_toward_wall),
+            "time_to_contact": float(ttc),
+        })
+        steps.append(step)
         if crash_pred(sim):
             crash_step = t
             break
@@ -120,17 +156,22 @@ def main():
     first = Scenario.load(os.path.dirname(sorted(glob.glob("scenarios/*/scenario.json"))[0]))
     env = LiberoEnv(first.task_suite, first.task_id, model_family=env_family)
 
-    def flush(H, meta, note):
+    def flush(H, meta, behavior, note):
         # incremental save after each condition: a walltime kill still leaves usable data
         # (wall+nowall is the core probe fit; offpath is the slow, less-essential confound).
         Harr = np.asarray(H, dtype=np.float16)
         np.savez_compressed(f"{args.out}/hidden.npz", H=Harr)
         json.dump(meta, open(f"{args.out}/meta.json", "w"))
+        # Unlike meta.json, this includes every executed action, including buffered
+        # action-chunk steps for OFT/π0.  Directional braking must not be sampled only
+        # at hidden-state query frames.
+        json.dump(behavior, open(f"{args.out}/behavior.json", "w"))
         from collections import Counter
         c = Counter((m["cond"], m["crashed_episode"]) for m in meta)
-        print(f"  [flush after {note}] H={Harr.shape} rows={len(meta)}  {dict(c)}", flush=True)
+        print(f"  [flush after {note}] H={Harr.shape} hidden_rows={len(meta)} "
+              f"behavior_rows={len(behavior)}  {dict(c)}", flush=True)
 
-    H, meta = [], []
+    H, meta, behavior = [], [], []
     for cond, pat, drop in conditions:
         scns = [Scenario.load(os.path.dirname(p)) for p in sorted(glob.glob(pat))]
         print(f"\n=== condition '{cond}' : {len(scns)} scenarios (drop_wall={drop}) ===", flush=True)
@@ -139,6 +180,21 @@ def main():
             crashed = cstep >= 0
             n_hidden = 0
             for s in steps:
+                behavior.append({
+                    "cond": cond, "scenario_id": sc.id, "t": s["t"],
+                    "crashed_episode": bool(crashed), "crash_step": int(cstep),
+                    "steps_to_crash": int(cstep - s["t"]) if crashed else -1,
+                    "act_xyz_norm": s["act_xyz_norm"],
+                    "action_toward_wall": s["action_toward_wall"],
+                    "eef_velocity_toward_wall": s["eef_velocity_toward_wall"],
+                    "clearance": s["clearance"], "next_clearance": s["next_clearance"],
+                    "clearance_delta": s["clearance_delta"],
+                    "time_to_contact": s["time_to_contact"],
+                    "wall_nx": s["wall_nx"], "wall_ny": s["wall_ny"], "wall_nz": s["wall_nz"],
+                    "wall_force": s["wall_force"],
+                    "eef_x": s["eef_x"], "eef_y": s["eef_y"], "eef_z": s["eef_z"],
+                    "wall_x": s["wall_x"],
+                })
                 if s["hidden"] is None:
                     continue
                 n_hidden += 1
@@ -149,16 +205,24 @@ def main():
                     "crash_step": int(cstep),
                     "steps_to_crash": int(cstep - s["t"]) if crashed else -1,
                     "act_xyz_norm": s["act_xyz_norm"], "gripper": s["gripper"],
+                    "action_toward_wall": s["action_toward_wall"],
+                    "eef_velocity_toward_wall": s["eef_velocity_toward_wall"],
+                    "clearance": s["clearance"],
+                    "next_clearance": s["next_clearance"],
+                    "clearance_delta": s["clearance_delta"],
+                    "time_to_contact": s["time_to_contact"],
+                    "wall_nx": s["wall_nx"], "wall_ny": s["wall_ny"], "wall_nz": s["wall_nz"],
                     "wall_force": s["wall_force"],
                     "eef_x": s["eef_x"], "eef_y": s["eef_y"], "eef_z": s["eef_z"],
                     "wall_x": s["wall_x"],
                 })
             print(f"  {sc.id:48s} crash={'Y' if crashed else 'n'} "
                   f"crash_step={cstep:3d} steps={len(steps):3d} hidden_frames={n_hidden:3d}", flush=True)
-        flush(H, meta, f"condition '{cond}'")
+        flush(H, meta, behavior, f"condition '{cond}'")
 
     Harr = np.asarray(H, dtype=np.float16)
-    print(f"\nwrote {args.out}/hidden.npz  H={Harr.shape}  and {args.out}/meta.json  rows={len(meta)}")
+    print(f"\nwrote {args.out}/hidden.npz  H={Harr.shape}, {args.out}/meta.json "
+          f"hidden_rows={len(meta)}, and {args.out}/behavior.json rows={len(behavior)}")
     from collections import Counter
     c = Counter((m["cond"], m["crashed_episode"]) for m in meta)
     for k, v in sorted(c.items()):

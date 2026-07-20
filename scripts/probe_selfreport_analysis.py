@@ -85,7 +85,40 @@ crashed = np.array([m["crashed_episode"] for m in meta])
 actn = np.array([m["act_xyz_norm"] for m in meta])
 eefx = np.array([m["eef_x"] for m in meta])
 wallx = np.array([m["wall_x"] for m in meta])
+
+def metric(name):
+    """Load a new behavior field, keeping old captures analyzable."""
+    return np.array([m.get(name, np.nan) for m in meta], dtype=np.float64)
+
+action_into = metric("action_toward_wall")
+eef_velocity_into = metric("eef_velocity_toward_wall")
+clearance = metric("clearance")
+next_clearance = metric("next_clearance")
+clearance_delta = metric("clearance_delta")
+ttc = metric("time_to_contact")
 print(f"loaded H={H.shape}  conds={dict(zip(*np.unique(cond, return_counts=True)))}")
+
+# Behavior is intentionally loaded separately from the hidden-state table.  For
+# chunked policies this table contains every executed action, not only requery
+# frames.  Fall back to meta for captures made before behavior.json existed.
+behavior_path = f"{IN}/behavior.json"
+if os.path.exists(behavior_path):
+    bmeta = json.load(open(behavior_path))
+else:
+    bmeta = meta
+bcond = np.array([m["cond"] for m in bmeta])
+bstc = np.array([m["steps_to_crash"] for m in bmeta])
+bactn = np.array([m["act_xyz_norm"] for m in bmeta], dtype=np.float64)
+
+def bmetric(name):
+    return np.array([m.get(name, np.nan) for m in bmeta], dtype=np.float64)
+
+baction_into = bmetric("action_toward_wall")
+beef_velocity_into = bmetric("eef_velocity_toward_wall")
+bclearance = bmetric("clearance")
+bclearance_delta = bmetric("clearance_delta")
+bttc = bmetric("time_to_contact")
+bis_wall = bcond == "wall"
 
 is_wall = cond == "wall"
 is_nowall = cond == "nowall"
@@ -239,6 +272,93 @@ summary["offpath_confound"] = {
     "mean_crash_logit_wall_near": round(float(g_wall_near.mean()), 3) if len(g_wall_near) else None,
     "mean_crash_logit_nowall": round(float(g_nowall.mean()), 3) if len(g_nowall) else None,
 }
+
+
+# ---------- (1b) directional braking audit ----------
+# A positive projection means motion toward the wall.  The pre-impact window is
+# compared with an earlier approach window from the same on-path episodes; this
+# avoids calling a naturally small/large task action a brake.  A positive ratio
+# means the directed command/velocity fell near impact.  Clearance delta has the
+# opposite sign: negative means the wall got closer during the step.
+def finite_median(x):
+    x = np.asarray(x, dtype=np.float64)
+    x = x[np.isfinite(x)]
+    return float(np.median(x)) if len(x) else None
+
+
+def ratio_drop(early, near):
+    e, n = finite_median(early), finite_median(near)
+    # A braking ratio is only meaningful when the early reference is itself
+    # directed toward the obstacle.  If it is <= 0, report no ratio instead of
+    # turning a reversal/sideways motion into a misleading percentage.
+    if e is None or n is None or e <= 1e-8:
+        return None
+    return float(1.0 - n / e)
+
+
+near2 = bis_wall & (bstc >= 0) & (bstc <= 2)
+early = bis_wall & (bstc >= 8) & (bstc <= 12)
+behavior_summary = {
+    "window_definition": {
+        "near": "on-path wall frames with 0 <= steps_to_crash <= 2",
+        "early": "same on-path episodes with 8 <= steps_to_crash <= 12",
+        "positive_direction": "positive action/velocity projection means toward the wall",
+        "clearance_delta": "next end-effector AABB clearance minus current clearance; negative means approaching",
+    },
+    "total_action_magnitude": {
+        "early_median": finite_median(bactn[early]),
+        "near_median": finite_median(bactn[near2]),
+        "drop_ratio": ratio_drop(bactn[early], bactn[near2]),
+    },
+    "obstacle_directed_action": {
+        "early_median": finite_median(baction_into[early]),
+        "near_median": finite_median(baction_into[near2]),
+        "braking_ratio": ratio_drop(baction_into[early], baction_into[near2]),
+    },
+    "obstacle_directed_eef_velocity": {
+        "early_median": finite_median(beef_velocity_into[early]),
+        "near_median": finite_median(beef_velocity_into[near2]),
+        "braking_ratio": ratio_drop(beef_velocity_into[early], beef_velocity_into[near2]),
+    },
+    "clearance": {
+        "early_median": finite_median(bclearance[early]),
+        "near_median": finite_median(bclearance[near2]),
+        "delta_early_median": finite_median(bclearance_delta[early]),
+        "delta_near_median": finite_median(bclearance_delta[near2]),
+        "near_fraction_decreasing": float(np.mean(bclearance_delta[near2][np.isfinite(bclearance_delta[near2])] < 0)) if np.isfinite(bclearance_delta[near2]).any() else None,
+    },
+    "time_to_contact_proxy": {
+        "early_median_steps": finite_median(bttc[early]),
+        "near_median_steps": finite_median(bttc[near2]),
+    },
+    "interpretation": "Use directional/clearance rows for the braking claim; total action magnitude is only a descriptive control.",
+}
+summary["behavior_braking_audit"] = behavior_summary
+
+# Separate geometry-aware figure.  It remains useful when action magnitude goes
+# up because lateral/rotational behavior is not silently folded into the claim.
+figb, axb = plt.subplots(2, 2, figsize=(11, 8), sharex=True)
+for a, (values, title, color, ylabel) in zip(axb.flat, [
+    (baction_into, "action projection toward wall", "tab:blue", "command into wall"),
+    (beef_velocity_into, "actual eef velocity toward wall", "tab:purple", "eef displacement / step"),
+    (bclearance_delta, "next clearance change", "tab:orange", "next clearance − current (m)"),
+    (bttc, "end-effector time-to-contact proxy", "tab:red", "TTC (control steps)"),
+]):
+    valid = bis_wall & np.isfinite(values)
+    a.scatter(bstc[valid], values[valid], s=18, c=color, alpha=.58)
+    a.invert_xaxis()
+    a.axvline(0, color="gray", ls=":", lw=1)
+    if values is bclearance_delta:
+        a.axhline(0, color="black", ls="--", lw=1)
+    a.set_title(title)
+    a.set_ylabel(ylabel)
+    a.grid(alpha=.15)
+axb[1, 0].set_xlabel("steps until crash (0 = impact)")
+axb[1, 1].set_xlabel("steps until crash (0 = impact)")
+figb.suptitle("Geometry-aware braking audit: positive = toward the wall", y=.995)
+figb.tight_layout()
+plt.savefig(f"{FIG}/fig_selfreport{TAG}_behavior.png", dpi=130)
+print(f"wrote {FIG}/fig_selfreport{TAG}_behavior.png")
 json.dump(summary, open(f"{IN}/probe_summary.json", "w"), indent=2)
 print("\n" + json.dumps(summary, indent=2))
 print(f"wrote {IN}/probe_summary.json")

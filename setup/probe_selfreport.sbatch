@@ -20,8 +20,12 @@ source activate "$HOME/crash_bench/envs/openvla"
 export PYTHONNOUSERSITE=1 MUJOCO_GL=egl PYOPENGL_PLATFORM=egl
 cd "$HOME/crash_bench"
 
-echo "== [1/2] capturing hidden states (wall vs no-wall vs off-path) =="
-python scripts/probe_selfreport.py
+echo "== [1/2] capturing hidden states + every executed behavior step =="
+python scripts/probe_selfreport_capture.py \
+  --policy openvla \
+  --out results/selfreport \
+  --checkpoint openvla/openvla-7b-finetuned-libero-spatial \
+  --unnorm_key libero_spatial
 
 echo "== [2/2] training the linear probe + figures =="
 python scripts/probe_selfreport_analysis.py

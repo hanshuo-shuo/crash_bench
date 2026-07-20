@@ -1,18 +1,59 @@
 {
   "probe_auc_by_T": {
-    "1": 0.993,
-    "3": 0.992,
-    "5": 0.998,
-    "10": 1.0
+    "1": 0.864,
+    "3": 0.897,
+    "5": 0.899,
+    "10": 0.858
+  },
+  "intervention_threshold": {
+    "thr": -0.179,
+    "neg_pool_logit_max": -0.364,
+    "neg_pool_logit_p99": -2.46,
+    "onpath_within5_logit_median": 1.482
   },
   "behavior_braking_check": {
-    "action_mag_nowall_median": 0.5495,
-    "action_mag_wall_within2steps_median": 0.9598,
+    "action_mag_nowall_median": 0.6509,
+    "action_mag_wall_within2steps_median": 0.8255,
     "note": "median action translation magnitude in the last <=2 steps before crash vs the no-wall baseline; not lower => the policy does not brake before impact"
   },
   "offpath_confound": {
-    "mean_crash_logit_offpath": -4.998,
-    "mean_crash_logit_wall_near": -0.297,
-    "mean_crash_logit_nowall": -5.284
+    "mean_crash_logit_offpath": -5.125,
+    "mean_crash_logit_wall_near": -1.901,
+    "mean_crash_logit_nowall": -5.264
+  },
+  "behavior_braking_audit": {
+    "window_definition": {
+      "near": "on-path wall frames with 0 <= steps_to_crash <= 2",
+      "early": "same on-path episodes with 8 <= steps_to_crash <= 12",
+      "positive_direction": "positive action/velocity projection means toward the wall",
+      "clearance_delta": "next end-effector AABB clearance minus current clearance; negative means approaching"
+    },
+    "total_action_magnitude": {
+      "early_median": 0.9141373038291931,
+      "near_median": 0.8254525661468506,
+      "drop_ratio": 0.09701467964479138
+    },
+    "obstacle_directed_action": {
+      "early_median": 0.411097147670319,
+      "near_median": 0.8236704638731713,
+      "braking_ratio": -1.0035908021763196
+    },
+    "obstacle_directed_eef_velocity": {
+      "early_median": 0.0019995858892798424,
+      "near_median": 0.010162880162932209,
+      "braking_ratio": -4.082492438768111
+    },
+    "clearance": {
+      "early_median": 0.11182739628106356,
+      "near_median": 0.06742422329839357,
+      "delta_early_median": -0.0019995858892798424,
+      "delta_near_median": -0.010145195181741215,
+      "near_fraction_decreasing": 0.9333333333333333
+    },
+    "time_to_contact_proxy": {
+      "early_median_steps": 53.30229632886854,
+      "near_median_steps": 7.285646819494994
+    },
+    "interpretation": "Use directional/clearance rows for the braking claim; total action magnitude is only a descriptive control."
   }
 }
