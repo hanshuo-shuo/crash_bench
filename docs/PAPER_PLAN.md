@@ -18,7 +18,7 @@ Use “representation–behavior dissociation”, “decoded but not used”, an
 “represented but not read out into safe action” in formal text. “Knows but does
 not act” is at most an informal introduction hook.
 
-The plan uses the same claim vocabulary, C0–C12, as `CLAIMS.md`.
+The plan uses the same claim vocabulary, C0–C13, as `CLAIMS.md`.
 
 ## MUST
 

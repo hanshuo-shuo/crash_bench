@@ -47,14 +47,14 @@ def dotted_get(value, path: str):
 
 def audit() -> list[str]:
     errors: list[str] = []
-    # Current docs must share the complete C0..C12 ledger vocabulary and no obsolete headline.
-    claim_ids = set(re.findall(r"\bC(?:1[0-2]|[0-9])\b", (ROOT / "docs/CLAIMS.md").read_text()))
-    expected_claim_ids = {f"C{i}" for i in range(13)}
+    # Current docs must share the complete C0..C13 ledger vocabulary and no obsolete headline.
+    claim_ids = set(re.findall(r"\bC(?:1[0-3]|[0-9])\b", (ROOT / "docs/CLAIMS.md").read_text()))
+    expected_claim_ids = {f"C{i}" for i in range(14)}
     if claim_ids != expected_claim_ids:
         errors.append(f"docs/CLAIMS.md IDs {sorted(claim_ids)} != {sorted(expected_claim_ids)}")
     for name in ("CURRENT.md", "PAPER_PLAN.md"):
-        if "C0–C12" not in (ROOT / "docs" / name).read_text():
-            errors.append(f"docs/{name} does not declare the C0–C12 claim vocabulary")
+        if "C0–C13" not in (ROOT / "docs" / name).read_text():
+            errors.append(f"docs/{name} does not declare the C0–C13 claim vocabulary")
     for path in CURRENT_DOCS:
         text = path.read_text()
         for banned in BANNED_CURRENT_TEXT:

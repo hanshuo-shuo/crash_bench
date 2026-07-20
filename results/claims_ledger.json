@@ -14,6 +14,7 @@
     {"id":"C9","result_files":["results/glass_prototype.json"],"status":"frozen","abstract":false,"checks":[{"array_length":100}]},
     {"id":"C10","result_files":["results/selfreport_glass/probe_glass_summary.json"],"status":"frozen","abstract":false,"checks":[]},
     {"id":"C11","result_files":["results/steering/summary.json","results/steering/diag.json"],"status":"frozen","abstract":false,"checks":[{"file":"results/steering/diag.json","path":"readout_projection.W_action256_dot_d_norm","equals":0.742},{"file":"results/steering/diag.json","path":"readout_projection.W_full_dot_d_norm","equals":7.688}]},
-    {"id":"C12","result_files":["results/phase2_task_witness/summary.json"],"status":"frozen","abstract":false,"checks":[{"array_length":1}]}
+    {"id":"C12","result_files":["results/phase2_task_witness/summary.json"],"status":"frozen","abstract":false,"checks":[{"array_length":1}]},
+    {"id":"C13","result_files":["results/task_phase_confound/task_phase_confound.json"],"status":"frozen","abstract":false,"checks":[{"path":"schema_version","equals":2},{"path":"analysis.final_conclusion","equals":"Hidden states contain additional collision-predictive information beyond measured task progress, EEF pose, and action magnitude."},{"path":"scenario_level_classification.primary_comparison.macro_auprc_difference","equals":0.27327942097212976},{"path":"scenario_level_classification.primary_comparison.scenario_level_inference.grouped_sign_permutation.two_sided_p","equals":0.25}]}
   ]
 }

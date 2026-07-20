@@ -1,40 +1,33 @@
-#!/usr/bin/env python
-"""Diagnose task-phase, pose, action, and wall-visibility confounds.
+#!/usr/bin/env python3
+"""Task-phase confound analysis from an existing hidden-state capture.
 
-This is a read-only analysis of an existing self-report capture.  It never runs a
-policy and never overwrites the capture or the frozen probe.  Inputs are the
-row-aligned ``hidden.npz``/``meta.json`` pair produced by
-``probe_selfreport_capture.py`` plus the already-fitted ``probe_T5.npz``.
+This analysis is deliberately CPU-only and never runs a VLA.  It reads only the
+row-aligned ``hidden.npz`` and ``meta.json`` capture.  The existing full-data
+``probe_T5.npz`` is not used for the primary result.
 
-The analysis has two matching audits:
+The primary matched-logit result is strict leave-one-wall-scenario-out (OOF):
+each fold fits a fresh PCA-50 + L2 logistic probe on the other four wall
+scenarios and their paired no-wall scenarios, then scores the held-out wall,
+the held-out paired no-wall, and scenario-balanced safe off-path matches.
 
-1. Every on-path wall frame with 0 <= steps_to_crash <= T is paired with the
-   nearest-timestep safe off-path frame and nearest-timestep no-wall frame.
-2. The same on-path frames are paired with nearest neighbours in standardized
-   (timestep, EEF xyz, action-magnitude) space.
+The classification audit uses the same five held-out wall/no-wall scenario
+groups.  It reports linear logistic and a small nonlinear one-hidden-layer MLP
+for timestep, EEF xyz, action magnitude, their combinations, hidden only, and
+hidden + covariates.  All uncertainty is grouped at the scenario level.
 
-It also fits identical L2 logistic probes under leave-one-on-path-scenario-out
-cross-validation for timestep, EEF xyz, timestep+EEF xyz,
-timestep+EEF xyz+action magnitude, and hidden state.  Hidden state uses the
-same PCA-50 -> standardized logistic regression pipeline as the existing probe;
-the low-dimensional covariates use the same logistic regression directly.
-
-Outputs are written only under ``--output`` (by default
-``results/task_phase_confound``):
+Outputs under ``--output``:
 
   task_phase_confound.json
   task_phase_confound_summary.png
-
-The output directory is intentionally separate from results/selfreport so the
-original capture, probe, summary, and figures remain untouched.
 """
 
 from __future__ import annotations
 
 import argparse
 import hashlib
+import itertools
 import json
-import os
+from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Any
 
@@ -47,9 +40,9 @@ import matplotlib.pyplot as plt
 
 
 DEFAULT_INPUT = "results/selfreport"
-DEFAULT_PROBE = "results/selfreport/probe_T5.npz"
 DEFAULT_OUTPUT = "results/task_phase_confound"
 DEFAULT_T = 5
+
 PCA_K = 50
 PCA_OVERSAMPLE = 10
 PCA_POWER_ITERATIONS = 2
@@ -57,16 +50,51 @@ PCA_SEED = 0
 L2 = 2.0
 LOGREG_ITERS = 400
 LOGREG_LR = 0.5
+MLP_HIDDEN = 16
+MLP_EPOCHS = 220
+MLP_LR = 0.04
+MLP_L2 = 1e-2
+MLP_SEED = 1729
+INFERENCE_SEED = 20260719
+BOOTSTRAP_REPS = 20000
+
+FINAL_CONCLUSION = (
+    "Hidden states contain additional collision-predictive information beyond "
+    "measured task progress, EEF pose, and action magnitude."
+)
+
+COVARIATE_COLUMNS = {
+    "timestep": [0],
+    "eef_xyz": [1, 2, 3],
+    "action_magnitude": [4],
+    "timestep_eef_xyz": [0, 1, 2, 3],
+    "timestep_action_magnitude": [0, 4],
+    "eef_xyz_action_magnitude": [1, 2, 3, 4],
+    "covariates_only": [0, 1, 2, 3, 4],
+}
+COVARIATE_LABELS = {
+    "timestep": "timestep",
+    "eef_xyz": "EEF xyz",
+    "action_magnitude": "action magnitude",
+    "timestep_eef_xyz": "timestep + EEF xyz",
+    "timestep_action_magnitude": "timestep + action magnitude",
+    "eef_xyz_action_magnitude": "EEF xyz + action magnitude",
+    "covariates_only": "all measured covariates",
+    "hidden_only": "hidden only",
+    "hidden_plus_covariates": "hidden + covariates",
+}
+OBSERVABLE_INPUTS = list(COVARIATE_COLUMNS)
+ALL_INPUTS = OBSERVABLE_INPUTS + ["hidden_only", "hidden_plus_covariates"]
 
 
 def auc(scores: np.ndarray, labels: np.ndarray) -> float:
-    """Mann-Whitney ROC-AUC, with stable average handling for ties."""
+    """Mann-Whitney ROC-AUC with stable average ranks for ties."""
     scores = np.asarray(scores, dtype=np.float64)
     labels = np.asarray(labels, dtype=bool)
-    if labels.sum() == 0 or (~labels).sum() == 0:
+    n_pos = int(labels.sum())
+    n_neg = int((~labels).sum())
+    if n_pos == 0 or n_neg == 0:
         return float("nan")
-    # Average ranks for ties.  This is small enough to keep a simple numpy-only
-    # implementation while matching the usual Mann-Whitney definition.
     order = np.argsort(scores, kind="mergesort")
     sorted_scores = scores[order]
     ranks = np.empty(len(scores), dtype=np.float64)
@@ -77,13 +105,11 @@ def auc(scores: np.ndarray, labels: np.ndarray) -> float:
             end += 1
         ranks[order[start:end]] = 0.5 * (start + 1 + end)
         start = end
-    n_pos = int(labels.sum())
-    n_neg = int((~labels).sum())
     return float((ranks[labels].sum() - n_pos * (n_pos + 1) / 2) / (n_pos * n_neg))
 
 
 def average_precision(scores: np.ndarray, labels: np.ndarray) -> float:
-    """Average precision with score ties grouped at the same threshold."""
+    """Average precision with tied scores evaluated at a common threshold."""
     scores = np.asarray(scores, dtype=np.float64)
     labels = np.asarray(labels, dtype=bool)
     n_pos = int(labels.sum())
@@ -101,25 +127,17 @@ def average_precision(scores: np.ndarray, labels: np.ndarray) -> float:
         while end < len(s) and s[end] == s[start]:
             end += 1
         group_pos = int(y[start:end].sum())
-        prev_recall = cum_pos / n_pos
+        previous_recall = cum_pos / n_pos
         cum_pos += group_pos
         cum_n += end - start
         if group_pos:
-            ap += (cum_pos / cum_n) * (cum_pos / n_pos - prev_recall)
+            ap += (cum_pos / cum_n) * (cum_pos / n_pos - previous_recall)
         start = end
     return float(ap)
 
 
 def pca_fit(x: np.ndarray, k: int = PCA_K) -> tuple[np.ndarray, np.ndarray]:
-    """Deterministic PCA with an exact small-problem path.
-
-    The existing probe was already fitted and is used as-is for matching.  For
-    the five new hidden-state LOSO fits, a full 4096 x 4096 SVD is needlessly
-    expensive on the CPU node.  This fixed-seed randomized range finder only
-    uses the training fold, then does an exact SVD on the small projected
-    matrix.  It is deterministic and keeps the same PCA-50 + logistic model
-    comparison across folds.
-    """
+    """Deterministic training-fold PCA without a large full SVD."""
     x = np.asarray(x, dtype=np.float64)
     mu = x.mean(axis=0)
     xc = x - mu
@@ -145,7 +163,7 @@ def logreg_fit(
     iters: int = LOGREG_ITERS,
     lr: float = LOGREG_LR,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Fit the repository's numpy-only standardized L2 logistic regression."""
+    """Repository-compatible standardized L2 logistic regression."""
     x = np.asarray(x, dtype=np.float64)
     y = np.asarray(y, dtype=np.float64)
     mu = x.mean(axis=0)
@@ -164,45 +182,69 @@ def logreg_fit(
 
 def logreg_score(model: tuple[np.ndarray, np.ndarray, np.ndarray], x: np.ndarray) -> np.ndarray:
     mu, sd, w = model
-    return np.hstack([(np.asarray(x, dtype=np.float64) - mu) / sd, np.ones((len(x), 1))]) @ w
+    return np.hstack(
+        [(np.asarray(x, dtype=np.float64) - mu) / sd, np.ones((len(x), 1), dtype=np.float64)]
+    ) @ w
 
 
-def frozen_probe_score(
-    h: np.ndarray,
-    params: dict[str, np.ndarray],
-) -> np.ndarray:
-    """Score hidden rows with the existing, frozen T=5 probe."""
-    mu = params["mu_pca"].astype(np.float32)
-    v = params["V_pca"].astype(np.float32)
-    mu_lr = params["mu_lr"].astype(np.float32)
-    sd_lr = params["sd_lr"].astype(np.float32)
-    w = params["w_lr"].astype(np.float32)
-    z = (np.asarray(h, dtype=np.float32) - mu) @ v
-    return np.hstack([(z - mu_lr) / sd_lr, np.ones((len(z), 1), dtype=np.float32)]) @ w
+def mlp_fit(
+    x: np.ndarray,
+    y: np.ndarray,
+    hidden: int = MLP_HIDDEN,
+    epochs: int = MLP_EPOCHS,
+    lr: float = MLP_LR,
+    l2: float = MLP_L2,
+    seed: int = MLP_SEED,
+) -> dict[str, Any]:
+    """Fit a small deterministic tanh MLP on standardized numeric features."""
+    x = np.asarray(x, dtype=np.float64)
+    y = np.asarray(y, dtype=np.float64)
+    mu = x.mean(axis=0)
+    sd = x.std(axis=0) + 1e-6
+    xs = (x - mu) / sd
+    rng = np.random.default_rng(seed)
+    w1 = rng.normal(0.0, np.sqrt(2.0 / max(1, xs.shape[1])), (xs.shape[1], hidden))
+    b1 = np.zeros(hidden, dtype=np.float64)
+    w2 = rng.normal(0.0, np.sqrt(2.0 / hidden), hidden)
+    b2 = 0.0
+    n = len(y)
+    for _ in range(epochs):
+        a1 = xs @ w1 + b1
+        z1 = np.tanh(a1)
+        z2 = np.clip(z1 @ w2 + b2, -60.0, 60.0)
+        p = 1.0 / (1.0 + np.exp(-z2))
+        dz2 = (p - y) / n
+        dw2 = z1.T @ dz2 + l2 * w2
+        db2 = float(dz2.sum())
+        dz1 = (dz2[:, None] * w2[None, :]) * (1.0 - z1 * z1)
+        dw1 = xs.T @ dz1 + l2 * w1
+        db1 = dz1.sum(axis=0)
+        w2 -= lr * dw2
+        b2 -= lr * db2
+        w1 -= lr * dw1
+        b1 -= lr * db1
+    return {"mu": mu, "sd": sd, "w1": w1, "b1": b1, "w2": w2, "b2": b2}
 
 
-def finite_float(value: Any) -> float | None:
-    try:
-        value = float(value)
-    except (TypeError, ValueError):
-        return None
-    return value if np.isfinite(value) else None
+def mlp_score(model: dict[str, Any], x: np.ndarray) -> np.ndarray:
+    xs = (np.asarray(x, dtype=np.float64) - model["mu"]) / model["sd"]
+    z1 = np.tanh(xs @ model["w1"] + model["b1"])
+    return z1 @ model["w2"] + model["b2"]
 
 
 def clean_json(value: Any) -> Any:
-    """Convert numpy scalars/arrays and non-finite values to JSON-safe values."""
     if isinstance(value, dict):
         return {str(k): clean_json(v) for k, v in value.items()}
     if isinstance(value, (list, tuple)):
         return [clean_json(v) for v in value]
     if isinstance(value, np.ndarray):
         return clean_json(value.tolist())
-    if isinstance(value, (np.integer,)):
+    if isinstance(value, np.integer):
         return int(value)
-    if isinstance(value, (np.floating,)):
-        return finite_float(value)
+    if isinstance(value, np.floating):
+        value = float(value)
     if isinstance(value, float):
-        return finite_float(value)
+        return value if np.isfinite(value) else None
     return value
 
 
@@ -215,443 +257,760 @@ def quantiles(x: np.ndarray) -> dict[str, float | None]:
     return {"q25": float(q25), "median": float(med), "q75": float(q75)}
 
 
-def summarize_pair(
-    on_logits: np.ndarray,
-    off_logits: np.ndarray,
-    nowall_logits: np.ndarray,
-    off_dt: np.ndarray,
-    nowall_dt: np.ndarray,
-    off_dist: np.ndarray | None = None,
-    nowall_dist: np.ndarray | None = None,
-) -> dict[str, Any]:
-    def one(control: np.ndarray, dt: np.ndarray, dist: np.ndarray | None) -> dict[str, Any]:
-        delta = on_logits - control
-        out: dict[str, Any] = {
-            "n": int(len(control)),
-            "onpath_collision_window_logit": quantiles(on_logits),
-            "control_logit": quantiles(control),
-            "paired_delta_onpath_minus_control": quantiles(delta),
-            "mean_onpath_logit": float(np.mean(on_logits)),
-            "mean_control_logit": float(np.mean(control)),
-            "mean_paired_delta": float(np.mean(delta)),
-            "mean_abs_timestep_difference": float(np.mean(np.abs(dt))),
-            "max_abs_timestep_difference": int(np.max(np.abs(dt))) if len(dt) else None,
-        }
-        if dist is not None:
-            out["nn_distance"] = quantiles(dist)
-        return out
-
+def summary_stats(values: list[float] | np.ndarray) -> dict[str, Any]:
+    x = np.asarray(values, dtype=np.float64)
+    x = x[np.isfinite(x)]
+    if not len(x):
+        return {"macro_mean": None, "median": None, "range": [None, None], "values": []}
     return {
-        "onpath": quantiles(on_logits),
-        "offpath_safe": one(off_logits, off_dt, off_dist),
-        "nowall": one(nowall_logits, nowall_dt, nowall_dist),
+        "macro_mean": float(np.mean(x)),
+        "median": float(np.median(x)),
+        "range": [float(np.min(x)), float(np.max(x))],
+        "values": [float(v) for v in x],
     }
 
 
-def row_record(meta: list[dict[str, Any]], i: int, logit: float, distance: float | None = None) -> dict[str, Any]:
-    m = meta[i]
-    out = {
-        "row_index": int(i),
-        "cond": m["cond"],
-        "scenario_id": m["scenario_id"],
-        "t": int(m["t"]),
-        "steps_to_crash": int(m["steps_to_crash"]),
-        "eef_xyz": [float(m[k]) for k in ("eef_x", "eef_y", "eef_z")],
-        "action_magnitude": float(m["act_xyz_norm"]),
-        "probe_logit": float(logit),
-    }
-    if distance is not None:
-        out["match_distance_standardized"] = float(distance)
-    return out
-
-
-def select_nearest_timestep(meta: list[dict[str, Any]], source_i: int, candidates: np.ndarray) -> int:
-    t = int(meta[source_i]["t"])
-    # np.lexsort gives deterministic tie-breaking: |dt|, scenario id, row index.
-    order = sorted(
-        (int(i) for i in candidates),
-        key=lambda i: (abs(int(meta[i]["t"]) - t), str(meta[i]["scenario_id"]), i),
-    )
-    if not order:
-        raise ValueError("empty candidate set for timestep matching")
-    return order[0]
-
-
-def feature_matrix(meta: list[dict[str, Any]], indices: np.ndarray) -> np.ndarray:
+def meta_feature_matrix(meta: list[dict[str, Any]]) -> np.ndarray:
     return np.asarray(
         [
-            [meta[i]["t"], meta[i]["eef_x"], meta[i]["eef_y"], meta[i]["eef_z"], meta[i]["act_xyz_norm"]]
-            for i in indices
+            [m["t"], m["eef_x"], m["eef_y"], m["eef_z"], m["act_xyz_norm"]]
+            for m in meta
         ],
         dtype=np.float64,
     )
 
 
-def select_nearest_feature(
-    source_feature: np.ndarray,
-    candidate_features: np.ndarray,
-    candidates: np.ndarray,
-) -> tuple[int, float]:
-    distances = np.linalg.norm(candidate_features - source_feature[None, :], axis=1)
-    # candidates are passed in original row order; argmin is deterministic for ties.
-    j = int(np.argmin(distances))
-    return int(candidates[j]), float(distances[j])
+def abbreviated_scenario(scenario_id: str) -> str:
+    parts = scenario_id.split("_")
+    return parts[-1] if parts else scenario_id
 
 
-def build_pair_records(
+def row_record(meta: list[dict[str, Any]], index: int, logit: float) -> dict[str, Any]:
+    m = meta[index]
+    return {
+        "row_index": int(index),
+        "scenario_id": str(m["scenario_id"]),
+        "cond": str(m["cond"]),
+        "t": int(m["t"]),
+        "steps_to_crash": int(m["steps_to_crash"]),
+        "probe_logit": float(logit),
+    }
+
+
+def select_nearest_timestep(
+    meta: list[dict[str, Any]], source_index: int, candidates: np.ndarray
+) -> int:
+    if not len(candidates):
+        raise ValueError("empty candidate set for timestep matching")
+    t = int(meta[source_index]["t"])
+    return min(
+        (int(i) for i in candidates),
+        key=lambda i: (abs(int(meta[i]["t"]) - t), int(meta[i]["t"]), i),
+    )
+
+
+def usage_summary(assignments: list[tuple[str, int]]) -> dict[str, Any]:
+    by_scenario: dict[str, Counter[int]] = defaultdict(Counter)
+    for scenario_id, row_index in assignments:
+        by_scenario[scenario_id][int(row_index)] += 1
+    total = len(assignments)
+    unique = len({row_index for _, row_index in assignments})
+    per_scenario: dict[str, Any] = {}
+    for scenario_id in sorted(by_scenario):
+        counts = by_scenario[scenario_id]
+        assigned = int(sum(counts.values()))
+        unique_scenario = len(counts)
+        per_scenario[scenario_id] = {
+            "matched_assignments": assigned,
+            "unique_control_rows": int(unique_scenario),
+            "reuse_count": int(assigned - unique_scenario),
+            "rows_used_more_than_once": int(sum(v > 1 for v in counts.values())),
+            "max_uses_of_one_row": int(max(counts.values())) if counts else 0,
+            "use_count_histogram": {
+                str(k): int(v) for k, v in sorted(Counter(counts.values()).items())
+            },
+        }
+    return {
+        "matched_assignments": int(total),
+        "unique_control_rows": int(unique),
+        "reuse_count": int(total - unique),
+        "rows_used_more_than_once": int(
+            sum(v > 1 for counts in by_scenario.values() for v in counts.values())
+        ),
+        "max_uses_of_one_row": int(max((max(c.values()) for c in by_scenario.values()), default=0)),
+        "per_scenario": per_scenario,
+    }
+
+
+def fit_probe_fold(
+    h: np.ndarray,
+    cond: np.ndarray,
+    sid: np.ndarray,
+    labels: np.ndarray,
+    held_out: str,
+) -> dict[str, Any]:
+    """Fit the strict OOF hidden probe for one held-out wall scenario."""
+    wall_or_nowall = (cond == "wall") | (cond == "nowall")
+    train = wall_or_nowall & (sid != held_out)
+    test = wall_or_nowall & (sid == held_out)
+    if labels[train].sum() == 0 or (~labels[train]).sum() == 0:
+        raise ValueError(f"training fold {held_out} lacks both labels")
+    mu_pca, v_pca = pca_fit(h[train], PCA_K)
+    z_train = (h[train].astype(np.float64) - mu_pca) @ v_pca
+    model = logreg_fit(z_train, labels[train].astype(np.float64))
+    return {
+        "held_out_scenario": held_out,
+        "train_mask": train,
+        "test_mask": test,
+        "mu_pca": mu_pca,
+        "v_pca": v_pca,
+        "model": model,
+        "n_train": int(train.sum()),
+        "n_test": int(test.sum()),
+        "n_positive_train": int(labels[train].sum()),
+        "n_negative_train": int((~labels[train]).sum()),
+    }
+
+
+def probe_fold_score(fold: dict[str, Any], h: np.ndarray, indices: np.ndarray) -> np.ndarray:
+    z = (h[indices].astype(np.float64) - fold["mu_pca"]) @ fold["v_pca"]
+    return logreg_score(fold["model"], z)
+
+
+def build_strict_oof_matches(
     meta: list[dict[str, Any]],
     h: np.ndarray,
-    probe: dict[str, np.ndarray],
-    source: np.ndarray,
-    off_candidates: np.ndarray,
-    nowall_candidates: np.ndarray,
-    mode: str,
-) -> tuple[dict[str, Any], dict[str, Any]]:
-    """Return summary and per-frame pairs for one matching mode."""
-    # Selected rows are small; scoring only these rows avoids a needless full
-    # 5k x 4096 projection while preserving the exact frozen-probe calculation.
-    selected = []
-    pair_indices: list[tuple[int, int, int]] = []
-    distances: list[tuple[float, float]] = []
+    cond: np.ndarray,
+    sid: np.ndarray,
+    labels: np.ndarray,
+    wall_scenarios: list[str],
+    safe_offpath_scenarios: list[str],
+    folds: dict[str, dict[str, Any]],
+    args_t: int,
+) -> tuple[dict[str, Any], dict[str, Any], dict[str, list[float]]]:
+    """Score held-out collision rows and scenario-balanced matched controls."""
+    details: list[dict[str, Any]] = []
+    off_assignments: list[tuple[str, int]] = []
+    nowall_assignments: list[tuple[str, int]] = []
+    fold_summaries = []
+    plot_rows = {"steps_to_crash": [], "onpath": [], "offpath_mean": [], "nowall": []}
 
-    if mode == "timestep":
-        for i in source:
-            oi = select_nearest_timestep(meta, int(i), off_candidates)
-            ni = select_nearest_timestep(meta, int(i), nowall_candidates)
-            pair_indices.append((int(i), oi, ni))
-            distances.append((float(abs(meta[oi]["t"] - meta[i]["t"])), float(abs(meta[ni]["t"] - meta[i]["t"]))))
-    elif mode == "timestep_eef_action_nn":
-        all_match = np.concatenate([source, off_candidates, nowall_candidates])
-        scales = feature_matrix(meta, all_match).std(axis=0)
-        scales[scales < 1e-8] = 1.0
-        source_f = feature_matrix(meta, source)
-        off_f = feature_matrix(meta, off_candidates)
-        nowall_f = feature_matrix(meta, nowall_candidates)
-        source_f = source_f / scales
-        off_f = off_f / scales
-        nowall_f = nowall_f / scales
-        for j, i in enumerate(source):
-            oi, od = select_nearest_feature(source_f[j], off_f, off_candidates)
-            ni, nd = select_nearest_feature(source_f[j], nowall_f, nowall_candidates)
-            pair_indices.append((int(i), oi, ni))
-            distances.append((od, nd))
-    else:
-        raise ValueError(mode)
+    for held in wall_scenarios:
+        fold = folds[held]
+        source = np.flatnonzero((cond == "wall") & (sid == held) & labels)
+        held_nowall = np.flatnonzero((cond == "nowall") & (sid == held))
+        if not len(source) or not len(held_nowall):
+            raise ValueError(f"missing source or paired nowall rows for {held}")
+        off_candidates = {
+            scenario_id: np.flatnonzero((cond == "offpath") & (sid == scenario_id))
+            for scenario_id in safe_offpath_scenarios
+        }
+        all_selected = list(source) + list(held_nowall)
+        matches_by_source = []
+        for source_index in source:
+            nowall_index = select_nearest_timestep(meta, int(source_index), held_nowall)
+            off_indices = {
+                scenario_id: select_nearest_timestep(meta, int(source_index), candidates)
+                for scenario_id, candidates in off_candidates.items()
+            }
+            all_selected.extend(off_indices.values())
+            matches_by_source.append((int(source_index), nowall_index, off_indices))
 
-    for triplet in pair_indices:
-        selected.extend(triplet)
-    unique_selected = np.asarray(sorted(set(selected)), dtype=np.int64)
-    selected_logits = frozen_probe_score(h[unique_selected], probe)
-    score_by_index = {int(i): float(s) for i, s in zip(unique_selected, selected_logits)}
+        unique_selected = np.asarray(sorted(set(all_selected)), dtype=np.int64)
+        selected_scores = probe_fold_score(fold, h, unique_selected)
+        score_by_index = {int(i): float(s) for i, s in zip(unique_selected, selected_scores)}
 
-    on_logits = np.asarray([score_by_index[i] for i, _, _ in pair_indices])
-    off_logits = np.asarray([score_by_index[o] for _, o, _ in pair_indices])
-    nowall_logits = np.asarray([score_by_index[n] for _, _, n in pair_indices])
-    off_dt = np.asarray([abs(meta[o]["t"] - meta[i]["t"]) for i, o, _ in pair_indices], dtype=np.float64)
-    nowall_dt = np.asarray([abs(meta[n]["t"] - meta[i]["t"]) for i, _, n in pair_indices], dtype=np.float64)
-    off_dist = np.asarray([d[0] for d in distances], dtype=np.float64) if mode != "timestep" else None
-    nowall_dist = np.asarray([d[1] for d in distances], dtype=np.float64) if mode != "timestep" else None
+        on_values = [score_by_index[i] for i, _, _ in matches_by_source]
+        nowall_values = [score_by_index[i] for _, i, _ in matches_by_source]
+        off_by_scenario: dict[str, list[float]] = {s: [] for s in safe_offpath_scenarios}
+        fold_pairs = []
+        for source_index, nowall_index, off_indices in matches_by_source:
+            off_rows = {}
+            for scenario_id in safe_offpath_scenarios:
+                off_index = off_indices[scenario_id]
+                off_assignments.append((scenario_id, off_index))
+                off_by_scenario[scenario_id].append(score_by_index[off_index])
+                off_rows[scenario_id] = row_record(meta, off_index, score_by_index[off_index])
+            nowall_assignments.append((held, nowall_index))
+            fold_pairs.append(
+                {
+                    "onpath": row_record(meta, source_index, score_by_index[source_index]),
+                    "offpath_by_scenario": off_rows,
+                    "nowall": row_record(meta, nowall_index, score_by_index[nowall_index]),
+                }
+            )
+            plot_rows["steps_to_crash"].append(int(meta[source_index]["steps_to_crash"]))
+            plot_rows["onpath"].append(score_by_index[source_index])
+            plot_rows["offpath_mean"].append(
+                float(np.mean([off_rows[s]["probe_logit"] for s in safe_offpath_scenarios]))
+            )
+            plot_rows["nowall"].append(score_by_index[nowall_index])
 
-    pairs = []
-    for k, (i, o, n) in enumerate(pair_indices):
-        pairs.append(
+        scenario_means = {s: float(np.mean(v)) for s, v in off_by_scenario.items()}
+        on_mean = float(np.mean(on_values))
+        nowall_mean = float(np.mean(nowall_values))
+        fold_summaries.append(
             {
-                "onpath": row_record(meta, i, on_logits[k]),
-                "offpath_safe": row_record(meta, o, off_logits[k], distances[k][0] if mode != "timestep" else None),
-                "nowall": row_record(meta, n, nowall_logits[k], distances[k][1] if mode != "timestep" else None),
-                "abs_timestep_difference": {
-                    "offpath_safe": int(off_dt[k]),
-                    "nowall": int(nowall_dt[k]),
+                "held_out_scenario": held,
+                "n_source_rows": int(len(source)),
+                "n_match_assignments_per_offpath_scenario": int(len(source)),
+                "onpath_within_scenario_mean_logit": on_mean,
+                "offpath_control_scenario_means": scenario_means,
+                "offpath_scenario_balanced_mean_logit": float(np.mean(list(scenario_means.values()))),
+                "nowall_within_scenario_mean_logit": nowall_mean,
+                "onpath_minus_offpath_by_control_scenario": {
+                    s: float(on_mean - v) for s, v in scenario_means.items()
                 },
+                "onpath_minus_nowall": float(on_mean - nowall_mean),
+                "probe_training": {
+                    "wall_scenarios_used": [s for s in wall_scenarios if s != held],
+                    "nowall_scenarios_used": [s for s in wall_scenarios if s != held],
+                    "n_train": fold["n_train"],
+                    "n_positive_train": fold["n_positive_train"],
+                    "n_negative_train": fold["n_negative_train"],
+                },
+                "pairs": fold_pairs,
             }
         )
-    details = {
-        "matching": mode,
-        "n_pairs": len(pairs),
-        "pairs": pairs,
+        details.extend(fold_pairs)
+
+    all_off_scenario_means = [
+        value
+        for fold in fold_summaries
+        for value in fold["offpath_control_scenario_means"].values()
+    ]
+    off_summary = {
+        "fold_scenario_means": [
+            {
+                "held_out_scenario": f["held_out_scenario"],
+                "scenario_means": f["offpath_control_scenario_means"],
+                "scenario_balanced_mean": f["offpath_scenario_balanced_mean_logit"],
+            }
+            for f in fold_summaries
+        ],
+        "scenario_level_summary_across_fold_control_pairs": summary_stats(all_off_scenario_means),
+        "fold_balanced_summary": summary_stats(
+            [f["offpath_scenario_balanced_mean_logit"] for f in fold_summaries]
+        ),
+        "onpath_minus_offpath_fold_balanced": summary_stats(
+            [
+                f["onpath_within_scenario_mean_logit"]
+                - f["offpath_scenario_balanced_mean_logit"]
+                for f in fold_summaries
+            ]
+        ),
     }
-    return summarize_pair(on_logits, off_logits, nowall_logits, off_dt, nowall_dt, off_dist, nowall_dist), details
-
-
-def prepare_loso_data(
-    meta: list[dict[str, Any]],
-    h: np.ndarray,
-    t: int,
-) -> tuple[np.ndarray, np.ndarray, np.ndarray, list[str], dict[str, int]]:
-    cond = np.asarray([m["cond"] for m in meta])
-    crashed = np.asarray([bool(m["crashed_episode"]) for m in meta])
-    stc = np.asarray([int(m["steps_to_crash"]) for m in meta])
-    # Off-path is used as a visibility control only when that episode did not
-    # itself crash.  The few boundary off-path crashes are counted and excluded
-    # so the negative class stays a clean "visible wall, no collision" control.
-    offpath_safe = (cond == "offpath") & ~crashed
-    wall = cond == "wall"
-    nowall = cond == "nowall"
-    positive = wall & crashed & (stc >= 0) & (stc <= t)
-    pool = wall | nowall | offpath_safe
-    labels = positive[pool]
-    indices = np.flatnonzero(pool)
-    # The five wall scenario IDs are shared by the corresponding no-wall runs.
-    # Off-path scenarios have their own IDs and remain available as visibility
-    # controls in every fold.
-    sid = np.asarray([str(m["scenario_id"]) for m in meta])
-    groups = sorted(set(sid[wall]))
-    counts = {
-        "pool_rows": int(pool.sum()),
-        "positive_rows": int(positive[pool].sum()),
-        "negative_rows": int((~positive[pool]).sum()),
-        "offpath_safe_rows": int(offpath_safe.sum()),
-        "offpath_episode_rows_excluded_due_to_crash": int(((cond == "offpath") & crashed).sum()),
+    on_summary = summary_stats([f["onpath_within_scenario_mean_logit"] for f in fold_summaries])
+    nowall_summary = summary_stats([f["nowall_within_scenario_mean_logit"] for f in fold_summaries])
+    match_result = {
+        "definition": {
+            "matching": "nearest timestep within each control scenario",
+            "control_order": "match separately within each scenario, average within scenario, then macro-average across scenarios",
+            "safe_offpath_definition": "offpath scenarios with no crashed episode; partially/fully crashing offpath scenarios are excluded",
+            "onpath_rows": f"cond == wall and 0 <= steps_to_crash <= {args_t}",
+            "nowall_rows": "paired no-wall scenario with the same scenario_id as the held-out wall",
+            "probe_scope_per_fold": "only the other four wall scenarios and their four paired nowall scenarios",
+            "primary_score": "strict OOF logit from the fold probe; no full-data frozen probe used",
+        },
+        "folds": fold_summaries,
+        "aggregate": {
+            "onpath_held_out_scenario_means": on_summary,
+            "offpath_safe_control": off_summary,
+            "nowall_paired_control": nowall_summary,
+            "onpath_minus_nowall": summary_stats(
+                [f["onpath_minus_nowall"] for f in fold_summaries]
+            ),
+        },
+        "control_usage": {
+            "offpath_safe": usage_summary(off_assignments),
+            "nowall_paired": usage_summary(nowall_assignments),
+            "all_controls": usage_summary(off_assignments + nowall_assignments),
+        },
+        "n_pairs": int(len(details)),
+        "n_offpath_control_assignments": int(len(off_assignments)),
+        "n_nowall_control_assignments": int(len(nowall_assignments)),
     }
-    return indices, labels, sid, groups, counts
+    plot_data = {
+        key: [float(v) if key != "steps_to_crash" else int(v) for v in values]
+        for key, values in plot_rows.items()
+    }
+    return match_result, {"pairs": details}, plot_data
 
 
-def fit_loso_feature(
-    h: np.ndarray,
-    meta: list[dict[str, Any]],
-    indices: np.ndarray,
-    labels: np.ndarray,
-    sid: np.ndarray,
-    groups: list[str],
-    kind: str,
-) -> tuple[dict[str, Any], np.ndarray]:
-    """Run identical LOSO logistic fitting and return metrics plus OOF logits."""
-    # Work in original row indices so the held-out scenario exclusion is clear.
-    oof = np.full(len(indices), np.nan, dtype=np.float64)
-    x_all = feature_matrix(meta, indices)
-    if kind == "timestep":
-        x_all = x_all[:, [0]]
-    elif kind == "eef_xyz":
-        x_all = x_all[:, 1:4]
-    elif kind == "timestep_eef_xyz":
-        x_all = x_all[:, 0:4]
-    elif kind == "timestep_eef_xyz_action_magnitude":
-        x_all = x_all[:, 0:5]
-    elif kind == "hidden_state":
-        x_all = h[indices].astype(np.float32)
-    else:
-        raise ValueError(kind)
-
-    fold_rows = []
-    for held in groups:
-        # Every wall/nowall row for the held scenario is withheld.  Off-path
-        # rows do not share those scenario IDs and remain controls in each fold.
-        train = sid[indices] != held
-        test = sid[indices] == held
-        if not test.any() or labels[train].sum() == 0 or (~labels[train]).sum() == 0:
-            continue
-        if kind == "hidden_state":
-            mu_pca, v_pca = pca_fit(x_all[train], PCA_K)
-            xtr = (x_all[train] - mu_pca) @ v_pca
-            xte = (x_all[test] - mu_pca) @ v_pca
-            model = logreg_fit(xtr, labels[train].astype(np.float64), l2=L2)
-            oof[test] = logreg_score(model, xte)
-            dim = int(v_pca.shape[1])
-        else:
-            model = logreg_fit(x_all[train], labels[train].astype(np.float64), l2=L2)
-            oof[test] = logreg_score(model, x_all[test])
-            dim = int(x_all.shape[1])
-        fold_rows.append({"held_out_scenario": held, "n_train": int(train.sum()), "n_test": int(test.sum()), "feature_dim": dim})
-
-    valid = np.isfinite(oof)
-    result = {
-        "roc_auc": auc(oof[valid], labels[valid]),
-        "auprc": average_precision(oof[valid], labels[valid]),
-        "n_evaluated": int(valid.sum()),
-        "n_positive_evaluated": int(labels[valid].sum()),
-        "positive_prevalence": float(labels[valid].mean()) if valid.any() else None,
-        "folds": fold_rows,
-        "classifier": {
-            "model": "standardized L2 logistic regression, full-batch gradient descent",
-            "l2": L2,
-            "iterations": LOGREG_ITERS,
-            "learning_rate": LOGREG_LR,
-            "hidden_preprocessing": "training-fold deterministic randomized PCA-50 (seed 0, 2 power iterations) before the same logistic regression",
+def metric_summary(
+    scenario_rows: list[dict[str, Any]],
+    pooled_scores: np.ndarray,
+    pooled_labels: np.ndarray,
+) -> dict[str, Any]:
+    auprc_values = [row["auprc"] for row in scenario_rows]
+    auc_values = [row["roc_auc"] for row in scenario_rows]
+    return {
+        "per_held_out_scenario": scenario_rows,
+        "auprc": summary_stats(auprc_values),
+        "roc_auc": summary_stats(auc_values),
+        "pooled_oof": {
+            "auprc": average_precision(pooled_scores, pooled_labels),
+            "roc_auc": auc(pooled_scores, pooled_labels),
+            "n_evaluated": int(len(pooled_labels)),
+            "n_positive": int(pooled_labels.sum()),
+            "positive_prevalence": float(np.mean(pooled_labels)),
         },
     }
-    return result, oof
+
+
+def model_input_for_fold(
+    h: np.ndarray,
+    covariates: np.ndarray,
+    train_mask: np.ndarray,
+    test_mask: np.ndarray,
+    input_name: str,
+) -> tuple[np.ndarray, np.ndarray, int, dict[str, Any] | None]:
+    if input_name in COVARIATE_COLUMNS:
+        cols = COVARIATE_COLUMNS[input_name]
+        return covariates[train_mask][:, cols], covariates[test_mask][:, cols], len(cols), None
+    mu_pca, v_pca = pca_fit(h[train_mask], PCA_K)
+    z_train = (h[train_mask].astype(np.float64) - mu_pca) @ v_pca
+    z_test = (h[test_mask].astype(np.float64) - mu_pca) @ v_pca
+    if input_name == "hidden_only":
+        return z_train, z_test, int(v_pca.shape[1]), {"mu": mu_pca, "v": v_pca}
+    if input_name == "hidden_plus_covariates":
+        return (
+            np.hstack([z_train, covariates[train_mask]]),
+            np.hstack([z_test, covariates[test_mask]]),
+            int(z_train.shape[1] + covariates.shape[1]),
+            {"mu": mu_pca, "v": v_pca},
+        )
+    raise ValueError(input_name)
+
+
+def fit_oof_classifier(
+    h: np.ndarray,
+    covariates: np.ndarray,
+    cond: np.ndarray,
+    sid: np.ndarray,
+    labels: np.ndarray,
+    wall_scenarios: list[str],
+    input_name: str,
+    model_name: str,
+    probe_folds: dict[str, dict[str, Any]],
+) -> dict[str, Any]:
+    """Fit one model/input combination with one held-out wall scenario at a time."""
+    eval_pool = (cond == "wall") | (cond == "nowall")
+    oof = np.full(len(cond), np.nan, dtype=np.float64)
+    scenario_rows = []
+    fold_rows = []
+    for fold_index, held in enumerate(wall_scenarios):
+        train = eval_pool & (sid != held)
+        test = eval_pool & (sid == held)
+        if model_name == "linear_logistic" and input_name == "hidden_only":
+            scores = probe_fold_score(probe_folds[held], h, np.flatnonzero(test))
+            feature_dim = PCA_K
+            preprocessing = "training-fold PCA-50, then standardized L2 logistic regression"
+        else:
+            x_train, x_test, feature_dim, pca_info = model_input_for_fold(
+                h, covariates, train, test, input_name
+            )
+            if model_name == "linear_logistic":
+                model = logreg_fit(x_train, labels[train].astype(np.float64))
+                scores = logreg_score(model, x_test)
+                preprocessing = "training-fold standardization + L2 logistic regression"
+                if pca_info is not None:
+                    preprocessing = "training-fold PCA-50 + standardization + L2 logistic regression"
+            elif model_name == "nonlinear_mlp":
+                model = mlp_fit(x_train, labels[train].astype(np.float64), seed=MLP_SEED + fold_index)
+                scores = mlp_score(model, x_test)
+                preprocessing = "training-fold PCA if hidden + standardization + one-hidden-layer tanh MLP"
+            else:
+                raise ValueError(model_name)
+        test_indices = np.flatnonzero(test)
+        oof[test_indices] = scores
+        test_labels = labels[test]
+        row = {
+            "held_out_scenario": held,
+            "n_train": int(train.sum()),
+            "n_test": int(test.sum()),
+            "n_positive_test": int(test_labels.sum()),
+            "positive_prevalence": float(test_labels.mean()),
+            "roc_auc": auc(scores, test_labels),
+            "auprc": average_precision(scores, test_labels),
+        }
+        scenario_rows.append(row)
+        fold_rows.append(
+            {
+                "held_out_scenario": held,
+                "n_train": int(train.sum()),
+                "n_test": int(test.sum()),
+                "feature_dim": int(feature_dim),
+            }
+        )
+    valid = np.isfinite(oof) & eval_pool
+    result = metric_summary(scenario_rows, oof[valid], labels[valid])
+    result.update(
+        {
+            "model_name": model_name,
+            "input_name": input_name,
+            "input_label": COVARIATE_LABELS[input_name],
+            "folds": fold_rows,
+            "classifier": {
+                "model": model_name,
+                "preprocessing": preprocessing,
+                "logistic_l2": L2 if model_name == "linear_logistic" else None,
+                "logistic_iterations": LOGREG_ITERS if model_name == "linear_logistic" else None,
+                "mlp_hidden_units": MLP_HIDDEN if model_name == "nonlinear_mlp" else None,
+                "mlp_epochs": MLP_EPOCHS if model_name == "nonlinear_mlp" else None,
+                "mlp_learning_rate": MLP_LR if model_name == "nonlinear_mlp" else None,
+                "mlp_l2": MLP_L2 if model_name == "nonlinear_mlp" else None,
+            },
+        }
+    )
+    return result
+
+
+def grouped_inference(
+    hidden_rows: list[dict[str, Any]],
+    observable_rows: list[dict[str, Any]],
+) -> dict[str, Any]:
+    """Scenario bootstrap and exact sign permutation on paired scenario metrics."""
+    hidden_by_scenario = {row["held_out_scenario"]: row for row in hidden_rows}
+    obs_by_scenario = {row["held_out_scenario"]: row for row in observable_rows}
+    scenarios = sorted(set(hidden_by_scenario) & set(obs_by_scenario))
+    differences = np.asarray(
+        [hidden_by_scenario[s]["auprc"] - obs_by_scenario[s]["auprc"] for s in scenarios],
+        dtype=np.float64,
+    )
+    observed = float(np.mean(differences))
+    rng = np.random.default_rng(INFERENCE_SEED)
+    bootstrap = np.asarray(
+        [float(np.mean(rng.choice(differences, size=len(differences), replace=True))) for _ in range(BOOTSTRAP_REPS)]
+    )
+    signs = np.asarray(list(itertools.product([-1.0, 1.0], repeat=len(differences))), dtype=np.float64)
+    null = (signs * differences[None, :]).mean(axis=1)
+    p_exact = float(np.mean(np.abs(null) >= abs(observed) - 1e-15))
+    return {
+        "unit": "held-out wall scenario",
+        "scenarios": scenarios,
+        "paired_auprc_differences_hidden_minus_observable": {
+            s: float(d) for s, d in zip(scenarios, differences)
+        },
+        "observed_macro_auprc_difference": observed,
+        "scenario_bootstrap": {
+            "replicates": BOOTSTRAP_REPS,
+            "seed": INFERENCE_SEED,
+            "percentile_95_ci": [
+                float(np.percentile(bootstrap, 2.5)),
+                float(np.percentile(bootstrap, 97.5)),
+            ],
+        },
+        "grouped_sign_permutation": {
+            "exact_sign_patterns": int(len(signs)),
+            "two_sided_p": p_exact,
+            "null_macro_differences": [float(v) for v in null],
+        },
+        "warning": "This is scenario-level inference with five groups; continuous frames are not treated as independent replicates.",
+    }
 
 
 def make_figure(
     output: Path,
-    source_meta: list[dict[str, Any]],
-    timestep_summary: dict[str, Any],
-    nn_summary: dict[str, Any],
-    metrics: dict[str, dict[str, Any]],
+    plot_data: dict[str, list[float]],
+    model_results: dict[str, dict[str, Any]],
+    primary_hidden_key: str,
+    strongest_observable_key: str,
 ) -> None:
-    fig, ax = plt.subplots(1, 3, figsize=(16, 4.8))
+    fig, axes = plt.subplots(1, 3, figsize=(18, 5.2), gridspec_kw={"width_ratios": [1.05, 1.0, 1.65]})
 
-    # Panel 1: paired frozen-probe logit by remaining steps.
-    def plot_by_k(summary: dict[str, Any], title: str, axis: Any) -> None:
-        pairs = summary["pairs"]
-        ks = sorted(set(int(p["onpath"]["steps_to_crash"]) for p in pairs))
-        labels = [("onpath collision", "tab:red"), ("offpath safe", "tab:orange"), ("no wall", "tab:green")]
-        pair_key = {
-            "onpath collision": "onpath",
-            "offpath safe": "offpath_safe",
-            "no wall": "nowall",
-        }
-        for name, color in labels:
-            vals = []
-            for k in ks:
-                rows = [p[pair_key[name]] for p in pairs if int(p["onpath"]["steps_to_crash"]) == k]
-                vals.append(float(np.mean([r["probe_logit"] for r in rows])))
-            axis.plot(ks, vals, "o-", color=color, label=name)
-        axis.set_xticks(ks)
-        axis.set_xlabel("steps to crash (0 = impact)")
-        axis.set_ylabel("frozen T=5 probe logit")
-        axis.set_title(title)
-        axis.grid(alpha=0.2)
+    # Panel A: strict OOF matched logits.  Off-path is averaged across control
+    # scenarios for each source frame before plotting.
+    steps = np.asarray(plot_data["steps_to_crash"])
+    order = sorted(set(int(x) for x in steps))
+    for key, label, color in [
+        ("onpath", "held-out wall", "#c0392b"),
+        ("offpath_mean", "safe off-path (scenario-balanced)", "#e67e22"),
+        ("nowall", "paired no-wall", "#2e8b57"),
+    ]:
+        means = [
+            float(np.mean([v for v, s in zip(plot_data[key], steps) if int(s) == k]))
+            for k in order
+        ]
+        axes[0].plot(order, means, "o-", lw=2, ms=5, label=label, color=color)
+    axes[0].set_xlabel("steps to crash (0 = impact)")
+    axes[0].set_ylabel("strict OOF probe logit")
+    axes[0].set_title("OOF matched logits")
+    axes[0].set_xticks(order)
+    axes[0].grid(alpha=0.2)
+    axes[0].legend(fontsize=8)
 
-    plot_by_k(timestep_summary["details"], "Timestep-matched probe logit", ax[0])
-    ax[0].legend(fontsize=8)
+    # Panel B: per-scenario primary hidden versus selected strongest observable.
+    hidden_rows = model_results[primary_hidden_key]["per_held_out_scenario"]
+    obs_rows = model_results[strongest_observable_key]["per_held_out_scenario"]
+    scenarios = [row["held_out_scenario"] for row in hidden_rows]
+    x = np.arange(len(scenarios))
+    width = 0.34
+    axes[1].bar(
+        x - width / 2,
+        [row["auprc"] for row in hidden_rows],
+        width,
+        label="hidden only",
+        color="#6a3d9a",
+    )
+    axes[1].bar(
+        x + width / 2,
+        [row["auprc"] for row in obs_rows],
+        width,
+        label="strongest observable",
+        color="#1f78b4",
+    )
+    axes[1].scatter(
+        x,
+        [row["positive_prevalence"] for row in hidden_rows],
+        marker="_",
+        s=180,
+        color="black",
+        label="random prevalence",
+        zorder=4,
+    )
+    axes[1].set_xticks(x)
+    axes[1].set_xticklabels([abbreviated_scenario(s) for s in scenarios], rotation=35, ha="right", fontsize=8)
+    axes[1].set_ylabel("AUPRC")
+    axes[1].set_title("Per-scenario AUPRC")
+    axes[1].set_ylim(0, 1.0)
+    axes[1].grid(axis="y", alpha=0.2)
+    axes[1].legend(fontsize=8)
 
-    # Panel 2: matched group distributions, using the NN pairs.
-    groups = ["onpath\ncollision", "offpath\nsafe", "no wall"]
-    data = []
-    for key in ["onpath", "offpath_safe", "nowall"]:
-        data.append([p[key]["probe_logit"] for p in nn_summary["details"]["pairs"]])
-    ax[1].boxplot(data, labels=groups, showfliers=False)
-    for j, vals in enumerate(data, start=1):
-        jitter = np.linspace(-0.10, 0.10, len(vals)) if len(vals) else np.array([])
-        ax[1].scatter(np.full(len(vals), j) + jitter, vals, s=13, alpha=0.55)
-    ax[1].set_ylabel("frozen T=5 probe logit")
-    ax[1].set_title("NN matched on timestep + EEF xyz + action")
-    ax[1].grid(axis="y", alpha=0.2)
+    # Panel C: AUPRC is primary; open circles are ROC-AUC as an auxiliary metric.
+    keys = list(model_results)
+    labels = [
+        f"{model_results[k]['model_name'].replace('_', ' ')}\n{model_results[k]['input_label']}"
+        for k in keys
+    ]
+    vals = np.asarray([model_results[k]["auprc"]["macro_mean"] for k in keys])
+    auc_vals = np.asarray([model_results[k]["roc_auc"]["macro_mean"] for k in keys])
+    colors = [
+        "#6a3d9a" if model_results[k]["input_name"].startswith("hidden") else "#80b1d3"
+        for k in keys
+    ]
+    colors[keys.index(strongest_observable_key)] = "#e31a1c"
+    y = np.arange(len(keys))
+    axes[2].barh(y, vals, color=colors, alpha=0.9)
+    axes[2].scatter(auc_vals, y, facecolors="none", edgecolors="black", s=45, label="ROC-AUC")
+    axes[2].axvline(0.5, color="gray", ls=":", lw=1)
+    axes[2].set_yticks(y)
+    axes[2].set_yticklabels(labels, fontsize=7)
+    axes[2].set_xlim(0, 1.0)
+    axes[2].set_xlabel("macro mean (AUPRC bars; ROC-AUC circles)")
+    axes[2].set_title("Observable baseline comparison")
+    axes[2].grid(axis="x", alpha=0.2)
+    axes[2].legend(fontsize=8, loc="lower right")
 
-    # Panel 3: common LOSO classifier metrics.
-    names = list(metrics)
-    short = ["t", "EEF", "t+EEF", "t+EEF+a", "hidden"]
-    x = np.arange(len(names))
-    width = 0.36
-    ax[2].bar(x - width / 2, [metrics[n]["roc_auc"] for n in names], width, label="ROC-AUC", color="tab:blue")
-    ax[2].bar(x + width / 2, [metrics[n]["auprc"] for n in names], width, label="AUPRC", color="tab:purple")
-    ax[2].axhline(0.5, color="gray", ls=":", lw=1)
-    ax[2].set_xticks(x)
-    ax[2].set_xticklabels(short, rotation=20)
-    ax[2].set_ylim(0, 1.05)
-    ax[2].set_ylabel("LOSO score")
-    ax[2].set_title("Collision-window classification")
-    ax[2].legend(fontsize=8)
-    ax[2].grid(axis="y", alpha=0.2)
-
-    fig.suptitle("Task-phase / pose / action confound diagnostic", y=1.02)
+    fig.suptitle("Task-phase confound analysis: strict OOF and scenario-level evaluation", y=1.02)
     fig.tight_layout()
-    fig.savefig(output, dpi=160, bbox_inches="tight")
+    fig.savefig(output, dpi=170, bbox_inches="tight")
     plt.close(fig)
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--input", default=DEFAULT_INPUT, help="capture directory containing hidden.npz and meta.json")
-    ap.add_argument("--probe", default=DEFAULT_PROBE, help="existing frozen probe_T5.npz")
-    ap.add_argument("--output", default=DEFAULT_OUTPUT, help="new output directory; originals are not written")
-    ap.add_argument("--T", type=int, default=DEFAULT_T, help="collision-window horizon in frames")
-    args = ap.parse_args()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--input", default=DEFAULT_INPUT, help="capture directory with hidden.npz and meta.json")
+    parser.add_argument("--output", default=DEFAULT_OUTPUT, help="new output directory")
+    parser.add_argument("--T", type=int, default=DEFAULT_T, help="collision-window horizon")
+    args = parser.parse_args()
 
     input_dir = Path(args.input)
     output_dir = Path(args.output)
     output_dir.mkdir(parents=True, exist_ok=True)
-    h = np.load(input_dir / "hidden.npz")["H"].astype(np.float32)
-    meta = json.load(open(input_dir / "meta.json"))
-    probe_npz = np.load(args.probe)
-    probe = {k: probe_npz[k] for k in probe_npz.files}
+    hidden_path = input_dir / "hidden.npz"
+    meta_path = input_dir / "meta.json"
+    hidden_archive = np.load(hidden_path)
+    h = hidden_archive["H"].astype(np.float32)
+    meta = json.loads(meta_path.read_text())
     if len(meta) != len(h):
         raise ValueError(f"hidden/meta row mismatch: H={len(h)} meta={len(meta)}")
-    required_probe = {"mu_pca", "V_pca", "mu_lr", "sd_lr", "w_lr"}
-    missing = required_probe - set(probe)
-    if missing:
-        raise ValueError(f"probe missing keys: {sorted(missing)}")
-    if h.shape[1] != len(probe["mu_pca"]):
-        raise ValueError(f"hidden dim {h.shape[1]} != probe dim {len(probe['mu_pca'])}")
 
     cond = np.asarray([m["cond"] for m in meta])
+    sid = np.asarray([str(m["scenario_id"]) for m in meta])
     crashed = np.asarray([bool(m["crashed_episode"]) for m in meta])
     stc = np.asarray([int(m["steps_to_crash"]) for m in meta])
-    source = np.flatnonzero((cond == "wall") & crashed & (stc >= 0) & (stc <= args.T))
-    offpath_safe = np.flatnonzero((cond == "offpath") & ~crashed)
-    offpath_all = np.flatnonzero(cond == "offpath")
-    nowall = np.flatnonzero(cond == "nowall")
-    if not len(source) or not len(offpath_safe) or not len(nowall):
-        raise ValueError("missing one of onpath collision-window, safe offpath, or nowall rows")
+    labels = (cond == "wall") & crashed & (stc >= 0) & (stc <= args.T)
+    wall_scenarios = sorted(set(sid[cond == "wall"]))
+    nowall_scenarios = sorted(set(sid[cond == "nowall"]))
+    if wall_scenarios != nowall_scenarios:
+        raise ValueError("wall and nowall scenario IDs are not paired")
 
-    print(f"loaded H={h.shape}; source collision-window rows={len(source)}; "
-          f"safe offpath={len(offpath_safe)}; nowall={len(nowall)}", flush=True)
-    ts_summary, ts_details = build_pair_records(meta, h, probe, source, offpath_safe, nowall, "timestep")
-    nn_summary, nn_details = build_pair_records(meta, h, probe, source, offpath_safe, nowall, "timestep_eef_action_nn")
+    offpath_scenarios = sorted(set(sid[cond == "offpath"]))
+    safe_offpath_scenarios = []
+    excluded_offpath_scenarios = []
+    for scenario_id in offpath_scenarios:
+        rows = (cond == "offpath") & (sid == scenario_id)
+        if not crashed[rows].any():
+            safe_offpath_scenarios.append(scenario_id)
+        else:
+            excluded_offpath_scenarios.append(scenario_id)
+    if len(wall_scenarios) != 5 or not len(safe_offpath_scenarios):
+        raise ValueError("expected five paired wall scenarios and safe off-path controls")
 
-    indices, labels, sid, folds, pool_counts = prepare_loso_data(meta, h, args.T)
-    feature_kinds = [
-        ("timestep", "timestep"),
-        ("eef_xyz", "EEF xyz"),
-        ("timestep_eef_xyz", "timestep + EEF xyz"),
-        ("timestep_eef_xyz_action_magnitude", "timestep + EEF xyz + action magnitude"),
-        ("hidden_state", "hidden state"),
+    print(
+        f"loaded H={h.shape}; wall={int((cond == 'wall').sum())}; "
+        f"nowall={int((cond == 'nowall').sum())}; safe offpath="
+        f"{int(sum((cond == 'offpath') & np.isin(sid, safe_offpath_scenarios)))}",
+        flush=True,
+    )
+    print(f"collision-window source rows={int(labels.sum())}; fitting strict OOF probes", flush=True)
+
+    # One strict OOF hidden probe per held-out wall scenario.  These folds are
+    # also reused for the primary linear hidden-only classification result.
+    folds = {
+        held: fit_probe_fold(h, cond, sid, labels, held) for held in wall_scenarios
+    }
+    match_result, match_details, match_plot_data = build_strict_oof_matches(
+        meta,
+        h,
+        cond,
+        sid,
+        labels,
+        wall_scenarios,
+        safe_offpath_scenarios,
+        folds,
+        args.T,
+    )
+
+    covariates = meta_feature_matrix(meta)
+    model_results: dict[str, dict[str, Any]] = {}
+    for model_name in ("linear_logistic", "nonlinear_mlp"):
+        for input_name in ALL_INPUTS:
+            key = f"{model_name}__{input_name}"
+            print(f"fitting {key}", flush=True)
+            model_results[key] = fit_oof_classifier(
+                h,
+                covariates,
+                cond,
+                sid,
+                labels,
+                wall_scenarios,
+                input_name,
+                model_name,
+                folds,
+            )
+            print(
+                f"  macro AUPRC={model_results[key]['auprc']['macro_mean']:.4f} "
+                f"macro ROC-AUC={model_results[key]['roc_auc']['macro_mean']:.4f}",
+                flush=True,
+            )
+
+    primary_hidden_key = "linear_logistic__hidden_only"
+    observable_keys = [
+        f"{model}__{input_name}"
+        for model in ("linear_logistic", "nonlinear_mlp")
+        for input_name in OBSERVABLE_INPUTS
     ]
-    metrics: dict[str, dict[str, Any]] = {}
-    oof_for_plot: dict[str, np.ndarray] = {}
-    for kind, _ in feature_kinds:
-        print(f"LOSO fitting {kind} ...", flush=True)
-        result, oof = fit_loso_feature(h, meta, indices, labels, sid, folds, kind)
-        metrics[kind] = result
-        oof_for_plot[kind] = oof
-        print(f"  ROC-AUC={result['roc_auc']:.4f} AUPRC={result['auprc']:.4f}", flush=True)
-
-    # A compact sensitivity check uses all off-path rows (including the five
-    # boundary episodes that crashed). It is not the primary clean control, but
-    # makes the treatment of those rows explicit and auditable.
-    ts_all_summary, ts_all_details = build_pair_records(meta, h, probe, source, offpath_all, nowall, "timestep")
+    strongest_observable_key = max(
+        observable_keys,
+        key=lambda key: model_results[key]["auprc"]["macro_mean"],
+    )
+    inference = grouped_inference(
+        model_results[primary_hidden_key]["per_held_out_scenario"],
+        model_results[strongest_observable_key]["per_held_out_scenario"],
+    )
+    hidden_macro = model_results[primary_hidden_key]["auprc"]["macro_mean"]
+    observable_macro = model_results[strongest_observable_key]["auprc"]["macro_mean"]
 
     result = {
+        "schema_version": 2,
         "analysis": {
             "name": "task_phase_confound",
             "T": int(args.T),
             "read_only_inputs": True,
-            "primary_offpath_definition": "cond == offpath and crashed_episode == false",
-            "reason_for_excluding_offpath_crashes": "wall-visibility control should not also be a collision control",
-            "collision_window_definition": "cond == wall, crashed_episode == true, 0 <= steps_to_crash <= T",
-            "loso_group_definition": "five on-path scenario IDs; paired no-wall rows share the held-out ID; off-path controls remain available in each fold",
-            "positive_rows_for_matching": int(len(source)),
-            "source_row_indices": [int(i) for i in source],
-            "condition_counts": {
-                str(c): int((cond == c).sum()) for c in sorted(set(cond.tolist()))
+            "vla_rerun": False,
+            "primary_hidden_model": primary_hidden_key,
+            "strongest_observable_baseline": strongest_observable_key,
+            "final_conclusion": FINAL_CONCLUSION,
+            "distinction": {
+                "stage_information_exists": "Observable timestep, pose, and action features have non-chance scenario-level prediction, so measured task progress information is present in the capture.",
+                "stage_information_not_complete": "The primary hidden-only OOF result is compared with the strongest observable OOF candidate; a residual gap means the measured covariates do not fully explain the hidden signal, without claiming that all task-phase confounds are excluded.",
+                "causal_scope": "Associational frozen-capture evidence only; it does not establish a pure or causal collision representation.",
             },
         },
         "inputs": {
             "capture_dir": str(input_dir),
-            "hidden_file": str(input_dir / "hidden.npz"),
-            "meta_file": str(input_dir / "meta.json"),
-            "probe_file": str(args.probe),
+            "hidden_file": str(hidden_path),
+            "meta_file": str(meta_path),
             "hidden_shape": [int(x) for x in h.shape],
-            "hidden_dtype_on_disk": str(np.load(input_dir / "hidden.npz")["H"].dtype),
+            "hidden_dtype_on_disk": str(hidden_archive["H"].dtype),
             "sha256": {
-                "hidden.npz": hashlib.sha256((input_dir / "hidden.npz").read_bytes()).hexdigest(),
-                "meta.json": hashlib.sha256((input_dir / "meta.json").read_bytes()).hexdigest(),
-                "probe_T5.npz": hashlib.sha256(Path(args.probe).read_bytes()).hexdigest(),
+                "hidden.npz": hashlib.sha256(hidden_path.read_bytes()).hexdigest(),
+                "meta.json": hashlib.sha256(meta_path.read_bytes()).hexdigest(),
             },
         },
-        "pool": pool_counts,
-        "timestep_matching": {"summary": ts_summary, "details": ts_details},
-        "timestep_eef_action_nn_matching": {"summary": nn_summary, "details": nn_details},
-        "all_offpath_timestep_sensitivity": {"summary": ts_all_summary, "details": ts_all_details},
-        "loso_classification": {
-            "pool": "all wall rows + all no-wall rows + safe off-path rows; label is on-path collision within T",
-            "evaluated_rows": int(metrics["hidden_state"]["n_evaluated"]),
-            "feature_sets": metrics,
+        "data": {
+            "condition_counts": {str(c): int((cond == c).sum()) for c in sorted(set(cond.tolist()))},
+            "wall_scenarios": wall_scenarios,
+            "safe_offpath_scenarios": safe_offpath_scenarios,
+            "excluded_offpath_scenarios": excluded_offpath_scenarios,
+            "collision_window_definition": f"cond == wall, crashed_episode == true, 0 <= steps_to_crash <= {args.T}",
+            "positive_rows": int(labels.sum()),
+            "paired_classification_pool": {
+                "definition": "all wall rows + all paired nowall rows; each fold holds out one wall scenario and its nowall counterpart",
+                "rows": int(((cond == "wall") | (cond == "nowall")).sum()),
+                "positive_rows": int(labels[(cond == "wall") | (cond == "nowall")].sum()),
+            },
         },
-        "interpretation": {
-            "wall_visibility_confound": "The off-path-safe matched group has a wall in the capture but no collision. If its frozen probe logit stays near no-wall, wall visibility alone is insufficient; if it rises, the probe may be reading visibility.",
-            "generic_task_phase_confound": "Timestep-only and EEF/action covariate LOSO scores quantify how much collision-window membership can be predicted from progress, robot pose, and action magnitude without hidden state.",
-            "collision_specific_information": "Evidence for collision-specific hidden information requires a high hidden-state LOSO score that remains above the covariate baselines and a positive on-path-minus-control logit gap after both matching audits. This is associational, not causal.",
-            "final_test": "Compare hidden_state ROC-AUC/AUPRC with timestep + EEF xyz + action magnitude; the latter is the preregistered observable-confound baseline.",
+        "strict_oof_matched_logits": {
+            "summary": match_result,
+            "details": match_details,
+            "plot_data": match_plot_data,
+        },
+        "scenario_level_classification": {
+            "unit": "held-out wall scenario; all frames are scored within a scenario, then metrics are macro-averaged",
+            "no_frame_level_significance": True,
+            "feature_sets": model_results,
+            "primary_comparison": {
+                "hidden_key": primary_hidden_key,
+                "strongest_observable_key": strongest_observable_key,
+                "hidden_macro_auprc": hidden_macro,
+                "observable_macro_auprc": observable_macro,
+                "macro_auprc_difference": float(hidden_macro - observable_macro),
+                "hidden_macro_roc_auc": model_results[primary_hidden_key]["roc_auc"]["macro_mean"],
+                "observable_macro_roc_auc": model_results[strongest_observable_key]["roc_auc"]["macro_mean"],
+                "scenario_level_inference": inference,
+            },
+        },
+        "reproducibility": {
+            "command": "MPLCONFIGDIR=/tmp/crashbench-mpl-taskphase envs/openvla/bin/python3.10 scripts/task_phase_confound_analysis.py --input results/selfreport --output results/task_phase_confound --T 5",
+            "pca": {
+                "components": PCA_K,
+                "randomized_oversample": PCA_OVERSAMPLE,
+                "power_iterations": PCA_POWER_ITERATIONS,
+                "seed": PCA_SEED,
+                "fit_scope": "training fold only",
+            },
+            "linear_logistic": {"l2": L2, "iterations": LOGREG_ITERS, "learning_rate": LOGREG_LR},
+            "nonlinear_mlp": {
+                "architecture": f"standardized input -> tanh({MLP_HIDDEN}) -> scalar logit",
+                "epochs": MLP_EPOCHS,
+                "learning_rate": MLP_LR,
+                "l2": MLP_L2,
+                "seed": MLP_SEED,
+            },
+            "inference": {
+                "scenario_bootstrap_replicates": BOOTSTRAP_REPS,
+                "seed": INFERENCE_SEED,
+                "permutation": "exact sign permutation over five held-out scenarios",
+            },
         },
     }
     json_path = output_dir / "task_phase_confound.json"
-    json.dump(clean_json(result), open(json_path, "w"), indent=2, allow_nan=False)
-    fig_path = output_dir / "task_phase_confound_summary.png"
-    make_figure(fig_path, meta, {"summary": ts_summary, "details": ts_details}, {"summary": nn_summary, "details": nn_details}, metrics)
+    json_path.write_text(json.dumps(clean_json(result), indent=2, allow_nan=False))
+    figure_path = output_dir / "task_phase_confound_summary.png"
+    make_figure(
+        figure_path,
+        match_plot_data,
+        model_results,
+        primary_hidden_key,
+        strongest_observable_key,
+    )
+    print(f"strongest observable baseline: {strongest_observable_key}", flush=True)
+    print(f"primary macro AUPRC hidden={hidden_macro:.4f} observable={observable_macro:.4f}", flush=True)
     print(f"wrote {json_path}", flush=True)
-    print(f"wrote {fig_path}", flush=True)
+    print(f"wrote {figure_path}", flush=True)
 
 
 if __name__ == "__main__":

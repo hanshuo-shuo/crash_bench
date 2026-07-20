@@ -19,6 +19,7 @@ retain for provenance only and do not use for a new paper result.
 | E8 | canonical | `phase2_witness.py` | `phase2_witness.sbatch` |
 | E9 | historical / existence demo only | `phase2_task_witness.py`, `phase3_detour_handoff.py`, `render_d70_detour.py`, `phase2_lowwall_validity.py` | `phase2_task_witness_d62.sbatch`, `phase2_task_witness_diag.sbatch`, `phase2_task_witness_prod.sbatch`, `phase3_detour_handoff.sbatch`, `render_d70_detour.sbatch`, `phase2_lowwall_validity.sbatch` |
 | E10 | retained negative / one-off diagnostic | `phase2_build_nowall.py`, `phase2_run_nowall.py`, `phase2_obj_collision.py`, `phase2_recon_indist.py`, `phase2_grasp.py`, `phase2_grasp_build.py`, `phase2_grasp_recon.py`, `phase2_grasp_run.py` | matching `phase2_*` sbatch files |
+| E11/C13 | canonical zero-GPU analysis | `task_phase_confound_analysis.py` | none; reads existing hidden/meta only |
 | utility | helper | `mp4_to_gif.py` | none |
 | deprecated selected headline | deprecated | `headline_suite.py` | none; reproduces only the historical artifact |
 
