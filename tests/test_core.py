@@ -257,6 +257,27 @@ def test_p0_probe_math_handles_ties_and_group_weights():
     assert auc(score(model, x), y) == 1.0
 
 
+def test_p0_authoring_task_selection_and_layout():
+    from scripts.p0_author_scenarios import LAYOUT, choose_tasks
+
+    gate = {
+        "checkpoint": {"requested_revision": "a" * 40},
+        "tasks": {
+            "1": {"success_rate": 0.8},
+            "2": {"success_rate": 1.0},
+            "3": {"success_rate": 1.0},
+            "4": {"success_rate": 0.4},
+        },
+    }
+    assert choose_tasks(gate, 0.6) == [0, 2]
+    expected_counts = {"train": 3, "calibration": 3, "heldout": 5}
+    for split, expected in expected_counts.items():
+        rows = [row for row in LAYOUT if row[0] == split]
+        assert len(rows) == expected
+        assert {row[2] for row in rows} == {"intrusion", "boundary", "clear"}
+        assert {row[1] for row in rows} == {0, 1}
+
+
 if __name__ == "__main__":
     test_scenario_roundtrip()
     test_scenario_fingerprint_stable_and_sensitive()
@@ -268,4 +289,5 @@ if __name__ == "__main__":
     test_full_arm_corridor_geometry()
     test_p0_design_preflight_is_grouped_and_heldout()
     test_p0_probe_math_handles_ties_and_group_weights()
+    test_p0_authoring_task_selection_and_layout()
     print("\nall core tests passed ✓")

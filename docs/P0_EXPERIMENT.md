@@ -34,13 +34,36 @@ should be described that way in the paper.
 The tracked repository currently does **not** contain the required two-task,
 3/3/5 split. Author and commit those scenarios under a new root such as
 `scenarios_p0/{train,calibration,heldout}/`; do not relabel the old five walls as
-held-out. Copy and edit the config:
+held-out.
+
+First run the exact-revision nominal gate and automatic authoring job:
 
 ```bash
-cp configs/p0_core.example.json configs/p0_core.json
-# Fill the exact HF commit, unique output path, second task target, and scenario globs.
+export CB_CHECKPOINT_REVISION=962318cec55ac10993ff0f5f43eda9a270b4c873
+bash setup/submit_p0_authoring.sh all
+```
+
+The gate evaluates t1--t9 five times. The authoring job deterministically chooses
+the highest-success non-anchor task (lowest task ID breaks a tie), pairs it with t0,
+finds successful nominal states, identifies the moved black bowl, and creates all
+11 scenarios plus `configs/p0_core.json`. Each authored scenario stores a nominal
+geometry seed that must still complete the original task when capture replays it.
+
+After the authoring job finishes, inspect its output:
+
+```bash
+cat results/p0_runs/p0_authoring/authoring_report.json
+find results/p0_runs/p0_authoring/previews -name '*.png' | sort
+CB_P0_CONFIG=configs/p0_core.json bash setup/submit_p0.sh preflight
+```
+
+Then commit the server-authored scenario bytes and config. These files must be in
+the exact clean commit used by the paper run:
+
+```bash
 git add configs/p0_core.json scenarios_p0
 git commit -m "Freeze P0 scenarios and experiment config"
+git push -u origin HEAD
 ```
 
 Resolve the cached checkpoint commit on a networked login node before the GPU job.

@@ -17,13 +17,18 @@ allowed=(
   crashbench/provenance.py
   docs/P0_EXPERIMENT.md
   scripts/p0_capture.py
+  scripts/p0_author_scenarios.py
   scripts/p0_guard.py
   scripts/p0_probe_analysis.py
   setup/commit_p0_core.sh
   setup/p0_analyze.sbatch
+  setup/p0_author_scenarios.sbatch
   setup/p0_capture.sbatch
   setup/p0_guard.sbatch
+  setup/p0_nominal_gate.sbatch
   setup/submit_p0.sh
+  setup/submit_p0_authoring.sh
+  scripts/nominal_task_gate.py
   tests/test_core.py
 )
 
@@ -48,6 +53,6 @@ git diff --check
 python -m pytest tests -q
 python scripts/audit_repo.py
 git add -- "${allowed[@]}"
-git diff --cached --stat
-git commit -m "${1:-Add provenance-complete P0 experiment pipeline}"
+git --no-pager diff --cached --stat
+git commit -m "${1:-Add P0 scenario authoring pipeline}"
 git push -u origin HEAD

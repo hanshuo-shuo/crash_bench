@@ -10,13 +10,34 @@ same code path as the later hazard evaluation.
 from __future__ import annotations
 
 import argparse
-import json
+import random
+import sys
 from pathlib import Path
 
 import numpy as np
 
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
 from crashbench.envs import LiberoEnv
 from crashbench.policies import OpenVLAPolicy
+from crashbench.provenance import (
+    repository_provenance, require_checkpoint_revision, runtime_provenance,
+    write_json_exclusive,
+)
+
+
+def seed_everything(seed: int) -> None:
+    random.seed(seed)
+    np.random.seed(seed)
+    try:
+        import torch
+        torch.manual_seed(seed)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
+    except ImportError:
+        pass
 
 
 def run_one(env, policy, state, max_steps: int, settle: int) -> dict:
@@ -48,8 +69,10 @@ def main() -> None:
     ap.add_argument("--max_steps", type=int, default=220)
     ap.add_argument("--settle", type=int, default=10)
     ap.add_argument("--checkpoint", default="openvla/openvla-7b-finetuned-libero-spatial")
+    ap.add_argument("--checkpoint-revision", default=None)
     ap.add_argument("--unnorm_key", default="libero_spatial")
     ap.add_argument("--out", default="results/m1_nominal_gate.json")
+    ap.add_argument("--base-seed", type=int, default=20260726)
     ap.add_argument("--fail_below", type=float, default=None,
                     help="exit nonzero if any task is below this success rate")
     args = ap.parse_args()
@@ -57,8 +80,12 @@ def main() -> None:
     if not task_ids or args.repeats < 1:
         raise SystemExit("need at least one task and --repeats >= 1")
 
+    revision = require_checkpoint_revision(args.checkpoint_revision) if args.checkpoint_revision else None
+    repo = repository_provenance(ROOT, require_clean=revision is not None)
+    seed_everything(args.base_seed)
     policy = OpenVLAPolicy(
         pretrained_checkpoint=args.checkpoint,
+        checkpoint_revision=revision,
         unnorm_key=args.unnorm_key,
         center_crop=True,
     )
@@ -69,6 +96,9 @@ def main() -> None:
         states = np.asarray(env.default_init_states())
         task_rows = []
         for rep in range(args.repeats):
+            episode_seed = args.base_seed + task_id * 1000 + rep
+            seed_everything(episode_seed)
+            env.seed(episode_seed)
             state = states[rep % len(states)]
             result = run_one(env, policy, state, args.max_steps, args.settle)
             row = {
@@ -76,6 +106,7 @@ def main() -> None:
                 "task_id": task_id,
                 "task_description": env.task_description,
                 "rep": rep,
+                "episode_seed": episode_seed,
                 **result,
             }
             rows.append(row)
@@ -96,10 +127,17 @@ def main() -> None:
             "successes": successes,
             "success_rate": successes / len(task_rows),
         }
-    out = {"config": vars(args), "tasks": by_task, "episodes": rows}
+    out = {
+        "schema_version": 1,
+        "config": vars(args),
+        "repository": repo,
+        "runtime": runtime_provenance(),
+        "checkpoint": policy.checkpoint_identity,
+        "tasks": by_task,
+        "episodes": rows,
+    }
     path = Path(args.out)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(out, indent=2))
+    write_json_exclusive(path, out)
     print(f"wrote {path}")
 
     if args.fail_below is not None:

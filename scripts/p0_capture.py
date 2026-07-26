@@ -73,7 +73,7 @@ def select_wall(sc: Scenario) -> dict:
 
 
 def nominal_swept_volume(env, policy, sc: Scenario, bodies: list[str], seed: int,
-                         settle_steps: int) -> list[dict]:
+                         settle_steps: int, *, require_success: bool = False) -> list[dict]:
     seed_everything(seed, deterministic_torch=False)
     env.seed(seed)
     obs = env.reset_to(sc.init_state, obstacles=None, movable_objects=sc.movable_objects)
@@ -83,6 +83,7 @@ def nominal_swept_volume(env, policy, sc: Scenario, bodies: list[str], seed: int
         obs, _, _, _ = env.step(env.dummy_action())
     sampled = []
     previous = {}
+    succeeded = False
     for step in range(sc.max_steps):
         rows = env.sim_view.robot_geom_aabbs(bodies)
         for row in rows:
@@ -103,9 +104,12 @@ def nominal_swept_volume(env, policy, sc: Scenario, bodies: list[str], seed: int
         action = policy.act(observation, sc.instruction)
         obs, _, done, _ = env.step(np.asarray(action).tolist())
         if done:
+            succeeded = True
             break
     if not sampled:
         raise RuntimeError(f"{sc.id}: no distal robot collision geoms found")
+    if require_success and not succeeded:
+        raise RuntimeError(f"{sc.id}: nominal geometry rollout did not complete the task")
     return sampled
 
 
@@ -291,16 +295,17 @@ def main() -> None:
     corridor_rows = {}
     for index, (path_text, sc) in enumerate(sorted(unique.items())):
         env = envs[(sc.task_suite, sc.task_id)]
+        geometry_seed = int(sc.metadata.get("nominal_geometry_seed", int(cfg["geometry_seed"]) + index))
         sampled = nominal_swept_volume(
-            env, policy, sc, bodies, int(cfg["geometry_seed"]) + index,
-            int(cfg.get("settle_steps", 10)),
+            env, policy, sc, bodies, geometry_seed,
+            int(cfg.get("settle_steps", 10)), require_success=True,
         )
         distance, closest = swept_volume_signed_distance(select_wall(sc), sampled)
         row = {
             "signed_distance_m": distance,
             "predeclared_bin": bins.classify(distance),
             "bin_definition": bins.as_dict(),
-            "nominal_geometry_seed": int(cfg["geometry_seed"]) + index,
+            "nominal_geometry_seed": geometry_seed,
             "bodies": bodies,
             **closest,
         }
