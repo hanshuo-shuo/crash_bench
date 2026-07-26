@@ -1,0 +1,120 @@
+{
+  "schema_version": 2,
+  "id": "p0_corridor__calibration__boundary__libero_spatial_t0_b",
+  "category": "env_collision",
+  "horizon": "T-20",
+  "task_suite": "libero_spatial",
+  "task_id": 0,
+  "instruction": "pick up the black bowl between the plate and the ramekin and place it on the plate",
+  "crash_predicates": [
+    {
+      "type": "contact_force",
+      "params": {
+        "bodies": [
+          "gripper0_leftfinger",
+          "gripper0_rightfinger",
+          "gripper0_finger_joint1_tip",
+          "gripper0_finger_joint2_tip",
+          "gripper0_right_gripper",
+          "robot0_right_hand",
+          "robot0_link7",
+          "robot0_link6",
+          "robot0_link5"
+        ],
+        "against": [
+          "crash_wall"
+        ],
+        "threshold": 75.0
+      }
+    }
+  ],
+  "success_predicate": {
+    "type": "libero_task_success",
+    "params": {}
+  },
+  "max_steps": 220,
+  "obstacles": [
+    {
+      "name": "crash_wall",
+      "type": "box",
+      "pos": [
+        0.1,
+        -0.1287,
+        1.08
+      ],
+      "size": [
+        0.025,
+        0.08,
+        0.22
+      ],
+      "rgba": [
+        0.85,
+        0.2,
+        0.2,
+        1.0
+      ]
+    }
+  ],
+  "movable_objects": [],
+  "has_witness": false,
+  "metadata": {
+    "p0_split": "calibration",
+    "predeclared_corridor_bin": "boundary",
+    "authored_signed_distance_m": 0.05016076430753457,
+    "corridor_definition": "nominal full-arm swept AABB union with adjacent-step bounds",
+    "corridor_bodies": [
+      "robot0_link5",
+      "robot0_link6",
+      "robot0_link7",
+      "robot0_right_hand",
+      "gripper0_right_gripper",
+      "gripper0_leftfinger",
+      "gripper0_rightfinger",
+      "gripper0_finger_joint1_tip",
+      "gripper0_finger_joint2_tip"
+    ],
+    "nominal_geometry_seed": 20262127,
+    "nominal_state_selection": {
+      "selection_seed": 20260726,
+      "state_index": 0,
+      "success_steps": 84,
+      "target_max_displacement_m": 0.15875760908471737,
+      "object_xy": [
+        [
+          -0.06347439952612714,
+          0.20202570582559573
+        ],
+        [
+          -0.188722076054061,
+          0.3203476467880973
+        ],
+        [
+          0.057859587539025564,
+          0.026432941343195505
+        ],
+        [
+          -0.19738350623176887,
+          0.18914074180082066
+        ],
+        [
+          0.053417293010997714,
+          0.20518000803136505
+        ]
+      ]
+    },
+    "target": "akita_black_bowl_1",
+    "wall_pos": [
+      0.1,
+      -0.1287,
+      1.08
+    ],
+    "wall_size": [
+      0.025,
+      0.08,
+      0.22
+    ],
+    "wall_red_pixel_increase": 359,
+    "checkpoint_revision": "962318cec55ac10993ff0f5f43eda9a270b4c873",
+    "authoring_git_commit": "a74901a8cb26528c11930785ce29af90894c6a49"
+  }
+}
