@@ -16,6 +16,7 @@ Status is based on tracked artifacts only.
 | E8 Recoverability witnesses | structured retreat or replay / bare collision path | wall scenarios | `phase2_witness.py`, `phase2_task_witness.py` | `witness.json`, `phase2_task_witness/summary.json`; `WITNESS.md` | frozen; C6; task witness is low-wall d62 only |
 | E9 Detour existence demo | low-wall task-completing detour / tall-wall failures | d62 low-wall variant | `phase2_task_witness.py`, `phase3_detour_handoff.py` | `phase2_task_witness/summary.json` | frozen existence demo; C12; not general recovery |
 | E10 Failed/blocked hazards | alternate hazards and mechanisms / nominal conditions | edge bowl, fixtures, cookies, grasp, border | Phase-2 helper scripts | `nowall.json`, `obj_collision.json`, `grasp*`, notes | retained negative evidence; see `NEGATIVE_RESULTS.md` |
+| E12 Provenance-complete P0 | two tasks; 3/3/5 train/calibration/held-out scenarios; wall/nowall; probe/baseline analysis and 11-method online guard | `scenarios_p0`; exact OpenVLA revision | `p0_capture.py`, `p0_probe_analysis.py`, `p0_guard.py`; P0 sbatch chain | `p0_core_20260726_retry1/summary.json` | complete negative/indeterminate result; no calibration/held-out positive frames; held-out vanilla 0/50 crashes; no new positive claim |
 
 Current canonical commands must be read together with
 [REPRODUCIBILITY.md](REPRODUCIBILITY.md); old sbatch paths remain available for

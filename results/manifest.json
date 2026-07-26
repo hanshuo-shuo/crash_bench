@@ -302,6 +302,43 @@
       "figures": [],
       "status": "frozen",
       "notes": "Negative/blocked attempts; no inference should be made from missing generated scenario roots."
+    },
+    {
+      "experiment_id": "E12",
+      "result_files": ["results/p0_core_20260726_retry1/summary.json"],
+      "git_commit": "68d0195cc4bd93832f23cc949f8986814f75719b",
+      "created_date": "2026-07-26",
+      "model": "OpenVLA LIBERO-Spatial",
+      "checkpoint": "openvla/openvla-7b-finetuned-libero-spatial@962318cec55ac10993ff0f5f43eda9a270b4c873",
+      "scenario_root": "scenarios_p0/{train,calibration,heldout}",
+      "scenario_fingerprints": [
+        "12c6e3cff27a887903fda9d745f1333306372bfdfaba42b3299a8858add6252f",
+        "9a59ee75a4c59956ef329f7f98c27c4345bbd73e7b08b2d49188cd0756876286",
+        "49577e22bc09bec28c09a96c043d25bb1ed16e2e86d4c5b5c9f61a271d0904f0",
+        "c30a8d165865d11804be1d51895e923ba9fa0029707cea12dd41be28aeb1576b",
+        "4e2482e3b3a398e5f8a8036bca0b741f5fd0c15415089dac9b8d18a3a3e9a962",
+        "315cb79a201a79ebe8911f4d48e41f2b6885d75f874715de349ec6f8ec213093",
+        "3f81720af42335c36714f774d805cddbd85f949a77a342fcc1f006d034af5b2c",
+        "cb0de31733a17627f378347dbce773c2a0b3399298e4b3254e3596f758d8d1de",
+        "9566f2b1f90555802f2a9910e2da36c23bd31608fce9db65a408da70fa184433",
+        "7924cd612261b6e5fa0ce8934a789725433125100e0c47d01d33fff8f6f233e7",
+        "d7169f754f8f58f3fcda670d0e25ee3e6668b5f3349ad93d172bfa47112c287a"
+      ],
+      "task_suite": "libero_spatial",
+      "task_id": [0, 2],
+      "repeat_k": {"train": 3, "calibration": 3, "heldout": 5},
+      "policy_options": {"unnorm_key": "libero_spatial", "capture_hidden": true, "online_guard": true, "horizon_steps": 5},
+      "threshold": "calibration negative-only empirical FPR <= 0.05; hidden threshold -4.185760656631064; TPR undefined",
+      "crash_predicate": "scoped contact_force against crash_wall at 75 N",
+      "force_threshold_N": 75,
+      "seed_or_nondeterminism": "base seed 20260726; per-episode seeds 20260726--20260811; deterministic_torch=false; exact repeat and pair metadata retained in ignored raw artifacts",
+      "generating_script": "scripts/p0_capture.py",
+      "sbatch": ["setup/p0_capture.sbatch", "setup/p0_analyze.sbatch", "setup/p0_guard.sbatch"],
+      "raw_log": "Quest results/p0_runs/p0_core_20260726_retry1 and results/p0_runs/p0_core_20260726_retry1_online_guard; both complete.json present; raw activation/trace artifacts intentionally ignored",
+      "analysis_script": "scripts/p0_probe_analysis.py; scripts/p0_guard.py",
+      "figures": [],
+      "status": "frozen",
+      "notes": "Complete preregistered negative/indeterminate result: calibration and held-out capture have zero positive frames, held-out vanilla guard has 0/50 crashes, dissociation_supported=false, and no guard safety improvement is identifiable. Do not rescue by changing held-out data, horizon, seeds, repeats, or thresholds."
     }
   ]
 }

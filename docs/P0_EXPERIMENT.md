@@ -71,8 +71,23 @@ git commit -m "Freeze P0 scenarios and experiment config"
 git push -u origin HEAD
 ```
 
-See `docs/P0_HANDOFF_20260726.md` for the successful job IDs, audit outcome, SSH
-workflow, and the exact next commands for the paper-facing run.
+See `docs/P0_HANDOFF_20260726.md` for the authoring and final job IDs, audit
+outcome, SSH workflow, and historical execution commands.
+
+## Final result
+
+The provenance-complete retry ran at commit
+`68d0195cc4bd93832f23cc949f8986814f75719b`. Capture, analysis, and guard jobs
+`7951879/7951880/7951881` all completed `0:0`, producing 86 capture episodes and
+550 online-guard episodes. The tracked review summary is
+`results/p0_core_20260726_retry1/summary.json`.
+
+This is a negative/indeterminate result. Calibration and held-out capture had no
+positive T-5 frames, so held-out AUC and the preregistered hidden-minus-baseline
+bootstrap were not identifiable; `dissociation_supported=false`. Paired online
+vanilla also had 0/50 crashes, so no guard crash reduction or counterfactual lead
+time is identifiable. These outcomes must not be rescued by changing P0 held-out
+scenarios, horizon, seeds, repeats, or thresholds.
 
 ## Before submitting the paper-facing run
 

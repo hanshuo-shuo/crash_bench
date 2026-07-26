@@ -22,10 +22,12 @@ The plan uses the same claim vocabulary, C0–C13, as `CLAIMS.md`.
 
 ## MUST
 
-- External validity: run held-out wall and held-out task checks before expanding
-  hazard breadth.
-- Compare the probe guard with trivial trigger baselines; separate online closed
-  loop results from frozen-capture threshold sweeps.
+- Treat the completed two-task held-out P0 as negative/indeterminate: it had no
+  calibration or held-out positive T-5 frames and no held-out vanilla crashes.
+  Do not tune its held-out data, horizon, seeds, repeats, or thresholds.
+- Keep the completed online probe-guard/trivial-trigger comparison separate from
+  frozen-capture threshold analysis; P0 cannot establish crash reduction because
+  vanilla was already 0/50 crashes.
 - Add probe-confound controls and close the pi0 probe conclusion as partial,
   positive, or negative according to data.
 - Report trial and scenario counts, repeats, uncertainty, scenario fingerprints,
@@ -62,3 +64,6 @@ The plan uses the same claim vocabulary, C0–C13, as `CLAIMS.md`.
 - The steering diagnostic is a readout-norm ratio: under 10% of the full
   probe-direction readout norm remains on the action-token slice. It is not an
   angle measurement.
+- P0 is not positive external-validity evidence for C7 or C13. Its tracked E12
+  summary records `dissociation_supported=false`; all guard crash rates are zero,
+  while vanilla retains the highest task success (88%).

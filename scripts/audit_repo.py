@@ -99,6 +99,39 @@ def audit() -> list[str]:
         if script and script.startswith("scripts/") and not (ROOT / script).exists():
             errors.append(f"manifest script missing: {script}")
 
+    # The provenance-complete P0 is a frozen negative result.  Pin the fields
+    # that prevent it from drifting into a positive external-validity claim.
+    p0_entry = next((entry for entry in manifest.get("entries", [])
+                     if entry.get("experiment_id") == "E12"), None)
+    if p0_entry is None:
+        errors.append("manifest lacks E12 provenance-complete P0")
+    else:
+        p0_path = ROOT / "results/p0_core_20260726_retry1/summary.json"
+        if p0_path.exists():
+            p0 = read_json(p0_path)
+            expected = {
+                "status": "complete_negative_result",
+                "run_git_commit": "68d0195cc4bd93832f23cc949f8986814f75719b",
+                "checkpoint_revision": "962318cec55ac10993ff0f5f43eda9a270b4c873",
+                "design.capture_episode_count": 86,
+                "design.guard_episode_count": 550,
+                "probe_analysis.dissociation_supported": False,
+                "online_guard.headline_metrics.vanilla.n": 50,
+                "online_guard.headline_metrics.vanilla.crash_rate": 0.0,
+            }
+            for dotted, value in expected.items():
+                if dotted_get(p0, dotted) != value:
+                    errors.append(f"E12 P0 mismatch: {dotted}")
+            summary_fingerprints = {
+                row["fingerprint_sha256"] for row in p0["design"]["scenarios"]
+            }
+            if len(summary_fingerprints) != 11:
+                errors.append("E12 P0 does not contain 11 unique scenario fingerprints")
+            if summary_fingerprints != set(p0_entry["scenario_fingerprints"]):
+                errors.append("E12 P0 scenario fingerprints differ from manifest")
+            if p0_entry["git_commit"] != p0["run_git_commit"]:
+                errors.append("E12 P0 run commit differs from manifest")
+
     # Every claim result path must exist and declared numeric checks must equal raw JSON values.
     ledger = read_json(ROOT / "results/claims_ledger.json")
     for claim in ledger.get("claims", []):
