@@ -15,10 +15,11 @@ set -euo pipefail
 : "${CB_CAPTURE_DIR:?set CB_CAPTURE_DIR to the completed P0 capture directory}"
 : "${CB_GUARD_OUT:?set CB_GUARD_OUT to a new result directory}"
 module purge
+module load git/2.47.0-gcc-12.4.0
 module load mamba/24.3.0
 source activate "$HOME/crash_bench/envs/openvla"
 export PYTHONNOUSERSITE=1 MUJOCO_GL=egl PYOPENGL_PLATFORM=egl
-export CB_GIT_EXECUTABLE="${CB_GIT_EXECUTABLE:-/usr/bin/git}"
+export CB_GIT_EXECUTABLE="$(command -v git)"
 cd "$HOME/crash_bench"
 PYTHON="$HOME/crash_bench/envs/openvla/bin/python"
 test -x "$PYTHON"

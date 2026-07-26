@@ -14,10 +14,11 @@ set -euo pipefail
 : "${CB_CHECKPOINT_REVISION:?set the exact immutable checkpoint revision}"
 : "${CB_GATE_OUT:?set the completed P0 gate result path}"
 module purge
+module load git/2.47.0-gcc-12.4.0
 module load mamba/24.3.0
 source activate "$HOME/crash_bench/envs/openvla"
 export PYTHONNOUSERSITE=1 MUJOCO_GL=egl PYOPENGL_PLATFORM=egl
-export CB_GIT_EXECUTABLE="${CB_GIT_EXECUTABLE:-/usr/bin/git}"
+export CB_GIT_EXECUTABLE="$(command -v git)"
 cd "$HOME/crash_bench"
 PYTHON="$HOME/crash_bench/envs/openvla/bin/python"
 test -x "$PYTHON"
