@@ -18,7 +18,10 @@ module load mamba/24.3.0
 source activate "$HOME/crash_bench/envs/openvla"
 export PYTHONNOUSERSITE=1 MUJOCO_GL=egl PYOPENGL_PLATFORM=egl
 cd "$HOME/crash_bench"
-python scripts/p0_author_scenarios.py \
+PYTHON="$HOME/crash_bench/envs/openvla/bin/python"
+test -x "$PYTHON"
+"$PYTHON" -c 'import sys, numpy; print(f"python={sys.executable}"); print(f"numpy={numpy.__version__}")'
+"$PYTHON" scripts/p0_author_scenarios.py \
   --gate "$CB_GATE_OUT" \
   --checkpoint-revision "$CB_CHECKPOINT_REVISION" \
   --base-seed "${CB_BASE_SEED:-20260726}" \
@@ -26,4 +29,3 @@ python scripts/p0_author_scenarios.py \
   --scenario-root "${CB_SCENARIO_ROOT:-scenarios_p0}" \
   --config-out "${CB_CONFIG_OUT:-configs/p0_core.json}" \
   --report-out "${CB_AUTHOR_REPORT:-results/p0_runs/p0_authoring}"
-

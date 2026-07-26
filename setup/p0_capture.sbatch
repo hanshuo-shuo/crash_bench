@@ -18,5 +18,7 @@ module load mamba/24.3.0
 source activate "$HOME/crash_bench/envs/openvla"
 export PYTHONNOUSERSITE=1 MUJOCO_GL=egl PYOPENGL_PLATFORM=egl
 cd "$HOME/crash_bench"
-python scripts/p0_capture.py --config "$CB_P0_CONFIG"
-
+PYTHON="$HOME/crash_bench/envs/openvla/bin/python"
+test -x "$PYTHON"
+"$PYTHON" -c 'import sys, numpy; print(f"python={sys.executable}"); print(f"numpy={numpy.__version__}")'
+"$PYTHON" scripts/p0_capture.py --config "$CB_P0_CONFIG"

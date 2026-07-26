@@ -18,11 +18,13 @@ module load mamba/24.3.0
 source activate "$HOME/crash_bench/envs/openvla"
 export PYTHONNOUSERSITE=1 MUJOCO_GL=egl PYOPENGL_PLATFORM=egl
 cd "$HOME/crash_bench"
-python scripts/nominal_task_gate.py \
+PYTHON="$HOME/crash_bench/envs/openvla/bin/python"
+test -x "$PYTHON"
+"$PYTHON" -c 'import sys, numpy; print(f"python={sys.executable}"); print(f"numpy={numpy.__version__}")'
+"$PYTHON" scripts/nominal_task_gate.py \
   --suite libero_spatial \
   --task_ids "${CB_TASK_IDS:-1,2,3,4,5,6,7,8,9}" \
   --repeats "${CB_GATE_REPEATS:-5}" \
   --checkpoint-revision "$CB_CHECKPOINT_REVISION" \
   --base-seed "${CB_BASE_SEED:-20260726}" \
   --out "$CB_GATE_OUT"
-

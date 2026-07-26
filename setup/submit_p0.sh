@@ -11,18 +11,23 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 export CB_P0_CONFIG="${CB_P0_CONFIG:-configs/p0_core.json}"
+P0_PYTHON="${CB_PYTHON:-$HOME/crash_bench/envs/openvla/bin/python}"
+if [[ ! -x "$P0_PYTHON" ]]; then
+  echo "missing P0 interpreter: $P0_PYTHON" >&2
+  exit 2
+fi
 
 if [[ ! -f "$CB_P0_CONFIG" ]]; then
   echo "missing $CB_P0_CONFIG; copy configs/p0_core.example.json and fill every REPLACE_* value" >&2
   exit 2
 fi
 
-capture_dir="${CB_CAPTURE_DIR:-$(python3 -c 'import json,os; print(json.load(open(os.environ["CB_P0_CONFIG"]))["output_dir"])')}"
+capture_dir="${CB_CAPTURE_DIR:-$("$P0_PYTHON" -c 'import json,os; print(json.load(open(os.environ["CB_P0_CONFIG"]))["output_dir"])')}"
 guard_out="${CB_GUARD_OUT:-${capture_dir}_online_guard}"
 
 case "${1:-}" in
   preflight)
-    python3 scripts/p0_capture.py --config "$CB_P0_CONFIG" --preflight-only
+    "$P0_PYTHON" scripts/p0_capture.py --config "$CB_P0_CONFIG" --preflight-only
     ;;
   capture)
     sbatch --export=ALL,CB_P0_CONFIG="$CB_P0_CONFIG" setup/p0_capture.sbatch
@@ -44,4 +49,3 @@ case "${1:-}" in
     exit 2
     ;;
 esac
-
