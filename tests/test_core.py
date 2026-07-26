@@ -246,7 +246,7 @@ def test_p0_design_preflight_is_grouped_and_heldout():
 
 
 def test_p0_probe_math_handles_ties_and_group_weights():
-    from scripts.p0_probe_analysis import auc, fit, score
+    from scripts.p0_probe_analysis import auc, fit, score, select_threshold
 
     assert auc(np.asarray([0.0, 0.0]), np.asarray([False, True])) == 0.5
     x = np.asarray([[-2.0], [-1.0], [1.0], [2.0]], dtype=float)
@@ -255,6 +255,27 @@ def test_p0_probe_math_handles_ties_and_group_weights():
                          "task1/scenario1", "task1/scenario1"])
     model = fit(x, y, groups, pca_k=None)
     assert auc(score(model, x), y) == 1.0
+
+    negative_only = select_threshold(
+        np.asarray([0.0, 1.0, 2.0, 3.0]), np.asarray([False] * 4), 0.25,
+    )
+    assert negative_only["threshold"] == 3.0
+    assert negative_only["fpr"] == 0.25
+    assert negative_only["tpr"] is None
+    assert negative_only["selection_basis"] == "negative_only_fpr_bound"
+
+    zero_fpr = select_threshold(
+        np.asarray([0.0, 1.0, 2.0, 3.0]), np.asarray([False] * 4), 0.0,
+    )
+    assert zero_fpr["threshold"] > 3.0
+    assert zero_fpr["fpr"] == 0.0
+
+    try:
+        select_threshold(np.asarray([0.0, 1.0]), np.asarray([True, True]), 0.05)
+    except ValueError as exc:
+        assert "negative frames" in str(exc)
+    else:
+        raise AssertionError("positive-only calibration must fail closed")
 
 
 def test_p0_authoring_task_selection_and_layout():

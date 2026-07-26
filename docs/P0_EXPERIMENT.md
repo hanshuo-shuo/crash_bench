@@ -17,6 +17,10 @@ results merely by adding manifest rows.
   tasks, with fingerprint-disjoint splits and at least two repeats;
 - train-only fitting, calibration-only threshold choice, and held-out reporting;
   grouped cross-validation and bootstrap use task/scenario rather than frames;
+- negative-only calibration remains usable for the preregistered empirical FPR
+  bound, but records an undefined calibration TPR; a held-out split without both
+  frame classes makes the dissociation claim unsupported rather than triggering
+  post-hoc horizon or scenario changes;
 - probe comparisons against time, EEF pose, joint pose, action, task phase, and
   robot-state baselines;
 - held-out online comparison against vanilla, always retreat, fixed step-3

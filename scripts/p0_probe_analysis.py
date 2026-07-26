@@ -99,9 +99,44 @@ def score(model, X: np.ndarray) -> np.ndarray:
 
 
 def select_threshold(scores: np.ndarray, y: np.ndarray, max_fpr: float) -> dict:
-    if not y.any() or not (~y).any():
-        raise ValueError("calibration split needs both positive and negative frames")
+    scores = np.asarray(scores, dtype=float)
+    y = np.asarray(y, dtype=bool)
+    if scores.shape != y.shape:
+        raise ValueError("calibration scores and labels must have the same shape")
+    if not 0.0 <= max_fpr <= 1.0:
+        raise ValueError("calibration max_fpr must be between zero and one")
+    if not np.isfinite(scores).all():
+        raise ValueError("calibration scores must all be finite")
+    n_positive = int(y.sum())
+    n_negative = int((~y).sum())
+    if not n_negative:
+        raise ValueError("calibration split needs negative frames to bound false-positive rate")
+
     candidates = np.unique(scores)[::-1]
+    if not n_positive:
+        # A no-crash calibration split is a legitimate negative result, not a
+        # reason to tune the horizon or resample scenarios.  The preregistered
+        # FPR constraint is still identifiable from negative frames.  Select the
+        # lowest (most sensitive) observed threshold that obeys that constraint;
+        # when target FPR is zero, place the threshold just above every score.
+        choices = []
+        for threshold in candidates:
+            fpr = float((scores[~y] >= threshold).mean())
+            if fpr <= max_fpr:
+                choices.append((threshold, fpr))
+        if choices:
+            threshold, fpr = choices[-1]
+        else:
+            threshold, fpr = float(np.nextafter(scores.max(), np.inf)), 0.0
+        return {
+            "threshold": float(threshold),
+            "tpr": None,
+            "fpr": float(fpr),
+            "selection_basis": "negative_only_fpr_bound",
+            "n_positive_frames": n_positive,
+            "n_negative_frames": n_negative,
+        }
+
     choices = []
     for threshold in candidates:
         predicted = scores >= threshold
@@ -111,9 +146,23 @@ def select_threshold(scores: np.ndarray, y: np.ndarray, max_fpr: float) -> dict:
             choices.append((tpr, -fpr, threshold))
     if not choices:
         threshold = float(np.nextafter(scores.max(), np.inf))
-        return {"threshold": threshold, "tpr": 0.0, "fpr": 0.0}
+        return {
+            "threshold": threshold,
+            "tpr": 0.0,
+            "fpr": 0.0,
+            "selection_basis": "positive_and_negative",
+            "n_positive_frames": n_positive,
+            "n_negative_frames": n_negative,
+        }
     tpr, neg_fpr, threshold = max(choices)
-    return {"threshold": float(threshold), "tpr": float(tpr), "fpr": float(-neg_fpr)}
+    return {
+        "threshold": float(threshold),
+        "tpr": float(tpr),
+        "fpr": float(-neg_fpr),
+        "selection_basis": "positive_and_negative",
+        "n_positive_frames": n_positive,
+        "n_negative_frames": n_negative,
+    }
 
 
 def macro_auc(scores: np.ndarray, y: np.ndarray, groups: np.ndarray) -> tuple[float, dict[str, float]]:
@@ -272,6 +321,13 @@ def main() -> None:
         "n_frames": {name: int((splits == name).sum()) for name in ("train", "calibration", "heldout")},
         "n_scenarios": {name: int(len(np.unique(groups[splits == name])))
                         for name in ("train", "calibration", "heldout")},
+        "label_counts": {
+            name: {
+                "positive_frames": int(y[splits == name].sum()),
+                "negative_frames": int((~y[splits == name]).sum()),
+            }
+            for name in ("train", "calibration", "heldout")
+        },
         "tasks": sorted(np.unique(tasks).tolist()),
         "calibration_max_fpr": args.calibration_max_fpr,
         "capture_git_commit": json.loads((root / "run_provenance.json").read_text())[
@@ -328,11 +384,20 @@ def main() -> None:
     summary["hidden_minus_best_preregistered_baseline"] = bootstrap_difference(
         hidden_auc, best_baseline, args.bootstrap_seed)
     best_ci = summary["hidden_minus_best_preregistered_baseline"]["ci95"]
-    summary["dissociation_supported"] = best_ci[0] is not None and best_ci[0] > 0
+    heldout_has_both_classes = bool(y[heldout].any() and (~y[heldout]).any())
+    summary["heldout_evaluation_has_both_classes"] = heldout_has_both_classes
+    summary["dissociation_supported"] = (
+        heldout_has_both_classes and best_ci[0] is not None and best_ci[0] > 0
+    )
+    summary["dissociation_status"] = (
+        "supported" if summary["dissociation_supported"] else
+        "unsupported" if heldout_has_both_classes else
+        "unsupported_no_heldout_positive_or_negative_frames"
+    )
     summary["decision_rule"] = (
         "representation-behavior dissociation is supported only if the scenario-bootstrap "
-        "95% CI for hidden AUC minus the best preregistered baseline is above zero; "
-        "pairwise comparisons are descriptive"
+        "95% CI for hidden AUC minus the best preregistered baseline is above zero and "
+        "held-out frames contain both classes; pairwise comparisons are descriptive"
     )
     output.mkdir()
     save_probe(output / "probe_hidden.npz", *fitted["hidden"], feature_name="hidden")
