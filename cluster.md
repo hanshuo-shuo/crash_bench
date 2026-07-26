@@ -98,6 +98,32 @@ mamba clean -a -y                     # 清 conda 包缓存
 rm -rf ~/.cache/pip                   # 清 pip 缓存
 ```
 
+## 本地编辑、Quest 运行
+
+VS Code 和 Codex 都在本地仓库运行，只通过一个持久 SSH 会话增量上传代码。先在本机终端
+完成一次密码/Duo 认证：
+
+```bash
+ssh -M -S /tmp/crashbench-quest.sock -o ControlPersist=8h \
+  -fN quest.northwestern.edu
+```
+
+然后在本地项目根目录使用：
+
+```bash
+scripts/quest_sync.sh status
+scripts/quest_sync.sh dry-run
+scripts/quest_sync.sh push
+scripts/quest_sync.sh submit setup/run_pilot.sbatch
+scripts/quest_sync.sh queue
+scripts/quest_sync.sh pull-result results/example.json
+```
+
+`push` 不再用 rsync 覆盖源码。它要求本地工作区 clean、本地 HEAD 已发布到 upstream、
+Quest 工作区也 clean，然后让 Quest 通过 Git fast-forward 到完全相同的 commit。
+因此 provenance 中的 commit 与实际执行代码一致；云端被忽略的 `envs/`、
+`third_party/`、模型缓存、大视频和 activation dump 不会被 Git 操作触碰。
+
 ## 排查清单
 
 - **GPU 用不了 / `cuda.is_available()` 是 False**:确认在 GPU 节点上(`nvidia-smi` 能看到卡);
