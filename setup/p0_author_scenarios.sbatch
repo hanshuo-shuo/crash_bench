@@ -17,10 +17,13 @@ module purge
 module load mamba/24.3.0
 source activate "$HOME/crash_bench/envs/openvla"
 export PYTHONNOUSERSITE=1 MUJOCO_GL=egl PYOPENGL_PLATFORM=egl
+export CB_GIT_EXECUTABLE="${CB_GIT_EXECUTABLE:-/usr/bin/git}"
 cd "$HOME/crash_bench"
 PYTHON="$HOME/crash_bench/envs/openvla/bin/python"
 test -x "$PYTHON"
+test -x "$CB_GIT_EXECUTABLE"
 "$PYTHON" -c 'import sys, numpy; print(f"python={sys.executable}"); print(f"numpy={numpy.__version__}")'
+"$CB_GIT_EXECUTABLE" --version
 "$PYTHON" scripts/p0_author_scenarios.py \
   --gate "$CB_GATE_OUT" \
   --checkpoint-revision "$CB_CHECKPOINT_REVISION" \

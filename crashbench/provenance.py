@@ -22,10 +22,16 @@ from crashbench.scenario import Scenario, scenario_fingerprint
 
 
 def _git(root: Path, *args: str) -> str:
-    proc = subprocess.run(
-        ["git", *args], cwd=root, check=False, text=True,
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-    )
+    executable = os.environ.get("CB_GIT_EXECUTABLE", "git")
+    try:
+        proc = subprocess.run(
+            [executable, *args], cwd=root, check=False, text=True,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        )
+    except FileNotFoundError as exc:
+        raise RuntimeError(
+            f"git executable not found: {executable!r}; set CB_GIT_EXECUTABLE to an absolute path"
+        ) from exc
     if proc.returncode:
         raise RuntimeError(f"git {' '.join(args)} failed: {proc.stderr.strip()}")
     return proc.stdout.strip()
