@@ -29,14 +29,16 @@ bridges each geom between adjacent policy steps. This is a full-arm quantity but
 an exact continuous-time mesh union; the representation is saved in provenance and
 should be described that way in the paper.
 
-## Before submitting
+## Frozen design and authoring history
 
-The tracked repository currently does **not** contain the required two-task,
-3/3/5 split. Author and commit those scenarios under a new root such as
-`scenarios_p0/{train,calibration,heldout}/`; do not relabel the old five walls as
-held-out.
+The tracked repository now contains the required two-task, 3/3/5 split under
+`scenarios_p0/{train,calibration,heldout}/` and its committed
+`configs/p0_core.json`.  The exact-revision gate selected LIBERO-Spatial task 2
+alongside anchor task 0; the frozen scenario/config commit is `bc67488`.
 
-First run the exact-revision nominal gate and automatic authoring job:
+The authoring commands below are historical/recovery instructions.  Do **not** rerun
+them for the frozen P0 experiment; a new authoring attempt must use new output paths
+and cannot silently replace these scenario bytes.
 
 ```bash
 export CB_CHECKPOINT_REVISION=962318cec55ac10993ff0f5f43eda9a270b4c873
@@ -49,7 +51,7 @@ finds successful nominal states, identifies the moved black bowl, and creates al
 11 scenarios plus `configs/p0_core.json`. Each authored scenario stores a nominal
 geometry seed that must still complete the original task when capture replays it.
 
-After the authoring job finishes, inspect its output:
+The completed authoring attempt was inspected with:
 
 ```bash
 cat results/p0_runs/p0_authoring/authoring_report.json
@@ -57,14 +59,18 @@ find results/p0_runs/p0_authoring/previews -name '*.png' | sort
 CB_P0_CONFIG=configs/p0_core.json bash setup/submit_p0.sh preflight
 ```
 
-Then commit the server-authored scenario bytes and config. These files must be in
-the exact clean commit used by the paper run:
+The resulting server-authored scenario bytes and config were committed with:
 
 ```bash
 git add configs/p0_core.json scenarios_p0
 git commit -m "Freeze P0 scenarios and experiment config"
 git push -u origin HEAD
 ```
+
+See `docs/P0_HANDOFF_20260726.md` for the successful job IDs, audit outcome, SSH
+workflow, and the exact next commands for the paper-facing run.
+
+## Before submitting the paper-facing run
 
 Resolve the cached checkpoint commit on a networked login node before the GPU job.
 The compute job uses `local_files_only=True` and will fail instead of silently

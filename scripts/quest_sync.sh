@@ -27,7 +27,7 @@ Commands:
   submit FILE.sbatch     Push, then submit FILE with sbatch on Quest.
   queue                  Show this user's Slurm jobs.
   exec 'COMMAND'         Run a shell command from the remote project root.
-  pull-result PATH       Pull one path under results/ (no delete).
+  pull-result PATH       Pull one file or directory under results/ (no delete).
 
 Environment overrides:
   QUEST_HOST, QUEST_REMOTE_DIR, QUEST_SOCKET
@@ -142,12 +142,19 @@ case "$command" in
     ;;
   pull-result)
     path="${2:-}"
-    [[ "$path" == results/* && "$path" != *..* ]] \
+    [[ "$path" =~ ^results/[A-Za-z0-9._/-]+$ && "$path" != */ ]] \
       || die "pull-result only accepts a path below results/"
     check_connection
-    mkdir -p "$ROOT/$(dirname "$path")"
-    rsync -az --itemize-changes -e "$SSH_TRANSPORT" \
-      "$QUEST_HOST:$QUEST_REMOTE_DIR/$path" "$ROOT/$path"
+    quoted_path="$(printf '%q' "$path")"
+    if remote_in_project "test -d $quoted_path"; then
+      mkdir -p "$ROOT/$path"
+      rsync -az --itemize-changes -e "$SSH_TRANSPORT" \
+        "$QUEST_HOST:$QUEST_REMOTE_DIR/$path/" "$ROOT/$path/"
+    else
+      mkdir -p "$ROOT/$(dirname "$path")"
+      rsync -az --itemize-changes -e "$SSH_TRANSPORT" \
+        "$QUEST_HOST:$QUEST_REMOTE_DIR/$path" "$ROOT/$path"
+    fi
     ;;
   -h|--help|help|'')
     usage
