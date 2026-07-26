@@ -1,7 +1,12 @@
-# Provenance-complete P0 experiment
+# Hazard Validity and Environment Generalization Experiment
 
-This pipeline is for new paper-facing evidence. It does not upgrade historical
-results merely by adding manifest rows.
+`P0` is the frozen internal run name and remains in code, paths, configs, and
+provenance. The descriptive name above should be used in presentations and
+paper-facing discussion.
+
+This pipeline tested whether the original on-path-wall result extends to new
+wall placements and a second task. It does not upgrade historical results merely
+by adding manifest rows.
 
 ## What is enforced
 
@@ -88,6 +93,25 @@ bootstrap were not identifiable; `dissociation_supported=false`. Paired online
 vanilla also had 0/50 crashes, so no guard crash reduction or counterfactual lead
 time is identifiable. These outcomes must not be rescued by changing P0 held-out
 scenarios, horizon, seeds, repeats, or thresholds.
+
+## Hazard-validity interpretation
+
+The main problem was scene construction, not pipeline execution. The original
+five walls directly blocked the bowl-reach path. This experiment instead called
+a wall `intrusion` when it overlapped a conservative full-arm AABB swept corridor
+from a successful no-wall trajectory. Raw traces showed that held-out intrusion
+walls reached negative AABB clearance while producing exactly 0 N wall force.
+Generic swept-volume overlap was therefore too broad to define a task-critical,
+path-blocking hazard.
+
+The next study should save the nominal no-wall actions, add each proposed wall,
+and replay the same actions open loop. A scene qualifies as a path-blocking hazard
+only when that fixed replay produces real robot--wall contact. The qualified
+scenes and evaluation seeds must then be frozen before running OpenVLA closed
+loop. This separates hazard validity from the final policy outcome and avoids
+selecting scenes because the evaluated closed-loop policy happened to crash.
+
+Until that gate exists, expanding probe or guard experiments is not the priority.
 
 ## Before submitting the paper-facing run
 

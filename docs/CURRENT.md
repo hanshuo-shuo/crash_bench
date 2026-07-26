@@ -16,9 +16,11 @@ Completed core evidence: a wall corridor sweep, behavioral replication across
 OpenVLA, OpenVLA-OFT, and pi0 action heads, OpenVLA-family probes (with partial
 pi0 evidence), a non-braking diagnostic, safe-abort witnesses, a scoped
 probe-gated intervention, a glass dose response, and negative steering/transfer
-tests. The provenance-complete two-task P0 extension is also complete, but it is
-a negative/indeterminate result: calibration and held-out captures contained no
-positive T-5 frames, held-out vanilla had 0/50 crashes, and the preregistered
+tests. The **Hazard Validity and Environment Generalization Experiment** is also
+complete (internal frozen run name: P0/E12), but it is a negative/indeterminate
+result. Generic full-arm swept-volume overlap did not reliably create a
+task-blocking hazard: calibration and held-out captures contained no positive
+T-5 frames, held-out vanilla had 0/50 crashes, and the preregistered
 hidden-over-baseline dissociation criterion was not supported.
 
 The most important limitation is external validity: the strongest causal and
@@ -26,13 +28,15 @@ online intervention evidence is one LIBERO task and the OpenVLA-base on-path-wal
 mode. The low-wall d62 task-completion result is only an existence demo; it is
 not a general recovery result.
 
-The geometry/provenance split, held-out P0 run, trivial-trigger controls, and
-zero-GPU checks are complete. Any further external-validity experiment must be a
-new preregistered study, not a post-hoc change to P0 scenarios, horizon, seeds,
-repeats, or thresholds. The task-phase confound diagnostic remains a strict-OOF,
-scenario-level frozen-capture result supporting only the scoped C13 wording;
-P0 did not independently validate it. Prioritize a careful pi0 conclusion and a
-new design only if it can create an identifiable held-out safety comparison.
+The geometry/provenance split, held-out generalization run, trivial-trigger
+controls, and zero-GPU checks are complete. Any follow-up must be a new
+preregistered study, not a post-hoc change to the frozen P0/E12 scenarios,
+horizon, seeds, repeats, or thresholds. The next priority is hazard validity:
+save nominal no-wall actions, replay those fixed actions after adding a proposed
+wall, and freeze only scenes where replay causes real robot--wall contact. Only
+then should closed-loop probe or guard generalization be tested. The task-phase
+confound diagnostic remains a strict-OOF, scenario-level frozen-capture result
+supporting only the scoped C13 wording; E12 did not independently validate it.
 
 See [PAPER_PLAN.md](PAPER_PLAN.md), [CLAIMS.md](CLAIMS.md),
 [EXPERIMENT_INDEX.md](EXPERIMENT_INDEX.md), and

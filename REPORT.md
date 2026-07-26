@@ -546,3 +546,186 @@ Remaining, if we push further:
 - **Consumer ② fine-tune** — export the witness to RLDS/HDF5 (`regenerate_libero_dataset.py` schema →
   `rlds_dataset_builder` → TFDS) and LoRA-finetune OpenVLA, **mixing in original libero_spatial demos**
   (one 332-step trajectory alone overfits). Blocked on having more than one witness.
+
+---
+
+## 9. Hazard Validity and Environment Generalization Experiment
+
+*Internal frozen run name: `P0` / `E12`. The internal name is kept in file paths and result IDs
+for reproducibility; the descriptive name above is used for presentation.*
+
+### 9.1 What we tried to test
+
+The earlier result used one LIBERO-Spatial task and five walls placed by hand on the bowl-reach
+path. All 15 runs crashed, while moving the same walls away from that path removed the crash. This
+gave a clear local result. The generalization experiment asked whether the same effect holds for a
+new task and new wall positions without choosing those positions by hand.
+
+We first chose two tasks where bare OpenVLA could finish the normal task: task 0 and task 2. For
+each task, we saved one successful initial state and ran OpenVLA with no wall. We recorded the
+world-space bounding boxes of robot links 5--7, the hand, the gripper, and the fingers over the
+whole successful trajectory. This gave a conservative estimate of the arm's swept corridor.
+
+Walls were then placed in three pre-defined geometry groups:
+
+- `intrusion`: the wall bounding box overlapped the estimated corridor;
+- `boundary`: about 0--10 cm from the corridor;
+- `clear`: at least 10 cm from the corridor.
+
+| Training `intrusion` preview | Held-out `clear` preview |
+| :---: | :---: |
+| ![training intrusion authoring preview](setup/figures/hazard_validity_train_intrusion_preview.png) | ![held-out clear authoring preview](setup/figures/hazard_validity_heldout_clear_t0_preview.png) |
+
+*These are authoring previews at the reset state, not impact frames. They show the wall placements
+that were frozen before capture.*
+
+The final frozen design had 3 training walls, 3 calibration walls, and 5 held-out walls. Every wall
+had a matched no-wall condition. We ran 3 repeats for each training and calibration condition and
+5 repeats for each held-out condition. This produced **86 capture episodes**. The probe was fitted
+only on training data, its threshold was selected only on calibration data, and the final test used
+only held-out data. We also compared hidden state with time, robot pose, action, task phase, and
+robot-state baselines.
+
+For the online test, we ran 11 methods on the held-out set. Each method had 50 episodes: 5 scenes
+times 2 conditions (`wall` and `nowall`) times 5 repeats. The methods included bare OpenVLA, the
+probe guard, always retreat, fixed-step retreat, a robot-state guard, a wall-presence guard, and
+several probe thresholds. This produced **550 online episodes**.
+
+### 9.2 What happened
+
+The capture data did not contain enough crashes for the planned test:
+
+| Split | Wall episodes | Crashes | Task success | Safe abort |
+|---|---:|---:|---:|---:|
+| Train | 9 | **2** | 2 | 5 |
+| Calibration | 9 | **0** | 6 | 3 |
+| Held-out | 25 | **0** | 23 | 2 |
+
+Both crashes came from the same task-0 training wall. They produced only 12 positive T-5 frames.
+Calibration had 0 positive frames and held-out had 0 positive frames. Therefore, held-out AUC,
+hidden-state improvement over the simple baselines, and crash lead time were all undefined. The
+pre-registered hidden-state dissociation test was not supported.
+
+The online result had the same problem:
+
+| Method | Crashes | Task success | Interventions | False interventions |
+|---|---:|---:|---:|---:|
+| Bare OpenVLA | 0/50 | **44/50** | 0/50 | 0/50 |
+| Main probe guard | 0/50 | **0/50** | 50/50 | 50/50 |
+| Wall-presence guard | 0/50 | 18/50 | 25/50 | 25/50 |
+| Most conservative probe sweep point | 0/50 | 29/50 | 14/50 | 14/50 |
+
+Bare OpenVLA already had **0/50 crashes**, so no guard could show a safety improvement. The main
+probe guard stopped every episode and completed no tasks. In this run, it mostly stopped behavior
+that was already safe.
+
+![hazard-validity capture outcomes and held-out guard trade-off](setup/figures/fig_hazard_validity_generalization.png)
+
+### 9.3 Why this looks different from the earlier 15/15 result
+
+The two experiments did not create the same kind of treatment.
+
+The old five walls were directly on the gripper's bowl-reach path. Their centers were around
+`x=-0.12 to -0.085, y=0.12 to 0.17`, and they caused real contact in every run. In the generalization
+experiment, wall position was selected from a conservative full-arm bounding-box corridor. Its
+three `intrusion` walls were at very different places: roughly `x=0.0`, `x=-0.35`, and
+`x=-0.40/-0.45`. The closest
+predicted robot part was usually `link5`, not the gripper. Only the `x=0.0` training wall caused a
+crash, and only in 2/3 repeats.
+
+The main geometry problem is that `intrusion` meant **bounding-box overlap**, not real robot-wall
+overlap. A rotated link has a world-axis-aligned bounding box that contains a lot of empty space.
+The wall can enter that empty part of the box without touching the real link.
+
+The raw Quest traces show this directly. In all 10 held-out `intrusion` wall runs, the live
+full-arm AABB clearance became negative, reaching about **-1.1 to -2.3 cm**. However, scoped wall
+force was exactly **0 N** in all 10 runs, and all 10 runs completed the task. This is not a 75 N
+threshold issue: there was no wall contact to threshold. The geometric label said "intrusion," but
+the physical rollout was safe.
+
+| Earlier on-path wall: real crash rollout | Held-out `intrusion`, task 0 | Held-out `intrusion`, task 2 |
+| :---: | :---: | :---: |
+| ![earlier real on-path crash](setup/figures/crash_d62.gif) | ![held-out task-0 intrusion authoring preview](setup/figures/hazard_validity_heldout_intrusion_t0_preview.png) | ![held-out task-2 intrusion authoring preview](setup/figures/hazard_validity_heldout_intrusion_t2_preview.png) |
+
+*Left: an actual old-policy crash rollout. Middle and right: authoring previews from the
+generalization experiment. The two held-out walls were called `intrusion` because they entered the
+conservative link5 AABB, but their ten
+held-out rollouts had 0 N wall force and 10/10 task success.*
+
+The authoring stage checked that the wall was visible, the robot started clear, and the no-wall
+trajectory completed the task. It did **not** require the wall-present policy to crash on separate
+authoring runs. Therefore, safe walls could pass authoring and enter calibration and held-out as
+if they were dangerous walls.
+
+There are two more design limits:
+
+1. The 11 scenario fingerprints were different because the wall files and wall positions were
+   different, but all task-0 scenarios shared one identical initial state and all task-2 scenarios
+   shared another. So this was 11 wall placements but only **2 task initial states**. It is not a
+   strong test of new task states.
+2. The main threshold allowed about 5% false positives per frame. Online, the guard stops if any
+   frame fires. Over a 100-step episode, even independent 5% frame errors would give more than 99%
+   chance of at least one false stop. The observed 50/50 false interventions are therefore not
+   surprising. The threshold should have been calibrated on the maximum score per episode, not on
+   individual frames.
+
+### 9.4 The real experimental difficulty: defining a valid hazard
+
+The main difficulty is not code implementation. It is how to define a new scene that is truly
+dangerous without selecting scenes after seeing whether closed-loop OpenVLA crashes.
+
+The original five walls clearly blocked the critical bowl-reach action. The generic full-arm swept
+corridor asked a broader geometric question: did any distal arm bounding box pass through this
+space at any time in the nominal task? The result shows that this definition is too broad. A wall
+can overlap the full swept envelope without blocking a task-critical motion. `Swept-volume overlap`
+and `path-blocking hazard` are not the same thing.
+
+This is a valid negative/indeterminate result for the frozen experiment protocol: its planned
+held-out claims were not supported. We should keep it and should not change its held-out walls,
+labels, horizon, seeds, or thresholds after seeing the result.
+
+However, it is **not** clean evidence that the earlier 15/15 crash result was false, and it is not
+clean evidence that OpenVLA suddenly learned wall avoidance on a second task. The new treatment often
+failed to put a real obstacle on the physical path. Task identity, wall position, and initial state
+also changed together, so we cannot separate a task effect from a scenario-construction effect.
+
+The most direct conclusion is:
+
+> The environment-generalization run tested the analysis pipeline, but its automatic wall authoring
+> did not reliably create held-out crash opportunities. Because the held-out baseline had no
+> crashes, the frozen run could not test probe generalization or guard safety improvement.
+
+### 9.5 Next step: open-loop replay as the hazard-validity gate
+
+A new experiment should be pre-registered as a new study, not used to rewrite this result. The
+priority is hazard construction, not a larger probe or guard experiment.
+
+The cleanest next design is:
+
+1. Run the task with no wall and save the nominal OpenVLA action sequence.
+2. Propose new wall positions without looking at the future closed-loop outcome.
+3. Reset to the same task state, add the wall, and replay the saved actions open loop.
+4. Call a scene a `path-blocking hazard` only if this fixed replay causes real robot--wall contact.
+5. Freeze all accepted scenes and evaluation seeds.
+6. Run OpenVLA closed loop. Now any difference from replay must come from the policy changing its
+   actions after seeing the wall.
+
+This gate avoids the main cherry-picking problem. Scene validity is decided by a fixed nominal
+action sequence, not by whether the final closed-loop evaluation happens to crash. It also asks the
+right physical question: does the wall block the action sequence needed for the normal task?
+
+The new study should also:
+
+- Use AABB clearance only to propose wall locations; open-loop contact decides hazard validity.
+- Require the robot to start clear and require the matched no-wall task to succeed.
+- Use several independent initial states for every task. Split by task state as well as wall position;
+  use a fully held-out task if the claim is cross-task generalization.
+- Require enough positive examples in training and calibration before fitting and selecting a
+  threshold. If the final held-out set has no crashes, report it as unidentifiable again.
+- Calibrate false intervention at the **episode level**, using each episode's maximum pre-crash
+  score. Report task success and false stops next to crash rate.
+- Keep the old five-wall result as a narrow positive result and this generalization experiment as a
+  useful negative result: **generic swept-volume overlap is not enough to define task-critical path
+  obstruction.**
+
+Full frozen result: [`results/p0_core_20260726_retry1/summary.json`](results/p0_core_20260726_retry1/summary.json).
