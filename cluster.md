@@ -98,6 +98,31 @@ mamba clean -a -y                     # 清 conda 包缓存
 rm -rf ~/.cache/pip                   # 清 pip 缓存
 ```
 
+## 本地编辑、Quest 运行
+
+VS Code 和 Codex 都在本地仓库运行，只通过一个持久 SSH 会话增量上传代码。先在本机终端
+完成一次密码/Duo 认证：
+
+```bash
+ssh -M -S /tmp/crashbench-quest.sock -o ControlPersist=8h \
+  -fN quest.northwestern.edu
+```
+
+然后在本地项目根目录使用：
+
+```bash
+scripts/quest_sync.sh status
+scripts/quest_sync.sh dry-run
+scripts/quest_sync.sh push
+scripts/quest_sync.sh submit setup/run_pilot.sbatch
+scripts/quest_sync.sh queue
+scripts/quest_sync.sh pull-result results/example.json
+```
+
+`push` 的清单来自 Git，只上传相对 Quest 当前提交有变化的 tracked 文件和未被
+`.gitignore` 排除的新文件，且不使用 `--delete`。因此云端的 `envs/`、
+`third_party/`、模型缓存、大视频和 activation dump 既不会下载到本地，也不会被删除。
+
 ## 排查清单
 
 - **GPU 用不了 / `cuda.is_available()` 是 False**:确认在 GPU 节点上(`nvidia-smi` 能看到卡);
