@@ -63,4 +63,8 @@ results/selfreport_pi0/hidden.npz
 results/selfreport_pi0/meta.json
 results/selfreport_pi0_ae/hidden.npz
 results/selfreport_pi0_ae/meta.json
+# Provenance-complete P0 runs contain lossless float32 activations and per-episode traces.
+# Keep the immutable run directory off Git; copy only reviewed summaries into a separately
+# named tracked result and add a manifest entry after analysis.
+/results/p0_runs/
 results/phase2_task_witness/*.gif

@@ -49,7 +49,7 @@ def add_openvla_to_path(openvla_root: str | None = None) -> None:
         sys.path.insert(0, root)
 
 
-def _native_get_libero_env(task, resolution: int = 256):
+def _native_get_libero_env(task, resolution: int = 256, seed: int = 0):
     """torch-free replica of experiments.robot.libero.libero_utils.get_libero_env, for the π0
     (openpi/JAX) path. That helper's module imports tensorflow + experiments.robot.robot_utils
     (→ torch), which we must NOT pull into the JAX env. This builds the SAME OffScreenRenderEnv
@@ -60,7 +60,7 @@ def _native_get_libero_env(task, resolution: int = 256):
 
     bddl = os.path.join(get_libero_path("bddl_files"), task.problem_folder, task.bddl_file)
     env = OffScreenRenderEnv(bddl_file_name=bddl, camera_heights=resolution, camera_widths=resolution)
-    env.seed(0)  # IMPORTANT: seed affects object positions even with a fixed init_state (matches OFT)
+    env.seed(seed)  # IMPORTANT: seed affects object positions even with a fixed init_state
     return env, task.language
 
 
@@ -259,6 +259,51 @@ class LiberoSimView:
         data = getattr(sim.data, "_data", sim.data)
         return model, data
 
+    def joint_state(self) -> dict[str, list[float]]:
+        """Policy-relevant robot joint position/velocity from the live simulator."""
+        model, data = self._live_mj()
+        import mujoco
+        qpos, qvel, names = [], [], []
+        for jid in range(int(model.njnt)):
+            name = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_JOINT, jid) or f"joint_{jid}"
+            if not (name.startswith("robot0_") or name.startswith("gripper0_")):
+                continue
+            qadr = int(model.jnt_qposadr[jid])
+            dadr = int(model.jnt_dofadr[jid])
+            names.append(name)
+            qpos.append(float(data.qpos[qadr]))
+            qvel.append(float(data.qvel[dadr]) if dadr >= 0 else 0.0)
+        return {"names": names, "qpos": qpos, "qvel": qvel}
+
+    def robot_geom_aabbs(self, bodies: list[str]) -> list[dict]:
+        """World AABBs of collision geoms attached to the requested robot bodies.
+
+        MuJoCo stores a local geom AABB as center+half-size.  Transforming it by
+        ``abs(R)`` gives the exact world AABB of that local AABB and a conservative
+        bound for the underlying rotated geometry.
+        """
+        model, data = self._live_mj()
+        import mujoco
+        body_ids = {self._body_id(model, name): name for name in bodies}
+        rows = []
+        for gid in range(int(model.ngeom)):
+            bid = int(model.geom_bodyid[gid])
+            if bid not in body_ids or int(model.geom_contype[gid]) == 0:
+                continue
+            local = np.asarray(model.geom_aabb[gid], dtype=float)
+            local_center, local_half = local[:3], local[3:]
+            rotation = np.asarray(data.geom_xmat[gid], dtype=float).reshape(3, 3)
+            center = np.asarray(data.geom_xpos[gid], dtype=float) + rotation @ local_center
+            half = np.abs(rotation) @ local_half
+            if not np.any(half > 0):
+                half = np.full(3, float(model.geom_rbound[gid]))
+            geom_name = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_GEOM, gid) or f"geom_{gid}"
+            rows.append({
+                "body": body_ids[bid], "geom": geom_name,
+                "lo": (center - half).tolist(), "hi": (center + half).tolist(),
+            })
+        return rows
+
     def max_contact_force(self, bodies: list[str], against: list[str] | None = None) -> float:
         """Max ||contact force|| (N) over contacts that touch any of `bodies`.
 
@@ -311,7 +356,7 @@ class LiberoEnv:
     """Thin wrapper over a LIBERO task env using OpenVLA's verified helpers."""
 
     def __init__(self, task_suite: str, task_id: int, model_family: str = "openvla",
-                 resolution: int = 256, openvla_root: str | None = None):
+                 resolution: int = 256, openvla_root: str | None = None, seed: int = 0):
         from libero.libero import benchmark   # LIBERO (not OpenVLA) — safe on every path
 
         suite = benchmark.get_benchmark_dict()[task_suite]()
@@ -321,12 +366,19 @@ class LiberoEnv:
         self._model_family = model_family
         if model_family == "pi0":
             # π0 (openpi/JAX) path: build the env WITHOUT the OpenVLA repo (no torch/tensorflow).
-            self.env, self.task_description = _native_get_libero_env(self.task, resolution=resolution)
+            self.env, self.task_description = _native_get_libero_env(
+                self.task, resolution=resolution, seed=seed)
         else:
             add_openvla_to_path(openvla_root)   # None -> CRASHBENCH_OPENVLA_ROOT / base default
             from experiments.robot.libero.libero_utils import get_libero_env
             self.env, self.task_description = get_libero_env(self.task, model_family, resolution=resolution)
+            self.env.seed(seed)
+        self.seed_value = int(seed)
         self.sim_view = LiberoSimView(self.env)
+
+    def seed(self, seed: int) -> None:
+        self.seed_value = int(seed)
+        self.env.seed(self.seed_value)
 
     def default_init_states(self) -> np.ndarray:
         from libero.libero import benchmark

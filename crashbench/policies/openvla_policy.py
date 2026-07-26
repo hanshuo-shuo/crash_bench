@@ -17,6 +17,28 @@ import numpy as np
 from crashbench.envs.libero_adapter import add_openvla_to_path
 
 
+def _resolve_checkpoint(checkpoint: str, revision: str | None) -> tuple[str, dict]:
+    """Resolve an immutable HF revision to a cached snapshot before model loading."""
+    from pathlib import Path
+    requested = checkpoint
+    resolved = checkpoint
+    if revision is not None and not Path(checkpoint).expanduser().exists():
+        from huggingface_hub import snapshot_download
+        resolved = snapshot_download(repo_id=checkpoint, revision=revision, local_files_only=True)
+    resolved_path = Path(resolved).expanduser()
+    resolved_revision = resolved_path.name if resolved_path.parent.name == "snapshots" else None
+    if revision is not None and resolved_revision is not None and resolved_revision != revision:
+        raise RuntimeError(
+            f"checkpoint cache resolved {revision} to unexpected snapshot {resolved_revision}"
+        )
+    return resolved, {
+        "requested": requested,
+        "requested_revision": revision,
+        "resolved_revision": resolved_revision,
+        "resolved_path": str(resolved_path.resolve()) if resolved_path.exists() else resolved,
+    }
+
+
 class OpenVLAPolicy:
     def __init__(
         self,
@@ -29,11 +51,14 @@ class OpenVLAPolicy:
         openvla_root: str | None = None,
         capture_hidden: bool = False,     # self-report probe: export the LM's last hidden state
         enable_steering: bool = False,    # Path 1-1b: install a WRITE hook on the final RMSNorm
+        checkpoint_revision: str | None = None,
     ):
         add_openvla_to_path(openvla_root) if openvla_root else add_openvla_to_path()
         from experiments.robot.robot_utils import get_model, get_image_resize_size
         from experiments.robot.openvla_utils import get_processor
 
+        pretrained_checkpoint, self.checkpoint_identity = _resolve_checkpoint(
+            pretrained_checkpoint, checkpoint_revision)
         # Mirror run_libero_eval.py's GenerateConfig fields that the helpers read.
         self.cfg = SimpleNamespace(
             model_family="openvla",
@@ -44,6 +69,13 @@ class OpenVLAPolicy:
             unnorm_key=unnorm_key,
         )
         self.model = get_model(self.cfg)
+        config_commit = getattr(getattr(self.model, "config", None), "_commit_hash", None)
+        self.checkpoint_identity["model_config_commit_hash"] = config_commit
+        generation = getattr(self.model, "generation_config", None)
+        self.checkpoint_identity["generation_config"] = {
+            key: getattr(generation, key, None)
+            for key in ("do_sample", "num_beams", "temperature", "top_k", "top_p")
+        }
         # resolve unnorm key the same way run_libero_eval does
         if (self.cfg.unnorm_key not in self.model.norm_stats
                 and f"{self.cfg.unnorm_key}_no_noops" in self.model.norm_stats):

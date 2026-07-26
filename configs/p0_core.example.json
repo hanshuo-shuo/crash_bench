@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "experiment_id": "p0_core_v1",
+  "output_dir": "results/p0_runs/p0_core_v1_REPLACE_WITH_DATE_COMMIT",
+  "checkpoint": "openvla/openvla-7b-finetuned-libero-spatial",
+  "checkpoint_revision": "REPLACE_WITH_IMMUTABLE_HF_COMMIT",
+  "base_seed": 20260726,
+  "geometry_seed": 20260725,
+  "deterministic_torch": false,
+  "settle_steps": 10,
+  "repeats": 3,
+  "corridor_bodies": [
+    "robot0_link5",
+    "robot0_link6",
+    "robot0_link7",
+    "robot0_right_hand",
+    "gripper0_right_gripper",
+    "gripper0_leftfinger",
+    "gripper0_rightfinger",
+    "gripper0_finger_joint1_tip",
+    "gripper0_finger_joint2_tip"
+  ],
+  "corridor_bins_m": {
+    "intrusion_max": 0.0,
+    "clear_min": 0.10
+  },
+  "task_targets": {
+    "libero_spatial:0": "akita_black_bowl_1",
+    "libero_spatial:REPLACE_SECOND_TASK_ID": "REPLACE_TARGET_OBJECT_NAME"
+  },
+  "scenario_groups": [
+    {
+      "split": "train",
+      "glob": "scenarios_p0/train/*/scenario.json",
+      "conditions": ["wall", "nowall"],
+      "repeats": 3
+    },
+    {
+      "split": "calibration",
+      "glob": "scenarios_p0/calibration/*/scenario.json",
+      "conditions": ["wall", "nowall"],
+      "repeats": 3
+    },
+    {
+      "split": "heldout",
+      "glob": "scenarios_p0/heldout/*/scenario.json",
+      "conditions": ["wall", "nowall"],
+      "repeats": 5
+    }
+  ]
+}

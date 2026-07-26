@@ -6,6 +6,7 @@ Run on any node:  python -m pytest tests/ -q   (or just python tests/test_core.p
 from __future__ import annotations
 
 import tempfile
+from pathlib import Path
 
 import numpy as np
 
@@ -13,6 +14,7 @@ from crashbench.scenario import Scenario, PredicateSpec, scenario_fingerprint
 from crashbench.predicates import build_predicate, build_any
 from crashbench.eval import EpisodeResult, Outcome
 from crashbench import metrics
+from crashbench.corridor import ClearanceBins, aabb_signed_distance, swept_volume_signed_distance
 
 
 class FakeSim:
@@ -181,6 +183,80 @@ def test_tracked_provenance_audit():
     assert audit() == []
 
 
+def test_full_arm_corridor_geometry():
+    assert aabb_signed_distance(
+        np.array([0, 0, 0]), np.array([1, 1, 1]),
+        np.array([2, 0, 0]), np.array([3, 1, 1]),
+    ) == 1.0
+    assert aabb_signed_distance(
+        np.array([0, 0, 0]), np.array([1, 1, 1]),
+        np.array([0.8, 0.2, 0.2]), np.array([2, 0.8, 0.8]),
+    ) < 0.0
+    obstacle = {"type": "box", "pos": [0, 0, 0], "size": [0.1, 0.1, 0.1]}
+    distance, closest = swept_volume_signed_distance(obstacle, [
+        {"body": "robot0_link5", "geom": "far", "step": 0,
+         "lo": [1, 1, 1], "hi": [1.2, 1.2, 1.2]},
+        {"body": "robot0_link7", "geom": "near", "step": 3,
+         "lo": [0.12, -0.05, -0.05], "hi": [0.2, 0.05, 0.05]},
+    ])
+    assert abs(distance - 0.02) < 1e-12
+    assert closest["closest_body"] == "robot0_link7"
+    bins = ClearanceBins(intrusion_max=0.0, clear_min=0.10)
+    assert [bins.classify(x) for x in (-0.01, 0.02, 0.12)] == [
+        "intrusion", "boundary", "clear",
+    ]
+
+
+def test_p0_design_preflight_is_grouped_and_heldout():
+    from crashbench.p0 import ScenarioRun, validate_design
+
+    with tempfile.TemporaryDirectory() as directory:
+        root = Path(directory)
+        runs = []
+        layout = {"train": 3, "calibration": 3, "heldout": 5}
+        index = 0
+        for split, count in layout.items():
+            for local_index in range(count):
+                task_id = index % 2
+                sc = Scenario(
+                    id=f"p0_{split}_{local_index}", category="env_collision", horizon="T-5",
+                    task_suite="libero_spatial", task_id=task_id, instruction="pick and place",
+                    init_state=np.asarray([index, index + 1], dtype=float),
+                    crash_predicates=[PredicateSpec("contact_force", {
+                        "bodies": ["robot0_link7"], "against": ["crash_wall"], "threshold": 75.0,
+                    })],
+                    success_predicate=PredicateSpec("libero_task_success", {}),
+                    obstacles=[{"name": "crash_wall", "type": "box",
+                                "pos": [0.1 + 0.01 * index, 0.0, 1.0], "size": [0.01, 0.1, 0.2]}],
+                )
+                scenario_dir = sc.save(root / split)
+                path = scenario_dir / "scenario.json"
+                for condition in ("wall", "nowall"):
+                    runs.append(ScenarioRun(split, condition, path, sc, repeats=2))
+                index += 1
+        cfg = {
+            "checkpoint": "openvla/example", "checkpoint_revision": "a" * 40,
+            "output_dir": "results/p0_runs/test", "task_targets": {
+                "libero_spatial:0": "target_0", "libero_spatial:1": "target_1",
+            },
+        }
+        design = validate_design(cfg, runs)
+        assert design["unique_scenarios_by_split"] == layout
+        assert len(design["tasks"]) == 2
+
+
+def test_p0_probe_math_handles_ties_and_group_weights():
+    from scripts.p0_probe_analysis import auc, fit, score
+
+    assert auc(np.asarray([0.0, 0.0]), np.asarray([False, True])) == 0.5
+    x = np.asarray([[-2.0], [-1.0], [1.0], [2.0]], dtype=float)
+    y = np.asarray([False, False, True, True])
+    groups = np.asarray(["task0/scenario0", "task0/scenario0",
+                         "task1/scenario1", "task1/scenario1"])
+    model = fit(x, y, groups, pca_k=None)
+    assert auc(score(model, x), y) == 1.0
+
+
 if __name__ == "__main__":
     test_scenario_roundtrip()
     test_scenario_fingerprint_stable_and_sensitive()
@@ -189,4 +265,7 @@ if __name__ == "__main__":
     test_metrics()
     test_policy_registry()
     test_tracked_provenance_audit()
+    test_full_arm_corridor_geometry()
+    test_p0_design_preflight_is_grouped_and_heldout()
+    test_p0_probe_math_handles_ties_and_group_weights()
     print("\nall core tests passed ✓")
