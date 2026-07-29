@@ -454,6 +454,9 @@ current end-effector action space. This leaves three clean directions:
 3. **Safety:** turn detection into task-completing recovery with a joint-space planner or learned
    recovery policy, while preserving nominal task success.
 
+<img width="1430" height="1376" alt="image" src="https://github.com/user-attachments/assets/30c2d8ef-305f-4030-bfdc-bb43181ef81d" />
+
+
 ---
 
 ## 9. Hazard Validity and Environment Generalization Experiment
