@@ -456,6 +456,10 @@ current end-effector action space. This leaves three clean directions:
 
 <img width="1430" height="1376" alt="image" src="https://github.com/user-attachments/assets/30c2d8ef-305f-4030-bfdc-bb43181ef81d" />
 
+<img width="958" height="212" alt="image" src="https://github.com/user-attachments/assets/89e3da3b-d2ec-47c1-97cb-f03e1185298a" />
+
+<img width="1242" height="348" alt="image" src="https://github.com/user-attachments/assets/bdd86689-00d4-4736-9f88-6ae3ad3ac418" />
+
 
 ---
 
