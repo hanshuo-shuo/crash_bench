@@ -121,12 +121,13 @@ class QwenMonitorClient:
 
 
 def _git_commit() -> str | None:
+    exported = os.environ.get("CB_CODE_COMMIT")
     try:
         return subprocess.check_output(
             ["git", "rev-parse", "HEAD"], text=True, stderr=subprocess.DEVNULL
         ).strip()
     except Exception:
-        return None
+        return exported
 
 
 def _episode(

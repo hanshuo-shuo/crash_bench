@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "base_checkpoint": "/projects/p33100/siosio/huggingface_cache/hub/models--openvla--openvla-7b-finetuned-libero-spatial/snapshots/962318cec55ac10993ff0f5f43eda9a270b4c873",
+  "train_manifest": "results/oracle_recovery/dataset_v1/train.jsonl",
+  "train_manifest_sha256": "785069c1c0534e960a77d2e7f8f1caf2d713c4b6a1f6a018660e088566d639ff",
+  "code_commit": "29c032edd54e230eb632e721612a26c82d8b7d06",
+  "method": "LoRA behavior cloning of oracle-stop filtered OpenVLA actions",
+  "heldout_used_for_training": false,
+  "hyperparameters": {
+    "max_steps": 100,
+    "batch_size": 8,
+    "grad_accumulation_steps": 2,
+    "learning_rate": 0.0001,
+    "weight_decay": 0.01,
+    "warmup_steps": 10,
+    "lora_rank": 16,
+    "lora_dropout": 0.05,
+    "seed": 17,
+    "balance_stop_labels": true
+  },
+  "adapter_dir": "/projects/p33100/siosio/openvla_checkpoints/oracle_stop_recovery_v1/adapter",
+  "merged_dir": "/projects/p33100/siosio/openvla_checkpoints/oracle_stop_recovery_v1/merged"
+}

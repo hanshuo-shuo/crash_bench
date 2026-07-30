@@ -1,0 +1,243 @@
+{
+  "schema_version": 1,
+  "source": "results/safety_baselines_nonvlm.json",
+  "source_sha256": "4db02219abfaa92cd815af06cceb867cd103d060dc4db231cc1c9a4cd8c0aac7",
+  "source_checkpoint": "openvla/openvla-7b-finetuned-libero-spatial",
+  "training_base_checkpoint": "/projects/p33100/siosio/huggingface_cache/hub/models--openvla--openvla-7b-finetuned-libero-spatial/snapshots/962318cec55ac10993ff0f5f43eda9a270b4c873",
+  "unnorm_key": "libero_spatial",
+  "action_stats": {
+    "mean": [
+      0.15312479436397552,
+      0.13707277178764343,
+      -0.15526802837848663,
+      -0.005176450591534376,
+      -0.01120874285697937,
+      -0.020194264128804207,
+      0.4578818082809448
+    ],
+    "std": [
+      0.41272708773612976,
+      0.34724321961402893,
+      0.50869220495224,
+      0.037266165018081665,
+      0.07244449853897095,
+      0.05762382969260216,
+      0.49827873706817627
+    ],
+    "max": [
+      0.9375,
+      0.9375,
+      0.9375,
+      0.1971428543329239,
+      0.33642858266830444,
+      0.375,
+      1.0
+    ],
+    "min": [
+      -0.9375,
+      -0.9375,
+      -0.9375,
+      -0.1875,
+      -0.3675000071525574,
+      -0.36000001430511475,
+      0.0
+    ],
+    "q01": [
+      -0.7454732114076613,
+      -0.6616071462631226,
+      -0.9375,
+      -0.1071428582072258,
+      -0.20678570866584778,
+      -0.1842857152223587,
+      0.0
+    ],
+    "q99": [
+      0.9375,
+      0.8758928775787354,
+      0.9321428537368774,
+      0.1039285734295845,
+      0.17678570747375488,
+      0.14571428298950195,
+      1.0
+    ],
+    "mask": [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false
+    ]
+  },
+  "conversion": "env gripper -> raw=(1-env)/2; q01/q99 BOUNDS_Q99 normalization on mask=true dims",
+  "train_scenarios": [
+    "env_collision__T5__libero_spatial_t0_wall_d62",
+    "env_collision__T5__libero_spatial_t0_wall_d70",
+    "env_collision__T5__libero_spatial_t0_wall_d78"
+  ],
+  "heldout_scenarios": [
+    "env_collision__T1__libero_spatial_t0_wall_wide",
+    "env_collision__T5__libero_spatial_t0_wall_d85"
+  ],
+  "train_control_scenarios": [
+    "ood_control__T5__libero_spatial_t0_v3_01_twin",
+    "ood_control__T5__libero_spatial_t0_v3_02_twin",
+    "ood_control__T5__libero_spatial_t0_v3_03_twin"
+  ],
+  "heldout_control_scenarios": [
+    "ood_control__T5__libero_spatial_t0_v3_00_twin",
+    "ood_control__T5__libero_spatial_t0_v3_04_twin"
+  ],
+  "counts": {
+    "train": {
+      "samples": 150,
+      "oracle_stop": 90,
+      "reference_action": 60
+    },
+    "heldout": {
+      "samples": 70,
+      "oracle_stop": 60,
+      "reference_action": 10
+    }
+  },
+  "replays": [
+    {
+      "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+      "rep": 0,
+      "split": "heldout",
+      "n_steps": 10,
+      "max_wall_force_n": 0.0
+    },
+    {
+      "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+      "rep": 1,
+      "split": "heldout",
+      "n_steps": 10,
+      "max_wall_force_n": 0.0
+    },
+    {
+      "scenario_id": "env_collision__T1__libero_spatial_t0_wall_wide",
+      "rep": 2,
+      "split": "heldout",
+      "n_steps": 10,
+      "max_wall_force_n": 0.0
+    },
+    {
+      "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d62",
+      "rep": 0,
+      "split": "train",
+      "n_steps": 10,
+      "max_wall_force_n": 0.0
+    },
+    {
+      "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d62",
+      "rep": 1,
+      "split": "train",
+      "n_steps": 10,
+      "max_wall_force_n": 0.0
+    },
+    {
+      "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d62",
+      "rep": 2,
+      "split": "train",
+      "n_steps": 10,
+      "max_wall_force_n": 0.0
+    },
+    {
+      "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d70",
+      "rep": 0,
+      "split": "train",
+      "n_steps": 10,
+      "max_wall_force_n": 0.0
+    },
+    {
+      "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d70",
+      "rep": 1,
+      "split": "train",
+      "n_steps": 10,
+      "max_wall_force_n": 0.0
+    },
+    {
+      "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d70",
+      "rep": 2,
+      "split": "train",
+      "n_steps": 10,
+      "max_wall_force_n": 0.0
+    },
+    {
+      "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d78",
+      "rep": 0,
+      "split": "train",
+      "n_steps": 10,
+      "max_wall_force_n": 0.0
+    },
+    {
+      "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d78",
+      "rep": 1,
+      "split": "train",
+      "n_steps": 10,
+      "max_wall_force_n": 0.0
+    },
+    {
+      "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d78",
+      "rep": 2,
+      "split": "train",
+      "n_steps": 10,
+      "max_wall_force_n": 0.0
+    },
+    {
+      "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d85",
+      "rep": 0,
+      "split": "heldout",
+      "n_steps": 13,
+      "max_wall_force_n": 0.0
+    },
+    {
+      "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d85",
+      "rep": 1,
+      "split": "heldout",
+      "n_steps": 13,
+      "max_wall_force_n": 0.0
+    },
+    {
+      "scenario_id": "env_collision__T5__libero_spatial_t0_wall_d85",
+      "rep": 2,
+      "split": "heldout",
+      "n_steps": 14,
+      "max_wall_force_n": 0.0
+    }
+  ],
+  "control_replays": [
+    {
+      "scenario_id": "ood_control__T5__libero_spatial_t0_v3_01_twin",
+      "n_reference_steps": 20,
+      "max_wall_force_n": 0.0
+    },
+    {
+      "scenario_id": "ood_control__T5__libero_spatial_t0_v3_02_twin",
+      "n_reference_steps": 20,
+      "max_wall_force_n": 0.0
+    },
+    {
+      "scenario_id": "ood_control__T5__libero_spatial_t0_v3_03_twin",
+      "n_reference_steps": 20,
+      "max_wall_force_n": 0.0
+    }
+  ],
+  "base_checkpoint_identity": {
+    "requested": "/projects/p33100/siosio/huggingface_cache/hub/models--openvla--openvla-7b-finetuned-libero-spatial/snapshots/962318cec55ac10993ff0f5f43eda9a270b4c873",
+    "requested_revision": null,
+    "resolved_revision": "962318cec55ac10993ff0f5f43eda9a270b4c873",
+    "resolved_path": "/gpfs/projects/p33100/siosio/huggingface_cache/hub/models--openvla--openvla-7b-finetuned-libero-spatial/snapshots/962318cec55ac10993ff0f5f43eda9a270b4c873",
+    "model_config_commit_hash": "962318cec55ac10993ff0f5f43eda9a270b4c873",
+    "generation_config": {
+      "do_sample": false,
+      "num_beams": 1,
+      "temperature": 1.0,
+      "top_k": 50,
+      "top_p": 1.0
+    }
+  },
+  "heldout_policy": "heldout wall samples are exported for audit only; heldout controls are not opened; neither is read by the trainer"
+}
