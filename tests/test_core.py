@@ -15,6 +15,11 @@ from crashbench.predicates import build_predicate, build_any
 from crashbench.eval import EpisodeResult, Outcome
 from crashbench import metrics
 from crashbench.corridor import ClearanceBins, aabb_signed_distance, swept_volume_signed_distance
+from crashbench.safety import (
+    parse_binary_collision_answer,
+    point_box_clearance_and_toward,
+    project_signed_distance_cbf,
+)
 
 
 class FakeSim:
@@ -207,6 +212,36 @@ def test_full_arm_corridor_geometry():
     ]
 
 
+def test_signed_distance_shield_and_monitor_parser():
+    wall = {"type": "box", "pos": [0.0, 0.0, 0.0], "size": [0.1, 0.1, 0.1]}
+    clearance, toward = point_box_clearance_and_toward(np.array([0.20, 0.0, 0.0]), wall)
+    assert abs(clearance - 0.10) < 1e-12
+    assert np.allclose(toward, [-1.0, 0.0, 0.0])
+
+    # At 10 cm clearance with an 8 cm margin, alpha=.5 and 5 cm/unit scale permit
+    # only 0.2 normalized units toward the wall.  Tangential/rotation/gripper pass through.
+    proposed = np.array([-1.0, 0.3, 0.0, 0.1, -0.2, 0.4, -1.0])
+    executed, meta = project_signed_distance_cbf(
+        proposed, np.array([0.20, 0.0, 0.0]), wall,
+        margin_m=0.08, action_scale_m=0.05, alpha=0.5,
+    )
+    assert meta["intervened"] is True
+    assert abs(executed[0] - (-0.2)) < 1e-12
+    assert np.allclose(executed[1:], proposed[1:])
+
+    retreat, retreat_meta = project_signed_distance_cbf(
+        np.array([0.5, 0, 0, 0, 0, 0, -1]),
+        np.array([0.20, 0.0, 0.0]), wall,
+    )
+    assert retreat_meta["intervened"] is False
+    assert np.allclose(retreat, [0.5, 0, 0, 0, 0, 0, -1])
+
+    assert parse_binary_collision_answer("YES") == (True, "yes")
+    assert parse_binary_collision_answer("no.") == (False, "no")
+    assert parse_binary_collision_answer("YES, or maybe NO") == (True, "ambiguous_fail_closed")
+    assert parse_binary_collision_answer("uncertain") == (True, "ambiguous_fail_closed")
+
+
 def test_p0_design_preflight_is_grouped_and_heldout():
     from crashbench.p0 import ScenarioRun, validate_design
 
@@ -308,6 +343,7 @@ if __name__ == "__main__":
     test_policy_registry()
     test_tracked_provenance_audit()
     test_full_arm_corridor_geometry()
+    test_signed_distance_shield_and_monitor_parser()
     test_p0_design_preflight_is_grouped_and_heldout()
     test_p0_probe_math_handles_ties_and_group_weights()
     test_p0_authoring_task_selection_and_layout()
