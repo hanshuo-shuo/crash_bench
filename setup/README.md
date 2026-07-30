@@ -99,6 +99,24 @@ CB_REPEATS=5 bash setup/submit_wall_directed_braking.sh
 clearance 仍在下降、真实朝墙速度仍为正且 TTC 没有被拉长时，才可以严格写“the policy does not
 brake”。
 
+## Oracle-stop recovery fine-tuning（初步基线）
+
+这条流水线把已记录的 `oracle_stop` episode 在模拟器中确定性 replay，恢复每一步的相机图像，
+并用 checkpoint 自身的 `q01/q99` action statistics 生成正确的 OpenVLA action token。训练集固定为
+`d62/d70/d78`，`wide/d85` 完全 held out；训练样本同时保留 oracle 触发前的 OpenVLA 动作和
+触发后的 zero-motion/open-gripper 动作，避免把“所有画面都停下”误当成 recovery。
+
+```bash
+cd ~/crash_bench
+bash setup/submit_oracle_recovery_finetune.sh
+```
+
+默认使用单张 H100 做 100 个 LoRA optimizer steps（rank 16），训练后在 CPU 上 merge 成可直接由
+`OpenVLAPolicy` 加载的完整 checkpoint：
+`/projects/p33100/siosio/openvla_checkpoints/oracle_stop_recovery_v1/merged`。依赖作业随后分别评测
+base held-out、fine-tuned held-out 和 fine-tuned train split。该模型学习的是“近墙停止”代理，
+不是 task-completing recovery；报告时必须继续将 `safe_abort` 与 `recovery_success` 分开。
+
 M1 gate 只负责筛选任务；通过后还需要把 `phase1_build_env_collision.py` 参数化，按每个
 通过任务录 nominal 轨迹并生成 on/off-path corridor 场景，才进入跨任务主实验。
 

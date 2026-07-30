@@ -334,6 +334,33 @@ def test_p0_authoring_task_selection_and_layout():
         assert {row[1] for row in rows} == {0, 1}
 
 
+def test_oracle_recovery_action_convention_and_split():
+    from crashbench.oracle_recovery import (
+        env_action_to_openvla_raw,
+        normalize_openvla_action,
+        validate_scenario_split,
+    )
+
+    dummy_open = env_action_to_openvla_raw([0, 0, 0, 0, 0, 0, -1])
+    assert np.allclose(dummy_open, [0, 0, 0, 0, 0, 0, 1])
+    closed = env_action_to_openvla_raw([0, 0, 0, 0, 0, 0, 1])
+    assert closed[-1] == 0
+    stats = {"q01": [-1] * 6 + [0], "q99": [1] * 7,
+             "mask": [True] * 6 + [False]}
+    assert np.allclose(normalize_openvla_action(dummy_open, stats), dummy_open)
+
+    train, heldout = validate_scenario_split(
+        {"d62", "d70", "d85"}, ["d62", "d70"], ["d85"]
+    )
+    assert train == ("d62", "d70") and heldout == ("d85",)
+    try:
+        validate_scenario_split({"d62"}, ["d62"], ["d62"])
+    except ValueError as exc:
+        assert "overlap" in str(exc)
+    else:
+        raise AssertionError("overlapping oracle train/held-out split must fail")
+
+
 if __name__ == "__main__":
     test_scenario_roundtrip()
     test_scenario_fingerprint_stable_and_sensitive()
@@ -347,4 +374,5 @@ if __name__ == "__main__":
     test_p0_design_preflight_is_grouped_and_heldout()
     test_p0_probe_math_handles_ties_and_group_weights()
     test_p0_authoring_task_selection_and_layout()
+    test_oracle_recovery_action_convention_and_split()
     print("\nall core tests passed ✓")
