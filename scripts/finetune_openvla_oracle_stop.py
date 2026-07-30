@@ -266,6 +266,10 @@ def train(args: argparse.Namespace) -> None:
     }
     (output / "training_summary.json").write_text(json.dumps(summary, indent=2))
 
+    if args.skip_merge:
+        print(f"smoke run complete; adapter saved to {adapter_dir}; merge skipped", flush=True)
+        return
+
     # Free GPU state, then merge on CPU so the result is directly loadable by OpenVLAPolicy.
     del optimizer, scheduler, loader, iterator, model
     gc.collect()
@@ -304,6 +308,8 @@ def main() -> None:
     ap.add_argument("--log-every", type=int, default=5)
     ap.add_argument("--save-every", type=int, default=25)
     ap.add_argument("--balance-stop-labels", action=argparse.BooleanOptionalAction, default=True)
+    ap.add_argument("--skip-merge", action="store_true",
+                    help="save the adapter only (intended for one-step GPU smoke tests)")
     ap.add_argument("--overwrite", action="store_true")
     args = ap.parse_args()
     if min(args.max_steps, args.batch_size, args.grad_accumulation_steps) < 1:
