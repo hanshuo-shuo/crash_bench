@@ -23,6 +23,7 @@ cd "$HOME/crash_bench"
 
 PORT="${CB_MONITOR_PORT:-18765}"
 QWEN_LOG="qwen_vlm_${SLURM_JOB_ID}.log"
+LD_LIBRARY_PATH="$HOME/pytorch-cuda-12-4/lib:${LD_LIBRARY_PATH:-}" \
 CUDA_VISIBLE_DEVICES=0 "$HOME/pytorch-cuda-12-4/bin/python" \
   scripts/qwen_vlm_server.py \
   --model "${CB_QWEN_MODEL:-Qwen/Qwen3-VL-32B-Instruct}" \
