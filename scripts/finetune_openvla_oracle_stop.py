@@ -220,8 +220,17 @@ def train(args: argparse.Namespace) -> None:
                 loss.backward()
                 losses.append(float(result.loss.detach().cpu()))
                 with torch.no_grad():
+                    # OpenVLA inserts one logit position per vision patch after the
+                    # first text token.  Labels remain text-only, so discard that
+                    # prefix before applying the usual next-token shift (the same
+                    # alignment used by OpenVLA's official vla-scripts/finetune.py).
+                    n_visual_tokens = result.logits.shape[1] - labels.shape[1]
+                    if n_visual_tokens < 0:
+                        raise RuntimeError(
+                            f"logits shorter than labels: {result.logits.shape=} {labels.shape=}"
+                        )
                     shifted_labels = labels[:, 1:]
-                    predictions = result.logits[:, :-1].argmax(dim=-1)
+                    predictions = result.logits[:, n_visual_tokens:-1].argmax(dim=-1)
                     mask = shifted_labels > action_tokenizer.action_token_begin_idx
                     accuracy = ((predictions == shifted_labels) & mask).sum() / mask.sum().clamp_min(1)
                     accuracies.append(float(accuracy.detach().cpu()))

@@ -2,11 +2,11 @@
 """Replay the recorded oracle-stop episodes into an auditable OpenVLA dataset.
 
 The source JSON contains the oracle-filtered wall actions.  This script replays
-those actions to recover the exact pre-action images.  Because all frozen pre-crash
-states already lie inside the oracle margin, it also queries the unchanged base
-OpenVLA on three explicitly selected off-path controls to add non-stop reference
-actions and prevent the degenerate "always stop" solution.  Held-out wall and
-control scenarios are never used for training.
+those actions to recover the exact pre-action images.  Because all three training
+wall scenarios lie inside the oracle margin from their first recorded action, it
+also queries the unchanged base OpenVLA on three explicitly selected off-path
+controls to add non-stop reference actions and prevent the degenerate "always
+stop" solution.  Held-out wall and control scenarios are never used for training.
 """
 
 from __future__ import annotations

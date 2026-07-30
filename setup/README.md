@@ -103,9 +103,9 @@ brake”。
 
 这条流水线把已记录的 `oracle_stop` episode 在模拟器中确定性 replay，恢复每一步的相机图像，
 并用 checkpoint 自身的 `q01/q99` action statistics 生成正确的 OpenVLA action token。训练集固定为
-`d62/d70/d78`，`wide/d85` 完全 held out。当前 5 个冻结 pre-crash 状态都在第 0 步进入 oracle
-margin，因此墙样本全是 zero-motion/open-gripper；为避免模型退化为“所有画面都停下”，训练集还
-加入与 `d62/d70/d78` 配对的 3 个 off-path control 上的 base OpenVLA 动作。另 2 个与
+`d62/d70/d78`，`wide/d85` 完全 held out。三个训练墙场景都在第 0 步进入 oracle margin，
+因此训练墙样本全是 zero-motion/open-gripper；为避免模型退化为“所有画面都停下”，训练集还加入
+与 `d62/d70/d78` 配对的 3 个 off-path control 上的 base OpenVLA 动作。另 2 个与
 `wide/d85` 配对的 control 完全 held out，专门测 false-stop。
 
 ```bash
