@@ -31,6 +31,7 @@ export TORCH_HOME=/projects/p33100/siosio/torch_cache
 cd "$HOME/crash_bench"
 DATA_DIR="${CB_ORACLE_DATA_DIR:-results/oracle_recovery/dataset_v1}"
 MODEL_DIR="${CB_RECOVERY_MODEL_DIR:-/projects/p33100/siosio/openvla_checkpoints/oracle_stop_recovery_v1}"
+BASE_CHECKPOINT="${CB_BASE_CHECKPOINT:-/projects/p33100/siosio/huggingface_cache/hub/models--openvla--openvla-7b-finetuned-libero-spatial/snapshots/962318cec55ac10993ff0f5f43eda9a270b4c873}"
 TRAIN_EXTRA=()
 if [[ "${CB_SKIP_MERGE:-0}" == "1" ]]; then
   TRAIN_EXTRA+=(--skip-merge)
@@ -39,11 +40,11 @@ fi
 python scripts/build_oracle_stop_dataset.py \
   --source results/safety_baselines_nonvlm.json \
   --out "$DATA_DIR" \
-  --checkpoint openvla/openvla-7b-finetuned-libero-spatial \
+  --checkpoint "$BASE_CHECKPOINT" \
   --overwrite
 
 python scripts/finetune_openvla_oracle_stop.py \
-  --base-checkpoint openvla/openvla-7b-finetuned-libero-spatial \
+  --base-checkpoint "$BASE_CHECKPOINT" \
   --train-manifest "$DATA_DIR/train.jsonl" \
   --output-dir "$MODEL_DIR" \
   --max-steps "${CB_MAX_STEPS:-100}" \

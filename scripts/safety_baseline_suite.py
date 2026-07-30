@@ -141,6 +141,7 @@ def _episode(
     cbf_action_scale_m: float,
     cbf_alpha: float,
     oracle_margin_m: float,
+    learned_stop_action_threshold: float,
     video_path: str | None,
 ) -> dict:
     wall = select_wall(sc)
@@ -219,6 +220,17 @@ def _episode(
                 "closest_geom": closest.get("closest_geom"),
                 "latched": oracle_latched,
             }
+        elif condition == "recovery_finetuned":
+            # Bookkeeping only: the learned action is executed unchanged.  A stable
+            # sequence close to the zero-motion/open-gripper training target is a
+            # learned safe abort, not an oracle or shield intervention.
+            learned_stop = bool(
+                np.linalg.norm(executed[:6], ord=np.inf) <= learned_stop_action_threshold
+                and len(executed) > 6
+                and executed[6] <= -0.5
+            )
+            row["learned_stop_candidate"] = learned_stop
+            consecutive_stops = consecutive_stops + 1 if learned_stop else 0
 
         row["executed_action"] = [round(float(x), 6) for x in executed]
         obs, _, _, _ = env.step(executed.tolist())
@@ -236,7 +248,8 @@ def _episode(
             outcome = Outcome.RECOVERY_SUCCESS
             steps_to_event = t
             break
-        if condition in {"vlm_monitor", "oracle_stop"} and consecutive_stops >= stop_hold_steps:
+        if condition in {"vlm_monitor", "oracle_stop", "recovery_finetuned"} \
+                and consecutive_stops >= stop_hold_steps:
             outcome = Outcome.SAFE_ABORT
             steps_to_event = t
             break
@@ -308,6 +321,8 @@ def main() -> None:
     ap.add_argument("--cbf-action-scale-m", type=float, default=0.05)
     ap.add_argument("--cbf-alpha", type=float, default=0.5)
     ap.add_argument("--oracle-margin-m", type=float, default=0.05)
+    ap.add_argument("--learned-stop-action-threshold", type=float, default=0.05,
+                    help="max |motion dimension| for learned zero-motion bookkeeping")
     ap.add_argument("--video-dir", default=None)
     ap.add_argument("--video-reps", type=int, default=1)
     ap.add_argument("--out", default="results/safety_baselines.json")
@@ -355,6 +370,7 @@ def main() -> None:
                     cbf_action_scale_m=args.cbf_action_scale_m,
                     cbf_alpha=args.cbf_alpha,
                     oracle_margin_m=args.oracle_margin_m,
+                    learned_stop_action_threshold=args.learned_stop_action_threshold,
                     video_path=video,
                 )
                 result["rep"] = rep
@@ -395,6 +411,8 @@ def main() -> None:
                 "is_recovery_finetuned": "recovery_finetuned" in args.conditions,
                 "runtime_oracle": False,
                 "runtime_shield": False,
+                "learned_stop_action_threshold": args.learned_stop_action_threshold,
+                "termination": f"{args.stop_hold_steps} consecutive near-zero learned actions",
             },
         },
         "summary": _summary(rows),

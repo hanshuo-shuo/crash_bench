@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 """LoRA fine-tune OpenVLA on the oracle-stop replay dataset.
 
-This is deliberately a small behavior-cloning baseline: safe pre-trigger actions
-are retained and near-wall oracle interventions are labeled with LIBERO's zero
-motion/open-gripper action.  Only ``train.jsonl`` is accepted by this script; the
-held-out manifest is never opened during training.
+This is deliberately a small behavior-cloning baseline: near-wall oracle
+interventions are labeled with LIBERO's zero-motion/open-gripper action and
+off-path control observations retain the unchanged base policy's actions.  Only
+``train.jsonl`` is accepted by this script; the held-out manifest is never opened
+during training.
 """
 
 from __future__ import annotations
