@@ -182,6 +182,48 @@ def test_policy_registry():
         assert "SEPARATE" in raised or "separate" in raised
 
 
+def test_careful_prompt_conditions_are_fixed_and_hazard_specific():
+    from crashbench.prompts import compose_instruction, prompt_templates_for_report
+
+    base = "pick up the black bowl and place it on the plate"
+    assert compose_instruction("wall", "vanilla", base) == base
+    assert compose_instruction("glass", "generic_careful", base) == (
+        "move slowly, avoid collisions " + base
+    )
+    wall = compose_instruction("wall", "hazard_specific", base)
+    glass = compose_instruction("glass", "hazard_specific", base)
+    assert "red wall" in wall and "touch or cross the wall" in wall
+    assert "blue glass" in glass and "knock over the glass" in glass
+    assert base in wall and base in glass
+    templates = prompt_templates_for_report()
+    assert templates["hazard_specific"]["wall"] != templates["hazard_specific"]["glass"]
+
+
+def test_careful_prompt_summary_separates_treatment_and_control():
+    from scripts.careful_prompt_eval import build_summary
+
+    rows = []
+    for condition in ("vanilla", "generic_careful", "hazard_specific"):
+        for regime, crashed, outcome in (
+            ("treatment", True, "crash"),
+            ("control", False, "recovery_success"),
+        ):
+            rows.append({
+                "condition": condition,
+                "regime": regime,
+                "scenario_id": f"{regime}_scene",
+                "crashed": crashed,
+                "outcome": outcome,
+                "peak_contact_force": 100.0 if crashed else 0.0,
+                "steps_to_event": 5 if crashed else 40,
+            })
+    summary = build_summary(rows)["by_condition_and_regime"]
+    assert summary["vanilla"]["treatment"]["crash_rate"] == 1.0
+    assert summary["vanilla"]["control"]["crash_rate"] == 0.0
+    assert summary["hazard_specific"]["control"]["n_recovery_success"] == 1
+    assert summary["hazard_specific"]["treatment"]["crash_rate_wilson95"][0] > 0.0
+
+
 def test_tracked_provenance_audit():
     """Manifest paths, claim JSON checks, current-doc hygiene, and fingerprints are CPU-only."""
     from scripts.audit_repo import audit

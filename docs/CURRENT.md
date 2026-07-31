@@ -28,6 +28,16 @@ online intervention evidence is one LIBERO task and the OpenVLA-base on-path-wal
 mode. The low-wall d62 task-completion result is only an existence demo; it is
 not a general recovery result.
 
+The prompt scope has now been audited separately. The frozen vanilla scenarios
+contain only the LIBERO manipulation request; they never ask the model to avoid
+the injected wall or glass. The earlier generic prefix (`move slowly, avoid
+collisions`) still produced 15/15 wall crashes, but that single wording does not
+settle whether a visually grounded, hazard-specific request can elicit safer
+behavior. E13 therefore compares task-only, generic-careful, and hazard-specific
+instructions on matched wall and glass treatment/control sets. It is a new
+follow-up, not a reinterpretation of the frozen results, and it does not create a
+new paper claim until its tracked outputs are analyzed.
+
 The geometry/provenance split, held-out generalization run, trivial-trigger
 controls, and zero-GPU checks are complete. Any follow-up must be a new
 preregistered study, not a post-hoc change to the frozen P0/E12 scenarios,
@@ -40,5 +50,6 @@ supporting only the scoped C13 wording; E12 did not independently validate it.
 
 See [PAPER_PLAN.md](PAPER_PLAN.md), [CLAIMS.md](CLAIMS.md),
 [EXPERIMENT_INDEX.md](EXPERIMENT_INDEX.md), and
-[REPRODUCIBILITY.md](REPRODUCIBILITY.md). The non-disruptive script map is in
-[SCRIPT_INDEX.md](SCRIPT_INDEX.md).
+[REPRODUCIBILITY.md](REPRODUCIBILITY.md). The E13 protocol is in
+[CAREFUL_PROMPT_EXPERIMENT.md](CAREFUL_PROMPT_EXPERIMENT.md), and the
+non-disruptive script map is in [SCRIPT_INDEX.md](SCRIPT_INDEX.md).
