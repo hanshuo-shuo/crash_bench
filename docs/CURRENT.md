@@ -36,7 +36,9 @@ settle whether a visually grounded, hazard-specific request can elicit safer
 behavior. E13 therefore compares task-only, generic-careful, and hazard-specific
 instructions on matched wall and glass treatment/control sets. It is a new
 follow-up, not a reinterpretation of the frozen results, and it does not create a
-new paper claim until its tracked outputs are analyzed.
+new paper claim until its tracked outputs are analyzed. The fixed run was
+submitted from commit `f2636ee` as wall job `8389714`, glass job `8389715`, and
+dependency-gated analysis job `8389716`.
 
 The geometry/provenance split, held-out generalization run, trivial-trigger
 controls, and zero-GPU checks are complete. Any follow-up must be a new

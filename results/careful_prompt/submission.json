@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "submitted_at": "2026-07-31T11:30:40+08:00",
+  "git_commit": "f2636eeec8d97146f79c6e45e89965c1ac74ec21",
+  "jobs": {
+    "wall": "8389714",
+    "glass": "8389715",
+    "analysis": "8389716"
+  },
+  "dependency": "afterok:8389714:8389715",
+  "initial_queue_state": {
+    "wall": "RUNNING",
+    "glass": "PENDING_RESOURCES",
+    "analysis": "PENDING_DEPENDENCY"
+  },
+  "expected_outputs": {
+    "wall": "results/careful_prompt/wall_prompt_matrix.json",
+    "glass": "results/careful_prompt/glass_prompt_matrix.json",
+    "combined": "results/careful_prompt/combined_summary.json",
+    "analysis": "results/ANALYSIS_careful_prompt.md"
+  },
+  "remote_recovery_backup": {
+    "path": "/home/shv7753/crashbench_remote_backups/oracle_recovery_pre_f2636ee_20260731",
+    "size": "12M",
+    "reason": "Preserved pre-existing untracked Quest outputs before exact-commit fast-forward."
+  }
+}

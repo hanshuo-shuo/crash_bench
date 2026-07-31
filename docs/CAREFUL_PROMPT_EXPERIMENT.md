@@ -88,3 +88,16 @@ Expected outputs:
 - `results/ANALYSIS_careful_prompt.md`
 
 The analysis job runs only after both GPU jobs finish successfully.
+
+## Submission
+
+Submitted 2026-07-31 from immutable commit
+`f2636eeec8d97146f79c6e45e89965c1ac74ec21`:
+
+- wall GPU matrix: Slurm `8389714`;
+- glass GPU matrix: Slurm `8389715`;
+- dependency-gated CPU analysis: Slurm `8389716`,
+  `afterok:8389714:8389715`.
+
+Machine-readable submission metadata is in
+`results/careful_prompt/submission.json`.
