@@ -28,17 +28,47 @@ def _eef_from_obs(obs: dict) -> np.ndarray:
     return np.asarray(obs["state"][:3], dtype=np.float32)
 
 
-def _axisangle_from_obs(obs: dict) -> np.ndarray:
-    if "robot0_eef_quat" not in obs:
-        return np.asarray(obs["state"][3:6], dtype=np.float32)
-    quat = np.asarray(obs["robot0_eef_quat"], dtype=np.float64).copy()
-    quat[3] = np.clip(quat[3], -1.0, 1.0)
-    denominator = np.sqrt(max(0.0, 1.0 - quat[3] * quat[3]))
-    if denominator < 1e-8:
-        return np.zeros(3, dtype=np.float32)
-    return np.asarray(
-        quat[:3] * (2.0 * np.arccos(quat[3]) / denominator), dtype=np.float32
+def _quat_from_axisangle(axisangle) -> np.ndarray:
+    vector = np.asarray(axisangle, dtype=np.float64)
+    angle = float(np.linalg.norm(vector))
+    if angle < 1e-10:
+        return np.asarray([0.0, 0.0, 0.0, 1.0], dtype=np.float64)
+    half = 0.5 * angle
+    return np.concatenate([vector / angle * np.sin(half), [np.cos(half)]])
+
+
+def _quat_multiply(left: np.ndarray, right: np.ndarray) -> np.ndarray:
+    lx, ly, lz, lw = left
+    rx, ry, rz, rw = right
+    return np.asarray([
+        lw * rx + lx * rw + ly * rz - lz * ry,
+        lw * ry - lx * rz + ly * rw + lz * rx,
+        lw * rz + lx * ry - ly * rx + lz * rw,
+        lw * rw - lx * rx - ly * ry - lz * rz,
+    ], dtype=np.float64)
+
+
+def _orientation_error(obs: dict, target_axisangle: np.ndarray) -> np.ndarray:
+    """Shortest relative rotation, robust to the axis-angle +/-pi branch cut."""
+
+    current = (
+        np.asarray(obs["robot0_eef_quat"], dtype=np.float64)
+        if "robot0_eef_quat" in obs
+        else _quat_from_axisangle(obs["state"][3:6])
     )
+    current /= max(float(np.linalg.norm(current)), 1e-12)
+    desired = _quat_from_axisangle(target_axisangle)
+    relative = _quat_multiply(desired, np.asarray([
+        -current[0], -current[1], -current[2], current[3]
+    ]))
+    relative /= max(float(np.linalg.norm(relative)), 1e-12)
+    if relative[3] < 0.0:
+        relative = -relative
+    sine_half = float(np.linalg.norm(relative[:3]))
+    if sine_half < 1e-10:
+        return np.zeros(3, dtype=np.float32)
+    angle = 2.0 * np.arctan2(sine_half, np.clip(relative[3], -1.0, 1.0))
+    return np.asarray(relative[:3] / sine_half * angle, dtype=np.float32)
 
 
 class WitnessReplay:
@@ -135,7 +165,7 @@ class DetourComplete:
         drot = np.zeros(3, dtype=np.float32)
         if self.orientation_target is not None:
             drot = np.clip(
-                self.orientation_k * (self.orientation_target - _axisangle_from_obs(obs)),
+                self.orientation_k * _orientation_error(obs, self.orientation_target),
                 -1.0, 1.0,
             )
         return np.array([float(np.clip(self.k * dxyz[0], -1, 1)),

@@ -247,6 +247,20 @@ def test_detour_can_track_an_absolute_wrist_orientation():
     assert action[5] > 0
 
 
+def test_detour_orientation_uses_short_arc_across_pi_boundary():
+    controller = DetourComplete(
+        {"pos": [0.0, 0.0, 0.96], "size": [0.03, 0.03, 0.06]},
+        target_pos=[0.1, 0.2, 0.91], plate_pos=[0.5, 0.6, 0.90],
+        orientation_target=[3.13, 0.0, 0.0],
+    )
+    obs = {
+        "state": np.asarray([0.0, 0.0, 1.2, -3.13, 0.0, 0.0, 0.0, 0.0]),
+    }
+    controller.engage(obs)
+    action = controller.step(obs)
+    assert 0.0 < abs(action[3]) < 0.1
+
+
 def test_late_glass_anchor_is_clamped_before_target_overlap():
     fraction, required = _collision_free_path_fraction(
         requested_fraction=0.83,
