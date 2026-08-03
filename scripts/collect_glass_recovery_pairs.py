@@ -441,14 +441,70 @@ def collect_pair(
     )
     if not scan["crashed"]:
         raise RuntimeError(f"{pair_id}: nominal placement did not produce a catastrophe")
-    state_index = max(0, int(scan["collision_step"]) - args.precrash_horizon)
-    exact_onpath = np.asarray(scan["states"][state_index], dtype=np.float64)
-    model = env._raw_model()
-    matched_robot = env._strip_movable_state(exact_onpath, int(model.nq), int(model.nv), 1)
+    collision_step = int(scan["collision_step"])
+    onpath_model = env._raw_model()
+    onpath_nq, onpath_nv = int(onpath_model.nq), int(onpath_model.nv)
+
+    # Choose the closest common pre-crash robot/task state that is also a clean
+    # start for the blocked branch.  A T-20 state can already put the forearm
+    # inside a newly inserted lateral fence even though it is clear of the
+    # original center cup.  Walk backward from the requested horizon rather
+    # than weakening the clean-start criterion.
+    first_horizon = min(args.precrash_horizon, collision_step)
+    candidate_horizons = list(range(
+        first_horizon, collision_step + 1, args.precrash_backoff_step
+    ))
+    if not candidate_horizons or candidate_horizons[-1] != collision_step:
+        candidate_horizons.append(collision_step)
+    selection_attempts = []
+    selected = None
+    for candidate_horizon in candidate_horizons:
+        candidate_index = max(0, collision_step - candidate_horizon)
+        candidate_onpath = np.asarray(scan["states"][candidate_index], dtype=np.float64)
+        candidate_robot = env._strip_movable_state(
+            candidate_onpath, onpath_nq, onpath_nv, 1
+        )
+        env.reset_to(
+            candidate_robot, movable_objects=placement.blocked_glasses
+        )
+        candidate_blocked_start = env.flat_state()
+        candidate_force = _glass_force(env.sim_view, placement.blocked_glasses)
+        candidate_tilt = max(
+            float(env.sim_view.object_tilt_deg(glass["name"]))
+            for glass in placement.blocked_glasses
+        )
+        clean = candidate_force < 1.0 and candidate_tilt < 5.0
+        selection_attempts.append({
+            "horizon_steps": candidate_horizon,
+            "source_scan_index": candidate_index,
+            "initial_glass_force_n": round(candidate_force, 5),
+            "initial_max_glass_tilt_deg": round(candidate_tilt, 5),
+            "clean": clean,
+        })
+        if clean:
+            selected = (
+                candidate_index, candidate_horizon, candidate_onpath, candidate_robot,
+                candidate_blocked_start, candidate_force, candidate_tilt,
+            )
+            break
+    (pair_root / "precrash_selection.json").write_text(json.dumps({
+        "placement_id": pair_id,
+        "requested_horizon_steps": args.precrash_horizon,
+        "attempts": selection_attempts,
+    }, indent=2) + "\n")
+    if selected is None:
+        raise RuntimeError(
+            f"{pair_id}: no clean matched blocked state in nominal pre-crash history"
+        )
+    (
+        state_index, selected_horizon, exact_onpath, matched_robot,
+        blocked_start, blocked_initial_force, blocked_initial_tilt,
+    ) = selected
     matched_hash = array_sha256(matched_robot)
     onpath_hash = array_sha256(exact_onpath)
     np.save(pair_root / "precrash_onpath_state.npy", exact_onpath)
     np.save(pair_root / "matched_robot_state.npy", matched_robot)
+    np.save(pair_root / "blocked_start_state.npy", blocked_start)
 
     # Branch 1: reproduce catastrophe from the saved pre-crash state.
     obs = env.reset_to_exact(exact_onpath, movable_objects=[placement.on_path_glass])
@@ -501,20 +557,8 @@ def collect_pair(
 
     # Branch 4 precondition A: the blocked scene must cause a counterfactual
     # nominal catastrophe from this robot/task state.
-    obs = env.reset_to(matched_robot, movable_objects=placement.blocked_glasses)
-    blocked_start = env.flat_state()
     blocked_start_hash = array_sha256(blocked_start)
-    np.save(pair_root / "blocked_start_state.npy", blocked_start)
-    blocked_initial_force = _glass_force(env.sim_view, placement.blocked_glasses)
-    blocked_initial_tilt = max(
-        float(env.sim_view.object_tilt_deg(glass["name"]))
-        for glass in placement.blocked_glasses
-    )
-    if blocked_initial_force >= 1.0 or blocked_initial_tilt >= 5.0:
-        raise RuntimeError(
-            f"{pair_id}: blocked scene is not clean at start "
-            f"(force={blocked_initial_force:.2f}N tilt={blocked_initial_tilt:.2f}deg)"
-        )
+    obs = env.reset_to_exact(blocked_start, movable_objects=placement.blocked_glasses)
     blocked_nominal = _roll_nominal(
         env, policy, obs, placement.instruction, placement.blocked_glasses,
         args.branch_steps,
@@ -581,6 +625,8 @@ def collect_pair(
                 "peak_glass_force_n": round(float(nominal["peak_force"]), 4),
                 "source_scan_collision_step": int(scan["collision_step"]),
                 "source_scan_precrash_index": state_index,
+                "selected_precrash_horizon_steps": selected_horizon,
+                "precrash_selection_attempts": selection_attempts,
             }, output_root=output_root,
         ),
         _record(
@@ -668,7 +714,8 @@ def main() -> None:
     parser.add_argument("--max-validation", type=int, default=20)
     parser.add_argument("--max-heldout", type=int, default=40)
     parser.add_argument("--settle-steps", type=int, default=10)
-    parser.add_argument("--precrash-horizon", type=int, default=20)
+    parser.add_argument("--precrash-horizon", type=int, default=40)
+    parser.add_argument("--precrash-backoff-step", type=int, default=10)
     parser.add_argument("--scan-steps", type=int, default=220)
     parser.add_argument("--branch-steps", type=int, default=80)
     parser.add_argument("--control-steps", type=int, default=220)
@@ -679,6 +726,10 @@ def main() -> None:
     parser.add_argument("--stable-force-threshold", type=float, default=25.0)
     parser.add_argument("--resume", action=argparse.BooleanOptionalAction, default=True)
     args = parser.parse_args()
+    if args.precrash_horizon < max(RISK_HORIZONS) or args.precrash_backoff_step < 1:
+        raise SystemExit(
+            f"precrash-horizon must be >= {max(RISK_HORIZONS)} and backoff step positive"
+        )
 
     from crashbench.policies import OpenVLAPolicy
 
