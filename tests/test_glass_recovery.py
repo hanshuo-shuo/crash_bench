@@ -261,6 +261,21 @@ def test_detour_orientation_uses_short_arc_across_pi_boundary():
     assert 0.0 < abs(action[3]) < 0.1
 
 
+def test_glass_detour_approaches_along_glass_target_path():
+    controller = DetourComplete(
+        {"pos": [0.0, 0.0, 0.96], "size": [0.03, 0.03, 0.06]},
+        target_pos=[0.1, 0.0, 0.91], plate_pos=[0.5, 0.6, 0.90],
+        lane_margin=0.12, transit_z=1.2, path_aligned=True,
+        pregrasp_offset=0.02,
+    )
+    obs = {"robot0_eef_pos": np.asarray([-0.1, 0.0, 1.2])}
+    controller.engage(obs)
+    # The third waypoint returns to the nominal path 2 cm before the bowl;
+    # the fourth completes only that short approach, rather than forcing +x.
+    assert np.allclose(controller.legs[2][1], [0.08, -0.0, 1.2])
+    assert np.allclose(controller.legs[3][1], [0.1, 0.0, 1.2])
+
+
 def test_late_glass_anchor_is_clamped_before_target_overlap():
     fraction, required = _collision_free_path_fraction(
         requested_fraction=0.83,

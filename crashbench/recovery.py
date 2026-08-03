@@ -114,7 +114,8 @@ class DetourComplete:
                  tol: float = 0.02, leg_cap: int = 80, grasp_steps: int = 18, release_steps: int = 30,
                  descend_off: float = 0.04, place_off: float = 0.015,
                  target_name: str | None = None,
-                 orientation_target=None, orientation_k: float = 2.0):
+                 orientation_target=None, orientation_k: float = 2.0,
+                 path_aligned: bool = False, pregrasp_offset: float = 0.02):
         self.wall, self.k, self.tol, self.leg_cap = wall, k, tol, leg_cap
         self.side, self.lane_margin = side, lane_margin
         self.bowl = np.asarray(target_pos, dtype=np.float32)
@@ -130,6 +131,8 @@ class DetourComplete:
         if self.orientation_target is not None and self.orientation_target.shape != (3,):
             raise ValueError("orientation_target must be a 3-D absolute axis-angle")
         self.orientation_k = float(orientation_k)
+        self.path_aligned = bool(path_aligned)
+        self.pregrasp_offset = float(pregrasp_offset)
         self.legs: list | None = None
         self.i = 0
         self._in_leg = 0
@@ -144,12 +147,38 @@ class DetourComplete:
         sx = max(float(b[0]), wx + whx) + 0.13                  # staging x: past wall/bowl (+x, open)
         cx = float(eef[0])
         O, C = GRIP_OPEN, GRIP_CLOSE
+        if self.path_aligned:
+            glass_xy = np.asarray([wx, wy], dtype=np.float32)
+            path = np.asarray(b[:2], dtype=np.float32) - glass_xy
+            path_norm = float(np.linalg.norm(path))
+            if path_norm < 1e-6:
+                raise ValueError("path-aligned detour needs distinct glass and target centers")
+            along = path / path_norm
+            lateral = np.asarray([-along[1], along[0]], dtype=np.float32)
+            lane_offset = float(whx + self.lane_margin)
+            lane_reference = glass_xy + self.side * lane_offset * lateral
+            start_xy = np.asarray(eef[:2], dtype=np.float32)
+            first_xy = start_xy + lateral * float(np.dot(
+                lane_reference - start_xy, lateral
+            ))
+            pregrasp_xy = np.asarray(b[:2], dtype=np.float32) - self.pregrasp_offset * along
+            pregrasp_lane_xy = pregrasp_xy + self.side * lane_offset * lateral
+            approach_legs = [
+                ("move", [float(first_xy[0]), float(first_xy[1]), ez], O),
+                ("move", [float(pregrasp_lane_xy[0]), float(pregrasp_lane_xy[1]), ez], O),
+                ("move", [float(pregrasp_xy[0]), float(pregrasp_xy[1]), ez], O),
+                ("move", [float(b[0]), float(b[1]), ez], O),
+            ]
+        else:
+            approach_legs = [
+                ("move", [cx, dy, ez], O),                    # 1. sidestep into detour lane
+                ("move", [sx, dy, ez], O),                    # 2. advance past wall/bowl (+x)
+                ("move", [sx, float(b[1]), ez], O),           # 3. come to bowl y (open, +x)
+                ("move", [float(b[0]), float(b[1]), ez], O),  # 4. approach bowl FROM +x
+            ]
         # (kind, ...): move -> (target xyz, grip); hold -> (grip, n_steps). Mirrors run_detour legs.
         self.legs = [
-            ("move", [cx, dy, ez], O),                          # 1. sidestep into detour lane
-            ("move", [sx, dy, ez], O),                          # 2. advance past wall/bowl (+x)
-            ("move", [sx, float(b[1]), ez], O),                 # 3. come to bowl y (open, +x)
-            ("move", [float(b[0]), float(b[1]), ez], O),        # 4. approach bowl FROM +x
+            *approach_legs,
             ("move", [float(b[0]), float(b[1]), float(b[2]) + self.descend_off], O),  # 5. descend
             ("hold", C, self.grasp_steps),                      # 6. grasp
             ("move", [float(b[0]), float(b[1]), ez], C),        # 7. lift

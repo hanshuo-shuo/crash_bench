@@ -65,6 +65,11 @@ control. This keeps recovery in the existing OSC action space while using a
 task- and state-matched reachable grasp pose; every orientation/config attempt
 is logged.
 
+Glass recovery uses a path-aligned detour rather than the historical wall
+controller's global `+x` staging assumption: it moves normal to the glass-to-bowl
+axis, passes the glass in that lane, returns to the bowl side of the nominal path,
+then makes only a 2 cm pregrasp approach. The wall controller default is unchanged.
+
 ## Loss and inference
 
 The implemented positive minimization objective is:

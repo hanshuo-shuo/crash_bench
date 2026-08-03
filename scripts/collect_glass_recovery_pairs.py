@@ -384,6 +384,7 @@ def _oracle_configs(
             "transit_z": bowl_z + lift,
             "descend_off": descend_off,
             "orientation_target": orientation_target,
+            "path_aligned": True,
         }
         for orientation_target in targets
         for descend_off in (0.012, 0.04)
@@ -419,6 +420,7 @@ def _search_oracle(
             transit_z=config["transit_z"], descend_off=config["descend_off"],
             leg_cap=70, target_name=TARGET,
             orientation_target=config["orientation_target"],
+            path_aligned=config["path_aligned"],
         )
         result = _run_controller(
             env, policy, obs, placement.instruction, glasses, controller, max_steps,
@@ -454,6 +456,7 @@ def _search_oracle(
         transit_z=successful_config["transit_z"],
         descend_off=successful_config["descend_off"], leg_cap=70, target_name=TARGET,
         orientation_target=successful_config["orientation_target"],
+        path_aligned=successful_config["path_aligned"],
     )
     collected = _run_controller(
         env, policy, obs, placement.instruction, glasses, controller, max_steps,
