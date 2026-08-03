@@ -8,6 +8,7 @@ import numpy as np
 import pytest
 import torch
 
+from crashbench.envs.libero_adapter import inject_obstacles_xml
 from crashbench.glass_recovery_data import (
     HAZARD_TYPES,
     RISK_HORIZONS,
@@ -29,6 +30,7 @@ from crashbench.policies.glass_recovery_policy import GlassRecoveryPolicy
 from crashbench.recovery import DetourComplete
 from scripts.collect_glass_recovery_pairs import (
     _oracle_configs,
+    _partition_scene,
     _safe_abort_configs,
     _stable_abort,
 )
@@ -75,6 +77,13 @@ def test_glass_placement_design_rejects_split_state_leakage():
     ]
     with pytest.raises(ValueError, match="leaks across splits"):
         validate_placement_design(leaked)
+
+
+def test_glass_placement_rejects_non_boolean_mobility_marker():
+    payload = _placement("bad", "train", "state", "train/nominal").to_dict()
+    payload["blocked_glasses"] = [{**_glass("bad"), "movable": "no"}]
+    with pytest.raises(ValueError, match="movable must be boolean"):
+        GlassPlacement.from_dict(payload)
 
 
 def test_four_way_pair_requires_exact_nominal_oracle_state():
@@ -336,16 +345,29 @@ def test_late_glass_anchor_is_clamped_before_target_overlap():
     assert (1.0 - fraction) * 0.23 == pytest.approx(required)
 
 
-def test_blocked_barrier_is_dense_nonoverlapping_and_not_slender():
-    offsets = _blocked_barrier_offsets(0.28, 5, 0.067, 0.20)
+def test_blocked_barrier_is_dense_and_nonoverlapping():
+    offsets = _blocked_barrier_offsets(0.28, 9, 0.032, 0.20)
     spacing = float(offsets[1] - offsets[0])
-    assert len(offsets) == 5
-    assert spacing - 2 * 0.067 == pytest.approx(0.006)
-    assert 0.20 / 0.067 < 3.25
-    with pytest.raises(ValueError, match="too slender"):
-        _blocked_barrier_offsets(0.28, 9, 0.032, 0.20)
+    assert len(offsets) == 9
+    assert spacing - 2 * 0.032 == pytest.approx(0.006)
     with pytest.raises(ValueError, match="overlap"):
-        _blocked_barrier_offsets(0.28, 5, 0.071, 0.20)
+        _blocked_barrier_offsets(0.28, 9, 0.036, 0.20)
+    with pytest.raises(ValueError, match="exceeds"):
+        _blocked_barrier_offsets(0.28, 9, 0.020, 0.20)
+
+
+def test_mixed_blocked_scene_partitions_static_cylinders_from_center_glass():
+    scene = [
+        {**_glass("left"), "movable": False},
+        _glass("center"),
+        {**_glass("right"), "movable": False},
+    ]
+    obstacles, movables = _partition_scene(scene)
+    assert [row["name"] for row in obstacles] == ["left", "right"]
+    assert [row["name"] for row in movables] == ["center"]
+    xml = inject_obstacles_xml("<mujoco><worldbody></worldbody></mujoco>", obstacles)
+    assert 'type="cylinder" size="0.03 0.06"' in xml
+    assert "freejoint" not in xml
 
 
 def test_source_state_splits_are_disjoint_and_stratified():

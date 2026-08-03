@@ -93,6 +93,14 @@ def _controller_glass(glass: dict) -> dict:
     }
 
 
+def _partition_scene(glasses: list[dict]) -> tuple[list[dict], list[dict]]:
+    """Return (static obstacles, movable glasses) for mixed blocked scenes."""
+
+    obstacles = [glass for glass in glasses if not glass.get("movable", True)]
+    movables = [glass for glass in glasses if glass.get("movable", True)]
+    return obstacles, movables
+
+
 def _capture_step(env: LiberoEnv, policy, obs: dict, instruction: str) -> dict:
     policy_obs = env.policy_observation(obs, policy.resize_size)
     nominal = np.asarray(policy.act(policy_obs, instruction), dtype=np.float32)
@@ -598,6 +606,11 @@ def collect_pair(
     source_state = np.load(placement_root / placement.source_state_path)
     if array_sha256(source_state) != placement.source_state_sha256:
         raise ValueError(f"{pair_id}: source state hash mismatch")
+    blocked_obstacles, blocked_movables = _partition_scene(placement.blocked_glasses)
+    if not blocked_obstacles or not blocked_movables:
+        raise ValueError(
+            f"{pair_id}: blocked scene needs static lateral and movable center glasses"
+        )
 
     # Locate a true pre-crash state on the measured nominal rollout.
     obs = env.reset_to(source_state, movable_objects=[placement.on_path_glass])
@@ -646,7 +659,8 @@ def collect_pair(
             candidate_onpath, onpath_nq, onpath_nv, 1
         )
         blocked_obs = env.reset_to(
-            candidate_robot, movable_objects=placement.blocked_glasses
+            candidate_robot, obstacles=blocked_obstacles,
+            movable_objects=blocked_movables,
         )
         candidate_blocked_start = env.flat_state()
         candidate_force = _glass_force(env.sim_view, placement.blocked_glasses)
@@ -837,7 +851,9 @@ def collect_pair(
     # Branch 4 precondition A: the blocked scene must cause a counterfactual
     # nominal catastrophe from this robot/task state.
     blocked_start_hash = array_sha256(blocked_start)
-    obs = env.reset_to_exact(blocked_start, movable_objects=placement.blocked_glasses)
+    obs = env.reset_to_exact(
+        blocked_start, obstacles=blocked_obstacles, movable_objects=blocked_movables
+    )
     blocked_nominal = _roll_nominal(
         env, policy, obs, placement.instruction, placement.blocked_glasses,
         args.branch_steps,
@@ -847,7 +863,7 @@ def collect_pair(
 
     # Branch 4 precondition B: exhaust the declared recovery-controller grid.
     reset_blocked = lambda: env.reset_to_exact(
-        blocked_start, movable_objects=placement.blocked_glasses
+        blocked_start, obstacles=blocked_obstacles, movable_objects=blocked_movables
     )
     recovered_blocked, blocked_attempts = _search_oracle(
         reset_blocked, env, policy, placement, placement.blocked_glasses,

@@ -112,6 +112,8 @@ def _validate_glass(glass: Mapping[str, Any], label: str) -> None:
         raise ValueError(f"{label}.pos must be xyz")
     if len(glass["size"]) not in (2, 3):
         raise ValueError(f"{label}.size must be a MuJoCo cylinder/box size")
+    if "movable" in glass and not isinstance(glass["movable"], bool):
+        raise ValueError(f"{label}.movable must be boolean when provided")
     numbers = np.asarray([*glass["pos"], *glass["size"]], dtype=float)
     if not np.isfinite(numbers).all() or np.any(np.asarray(glass["size"], dtype=float) <= 0):
         raise ValueError(f"{label} has invalid geometry")

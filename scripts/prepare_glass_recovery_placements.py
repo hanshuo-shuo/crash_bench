@@ -100,9 +100,8 @@ def _blocked_barrier_offsets(
     half_height: float,
     *,
     max_gap: float = 0.02,
-    max_slenderness: float = 3.25,
 ) -> np.ndarray:
-    """Author a dense but non-overlapping, passively stable glass barrier."""
+    """Author a dense but non-overlapping static lateral glass barrier."""
 
     if count < 3 or count % 2 == 0:
         raise ValueError("blocked scene needs an odd number of at least three glasses")
@@ -116,10 +115,6 @@ def _blocked_barrier_offsets(
     if surface_gap > max_gap:
         raise ValueError(
             f"blocked lateral gap {surface_gap:.3f} m exceeds {max_gap:.3f} m"
-        )
-    if half_height / radius > max_slenderness:
-        raise ValueError(
-            "blocked lateral glasses are too slender to serve as passive stable props"
         )
     return offsets
 
@@ -244,13 +239,20 @@ def author(args: argparse.Namespace) -> dict:
                         size if abs(float(barrier_offset)) < 1e-9
                         else [args.blocked_radius, args.blocked_half_height]
                     )
-                    blocked.append(_glass(
+                    blocked_glass = _glass(
                         f"glass_block_{barrier_index}",
                         anchor + barrier_offset * perpendicular,
                         table_top,
                         blocked_size,
                         density,
-                    ))
+                    )
+                    # Only the original center glass remains fragile/movable.
+                    # Lateral pillars are transparent static glass obstacles: they
+                    # retain collision/contact sensing but cannot self-topple and
+                    # do not add qpos/qvel to the exact matched state.
+                    if abs(float(barrier_offset)) >= 1e-9:
+                        blocked_glass["movable"] = False
+                    blocked.append(blocked_glass)
                 placement_id = f"glass_recovery_{split}_{split_counter:04d}"
                 cluster_id = f"{split}/{family}"
                 placements.append(GlassPlacement(
@@ -279,6 +281,8 @@ def author(args: argparse.Namespace) -> dict:
                         "blocked_corridor_half_width_m": args.blocked_half_width,
                         "blocked_lateral_half_height_m": args.blocked_half_height,
                         "blocked_lateral_radius_m": args.blocked_radius,
+                        "blocked_static_lateral_count": args.blocked_glasses - 1,
+                        "blocked_movable_center_count": 1,
                         "blocked_lateral_surface_gap_m": round(float(
                             barrier_offsets[1] - barrier_offsets[0]
                             - 2.0 * args.blocked_radius
@@ -331,8 +335,8 @@ def main() -> None:
     parser.add_argument("--target-clearance-margin", type=float, default=0.005)
     parser.add_argument("--min-target-clearance", type=float, default=0.10)
     parser.add_argument("--blocked-half-width", type=float, default=0.28)
-    parser.add_argument("--blocked-glasses", type=int, default=5)
-    parser.add_argument("--blocked-radius", type=float, default=0.067)
+    parser.add_argument("--blocked-glasses", type=int, default=9)
+    parser.add_argument("--blocked-radius", type=float, default=0.032)
     parser.add_argument("--blocked-half-height", type=float, default=0.20)
     parser.add_argument("--overwrite", action="store_true")
     args = parser.parse_args()

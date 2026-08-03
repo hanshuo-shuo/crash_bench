@@ -90,14 +90,15 @@ link into the lateral fence. Every attempt is written to
 `blocked_abort_search.json`; the selected action must pass a second 60-step run
 while hidden states are captured.
 
-The blocked barrier preserves the original central on-path glass and uses four
-wide-base movable lateral cylinders across the declared 56 cm corridor. Adjacent
-lateral cylinders have a 6 mm surface gap, do not overlap, and have a
-half-height/radius ratio below 3.25. This replaces the earlier nine-cylinder
-slender fence, which could topple under a zero-motion hold and was therefore not
-valid blocked-scene evidence. Candidate states must now pass a 60-step
-zero-motion stability precheck before any expensive oracle search; the recovery
-grid remains the empirical test that the complete barrier is blocked.
+The blocked barrier preserves the original central on-path glass as a fragile
+movable object and uses eight transparent static glass pillars across the
+declared 56 cm corridor. Adjacent pillars have a 6 mm surface gap and do not
+overlap. Static pillars remain visible and collidable, and their robot contacts
+are included in the same glass force predicate, but they add no qpos/qvel and
+cannot self-topple under a zero-motion hold. This replaces the invalid all-free-
+joint fence. Candidate states must pass a 60-step zero-motion stability precheck
+before any expensive oracle search; the recovery grid remains the empirical test
+that the complete barrier is operationally blocked.
 
 ## Loss and inference
 

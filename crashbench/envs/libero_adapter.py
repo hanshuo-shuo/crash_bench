@@ -79,7 +79,8 @@ def _native_quat2axisangle(quat):
 def inject_obstacles_xml(xml: str, obstacles: list[dict]) -> str:
     """Insert static (jointless) obstacle bodies into a robosuite model XML string.
 
-    Each obstacle: {"name", "pos":[x,y,z], "size":[sx,sy,sz], "type"="box", "rgba"=[...]}.
+    Each obstacle: {"name", "pos":[x,y,z], "size":[...], "type"="box", "rgba"=[...]};
+    box sizes are [sx,sy,sz], while cylinder sizes are [radius,half_height].
     Static bodies add geoms but NO qpos/qvel DOF, so the LIBERO state vector layout is
     unchanged and saved init_states stay valid (verified in scripts/probe_wall_inject.py).
 
@@ -94,12 +95,12 @@ def inject_obstacles_xml(xml: str, obstacles: list[dict]) -> str:
     blocks = []
     for o in obstacles:
         px, py, pz = o["pos"]
-        sx, sy, sz = o["size"]
+        size = " ".join(str(v) for v in o["size"])
         gtype = o.get("type", "box")
         rgba = " ".join(str(v) for v in o.get("rgba", [0.85, 0.2, 0.2, 1.0]))
         blocks.append(
             f'<body name="{o["name"]}" pos="{px} {py} {pz}">'
-            f'<geom name="{o["name"]}_g" type="{gtype}" size="{sx} {sy} {sz}" '
+            f'<geom name="{o["name"]}_g" type="{gtype}" size="{size}" '
             f'rgba="{rgba}" group="1" contype="1" conaffinity="1"/></body>'
         )
     return xml.replace("</worldbody>", "".join(blocks) + "</worldbody>", 1)
