@@ -27,6 +27,7 @@ from crashbench.glass_recovery_model import (
 from crashbench.metrics import summarize_recovery_rows
 from crashbench.policies.glass_recovery_policy import GlassRecoveryPolicy
 from crashbench.recovery import DetourComplete
+from scripts.collect_glass_recovery_pairs import _oracle_configs
 
 
 def _glass(name="glass_1", x=0.0, y=0.0):
@@ -222,6 +223,12 @@ def test_detour_compensates_grasp_offset_before_placing():
     assert controller._carry_adjusted is True
     # Held bowl is +[.1,.2] from the EEF, so the EEF target is plate-offset.
     assert np.allclose(controller.legs[7][1], [0.4, 0.4, 1.2])
+
+
+def test_oracle_grid_searches_both_grasp_heights():
+    configs = _oracle_configs(0.9)
+    assert len(configs) == 16
+    assert {config["descend_off"] for config in configs} == {0.012, 0.04}
 
 
 def test_recovery_metrics_do_not_reward_always_stop():

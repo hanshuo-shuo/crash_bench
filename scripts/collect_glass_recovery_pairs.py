@@ -275,7 +275,13 @@ def _run_controller(
 
 def _oracle_configs(bowl_z: float) -> list[dict]:
     return [
-        {"side": side, "lane_margin": lane, "transit_z": bowl_z + lift}
+        {
+            "side": side,
+            "lane_margin": lane,
+            "transit_z": bowl_z + lift,
+            "descend_off": descend_off,
+        }
+        for descend_off in (0.012, 0.04)
         for lift in (0.30, 0.38)
         for lane in (0.12, 0.18)
         for side in (-1.0, 1.0)
@@ -302,7 +308,8 @@ def _search_oracle(
         controller = DetourComplete(
             _controller_glass(glasses[len(glasses) // 2]), bowl, plate,
             side=config["side"], lane_margin=config["lane_margin"],
-            transit_z=config["transit_z"], leg_cap=70, target_name=TARGET,
+            transit_z=config["transit_z"], descend_off=config["descend_off"],
+            leg_cap=70, target_name=TARGET,
         )
         result = _run_controller(
             env, policy, obs, placement.instruction, glasses, controller, max_steps,
@@ -331,7 +338,8 @@ def _search_oracle(
     controller = DetourComplete(
         _controller_glass(glasses[len(glasses) // 2]), bowl, plate,
         side=successful_config["side"], lane_margin=successful_config["lane_margin"],
-        transit_z=successful_config["transit_z"], leg_cap=70, target_name=TARGET,
+        transit_z=successful_config["transit_z"],
+        descend_off=successful_config["descend_off"], leg_cap=70, target_name=TARGET,
     )
     collected = _run_controller(
         env, policy, obs, placement.instruction, glasses, controller, max_steps,
@@ -714,7 +722,7 @@ def main() -> None:
     parser.add_argument("--max-validation", type=int, default=20)
     parser.add_argument("--max-heldout", type=int, default=40)
     parser.add_argument("--settle-steps", type=int, default=10)
-    parser.add_argument("--precrash-horizon", type=int, default=40)
+    parser.add_argument("--precrash-horizon", type=int, default=20)
     parser.add_argument("--precrash-backoff-step", type=int, default=10)
     parser.add_argument("--scan-steps", type=int, default=220)
     parser.add_argument("--branch-steps", type=int, default=80)
