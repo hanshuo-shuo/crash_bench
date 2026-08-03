@@ -47,7 +47,8 @@ contact force, abort target, and the masks used by each loss.
 The collector starts at T-20 and, when necessary, walks backward from the crash
 in 10-step increments along the measured nominal history until every branch has a clean
 common robot/task state (blocked-scene initial glass force below 1 N and tilt
-below 5 degrees). It never makes an invalid late state pass by relaxing those
+below 5 degrees, task target within 3 cm of its authored resting pose, and target
+not already grasped). It never makes an invalid late state pass by relaxing those
 thresholds; the selected horizon and every rejected candidate are recorded.
 
 ## Loss and inference

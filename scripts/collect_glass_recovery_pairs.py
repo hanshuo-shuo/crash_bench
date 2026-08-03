@@ -529,9 +529,11 @@ def collect_pair(
 
     # Choose the closest common pre-crash robot/task state that is also a clean
     # start for the blocked branch.  A T-20 state can already put the forearm
-    # inside a newly inserted lateral fence even though it is clear of the
-    # original center cup.  Walk backward from the requested horizon rather
-    # than weakening the clean-start criterion.
+    # inside a newly inserted lateral fence, or can be late enough that the
+    # nominal policy is already carrying the bowl.  The latter is not a valid
+    # start for a from-scratch detour oracle: opening the gripper would drop the
+    # bowl and invalidate all static target coordinates.  Walk backward from the
+    # requested horizon rather than weakening either clean-start criterion.
     first_horizon = min(args.precrash_horizon, collision_step)
     candidate_horizons = list(range(
         first_horizon, collision_step + 1, args.precrash_backoff_step
@@ -540,9 +542,18 @@ def collect_pair(
         candidate_horizons.append(collision_step)
     selection_attempts = []
     selected = None
+    baseline_target = np.asarray(placement.metadata["bowl_xyz"], dtype=float)
     for candidate_horizon in candidate_horizons:
         candidate_index = max(0, collision_step - candidate_horizon)
         candidate_onpath = np.asarray(scan["states"][candidate_index], dtype=np.float64)
+        candidate_obs = env.reset_to_exact(
+            candidate_onpath, movable_objects=[placement.on_path_glass]
+        )
+        candidate_target = np.asarray(candidate_obs[f"{TARGET}_pos"], dtype=float)
+        candidate_target_displacement = float(np.linalg.norm(
+            candidate_target - baseline_target
+        ))
+        candidate_target_grasped = bool(env.sim_view.is_grasped(TARGET))
         candidate_robot = env._strip_movable_state(
             candidate_onpath, onpath_nq, onpath_nv, 1
         )
@@ -555,12 +566,23 @@ def collect_pair(
             float(env.sim_view.object_tilt_deg(glass["name"]))
             for glass in placement.blocked_glasses
         )
-        clean = candidate_force < 1.0 and candidate_tilt < 5.0
+        glass_clean = candidate_force < 1.0 and candidate_tilt < 5.0
+        task_clean = (
+            candidate_target_displacement < args.target_state_threshold
+            and not candidate_target_grasped
+        )
+        clean = glass_clean and task_clean
         selection_attempts.append({
             "horizon_steps": candidate_horizon,
             "source_scan_index": candidate_index,
             "initial_glass_force_n": round(candidate_force, 5),
             "initial_max_glass_tilt_deg": round(candidate_tilt, 5),
+            "target_xyz": candidate_target.round(5).tolist(),
+            "target_baseline_xyz": baseline_target.round(5).tolist(),
+            "target_baseline_displacement_m": round(candidate_target_displacement, 5),
+            "target_grasped": candidate_target_grasped,
+            "glass_clean": glass_clean,
+            "task_clean": task_clean,
             "clean": clean,
         })
         if clean:
@@ -798,6 +820,7 @@ def main() -> None:
     parser.add_argument("--settle-steps", type=int, default=10)
     parser.add_argument("--precrash-horizon", type=int, default=20)
     parser.add_argument("--precrash-backoff-step", type=int, default=10)
+    parser.add_argument("--target-state-threshold", type=float, default=0.03)
     parser.add_argument("--scan-steps", type=int, default=220)
     parser.add_argument("--branch-steps", type=int, default=80)
     parser.add_argument("--control-steps", type=int, default=220)
@@ -808,9 +831,12 @@ def main() -> None:
     parser.add_argument("--stable-force-threshold", type=float, default=25.0)
     parser.add_argument("--resume", action=argparse.BooleanOptionalAction, default=True)
     args = parser.parse_args()
-    if args.precrash_horizon < max(RISK_HORIZONS) or args.precrash_backoff_step < 1:
+    if (args.precrash_horizon < max(RISK_HORIZONS)
+            or args.precrash_backoff_step < 1
+            or args.target_state_threshold <= 0):
         raise SystemExit(
-            f"precrash-horizon must be >= {max(RISK_HORIZONS)} and backoff step positive"
+            f"precrash-horizon must be >= {max(RISK_HORIZONS)}; backoff step and "
+            "target-state-threshold must be positive"
         )
 
     from crashbench.policies import OpenVLAPolicy
