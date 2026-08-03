@@ -26,6 +26,7 @@ from crashbench.glass_recovery_model import (
 )
 from crashbench.metrics import summarize_recovery_rows
 from crashbench.policies.glass_recovery_policy import GlassRecoveryPolicy
+from crashbench.recovery import DetourComplete
 
 
 def _glass(name="glass_1", x=0.0, y=0.0):
@@ -205,6 +206,22 @@ def test_runtime_gate_nominal_recovery_and_abort():
         abort_policy = GlassRecoveryPolicy(_FakeBase(), str(abort), device="cpu")
         abort_policy.act(observation, "pick")
         assert abort_policy.mode == "abort"
+
+
+def test_detour_compensates_grasp_offset_before_placing():
+    controller = DetourComplete(
+        {"pos": [0.0, 0.0, 0.96], "size": [0.03, 0.03, 0.06]},
+        target_pos=[0.1, 0.2, 0.91], plate_pos=[0.5, 0.6, 0.90],
+        transit_z=1.2, target_name="bowl",
+    )
+    obs = {"robot0_eef_pos": np.asarray([0.0, 0.0, 1.2]),
+           "bowl_pos": np.asarray([0.1, 0.2, 1.0])}
+    controller.engage(obs)
+    controller.i = 7
+    controller.step(obs)
+    assert controller._carry_adjusted is True
+    # Held bowl is +[.1,.2] from the EEF, so the EEF target is plate-offset.
+    assert np.allclose(controller.legs[7][1], [0.4, 0.4, 1.2])
 
 
 def test_recovery_metrics_do_not_reward_always_stop():

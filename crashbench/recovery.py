@@ -69,7 +69,8 @@ class DetourComplete:
     def __init__(self, wall: dict, target_pos, plate_pos, *, side: float = -1.0,
                  lane_margin: float = 0.22, transit_z: float | None = None, k: float = 12.0,
                  tol: float = 0.02, leg_cap: int = 80, grasp_steps: int = 18, release_steps: int = 30,
-                 descend_off: float = 0.04, place_off: float = 0.015):
+                 descend_off: float = 0.04, place_off: float = 0.015,
+                 target_name: str | None = None):
         self.wall, self.k, self.tol, self.leg_cap = wall, k, tol, leg_cap
         self.side, self.lane_margin = side, lane_margin
         self.bowl = np.asarray(target_pos, dtype=np.float32)
@@ -77,9 +78,11 @@ class DetourComplete:
         self.transit_z = float(self.bowl[2] + 0.40) if transit_z is None else float(transit_z)
         self.grasp_steps, self.release_steps = grasp_steps, release_steps
         self.descend_off, self.place_off = descend_off, place_off
+        self.target_name = target_name
         self.legs: list | None = None
         self.i = 0
         self._in_leg = 0
+        self._carry_adjusted = False
 
     def engage(self, obs: dict) -> None:
         eef = _eef_from_obs(obs)
@@ -105,6 +108,7 @@ class DetourComplete:
         ]
         self.i = 0
         self._in_leg = 0
+        self._carry_adjusted = False
 
     def _act(self, dxyz, grip):
         return np.array([float(np.clip(self.k * dxyz[0], -1, 1)),
@@ -118,6 +122,19 @@ class DetourComplete:
         eef = _eef_from_obs(obs)
         if self.i >= len(self.legs):                            # done: hold in place, gripper open
             return self._act([0.0, 0.0, 0.0], GRIP_OPEN)
+        # Once the bowl is grasped and lifted, compensate for the measured
+        # bowl--EEF xy offset before carrying/lowering.  Aiming the EEF itself at
+        # plate center is not enough: the held bowl hangs off-center and misses
+        # LIBERO's placement region.  This mirrors the verified offline witness.
+        if self.i == 7 and not self._carry_adjusted and self.target_name:
+            key = f"{self.target_name}_pos"
+            if key in obs:
+                target_xy = np.asarray(obs[key], dtype=np.float32)[:2]
+                offset = target_xy - eef[:2]
+                px, py = float(self.plate[0] - offset[0]), float(self.plate[1] - offset[1])
+                self.legs[7] = ("move", [px, py, self.transit_z], GRIP_CLOSE)
+                self.legs[8] = ("move", [px, py, float(self.plate[2]) + self.place_off], GRIP_CLOSE)
+                self._carry_adjusted = True
         leg = self.legs[self.i]
         self._in_leg += 1
         if leg[0] == "move":

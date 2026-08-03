@@ -302,15 +302,22 @@ def _search_oracle(
         controller = DetourComplete(
             _controller_glass(glasses[len(glasses) // 2]), bowl, plate,
             side=config["side"], lane_margin=config["lane_margin"],
-            transit_z=config["transit_z"], leg_cap=70,
+            transit_z=config["transit_z"], leg_cap=70, target_name=TARGET,
         )
         result = _run_controller(
             env, policy, obs, placement.instruction, glasses, controller, max_steps,
             capture_rows=False,
         )
+        final_obs = result["obs"]
+        final_bowl = np.asarray(final_obs[f"{TARGET}_pos"], dtype=float)
+        final_plate = np.asarray(final_obs[f"{PLATE}_pos"], dtype=float)
         attempts.append({
             **config, "crashed": result["crashed"], "succeeded": result["succeeded"],
             "steps": result["steps"], "peak_glass_force_n": round(result["peak_force"], 4),
+            "final_bowl_plate_xy_m": round(float(np.linalg.norm(
+                final_bowl[:2] - final_plate[:2]
+            )), 5),
+            "final_bowl_z_m": round(float(final_bowl[2]), 5),
         })
         if result["succeeded"] and not result["crashed"]:
             successful_config = config
@@ -324,7 +331,7 @@ def _search_oracle(
     controller = DetourComplete(
         _controller_glass(glasses[len(glasses) // 2]), bowl, plate,
         side=successful_config["side"], lane_margin=successful_config["lane_margin"],
-        transit_z=successful_config["transit_z"], leg_cap=70,
+        transit_z=successful_config["transit_z"], leg_cap=70, target_name=TARGET,
     )
     collected = _run_controller(
         env, policy, obs, placement.instruction, glasses, controller, max_steps,
@@ -468,6 +475,9 @@ def collect_pair(
         args.oracle_steps, collect_success=True,
         counterfactual_peak_force=float(nominal["peak_force"]),
     )
+    (pair_root / "oracle_search.json").write_text(json.dumps({
+        "placement_id": pair_id, "attempts": oracle_attempts,
+    }, indent=2) + "\n")
     if oracle is None:
         raise RuntimeError(f"{pair_id}: no safe task-completing oracle found")
     oracle_arrays = _finalize_arrays(
@@ -511,6 +521,9 @@ def collect_pair(
         args.oracle_steps, collect_success=False,
         counterfactual_peak_force=float(blocked_nominal["peak_force"]),
     )
+    (pair_root / "blocked_oracle_search.json").write_text(json.dumps({
+        "placement_id": pair_id, "attempts": blocked_attempts,
+    }, indent=2) + "\n")
     if recovered_blocked is not None or any(
         attempt["succeeded"] and not attempt["crashed"] for attempt in blocked_attempts
     ):
