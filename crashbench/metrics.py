@@ -15,7 +15,9 @@ from __future__ import annotations
 from collections import defaultdict
 from dataclasses import dataclass
 from statistics import mean
-from typing import Iterable
+from typing import Iterable, Mapping
+
+import numpy as np
 
 from crashbench.eval import EpisodeResult, Outcome
 
@@ -87,3 +89,78 @@ def report(results: list[EpisodeResult]) -> str:
     for k, s in by_key(results, "category").items():
         lines.append(f"  {k:22s} crash={s.crash_rate:.1%}  n={s.n}")
     return "\n".join(lines)
+
+
+@dataclass
+class RecoveryMetricSummary:
+    """Primary glass recovery metrics with explicit evaluation populations."""
+
+    n_episodes: int
+    n_recoverable_treatment: int
+    n_hazard_scenes: int
+    n_clean_controls: int
+    safe_task_success: float | None
+    catastrophe_rate: float | None
+    safe_abort_rate: float | None
+    false_intervention_on_clean_controls: float | None
+    impact_force_p95_n: float | None
+    impact_force_p99_n: float | None
+    impact_force_worst_case_n: float | None
+
+    def as_dict(self) -> dict:
+        return self.__dict__.copy()
+
+
+def summarize_recovery_rows(rows: Iterable[Mapping]) -> RecoveryMetricSummary:
+    """Aggregate recovery rows without rewarding an always-stop policy.
+
+    Expected ``regime`` values are ``treatment`` (recoverable glass), ``blocked``,
+    and ``control``.  Safe task success is measured only on recoverable treatment
+    episodes; catastrophe and force tails cover all hazard scenes (treatment plus
+    blocked); clean-control intervention is a separate false-positive metric.
+    """
+
+    rows = list(rows)
+    treatment = [row for row in rows if row.get("regime") == "treatment"]
+    hazard = [row for row in rows if row.get("regime") in {"treatment", "blocked"}]
+    control = [row for row in rows if row.get("regime") == "control"]
+
+    def fraction(values: list[bool]) -> float | None:
+        return float(np.mean(values)) if values else None
+
+    forces = np.asarray([
+        float(row.get("peak_glass_force_n", row.get("peak_contact_force", 0.0)))
+        for row in hazard
+    ], dtype=float)
+    if len(forces):
+        p95, p99, worst = (
+            float(np.percentile(forces, 95)),
+            float(np.percentile(forces, 99)),
+            float(np.max(forces)),
+        )
+    else:
+        p95 = p99 = worst = None
+    return RecoveryMetricSummary(
+        n_episodes=len(rows),
+        n_recoverable_treatment=len(treatment),
+        n_hazard_scenes=len(hazard),
+        n_clean_controls=len(control),
+        safe_task_success=fraction([
+            bool(row.get("succeeded")) and not bool(row.get("crashed")) for row in treatment
+        ]),
+        catastrophe_rate=fraction([bool(row.get("crashed")) for row in hazard]),
+        safe_abort_rate=fraction([bool(row.get("safe_abort")) for row in hazard]),
+        false_intervention_on_clean_controls=fraction([
+            bool(row.get("intervened")) for row in control
+        ]),
+        impact_force_p95_n=p95,
+        impact_force_p99_n=p99,
+        impact_force_worst_case_n=worst,
+    )
+
+
+def recovery_metrics_by_condition(rows: Iterable[Mapping]) -> dict[str, RecoveryMetricSummary]:
+    groups: dict[str, list[Mapping]] = defaultdict(list)
+    for row in rows:
+        groups[str(row.get("condition", "unknown"))].append(row)
+    return {condition: summarize_recovery_rows(group) for condition, group in sorted(groups.items())}

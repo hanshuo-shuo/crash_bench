@@ -83,6 +83,8 @@ def test_movable_object_state_splice():
     assert np.allclose(spliced[4:11], [0.1, 0.2, 0.3, 1.0, 0.0, 0.0, 0.0])
     assert np.allclose(spliced[11:13], [20.0, 21.0])
     assert np.allclose(spliced[13:], np.zeros(6))
+    restored = LiberoEnv._strip_movable_state(spliced, nq=10, nv=8, movable_count=1)
+    assert np.allclose(restored, base)
 
 
 def test_predicates():

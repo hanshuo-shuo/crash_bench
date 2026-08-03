@@ -21,6 +21,7 @@ retain for provenance only and do not use for a new paper result.
 | E10 | retained negative / one-off diagnostic | `phase2_build_nowall.py`, `phase2_run_nowall.py`, `phase2_obj_collision.py`, `phase2_recon_indist.py`, `phase2_grasp.py`, `phase2_grasp_build.py`, `phase2_grasp_recon.py`, `phase2_grasp_run.py` | matching `phase2_*` sbatch files |
 | E11/C13 | canonical zero-GPU analysis | `task_phase_confound_analysis.py` | none; reads existing hidden/meta only |
 | E13 | canonical | `careful_prompt_eval.py`, `analyze_careful_prompt.py`; fixed templates in `crashbench/prompts.py` | `run_careful_prompt_wall.sbatch`, `run_careful_prompt_glass.sbatch`, `analyze_careful_prompt.sbatch`, `submit_careful_prompt.sh` |
+| E14 | implementation / smoke pending | `prepare_glass_recovery_placements.py`, `collect_glass_recovery_pairs.py`, `replay_glass_recovery_pair.py`, `train_glass_recovery.py`, `eval_glass_recovery.py`; schema/model in `crashbench/glass_recovery_*` | `glass_recovery_smoke.sbatch`, `submit_glass_recovery_smoke.sh` |
 | utility | helper | `mp4_to_gif.py` | none |
 | deprecated selected headline | deprecated | `headline_suite.py` | none; reproduces only the historical artifact |
 

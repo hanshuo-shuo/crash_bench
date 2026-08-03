@@ -422,6 +422,49 @@ class LiberoEnv:
         self.sim_view.update(obs, done=False)
         return obs
 
+    def flat_state(self) -> np.ndarray:
+        """Return the exact live MuJoCo state in LIBERO's flattened convention.
+
+        This includes simulation time, every qpos, and every qvel.  It is used by
+        the glass paired-data collector to restore the nominal and oracle branch
+        to byte-identical on-path pre-crash states.
+        """
+
+        model, data = self.sim_view._live_mj()
+        return np.concatenate([
+            np.asarray([data.time], dtype=np.float64),
+            np.asarray(data.qpos[:int(model.nq)], dtype=np.float64).copy(),
+            np.asarray(data.qvel[:int(model.nv)], dtype=np.float64).copy(),
+        ])
+
+    def reset_to_exact(self, flat_state: np.ndarray, obstacles: list[dict] | None = None,
+                       movable_objects: list[dict] | None = None):
+        """Rebuild a requested injected scene and restore its *expanded* state.
+
+        In contrast to :meth:`reset_to`, ``flat_state`` already contains the
+        qpos/qvel slots of all injected movable objects.  This is intentionally a
+        separate method so an expanded pre-crash state can never be accidentally
+        spliced twice.
+        """
+
+        self.env.reset()
+        if obstacles or movable_objects:
+            xml = self.env.sim.model.get_xml()
+            xml = inject_obstacles_xml(xml, obstacles or [])
+            xml = inject_movable_objects_xml(xml, movable_objects or [])
+            self.env.reset_from_xml_string(xml)
+        model = self._raw_model()
+        expected = 1 + int(model.nq) + int(model.nv)
+        state = np.asarray(flat_state, dtype=np.float64)
+        if state.shape != (expected,):
+            raise ValueError(
+                f"exact state shape {state.shape} != ({expected},) for rebuilt model"
+            )
+        obs = self.env.set_init_state(state)
+        self.sim_view.peak_force = 0.0
+        self.sim_view.update(obs, done=False)
+        return obs
+
     def _raw_model(self):
         sim = self.env.sim
         return getattr(sim.model, "_model", sim.model)
@@ -439,6 +482,28 @@ class LiberoEnv:
             add_q.extend([px, py, pz, 1.0, 0.0, 0.0, 0.0])     # identity quat -> upright
             add_v.extend([0.0] * 6)
         return np.concatenate([t, qpos, np.asarray(add_q), qvel, np.asarray(add_v)])
+
+    @staticmethod
+    def _strip_movable_state(expanded_state, nq, nv, movable_count):
+        """Inverse of ``_splice_movable_state`` for append-last free joints.
+
+        ``nq`` and ``nv`` describe the currently injected model.  Removing the
+        final ``7*M`` qpos and ``6*M`` qvel entries preserves the exact robot and
+        original task-object state.  A different matched glass scene can then be
+        rebuilt with :meth:`reset_to`.
+        """
+
+        count = int(movable_count)
+        if count < 0 or 7 * count > nq or 6 * count > nv:
+            raise ValueError("invalid movable_count for model dimensions")
+        state = np.asarray(expanded_state, dtype=np.float64)
+        expected = 1 + int(nq) + int(nv)
+        if state.shape != (expected,):
+            raise ValueError(f"expanded state shape {state.shape} != ({expected},)")
+        nq0, nv0 = int(nq) - 7 * count, int(nv) - 6 * count
+        qpos = state[1:1 + int(nq)]
+        qvel = state[1 + int(nq):]
+        return np.concatenate([state[:1], qpos[:nq0], qvel[:nv0]])
 
     def dummy_action(self):
         if self._model_family == "pi0":
