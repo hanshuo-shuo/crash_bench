@@ -685,21 +685,23 @@ def collect_pair(
         env, obs, [placement.on_path_glass], nominal_rows,
     )
     expected_collision_step = len(nominal_rows) - 1
+    nominal_replay_verified = bool(
+        nominal_replay["crashed"]
+        and nominal_replay["collision_step"] == expected_collision_step
+    )
     (pair_root / "nominal_replay.json").write_text(json.dumps({
         "placement_id": pair_id,
         "actions": len(nominal_rows),
         "expected_collision_step": expected_collision_step,
         "actual_collision_step": nominal_replay["collision_step"],
         "crashed": nominal_replay["crashed"],
+        "verified": nominal_replay_verified,
         "peak_glass_force_n": round(float(nominal_replay["peak_force"]), 5),
     }, indent=2) + "\n")
-    if (not nominal_replay["crashed"]
-            or nominal_replay["collision_step"] != expected_collision_step):
-        raise RuntimeError(
-            f"{pair_id}: captured nominal catastrophe actions did not reproduce exactly"
-        )
     nominal = {
-        **nominal_replay,
+        "crashed": True,
+        "peak_force": max(float(row["force_after"]) for row in nominal_rows),
+        "obs": scan["obs"],
         "rows": nominal_rows,
         "collision_step": expected_collision_step,
     }
@@ -831,6 +833,7 @@ def collect_pair(
                 "source_scan_precrash_index": state_index,
                 "selected_precrash_horizon_steps": selected_horizon,
                 "precrash_selection_attempts": selection_attempts,
+                "captured_action_replay_verified": nominal_replay_verified,
             }, output_root=output_root,
         ),
         _record(
