@@ -247,14 +247,83 @@ def _run_controller(
 ) -> dict:
     crash = build_any(_glass_predicate_specs(glasses))
     rows: list[dict] = []
+    controller_trace: list[dict] = []
     peak_force = 0.0
+    target_name = getattr(controller, "target_name", None)
+    initial_target_z = (
+        float(np.asarray(obs[f"{target_name}_pos"])[2])
+        if target_name and f"{target_name}_pos" in obs else None
+    )
+    max_target_z = initial_target_z
+
+    def diagnostic(step: int, stage_before: int | None, stage_after: int | None,
+                   commanded_target: np.ndarray | None) -> dict:
+        eef = np.asarray(obs["robot0_eef_pos"], dtype=float)
+        target_pos = (
+            np.asarray(obs[f"{target_name}_pos"], dtype=float)
+            if target_name and f"{target_name}_pos" in obs else None
+        )
+        return {
+            "step": step,
+            "stage_before": stage_before,
+            "stage_after": stage_after,
+            "commanded_target_xyz": (
+                None if commanded_target is None else commanded_target.round(5).tolist()
+            ),
+            "eef_xyz": eef.round(5).tolist(),
+            "eef_target_distance_m": (
+                None if commanded_target is None
+                else round(float(np.linalg.norm(eef - commanded_target)), 5)
+            ),
+            "target_xyz": None if target_pos is None else target_pos.round(5).tolist(),
+            "target_eef_distance_m": (
+                None if target_pos is None
+                else round(float(np.linalg.norm(target_pos - eef)), 5)
+            ),
+            "gripper_qpos": np.asarray(
+                obs.get("robot0_gripper_qpos", []), dtype=float
+            ).round(5).tolist(),
+            "target_grasped": (
+                None if target_name is None else env.sim_view.is_grasped(target_name)
+            ),
+        }
+
+    def result(crashed: bool, succeeded: bool, steps: int) -> dict:
+        return {
+            "crashed": crashed,
+            "succeeded": succeeded,
+            "steps": steps,
+            "peak_force": peak_force,
+            "obs": obs,
+            "rows": rows,
+            "controller_trace": controller_trace,
+            "controller_final_stage": getattr(controller, "i", None),
+            "initial_target_z_m": initial_target_z,
+            "max_target_z_m": max_target_z,
+        }
+
     controller.engage(obs)
     for step in range(max_steps):
         captured = _capture_step(env, policy, obs, instruction) if capture_rows else None
+        stage_before = getattr(controller, "i", None)
+        commanded_target = None
+        legs = getattr(controller, "legs", None)
+        if legs is not None and stage_before is not None and stage_before < len(legs):
+            leg = legs[stage_before]
+            if leg[0] == "move":
+                commanded_target = np.asarray(leg[1], dtype=float)
         target = np.asarray(controller.step(obs), dtype=np.float32)
         obs, _, _, _ = env.step(target.tolist())
+        stage_after = getattr(controller, "i", None)
+        if target_name and f"{target_name}_pos" in obs:
+            target_z = float(np.asarray(obs[f"{target_name}_pos"])[2])
+            max_target_z = target_z if max_target_z is None else max(max_target_z, target_z)
         force = _glass_force(env.sim_view, glasses)
         peak_force = max(peak_force, force)
+        if step == 0 or stage_after != stage_before:
+            controller_trace.append(
+                diagnostic(step + 1, stage_before, stage_after, commanded_target)
+            )
         if captured is not None:
             captured.update({
                 "target_action": target,
@@ -264,13 +333,14 @@ def _run_controller(
             })
             rows.append(captured)
         if crash(env.sim_view):
-            return {"crashed": True, "succeeded": False, "steps": step + 1,
-                    "peak_force": peak_force, "obs": obs, "rows": rows}
+            return result(True, False, step + 1)
         if env.sim_view.libero_done:
-            return {"crashed": False, "succeeded": True, "steps": step + 1,
-                    "peak_force": peak_force, "obs": obs, "rows": rows}
-    return {"crashed": False, "succeeded": False, "steps": max_steps,
-            "peak_force": peak_force, "obs": obs, "rows": rows}
+            return result(False, True, step + 1)
+    if not controller_trace or controller_trace[-1]["step"] != max_steps:
+        controller_trace.append(diagnostic(
+            max_steps, getattr(controller, "i", None), getattr(controller, "i", None), None
+        ))
+    return result(False, False, max_steps)
 
 
 def _oracle_configs(bowl_z: float) -> list[dict]:
@@ -321,6 +391,10 @@ def _search_oracle(
         attempts.append({
             **config, "crashed": result["crashed"], "succeeded": result["succeeded"],
             "steps": result["steps"], "peak_glass_force_n": round(result["peak_force"], 4),
+            "controller_final_stage": result["controller_final_stage"],
+            "initial_target_z_m": result["initial_target_z_m"],
+            "max_target_z_m": result["max_target_z_m"],
+            "controller_trace": result["controller_trace"],
             "final_bowl_plate_xy_m": round(float(np.linalg.norm(
                 final_bowl[:2] - final_plate[:2]
             )), 5),
