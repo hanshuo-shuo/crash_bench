@@ -104,12 +104,23 @@ def _state_layout(
         raise ValueError(
             f"requested {requested} disjoint source states, but task exposes only {available}"
         )
-    order = list(range(requested))
-    return {
-        "train": order[:train_states],
-        "validation": order[train_states:train_states + validation_states],
-        "heldout": order[train_states + validation_states:],
-    }
+    def take_stratified(pool: list[int], count: int) -> tuple[list[int], list[int]]:
+        if count == 0:
+            return [], pool
+        positions = [index * len(pool) // count for index in range(count)]
+        selected = [pool[position] for position in positions]
+        selected_set = set(selected)
+        return selected, [value for value in pool if value not in selected_set]
+
+    # Allocate evaluation states across the full LIBERO state ordering first,
+    # then draw validation and train from the disjoint remainder.  Contiguous
+    # index blocks can accidentally turn simulator reachability into a split
+    # confound even though their hashes do not leak.
+    pool = list(range(available))
+    heldout, pool = take_stratified(pool, heldout_states)
+    validation, pool = take_stratified(pool, validation_states)
+    train, _ = take_stratified(pool, train_states)
+    return {"train": train, "validation": validation, "heldout": heldout}
 
 
 def author(args: argparse.Namespace) -> dict:

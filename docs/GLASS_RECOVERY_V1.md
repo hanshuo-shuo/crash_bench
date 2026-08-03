@@ -38,9 +38,12 @@ The default authoring design is 100 train, 20 validation, and 40 held-out
 placements over disjoint source LIBERO initial-state hashes. Held-out placements
 are clustered into geometry families (`tall_narrow`, `wide_glass`, and
 `late_approach`) absent from train. The schema rejects source-state or cluster
-leakage across splits. Along-path anchors are clamped by the combined bowl/glass
-radius plus margin and a 10 cm descent-clearance floor, so a late glass never
-intersects the task target or makes the scripted recovery grasp itself unsafe.
+leakage across splits. Source indices are deterministically stratified across the
+full LIBERO state ordering rather than assigned as contiguous split blocks, which
+avoids making reachability an index/split confound. Along-path anchors are clamped
+by the combined bowl/glass radius plus margin and a 10 cm descent-clearance floor,
+so a late glass never intersects the task target or makes the scripted recovery
+grasp itself unsafe.
 
 Each trajectory stores image, instruction (manifest), robot state, frozen hidden
 state, nominal/target/executed action, five risk labels, hazard type, future

@@ -28,7 +28,10 @@ from crashbench.metrics import summarize_recovery_rows
 from crashbench.policies.glass_recovery_policy import GlassRecoveryPolicy
 from crashbench.recovery import DetourComplete
 from scripts.collect_glass_recovery_pairs import _oracle_configs
-from scripts.prepare_glass_recovery_placements import _collision_free_path_fraction
+from scripts.prepare_glass_recovery_placements import (
+    _collision_free_path_fraction,
+    _state_layout,
+)
 
 
 def _glass(name="glass_1", x=0.0, y=0.0):
@@ -288,6 +291,18 @@ def test_late_glass_anchor_is_clamped_before_target_overlap():
     assert required == pytest.approx(0.10)
     assert fraction == pytest.approx(1.0 - required / 0.23)
     assert (1.0 - fraction) * 0.23 == pytest.approx(required)
+
+
+def test_source_state_splits_are_disjoint_and_stratified():
+    layout = _state_layout(50, train_states=30, validation_states=8, heldout_states=12)
+    sets = {split: set(values) for split, values in layout.items()}
+    assert {split: len(values) for split, values in sets.items()} == {
+        "train": 30, "validation": 8, "heldout": 12,
+    }
+    assert not (sets["train"] & sets["validation"])
+    assert not (sets["train"] & sets["heldout"])
+    assert not (sets["validation"] & sets["heldout"])
+    assert min(sets["heldout"]) == 0 and max(sets["heldout"]) >= 40
 
 
 def test_recovery_metrics_do_not_reward_always_stop():
