@@ -33,6 +33,7 @@ from scripts.collect_glass_recovery_pairs import (
     _stable_abort,
 )
 from scripts.prepare_glass_recovery_placements import (
+    _blocked_barrier_offsets,
     _collision_free_path_fraction,
     _state_layout,
 )
@@ -333,6 +334,18 @@ def test_late_glass_anchor_is_clamped_before_target_overlap():
     assert required == pytest.approx(0.10)
     assert fraction == pytest.approx(1.0 - required / 0.23)
     assert (1.0 - fraction) * 0.23 == pytest.approx(required)
+
+
+def test_blocked_barrier_is_dense_nonoverlapping_and_not_slender():
+    offsets = _blocked_barrier_offsets(0.28, 5, 0.067, 0.20)
+    spacing = float(offsets[1] - offsets[0])
+    assert len(offsets) == 5
+    assert spacing - 2 * 0.067 == pytest.approx(0.006)
+    assert 0.20 / 0.067 < 3.25
+    with pytest.raises(ValueError, match="too slender"):
+        _blocked_barrier_offsets(0.28, 9, 0.032, 0.20)
+    with pytest.raises(ValueError, match="overlap"):
+        _blocked_barrier_offsets(0.28, 5, 0.071, 0.20)
 
 
 def test_source_state_splits_are_disjoint_and_stratified():

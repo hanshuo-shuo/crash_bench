@@ -93,6 +93,37 @@ def _collision_free_path_fraction(
     return min(float(np.clip(requested_fraction, 0.05, 0.95)), max_fraction), required_clearance
 
 
+def _blocked_barrier_offsets(
+    half_width: float,
+    count: int,
+    radius: float,
+    half_height: float,
+    *,
+    max_gap: float = 0.02,
+    max_slenderness: float = 3.25,
+) -> np.ndarray:
+    """Author a dense but non-overlapping, passively stable glass barrier."""
+
+    if count < 3 or count % 2 == 0:
+        raise ValueError("blocked scene needs an odd number of at least three glasses")
+    if half_width <= 0 or radius <= 0 or half_height <= 0:
+        raise ValueError("blocked barrier dimensions must be positive")
+    offsets = np.linspace(-half_width, half_width, count)
+    spacing = float(offsets[1] - offsets[0])
+    surface_gap = spacing - 2.0 * radius
+    if surface_gap <= 0:
+        raise ValueError("blocked lateral glasses overlap")
+    if surface_gap > max_gap:
+        raise ValueError(
+            f"blocked lateral gap {surface_gap:.3f} m exceeds {max_gap:.3f} m"
+        )
+    if half_height / radius > max_slenderness:
+        raise ValueError(
+            "blocked lateral glasses are too slender to serve as passive stable props"
+        )
+    return offsets
+
+
 def _state_layout(
     available: int,
     train_states: int,
@@ -200,8 +231,9 @@ def author(args: argparse.Namespace) -> dict:
                 # blocked record if every configured recovery attempt fails while
                 # RetreatHold remains collision-free.
                 blocked = []
-                barrier_offsets = np.linspace(
-                    -args.blocked_half_width, args.blocked_half_width, args.blocked_glasses
+                barrier_offsets = _blocked_barrier_offsets(
+                    args.blocked_half_width, args.blocked_glasses,
+                    args.blocked_radius, args.blocked_half_height,
                 )
                 for barrier_index, barrier_offset in enumerate(barrier_offsets):
                     # Keep the central on-path glass identical in height to the
@@ -245,7 +277,12 @@ def author(args: argparse.Namespace) -> dict:
                         "required_target_clearance_m": round(required_target_clearance, 6),
                         "off_path_offset_m": args.control_offset,
                         "blocked_corridor_half_width_m": args.blocked_half_width,
-                        "blocked_glass_half_height_m": args.blocked_half_height,
+                        "blocked_lateral_half_height_m": args.blocked_half_height,
+                        "blocked_lateral_radius_m": args.blocked_radius,
+                        "blocked_lateral_surface_gap_m": round(float(
+                            barrier_offsets[1] - barrier_offsets[0]
+                            - 2.0 * args.blocked_radius
+                        ), 6),
                         "blocked_controller_class": (
                             "GlassDetourComplete sides={-1,+1}, declared lane margins and transit heights"
                         ),
@@ -294,13 +331,18 @@ def main() -> None:
     parser.add_argument("--target-clearance-margin", type=float, default=0.005)
     parser.add_argument("--min-target-clearance", type=float, default=0.10)
     parser.add_argument("--blocked-half-width", type=float, default=0.28)
-    parser.add_argument("--blocked-glasses", type=int, default=9)
-    parser.add_argument("--blocked-radius", type=float, default=0.032)
+    parser.add_argument("--blocked-glasses", type=int, default=5)
+    parser.add_argument("--blocked-radius", type=float, default=0.067)
     parser.add_argument("--blocked-half-height", type=float, default=0.20)
     parser.add_argument("--overwrite", action="store_true")
     args = parser.parse_args()
-    if args.blocked_glasses < 3 or args.blocked_glasses % 2 == 0:
-        raise SystemExit("blocked scene needs an odd number of at least three glasses")
+    try:
+        _blocked_barrier_offsets(
+            args.blocked_half_width, args.blocked_glasses,
+            args.blocked_radius, args.blocked_half_height,
+        )
+    except ValueError as exc:
+        raise SystemExit(str(exc)) from exc
     if (args.target_radius <= 0 or args.target_clearance_margin < 0
             or args.min_target_clearance <= 0):
         raise SystemExit(

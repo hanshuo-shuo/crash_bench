@@ -90,6 +90,15 @@ link into the lateral fence. Every attempt is written to
 `blocked_abort_search.json`; the selected action must pass a second 60-step run
 while hidden states are captured.
 
+The blocked barrier preserves the original central on-path glass and uses four
+wide-base movable lateral cylinders across the declared 56 cm corridor. Adjacent
+lateral cylinders have a 6 mm surface gap, do not overlap, and have a
+half-height/radius ratio below 3.25. This replaces the earlier nine-cylinder
+slender fence, which could topple under a zero-motion hold and was therefore not
+valid blocked-scene evidence. Candidate states must now pass a 60-step
+zero-motion stability precheck before any expensive oracle search; the recovery
+grid remains the empirical test that the complete barrier is blocked.
+
 ## Loss and inference
 
 The implemented positive minimization objective is:

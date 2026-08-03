@@ -664,6 +664,14 @@ def collect_pair(
             [TARGET, PLATE],
             against=[glass["name"] for glass in placement.blocked_glasses],
         ))
+        candidate_hold = _run_controller(
+            env, policy, blocked_obs, placement.instruction,
+            placement.blocked_glasses, RetreatHold(back=0.0, up=0.0),
+            args.abort_steps, capture_rows=False,
+        )
+        candidate_hold_stable = _stable_abort(
+            candidate_hold, args.stable_force_threshold
+        )
         glass_clean = candidate_force < 1.0 and candidate_tilt < 5.0
         task_clean = (
             candidate_target_displacement < args.target_state_threshold
@@ -671,7 +679,7 @@ def collect_pair(
             and candidate_task_glass_force < 1.0
             and not candidate_target_grasped
         )
-        clean = glass_clean and task_clean
+        clean = glass_clean and task_clean and candidate_hold_stable
         selection_attempts.append({
             "horizon_steps": candidate_horizon,
             "source_scan_index": candidate_index,
@@ -685,6 +693,13 @@ def collect_pair(
             ),
             "blocked_task_glass_force_n": round(candidate_task_glass_force, 5),
             "target_grasped": candidate_target_grasped,
+            "hold_stability": {
+                "stable": candidate_hold_stable,
+                "crashed": candidate_hold["crashed"],
+                "succeeded": candidate_hold["succeeded"],
+                "steps": candidate_hold["steps"],
+                "peak_glass_force_n": round(float(candidate_hold["peak_force"]), 5),
+            },
             "glass_clean": glass_clean,
             "task_clean": task_clean,
             "clean": clean,
