@@ -375,8 +375,19 @@ def _run_controller(
 def _oracle_configs(
     bowl_z: float,
     orientation_targets: list[list[float] | None] | None = None,
+    control_grasp_offset: list[float] | None = None,
 ) -> list[dict]:
     targets = [None] if orientation_targets is None else orientation_targets
+    if control_grasp_offset is not None and len(control_grasp_offset) != 3:
+        raise ValueError("control_grasp_offset must contain xyz")
+    grasp_xy_offset = (
+        [0.0, 0.0] if control_grasp_offset is None
+        else [float(value) for value in control_grasp_offset[:2]]
+    )
+    descend_offsets = (
+        (0.012, 0.04) if control_grasp_offset is None
+        else (float(control_grasp_offset[2]), 0.04)
+    )
     return [
         {
             "side": side,
@@ -385,9 +396,10 @@ def _oracle_configs(
             "descend_off": descend_off,
             "orientation_target": orientation_target,
             "path_aligned": True,
+            "grasp_xy_offset": grasp_xy_offset,
         }
         for orientation_target in targets
-        for descend_off in (0.012, 0.04)
+        for descend_off in descend_offsets
         for lift in (0.30, 0.38)
         for lane in (0.12, 0.18)
         for side in (-1.0, 1.0)
@@ -405,11 +417,13 @@ def _search_oracle(
     collect_success: bool,
     counterfactual_peak_force: float,
     orientation_targets: list[list[float] | None] | None = None,
+    control_grasp_offset: list[float] | None = None,
 ) -> tuple[dict | None, list[dict]]:
     attempts: list[dict] = []
     successful_config: dict | None = None
     for config in _oracle_configs(
-        float(placement.metadata["bowl_xyz"][2]), orientation_targets
+        float(placement.metadata["bowl_xyz"][2]), orientation_targets,
+        control_grasp_offset,
     ):
         obs = reset()
         bowl = np.asarray(obs[f"{TARGET}_pos"], dtype=float)
@@ -421,6 +435,7 @@ def _search_oracle(
             leg_cap=140, target_name=TARGET,
             orientation_target=config["orientation_target"],
             path_aligned=config["path_aligned"],
+            grasp_xy_offset=config["grasp_xy_offset"],
         )
         result = _run_controller(
             env, policy, obs, placement.instruction, glasses, controller, max_steps,
@@ -457,6 +472,7 @@ def _search_oracle(
         descend_off=successful_config["descend_off"], leg_cap=140, target_name=TARGET,
         orientation_target=successful_config["orientation_target"],
         path_aligned=successful_config["path_aligned"],
+        grasp_xy_offset=successful_config["grasp_xy_offset"],
     )
     collected = _run_controller(
         env, policy, obs, placement.instruction, glasses, controller, max_steps,
@@ -726,16 +742,31 @@ def collect_pair(
     offpath_arrays = _finalize_arrays(offpath["rows"], kind="off_path_control")
     offpath_path = pair_root / "off_path_control.npz"
     _save_arrays(offpath_path, offpath_arrays)
-    closest_control_row = min(
-        offpath["rows"],
-        key=lambda row: float(np.linalg.norm(
-            np.asarray(row["robot_state"], dtype=float)[:3] - baseline_target
+    closest_control_index, closest_control_row = min(
+        enumerate(offpath["rows"]),
+        key=lambda item: float(np.linalg.norm(
+            np.asarray(item[1]["robot_state"], dtype=float)[:3] - baseline_target
         )),
     )
     control_reach_orientation = np.asarray(
         closest_control_row["robot_state"], dtype=float
     )[3:6].round(7).tolist()
+    control_grasp_offset = (
+        np.asarray(closest_control_row["robot_state"], dtype=float)[:3]
+        - baseline_target
+    ).round(7).tolist()
     oracle_orientation_targets = [control_reach_orientation, None]
+    (pair_root / "offpath_probe.json").write_text(json.dumps({
+        "placement_id": pair_id,
+        "succeeded": bool(offpath["succeeded"]),
+        "steps": int(offpath["steps"]),
+        "closest_control_row": int(closest_control_index),
+        "target_baseline_xyz": baseline_target.round(7).tolist(),
+        "control_reach_pose": np.asarray(
+            closest_control_row["robot_state"], dtype=float
+        )[:6].round(7).tolist(),
+        "control_grasp_offset_xyz": control_grasp_offset,
+    }, indent=2) + "\n")
 
     # Branch 2: search and recapture a safe task-completing oracle from the
     # byte-identical expanded state.
@@ -747,6 +778,7 @@ def collect_pair(
         args.oracle_steps, collect_success=True,
         counterfactual_peak_force=float(nominal["peak_force"]),
         orientation_targets=oracle_orientation_targets,
+        control_grasp_offset=control_grasp_offset,
     )
     (pair_root / "oracle_search.json").write_text(json.dumps({
         "placement_id": pair_id, "attempts": oracle_attempts,
@@ -780,6 +812,7 @@ def collect_pair(
         args.oracle_steps, collect_success=False,
         counterfactual_peak_force=float(blocked_nominal["peak_force"]),
         orientation_targets=oracle_orientation_targets,
+        control_grasp_offset=control_grasp_offset,
     )
     (pair_root / "blocked_oracle_search.json").write_text(json.dumps({
         "placement_id": pair_id, "attempts": blocked_attempts,

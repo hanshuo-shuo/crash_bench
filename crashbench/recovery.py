@@ -115,7 +115,8 @@ class DetourComplete:
                  descend_off: float = 0.04, place_off: float = 0.015,
                  target_name: str | None = None,
                  orientation_target=None, orientation_k: float = 2.0,
-                 path_aligned: bool = False, pregrasp_offset: float = 0.02):
+                 path_aligned: bool = False, pregrasp_offset: float = 0.02,
+                 grasp_xy_offset=None):
         self.wall, self.k, self.tol, self.leg_cap = wall, k, tol, leg_cap
         self.side, self.lane_margin = side, lane_margin
         self.bowl = np.asarray(target_pos, dtype=np.float32)
@@ -133,6 +134,12 @@ class DetourComplete:
         self.orientation_k = float(orientation_k)
         self.path_aligned = bool(path_aligned)
         self.pregrasp_offset = float(pregrasp_offset)
+        self.grasp_xy_offset = (
+            np.zeros(2, dtype=np.float32) if grasp_xy_offset is None
+            else np.asarray(grasp_xy_offset, dtype=np.float32)
+        )
+        if self.grasp_xy_offset.shape != (2,):
+            raise ValueError("grasp_xy_offset must be a 2-D xy offset")
         self.legs: list | None = None
         self.i = 0
         self._in_leg = 0
@@ -143,6 +150,7 @@ class DetourComplete:
         wx, wy = self.wall["pos"][0], self.wall["pos"][1]
         whx, why = self.wall["size"][0], self.wall["size"][1]
         b, p, ez = self.bowl, self.plate, self.transit_z
+        grasp_xy = np.asarray(b[:2], dtype=np.float32) + self.grasp_xy_offset
         dy = wy + self.side * (why + self.lane_margin)          # detour lane past the wall y-edge
         sx = max(float(b[0]), wx + whx) + 0.13                  # staging x: past wall/bowl (+x, open)
         cx = float(eef[0])
@@ -161,27 +169,28 @@ class DetourComplete:
             first_xy = start_xy + lateral * float(np.dot(
                 lane_reference - start_xy, lateral
             ))
-            pregrasp_xy = np.asarray(b[:2], dtype=np.float32) - self.pregrasp_offset * along
+            pregrasp_xy = grasp_xy - self.pregrasp_offset * along
             pregrasp_lane_xy = pregrasp_xy + self.side * lane_offset * lateral
             approach_legs = [
                 ("move", [float(first_xy[0]), float(first_xy[1]), ez], O),
                 ("move", [float(pregrasp_lane_xy[0]), float(pregrasp_lane_xy[1]), ez], O),
                 ("move", [float(pregrasp_xy[0]), float(pregrasp_xy[1]), ez], O),
-                ("move", [float(b[0]), float(b[1]), ez], O),
+                ("move", [float(grasp_xy[0]), float(grasp_xy[1]), ez], O),
             ]
         else:
             approach_legs = [
                 ("move", [cx, dy, ez], O),                    # 1. sidestep into detour lane
                 ("move", [sx, dy, ez], O),                    # 2. advance past wall/bowl (+x)
                 ("move", [sx, float(b[1]), ez], O),           # 3. come to bowl y (open, +x)
-                ("move", [float(b[0]), float(b[1]), ez], O),  # 4. approach bowl FROM +x
+                ("move", [float(grasp_xy[0]), float(grasp_xy[1]), ez], O),  # 4. approach grasp pose
             ]
         # (kind, ...): move -> (target xyz, grip); hold -> (grip, n_steps). Mirrors run_detour legs.
         self.legs = [
             *approach_legs,
-            ("move", [float(b[0]), float(b[1]), float(b[2]) + self.descend_off], O),  # 5. descend
+            ("move", [float(grasp_xy[0]), float(grasp_xy[1]),
+                      float(b[2]) + self.descend_off], O),       # 5. descend
             ("hold", C, self.grasp_steps),                      # 6. grasp
-            ("move", [float(b[0]), float(b[1]), ez], C),        # 7. lift
+            ("move", [float(grasp_xy[0]), float(grasp_xy[1]), ez], C),  # 7. lift
             ("move", [float(p[0]), float(p[1]), ez], C),        # 8. carry above plate
             ("move", [float(p[0]), float(p[1]), float(p[2]) + self.place_off], C),    # 9. set on plate
             ("hold", O, self.release_steps),                    # 10. release + settle

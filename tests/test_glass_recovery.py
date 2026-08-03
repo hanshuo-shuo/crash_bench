@@ -235,6 +235,17 @@ def test_oracle_grid_searches_both_grasp_heights():
     assert {config["descend_off"] for config in configs} == {0.012, 0.04}
 
 
+def test_oracle_grid_can_reuse_clean_control_grasp_pose():
+    configs = _oracle_configs(
+        0.9,
+        orientation_targets=[[3.1, 0.0, 0.1], None],
+        control_grasp_offset=[-0.002, -0.05, 0.021],
+    )
+    assert len(configs) == 32
+    assert {config["descend_off"] for config in configs} == {0.021, 0.04}
+    assert all(config["grasp_xy_offset"] == [-0.002, -0.05] for config in configs)
+
+
 def test_detour_can_track_an_absolute_wrist_orientation():
     controller = DetourComplete(
         {"pos": [0.0, 0.0, 0.96], "size": [0.03, 0.03, 0.06]},
@@ -277,6 +288,19 @@ def test_glass_detour_approaches_along_glass_target_path():
     # the fourth completes only that short approach, rather than forcing +x.
     assert np.allclose(controller.legs[2][1], [0.08, -0.0, 1.2])
     assert np.allclose(controller.legs[3][1], [0.1, 0.0, 1.2])
+
+
+def test_glass_detour_uses_matched_control_grasp_offset():
+    controller = DetourComplete(
+        {"pos": [0.0, 0.0, 0.96], "size": [0.03, 0.03, 0.06]},
+        target_pos=[0.1, 0.0, 0.91], plate_pos=[0.5, 0.6, 0.90],
+        transit_z=1.2, descend_off=0.021, path_aligned=True,
+        grasp_xy_offset=[-0.002, -0.05],
+    )
+    controller.engage({"robot0_eef_pos": np.asarray([-0.1, 0.0, 1.2])})
+    assert np.allclose(controller.legs[3][1], [0.098, -0.05, 1.2])
+    assert np.allclose(controller.legs[4][1], [0.098, -0.05, 0.931])
+    assert np.allclose(controller.legs[6][1], [0.098, -0.05, 1.2])
 
 
 def test_late_glass_anchor_is_clamped_before_target_overlap():
