@@ -700,22 +700,37 @@ def collect_pair(
         "rows": nominal_rows,
         "collision_step": expected_collision_step,
     }
-    closest_nominal_row = min(
-        nominal_rows,
-        key=lambda row: float(np.linalg.norm(
-            np.asarray(row["robot_state"], dtype=float)[:3] - baseline_target
-        )),
-    )
-    nominal_reach_orientation = np.asarray(
-        closest_nominal_row["robot_state"], dtype=float
-    )[3:6].round(7).tolist()
-    oracle_orientation_targets = [None, nominal_reach_orientation]
     nominal_arrays = _finalize_arrays(
         nominal["rows"], kind="nominal_catastrophe",
         collision_step=int(nominal["collision_step"]),
     )
     nominal_path = pair_root / "nominal_catastrophe.npz"
     _save_arrays(nominal_path, nominal_arrays)
+
+    # Branch 3 is collected before the oracle search because its successful
+    # clean approach supplies a task- and state-matched reachable wrist pose.
+    obs = env.reset_to(matched_robot, movable_objects=[placement.off_path_glass])
+    offpath_start = env.flat_state()
+    offpath_start_hash = array_sha256(offpath_start)
+    np.save(pair_root / "offpath_start_state.npy", offpath_start)
+    offpath = _run_offpath(env, policy, obs, placement, args.control_steps)
+    if offpath["crashed"]:
+        raise RuntimeError(f"{pair_id}: matched off-path control crashed")
+    if not offpath["rows"]:
+        raise RuntimeError(f"{pair_id}: matched off-path control has no frames")
+    offpath_arrays = _finalize_arrays(offpath["rows"], kind="off_path_control")
+    offpath_path = pair_root / "off_path_control.npz"
+    _save_arrays(offpath_path, offpath_arrays)
+    closest_control_row = min(
+        offpath["rows"],
+        key=lambda row: float(np.linalg.norm(
+            np.asarray(row["robot_state"], dtype=float)[:3] - baseline_target
+        )),
+    )
+    control_reach_orientation = np.asarray(
+        closest_control_row["robot_state"], dtype=float
+    )[3:6].round(7).tolist()
+    oracle_orientation_targets = [None, control_reach_orientation]
 
     # Branch 2: search and recapture a safe task-completing oracle from the
     # byte-identical expanded state.
@@ -739,18 +754,6 @@ def collect_pair(
     )
     oracle_path = pair_root / "oracle_recovery.npz"
     _save_arrays(oracle_path, oracle_arrays)
-
-    # Branch 3: same robot/task state, same glass appearance, moved off path.
-    obs = env.reset_to(matched_robot, movable_objects=[placement.off_path_glass])
-    offpath_start = env.flat_state()
-    offpath_start_hash = array_sha256(offpath_start)
-    np.save(pair_root / "offpath_start_state.npy", offpath_start)
-    offpath = _run_offpath(env, policy, obs, placement, args.control_steps)
-    if offpath["crashed"]:
-        raise RuntimeError(f"{pair_id}: matched off-path control crashed")
-    offpath_arrays = _finalize_arrays(offpath["rows"], kind="off_path_control")
-    offpath_path = pair_root / "off_path_control.npz"
-    _save_arrays(offpath_path, offpath_arrays)
 
     # Branch 4 precondition A: the blocked scene must cause a counterfactual
     # nominal catastrophe from this robot/task state.
