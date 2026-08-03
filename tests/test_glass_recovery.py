@@ -28,6 +28,7 @@ from crashbench.metrics import summarize_recovery_rows
 from crashbench.policies.glass_recovery_policy import GlassRecoveryPolicy
 from crashbench.recovery import DetourComplete
 from scripts.collect_glass_recovery_pairs import _oracle_configs
+from scripts.prepare_glass_recovery_placements import _collision_free_path_fraction
 
 
 def _glass(name="glass_1", x=0.0, y=0.0):
@@ -229,6 +230,19 @@ def test_oracle_grid_searches_both_grasp_heights():
     configs = _oracle_configs(0.9)
     assert len(configs) == 16
     assert {config["descend_off"] for config in configs} == {0.012, 0.04}
+
+
+def test_late_glass_anchor_is_clamped_before_target_overlap():
+    fraction, required = _collision_free_path_fraction(
+        requested_fraction=0.83,
+        path_length=0.23,
+        glass_radius=0.03,
+        target_radius=0.04,
+        clearance_margin=0.005,
+    )
+    assert required == pytest.approx(0.075)
+    assert fraction == pytest.approx(1.0 - required / 0.23)
+    assert (1.0 - fraction) * 0.23 >= required
 
 
 def test_recovery_metrics_do_not_reward_always_stop():

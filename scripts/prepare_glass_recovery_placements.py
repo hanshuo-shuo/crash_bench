@@ -70,6 +70,25 @@ def _quotas(total: int, state_indices: list[int]) -> list[int]:
     return [base + int(index < remainder) for index in range(len(state_indices))]
 
 
+def _collision_free_path_fraction(
+    requested_fraction: float,
+    path_length: float,
+    glass_radius: float,
+    target_radius: float,
+    clearance_margin: float,
+) -> tuple[float, float]:
+    """Clamp an on-path anchor before its glass can overlap the task target."""
+
+    required_clearance = float(glass_radius + target_radius + clearance_margin)
+    max_fraction = 1.0 - required_clearance / float(path_length)
+    if max_fraction <= 0.05:
+        raise ValueError(
+            f"path {path_length:.3f} m is too short for {required_clearance:.3f} m "
+            "glass-target clearance"
+        )
+    return min(float(np.clip(requested_fraction, 0.05, 0.95)), max_fraction), required_clearance
+
+
 def _state_layout(
     available: int,
     train_states: int,
@@ -137,11 +156,23 @@ def author(args: argparse.Namespace) -> dict:
                 family, size, density, fractions = geometry_families[
                     (state_slot + local_index) % len(geometry_families)
                 ]
-                fraction = float(fractions[(state_slot + local_index) % len(fractions)])
+                requested_fraction = float(
+                    fractions[(state_slot + local_index) % len(fractions)]
+                )
                 # Small deterministic along-path variation increases train coverage;
                 # split separation is still guaranteed by the source-state hash.
                 along_jitter = ((local_index % 3) - 1) * args.along_jitter
-                anchor = home + np.clip(fraction + along_jitter, 0.05, 0.95) * (bowl[:2] - home)
+                fraction, required_target_clearance = _collision_free_path_fraction(
+                    requested_fraction + along_jitter,
+                    norm,
+                    float(size[0]),
+                    args.target_radius,
+                    args.target_clearance_margin,
+                )
+                anchor = home + fraction * (bowl[:2] - home)
+                actual_target_clearance = float(np.linalg.norm(anchor - bowl[:2]))
+                if actual_target_clearance + 1e-8 < required_target_clearance:
+                    raise RuntimeError("glass-target clearance clamp failed")
                 on_path = _glass("glass_1", anchor, table_top, size, density)
                 side = -1.0 if (source_index + local_index) % 2 else 1.0
                 off_xy = anchor + side * args.control_offset * perpendicular
@@ -193,6 +224,9 @@ def author(args: argparse.Namespace) -> dict:
                         "home_xy": home.round(6).tolist(),
                         "bowl_xyz": bowl.round(6).tolist(),
                         "path_direction_xy": direction.round(6).tolist(),
+                        "requested_nominal_fraction": requested_fraction,
+                        "actual_target_clearance_m": round(actual_target_clearance, 6),
+                        "required_target_clearance_m": round(required_target_clearance, 6),
                         "off_path_offset_m": args.control_offset,
                         "blocked_corridor_half_width_m": args.blocked_half_width,
                         "blocked_glass_half_height_m": args.blocked_half_height,
@@ -240,6 +274,8 @@ def main() -> None:
     parser.add_argument("--bowl-rest-offset", type=float, default=0.005)
     parser.add_argument("--control-offset", type=float, default=0.20)
     parser.add_argument("--along-jitter", type=float, default=0.012)
+    parser.add_argument("--target-radius", type=float, default=0.04)
+    parser.add_argument("--target-clearance-margin", type=float, default=0.005)
     parser.add_argument("--blocked-half-width", type=float, default=0.28)
     parser.add_argument("--blocked-glasses", type=int, default=9)
     parser.add_argument("--blocked-radius", type=float, default=0.032)
@@ -248,6 +284,8 @@ def main() -> None:
     args = parser.parse_args()
     if args.blocked_glasses < 3 or args.blocked_glasses % 2 == 0:
         raise SystemExit("blocked scene needs an odd number of at least three glasses")
+    if args.target_radius <= 0 or args.target_clearance_margin < 0:
+        raise SystemExit("target radius must be positive and clearance margin non-negative")
     author(args)
 
 

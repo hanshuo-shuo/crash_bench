@@ -557,7 +557,7 @@ def collect_pair(
         candidate_robot = env._strip_movable_state(
             candidate_onpath, onpath_nq, onpath_nv, 1
         )
-        env.reset_to(
+        blocked_obs = env.reset_to(
             candidate_robot, movable_objects=placement.blocked_glasses
         )
         candidate_blocked_start = env.flat_state()
@@ -566,9 +566,21 @@ def collect_pair(
             float(env.sim_view.object_tilt_deg(glass["name"]))
             for glass in placement.blocked_glasses
         )
+        candidate_blocked_target = np.asarray(
+            blocked_obs[f"{TARGET}_pos"], dtype=float
+        )
+        candidate_blocked_target_displacement = float(np.linalg.norm(
+            candidate_blocked_target - baseline_target
+        ))
+        candidate_task_glass_force = float(env.sim_view.max_contact_force(
+            [TARGET, PLATE],
+            against=[glass["name"] for glass in placement.blocked_glasses],
+        ))
         glass_clean = candidate_force < 1.0 and candidate_tilt < 5.0
         task_clean = (
             candidate_target_displacement < args.target_state_threshold
+            and candidate_blocked_target_displacement < args.target_state_threshold
+            and candidate_task_glass_force < 1.0
             and not candidate_target_grasped
         )
         clean = glass_clean and task_clean
@@ -580,6 +592,10 @@ def collect_pair(
             "target_xyz": candidate_target.round(5).tolist(),
             "target_baseline_xyz": baseline_target.round(5).tolist(),
             "target_baseline_displacement_m": round(candidate_target_displacement, 5),
+            "blocked_target_baseline_displacement_m": round(
+                candidate_blocked_target_displacement, 5
+            ),
+            "blocked_task_glass_force_n": round(candidate_task_glass_force, 5),
             "target_grasped": candidate_target_grasped,
             "glass_clean": glass_clean,
             "task_clean": task_clean,
