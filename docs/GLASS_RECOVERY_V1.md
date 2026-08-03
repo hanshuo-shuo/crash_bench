@@ -59,6 +59,11 @@ keeps the scripted oracle near its reachable neutral joint posture; the saved
 nominal suffix still supplies all imminent-risk frames. It never relaxes the
 thresholds, and the selected horizon plus every rejected candidate are recorded.
 
+The declared oracle grid tests both pure-position OSC and an absolute wrist
+axis-angle copied from the closest-to-target frame of the original Base OpenVLA
+rollout. This keeps recovery in the existing OSC action space while avoiding an
+unreachable fixed-wrist IK posture; every orientation/config attempt is logged.
+
 ## Loss and inference
 
 The implemented positive minimization objective is:

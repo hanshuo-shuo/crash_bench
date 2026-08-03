@@ -232,6 +232,21 @@ def test_oracle_grid_searches_both_grasp_heights():
     assert {config["descend_off"] for config in configs} == {0.012, 0.04}
 
 
+def test_detour_can_track_an_absolute_wrist_orientation():
+    controller = DetourComplete(
+        {"pos": [0.0, 0.0, 0.96], "size": [0.03, 0.03, 0.06]},
+        target_pos=[0.1, 0.2, 0.91], plate_pos=[0.5, 0.6, 0.90],
+        orientation_target=[0.0, 0.0, 0.2],
+    )
+    obs = {
+        "robot0_eef_pos": np.asarray([0.0, 0.0, 1.2]),
+        "robot0_eef_quat": np.asarray([0.0, 0.0, 0.0, 1.0]),
+    }
+    controller.engage(obs)
+    action = controller.step(obs)
+    assert action[5] > 0
+
+
 def test_late_glass_anchor_is_clamped_before_target_overlap():
     fraction, required = _collision_free_path_fraction(
         requested_fraction=0.83,

@@ -372,14 +372,20 @@ def _run_controller(
     return result(False, False, max_steps)
 
 
-def _oracle_configs(bowl_z: float) -> list[dict]:
+def _oracle_configs(
+    bowl_z: float,
+    orientation_targets: list[list[float] | None] | None = None,
+) -> list[dict]:
+    targets = [None] if orientation_targets is None else orientation_targets
     return [
         {
             "side": side,
             "lane_margin": lane,
             "transit_z": bowl_z + lift,
             "descend_off": descend_off,
+            "orientation_target": orientation_target,
         }
+        for orientation_target in targets
         for descend_off in (0.012, 0.04)
         for lift in (0.30, 0.38)
         for lane in (0.12, 0.18)
@@ -397,10 +403,13 @@ def _search_oracle(
     *,
     collect_success: bool,
     counterfactual_peak_force: float,
+    orientation_targets: list[list[float] | None] | None = None,
 ) -> tuple[dict | None, list[dict]]:
     attempts: list[dict] = []
     successful_config: dict | None = None
-    for config in _oracle_configs(float(placement.metadata["bowl_xyz"][2])):
+    for config in _oracle_configs(
+        float(placement.metadata["bowl_xyz"][2]), orientation_targets
+    ):
         obs = reset()
         bowl = np.asarray(obs[f"{TARGET}_pos"], dtype=float)
         plate = np.asarray(obs[f"{PLATE}_pos"], dtype=float)
@@ -409,6 +418,7 @@ def _search_oracle(
             side=config["side"], lane_margin=config["lane_margin"],
             transit_z=config["transit_z"], descend_off=config["descend_off"],
             leg_cap=70, target_name=TARGET,
+            orientation_target=config["orientation_target"],
         )
         result = _run_controller(
             env, policy, obs, placement.instruction, glasses, controller, max_steps,
@@ -443,6 +453,7 @@ def _search_oracle(
         side=successful_config["side"], lane_margin=successful_config["lane_margin"],
         transit_z=successful_config["transit_z"],
         descend_off=successful_config["descend_off"], leg_cap=70, target_name=TARGET,
+        orientation_target=successful_config["orientation_target"],
     )
     collected = _run_controller(
         env, policy, obs, placement.instruction, glasses, controller, max_steps,
@@ -689,6 +700,16 @@ def collect_pair(
         "rows": nominal_rows,
         "collision_step": expected_collision_step,
     }
+    closest_nominal_row = min(
+        nominal_rows,
+        key=lambda row: float(np.linalg.norm(
+            np.asarray(row["robot_state"], dtype=float)[:3] - baseline_target
+        )),
+    )
+    nominal_reach_orientation = np.asarray(
+        closest_nominal_row["robot_state"], dtype=float
+    )[3:6].round(7).tolist()
+    oracle_orientation_targets = [None, nominal_reach_orientation]
     nominal_arrays = _finalize_arrays(
         nominal["rows"], kind="nominal_catastrophe",
         collision_step=int(nominal["collision_step"]),
@@ -705,6 +726,7 @@ def collect_pair(
         reset_onpath, env, policy, placement, [placement.on_path_glass],
         args.oracle_steps, collect_success=True,
         counterfactual_peak_force=float(nominal["peak_force"]),
+        orientation_targets=oracle_orientation_targets,
     )
     (pair_root / "oracle_search.json").write_text(json.dumps({
         "placement_id": pair_id, "attempts": oracle_attempts,
@@ -749,6 +771,7 @@ def collect_pair(
         reset_blocked, env, policy, placement, placement.blocked_glasses,
         args.oracle_steps, collect_success=False,
         counterfactual_peak_force=float(blocked_nominal["peak_force"]),
+        orientation_targets=oracle_orientation_targets,
     )
     (pair_root / "blocked_oracle_search.json").write_text(json.dumps({
         "placement_id": pair_id, "attempts": blocked_attempts,

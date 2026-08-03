@@ -28,6 +28,19 @@ def _eef_from_obs(obs: dict) -> np.ndarray:
     return np.asarray(obs["state"][:3], dtype=np.float32)
 
 
+def _axisangle_from_obs(obs: dict) -> np.ndarray:
+    if "robot0_eef_quat" not in obs:
+        return np.asarray(obs["state"][3:6], dtype=np.float32)
+    quat = np.asarray(obs["robot0_eef_quat"], dtype=np.float64).copy()
+    quat[3] = np.clip(quat[3], -1.0, 1.0)
+    denominator = np.sqrt(max(0.0, 1.0 - quat[3] * quat[3]))
+    if denominator < 1e-8:
+        return np.zeros(3, dtype=np.float32)
+    return np.asarray(
+        quat[:3] * (2.0 * np.arccos(quat[3]) / denominator), dtype=np.float32
+    )
+
+
 class WitnessReplay:
     """Replay a fixed witness action sequence open-loop from its recorded start state.
 
@@ -70,7 +83,8 @@ class DetourComplete:
                  lane_margin: float = 0.22, transit_z: float | None = None, k: float = 12.0,
                  tol: float = 0.02, leg_cap: int = 80, grasp_steps: int = 18, release_steps: int = 30,
                  descend_off: float = 0.04, place_off: float = 0.015,
-                 target_name: str | None = None):
+                 target_name: str | None = None,
+                 orientation_target=None, orientation_k: float = 2.0):
         self.wall, self.k, self.tol, self.leg_cap = wall, k, tol, leg_cap
         self.side, self.lane_margin = side, lane_margin
         self.bowl = np.asarray(target_pos, dtype=np.float32)
@@ -79,6 +93,13 @@ class DetourComplete:
         self.grasp_steps, self.release_steps = grasp_steps, release_steps
         self.descend_off, self.place_off = descend_off, place_off
         self.target_name = target_name
+        self.orientation_target = (
+            None if orientation_target is None
+            else np.asarray(orientation_target, dtype=np.float32)
+        )
+        if self.orientation_target is not None and self.orientation_target.shape != (3,):
+            raise ValueError("orientation_target must be a 3-D absolute axis-angle")
+        self.orientation_k = float(orientation_k)
         self.legs: list | None = None
         self.i = 0
         self._in_leg = 0
@@ -110,18 +131,25 @@ class DetourComplete:
         self._in_leg = 0
         self._carry_adjusted = False
 
-    def _act(self, dxyz, grip):
+    def _act(self, dxyz, grip, obs):
+        drot = np.zeros(3, dtype=np.float32)
+        if self.orientation_target is not None:
+            drot = np.clip(
+                self.orientation_k * (self.orientation_target - _axisangle_from_obs(obs)),
+                -1.0, 1.0,
+            )
         return np.array([float(np.clip(self.k * dxyz[0], -1, 1)),
                          float(np.clip(self.k * dxyz[1], -1, 1)),
                          float(np.clip(self.k * dxyz[2], -1, 1)),
-                         0.0, 0.0, 0.0, float(grip)], dtype=np.float32)
+                         float(drot[0]), float(drot[1]), float(drot[2]),
+                         float(grip)], dtype=np.float32)
 
     def step(self, obs: dict) -> np.ndarray:
         if self.legs is None:
             self.engage(obs)
         eef = _eef_from_obs(obs)
         if self.i >= len(self.legs):                            # done: hold in place, gripper open
-            return self._act([0.0, 0.0, 0.0], GRIP_OPEN)
+            return self._act([0.0, 0.0, 0.0], GRIP_OPEN, obs)
         # Once the bowl is grasped and lifted, compensate for the measured
         # bowl--EEF xy offset before carrying/lowering.  Aiming the EEF itself at
         # plate center is not enough: the held bowl hangs off-center and misses
@@ -143,12 +171,12 @@ class DetourComplete:
             reached = float(np.linalg.norm(d)) < self.tol
             if reached or self._in_leg >= self.leg_cap:         # advance on reach or safety cap
                 self.i += 1; self._in_leg = 0
-            return self._act(d, grip)
+            return self._act(d, grip, obs)
         else:                                                   # hold: command grip for n steps
             grip, n = leg[1], leg[2]
             if self._in_leg >= n:
                 self.i += 1; self._in_leg = 0
-            return self._act([0.0, 0.0, 0.0], grip)
+            return self._act([0.0, 0.0, 0.0], grip, obs)
 
 
 class RetreatHold:
