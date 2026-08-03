@@ -51,12 +51,13 @@ captured actions are replayed from the saved exact state to verify deterministic
 simulator reproduction; the collector never re-samples the stochastic policy and
 mistakes a different action sequence for a failed state replay.
 
-The collector starts at T-20 and, when necessary, walks backward from the crash
-in 10-step increments along the measured nominal history until every branch has a clean
-common robot/task state (blocked-scene initial glass force below 1 N and tilt
-below 5 degrees, task target within 3 cm of its authored resting pose, and target
-not already grasped). It never makes an invalid late state pass by relaxing those
-thresholds; the selected horizon and every rejected candidate are recorded.
+The collector starts at T-20 and evaluates 10-step backoffs through the earliest
+measured nominal state. It retains the earliest clean common robot/task state
+(blocked-scene initial glass force below 1 N and tilt below 5 degrees, task target
+within 3 cm of its authored resting pose, and target not already grasped). This
+keeps the scripted oracle near its reachable neutral joint posture; the saved
+nominal suffix still supplies all imminent-risk frames. It never relaxes the
+thresholds, and the selected horizon plus every rejected candidate are recorded.
 
 ## Loss and inference
 

@@ -561,8 +561,10 @@ def collect_pair(
     # inside a newly inserted lateral fence, or can be late enough that the
     # nominal policy is already carrying the bowl.  The latter is not a valid
     # start for a from-scratch detour oracle: opening the gripper would drop the
-    # bowl and invalidate all static target coordinates.  Walk backward from the
-    # requested horizon rather than weakening either clean-start criterion.
+    # bowl and invalidate all static target coordinates.  Evaluate the complete
+    # backoff sequence and retain the earliest clean state: the scripted detour
+    # is most reachable from the near-neutral episode-start joint posture, while
+    # the captured nominal suffix still supplies every imminent-risk horizon.
     first_horizon = min(args.precrash_horizon, collision_step)
     candidate_horizons = list(range(
         first_horizon, collision_step + 1, args.precrash_backoff_step
@@ -635,7 +637,10 @@ def collect_pair(
                 candidate_index, candidate_horizon, candidate_onpath, candidate_robot,
                 candidate_blocked_start, candidate_force, candidate_tilt,
             )
-            break
+    if selected is not None:
+        selected_horizon_for_log = selected[1]
+        for attempt in selection_attempts:
+            attempt["selected"] = attempt["horizon_steps"] == selected_horizon_for_log
     (pair_root / "precrash_selection.json").write_text(json.dumps({
         "placement_id": pair_id,
         "requested_horizon_steps": args.precrash_horizon,
