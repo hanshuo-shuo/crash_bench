@@ -25,8 +25,8 @@ Each accepted `placement_id` has exactly four branches:
    and LIBERO task completion;
 3. `off_path_control`: same robot/task state with the same glass moved outside
    the path; target actions remain frozen OpenVLA actions;
-4. `blocked_safe_abort`: same robot/task state, a dense tall-glass fence spanning
-   the declared OSC detour corridor, failure
+4. `blocked_safe_abort`: same robot/task state, the original-height center cup
+   plus a tall-glass fence over the lateral OSC detour lanes, failure
    of every member of the fixed detour-controller search, and a stable
    `RetreatHold` trajectory.
 

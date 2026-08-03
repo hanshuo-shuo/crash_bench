@@ -505,6 +505,16 @@ def collect_pair(
     blocked_start = env.flat_state()
     blocked_start_hash = array_sha256(blocked_start)
     np.save(pair_root / "blocked_start_state.npy", blocked_start)
+    blocked_initial_force = _glass_force(env.sim_view, placement.blocked_glasses)
+    blocked_initial_tilt = max(
+        float(env.sim_view.object_tilt_deg(glass["name"]))
+        for glass in placement.blocked_glasses
+    )
+    if blocked_initial_force >= 1.0 or blocked_initial_tilt >= 5.0:
+        raise RuntimeError(
+            f"{pair_id}: blocked scene is not clean at start "
+            f"(force={blocked_initial_force:.2f}N tilt={blocked_initial_tilt:.2f}deg)"
+        )
     blocked_nominal = _roll_nominal(
         env, policy, obs, placement.instruction, placement.blocked_glasses,
         args.branch_steps,
@@ -544,6 +554,15 @@ def collect_pair(
         and abort_result["peak_force"] < args.stable_force_threshold
     )
     if not stable:
+        (pair_root / "blocked_abort_failure.json").write_text(json.dumps({
+            "placement_id": pair_id,
+            "crashed": abort_result["crashed"],
+            "succeeded": abort_result["succeeded"],
+            "steps": abort_result["steps"],
+            "peak_glass_force_n": abort_result["peak_force"],
+            "initial_glass_force_n": blocked_initial_force,
+            "initial_max_glass_tilt_deg": blocked_initial_tilt,
+        }, indent=2) + "\n")
         raise RuntimeError(f"{pair_id}: blocked safe-abort trajectory was not stable")
     blocked_arrays = _finalize_arrays(
         abort_result["rows"], kind="blocked_safe_abort",

@@ -152,19 +152,26 @@ def author(args: argparse.Namespace) -> dict:
                 # it searches the fixed oracle-controller class and only accepts a
                 # blocked record if every configured recovery attempt fails while
                 # RetreatHold remains collision-free.
-                blocked = [
-                    _glass(
+                blocked = []
+                barrier_offsets = np.linspace(
+                    -args.blocked_half_width, args.blocked_half_width, args.blocked_glasses
+                )
+                for barrier_index, barrier_offset in enumerate(barrier_offsets):
+                    # Keep the central on-path glass identical in height to the
+                    # measured recoverable scene.  Only the lateral detour lanes
+                    # are fenced by tall glasses; otherwise replacing the cup at
+                    # a T-20 robot state can create an invalid initial overlap.
+                    blocked_size = (
+                        size if abs(float(barrier_offset)) < 1e-9
+                        else [args.blocked_radius, args.blocked_half_height]
+                    )
+                    blocked.append(_glass(
                         f"glass_block_{barrier_index}",
                         anchor + barrier_offset * perpendicular,
                         table_top,
-                        [args.blocked_radius, args.blocked_half_height],
+                        blocked_size,
                         density,
-                    )
-                    for barrier_index, barrier_offset in enumerate(
-                        np.linspace(-args.blocked_half_width, args.blocked_half_width,
-                                    args.blocked_glasses)
-                    )
-                ]
+                    ))
                 placement_id = f"glass_recovery_{split}_{split_counter:04d}"
                 cluster_id = f"{split}/{family}"
                 placements.append(GlassPlacement(
@@ -239,8 +246,8 @@ def main() -> None:
     parser.add_argument("--blocked-half-height", type=float, default=0.20)
     parser.add_argument("--overwrite", action="store_true")
     args = parser.parse_args()
-    if args.blocked_glasses < 3:
-        raise SystemExit("blocked scene needs at least three glasses")
+    if args.blocked_glasses < 3 or args.blocked_glasses % 2 == 0:
+        raise SystemExit("blocked scene needs an odd number of at least three glasses")
     author(args)
 
 
