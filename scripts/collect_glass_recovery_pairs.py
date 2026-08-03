@@ -418,7 +418,7 @@ def _search_oracle(
             _controller_glass(glasses[len(glasses) // 2]), bowl, plate,
             side=config["side"], lane_margin=config["lane_margin"],
             transit_z=config["transit_z"], descend_off=config["descend_off"],
-            leg_cap=70, target_name=TARGET,
+            leg_cap=140, target_name=TARGET,
             orientation_target=config["orientation_target"],
             path_aligned=config["path_aligned"],
         )
@@ -454,7 +454,7 @@ def _search_oracle(
         _controller_glass(glasses[len(glasses) // 2]), bowl, plate,
         side=successful_config["side"], lane_margin=successful_config["lane_margin"],
         transit_z=successful_config["transit_z"],
-        descend_off=successful_config["descend_off"], leg_cap=70, target_name=TARGET,
+        descend_off=successful_config["descend_off"], leg_cap=140, target_name=TARGET,
         orientation_target=successful_config["orientation_target"],
         path_aligned=successful_config["path_aligned"],
     )
@@ -735,7 +735,7 @@ def collect_pair(
     control_reach_orientation = np.asarray(
         closest_control_row["robot_state"], dtype=float
     )[3:6].round(7).tolist()
-    oracle_orientation_targets = [None, control_reach_orientation]
+    oracle_orientation_targets = [control_reach_orientation, None]
 
     # Branch 2: search and recapture a safe task-completing oracle from the
     # byte-identical expanded state.
@@ -927,7 +927,7 @@ def main() -> None:
     parser.add_argument("--scan-steps", type=int, default=220)
     parser.add_argument("--branch-steps", type=int, default=80)
     parser.add_argument("--control-steps", type=int, default=220)
-    parser.add_argument("--oracle-steps", type=int, default=500)
+    parser.add_argument("--oracle-steps", type=int, default=900)
     parser.add_argument("--abort-steps", type=int, default=60)
     parser.add_argument("--abort-back", type=float, default=0.14)
     parser.add_argument("--abort-up", type=float, default=0.10)

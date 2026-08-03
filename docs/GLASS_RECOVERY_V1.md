@@ -75,6 +75,10 @@ Glass recovery uses a path-aligned detour rather than the historical wall
 controller's global `+x` staging assumption: it moves normal to the glass-to-bowl
 axis, passes the glass in that lane, returns to the bowl side of the nominal path,
 then makes only a 2 cm pregrasp approach. The wall controller default is unchanged.
+Glass search allows 140 control steps per Cartesian leg and 900 total steps: the
+measured long descent can reach within grasp range instead of being advanced by
+the shorter historical wall safety cap. The matched-control orientation grid is
+searched first, followed by the pure-position control.
 
 ## Loss and inference
 
