@@ -233,6 +233,35 @@ def _roll_nominal(
     }
 
 
+def _replay_nominal_actions(
+    env: LiberoEnv,
+    obs: dict,
+    glasses: list[dict],
+    rows: list[dict],
+) -> dict:
+    """Verify a sampled Base OpenVLA catastrophe without sampling it twice."""
+
+    crash = build_any(_glass_predicate_specs(glasses))
+    peak_force = 0.0
+    for step, row in enumerate(rows):
+        action = np.asarray(row["executed_action"], dtype=np.float32)
+        obs, _, _, _ = env.step(action.tolist())
+        peak_force = max(peak_force, _glass_force(env.sim_view, glasses))
+        if crash(env.sim_view):
+            return {
+                "crashed": True,
+                "collision_step": step,
+                "peak_force": peak_force,
+                "obs": obs,
+            }
+    return {
+        "crashed": False,
+        "collision_step": None,
+        "peak_force": peak_force,
+        "obs": obs,
+    }
+
+
 def _run_controller(
     env: LiberoEnv,
     policy,
@@ -519,7 +548,7 @@ def collect_pair(
         obs, _, _, _ = env.step(env.dummy_action())
     scan = _roll_nominal(
         env, policy, obs, placement.instruction, [placement.on_path_glass],
-        args.scan_steps, capture_states=True,
+        args.scan_steps, capture_states=True, capture_rows=True,
     )
     if not scan["crashed"]:
         raise RuntimeError(f"{pair_id}: nominal placement did not produce a catastrophe")
@@ -626,14 +655,35 @@ def collect_pair(
     np.save(pair_root / "matched_robot_state.npy", matched_robot)
     np.save(pair_root / "blocked_start_state.npy", blocked_start)
 
-    # Branch 1: reproduce catastrophe from the saved pre-crash state.
+    # Branch 1: the scan is the original sampled Base OpenVLA catastrophe.
+    # Re-querying a stochastic policy here would test a different action sequence,
+    # so verify exact-state reproducibility by replaying the captured actions.
+    nominal_rows = scan["rows"][state_index:collision_step + 1]
+    if not nominal_rows:
+        raise RuntimeError(f"{pair_id}: selected nominal action segment is empty")
     obs = env.reset_to_exact(exact_onpath, movable_objects=[placement.on_path_glass])
-    nominal = _roll_nominal(
-        env, policy, obs, placement.instruction, [placement.on_path_glass],
-        args.branch_steps, capture_rows=True,
+    nominal_replay = _replay_nominal_actions(
+        env, obs, [placement.on_path_glass], nominal_rows,
     )
-    if not nominal["crashed"]:
-        raise RuntimeError(f"{pair_id}: exact-state nominal catastrophe did not reproduce")
+    expected_collision_step = len(nominal_rows) - 1
+    (pair_root / "nominal_replay.json").write_text(json.dumps({
+        "placement_id": pair_id,
+        "actions": len(nominal_rows),
+        "expected_collision_step": expected_collision_step,
+        "actual_collision_step": nominal_replay["collision_step"],
+        "crashed": nominal_replay["crashed"],
+        "peak_glass_force_n": round(float(nominal_replay["peak_force"]), 5),
+    }, indent=2) + "\n")
+    if (not nominal_replay["crashed"]
+            or nominal_replay["collision_step"] != expected_collision_step):
+        raise RuntimeError(
+            f"{pair_id}: captured nominal catastrophe actions did not reproduce exactly"
+        )
+    nominal = {
+        **nominal_replay,
+        "rows": nominal_rows,
+        "collision_step": expected_collision_step,
+    }
     nominal_arrays = _finalize_arrays(
         nominal["rows"], kind="nominal_catastrophe",
         collision_step=int(nominal["collision_step"]),

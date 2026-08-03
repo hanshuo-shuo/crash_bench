@@ -46,6 +46,11 @@ Each trajectory stores image, instruction (manifest), robot state, frozen hidden
 state, nominal/target/executed action, five risk labels, hazard type, future
 contact force, abort target, and the masks used by each loss.
 
+The nominal branch is the first sampled Base OpenVLA catastrophe rollout. Its
+captured actions are replayed from the saved exact state to verify deterministic
+simulator reproduction; the collector never re-samples the stochastic policy and
+mistakes a different action sequence for a failed state replay.
+
 The collector starts at T-20 and, when necessary, walks backward from the crash
 in 10-step increments along the measured nominal history until every branch has a clean
 common robot/task state (blocked-scene initial glass force below 1 N and tilt
