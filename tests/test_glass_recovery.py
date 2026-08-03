@@ -27,7 +27,11 @@ from crashbench.glass_recovery_model import (
 from crashbench.metrics import summarize_recovery_rows
 from crashbench.policies.glass_recovery_policy import GlassRecoveryPolicy
 from crashbench.recovery import DetourComplete
-from scripts.collect_glass_recovery_pairs import _oracle_configs
+from scripts.collect_glass_recovery_pairs import (
+    _oracle_configs,
+    _safe_abort_configs,
+    _stable_abort,
+)
 from scripts.prepare_glass_recovery_placements import (
     _collision_free_path_fraction,
     _state_layout,
@@ -244,6 +248,20 @@ def test_oracle_grid_can_reuse_clean_control_grasp_pose():
     assert len(configs) == 32
     assert {config["descend_off"] for config in configs} == {0.021, 0.04}
     assert all(config["grasp_xy_offset"] == [-0.002, -0.05] for config in configs)
+
+
+def test_safe_abort_search_prefers_hold_and_requires_stability():
+    configs = _safe_abort_configs(0.14, 0.10)
+    assert configs[0] == {"name": "hold", "back": 0.0, "up": 0.0}
+    assert {(row["back"], row["up"]) for row in configs} == {
+        (0.0, 0.0), (0.14, 0.0), (0.0, 0.10), (0.14, 0.10),
+    }
+    assert _stable_abort(
+        {"crashed": False, "succeeded": False, "peak_force": 0.0}, 25.0
+    )
+    assert not _stable_abort(
+        {"crashed": True, "succeeded": False, "peak_force": 0.0}, 25.0
+    )
 
 
 def test_detour_can_track_an_absolute_wrist_orientation():

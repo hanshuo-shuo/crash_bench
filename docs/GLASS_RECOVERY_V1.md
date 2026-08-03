@@ -82,6 +82,14 @@ measured long descent can reach within grasp range instead of being advanced by
 the shorter historical wall safety cap. The matched-control orientation grid is
 searched first, followed by the pure-position control.
 
+For a blocked scene, the collector first exhausts that declared recovery grid,
+then searches a fixed safe-abort set from the exact same state: hold, retreat in
+`-x`, lift, and retreat-plus-lift. Hold is preferred because the accepted start is
+already contact-free and an unnecessary OSC retreat can swing an upstream arm
+link into the lateral fence. Every attempt is written to
+`blocked_abort_search.json`; the selected action must pass a second 60-step run
+while hidden states are captured.
+
 ## Loss and inference
 
 The implemented positive minimization objective is:

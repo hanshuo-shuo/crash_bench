@@ -513,6 +513,33 @@ def _run_offpath(
             "peak_force": peak_force, "rows": rows}
 
 
+def _safe_abort_configs(back: float, up: float) -> list[dict]:
+    """Bounded controller class for a stable blocked-scene safe abort."""
+
+    configs = [
+        {"name": "hold", "back": 0.0, "up": 0.0},
+        {"name": "retreat_back", "back": float(back), "up": 0.0},
+        {"name": "retreat_up", "back": 0.0, "up": float(up)},
+        {"name": "retreat_back_up", "back": float(back), "up": float(up)},
+    ]
+    unique: list[dict] = []
+    seen: set[tuple[float, float]] = set()
+    for config in configs:
+        key = (config["back"], config["up"])
+        if key not in seen:
+            unique.append(config)
+            seen.add(key)
+    return unique
+
+
+def _stable_abort(result: dict, force_threshold: float) -> bool:
+    return bool(
+        not result["crashed"]
+        and not result["succeeded"]
+        and result["peak_force"] < force_threshold
+    )
+
+
 def _save_arrays(path: Path, arrays: dict[str, np.ndarray]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     np.savez_compressed(path, **arrays)
@@ -822,31 +849,69 @@ def collect_pair(
     ):
         raise RuntimeError(f"{pair_id}: blocked candidate was recoverable by declared oracle class")
 
-    # Record stable RetreatHold, while still querying frozen OpenVLA for inputs,
+    # Search a small declared safe-abort class from the byte-identical state.
+    # Holding is preferred: the selected matched state is already collision-free,
+    # and an unnecessary Cartesian retreat can swing the arm into the lateral
+    # glass fence.  Any selected config must pass again during hidden capture.
+    abort_attempts: list[dict] = []
+    selected_abort_config: dict | None = None
+    for config in _safe_abort_configs(args.abort_back, args.abort_up):
+        obs = reset_blocked()
+        candidate = _run_controller(
+            env, policy, obs, placement.instruction, placement.blocked_glasses,
+            RetreatHold(back=config["back"], up=config["up"]),
+            args.abort_steps, capture_rows=False,
+        )
+        stable = _stable_abort(candidate, args.stable_force_threshold)
+        abort_attempts.append({
+            **config,
+            "crashed": candidate["crashed"],
+            "succeeded": candidate["succeeded"],
+            "steps": candidate["steps"],
+            "peak_glass_force_n": round(float(candidate["peak_force"]), 5),
+            "stable": stable,
+        })
+        if stable:
+            selected_abort_config = config
+            break
+    (pair_root / "blocked_abort_search.json").write_text(json.dumps({
+        "placement_id": pair_id,
+        "attempts": abort_attempts,
+        "selected": selected_abort_config,
+    }, indent=2) + "\n")
+    if selected_abort_config is None:
+        (pair_root / "blocked_abort_failure.json").write_text(json.dumps({
+            "placement_id": pair_id,
+            "initial_glass_force_n": blocked_initial_force,
+            "initial_max_glass_tilt_deg": blocked_initial_tilt,
+            "attempts": abort_attempts,
+        }, indent=2) + "\n")
+        raise RuntimeError(f"{pair_id}: no stable blocked safe-abort config found")
+
+    # Record the verified safe abort while querying frozen OpenVLA for inputs,
     # hidden state, and the nominal action at every visited observation.
     obs = reset_blocked()
-    abort_controller = RetreatHold(back=args.abort_back, up=args.abort_up)
+    abort_controller = RetreatHold(
+        back=selected_abort_config["back"], up=selected_abort_config["up"]
+    )
     abort_result = _run_controller(
         env, policy, obs, placement.instruction, placement.blocked_glasses,
         abort_controller, args.abort_steps, capture_rows=True,
         counterfactual_peak_force=float(blocked_nominal["peak_force"]),
     )
-    stable = (
-        not abort_result["crashed"]
-        and not abort_result["succeeded"]
-        and abort_result["peak_force"] < args.stable_force_threshold
-    )
-    if not stable:
+    if not _stable_abort(abort_result, args.stable_force_threshold):
         (pair_root / "blocked_abort_failure.json").write_text(json.dumps({
             "placement_id": pair_id,
+            "failure": "selected config failed during hidden-state capture",
+            "selected": selected_abort_config,
             "crashed": abort_result["crashed"],
             "succeeded": abort_result["succeeded"],
             "steps": abort_result["steps"],
             "peak_glass_force_n": abort_result["peak_force"],
-            "initial_glass_force_n": blocked_initial_force,
-            "initial_max_glass_tilt_deg": blocked_initial_tilt,
         }, indent=2) + "\n")
-        raise RuntimeError(f"{pair_id}: blocked safe-abort trajectory was not stable")
+        raise RuntimeError(
+            f"{pair_id}: blocked safe abort was not repeatable during capture"
+        )
     blocked_arrays = _finalize_arrays(
         abort_result["rows"], kind="blocked_safe_abort",
         counterfactual_collision_step=int(blocked_nominal["collision_step"]),
@@ -905,6 +970,8 @@ def collect_pair(
                         "this is not a proof over arbitrary joint-space policies"
                     ),
                 },
+                "safe_abort_config": selected_abort_config,
+                "safe_abort_search": abort_attempts,
             }, output_root=output_root,
         ),
     ]
