@@ -39,7 +39,8 @@ placements over disjoint source LIBERO initial-state hashes. Held-out placements
 are clustered into geometry families (`tall_narrow`, `wide_glass`, and
 `late_approach`) absent from train. The schema rejects source-state or cluster
 leakage across splits. Along-path anchors are clamped by the combined bowl/glass
-radius plus margin, so a late glass never begins by intersecting the task target.
+radius plus margin and a 10 cm descent-clearance floor, so a late glass never
+intersects the task target or makes the scripted recovery grasp itself unsafe.
 
 Each trajectory stores image, instruction (manifest), robot state, frozen hidden
 state, nominal/target/executed action, five risk labels, hazard type, future

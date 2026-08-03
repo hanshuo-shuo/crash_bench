@@ -76,10 +76,14 @@ def _collision_free_path_fraction(
     glass_radius: float,
     target_radius: float,
     clearance_margin: float,
+    minimum_clearance: float = 0.0,
 ) -> tuple[float, float]:
     """Clamp an on-path anchor before its glass can overlap the task target."""
 
-    required_clearance = float(glass_radius + target_radius + clearance_margin)
+    required_clearance = max(
+        float(minimum_clearance),
+        float(glass_radius + target_radius + clearance_margin),
+    )
     max_fraction = 1.0 - required_clearance / float(path_length)
     if max_fraction <= 0.05:
         raise ValueError(
@@ -168,6 +172,7 @@ def author(args: argparse.Namespace) -> dict:
                     float(size[0]),
                     args.target_radius,
                     args.target_clearance_margin,
+                    args.min_target_clearance,
                 )
                 anchor = home + fraction * (bowl[:2] - home)
                 actual_target_clearance = float(np.linalg.norm(anchor - bowl[:2]))
@@ -276,6 +281,7 @@ def main() -> None:
     parser.add_argument("--along-jitter", type=float, default=0.012)
     parser.add_argument("--target-radius", type=float, default=0.04)
     parser.add_argument("--target-clearance-margin", type=float, default=0.005)
+    parser.add_argument("--min-target-clearance", type=float, default=0.10)
     parser.add_argument("--blocked-half-width", type=float, default=0.28)
     parser.add_argument("--blocked-glasses", type=int, default=9)
     parser.add_argument("--blocked-radius", type=float, default=0.032)
@@ -284,8 +290,11 @@ def main() -> None:
     args = parser.parse_args()
     if args.blocked_glasses < 3 or args.blocked_glasses % 2 == 0:
         raise SystemExit("blocked scene needs an odd number of at least three glasses")
-    if args.target_radius <= 0 or args.target_clearance_margin < 0:
-        raise SystemExit("target radius must be positive and clearance margin non-negative")
+    if (args.target_radius <= 0 or args.target_clearance_margin < 0
+            or args.min_target_clearance <= 0):
+        raise SystemExit(
+            "target radius and minimum clearance must be positive; margin non-negative"
+        )
     author(args)
 
 

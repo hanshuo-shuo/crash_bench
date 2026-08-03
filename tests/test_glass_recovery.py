@@ -239,10 +239,11 @@ def test_late_glass_anchor_is_clamped_before_target_overlap():
         glass_radius=0.03,
         target_radius=0.04,
         clearance_margin=0.005,
+        minimum_clearance=0.10,
     )
-    assert required == pytest.approx(0.075)
+    assert required == pytest.approx(0.10)
     assert fraction == pytest.approx(1.0 - required / 0.23)
-    assert (1.0 - fraction) * 0.23 >= required
+    assert (1.0 - fraction) * 0.23 == pytest.approx(required)
 
 
 def test_recovery_metrics_do_not_reward_always_stop():
