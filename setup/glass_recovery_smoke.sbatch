@@ -33,26 +33,41 @@ export PYTHONPATH="$BASE_REPO_ROOT/third_party/openvla:$REPO_ROOT${PYTHONPATH:+:
 cd "$REPO_ROOT"
 
 RUN_ROOT="${CB_GLASS_RECOVERY_RUN_ROOT:-results/glass_recovery_v1/smoke_${SLURM_JOB_ID}}"
-PLACEMENTS="$RUN_ROOT/placements"
-DATASET="$RUN_ROOT/dataset"
+SOURCE_RUN_ROOT="${CB_GLASS_RECOVERY_SOURCE_RUN_ROOT:-}"
+if [[ -n "$SOURCE_RUN_ROOT" ]]; then
+  PLACEMENTS="$SOURCE_RUN_ROOT/placements"
+  DATASET="$SOURCE_RUN_ROOT/dataset"
+else
+  PLACEMENTS="$RUN_ROOT/placements"
+  DATASET="$RUN_ROOT/dataset"
+fi
 CHECKPOINT="$RUN_ROOT/checkpoint"
 EVAL_OUT="$RUN_ROOT/eval_heldout.json"
 BASE_CHECKPOINT="${CB_BASE_CHECKPOINT:-/projects/p33100/siosio/huggingface_cache/hub/models--openvla--openvla-7b-finetuned-libero-spatial/snapshots/962318cec55ac10993ff0f5f43eda9a270b4c873}"
 
-python scripts/prepare_glass_recovery_placements.py \
-  --output "$PLACEMENTS" \
-  --train-placements 100 \
-  --validation-placements 20 \
-  --heldout-placements 40 \
-  --overwrite
+if [[ -n "$SOURCE_RUN_ROOT" ]]; then
+  echo "Reusing accepted data from $SOURCE_RUN_ROOT"
+  test -f "$PLACEMENTS/placements.json"
+  test -f "$DATASET/train.jsonl"
+  test -f "$DATASET/validation.jsonl"
+  test -f "$DATASET/heldout.jsonl"
+  test -f "$DATASET/collection_summary.json"
+else
+  python scripts/prepare_glass_recovery_placements.py \
+    --output "$PLACEMENTS" \
+    --train-placements 100 \
+    --validation-placements 20 \
+    --heldout-placements 40 \
+    --overwrite
 
-python scripts/collect_glass_recovery_pairs.py \
-  --placements "$PLACEMENTS/placements.json" \
-  --output "$DATASET" \
-  --checkpoint "$BASE_CHECKPOINT" \
-  --max-train "${CB_SMOKE_TRAIN_PAIRS:-1}" \
-  --max-validation "${CB_SMOKE_VALIDATION_PAIRS:-1}" \
-  --max-heldout "${CB_SMOKE_HELDOUT_PAIRS:-1}"
+  python scripts/collect_glass_recovery_pairs.py \
+    --placements "$PLACEMENTS/placements.json" \
+    --output "$DATASET" \
+    --checkpoint "$BASE_CHECKPOINT" \
+    --max-train "${CB_SMOKE_TRAIN_PAIRS:-1}" \
+    --max-validation "${CB_SMOKE_VALIDATION_PAIRS:-1}" \
+    --max-heldout "${CB_SMOKE_HELDOUT_PAIRS:-1}"
+fi
 
 python scripts/replay_glass_recovery_pair.py \
   --placements "$PLACEMENTS/placements.json" \

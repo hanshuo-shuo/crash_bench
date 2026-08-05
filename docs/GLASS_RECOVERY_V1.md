@@ -145,7 +145,7 @@ Simulator-only replay of one collected branch:
 ```bash
 python scripts/replay_glass_recovery_pair.py \
   --placements results/glass_recovery_v1/placements/placements.json \
-  --pair-dir results/glass_recovery_v1/dataset/train/<placement_id> \
+  --manifest results/glass_recovery_v1/dataset/train.jsonl \
   --branch nominal_catastrophe
 ```
 
@@ -153,6 +153,14 @@ Quest end-to-end smoke:
 
 ```bash
 scripts/quest_sync.sh submit setup/glass_recovery_smoke.sbatch
+```
+
+To resume after a successful collection stage without collecting again, submit
+the same script with the completed run as its source:
+
+```bash
+sbatch --export=ALL,CB_GLASS_RECOVERY_SOURCE_RUN_ROOT=results/glass_recovery_v1/smoke_<job_id> \
+  setup/glass_recovery_smoke.sbatch
 ```
 
 The smoke authors the full 100/20/40 placement design but collects only one
