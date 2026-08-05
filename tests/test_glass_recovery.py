@@ -39,6 +39,7 @@ from scripts.prepare_glass_recovery_placements import (
     _collision_free_path_fraction,
     _state_layout,
 )
+from scripts.replay_glass_recovery_pair import accepted_pair_dir_from_manifest
 
 
 def _glass(name="glass_1", x=0.0, y=0.0):
@@ -399,6 +400,54 @@ def test_recovery_metrics_do_not_reward_always_stop():
     assert summary.safe_abort_rate == 2 / 3
     assert summary.false_intervention_on_clean_controls == 0.0
     assert summary.impact_force_worst_case_n == 2.0
+
+
+def test_replay_selects_accepted_pair_from_manifest_not_first_directory(tmp_path):
+    dataset = tmp_path / "dataset"
+    rejected = dataset / "train" / "glass_recovery_train_0001"
+    accepted = dataset / "train" / "glass_recovery_train_0002"
+    rejected.mkdir(parents=True)
+    accepted.mkdir()
+    common = dict(
+        pair_id="glass_recovery_train_0002", placement_id="placement", split="train",
+        source_state_sha256="source", matched_robot_state_sha256="robot",
+        instruction="pick", n_steps=1, scene_sha256="scene",
+    )
+    records = [
+        PairedTrajectoryRecord(
+            **common, trajectory_kind="nominal_catastrophe",
+            branch_start_state_sha256="onpath",
+            arrays_path="train/glass_recovery_train_0002/nominal_catastrophe.npz",
+            outcome="crash", crashed=True, succeeded=False, safe_abort=False,
+            oracle_verified=False,
+        ),
+        PairedTrajectoryRecord(
+            **common, trajectory_kind="oracle_recovery",
+            branch_start_state_sha256="onpath",
+            arrays_path="train/glass_recovery_train_0002/oracle_recovery.npz",
+            outcome="recovery_success", crashed=False, succeeded=True, safe_abort=False,
+            oracle_verified=True,
+        ),
+        PairedTrajectoryRecord(
+            **common, trajectory_kind="off_path_control",
+            branch_start_state_sha256="offpath",
+            arrays_path="train/glass_recovery_train_0002/off_path_control.npz",
+            outcome="recovery_success", crashed=False, succeeded=True, safe_abort=False,
+            oracle_verified=False,
+        ),
+        PairedTrajectoryRecord(
+            **common, trajectory_kind="blocked_safe_abort",
+            branch_start_state_sha256="blocked",
+            arrays_path="train/glass_recovery_train_0002/blocked_safe_abort.npz",
+            outcome="safe_abort", crashed=False, succeeded=False, safe_abort=True,
+            oracle_verified=True,
+            metadata={"blocked_evidence": {"controller_class": "grid"}},
+        ),
+    ]
+    write_trajectory_manifest(dataset / "train.jsonl", records)
+    (accepted / "pair.json").write_text("{}\n")
+
+    assert accepted_pair_dir_from_manifest(dataset / "train.jsonl") == accepted.resolve()
 
 
 def _write_tiny_split(root: Path, split: str):

@@ -54,10 +54,9 @@ python scripts/collect_glass_recovery_pairs.py \
   --max-validation "${CB_SMOKE_VALIDATION_PAIRS:-1}" \
   --max-heldout "${CB_SMOKE_HELDOUT_PAIRS:-1}"
 
-PAIR_DIR="$(find "$DATASET/train" -mindepth 1 -maxdepth 1 -type d | sort | head -n 1)"
 python scripts/replay_glass_recovery_pair.py \
   --placements "$PLACEMENTS/placements.json" \
-  --pair-dir "$PAIR_DIR" \
+  --manifest "$DATASET/train.jsonl" \
   --branch nominal_catastrophe \
   --out "$RUN_ROOT/replay_nominal.json"
 

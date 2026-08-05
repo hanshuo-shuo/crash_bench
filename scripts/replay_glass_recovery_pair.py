@@ -25,6 +25,7 @@ from crashbench.glass_recovery_data import (
     PairedTrajectoryRecord,
     array_sha256,
     read_placement_manifest,
+    read_trajectory_manifest,
     validate_episode_arrays,
 )
 from crashbench.predicates import build_any, build_predicate
@@ -32,17 +33,44 @@ from crashbench.scenario import PredicateSpec
 from scripts.collect_glass_recovery_pairs import _glass_predicate_specs
 
 
+def accepted_pair_dir_from_manifest(manifest: str | Path) -> Path:
+    """Resolve the first accepted pair directory recorded in a split manifest."""
+
+    manifest = Path(manifest)
+    records = read_trajectory_manifest(manifest)
+    pair_id = records[0].pair_id
+    pair_records = [record for record in records if record.pair_id == pair_id]
+    pair_dirs = {
+        (manifest.parent / record.arrays_path).parent.resolve()
+        for record in pair_records
+    }
+    if len(pair_dirs) != 1:
+        raise ValueError(f"{pair_id} arrays span multiple directories: {sorted(pair_dirs)}")
+    pair_dir = pair_dirs.pop()
+    if not (pair_dir / "pair.json").is_file():
+        raise FileNotFoundError(f"accepted pair metadata missing: {pair_dir / 'pair.json'}")
+    return pair_dir
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--placements", required=True)
-    parser.add_argument("--pair-dir", required=True)
+    pair_source = parser.add_mutually_exclusive_group(required=True)
+    pair_source.add_argument("--pair-dir")
+    pair_source.add_argument(
+        "--manifest",
+        help="select the first accepted pair recorded in this split manifest",
+    )
     parser.add_argument("--branch", choices=(
         "nominal_catastrophe", "oracle_recovery", "off_path_control", "blocked_safe_abort",
     ), required=True)
     parser.add_argument("--out", default=None)
     args = parser.parse_args()
 
-    pair_dir = Path(args.pair_dir)
+    pair_dir = (
+        accepted_pair_dir_from_manifest(args.manifest)
+        if args.manifest else Path(args.pair_dir)
+    )
     pair_payload = json.loads((pair_dir / "pair.json").read_text())
     records = [PairedTrajectoryRecord.from_dict(row) for row in pair_payload["records"]]
     record = next(row for row in records if row.trajectory_kind == args.branch)
@@ -62,7 +90,7 @@ def main() -> None:
     if array_sha256(state) != record.branch_start_state_sha256:
         raise SystemExit(f"start-state hash mismatch for {state_path}")
 
-    arrays_path = Path(args.pair_dir).parents[1] / record.arrays_path
+    arrays_path = pair_dir.parents[1] / record.arrays_path
     arrays = dict(np.load(arrays_path))
     validate_episode_arrays(arrays, record.n_steps)
     env = LiberoEnv(placement.task_suite, placement.task_id)
