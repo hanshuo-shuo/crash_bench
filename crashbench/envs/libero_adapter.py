@@ -438,6 +438,88 @@ class LiberoEnv:
             np.asarray(data.qvel[:int(model.nv)], dtype=np.float64).copy(),
         ])
 
+    def controller_state(self) -> dict[str, np.ndarray]:
+        """Capture policy-boundary runtime state omitted by flat qpos/qvel."""
+
+        raw = self.env
+        while not hasattr(raw, "robots") and hasattr(raw, "env"):
+            raw = raw.env
+        if not hasattr(raw, "robots"):
+            raise RuntimeError("could not locate robosuite robots for controller snapshot")
+        snapshot: dict[str, np.ndarray] = {}
+        model, data = self.sim_view._live_mj()
+        snapshot["sim.qacc_warmstart"] = np.asarray(
+            data.qacc_warmstart[:int(model.nv)]
+        ).copy()
+        snapshot["sim.act"] = np.asarray(data.act[:int(model.na)]).copy()
+        snapshot["sim.ctrl"] = np.asarray(data.ctrl[:int(model.nu)]).copy()
+        for robot_index, robot in enumerate(raw.robots):
+            controller = robot.controller
+            prefix = f"robot{robot_index}"
+            for name in ("goal_pos", "goal_ori", "ori_ref", "relative_ori"):
+                if hasattr(controller, name):
+                    snapshot[f"{prefix}.controller.{name}"] = np.asarray(
+                        getattr(controller, name)
+                    ).copy()
+            snapshot[f"{prefix}.controller.new_update"] = np.asarray(
+                bool(controller.new_update), dtype=np.bool_
+            )
+            for interpolator_name in ("interpolator_pos", "interpolator_ori"):
+                interpolator = getattr(controller, interpolator_name, None)
+                if interpolator is None:
+                    continue
+                for name in ("start", "goal", "step"):
+                    snapshot[f"{prefix}.{interpolator_name}.{name}"] = np.asarray(
+                        getattr(interpolator, name)
+                    ).copy()
+        return snapshot
+
+    def restore_controller_state(self, snapshot: dict[str, np.ndarray]) -> None:
+        """Restore a controller snapshot after a simulator-state reset."""
+
+        raw = self.env
+        while not hasattr(raw, "robots") and hasattr(raw, "env"):
+            raw = raw.env
+        if not hasattr(raw, "robots"):
+            raise RuntimeError("could not locate robosuite robots for controller restore")
+        for robot_index, robot in enumerate(raw.robots):
+            controller = robot.controller
+            controller.update(force=True)
+            prefix = f"robot{robot_index}"
+            for name in ("goal_pos", "goal_ori", "ori_ref", "relative_ori", "new_update"):
+                key = f"{prefix}.controller.{name}"
+                if key in snapshot:
+                    value = np.asarray(snapshot[key])
+                    setattr(
+                        controller, name,
+                        bool(value.item()) if name == "new_update" else value.copy(),
+                    )
+            for interpolator_name in ("interpolator_pos", "interpolator_ori"):
+                interpolator = getattr(controller, interpolator_name, None)
+                if interpolator is None:
+                    continue
+                for name in ("start", "goal", "step"):
+                    key = f"{prefix}.{interpolator_name}.{name}"
+                    if key in snapshot:
+                        value = np.asarray(snapshot[key])
+                        setattr(
+                            interpolator, name,
+                            int(value.item()) if name == "step" else value.copy(),
+                        )
+        model, data = self.sim_view._live_mj()
+        expected_shapes = {
+            "sim.qacc_warmstart": (int(model.nv),),
+            "sim.act": (int(model.na),),
+            "sim.ctrl": (int(model.nu),),
+        }
+        for key, shape in expected_shapes.items():
+            value = np.asarray(snapshot[key])
+            if value.shape != shape:
+                raise ValueError(f"{key} shape {value.shape} != restored model shape {shape}")
+        data.qacc_warmstart[:int(model.nv)] = snapshot["sim.qacc_warmstart"]
+        data.act[:int(model.na)] = snapshot["sim.act"]
+        data.ctrl[:int(model.nu)] = snapshot["sim.ctrl"]
+
     def reset_to_exact(self, flat_state: np.ndarray, obstacles: list[dict] | None = None,
                        movable_objects: list[dict] | None = None):
         """Rebuild a requested injected scene and restore its *expanded* state.

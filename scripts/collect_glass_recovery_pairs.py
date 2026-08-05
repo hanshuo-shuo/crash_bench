@@ -85,6 +85,12 @@ def _glass_force(sim, glasses: list[dict]) -> float:
     ))
 
 
+def _controller_state_sha256(state: dict[str, np.ndarray]) -> str:
+    return canonical_sha256({
+        key: array_sha256(value) for key, value in sorted(state.items())
+    })
+
+
 def _controller_glass(glass: dict) -> dict:
     radius, half_height = glass["size"][:2]
     return {
@@ -208,11 +214,13 @@ def _roll_nominal(
 ) -> dict:
     crash = build_any(_glass_predicate_specs(glasses))
     states: list[np.ndarray] = []
+    controller_states: list[dict[str, np.ndarray]] = []
     rows: list[dict] = []
     peak_force = 0.0
     for step in range(max_steps):
         if capture_states:
             states.append(env.flat_state())
+            controller_states.append(env.controller_state())
         captured = _capture_step(env, policy, obs, instruction)
         action = captured["nominal_action"]
         obs, _, _, _ = env.step(action.tolist())
@@ -228,16 +236,19 @@ def _roll_nominal(
         if crash(env.sim_view):
             return {
                 "crashed": True, "collision_step": step, "peak_force": peak_force,
-                "obs": obs, "states": states, "rows": rows,
+                "obs": obs, "states": states, "controller_states": controller_states,
+                "rows": rows,
             }
         if env.sim_view.libero_done:
             return {
                 "crashed": False, "succeeded": True, "collision_step": None,
-                "peak_force": peak_force, "obs": obs, "states": states, "rows": rows,
+                "peak_force": peak_force, "obs": obs, "states": states,
+                "controller_states": controller_states, "rows": rows,
             }
     return {
         "crashed": False, "succeeded": False, "collision_step": None,
-        "peak_force": peak_force, "obs": obs, "states": states, "rows": rows,
+        "peak_force": peak_force, "obs": obs, "states": states,
+        "controller_states": controller_states, "rows": rows,
     }
 
 
@@ -647,9 +658,11 @@ def collect_pair(
     for candidate_horizon in candidate_horizons:
         candidate_index = max(0, collision_step - candidate_horizon)
         candidate_onpath = np.asarray(scan["states"][candidate_index], dtype=np.float64)
+        candidate_controller = scan["controller_states"][candidate_index]
         candidate_obs = env.reset_to_exact(
             candidate_onpath, movable_objects=[placement.on_path_glass]
         )
+        env.restore_controller_state(candidate_controller)
         candidate_target = np.asarray(candidate_obs[f"{TARGET}_pos"], dtype=float)
         candidate_target_displacement = float(np.linalg.norm(
             candidate_target - baseline_target
@@ -662,6 +675,7 @@ def collect_pair(
             candidate_robot, obstacles=blocked_obstacles,
             movable_objects=blocked_movables,
         )
+        env.restore_controller_state(candidate_controller)
         candidate_blocked_start = env.flat_state()
         candidate_force = _glass_force(env.sim_view, placement.blocked_glasses)
         candidate_tilt = max(
@@ -721,7 +735,7 @@ def collect_pair(
         if clean:
             selected = (
                 candidate_index, candidate_horizon, candidate_onpath, candidate_robot,
-                candidate_blocked_start, candidate_force, candidate_tilt,
+                candidate_blocked_start, candidate_controller, candidate_force, candidate_tilt,
             )
     if selected is not None:
         selected_horizon_for_log = selected[1]
@@ -738,13 +752,15 @@ def collect_pair(
         )
     (
         state_index, selected_horizon, exact_onpath, matched_robot,
-        blocked_start, blocked_initial_force, blocked_initial_tilt,
+        blocked_start, controller_state, blocked_initial_force, blocked_initial_tilt,
     ) = selected
     matched_hash = array_sha256(matched_robot)
     onpath_hash = array_sha256(exact_onpath)
     np.save(pair_root / "precrash_onpath_state.npy", exact_onpath)
     np.save(pair_root / "matched_robot_state.npy", matched_robot)
     np.save(pair_root / "blocked_start_state.npy", blocked_start)
+    np.savez_compressed(pair_root / "controller_state.npz", **controller_state)
+    controller_state_hash = _controller_state_sha256(controller_state)
 
     # Branch 1: the scan is the original sampled Base OpenVLA catastrophe.
     # Re-querying a stochastic policy here would test a different action sequence,
@@ -753,6 +769,7 @@ def collect_pair(
     if not nominal_rows:
         raise RuntimeError(f"{pair_id}: selected nominal action segment is empty")
     obs = env.reset_to_exact(exact_onpath, movable_objects=[placement.on_path_glass])
+    env.restore_controller_state(controller_state)
     nominal_replay = _replay_nominal_actions(
         env, obs, [placement.on_path_glass], nominal_rows,
     )
@@ -770,6 +787,8 @@ def collect_pair(
         "verified": nominal_replay_verified,
         "peak_glass_force_n": round(float(nominal_replay["peak_force"]), 5),
     }, indent=2) + "\n")
+    if not nominal_replay_verified:
+        raise RuntimeError(f"{pair_id}: captured nominal actions failed exact-state replay")
     nominal = {
         "crashed": True,
         "peak_force": max(float(row["force_after"]) for row in nominal_rows),
@@ -787,6 +806,7 @@ def collect_pair(
     # Branch 3 is collected before the oracle search because its successful
     # clean approach supplies a task- and state-matched reachable wrist pose.
     obs = env.reset_to(matched_robot, movable_objects=[placement.off_path_glass])
+    env.restore_controller_state(controller_state)
     offpath_start = env.flat_state()
     offpath_start_hash = array_sha256(offpath_start)
     np.save(pair_root / "offpath_start_state.npy", offpath_start)
@@ -826,9 +846,12 @@ def collect_pair(
 
     # Branch 2: search and recapture a safe task-completing oracle from the
     # byte-identical expanded state.
-    reset_onpath = lambda: env.reset_to_exact(
-        exact_onpath, movable_objects=[placement.on_path_glass]
-    )
+    def reset_onpath():
+        reset_obs = env.reset_to_exact(
+            exact_onpath, movable_objects=[placement.on_path_glass]
+        )
+        env.restore_controller_state(controller_state)
+        return reset_obs
     oracle, oracle_attempts = _search_oracle(
         reset_onpath, env, policy, placement, [placement.on_path_glass],
         args.oracle_steps, collect_success=True,
@@ -854,6 +877,7 @@ def collect_pair(
     obs = env.reset_to_exact(
         blocked_start, obstacles=blocked_obstacles, movable_objects=blocked_movables
     )
+    env.restore_controller_state(controller_state)
     blocked_nominal = _roll_nominal(
         env, policy, obs, placement.instruction, placement.blocked_glasses,
         args.branch_steps,
@@ -862,9 +886,12 @@ def collect_pair(
         raise RuntimeError(f"{pair_id}: blocked scene lacks a nominal catastrophe")
 
     # Branch 4 precondition B: exhaust the declared recovery-controller grid.
-    reset_blocked = lambda: env.reset_to_exact(
-        blocked_start, obstacles=blocked_obstacles, movable_objects=blocked_movables
-    )
+    def reset_blocked():
+        reset_obs = env.reset_to_exact(
+            blocked_start, obstacles=blocked_obstacles, movable_objects=blocked_movables
+        )
+        env.restore_controller_state(controller_state)
+        return reset_obs
     recovered_blocked, blocked_attempts = _search_oracle(
         reset_blocked, env, policy, placement, placement.blocked_glasses,
         args.oracle_steps, collect_success=False,
@@ -956,6 +983,7 @@ def collect_pair(
             nominal_path, nominal_arrays, outcome="crash", crashed=True, succeeded=False,
             safe_abort=False, oracle_verified=False, scene=[placement.on_path_glass],
             metadata={
+                "controller_state_sha256": controller_state_hash,
                 "collision_step": int(nominal["collision_step"]),
                 "peak_glass_force_n": round(float(nominal["peak_force"]), 4),
                 "source_scan_collision_step": int(scan["collision_step"]),
@@ -970,6 +998,7 @@ def collect_pair(
             oracle_path, oracle_arrays, outcome="recovery_success", crashed=False,
             succeeded=True, safe_abort=False, oracle_verified=True,
             scene=[placement.on_path_glass], metadata={
+                "controller_state_sha256": controller_state_hash,
                 "oracle_config": oracle["config"],
                 "oracle_search": oracle_attempts,
                 "peak_glass_force_n": round(float(oracle["peak_force"]), 4),
@@ -982,6 +1011,7 @@ def collect_pair(
             crashed=False, succeeded=bool(offpath["succeeded"]),
             safe_abort=not bool(offpath["succeeded"]), oracle_verified=False,
             scene=[placement.off_path_glass], metadata={
+                "controller_state_sha256": controller_state_hash,
                 "peak_glass_force_n": round(float(offpath["peak_force"]), 4),
                 "control_action_target": "unchanged frozen OpenVLA nominal action",
             }, output_root=output_root,
@@ -991,6 +1021,7 @@ def collect_pair(
             blocked_path, blocked_arrays, outcome="safe_abort", crashed=False,
             succeeded=False, safe_abort=True, oracle_verified=True,
             scene=placement.blocked_glasses, metadata={
+                "controller_state_sha256": controller_state_hash,
                 "peak_glass_force_n": round(float(abort_result["peak_force"]), 4),
                 "counterfactual_nominal_collision_step": int(blocked_nominal["collision_step"]),
                 "blocked_evidence": {

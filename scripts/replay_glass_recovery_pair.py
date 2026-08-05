@@ -30,7 +30,11 @@ from crashbench.glass_recovery_data import (
 )
 from crashbench.predicates import build_any, build_predicate
 from crashbench.scenario import PredicateSpec
-from scripts.collect_glass_recovery_pairs import _glass_predicate_specs
+from scripts.collect_glass_recovery_pairs import (
+    _controller_state_sha256,
+    _glass_predicate_specs,
+    _partition_scene,
+)
 
 
 def accepted_pair_dir_from_manifest(manifest: str | Path) -> Path:
@@ -89,12 +93,19 @@ def main() -> None:
     state = np.load(state_path)
     if array_sha256(state) != record.branch_start_state_sha256:
         raise SystemExit(f"start-state hash mismatch for {state_path}")
+    controller_path = pair_dir / "controller_state.npz"
+    controller_state = dict(np.load(controller_path))
+    expected_controller_hash = record.metadata.get("controller_state_sha256")
+    if _controller_state_sha256(controller_state) != expected_controller_hash:
+        raise SystemExit(f"controller-state hash mismatch for {controller_path}")
 
     arrays_path = pair_dir.parents[1] / record.arrays_path
     arrays = dict(np.load(arrays_path))
     validate_episode_arrays(arrays, record.n_steps)
     env = LiberoEnv(placement.task_suite, placement.task_id)
-    env.reset_to_exact(state, movable_objects=glasses)
+    obstacles, movables = _partition_scene(glasses)
+    env.reset_to_exact(state, obstacles=obstacles, movable_objects=movables)
+    env.restore_controller_state(controller_state)
     crash = build_any(_glass_predicate_specs(glasses))
     success = build_predicate(PredicateSpec("libero_task_success", {}))
     crashed = succeeded = False
@@ -131,7 +142,9 @@ def main() -> None:
     }
     print(json.dumps(payload, indent=2), flush=True)
     if args.out:
-        Path(args.out).write_text(json.dumps(payload, indent=2) + "\n")
+        out = Path(args.out)
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(json.dumps(payload, indent=2) + "\n")
     if not matches:
         raise SystemExit("replay outcome does not match manifest")
 

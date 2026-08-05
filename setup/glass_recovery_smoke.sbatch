@@ -44,6 +44,7 @@ fi
 CHECKPOINT="$RUN_ROOT/checkpoint"
 EVAL_OUT="$RUN_ROOT/eval_heldout.json"
 BASE_CHECKPOINT="${CB_BASE_CHECKPOINT:-/projects/p33100/siosio/huggingface_cache/hub/models--openvla--openvla-7b-finetuned-libero-spatial/snapshots/962318cec55ac10993ff0f5f43eda9a270b4c873}"
+mkdir -p "$RUN_ROOT"
 
 if [[ -n "$SOURCE_RUN_ROOT" ]]; then
   echo "Reusing accepted data from $SOURCE_RUN_ROOT"

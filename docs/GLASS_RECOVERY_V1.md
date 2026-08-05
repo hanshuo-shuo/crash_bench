@@ -50,12 +50,13 @@ state, nominal/target/executed action, five risk labels, hazard type, future
 contact force, abort target, and the masks used by each loss.
 
 The nominal branch is the first sampled Base OpenVLA catastrophe rollout, captured
-continuously from its saved start state. Its actions are also replayed as a
-non-gating audit and the result is recorded. Exact action-index reproduction is
-not required because robosuite OSC/interpolator state and contact warm-start state
-are not fully represented by flat MuJoCo qpos/qvel; re-sampling the stochastic
-policy is never used as a validity test. Risk/severity labels always come from the
-original real catastrophe rollout.
+continuously from its saved start state. Exact branch state includes flat MuJoCo
+qpos/qvel, contact warm-start/actuator state, and the robosuite OSC/interpolator
+goal state carried between policy steps. The captured nominal action suffix must
+reproduce the catastrophe at the same action index after restoring this runtime
+state; otherwise the pair is rejected before it can enter a manifest. Re-sampling
+the stochastic policy is never used as a validity test. Risk/severity labels come
+from the original real catastrophe rollout after this replay gate passes.
 
 The collector starts at T-20 and evaluates 10-step backoffs through the earliest
 measured nominal state. It retains the earliest clean common robot/task state

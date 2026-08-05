@@ -279,6 +279,13 @@ def validate_paired_records(records: Iterable[PairedTrajectoryRecord]) -> dict[s
             raise ValueError(f"{pair_id} spans multiple placements")
         if len({record.matched_robot_state_sha256 for record in group}) != 1:
             raise ValueError(f"{pair_id} branches do not share the same robot/task state")
+        controller_hashes = {
+            record.metadata.get("controller_state_sha256") for record in group
+        }
+        if controller_hashes != {None} and (
+            None in controller_hashes or len(controller_hashes) != 1
+        ):
+            raise ValueError(f"{pair_id} branches do not share the same controller state")
         on_path = {
             record.trajectory_kind: record for record in group
             if record.trajectory_kind in {"nominal_catastrophe", "oracle_recovery"}

@@ -3,12 +3,13 @@ from __future__ import annotations
 import tempfile
 from argparse import Namespace
 from pathlib import Path
+from types import SimpleNamespace
 
 import numpy as np
 import pytest
 import torch
 
-from crashbench.envs.libero_adapter import inject_obstacles_xml
+from crashbench.envs.libero_adapter import LiberoEnv, inject_obstacles_xml
 from crashbench.glass_recovery_data import (
     HAZARD_TYPES,
     RISK_HORIZONS,
@@ -123,6 +124,66 @@ def test_four_way_pair_requires_exact_nominal_oracle_state():
     ), *records[2:]]
     with pytest.raises(ValueError, match="not exact-state matched"):
         validate_paired_records(changed)
+
+    controller_changed = [
+        PairedTrajectoryRecord(**{
+            **record.to_dict(),
+            "metadata": {
+                **record.metadata,
+                "controller_state_sha256": "first" if index < 3 else "different",
+            },
+        })
+        for index, record in enumerate(records)
+    ]
+    with pytest.raises(ValueError, match="controller state"):
+        validate_paired_records(controller_changed)
+
+
+def test_controller_state_roundtrip_restores_osc_interpolators():
+    class Controller(SimpleNamespace):
+        def update(self, force=False):
+            self.updated_with_force = force
+
+    controller = Controller(
+        goal_pos=np.asarray([1.0, 2.0, 3.0]), goal_ori=np.eye(3),
+        ori_ref=np.eye(3) * 2, relative_ori=np.asarray([0.1, 0.2, 0.3]),
+        new_update=True,
+        interpolator_pos=SimpleNamespace(
+            start=np.asarray([0.0, 1.0, 2.0]), goal=np.asarray([1.0, 2.0, 3.0]), step=2,
+        ),
+        interpolator_ori=SimpleNamespace(
+            start=np.asarray([0.0, 0.1, 0.2]), goal=np.asarray([0.3, 0.4, 0.5]), step=1,
+        ),
+    )
+    env = LiberoEnv.__new__(LiberoEnv)
+    env.env = SimpleNamespace(env=SimpleNamespace(
+        robots=[SimpleNamespace(controller=controller)]
+    ))
+    model = SimpleNamespace(nv=2, na=1, nu=2)
+    data = SimpleNamespace(
+        qacc_warmstart=np.asarray([0.4, 0.5]),
+        act=np.asarray([0.6]), ctrl=np.asarray([0.7, 0.8]),
+    )
+    env.sim_view = SimpleNamespace(_live_mj=lambda: (model, data))
+    snapshot = env.controller_state()
+    controller.goal_pos[:] = -1
+    controller.interpolator_pos.goal[:] = -1
+    controller.interpolator_pos.step = 0
+    controller.new_update = False
+    data.qacc_warmstart[:] = -1
+    data.act[:] = -1
+    data.ctrl[:] = -1
+
+    env.restore_controller_state(snapshot)
+
+    assert controller.updated_with_force is True
+    assert np.array_equal(controller.goal_pos, [1.0, 2.0, 3.0])
+    assert np.array_equal(controller.interpolator_pos.goal, [1.0, 2.0, 3.0])
+    assert controller.interpolator_pos.step == 2
+    assert controller.new_update is True
+    assert np.array_equal(data.qacc_warmstart, [0.4, 0.5])
+    assert np.array_equal(data.act, [0.6])
+    assert np.array_equal(data.ctrl, [0.7, 0.8])
 
 
 def _batch(n=4, hidden_dim=6):
