@@ -86,6 +86,9 @@ def _glass_force(sim, glasses: list[dict]) -> float:
 
 
 def _controller_state_sha256(state: dict[str, np.ndarray]) -> str:
+    object_keys = [key for key, value in state.items() if np.asarray(value).dtype.hasobject]
+    if object_keys:
+        raise ValueError(f"controller state contains object arrays: {sorted(object_keys)}")
     return canonical_sha256({
         key: array_sha256(value) for key, value in sorted(state.items())
     })

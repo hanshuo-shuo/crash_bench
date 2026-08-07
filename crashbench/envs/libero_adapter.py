@@ -441,6 +441,14 @@ class LiberoEnv:
     def controller_state(self) -> dict[str, np.ndarray]:
         """Capture policy-boundary runtime state omitted by flat qpos/qvel."""
 
+        def encode(value) -> np.ndarray:
+            if value is None:
+                return np.empty(0, dtype=np.float64)
+            array = np.asarray(value)
+            if array.dtype.hasobject:
+                raise TypeError("controller runtime state cannot contain object arrays")
+            return array.copy()
+
         raw = self.env
         while not hasattr(raw, "robots") and hasattr(raw, "env"):
             raw = raw.env
@@ -458,9 +466,9 @@ class LiberoEnv:
             prefix = f"robot{robot_index}"
             for name in ("goal_pos", "goal_ori", "ori_ref", "relative_ori"):
                 if hasattr(controller, name):
-                    snapshot[f"{prefix}.controller.{name}"] = np.asarray(
+                    snapshot[f"{prefix}.controller.{name}"] = encode(
                         getattr(controller, name)
-                    ).copy()
+                    )
             snapshot[f"{prefix}.controller.new_update"] = np.asarray(
                 bool(controller.new_update), dtype=np.bool_
             )
@@ -469,9 +477,9 @@ class LiberoEnv:
                 if interpolator is None:
                     continue
                 for name in ("start", "goal", "step"):
-                    snapshot[f"{prefix}.{interpolator_name}.{name}"] = np.asarray(
+                    snapshot[f"{prefix}.{interpolator_name}.{name}"] = encode(
                         getattr(interpolator, name)
-                    ).copy()
+                    )
         return snapshot
 
     def restore_controller_state(self, snapshot: dict[str, np.ndarray]) -> None:
@@ -492,7 +500,8 @@ class LiberoEnv:
                     value = np.asarray(snapshot[key])
                     setattr(
                         controller, name,
-                        bool(value.item()) if name == "new_update" else value.copy(),
+                        bool(value.item()) if name == "new_update"
+                        else None if value.size == 0 else value.copy(),
                     )
             for interpolator_name in ("interpolator_pos", "interpolator_ori"):
                 interpolator = getattr(controller, interpolator_name, None)

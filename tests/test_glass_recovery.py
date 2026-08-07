@@ -146,7 +146,7 @@ def test_controller_state_roundtrip_restores_osc_interpolators():
 
     controller = Controller(
         goal_pos=np.asarray([1.0, 2.0, 3.0]), goal_ori=np.eye(3),
-        ori_ref=np.eye(3) * 2, relative_ori=np.asarray([0.1, 0.2, 0.3]),
+        ori_ref=None, relative_ori=np.asarray([0.1, 0.2, 0.3]),
         new_update=True,
         interpolator_pos=SimpleNamespace(
             start=np.asarray([0.0, 1.0, 2.0]), goal=np.asarray([1.0, 2.0, 3.0]), step=2,
@@ -166,6 +166,8 @@ def test_controller_state_roundtrip_restores_osc_interpolators():
     )
     env.sim_view = SimpleNamespace(_live_mj=lambda: (model, data))
     snapshot = env.controller_state()
+    assert snapshot["robot0.controller.ori_ref"].shape == (0,)
+    assert all(not value.dtype.hasobject for value in snapshot.values())
     controller.goal_pos[:] = -1
     controller.interpolator_pos.goal[:] = -1
     controller.interpolator_pos.step = 0
@@ -181,6 +183,7 @@ def test_controller_state_roundtrip_restores_osc_interpolators():
     assert np.array_equal(controller.interpolator_pos.goal, [1.0, 2.0, 3.0])
     assert controller.interpolator_pos.step == 2
     assert controller.new_update is True
+    assert controller.ori_ref is None
     assert np.array_equal(data.qacc_warmstart, [0.4, 0.5])
     assert np.array_equal(data.act, [0.6])
     assert np.array_equal(data.ctrl, [0.7, 0.8])
