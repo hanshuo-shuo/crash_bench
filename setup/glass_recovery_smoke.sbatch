@@ -31,6 +31,10 @@ REPO_ROOT="${CB_REPO_ROOT:-$HOME/crash_bench}"
 BASE_REPO_ROOT="${CB_BASE_REPO_ROOT:-$HOME/crash_bench}"
 export PYTHONPATH="$BASE_REPO_ROOT/third_party/openvla:$REPO_ROOT${PYTHONPATH:+:$PYTHONPATH}"
 cd "$REPO_ROOT"
+git diff --quiet && git diff --cached --quiet \
+  || { echo "tracked source differs from HEAD" >&2; exit 1; }
+export CB_CODE_COMMIT="${CB_CODE_COMMIT:-$(git rev-parse HEAD)}"
+echo "CODE_COMMIT=$CB_CODE_COMMIT"
 
 RUN_ROOT="${CB_GLASS_RECOVERY_RUN_ROOT:-results/glass_recovery_v1/smoke_${SLURM_JOB_ID}}"
 SOURCE_RUN_ROOT="${CB_GLASS_RECOVERY_SOURCE_RUN_ROOT:-}"

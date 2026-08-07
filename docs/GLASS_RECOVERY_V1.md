@@ -169,3 +169,30 @@ accepted paired group per split, trains 40 updates, replays one branch, and runs
 one held-out placement. It is an execution check, not evidence of generalization.
 Full collection should follow only after the smoke confirms the oracle,
 exact-state replay, and memory/runtime envelope.
+
+## Verified end-to-end smoke
+
+Quest job `8747337` completed on an A100 in 38:30 using source commit
+`911fd013f9d0260c1325d0acc7ae30f41e58a3e0`. The job accepted one fail-closed
+four-branch pair per split (`train_0047`, `validation_0010`, and
+`heldout_0028`), independently replayed the train catastrophe at the recorded
+action index, trained 40 updates, saved the checkpoint and training summary,
+and completed a one-placement held-out gating evaluation. All three accepted
+pairs have one matched robot-state hash and one runtime-controller-state hash;
+their nominal replays reproduced catastrophe at action indices 40, 42, and 32,
+respectively. No controller-state array used an object dtype.
+
+The smoke validates execution, serialization, split isolation, replay, training,
+and evaluation plumbing. It does **not** validate recovery quality. On its single
+held-out placement, the gated policy had 0% safe task success, 100% catastrophe
+rate, 0% safe-abort rate, and 100% false intervention on the clean control. It
+reduced worst-case glass impact force from 59.45 N to 16.51 N, but still crashed
+on both hazard regimes. These are diagnostic values with `n=1`, not generalization
+estimates or evidence that the method improves safety.
+
+The run JSON contains `code_commit: null` because the smoke wrapper had not yet
+exported `CB_CODE_COMMIT`. Provenance was recovered from the unchanged, tracked-clean
+Quest checkout and Slurm log at `911fd013f9d0260c1325d0acc7ae30f41e58a3e0`.
+The wrapper now exports its exact HEAD and refuses tracked source modifications,
+so future artifacts record the commit directly. Untracked result files do not
+invalidate the source check.
