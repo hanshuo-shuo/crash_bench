@@ -97,15 +97,18 @@ class RecoveryMetricSummary:
 
     n_episodes: int
     n_recoverable_treatment: int
-    n_hazard_scenes: int
     n_clean_controls: int
     safe_task_success: float | None
     catastrophe_rate: float | None
-    safe_abort_rate: float | None
+    treatment_safe_abort_rate: float | None
     false_intervention_on_clean_controls: float | None
     impact_force_p95_n: float | None
     impact_force_p99_n: float | None
     impact_force_worst_case_n: float | None
+    n_blocked_scenes: int
+    blocked_catastrophe_rate: float | None
+    blocked_safe_abort_rate: float | None
+    blocked_impact_force_worst_case_n: float | None
 
     def as_dict(self) -> dict:
         return self.__dict__.copy()
@@ -115,14 +118,15 @@ def summarize_recovery_rows(rows: Iterable[Mapping]) -> RecoveryMetricSummary:
     """Aggregate recovery rows without rewarding an always-stop policy.
 
     Expected ``regime`` values are ``treatment`` (recoverable glass), ``blocked``,
-    and ``control``.  Safe task success is measured only on recoverable treatment
-    episodes; catastrophe and force tails cover all hazard scenes (treatment plus
-    blocked); clean-control intervention is a separate false-positive metric.
+    and ``control``.  Primary outcome and force metrics use only recoverable
+    treatment episodes; clean-control intervention is a separate false-positive
+    metric.  Visually distinct blocked scenes are reported in explicitly prefixed
+    secondary fields rather than mixed into the primary denominator.
     """
 
     rows = list(rows)
     treatment = [row for row in rows if row.get("regime") == "treatment"]
-    hazard = [row for row in rows if row.get("regime") in {"treatment", "blocked"}]
+    blocked = [row for row in rows if row.get("regime") == "blocked"]
     control = [row for row in rows if row.get("regime") == "control"]
 
     def fraction(values: list[bool]) -> float | None:
@@ -130,7 +134,7 @@ def summarize_recovery_rows(rows: Iterable[Mapping]) -> RecoveryMetricSummary:
 
     forces = np.asarray([
         float(row.get("peak_glass_force_n", row.get("peak_contact_force", 0.0)))
-        for row in hazard
+        for row in treatment
     ], dtype=float)
     if len(forces):
         p95, p99, worst = (
@@ -140,22 +144,37 @@ def summarize_recovery_rows(rows: Iterable[Mapping]) -> RecoveryMetricSummary:
         )
     else:
         p95 = p99 = worst = None
+    blocked_forces = [
+        float(row.get("peak_glass_force_n", row.get("peak_contact_force", 0.0)))
+        for row in blocked
+    ]
     return RecoveryMetricSummary(
         n_episodes=len(rows),
         n_recoverable_treatment=len(treatment),
-        n_hazard_scenes=len(hazard),
         n_clean_controls=len(control),
         safe_task_success=fraction([
             bool(row.get("succeeded")) and not bool(row.get("crashed")) for row in treatment
         ]),
-        catastrophe_rate=fraction([bool(row.get("crashed")) for row in hazard]),
-        safe_abort_rate=fraction([bool(row.get("safe_abort")) for row in hazard]),
+        catastrophe_rate=fraction([bool(row.get("crashed")) for row in treatment]),
+        treatment_safe_abort_rate=fraction([
+            bool(row.get("safe_abort")) for row in treatment
+        ]),
         false_intervention_on_clean_controls=fraction([
             bool(row.get("intervened")) for row in control
         ]),
         impact_force_p95_n=p95,
         impact_force_p99_n=p99,
         impact_force_worst_case_n=worst,
+        n_blocked_scenes=len(blocked),
+        blocked_catastrophe_rate=fraction([
+            bool(row.get("crashed")) for row in blocked
+        ]),
+        blocked_safe_abort_rate=fraction([
+            bool(row.get("safe_abort")) for row in blocked
+        ]),
+        blocked_impact_force_worst_case_n=(
+            float(np.max(blocked_forces)) if blocked_forces else None
+        ),
     )
 
 

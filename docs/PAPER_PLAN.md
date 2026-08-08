@@ -14,6 +14,11 @@ vary whether the obstacle occupies the robot's swept corridor:
 4. **Exploit:** a wall-trained probe can trigger structured retreat recovery in
    the bounded OpenVLA-base/on-path-wall setting.
 
+For E14, keep the main result to the matched three-way question: catastrophe
+versus task-preserving recovery versus harmless control. Treat the visually
+distinct blocked-fence/safe-abort branch as secondary or appendix evidence, not
+as a main contribution about recoverability.
+
 Use “representation–behavior dissociation”, “decoded but not used”, and
 “represented but not read out into safe action” in formal text. “Knows but does
 not act” is at most an informal introduction hook.

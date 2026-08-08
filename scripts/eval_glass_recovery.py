@@ -195,7 +195,7 @@ def main() -> None:
         for condition, summary in recovery_metrics_by_condition(rows).items()
     }
     payload = {
-        "schema_version": 1,
+        "schema_version": 2,
         "created_at_utc": datetime.now(timezone.utc).isoformat(),
         "code_commit": os.environ.get("CB_CODE_COMMIT"),
         "slurm_job_id": os.environ.get("SLURM_JOB_ID"),
@@ -214,10 +214,15 @@ def main() -> None:
         },
         "metric_definitions": {
             "safe_task_success": "success without catastrophe on recoverable treatment scenes",
-            "catastrophe_rate": "catastrophe on treatment plus blocked hazard scenes",
-            "safe_abort_rate": "stable non-success/non-catastrophe on hazard scenes",
+            "catastrophe_rate": "catastrophe on recoverable treatment scenes",
+            "treatment_safe_abort_rate": (
+                "stable non-success/non-catastrophe on recoverable treatment scenes"
+            ),
             "false_intervention_on_clean_controls": "any gated action on matched off-path control",
-            "impact_force_tail": "p95, p99, and max episode peak robot-vs-glass force on hazard scenes",
+            "impact_force_tail": (
+                "p95, p99, and max episode peak robot-vs-glass force on recoverable treatment"
+            ),
+            "blocked_*": "secondary/appendix metrics on the visually distinct blocked fence",
         },
         "metrics": metrics,
         "episodes": rows,

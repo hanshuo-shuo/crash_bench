@@ -26,6 +26,10 @@ from crashbench.glass_recovery_model import (
     GlassRecoveryNetwork,
     glass_recovery_loss,
 )
+from scripts.train_glass_recovery import (
+    _episode_max_scores,
+    _select_episode_risk_threshold,
+)
 from crashbench.metrics import summarize_recovery_rows
 from crashbench.policies.glass_recovery_policy import GlassRecoveryPolicy
 from crashbench.recovery import DetourComplete
@@ -228,6 +232,48 @@ def test_joint_critic_recovery_loss_and_checkpoint_roundtrip():
         restored, metadata = GlassRecoveryNetwork.load_checkpoint(path)
         assert restored.config.hidden_dim == 6
         assert metadata["calibration"]["threshold"] == 0.5
+
+
+def test_direct_recovery_action_can_reverse_saturated_nominal_action():
+    model = GlassRecoveryNetwork(GlassRecoveryConfig(
+        hidden_dim=6, width=8, depth=1, dropout=0.0,
+    ))
+    for parameter in model.parameters():
+        torch.nn.init.zeros_(parameter)
+    model.action_head.bias.data.fill_(-4.0)
+    nominal = torch.ones(1, 7)
+    outputs = model(torch.zeros(1, 6), torch.zeros(1, 8), nominal)
+    assert torch.all(outputs["recovery_action"] < -0.99)
+    assert torch.allclose(
+        outputs["action_delta"], outputs["recovery_action"] - nominal
+    )
+
+
+def test_critic_predictions_condition_on_nominal_action():
+    model = GlassRecoveryNetwork(GlassRecoveryConfig(
+        hidden_dim=6, width=8, depth=1, dropout=0.0,
+    ))
+    hidden = torch.randn(1, 6).repeat(2, 1)
+    state = torch.randn(1, 8).repeat(2, 1)
+    nominal = torch.stack((torch.arange(7), torch.arange(6, -1, -1))).float()
+    outputs = model(hidden, state, nominal)
+    assert not torch.allclose(outputs["risk_logits"][0], outputs["risk_logits"][1])
+
+
+def test_episode_max_threshold_calibrates_false_interventions_by_episode():
+    frame_scores = np.asarray([0.01, 0.10, 0.20, 0.30, 0.80, 0.90])
+    valid = np.ones(6, dtype=bool)
+    episode_ids = np.asarray([0, 0, 1, 1, 2, 2])
+    kinds = np.asarray([2, 2, 2, 2, 0, 0])
+    controls = _episode_max_scores(frame_scores, valid, episode_ids, kinds, 2)
+    catastrophes = _episode_max_scores(frame_scores, valid, episode_ids, kinds, 0)
+    calibration = _select_episode_risk_threshold(controls, catastrophes, 0.0)
+    assert np.array_equal(controls, [0.10, 0.30])
+    assert np.array_equal(catastrophes, [0.90])
+    assert calibration["threshold"] == pytest.approx(0.9)
+    assert calibration["control_episode_fpr"] == 0.0
+    assert calibration["catastrophe_episode_tpr"] == 1.0
+    assert calibration["calibration_unit"] == "episode_max_risk"
 
 
 def test_episode_array_schema():
@@ -461,9 +507,11 @@ def test_recovery_metrics_do_not_reward_always_stop():
     summary = summarize_recovery_rows(rows)
     assert summary.safe_task_success == 0.5
     assert summary.catastrophe_rate == 0.0
-    assert summary.safe_abort_rate == 2 / 3
+    assert summary.treatment_safe_abort_rate == 0.5
     assert summary.false_intervention_on_clean_controls == 0.0
     assert summary.impact_force_worst_case_n == 2.0
+    assert summary.blocked_safe_abort_rate == 1.0
+    assert summary.blocked_impact_force_worst_case_n == 1.0
 
 
 def test_replay_selects_accepted_pair_from_manifest_not_first_directory(tmp_path):
@@ -575,11 +623,11 @@ def test_tiny_training_pipeline_runs_end_to_end():
             validation_manifest=str(root / "validation.jsonl"),
             output=str(root / "checkpoint"), device="cpu", max_steps=2, batch_size=4,
             learning_rate=3e-4, weight_decay=0.0, max_grad_norm=1.0,
-            width=8, depth=1, dropout=0.0, max_action_residual=1.0,
+            width=8, depth=1, dropout=0.0,
             sensitivity_margin=0.2, lambda_recovery=1.0, lambda_risk=1.0,
             lambda_hazard=0.25, lambda_severity=0.25, lambda_abort=0.5,
             lambda_invariance=0.5, lambda_sensitivity=0.25,
-            gating_horizon=10, max_control_fpr=0.5, exit_threshold_ratio=0.5,
+            gating_horizon=10, max_control_episode_fpr=0.5, exit_threshold_ratio=0.5,
             abort_threshold=0.6, eval_every=1, log_every=1,
             num_workers=0, cache_size=2, seed=17, overwrite=False,
         )
@@ -590,3 +638,4 @@ def test_tiny_training_pipeline_runs_end_to_end():
         assert model.config.hidden_dim == 6
         assert metadata["heldout_used_for_training_or_calibration"] is False
         assert metadata["calibration"]["horizon"] == 10
+        assert metadata["calibration"]["calibration_unit"] == "episode_max_risk"

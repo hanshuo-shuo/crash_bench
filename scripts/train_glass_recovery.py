@@ -89,6 +89,7 @@ class PairedFrameDataset(Dataset):
             .index(self.records[record_index].trajectory_kind),
             dtype=torch.long,
         )
+        out["episode_id"] = torch.tensor(record_index, dtype=torch.long)
         return out
 
     def balanced_sampler(self, seed: int) -> WeightedRandomSampler:
@@ -115,24 +116,64 @@ def _auc(scores: np.ndarray, labels: np.ndarray) -> float:
                          + 0.5 * (positive[:, None] == negative[None, :])))
 
 
-def _select_risk_threshold(scores: np.ndarray, labels: np.ndarray, max_fpr: float) -> dict:
+def _episode_max_scores(
+    scores: np.ndarray,
+    valid: np.ndarray,
+    episode_ids: np.ndarray,
+    trajectory_kinds: np.ndarray,
+    selected_kind: int,
+) -> np.ndarray:
+    """Reduce valid frame risks to one maximum for each selected trajectory."""
+
     scores = np.asarray(scores, dtype=float)
-    labels = np.asarray(labels, dtype=bool)
-    if not labels.any() or labels.all():
-        raise ValueError("risk calibration needs positive and negative validation frames")
-    candidates = np.unique(np.concatenate(([1.0], scores, [0.0])))
+    valid = np.asarray(valid, dtype=bool)
+    episode_ids = np.asarray(episode_ids, dtype=int)
+    trajectory_kinds = np.asarray(trajectory_kinds, dtype=int)
+    maxima = []
+    for episode_id in np.unique(episode_ids[trajectory_kinds == selected_kind]):
+        episode = episode_ids == episode_id
+        kinds = np.unique(trajectory_kinds[episode])
+        if len(kinds) != 1 or int(kinds[0]) != selected_kind:
+            raise ValueError(f"episode {episode_id} mixes trajectory kinds")
+        usable = episode & valid
+        if not usable.any():
+            raise ValueError(f"episode {episode_id} has no valid risk frames")
+        maxima.append(float(scores[usable].max()))
+    if not maxima:
+        raise ValueError("risk calibration has no episodes for the requested trajectory kind")
+    return np.asarray(maxima, dtype=float)
+
+
+def _select_episode_risk_threshold(
+    control_episode_scores: np.ndarray,
+    catastrophe_episode_scores: np.ndarray,
+    max_control_episode_fpr: float,
+) -> dict:
+    """Select an enter threshold in the same episode-level unit as evaluation."""
+
+    controls = np.asarray(control_episode_scores, dtype=float)
+    catastrophes = np.asarray(catastrophe_episode_scores, dtype=float)
+    if not len(controls) or not len(catastrophes):
+        raise ValueError("risk calibration needs control and catastrophe validation episodes")
+    candidates = np.unique(np.concatenate(([1.0], controls, catastrophes, [0.0])))
     best = None
     for threshold in candidates:
-        predicted = scores >= threshold
-        fpr = float(predicted[~labels].mean())
-        tpr = float(predicted[labels].mean())
-        if fpr <= max_fpr + 1e-12:
+        fpr = float((controls >= threshold).mean())
+        tpr = float((catastrophes >= threshold).mean())
+        if fpr <= max_control_episode_fpr + 1e-12:
             key = (tpr, -fpr, float(threshold))
             if best is None or key > best[0]:
                 best = (key, threshold, fpr, tpr)
     assert best is not None
-    return {"threshold": float(best[1]), "fpr": best[2], "tpr": best[3],
-            "max_fpr": float(max_fpr)}
+    return {
+        "threshold": float(best[1]),
+        "control_episode_fpr": best[2],
+        "catastrophe_episode_tpr": best[3],
+        "max_control_episode_fpr": float(max_control_episode_fpr),
+        "control_episodes": int(len(controls)),
+        "catastrophe_episodes": int(len(catastrophes)),
+        "calibration_unit": "episode_max_risk",
+    }
 
 
 @torch.inference_mode()
@@ -143,7 +184,8 @@ def evaluate(model: GlassRecoveryNetwork, loader: DataLoader, device: torch.devi
     hazard_scores, hazard_targets = [], []
     severity_pred, severity_target, severity_mask = [], [], []
     abort_scores, abort_targets = [], []
-    residuals, invariance_masks, sensitivity_masks = [], [], []
+    action_deltas, invariance_masks, sensitivity_masks = [], [], []
+    episode_ids, trajectory_kinds = [], []
     for batch in loader:
         batch = _move(batch, device)
         outputs = model(batch["hidden"], batch["robot_state"], batch["nominal_action"])
@@ -159,9 +201,11 @@ def evaluate(model: GlassRecoveryNetwork, loader: DataLoader, device: torch.devi
         severity_mask.append(batch["severity_mask"].cpu().numpy())
         abort_scores.append(torch.sigmoid(outputs["abort_logit"]).cpu().numpy())
         abort_targets.append(batch["abort_target"].cpu().numpy())
-        residuals.append(torch.linalg.vector_norm(outputs["action_residual"], dim=-1).cpu().numpy())
+        action_deltas.append(torch.linalg.vector_norm(outputs["action_delta"], dim=-1).cpu().numpy())
         invariance_masks.append(batch["invariance_mask"].cpu().numpy())
         sensitivity_masks.append(batch["sensitivity_mask"].cpu().numpy())
+        episode_ids.append(batch["episode_id"].cpu().numpy())
+        trajectory_kinds.append(batch["trajectory_kind"].cpu().numpy())
     risk_scores = np.concatenate(risk_scores)
     risk_targets = np.concatenate(risk_targets)
     risk_masks = np.concatenate(risk_masks).astype(bool)
@@ -172,9 +216,11 @@ def evaluate(model: GlassRecoveryNetwork, loader: DataLoader, device: torch.devi
     severity_mask = np.concatenate(severity_mask).astype(bool)
     abort_scores = np.concatenate(abort_scores)
     abort_targets = np.concatenate(abort_targets).astype(bool)
-    residuals = np.concatenate(residuals)
+    action_deltas = np.concatenate(action_deltas)
     invariance_masks = np.concatenate(invariance_masks).astype(bool)
     sensitivity_masks = np.concatenate(sensitivity_masks).astype(bool)
+    episode_ids = np.concatenate(episode_ids)
+    trajectory_kinds = np.concatenate(trajectory_kinds)
     metrics = {
         "risk_auc_by_horizon": {
             str(horizon): _auc(risk_scores[:, index][risk_masks[:, index]],
@@ -187,11 +233,11 @@ def evaluate(model: GlassRecoveryNetwork, loader: DataLoader, device: torch.devi
             if severity_mask.any() else None
         ),
         "abort_auc": _auc(abort_scores, abort_targets),
-        "control_residual_l2_mean": (
-            float(residuals[invariance_masks].mean()) if invariance_masks.any() else None
+        "control_action_delta_l2_mean": (
+            float(action_deltas[invariance_masks].mean()) if invariance_masks.any() else None
         ),
-        "hazard_residual_l2_mean": (
-            float(residuals[sensitivity_masks].mean()) if sensitivity_masks.any() else None
+        "hazard_action_delta_l2_mean": (
+            float(action_deltas[sensitivity_masks].mean()) if sensitivity_masks.any() else None
         ),
     }
     return float(np.mean(loss_values)), metrics | {
@@ -200,6 +246,8 @@ def evaluate(model: GlassRecoveryNetwork, loader: DataLoader, device: torch.devi
         "_risk_masks": risk_masks,
         "_abort_scores": abort_scores,
         "_abort_targets": abort_targets,
+        "_episode_ids": episode_ids,
+        "_trajectory_kinds": trajectory_kinds,
     }
 
 
@@ -222,7 +270,6 @@ def train(args: argparse.Namespace) -> None:
         width=args.width,
         depth=args.depth,
         dropout=args.dropout,
-        max_action_residual=args.max_action_residual,
     )
     model = GlassRecoveryNetwork(config).to(device)
     weights = GlassLossWeights(
@@ -289,10 +336,25 @@ def train(args: argparse.Namespace) -> None:
     validation_loss, validation_metrics = evaluate(model, validation_loader, device)
     calibration_index = RISK_HORIZONS.index(args.gating_horizon)
     mask = validation_metrics["_risk_masks"][:, calibration_index]
-    calibration = _select_risk_threshold(
-        validation_metrics["_risk_scores"][:, calibration_index][mask],
-        validation_metrics["_risk_targets"][:, calibration_index][mask],
-        args.max_control_fpr,
+    scores = validation_metrics["_risk_scores"][:, calibration_index]
+    control_episode_scores = _episode_max_scores(
+        scores,
+        mask,
+        validation_metrics["_episode_ids"],
+        validation_metrics["_trajectory_kinds"],
+        selected_kind=2,
+    )
+    catastrophe_episode_scores = _episode_max_scores(
+        scores,
+        mask,
+        validation_metrics["_episode_ids"],
+        validation_metrics["_trajectory_kinds"],
+        selected_kind=0,
+    )
+    calibration = _select_episode_risk_threshold(
+        control_episode_scores,
+        catastrophe_episode_scores,
+        args.max_control_episode_fpr,
     )
     calibration.update({
         "horizon": args.gating_horizon,
@@ -304,7 +366,10 @@ def train(args: argparse.Namespace) -> None:
     metadata = {
         "created_at_utc": datetime.now(timezone.utc).isoformat(),
         "code_commit": os.environ.get("CB_CODE_COMMIT"),
-        "method": "frozen OpenVLA hidden + robot-state joint critic/recovery action head",
+        "method": (
+            "frozen OpenVLA hidden + robot state + nominal action joint critic; "
+            "direct recovery action head"
+        ),
         "train_manifest": str(args.train_manifest),
         "validation_manifest": str(args.validation_manifest),
         "heldout_used_for_training_or_calibration": False,
@@ -341,7 +406,6 @@ def main() -> None:
     parser.add_argument("--width", type=int, default=512)
     parser.add_argument("--depth", type=int, default=2)
     parser.add_argument("--dropout", type=float, default=0.10)
-    parser.add_argument("--max-action-residual", type=float, default=1.0)
     parser.add_argument("--sensitivity-margin", type=float, default=0.20)
     parser.add_argument("--lambda-recovery", type=float, default=1.0)
     parser.add_argument("--lambda-risk", type=float, default=1.0)
@@ -351,7 +415,7 @@ def main() -> None:
     parser.add_argument("--lambda-invariance", type=float, default=0.5)
     parser.add_argument("--lambda-sensitivity", type=float, default=0.25)
     parser.add_argument("--gating-horizon", type=int, choices=RISK_HORIZONS, default=10)
-    parser.add_argument("--max-control-fpr", type=float, default=0.05)
+    parser.add_argument("--max-control-episode-fpr", type=float, default=0.05)
     parser.add_argument("--exit-threshold-ratio", type=float, default=0.5)
     parser.add_argument("--abort-threshold", type=float, default=0.60)
     parser.add_argument("--eval-every", type=int, default=50)

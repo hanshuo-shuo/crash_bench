@@ -14,7 +14,12 @@ state and nominal 7-D action. It jointly predicts:
 - causal hazard type;
 - future robot-versus-glass contact-force severity;
 - whether the scene belongs to the scoped blocked/safe-abort class;
-- a bounded recovery residual over the nominal action.
+- a direct bounded recovery action.
+
+The primary study is the three-way comparison among nominal catastrophe,
+task-preserving oracle recovery, and harmless off-path control. The visually
+distinct blocked fence and its safe-abort head are secondary/appendix analyses,
+not a main contribution or primary evidence of learned recoverability.
 
 ## Four-way paired data
 
@@ -115,19 +120,33 @@ L = lambda_bc       * L_recovery_BC
   + lambda_sens     * L_on_path_hazard_sensitivity
 ```
 
-At inference, risk below the calibrated threshold returns the nominal OpenVLA
-action. High risk enters the learned recovery head with hysteresis. High risk
-plus blocked probability above its threshold latches into structured safe abort.
+The critic and recovery head are jointly conditioned on normalized hidden state,
+robot state, and the nominal action. The recovery head directly predicts an
+action in `[-1, 1]`; it is not constrained to remain within a unit residual of
+the nominal policy.
+
+The risk enter threshold is calibrated on validation episodes in the same unit
+as the final false-intervention metric. For each clean `off_path_control`
+trajectory, calibration computes the maximum valid frame risk, then selects a
+threshold whose empirical fraction of episode maxima at or above the threshold
+is at most 5%. Among feasible thresholds it maximizes episode-level detection of
+the validation `nominal_catastrophe` trajectories.
+
+At inference, risk below that calibrated threshold returns the nominal OpenVLA
+action. High risk enters the learned recovery head with hysteresis. The
+secondary blocked branch can additionally latch into structured safe abort.
 
 ## Metrics
 
 The evaluator reports, with explicit denominators:
 
 - Safe task success on recoverable treatment scenes;
-- Catastrophe rate on treatment plus blocked hazard scenes;
-- Safe-abort rate on hazard scenes;
+- Catastrophe rate on recoverable treatment scenes;
 - False intervention on matched clean controls;
 - p95, p99, and worst-case episode peak robot-versus-glass force.
+
+Blocked-scene catastrophe and safe-abort rates are reported separately as
+secondary/appendix metrics.
 
 An always-stop policy can have 0% catastrophe but will score 0% Safe task
 success and therefore fails this evaluation.

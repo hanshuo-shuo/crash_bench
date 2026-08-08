@@ -1,14 +1,14 @@
 """Frozen-feature catastrophe critic and glass recovery action head.
 
 The 7B OpenVLA backbone is not modified in phase one.  Its final hidden state is
-concatenated with the 8-D LIBERO robot state and passed through this small joint
-network.  The outputs are:
+concatenated with the 8-D LIBERO robot state and nominal 7-D action, then passed
+through this small joint network.  The outputs are:
 
 * collision logits for 1/3/5/10/20 steps;
 * causal hazard type;
 * log1p future contact-force severity;
 * blocked/safe-abort logit;
-* a bounded residual over the nominal 7-D action.
+* a direct bounded 7-D recovery action.
 """
 
 from __future__ import annotations
@@ -32,7 +32,6 @@ class GlassRecoveryConfig:
     width: int = 512
     depth: int = 2
     dropout: float = 0.10
-    max_action_residual: float = 1.0
 
 
 @dataclass(frozen=True)
@@ -53,8 +52,9 @@ class GlassRecoveryNetwork(nn.Module):
         cfg = self.config
         self.hidden_norm = nn.LayerNorm(cfg.hidden_dim)
         self.state_norm = nn.LayerNorm(cfg.robot_state_dim)
+        self.action_norm = nn.LayerNorm(cfg.action_dim)
         layers: list[nn.Module] = [
-            nn.Linear(cfg.hidden_dim + cfg.robot_state_dim, cfg.width),
+            nn.Linear(cfg.hidden_dim + cfg.robot_state_dim + cfg.action_dim, cfg.width),
             nn.GELU(),
             nn.Dropout(cfg.dropout),
         ]
@@ -85,22 +85,26 @@ class GlassRecoveryNetwork(nn.Module):
             raise ValueError("robot-state dimension mismatch")
         if nominal_action.shape[-1] != self.config.action_dim:
             raise ValueError("nominal-action dimension mismatch")
-        fused = torch.cat((self.hidden_norm(hidden), self.state_norm(robot_state)), dim=-1)
+        fused = torch.cat((
+            self.hidden_norm(hidden),
+            self.state_norm(robot_state),
+            self.action_norm(nominal_action),
+        ), dim=-1)
         features = self.trunk(fused)
-        residual = torch.tanh(self.action_head(features)) * self.config.max_action_residual
-        recovery = torch.clamp(nominal_action + residual, -1.0, 1.0)
+        recovery = torch.tanh(self.action_head(features))
+        action_delta = recovery - nominal_action
         return {
             "risk_logits": self.risk_head(features),
             "hazard_logits": self.hazard_head(features),
             "severity_log": F.softplus(self.severity_head(features).squeeze(-1)),
             "abort_logit": self.abort_head(features).squeeze(-1),
-            "action_residual": residual,
+            "action_delta": action_delta,
             "recovery_action": recovery,
         }
 
     def checkpoint_payload(self, metadata: Mapping | None = None) -> dict:
         return {
-            "schema_version": 1,
+            "schema_version": 2,
             "model_config": asdict(self.config),
             "risk_horizons": list(RISK_HORIZONS),
             "hazard_types": list(HAZARD_TYPES),
@@ -123,7 +127,7 @@ class GlassRecoveryNetwork(nn.Module):
         # Checkpoints are produced locally by this pipeline and contain config +
         # metadata in addition to tensors, so the tensor-only loader is not used.
         payload = torch.load(path, map_location=map_location, weights_only=False)
-        if payload.get("schema_version") != 1:
+        if payload.get("schema_version") != 2:
             raise ValueError(f"unsupported recovery checkpoint {payload.get('schema_version')!r}")
         if tuple(payload.get("risk_horizons", ())) != RISK_HORIZONS:
             raise ValueError("checkpoint risk horizons do not match runtime")
@@ -162,9 +166,9 @@ def glass_recovery_loss(
 
     action_error = (outputs["recovery_action"] - batch["target_action"]).pow(2).mean(dim=-1)
     recovery_bc = _masked_mean(action_error, batch["recovery_mask"])
-    invariance_error = outputs["action_residual"].pow(2).mean(dim=-1)
+    invariance_error = outputs["action_delta"].pow(2).mean(dim=-1)
     invariance = _masked_mean(invariance_error, batch["invariance_mask"])
-    action_change = torch.linalg.vector_norm(outputs["action_residual"], dim=-1)
+    action_change = torch.linalg.vector_norm(outputs["action_delta"], dim=-1)
     sensitivity_error = F.relu(float(sensitivity_margin) - action_change).pow(2)
     sensitivity = _masked_mean(sensitivity_error, batch["sensitivity_mask"])
 
