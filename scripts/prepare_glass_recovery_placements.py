@@ -36,17 +36,17 @@ RGBA = [0.55, 0.78, 0.95, 0.55]
 
 GEOMETRY = {
     "train": (
-        ("nominal", [0.030, 0.060], 400.0, [0.50, 0.56, 0.62, 0.68, 0.72]),
+        ("nominal", [0.028, 0.060], 400.0, [0.48, 0.54, 0.60, 0.64, 0.68]),
     ),
     "validation": (
-        ("validation_tall", [0.028, 0.067], 360.0, [0.53, 0.62, 0.71]),
+        ("validation_tall", [0.026, 0.067], 360.0, [0.50, 0.58, 0.66]),
     ),
     # Held-out placements are grouped by a scene-level geometry family.  No
     # family identifier is reused by train or validation.
     "heldout": (
-        ("tall_narrow", [0.024, 0.078], 330.0, [0.56, 0.64, 0.72]),
-        ("wide_glass", [0.040, 0.060], 440.0, [0.58, 0.67, 0.76]),
-        ("late_approach", [0.030, 0.060], 400.0, [0.74, 0.79, 0.83]),
+        ("tall_narrow", [0.024, 0.072], 330.0, [0.52, 0.60, 0.68]),
+        ("wide_glass", [0.034, 0.060], 440.0, [0.54, 0.61, 0.68]),
+        ("late_approach", [0.028, 0.060], 400.0, [0.62, 0.66, 0.70]),
     ),
 }
 
@@ -204,7 +204,7 @@ def author(args: argparse.Namespace) -> dict:
                 # split separation is still guaranteed by the source-state hash.
                 along_jitter = ((local_index % 3) - 1) * args.along_jitter
                 fraction, required_target_clearance = _collision_free_path_fraction(
-                    requested_fraction + along_jitter,
+                    min(requested_fraction + along_jitter, args.max_nominal_fraction),
                     norm,
                     float(size[0]),
                     args.target_radius,
@@ -275,6 +275,7 @@ def author(args: argparse.Namespace) -> dict:
                         "bowl_xyz": bowl.round(6).tolist(),
                         "path_direction_xy": direction.round(6).tolist(),
                         "requested_nominal_fraction": requested_fraction,
+                        "max_nominal_fraction": args.max_nominal_fraction,
                         "actual_target_clearance_m": round(actual_target_clearance, 6),
                         "required_target_clearance_m": round(required_target_clearance, 6),
                         "off_path_offset_m": args.control_offset,
@@ -333,7 +334,8 @@ def main() -> None:
     parser.add_argument("--along-jitter", type=float, default=0.012)
     parser.add_argument("--target-radius", type=float, default=0.04)
     parser.add_argument("--target-clearance-margin", type=float, default=0.005)
-    parser.add_argument("--min-target-clearance", type=float, default=0.10)
+    parser.add_argument("--min-target-clearance", type=float, default=0.12)
+    parser.add_argument("--max-nominal-fraction", type=float, default=0.70)
     parser.add_argument("--blocked-half-width", type=float, default=0.28)
     parser.add_argument("--blocked-glasses", type=int, default=9)
     parser.add_argument("--blocked-radius", type=float, default=0.032)
@@ -348,9 +350,11 @@ def main() -> None:
     except ValueError as exc:
         raise SystemExit(str(exc)) from exc
     if (args.target_radius <= 0 or args.target_clearance_margin < 0
-            or args.min_target_clearance <= 0):
+            or args.min_target_clearance <= 0
+            or not 0.05 < args.max_nominal_fraction < 0.95):
         raise SystemExit(
-            "target radius and minimum clearance must be positive; margin non-negative"
+            "target radius and minimum clearance must be positive; margin non-negative; "
+            "max nominal fraction must lie in (0.05, 0.95)"
         )
     author(args)
 

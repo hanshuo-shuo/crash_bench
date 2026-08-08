@@ -63,7 +63,7 @@ def _run(
         if success(env.sim_view):
             succeeded, steps_to_event = True, step
             break
-    stable = float(env.sim_view.max_contact_force(env.sim_view._robot_bodies())) < stable_force_threshold
+    stable = float(env.sim_view.peak_force) < stable_force_threshold
     safe_abort = not crashed and not succeeded and stable
     intervention_count = int(getattr(policy, "intervention_count", 0))
     decisions = getattr(policy, "decisions", [])

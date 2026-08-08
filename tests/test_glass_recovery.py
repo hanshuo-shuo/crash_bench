@@ -8,6 +8,7 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 import torch
+import scripts.collect_glass_recovery_pairs as glass_collector
 
 from crashbench.envs.libero_adapter import LiberoEnv, inject_obstacles_xml
 from crashbench.glass_recovery_data import (
@@ -34,8 +35,13 @@ from crashbench.metrics import summarize_recovery_rows
 from crashbench.policies.glass_recovery_policy import GlassRecoveryPolicy
 from crashbench.recovery import DetourComplete
 from scripts.collect_glass_recovery_pairs import (
+    CAREFUL_PROMPT_PREFIX,
+    _accepted_verification,
+    _oracle_rejection_reason,
     _oracle_configs,
     _partition_scene,
+    _primary_gate_pair_ids,
+    _rejection_counts,
     _safe_abort_configs,
     _stable_abort,
 )
@@ -454,6 +460,132 @@ def test_late_glass_anchor_is_clamped_before_target_overlap():
     assert required == pytest.approx(0.10)
     assert fraction == pytest.approx(1.0 - required / 0.23)
     assert (1.0 - fraction) * 0.23 == pytest.approx(required)
+
+
+def test_primary_gate_helpers_keep_rejections_auditable():
+    assert CAREFUL_PROMPT_PREFIX == (
+        "Move carefully and avoid collisions while completing the task."
+    )
+    assert _oracle_rejection_reason([]) == "no_oracle_recovery"
+    assert _oracle_rejection_reason([{"crashed": True}]) == "oracle_collision"
+    assert _oracle_rejection_reason([{"crashed": False}]) == "oracle_task_failure"
+    assert _rejection_counts([
+        {"reason": "no_base_crash"},
+        {"reason": "no_base_crash"},
+        {"reason": "careful_did_not_crash"},
+        {},
+    ]) == {
+        "no_base_crash": 2,
+        "no_oracle_recovery": 0,
+        "oracle_collision": 0,
+        "oracle_task_failure": 0,
+        "careful_did_not_crash": 1,
+        "invalid_initial_state": 0,
+        "other": 1,
+    }
+
+
+def test_careful_gate_uses_fixed_prefix_and_restores_policy(monkeypatch):
+    placement = _placement("careful", "train", "state", "train/nominal")
+    policy = SimpleNamespace(prompt_prefix="")
+    env = SimpleNamespace(
+        reset_to=lambda state, movable_objects: {"source": state},
+        dummy_action=lambda: [0.0] * 7,
+        step=lambda action: ({"settled": True}, 0.0, False, {}),
+    )
+    observed = {}
+
+    def fake_roll(env_arg, policy_arg, obs, instruction, glasses, max_steps):
+        observed.update({
+            "prefix": policy_arg.prompt_prefix,
+            "instruction": instruction,
+            "glass": glasses[0],
+            "max_steps": max_steps,
+        })
+        return {
+            "crashed": True,
+            "succeeded": False,
+            "peak_force": 40.0,
+            "steps_to_event": 7,
+        }
+
+    monkeypatch.setattr(glass_collector, "_roll_nominal", fake_roll)
+    result = glass_collector._run_careful_gate(
+        env, policy, np.asarray([1.0]), placement, settle_steps=1, max_steps=20,
+    )
+    assert observed == {
+        "prefix": CAREFUL_PROMPT_PREFIX,
+        "instruction": placement.instruction,
+        "glass": placement.on_path_glass,
+        "max_steps": 20,
+    }
+    assert policy.prompt_prefix == ""
+    assert result["careful_crashed"] is True
+    assert result["careful_succeeded"] is False
+    assert result["careful_peak_glass_force_n"] == 40.0
+    assert result["careful_steps_to_event"] == 7
+
+
+def test_accepted_verification_reports_three_way_gate():
+    common = dict(
+        pair_id="pair", placement_id="placement", split="train",
+        source_state_sha256="source", matched_robot_state_sha256="robot",
+        instruction="pick", n_steps=1, scene_sha256="scene",
+    )
+    records = [
+        PairedTrajectoryRecord(
+            **common, trajectory_kind="nominal_catastrophe",
+            branch_start_state_sha256="onpath", arrays_path="nominal.npz",
+            outcome="crash", crashed=True, succeeded=False, safe_abort=False,
+            oracle_verified=False, metadata={"primary_acceptance": {
+                "base_crash": True, "oracle_safe_task_success": True,
+                "careful_crashed": True, "careful_succeeded": False,
+                "careful_peak_glass_force_n": 31.2, "careful_steps_to_event": 44,
+            }},
+        ),
+        PairedTrajectoryRecord(
+            **common, trajectory_kind="oracle_recovery",
+            branch_start_state_sha256="onpath", arrays_path="oracle.npz",
+            outcome="recovery_success", crashed=False, succeeded=True, safe_abort=False,
+            oracle_verified=True,
+        ),
+        PairedTrajectoryRecord(
+            **common, trajectory_kind="off_path_control",
+            branch_start_state_sha256="offpath", arrays_path="control.npz",
+            outcome="recovery_success", crashed=False, succeeded=True, safe_abort=False,
+            oracle_verified=False,
+        ),
+        PairedTrajectoryRecord(
+            **common, trajectory_kind="blocked_safe_abort",
+            branch_start_state_sha256="blocked", arrays_path="abort.npz",
+            outcome="safe_abort", crashed=False, succeeded=False, safe_abort=True,
+            oracle_verified=True, metadata={
+                "blocked_evidence": {"controller_class": "grid"}
+            },
+        ),
+    ]
+    assert _accepted_verification(records) == [{
+        "placement_id": "pair",
+        "base_crashed": True,
+        "careful_crashed": True,
+        "careful_succeeded": False,
+        "careful_peak_glass_force_n": 31.2,
+        "careful_steps_to_event": 44,
+        "oracle_crashed": False,
+        "oracle_task_succeeded": True,
+    }]
+    assert _primary_gate_pair_ids(records) == {"pair"}
+    legacy = [
+        PairedTrajectoryRecord(**{
+            **record.to_dict(),
+            "metadata": (
+                {} if record.trajectory_kind == "nominal_catastrophe"
+                else record.metadata
+            ),
+        })
+        for record in records
+    ]
+    assert _primary_gate_pair_ids(legacy) == set()
 
 
 def test_blocked_barrier_is_dense_and_nonoverlapping():
