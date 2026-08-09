@@ -12,6 +12,7 @@ CrashBench studies. Experiment-specific logic remains in `scripts/`.
 | `policies/` | OpenVLA, OFT, pi0 adapters and the narrowly scoped probe guard |
 | `probe.py` | frozen probe utilities |
 | `recovery.py` | online `RetreatHold`, open-loop `WitnessReplay`, and experimental `DetourComplete` |
+| `glass_recovery_data.py`, `glass_recovery_model.py` | E14 matched-pair schema, validation, critic, and direct recovery-action head |
 
 Current verified status:
 
@@ -21,7 +22,10 @@ Current verified status:
   interface.
 - Probe, guard, and structured safe-abort recovery exist.
 - `DetourComplete` is experimental and not a stable/general task-completion
-  recovery solution. The tracked d62 task completion is a low-wall existence demo.
+  recovery solution. The tracked d62 task completion is a low-wall existence
+  demo. Separately, E14 has three glass placements where the matched-state
+  controller is a verified task-completing recoverability witness; this is not
+  yet a learned or general recovery result.
 - The `grasp_dropped` helper still uses an explicitly marked heuristic grasp check;
   it is not a validated core result path.
 

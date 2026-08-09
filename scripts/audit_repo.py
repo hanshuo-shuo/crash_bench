@@ -132,6 +132,42 @@ def audit() -> list[str]:
             if p0_entry["git_commit"] != p0["run_git_commit"]:
                 errors.append("E12 P0 run commit differs from manifest")
 
+    # E14 is a verified environment-validity smoke, not a learned recovery
+    # result. Pin the admission gate and denominators that bound that wording.
+    e14_entry = next((entry for entry in manifest.get("entries", [])
+                      if entry.get("experiment_id") == "E14"), None)
+    if e14_entry is None:
+        errors.append("manifest lacks E14 acceptance-smoke provenance")
+    else:
+        e14_path = ROOT / "results/glass_recovery_acceptance_smoke_20260809.json"
+        if e14_path.exists():
+            e14 = read_json(e14_path)
+            expected = {
+                "status": "acceptance_smoke_complete",
+                "provenance.git_commit": "7bb6d7de805280d084b2dc68084796aec2e0619e",
+                "aggregate_attempt_accounting.candidate_rollout_attempts": 109,
+                "aggregate_attempt_accounting.accepted_admissions": 3,
+                "aggregate_attempt_accounting.rejected_attempts": 106,
+                "aggregate_attempt_accounting.accepted_by_split.train": 2,
+                "aggregate_attempt_accounting.accepted_by_split.validation": 0,
+                "aggregate_attempt_accounting.accepted_by_split.heldout": 1,
+                "validation.accepted_pairs": 3,
+                "validation.trajectory_records": 12,
+            }
+            for dotted, value in expected.items():
+                if dotted_get(e14, dotted) != value:
+                    errors.append(f"E14 acceptance smoke mismatch: {dotted}")
+            if e14_entry["git_commit"] != e14["provenance"]["git_commit"]:
+                errors.append("E14 acceptance-smoke run commit differs from manifest")
+            scene_hashes = {row["on_path_scene_sha256"] for row in e14["accepted"]}
+            if scene_hashes != set(e14_entry["scenario_fingerprints"]):
+                errors.append("E14 accepted scene hashes differ from manifest")
+            for row in e14["accepted"]:
+                if not row["base"]["crashed"] or not row["careful"]["crashed"]:
+                    errors.append(f"E14 primary crash gate failed for {row['placement_id']}")
+                if row["oracle"]["crashed"] or not row["oracle"]["task_succeeded"]:
+                    errors.append(f"E14 oracle gate failed for {row['placement_id']}")
+
     # Every claim result path must exist and declared numeric checks must equal raw JSON values.
     ledger = read_json(ROOT / "results/claims_ledger.json")
     for claim in ledger.get("claims", []):

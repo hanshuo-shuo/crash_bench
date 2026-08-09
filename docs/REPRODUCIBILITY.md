@@ -29,6 +29,11 @@ Tracked summaries are not substitutes for ignored raw assets:
   captures are ignored.
 - `results/selfreport*/hidden.npz` and `meta.json` are needed to regenerate
   probe/shield analyses but are not committed.
+- E14 rendered frames, hidden states, branch arrays, and checkpoints remain in
+  the ignored Quest run root. The promoted summary
+  `results/glass_recovery_acceptance_smoke_20260809.json` records its commit,
+  checkpoint revision, Slurm jobs, accepted state/scene hashes, attempt counts,
+  and SHA256 checksums for the ignored placement and collection manifests.
 - The tall-wall geometry is the treatment root. Low-wall detour results must use
   the separate `scenarios_detour_lowwall/` root.
 

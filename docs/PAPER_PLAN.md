@@ -14,10 +14,12 @@ vary whether the obstacle occupies the robot's swept corridor:
 4. **Exploit:** a wall-trained probe can trigger structured retreat recovery in
    the bounded OpenVLA-base/on-path-wall setting.
 
-For E14, keep the main result to the matched three-way question: catastrophe
-versus task-preserving recovery versus harmless control. Treat the visually
-distinct blocked-fence/safe-abort branch as secondary or appendix evidence, not
-as a main contribution about recoverability.
+For E14, keep the main environment-validity result to the matched three-policy
+gate: Base crash, fixed careful-prompt crash, and safe task-completing oracle.
+The off-path control remains a paired causal control and the visually distinct
+blocked-fence/safe-abort branch remains secondary or appendix evidence. The
+2026-08-09 smoke found three passing placements, but no validation placement;
+do not describe it as a completed recovery-training or generalization result.
 
 Use “representation–behavior dissociation”, “decoded but not used”, and
 “represented but not read out into safe action” in formal text. “Knows but does
@@ -42,6 +44,9 @@ The plan uses the same claim vocabulary, C0–C13, as `CLAIMS.md`.
 - Preserve the tall-wall treatment; put the lowered d62 detour in a distinct
   scenario root with parent/fingerprint metadata.
 - Release a manifest, claims ledger, audit command, and zero-GPU tests.
+- Before E14 training, obtain validation-split placements that pass the same
+  unmodified gate and add repeated Base rollouts to measure policy-level crash
+  reproducibility. Exact captured-action replay alone is a simulator check.
 
 ## SHOULD
 
@@ -73,3 +78,7 @@ The plan uses the same claim vocabulary, C0–C13, as `CLAIMS.md`.
 - E12 is not positive external-validity evidence for C7 or C13. Its tracked
   summary records `dissociation_supported=false`; all guard crash rates are zero,
   while vanilla retains the highest task success (88%).
+- E14 acceptance smoke is an existence result: 3 accepted admissions from 109
+  rollout attempts (train=2, validation=0, heldout=1). Its dominant rejection
+  was `no_base_crash` (92 attempts), so it is evidence for a clean gate and a
+  remaining placement-yield problem, not a denominator for a safety headline.

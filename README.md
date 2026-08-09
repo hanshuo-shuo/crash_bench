@@ -35,6 +35,10 @@ safety failure.
   benign guard fires at the committed online threshold.
 - Glass supplies a separate f30–f70 dose-response study. The old selected-band
   cross-category average is deprecated and is not a project headline.
+- The E14 recoverable-glass acceptance smoke found three exact-state scenes in
+  which Base and the fixed careful-prompt OpenVLA crash while the existing
+  oracle safely completes the task. This is an environment-validity existence
+  result, not yet a split-balanced recovery-training result.
 - Final-readout activation steering and wall-to-glass probe transfer are
   negative results retained in the repository.
 
@@ -85,6 +89,8 @@ Start at [docs/CURRENT.md](docs/CURRENT.md). See the
 [paper plan](docs/PAPER_PLAN.md), [claim ledger](docs/CLAIMS.md),
 [experiment index](docs/EXPERIMENT_INDEX.md), [reproducibility notes](docs/REPRODUCIBILITY.md),
 and [repository audit](docs/REPO_AUDIT.md).
+The current E14 smoke is summarized in
+[results/ANALYSIS_glass_recovery_acceptance.md](results/ANALYSIS_glass_recovery_acceptance.md).
 
 ## Citation and license
 

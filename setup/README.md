@@ -142,6 +142,23 @@ base/fine-tuned wall held-out、fine-tuned train split，以及 base/fine-tuned 
 该模型学习的是“近墙停止”代理，不是 task-completing recovery；报告时必须继续将 `safe_abort`
 与 `recovery_success` 分开，并用 control false-stop 检查 always-stop collapse。
 
+## E14 可恢复玻璃 acceptance smoke（2026-08-09）
+
+`glass_recovery_smoke.sbatch` 现在显式加载 Quest 的 Git module，并在运行前拒绝 tracked source
+漂移。E14 的 primary gate 是：Base OpenVLA crash、固定 careful prefix 也 crash、同一 matched-state
+oracle 无 crash 且完成原 LIBERO 任务。off-path control 和 blocked safe-abort 仍被收集，但 blocked
+不是 primary claim。
+
+真实 H100 smoke 在 commit `7bb6d7d` 上通过了 3 个 placement（train=2、heldout=1、validation=0）。
+机器可读结果在 `results/glass_recovery_acceptance_smoke_20260809.json`，解释在
+`results/ANALYSIS_glass_recovery_acceptance.md`。由于 validation 没有 accepted placement，当前不要
+直接继续训练/评估；先改善 on-path 命中率并补 validation，且不允许放宽 crash 或 oracle 条件。
+
+```bash
+cd ~/crash_bench
+bash setup/submit_glass_recovery_smoke.sh
+```
+
 M1 gate 只负责筛选任务；通过后还需要把 `phase1_build_env_collision.py` 参数化，按每个
 通过任务录 nominal 轨迹并生成 on/off-path corridor 场景，才进入跨任务主实验。
 

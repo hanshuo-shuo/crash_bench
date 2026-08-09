@@ -23,3 +23,10 @@ and machine-readable fields are mirrored in `results/claims_ledger.json`.
 
 Deprecated statement: `headline_suite.json`'s selected-band category average is
 historical and must not appear in current documentation or claims.
+
+E14's verified recoverable-glass acceptance smoke is an environment-validity
+milestone, not a new claim ID. Its three accepted placements establish existence
+of the Base-crash + Careful-crash + safe task-completing Oracle configuration;
+they do not yet establish a learned recovery result or held-out generalization.
+See `results/ANALYSIS_glass_recovery_acceptance.md` and
+`results/glass_recovery_acceptance_smoke_20260809.json`.
