@@ -13,11 +13,11 @@
 #SBATCH --output=%x_%j.log
 
 set -euo pipefail
-GIT_BIN="${CB_GIT_BIN:-/usr/bin/git}"
 echo "JOB $SLURM_JOB_ID on $(hostname) @ $(date)"
 nvidia-smi -L
 module purge
-module load mamba/24.3.0
+module load mamba/24.3.0 git/2.47.0-gcc-12.4.0
+GIT_BIN="${CB_GIT_BIN:-$(command -v git)}"
 source activate "$HOME/crash_bench/envs/openvla"
 
 export PYTHONNOUSERSITE=1
