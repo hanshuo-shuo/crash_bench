@@ -1,7 +1,7 @@
 # HISTORICAL — not the current execution plan
 
 This report is retained as an evidence record. Current wording and claims are in
-[docs/CURRENT.md](docs/CURRENT.md) and [docs/CLAIMS.md](docs/CLAIMS.md).
+[CURRENT.md](../CURRENT.md) and [CLAIMS.md](../CLAIMS.md).
 
 # CrashBench — Does OpenVLA Stop Before It Crashes?
 

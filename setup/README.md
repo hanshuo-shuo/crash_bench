@@ -8,7 +8,7 @@
 ## TL;DR
 
 - 为评测 **OpenVLA** 新建了独立 conda 环境(官方老栈),跑通了 **OpenVLA × LIBERO-Spatial** 的 nominal eval。
-- **Sanity 结果:成功率 66.7%(20/30, 3 trials/task)** —— 与官方 ~84.7%(500 ep)数量级吻合,**VLA bridge 打通**(PLAN.md Phase 0 step 3 ✓)。
+- **Sanity 结果:成功率 66.7%(20/30, 3 trials/task)** —— 与官方 ~84.7%(500 ep)数量级吻合，**VLA bridge 打通**。
 - 整套安装可一键复现:`install_openvla_env.sh`(在登录节点跑)+ `run_libero_sanity.sbatch`(GPU 节点跑)。
 
 ---
@@ -195,7 +195,7 @@ per-task = [0.90, 0.92, 0.86, 1.00, 0.68, 0.44, 0.90, 0.86, 0.82, 0.62]
 ```
 > 早期 sanity(job 4950759, 30 ep)是 66.7%,小样本噪声;跑满 500 收敛到 80.0%。
 
-→ VLA bridge(渲染格式 / 动作解码 / 控制器)正确,可进 PLAN.md **Phase 1**(5 个 pre-crash 场景 → crash rate)。
+→ VLA bridge（渲染格式 / 动作解码 / 控制器）正确；该结果是后续 pre-crash 实验的历史入口条件。
 
 ### 任务长什么样
 

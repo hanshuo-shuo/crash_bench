@@ -42,4 +42,5 @@ Tracked summaries are not substitutes for ignored raw assets:
   the separate `scenarios_detour_lowwall/` root.
 
 See `results/manifest.json` and `results/claims_ledger.json` for evidence-level
-provenance and [REPO_AUDIT.md](REPO_AUDIT.md) for known gaps.
+provenance. The pre-refactor gap inventory remains available in the
+[historical repository audit](archive/REPO_AUDIT.md).

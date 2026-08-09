@@ -92,9 +92,11 @@ captures are intentionally gitignored; tracked summaries document the gap.
 Start at [docs/CURRENT.md](docs/CURRENT.md). See the
 [paper plan](docs/PAPER_PLAN.md), [claim ledger](docs/CLAIMS.md),
 [experiment index](docs/EXPERIMENT_INDEX.md), [reproducibility notes](docs/REPRODUCIBILITY.md),
-and [repository audit](docs/REPO_AUDIT.md).
+and [script index](docs/SCRIPT_INDEX.md).
 The current E14 smoke is summarized in
 [results/ANALYSIS_glass_recovery_acceptance.md](results/ANALYSIS_glass_recovery_acceptance.md).
+Superseded planning and narrative snapshots are isolated in
+[`docs/archive/`](docs/archive/README.md).
 
 ## Citation and license
 

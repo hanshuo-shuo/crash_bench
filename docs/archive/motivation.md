@@ -1,5 +1,9 @@
 # CrashBench Motivation
 
+> **Historical framing.** This early benchmark motivation is retained for
+> provenance. See [CURRENT.md](../CURRENT.md) for the scoped causal-diagnosis
+> framing used now.
+
 ## From Failure Modes to a Benchmark
 
 Our initial failure-mode analysis suggests that the apparent safety capability of vision-language models in control settings can be misleading. In early experiments, the model often appeared to choose safe actions, but the prompt contained explicit physical information such as clearance, safety labels, velocity, progress-to-goal, or other hand-engineered abstractions. Once these quantities were exposed, the task became much closer to selecting from a pre-labeled safety structure than performing genuine visual physical reasoning.

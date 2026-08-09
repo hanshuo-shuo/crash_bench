@@ -1,5 +1,8 @@
 # Repository audit — 2026-07-17
 
+> **Historical pre-refactor snapshot.** For current repository integrity rules,
+> see [REPRODUCIBILITY.md](../REPRODUCIBILITY.md) and `scripts/audit_repo.py`.
+
 This is the Stage-A, read-only audit for the repository-hygiene refactor. It
 records observed state before any scenario or result provenance is changed. The
 current scientific framing is a controlled causal diagnosis, not a broad

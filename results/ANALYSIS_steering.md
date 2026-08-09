@@ -18,7 +18,7 @@
 question: is the probe *direction itself* a steering knob — push the hidden state away from
 "I will crash" and does the policy brake on its own, no controller? OpenVLA's action is a
 discrete token off the LM head applied to the final post-norm hidden state, so the obvious
-injection point is that norm output (PLAN.md §11 experiment 1b).
+injection point is that norm output (the original Path 1-1b design).
 
 ## Method
 

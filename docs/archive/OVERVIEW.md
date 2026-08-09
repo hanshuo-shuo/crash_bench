@@ -1,6 +1,6 @@
 # HISTORICAL — not the current execution plan
 
-See [docs/CURRENT.md](docs/CURRENT.md) for current framing. This tour may retain
+See [CURRENT.md](../CURRENT.md) for current framing. This tour may retain
 superseded numbers and is not a paper truth source.
 
 # CrashBench — The Simple (but Complete) Version

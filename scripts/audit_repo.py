@@ -33,6 +33,26 @@ CURRENT_DOCS = (
     ROOT / "docs/NEGATIVE_RESULTS.md",
 )
 BANNED_CURRENT_TEXT = ("98.3%", "98.3 %", "It still might just be ood still.")
+SUPERSEDED_ROOT_DOCS = (
+    "GIT_WORKFLOW.md",
+    "OVERVIEW.md",
+    "PAPER_PLAN.md",
+    "PLAN.md",
+    "REPORT.md",
+    "ROADMAP.md",
+    "STATUS.md",
+    "STRATEGY.md",
+    "motivation.md",
+)
+REQUIRED_ARCHIVE_DOCS = (
+    "OVERVIEW.md",
+    "P0_HANDOFF_20260726.md",
+    "PHASE1.md",
+    "REPORT.md",
+    "REPO_AUDIT.md",
+    "STRATEGY.md",
+    "motivation.md",
+)
 
 
 def read_json(path: Path):
@@ -47,6 +67,15 @@ def dotted_get(value, path: str):
 
 def audit() -> list[str]:
     errors: list[str] = []
+    # Keep one obvious documentation entrypoint. Historical narratives belong
+    # in docs/archive rather than competing with README.md at repository root.
+    for name in SUPERSEDED_ROOT_DOCS:
+        if (ROOT / name).exists():
+            errors.append(f"superseded root document reintroduced: {name}")
+    for name in REQUIRED_ARCHIVE_DOCS:
+        if not (ROOT / "docs/archive" / name).exists():
+            errors.append(f"historical archive document missing: docs/archive/{name}")
+
     # Current docs must share the complete C0..C13 ledger vocabulary and no obsolete headline.
     claim_ids = set(re.findall(r"\bC(?:1[0-3]|[0-9])\b", (ROOT / "docs/CLAIMS.md").read_text()))
     expected_claim_ids = {f"C{i}" for i in range(14)}

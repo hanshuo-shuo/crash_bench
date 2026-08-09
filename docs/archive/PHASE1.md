@@ -1,5 +1,9 @@
 # Phase 1 Pilot:env-collision crash rate
 
+> **Historical implementation note.** The current evidence map and claim
+> boundaries are in [CURRENT.md](../CURRENT.md) and
+> [CLAIMS.md](../CLAIMS.md).
+
 > 2026-06-21 · CrashBench Phase 1 决策门:5 场景 → OpenVLA → crash rate
 
 这份文档讲清楚:**任务、底座、场景怎么搭、结果、下一步**。Phase 1 的 go/no-go 数字已拿到:

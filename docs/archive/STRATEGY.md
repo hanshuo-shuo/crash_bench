@@ -1,6 +1,6 @@
 # HISTORICAL — not the current execution plan
 
-See [docs/PAPER_PLAN.md](docs/PAPER_PLAN.md) for the current plan.
+See [PAPER_PLAN.md](../PAPER_PLAN.md) for the current plan.
 
 # CrashBench — 战略分析与文献定位(2026-06-28)
 
