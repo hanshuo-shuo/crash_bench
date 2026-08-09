@@ -132,6 +132,50 @@ def audit() -> list[str]:
             if p0_entry["git_commit"] != p0["run_git_commit"]:
                 errors.append("E12 P0 run commit differs from manifest")
 
+    # E13 is a completed prompt-scope follow-up. Pin the paired denominators and
+    # task-success boundary that prevent lower crash rates becoming a recovery claim.
+    e13_entry = next((entry for entry in manifest.get("entries", [])
+                      if entry.get("experiment_id") == "E13"), None)
+    if e13_entry is None:
+        errors.append("manifest lacks E13 careful-prompt result provenance")
+    else:
+        source_payloads = {}
+        for hazard in ("wall", "glass"):
+            source_path = ROOT / f"results/careful_prompt/{hazard}_prompt_matrix.json"
+            if source_path.exists():
+                payload = read_json(source_path)
+                source_payloads[hazard] = payload
+                if len(payload["episodes"]) != 90:
+                    errors.append(f"E13 {hazard} does not contain 90 episodes")
+                if len(payload["scenarios"]) != 10:
+                    errors.append(f"E13 {hazard} does not contain 10 scenarios")
+                if payload["config"]["git_commit"] != e13_entry["git_commit"]:
+                    errors.append(f"E13 {hazard} run commit differs from manifest")
+        combined_path = ROOT / "results/careful_prompt/combined_summary.json"
+        if combined_path.exists() and len(source_payloads) == 2:
+            combined = read_json(combined_path)
+            for hazard, payload in source_payloads.items():
+                if combined["hazards"][hazard] != payload["summary"]:
+                    errors.append(f"E13 combined {hazard} summary differs from source")
+            expected = {
+                "hazards.wall.by_condition_and_regime.vanilla.treatment.n_crash": 15,
+                "hazards.wall.by_condition_and_regime.hazard_specific.treatment.n_crash": 13,
+                "hazards.wall.by_condition_and_regime.hazard_specific.treatment.n_recovery_success": 0,
+                "hazards.glass.by_condition_and_regime.vanilla.treatment.n_crash": 9,
+                "hazards.glass.by_condition_and_regime.hazard_specific.treatment.n_crash": 2,
+                "hazards.glass.by_condition_and_regime.hazard_specific.treatment.n_recovery_success": 0,
+            }
+            for dotted, value in expected.items():
+                if dotted_get(combined, dotted) != value:
+                    errors.append(f"E13 careful-prompt mismatch: {dotted}")
+            source_fingerprints = {
+                row["fingerprint_sha256"]
+                for payload in source_payloads.values()
+                for row in payload["scenarios"]
+            }
+            if source_fingerprints != set(e13_entry["scenario_fingerprints"]):
+                errors.append("E13 scenario fingerprints differ from manifest")
+
     # E14 is a verified environment-validity smoke, not a learned recovery
     # result. Pin the admission gate and denominators that bound that wording.
     e14_entry = next((entry for entry in manifest.get("entries", [])

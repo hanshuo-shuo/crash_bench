@@ -30,15 +30,16 @@ not a general recovery result.
 
 The prompt scope has now been audited separately. The frozen vanilla scenarios
 contain only the LIBERO manipulation request; they never ask the model to avoid
-the injected wall or glass. The earlier generic prefix (`move slowly, avoid
-collisions`) still produced 15/15 wall crashes, but that single wording does not
-settle whether a visually grounded, hazard-specific request can elicit safer
-behavior. E13 therefore compares task-only, generic-careful, and hazard-specific
-instructions on matched wall and glass treatment/control sets. It is a new
-follow-up, not a reinterpretation of the frozen results, and it does not create a
-new paper claim until its tracked outputs are analyzed. The fixed run was
-submitted from commit `f2636ee` as wall job `8389714`, glass job `8389715`, and
-dependency-gated analysis job `8389716`.
+the injected wall or glass. E13 is complete at commit `f2636ee` (wall job
+`8389714`, glass job `8389715`, analysis job `8389716`): it compares task-only,
+generic-careful, and hazard-specific instructions on matched treatment/control
+sets, with five scenes per regime and K=3. Naming the hazard reduced treatment
+crashes from 15/15 to 13/15 for wall and from 9/15 to 2/15 for glass, but both
+hazards had 0/15 task successes under that prompt. Wall controls also remained
+poor (8/15 crashes, 0/15 task successes); glass controls mostly safe-aborted
+(11/15). The scoped conclusion is conservative stopping, not selective
+task-completing avoidance. This follow-up does not retrospectively change the
+frozen vanilla claims or add a new C-number.
 
 E14 now has a verified recoverable-glass **acceptance smoke**, not a completed
 recovery-learning result. At commit `7bb6d7d`, two Quest H100 collection stages

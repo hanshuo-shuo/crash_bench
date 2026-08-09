@@ -29,6 +29,10 @@ Tracked summaries are not substitutes for ignored raw assets:
   captures are ignored.
 - `results/selfreport*/hidden.npz` and `meta.json` are needed to regenerate
   probe/shield analyses but are not committed.
+- E13's promoted wall and glass matrices retain all 180 episode rows, exact
+  effective instructions, checkpoint identity, commit, Slurm job IDs, and 20
+  scenario fingerprints. The combined JSON and Markdown are derived from those
+  tracked matrices; videos and Slurm logs remain ignored.
 - E14 rendered frames, hidden states, branch arrays, and checkpoints remain in
   the ignored Quest run root. The promoted summary
   `results/glass_recovery_acceptance_smoke_20260809.json` records its commit,

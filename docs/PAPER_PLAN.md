@@ -78,6 +78,10 @@ The plan uses the same claim vocabulary, C0–C13, as `CLAIMS.md`.
 - E12 is not positive external-validity evidence for C7 or C13. Its tracked
   summary records `dissociation_supported=false`; all guard crash rates are zero,
   while vanilla retains the highest task success (88%).
+- E13 shows that visually grounded hazard language changes behavior, especially
+  for glass, but both hazard-specific treatment cells have 0/15 task successes.
+  Describe this as conservative stopping, not task-completing avoidance, and use
+  five geometry scenarios per regime as the meaningful cluster count.
 - E14 acceptance smoke is an existence result: 3 accepted admissions from 109
   rollout attempts (train=2, validation=0, heldout=1). Its dominant rejection
   was `no_base_crash` (92 attempts), so it is evidence for a clean gate and a

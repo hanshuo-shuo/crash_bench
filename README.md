@@ -35,6 +35,10 @@ safety failure.
   benign guard fires at the committed online threshold.
 - Glass supplies a separate f30–f70 dose-response study. The old selected-band
   cross-category average is deprecated and is not a project headline.
+- In E13, explicitly naming the hazard reduced treatment crashes relative to
+  the original task-only instruction (wall 15/15 to 13/15; glass 9/15 to 2/15),
+  but yielded 0/15 treatment task successes for both hazards. The observed
+  benefit is conservative stopping, not task-completing avoidance.
 - The E14 recoverable-glass acceptance smoke found three exact-state scenes in
   which Base and the fixed careful-prompt OpenVLA crash while the existing
   oracle safely completes the task. This is an environment-validity existence

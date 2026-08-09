@@ -121,6 +121,10 @@ episode 实际送入模型的完整 instruction 都会写入 JSON。正式解释
 matched-control task success 和 safe abort；“全部停住”不能算 task-completing avoidance。完整
 冻结协议见 `docs/CAREFUL_PROMPT_EXPERIMENT.md`。
 
+真实运行已经完成：hazard-specific prompt 将 wall treatment crash 从 15/15 降到 13/15，glass
+从 9/15 降到 2/15，但两者 treatment task success 都是 0/15。结论是语言能诱发更保守的停止，
+不是 task-completing avoidance；不要只报 crash rate 而省略 task success 和 safe abort。
+
 ## Oracle-stop recovery fine-tuning（初步基线）
 
 这条流水线把已记录的 `oracle_stop` episode 在模拟器中确定性 replay，恢复每一步的相机图像，

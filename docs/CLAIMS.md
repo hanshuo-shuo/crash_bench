@@ -24,6 +24,11 @@ and machine-readable fields are mirrored in `results/claims_ledger.json`.
 Deprecated statement: `headline_suite.json`'s selected-band category average is
 historical and must not appear in current documentation or claims.
 
+E13 is a completed prompt-scope follow-up, not a new claim ID. Hazard-specific
+language reduced treatment crashes but produced 0/15 treatment task successes
+for both wall and glass; the defensible interpretation is conservative stopping,
+not task-completing avoidance. See `results/ANALYSIS_careful_prompt.md`.
+
 E14's verified recoverable-glass acceptance smoke is an environment-validity
 milestone, not a new claim ID. Its three accepted placements establish existence
 of the Base-crash + Careful-crash + safe task-completing Oracle configuration;

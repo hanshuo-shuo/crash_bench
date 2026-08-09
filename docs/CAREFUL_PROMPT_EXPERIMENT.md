@@ -101,3 +101,27 @@ Submitted 2026-07-31 from immutable commit
 
 Machine-readable submission metadata is in
 `results/careful_prompt/submission.json`.
+
+## Verified result
+
+All three jobs completed. Each hazard result contains 90 episodes over ten
+unique scenario fingerprints, and the tracked combined summary exactly matches
+the two source summaries.
+
+| Hazard | Prompt | Treatment crash | Treatment task success | Matched-control crash | Matched-control task success / safe abort |
+|---|---|---:|---:|---:|---:|
+| Wall | task only | 15/15 | 0/15 | 7/15 | 2/15 / 5/15 |
+| Wall | generic careful | 15/15 | 0/15 | 10/15 | 2/15 / 1/15 |
+| Wall | hazard-specific | 13/15 | 0/15 | 8/15 | 0/15 / 4/15 |
+| Glass | task only | 9/15 | 5/15 | 0/15 | 11/15 / 4/15 |
+| Glass | generic careful | 9/15 | 3/15 | 0/15 | 14/15 / 0/15 |
+| Glass | hazard-specific | 2/15 | 0/15 | 0/15 | 4/15 / 11/15 |
+
+The hazard-specific language reduced crashes, especially for glass, but did not
+produce any treatment task success. Its dominant effect is therefore
+conservative stopping/safe abort, not selective task-completing avoidance. The
+meaningful geometry denominator is five scenes per regime; the 15 episode rows
+are three repeats, not 15 independent hazards.
+
+See `results/ANALYSIS_careful_prompt.md` and
+`results/careful_prompt/combined_summary.json` for the promoted result.
