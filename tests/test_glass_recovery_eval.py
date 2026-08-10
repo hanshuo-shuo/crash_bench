@@ -3,8 +3,10 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
+from argparse import Namespace
 from dataclasses import asdict
 from pathlib import Path
+from types import SimpleNamespace
 
 import numpy as np
 import pytest
@@ -27,8 +29,14 @@ from crashbench.glass_recovery_model import (
     PRIMARY_DISABLED_AUXILIARY_TERMS,
     TTE_DEFINITION,
     GlassLossWeights,
+    GlassRecoveryNetwork,
 )
+from crashbench.policies.glass_recovery_policy import GlassRecoveryPolicy
 from crashbench.metrics import analyze_recovery_evaluation
+from scripts.audit_repo import (
+    E15_MAIN_BASELINE_CONDITIONS,
+    learned_recovery_semantic_errors,
+)
 from scripts.collect_glass_recovery_pairs import (
     _controller_state_sha256,
     _observation_sha256,
@@ -121,6 +129,10 @@ def _arrays(n: int, kind: str, horizon: int) -> dict[str, np.ndarray]:
             [float(1 <= int(tte) <= risk_h) for risk_h in RISK_HORIZONS]
             for tte in remaining
         ], dtype=np.float32)
+        values["oracle_recoverable_from_this_state"][0] = 1
+        values["oracle_verified_mask"][0] = 1
+        values["latest_verified_recoverable_state"][0] = 1
+        values["runtime_trigger_eligible"][0] = 1
     elif kind == "oracle_recovery":
         values["time_to_catastrophe_actions"][0] = horizon
         values["time_to_catastrophe_mask"][0] = 1
@@ -132,6 +144,10 @@ def _arrays(n: int, kind: str, horizon: int) -> dict[str, np.ndarray]:
         values["oracle_verified_mask"][0] = 1
         values["latest_verified_recoverable_state"][0] = 1
         values["runtime_trigger_eligible"][0] = 1
+    elif kind == "off_path_control":
+        # This synthetic control terminates in task success, so its observed
+        # safe frame is not a right-censored timeout tail.
+        values["risk_mask"][:] = 1
     return values
 
 
@@ -181,7 +197,7 @@ def _records_for_placement(
     paths: list[Path] = []
     arrays_by_kind = {
         "nominal_catastrophe": _arrays(PROTOCOL_H, "nominal_catastrophe", PROTOCOL_H),
-        "oracle_recovery": _arrays(1, "oracle_recovery", PROTOCOL_H),
+        "oracle_recovery": _arrays(PROTOCOL_H, "oracle_recovery", PROTOCOL_H),
         "off_path_control": _arrays(1, "off_path_control", PROTOCOL_H),
     }
     if write_artifacts:
@@ -249,7 +265,7 @@ def _records_for_placement(
         trajectory_kind="oracle_recovery",
         branch_start_state_sha256=onpath_hash,
         arrays_path=(pair_root / "oracle_recovery.npz").relative_to(root).as_posix(),
-        n_steps=1,
+        n_steps=PROTOCOL_H,
         outcome="recovery_success",
         crashed=False,
         succeeded=True,
@@ -343,9 +359,10 @@ def _build_contract_files(root: Path) -> dict:
     heldout_artifacts: list[Path] = []
     for placement in placements:
         records[placement.split], paths = _records_for_placement(
-            root, placement, write_artifacts=placement.split == "heldout"
+            root, placement, write_artifacts=True
         )
-        heldout_artifacts.extend(paths)
+        if placement.split == "heldout":
+            heldout_artifacts.extend(paths)
     manifests = {}
     for split in ("train", "validation", "heldout"):
         manifests[split] = root / f"{split}.jsonl"
@@ -1127,3 +1144,190 @@ def test_analysis_cli_combines_distinct_training_seed_outputs(tmp_path):
         "paired_method_differences"
     ]
     assert "always_stop" not in payload["analysis"]["methods"]
+
+
+def test_zero_gpu_v2_integration_collection_training_latch_cohort_eval_analysis(tmp_path):
+    """Exercise the E15 contract without importing LIBERO or loading OpenVLA."""
+
+    from scripts.train_glass_recovery import train
+
+    files = _build_contract_files(tmp_path / "e15")
+    checkpoint_dir = tmp_path / "e15" / "train_seed_17"
+    train(Namespace(
+        train_manifest=str(files["manifests"]["train"]),
+        validation_manifest=str(files["manifests"]["validation"]),
+        output=str(checkpoint_dir),
+        device="cpu",
+        max_steps=1,
+        batch_size=8,
+        learning_rate=3e-4,
+        weight_decay=0.0,
+        max_grad_norm=1.0,
+        width=8,
+        depth=1,
+        dropout=0.0,
+        sensitivity_margin=0.2,
+        lambda_recovery=1.0,
+        lambda_risk=1.0,
+        lambda_hazard=0.0,
+        lambda_severity=0.0,
+        lambda_abort=0.0,
+        lambda_invariance=0.5,
+        lambda_sensitivity=0.0,
+        gating_horizon=PROTOCOL_H,
+        first_k=1,
+        max_control_episode_fpr=1.0,
+        base_resolved_revision=BASE_REVISION,
+        unnorm_key="libero_spatial",
+        protocol_sha256=canonical_sha256(_primary_protocol()),
+        trigger_horizon=PROTOCOL_H,
+        exit_threshold_ratio=0.5,
+        abort_threshold=0.6,
+        eval_every=1,
+        log_every=1,
+        num_workers=0,
+        cache_size=2,
+        seed=17,
+        overwrite=False,
+    ))
+    checkpoint = checkpoint_dir / "glass_recovery.pt"
+    _, checkpoint_metadata = GlassRecoveryNetwork.load_checkpoint(checkpoint)
+    checkpoint_sha = file_sha256(checkpoint)
+
+    # Seal the already accepted cohort and produced checkpoint into the final
+    # evaluation protocol before any held-out episode is selected or run.
+    protocol = json.loads(files["protocol"].read_text())
+    protocol["evaluation_protocol"]["checkpoint_sha256_by_training_seed"] = {
+        "17": checkpoint_sha
+    }
+    protocol["evaluation_protocol_sha256"] = canonical_sha256(
+        protocol["evaluation_protocol"]
+    )
+    files["protocol"].write_text(json.dumps(protocol, indent=2) + "\n")
+    cohort = json.loads(files["cohort"].read_text())
+    cohort["evaluation_protocol_sha256"] = protocol["evaluation_protocol_sha256"]
+    files["cohort"].write_text(json.dumps(cohort, indent=2) + "\n")
+
+    contract = load_evaluation_contract(
+        placement_manifest=files["placements"],
+        trajectory_manifest=files["manifests"]["heldout"],
+        evaluation_cohort=files["cohort"],
+        protocol=files["protocol"],
+        checkpoint_metadata=checkpoint_metadata,
+        checkpoint_sha256=checkpoint_sha,
+        base_checkpoint_revision=BASE_REVISION,
+        unnorm_key="libero_spatial",
+    )
+    assert [pair.placement.placement_id for pair in contract.pairs] == ["heldout-pair"]
+
+    class IntegratedBase(_FakeBase):
+        checkpoint_identity = {"resolved_revision": BASE_REVISION}
+        cfg = SimpleNamespace(unnorm_key="libero_spatial")
+
+    base = IntegratedBase()
+    policy = GlassRecoveryPolicy(
+        base,
+        str(checkpoint),
+        device="cpu",
+        risk_horizon=PROTOCOL_H,
+        risk_enter_threshold=0.5,
+    )
+    predictions = iter((0.9, 0.1))
+    policy._predict = lambda hidden, state, nominal: {
+        "risk": np.full(len(RISK_HORIZONS), next(predictions), dtype=np.float32),
+        "recovery_action": np.full(7, 0.25, dtype=np.float32),
+    }
+    observation = {"state": np.zeros(8, dtype=np.float32)}
+    policy.act(observation, "pick and place")
+    policy.act(observation, "pick and place")
+    assert policy.mode == "recovery_latched"
+    assert policy.decisions[-1]["ownership_age"] == 1
+
+    pair = contract.pairs[0]
+    env = _FakeEnv(success_after=1)
+    _prepare_fake_runtime_pair(pair, env)
+    rows = []
+    for condition in ("base", "full_learned_gate_recovery"):
+        for regime in ("treatment", "control"):
+            score = 0.9 if condition != "base" and regime == "treatment" else 0.1
+            policy._predict = lambda hidden, state, nominal, score=score: {
+                "risk": np.full(len(RISK_HORIZONS), score, dtype=np.float32),
+                "recovery_action": np.full(7, 0.25, dtype=np.float32),
+            }
+            rows.append(run_evaluation_episode(
+                env=env,
+                base=base,
+                risk_model=policy,
+                pair=pair,
+                mode="exact_anchor",
+                regime=regime,
+                condition=condition,
+                rollout_seed=101,
+                training_seed=17,
+                settle_steps=0,
+                max_steps=1,
+                trigger_artifact_root=tmp_path / "triggers",
+            ))
+    analysis = analyze_recovery_evaluation(rows, bootstrap_replicates=0)
+    assert analysis["independent_cluster"] == "source_state_sha256"
+    assert analysis["counts"]["unique_source_states"] == 1
+    assert set(analysis["methods"]) == {"base", "full_learned_gate_recovery"}
+    assert "full_learned_gate_recovery_minus_base" in analysis[
+        "paired_method_differences"
+    ]
+
+
+def test_learned_result_audit_contract_fails_closed():
+    metric = {"estimate": 0.5, "denominator": 8}
+    payload = {
+        "kind": "glass_recovery_learned_result",
+        "accepted_cohort": {"sha256": "a" * 64, "pair_ids": ["p1", "p2"]},
+        "exact_replay_summary": {"all_passed": True, "n_pairs": 2},
+        "source_state_counts": {"train": 8, "validation": 5, "final_heldout": 12},
+        "family_counts": {
+            "train": {"narrow": 8},
+            "validation": {"wide": 5},
+            "final_heldout": {"late": 12},
+        },
+        "leakage_checks": {
+            "source_state_overlap_count": 0,
+            "family_overlap_count": 0,
+            "physical_scene_overlap_count": 0,
+        },
+        "identities": {
+            "checkpoint": {"sha256": "b" * 64, "training_seed": 17},
+            "base": {
+                "resolved_revision": BASE_REVISION,
+                "unnorm_key": "libero_spatial",
+            },
+            "dataset": {
+                "train_manifest_sha256": "c" * 64,
+                "validation_manifest_sha256": "d" * 64,
+                "final_heldout_manifest_sha256": "e" * 64,
+            },
+            "protocol": {
+                "primary_sha256": "f" * 64,
+                "evaluation_sha256": "1" * 64,
+            },
+        },
+        "evaluation": {
+            "primary_mode": "source_to_task",
+            "conditions": sorted(E15_MAIN_BASELINE_CONDITIONS),
+        },
+        "source_cluster_analysis": {"independent_cluster": "source_state_sha256"},
+        "primary_metrics": {
+            "safe_task_success": metric,
+            "catastrophe": metric,
+            "clean_control_false_intervention": metric,
+            "clean_control_task_preservation": metric,
+        },
+    }
+    assert learned_recovery_semantic_errors(payload) == []
+    invalid = json.loads(json.dumps(payload))
+    invalid["accepted_cohort"]["pair_ids"].append("p1")
+    invalid["evaluation"]["conditions"].remove("base")
+    invalid["primary_metrics"]["catastrophe"]["denominator"] = 0
+    errors = learned_recovery_semantic_errors(invalid)
+    assert any("pair_ids" in error for error in errors)
+    assert any("base" in error for error in errors)
+    assert any("catastrophe" in error for error in errors)

@@ -354,6 +354,8 @@ def validate_placement_design(placements: Iterable[GlassPlacement]) -> dict[str,
     ids: set[str] = set()
     state_splits: dict[str, set[str]] = {}
     cluster_splits: dict[str, set[str]] = {}
+    family_fingerprint_splits: dict[str, set[str]] = {}
+    physical_scene_ids: dict[str, str] = {}
     counts = {split: 0 for split in SPLITS}
     unique_states = {split: set() for split in SPLITS}
     clusters = {split: set() for split in SPLITS}
@@ -366,12 +368,36 @@ def validate_placement_design(placements: Iterable[GlassPlacement]) -> dict[str,
         clusters[placement.split].add(placement.cluster_id)
         state_splits.setdefault(placement.source_state_sha256, set()).add(placement.split)
         cluster_splits.setdefault(placement.cluster_id, set()).add(placement.split)
+        family_fingerprint = placement.metadata.get("geometry_family_fingerprint")
+        if family_fingerprint:
+            family_fingerprint_splits.setdefault(
+                str(family_fingerprint), set()
+            ).add(placement.split)
+        physical_scene = placement.metadata.get("physical_scene_sha256")
+        if physical_scene:
+            prior = physical_scene_ids.get(str(physical_scene))
+            if prior is not None:
+                raise ValueError(
+                    f"duplicate physical scene {physical_scene}: {prior}, "
+                    f"{placement.placement_id}"
+                )
+            physical_scene_ids[str(physical_scene)] = placement.placement_id
     leaked_states = {key: sorted(value) for key, value in state_splits.items() if len(value) > 1}
     if leaked_states:
         raise ValueError(f"source initial state leaks across splits: {leaked_states}")
     leaked_clusters = {key: sorted(value) for key, value in cluster_splits.items() if len(value) > 1}
     if leaked_clusters:
         raise ValueError(f"scene cluster leaks across splits: {leaked_clusters}")
+    leaked_family_fingerprints = {
+        key: sorted(value)
+        for key, value in family_fingerprint_splits.items()
+        if len(value) > 1
+    }
+    if leaked_family_fingerprints:
+        raise ValueError(
+            "physical geometry family leaks across splits: "
+            f"{leaked_family_fingerprints}"
+        )
     missing = [split for split, count in counts.items() if count == 0]
     if missing:
         raise ValueError(f"placement design has empty splits: {missing}")
@@ -381,6 +407,14 @@ def validate_placement_design(placements: Iterable[GlassPlacement]) -> dict[str,
             split: len(values) for split, values in unique_states.items()
         },
         "clusters_by_split": {split: sorted(values) for split, values in clusters.items()},
+        "geometry_family_fingerprints_by_split": {
+            split: sorted(
+                fingerprint for fingerprint, splits in family_fingerprint_splits.items()
+                if split in splits
+            )
+            for split in SPLITS
+        },
+        "physical_scene_count": len(physical_scene_ids),
         "split_unit": "source LIBERO initial-state sha256; never shared across splits",
         "pairing_unit": (
             "placement_id; three primary trajectory branches share one matched "

@@ -1,6 +1,10 @@
 #!/bin/bash
-# End-to-end first-stage smoke: author 100/20/40 placement specs, collect one
-# accepted four-way pair per split, train, replay, and evaluate one held-out scene.
+# E15/v2 learned-recovery smoke.  Submit only through the companion wrapper.
+#
+# train: consume accepted schema-v2 train/validation manifests and a frozen
+# primary-protocol SHA.  evaluate: consume a frozen accepted cohort and the
+# complete protocol whose checkpoint identity was sealed after training.
+# Historical E14 artifacts are never inputs or output targets of this job.
 #SBATCH --account=p33100
 #SBATCH --partition=gengpu
 #SBATCH --gres=gpu:h100:1
@@ -9,11 +13,34 @@
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=128G
 #SBATCH --time=06:00:00
-#SBATCH --job-name=glass_recovery_smoke
+#SBATCH --job-name=glass_recovery_e15
 #SBATCH --output=%x_%j.log
 
 set -euo pipefail
-echo "JOB $SLURM_JOB_ID on $(hostname) @ $(date)"
+
+require_env() {
+  local name="$1"
+  [[ -n "${!name:-}" ]] || { echo "required environment variable is empty: $name" >&2; exit 2; }
+}
+
+require_file() {
+  local path="$1"
+  [[ -f "$path" ]] || { echo "required input file does not exist: $path" >&2; exit 2; }
+}
+
+require_sha256() {
+  local name="$1"
+  local value="${!name:-}"
+  [[ "$value" =~ ^[0-9a-f]{64}$ ]] || { echo "$name must be a lowercase SHA-256 digest" >&2; exit 2; }
+}
+
+require_env CB_GLASS_RECOVERY_STAGE
+case "$CB_GLASS_RECOVERY_STAGE" in
+  train|evaluate) ;;
+  *) echo "CB_GLASS_RECOVERY_STAGE must be train or evaluate" >&2; exit 2 ;;
+esac
+
+echo "JOB $SLURM_JOB_ID stage=$CB_GLASS_RECOVERY_STAGE on $(hostname) @ $(date)"
 nvidia-smi -L
 module purge
 module load mamba/24.3.0 git/2.47.0-gcc-12.4.0
@@ -35,77 +62,99 @@ cd "$REPO_ROOT"
 "$GIT_BIN" diff --quiet && "$GIT_BIN" diff --cached --quiet \
   || { echo "tracked source differs from HEAD" >&2; exit 1; }
 export CB_CODE_COMMIT="${CB_CODE_COMMIT:-$("$GIT_BIN" rev-parse HEAD)}"
-echo "CODE_COMMIT=$CB_CODE_COMMIT"
+[[ "$CB_CODE_COMMIT" == "$("$GIT_BIN" rev-parse HEAD)" ]] \
+  || { echo "CB_CODE_COMMIT does not match checked-out HEAD" >&2; exit 1; }
 
-RUN_ROOT="${CB_GLASS_RECOVERY_RUN_ROOT:-results/glass_recovery_v1/smoke_${SLURM_JOB_ID}}"
-SOURCE_RUN_ROOT="${CB_GLASS_RECOVERY_SOURCE_RUN_ROOT:-}"
-if [[ -n "$SOURCE_RUN_ROOT" ]]; then
-  PLACEMENTS="$SOURCE_RUN_ROOT/placements"
-  DATASET="$SOURCE_RUN_ROOT/dataset"
-else
-  PLACEMENTS="$RUN_ROOT/placements"
-  DATASET="$RUN_ROOT/dataset"
+require_env CB_GLASS_RECOVERY_RUN_ROOT
+require_env CB_GLASS_RECOVERY_PRIMARY_PROTOCOL_SHA256
+require_env CB_BASE_CHECKPOINT_REVISION
+require_env CB_BASE_UNNORM_KEY
+require_env CB_GLASS_RECOVERY_H
+require_sha256 CB_GLASS_RECOVERY_PRIMARY_PROTOCOL_SHA256
+
+RUN_ROOT="$CB_GLASS_RECOVERY_RUN_ROOT"
+TRAIN_SEED="${CB_GLASS_RECOVERY_TRAIN_SEED:-17}"
+CHECKPOINT_DIR="$RUN_ROOT/train_seed_${TRAIN_SEED}"
+
+if [[ "$CB_GLASS_RECOVERY_STAGE" == "train" ]]; then
+  require_env CB_GLASS_RECOVERY_TRAIN_MANIFEST
+  require_env CB_GLASS_RECOVERY_VALIDATION_MANIFEST
+  require_file "$CB_GLASS_RECOVERY_TRAIN_MANIFEST"
+  require_file "$CB_GLASS_RECOVERY_VALIDATION_MANIFEST"
+  mkdir -p "$RUN_ROOT"
+  python scripts/train_glass_recovery.py \
+    --train-manifest "$CB_GLASS_RECOVERY_TRAIN_MANIFEST" \
+    --validation-manifest "$CB_GLASS_RECOVERY_VALIDATION_MANIFEST" \
+    --output "$CHECKPOINT_DIR" \
+    --base-resolved-revision "$CB_BASE_CHECKPOINT_REVISION" \
+    --unnorm-key "$CB_BASE_UNNORM_KEY" \
+    --protocol-sha256 "$CB_GLASS_RECOVERY_PRIMARY_PROTOCOL_SHA256" \
+    --trigger-horizon "$CB_GLASS_RECOVERY_H" \
+    --gating-horizon "$CB_GLASS_RECOVERY_H" \
+    --max-steps "${CB_GLASS_RECOVERY_TRAIN_STEPS:-40}" \
+    --batch-size "${CB_GLASS_RECOVERY_BATCH_SIZE:-32}" \
+    --width "${CB_GLASS_RECOVERY_WIDTH:-128}" \
+    --depth "${CB_GLASS_RECOVERY_DEPTH:-2}" \
+    --eval-every "${CB_GLASS_RECOVERY_EVAL_EVERY:-20}" \
+    --log-every "${CB_GLASS_RECOVERY_LOG_EVERY:-5}" \
+    --seed "$TRAIN_SEED"
+  test -f "$CHECKPOINT_DIR/glass_recovery.pt"
+  test -f "$CHECKPOINT_DIR/training_summary.json"
+  echo "CHECKPOINT=$CHECKPOINT_DIR/glass_recovery.pt"
+  echo "NEXT=freeze checkpoint SHA, accepted evaluation cohort, and evaluation protocol before evaluate"
+  echo "DONE @ $(date)"
+  exit 0
 fi
-CHECKPOINT="$RUN_ROOT/checkpoint"
-EVAL_OUT="$RUN_ROOT/eval_heldout.json"
-BASE_CHECKPOINT="${CB_BASE_CHECKPOINT:-/projects/p33100/siosio/huggingface_cache/hub/models--openvla--openvla-7b-finetuned-libero-spatial/snapshots/962318cec55ac10993ff0f5f43eda9a270b4c873}"
-mkdir -p "$RUN_ROOT"
 
-if [[ -n "$SOURCE_RUN_ROOT" ]]; then
-  echo "Reusing accepted data from $SOURCE_RUN_ROOT"
-  test -f "$PLACEMENTS/placements.json"
-  test -f "$DATASET/train.jsonl"
-  test -f "$DATASET/validation.jsonl"
-  test -f "$DATASET/heldout.jsonl"
-  test -f "$DATASET/collection_summary.json"
-else
-  python scripts/prepare_glass_recovery_placements.py \
-    --output "$PLACEMENTS" \
-    --train-placements 100 \
-    --validation-placements 20 \
-    --heldout-placements 40 \
-    --overwrite
+require_env CB_GLASS_RECOVERY_PLACEMENT_MANIFEST
+require_env CB_GLASS_RECOVERY_TRAJECTORY_MANIFEST
+require_env CB_GLASS_RECOVERY_EVALUATION_COHORT
+require_env CB_GLASS_RECOVERY_PROTOCOL
+require_env CB_GLASS_RECOVERY_EVALUATION_PROTOCOL_SHA256
+require_env CB_GLASS_RECOVERY_CHECKPOINT
+require_env CB_BASE_CHECKPOINT
+require_sha256 CB_GLASS_RECOVERY_EVALUATION_PROTOCOL_SHA256
+for input in \
+  "$CB_GLASS_RECOVERY_PLACEMENT_MANIFEST" \
+  "$CB_GLASS_RECOVERY_TRAJECTORY_MANIFEST" \
+  "$CB_GLASS_RECOVERY_EVALUATION_COHORT" \
+  "$CB_GLASS_RECOVERY_PROTOCOL" \
+  "$CB_GLASS_RECOVERY_CHECKPOINT"
+do
+  require_file "$input"
+done
 
-  python scripts/collect_glass_recovery_pairs.py \
-    --placements "$PLACEMENTS/placements.json" \
-    --output "$DATASET" \
-    --checkpoint "$BASE_CHECKPOINT" \
-    --max-train "${CB_SMOKE_TRAIN_PAIRS:-1}" \
-    --max-validation "${CB_SMOKE_VALIDATION_PAIRS:-1}" \
-    --max-heldout "${CB_SMOKE_HELDOUT_PAIRS:-1}"
-fi
+# Fail before OpenVLA/LIBERO initialization if the exported protocol identities
+# do not equal the canonical hashes embedded in the supplied protocol file.
+python -c 'import json, os; from crashbench.glass_recovery_data import canonical_sha256; p=json.load(open(os.environ["CB_GLASS_RECOVERY_PROTOCOL"])); primary=canonical_sha256(p["primary_protocol"]); evaluation=canonical_sha256(p["evaluation_protocol"]); assert p["primary_protocol_sha256"] == primary == os.environ["CB_GLASS_RECOVERY_PRIMARY_PROTOCOL_SHA256"], "primary protocol SHA mismatch"; assert p["evaluation_protocol_sha256"] == evaluation == os.environ["CB_GLASS_RECOVERY_EVALUATION_PROTOCOL_SHA256"], "evaluation protocol SHA mismatch"'
 
-python scripts/replay_glass_recovery_pair.py \
-  --placements "$PLACEMENTS/placements.json" \
-  --manifest "$DATASET/train.jsonl" \
-  --branch nominal_catastrophe \
-  --out "$RUN_ROOT/replay_nominal.json"
-
-python scripts/train_glass_recovery.py \
-  --train-manifest "$DATASET/train.jsonl" \
-  --validation-manifest "$DATASET/validation.jsonl" \
-  --output "$CHECKPOINT" \
-  --max-steps "${CB_SMOKE_TRAIN_STEPS:-40}" \
-  --batch-size 32 \
-  --width 128 \
-  --depth 2 \
-  --eval-every 20 \
-  --log-every 5 \
-  --overwrite
+EVAL_OUT="$RUN_ROOT/eval_seed_${TRAIN_SEED}.json"
+SOURCE_ANALYSIS="$RUN_ROOT/analysis_seed_${TRAIN_SEED}_source_to_task.json"
+ANCHOR_ANALYSIS="$RUN_ROOT/analysis_seed_${TRAIN_SEED}_exact_anchor.json"
 
 python scripts/eval_glass_recovery.py \
-  --placements "$PLACEMENTS/placements.json" \
-  --checkpoint "$CHECKPOINT/glass_recovery.pt" \
-  --base-checkpoint "$BASE_CHECKPOINT" \
-  --split heldout \
-  --max-placements 1 \
-  --repeats 1 \
-  --out "$EVAL_OUT" \
-  --overwrite
+  --placement-manifest "$CB_GLASS_RECOVERY_PLACEMENT_MANIFEST" \
+  --trajectory-manifest "$CB_GLASS_RECOVERY_TRAJECTORY_MANIFEST" \
+  --evaluation-cohort "$CB_GLASS_RECOVERY_EVALUATION_COHORT" \
+  --protocol "$CB_GLASS_RECOVERY_PROTOCOL" \
+  --checkpoint "$CB_GLASS_RECOVERY_CHECKPOINT" \
+  --base-checkpoint "$CB_BASE_CHECKPOINT" \
+  --base-checkpoint-revision "$CB_BASE_CHECKPOINT_REVISION" \
+  --unnorm-key "$CB_BASE_UNNORM_KEY" \
+  --out "$EVAL_OUT"
 
-test -f "$DATASET/collection_summary.json"
-test -f "$CHECKPOINT/training_summary.json"
+python scripts/analyze_glass_recovery_eval.py \
+  --evaluation "$EVAL_OUT" \
+  --mode source_to_task \
+  --out "$SOURCE_ANALYSIS"
+python scripts/analyze_glass_recovery_eval.py \
+  --evaluation "$EVAL_OUT" \
+  --mode exact_anchor \
+  --out "$ANCHOR_ANALYSIS"
+
 test -f "$EVAL_OUT"
+test -f "$SOURCE_ANALYSIS"
+test -f "$ANCHOR_ANALYSIS"
 echo "RUN_ROOT=$RUN_ROOT"
 echo "RESULT=$EVAL_OUT"
 echo "DONE @ $(date)"

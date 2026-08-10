@@ -1,18 +1,20 @@
 # Current state
 
-CrashBench asks whether a VLA that sees a visible obstacle entering its actual
-action-swept corridor represents imminent collision yet fails to read that
-information out into a safe action.
+The current paper question is E15: can a frozen VLA representation detect a
+certified imminent-but-avoidable movable-glass catastrophe early enough to hand
+off to a learned, latched controller that still completes the original task?
+The paper-primary estimand starts at the original LIBERO source state; exact-H
+anchor evaluation is a component diagnostic only.
 
-The paper line is **diagnose → localize → explain → exploit**: controlled
-on-path/off-path wall placement diagnoses and localizes the collision effect;
-frozen probes show collision imminence is **decoded but not used**; a narrowly
-scoped probe-gated retreat controller exploits that signal to avoid crashes.
+The paper line remains **diagnose → localize → explain → exploit**, but the new
+main exploit target is task-completing learned glass recovery. Historical wall
+experiments motivate representation/readout failure; they are not evidence that
+E15 works.
 
 The current claim vocabulary is C0–C13; definitions and evidence are in
 `CLAIMS.md`.
 
-Completed core evidence: a wall corridor sweep, behavioral replication across
+Completed historical evidence includes a wall corridor sweep, behavioral replication across
 OpenVLA, OpenVLA-OFT, and pi0 action heads, OpenVLA-family probes (with partial
 pi0 evidence), a non-braking diagnostic, safe-abort witnesses, a scoped
 probe-gated intervention, a glass dose response, and negative steering/transfer
@@ -23,12 +25,12 @@ task-blocking hazard: calibration and held-out captures contained no positive
 T-5 frames, held-out vanilla had 0/50 crashes, and the preregistered
 hidden-over-baseline dissociation criterion was not supported.
 
-The most important limitation is external validity: the strongest causal and
+These wall results are motivation/appendix under the E15 line. Their most important limitation is external validity: the strongest causal and
 online intervention evidence is one LIBERO task and the OpenVLA-base on-path-wall
 mode. The low-wall d62 task-completion result is only an existence demo; it is
 not a general recovery result.
 
-The prompt scope has now been audited separately. The frozen vanilla scenarios
+The prompt scope was audited separately in E13 and is now a baseline/appendix result. The frozen vanilla scenarios
 contain only the LIBERO manipulation request; they never ask the model to avoid
 the injected wall or glass. E13 is complete at commit `f2636ee` (wall job
 `8389714`, glass job `8389715`, analysis job `8389716`): it compares task-only,
@@ -41,7 +43,7 @@ poor (8/15 crashes, 0/15 task successes); glass controls mostly safe-aborted
 task-completing avoidance. This follow-up does not retrospectively change the
 frozen vanilla claims or add a new C-number.
 
-E14 now has a verified recoverable-glass **acceptance smoke**, not a completed
+E14 remains an immutable recoverable-glass **acceptance smoke**, not a completed
 recovery-learning result. At commit `7bb6d7d`, two Quest H100 collection stages
 made 109 rollout attempts and admitted three placements (train=2,
 validation=0, heldout=1). In every admitted placement Base OpenVLA crashed, the
@@ -53,11 +55,17 @@ environment exists; it does not establish split-balanced coverage, repeated
 policy-level crash probability, learned recovery, or held-out generalization.
 The tracked summary is `results/glass_recovery_acceptance_smoke_20260809.json`.
 
-The geometry/provenance split, held-out generalization run, trivial-trigger
-controls, and zero-GPU checks are complete. For E14, the immediate next step is
-to improve path intersection without weakening the crash/oracle predicates,
-obtain validation-split accepted placements, and add repeated Base rollouts
-before training the recovery head. Any E12 follow-up must be a new
+P0-A through P0-E are implemented for the E15/v2 line: shared event semantics
+and schema-v2 admission, exact-H collector alignment, primary training/runtime
+ownership, accepted-only evaluation with source-cluster analysis, read-only E14
+salvage inventory, successful no-glass trace capture, swept-path candidate
+generation, fixed-action hazard screening, and the exact-H frontier runner.
+P0-F adds two-stage smoke contracts and a zero-GPU synthetic integration. No
+tracked E15 dataset, checkpoint, evaluation, or learned-result claim exists.
+Pilot A/frontier execution and real LIBERO/OpenVLA validation remain required
+before GPU smoke can be called experiment-ready.
+
+Any E12 follow-up must be a new
 preregistered study, not a post-hoc change to the frozen P0/E12 scenarios,
 horizon, seeds, repeats, or thresholds. Separately, any renewed E12-style
 generalization study must begin with hazard validity: save nominal no-wall
@@ -71,7 +79,7 @@ See [PAPER_PLAN.md](PAPER_PLAN.md), [CLAIMS.md](CLAIMS.md),
 [EXPERIMENT_INDEX.md](EXPERIMENT_INDEX.md), and
 [REPRODUCIBILITY.md](REPRODUCIBILITY.md). The E13 protocol is in
 [CAREFUL_PROMPT_EXPERIMENT.md](CAREFUL_PROMPT_EXPERIMENT.md), and the
-E14 protocol and promoted result are in
+E15/v2 execution semantics and the immutable E14 record are in
 [GLASS_RECOVERY_V1.md](GLASS_RECOVERY_V1.md) and
 [ANALYSIS_glass_recovery_acceptance.md](../results/ANALYSIS_glass_recovery_acceptance.md).
 The non-disruptive script map is in [SCRIPT_INDEX.md](SCRIPT_INDEX.md).

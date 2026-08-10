@@ -53,6 +53,30 @@ REQUIRED_ARCHIVE_DOCS = (
     "STRATEGY.md",
     "motivation.md",
 )
+E15_DOCS = (
+    "GLASS_RECOVERY_V1.md",
+    "CURRENT.md",
+    "PAPER_PLAN.md",
+    "CLAIMS.md",
+    "EXPERIMENT_INDEX.md",
+    "SCRIPT_INDEX.md",
+    "REPRODUCIBILITY.md",
+)
+E15_MAIN_BASELINE_CONDITIONS = {
+    "base",
+    "generic_careful",
+    "hazard_specific_careful",
+    "risk_gate_retreat_hold",
+    "full_learned_gate_recovery",
+    "risk_gate_oracle_recovery",
+    "oracle_timed_learned_recovery",
+    "oracle_timed_oracle_recovery",
+}
+LEARNED_PROMOTION_STATUSES = {
+    "frozen_learned_result",
+    "verified_learned_result",
+    "claim_ready",
+}
 
 
 def read_json(path: Path):
@@ -63,6 +87,97 @@ def dotted_get(value, path: str):
     for key in path.split("."):
         value = value[int(key)] if isinstance(value, list) else value[key]
     return value
+
+
+def learned_recovery_semantic_errors(payload: dict) -> list[str]:
+    """Validate the minimum machine-readable contract for an E15 claim.
+
+    Code-complete, smoke, and fake-environment artifacts deliberately do not
+    satisfy this schema.  Keeping the check here makes a future manifest status
+    promotion fail closed instead of relying on prose review alone.
+    """
+
+    errors: list[str] = []
+    if payload.get("kind") != "glass_recovery_learned_result":
+        errors.append("kind must be glass_recovery_learned_result")
+    cohort = payload.get("accepted_cohort")
+    if not isinstance(cohort, dict):
+        return [*errors, "accepted_cohort must be an object"]
+    cohort_sha = str(cohort.get("sha256", ""))
+    if len(cohort_sha) != 64 or any(c not in "0123456789abcdef" for c in cohort_sha):
+        errors.append("accepted_cohort.sha256 must be a lowercase SHA-256")
+    pair_ids = cohort.get("pair_ids")
+    if not isinstance(pair_ids, list) or not pair_ids or len(pair_ids) != len(set(pair_ids)):
+        errors.append("accepted_cohort.pair_ids must be nonempty and unique")
+
+    replay = payload.get("exact_replay_summary")
+    if not isinstance(replay, dict) or replay.get("all_passed") is not True:
+        errors.append("exact_replay_summary.all_passed must be true")
+    elif not isinstance(replay.get("n_pairs"), int) or replay["n_pairs"] != len(pair_ids or []):
+        errors.append("exact_replay_summary.n_pairs must equal accepted pair count")
+
+    counts = payload.get("source_state_counts")
+    if not isinstance(counts, dict):
+        errors.append("source_state_counts must be an object")
+    else:
+        for split in ("train", "validation", "final_heldout"):
+            if not isinstance(counts.get(split), int) or counts[split] < 1:
+                errors.append(f"source_state_counts.{split} must be positive")
+    family_counts = payload.get("family_counts")
+    if not isinstance(family_counts, dict) or not all(
+        isinstance(family_counts.get(split), dict) and family_counts[split]
+        for split in ("train", "validation", "final_heldout")
+    ):
+        errors.append("family_counts must cover train/validation/final_heldout")
+    leakage = payload.get("leakage_checks")
+    for key in (
+        "source_state_overlap_count",
+        "family_overlap_count",
+        "physical_scene_overlap_count",
+    ):
+        if not isinstance(leakage, dict) or leakage.get(key) != 0:
+            errors.append(f"leakage_checks.{key} must equal zero")
+
+    identities = payload.get("identities")
+    identity_fields = {
+        "checkpoint": ("sha256", "training_seed"),
+        "base": ("resolved_revision", "unnorm_key"),
+        "dataset": (
+            "train_manifest_sha256",
+            "validation_manifest_sha256",
+            "final_heldout_manifest_sha256",
+        ),
+        "protocol": ("primary_sha256", "evaluation_sha256"),
+    }
+    for key, fields in identity_fields.items():
+        value = identities.get(key) if isinstance(identities, dict) else None
+        missing = [field for field in fields if not isinstance(value, dict) or value.get(field) in (None, "")]
+        if missing:
+            errors.append(f"identities.{key} lacks {missing}")
+
+    evaluation = payload.get("evaluation")
+    conditions = set(evaluation.get("conditions", [])) if isinstance(evaluation, dict) else set()
+    missing_conditions = sorted(E15_MAIN_BASELINE_CONDITIONS - conditions)
+    if missing_conditions:
+        errors.append(f"evaluation.conditions lacks {missing_conditions}")
+    if not isinstance(evaluation, dict) or evaluation.get("primary_mode") != "source_to_task":
+        errors.append("evaluation.primary_mode must be source_to_task")
+
+    analysis = payload.get("source_cluster_analysis")
+    if not isinstance(analysis, dict) or analysis.get("independent_cluster") != "source_state_sha256":
+        errors.append("source_cluster_analysis must use source_state_sha256")
+    metrics = payload.get("primary_metrics")
+    for key in (
+        "safe_task_success",
+        "catastrophe",
+        "clean_control_false_intervention",
+        "clean_control_task_preservation",
+    ):
+        value = metrics.get(key) if isinstance(metrics, dict) else None
+        if not isinstance(value, dict) or not isinstance(value.get("denominator"), int) \
+                or value["denominator"] < 1 or "estimate" not in value:
+            errors.append(f"primary_metrics.{key} needs estimate and positive denominator")
+    return errors
 
 
 def audit() -> list[str]:
@@ -92,6 +207,84 @@ def audit() -> list[str]:
     for name in ("CURRENT.md", "PAPER_PLAN.md", "CLAIMS.md"):
         if not (ROOT / "docs" / name).exists():
             errors.append(f"missing current document docs/{name}")
+
+    # E15 is a new protocol, while E14 remains immutable history.  Every user-
+    # facing experiment index must make that boundary explicit.
+    for name in E15_DOCS:
+        text = (ROOT / "docs" / name).read_text()
+        if "E15" not in text or "E14" not in text:
+            errors.append(f"docs/{name} does not distinguish E15 from E14")
+
+    smoke = (ROOT / "setup/glass_recovery_smoke.sbatch").read_text()
+    wrapper = (ROOT / "setup/submit_glass_recovery_smoke.sh").read_text()
+    for token in (
+        "CB_GLASS_RECOVERY_TRAIN_MANIFEST",
+        "CB_GLASS_RECOVERY_VALIDATION_MANIFEST",
+        "CB_GLASS_RECOVERY_PRIMARY_PROTOCOL_SHA256",
+        "--placement-manifest",
+        "--trajectory-manifest",
+        "--evaluation-cohort",
+        "--protocol",
+        "CB_GLASS_RECOVERY_EVALUATION_PROTOCOL_SHA256",
+    ):
+        if token not in smoke:
+            errors.append(f"E15 smoke lacks required accepted-input token {token}")
+    for token in ("train|evaluate", "CB_GLASS_RECOVERY_EVALUATION_COHORT"):
+        if token not in wrapper:
+            errors.append(f"E15 submit wrapper lacks required token {token}")
+    for stale in (
+        "results/glass_recovery_v1",
+        "prepare_glass_recovery_placements.py",
+        "collect_glass_recovery_pairs.py",
+        "CB_GLASS_RECOVERY_SOURCE_RUN_ROOT",
+        "--max-placements",
+    ):
+        if stale in smoke:
+            errors.append(f"E15 smoke still contains v1/authored-cohort path {stale}")
+
+    # P0-E must remain an executable, fail-closed path rather than a prose-only
+    # prerequisite.  These tokens pin the safeguards that previously caused the
+    # code-complete no-go.
+    p0e_contracts = {
+        "scripts/capture_glass_nominal_source_traces.py": (
+            "glass_recovery_nominal_source_traces",
+            "robot_body_xyz",
+            "checkpoint_revision",
+        ),
+        "scripts/prepare_glass_recovery_placements.py": (
+            "--source-trace-manifest",
+            "_fixed_action_hazard_screen",
+            "physical_scene_sha256",
+            "candidate_order_index",
+            "--legacy-straight-path",
+        ),
+        "scripts/audit_glass_core_artifacts.py": (
+            "--read-only",
+            "core_salvage_audit",
+            "direct_v2_promotion_allowed",
+            "source_root_read_only",
+        ),
+        "scripts/run_glass_avoidability_frontier.py": (
+            "FRONTIER_HORIZONS = (40, 30, 20, 15, 10, 5)",
+            "--print-commands",
+            "--execute",
+            "recommended_horizon_actions",
+        ),
+    }
+    for relative, tokens in p0e_contracts.items():
+        path = ROOT / relative
+        if not path.is_file():
+            errors.append(f"P0-E executable missing: {relative}")
+            continue
+        text = path.read_text()
+        for token in tokens:
+            if token not in text:
+                errors.append(f"P0-E {relative} lacks semantic guard {token}")
+    collector_text = (ROOT / "scripts/collect_glass_recovery_pairs.py").read_text()
+    if "_ordered_placements(placements)" not in collector_text:
+        errors.append("collector does not consume the predeclared P0-E candidate order")
+    if "-p.nominal_fraction" in collector_text:
+        errors.append("collector reintroduced high-fraction-first candidate selection")
 
     # Exact on-disk scenario bytes must match the tracked fingerprint registry.
     fp_path = ROOT / "results/scenario_fingerprints.json"
@@ -241,6 +434,28 @@ def audit() -> list[str]:
                 if row["oracle"]["crashed"] or not row["oracle"]["task_succeeded"]:
                     errors.append(f"E14 oracle gate failed for {row['placement_id']}")
 
+    # Merely adding E15 to the index is not a result.  If its manifest status is
+    # ever promoted, require a tracked machine-readable learned-result artifact
+    # with every semantic guard declared by P0-F.
+    e15_entry = next((entry for entry in manifest.get("entries", [])
+                      if entry.get("experiment_id") == "E15"), None)
+    if e15_entry is not None and e15_entry.get("status") in LEARNED_PROMOTION_STATUSES:
+        learned_payload = None
+        for rel in e15_entry.get("result_files", []):
+            path = ROOT / rel
+            if path.suffix == ".json" and path.is_file():
+                candidate = read_json(path)
+                if candidate.get("kind") == "glass_recovery_learned_result":
+                    learned_payload = candidate
+                    break
+        if learned_payload is None:
+            errors.append("promoted E15 lacks a glass_recovery_learned_result artifact")
+        else:
+            errors.extend(
+                f"E15 learned-result contract: {error}"
+                for error in learned_recovery_semantic_errors(learned_payload)
+            )
+
     # Every claim result path must exist and declared numeric checks must equal raw JSON values.
     ledger = read_json(ROOT / "results/claims_ledger.json")
     for claim in ledger.get("claims", []):
@@ -267,7 +482,7 @@ def main() -> None:
         print("Repository audit FAILED:")
         print("\n".join(f"- {error}" for error in errors))
         raise SystemExit(1)
-    print("Repository audit passed: current docs, scenario fingerprints, manifest paths, and claim checks are consistent.")
+    print("Repository audit passed: current docs, E14/E15 semantics, smoke contracts, scenario fingerprints, manifest paths, and claim checks are consistent.")
 
 
 if __name__ == "__main__":

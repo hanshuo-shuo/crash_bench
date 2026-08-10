@@ -2,24 +2,30 @@
 
 ## Current line
 
-The contribution is a controlled causal diagnosis of a collision mode, not a
-claim that all VLAs or all hazards are unsafe. Hold obstacle appearance fixed and
-vary whether the obstacle occupies the robot's swept corridor:
+The proposed contribution is a controlled causal diagnosis followed by a
+fail-closed learned-recovery test, not a claim that all VLAs or hazards are
+unsafe. E15 asks whether decoded imminent risk can be converted into a latched,
+task-completing response on certified recoverable glass scenes:
 
 1. **Diagnose:** visible on-path walls produce collisions.
 2. **Localize:** the on-path / clear-off-path and transition controls implicate
    corridor intrusion, rather than obstacle novelty alone.
 3. **Explain:** collision imminence is **decoded but not used** — it is
    represented but not read out into safe action.
-4. **Exploit:** a wall-trained probe can trigger structured retreat recovery in
-   the bounded OpenVLA-base/on-path-wall setting.
+4. **Exploit:** train a glass-specific risk/recovery head and test safe original-
+   task completion from sealed, accepted source-state cohorts.
 
-For E14, keep the main environment-validity result to the matched three-policy
-gate: Base crash, fixed careful-prompt crash, and safe task-completing oracle.
-The off-path control remains a paired causal control and the visually distinct
-blocked-fence/safe-abort branch remains secondary or appendix evidence. The
-2026-08-09 smoke found three passing placements, but no validation placement;
-do not describe it as a completed recovery-training or generalization result.
+E15/v2 primary admission is exactly three branches: exact-H Base catastrophe,
+independently recaptured matched-state Oracle safe task success, and matched
+off-path safe task success. Careful prompts do not select the cohort. Blocked
+safe-abort data use a separate appendix manifest. Source-to-task is the primary
+evaluation; exact-anchor is a component diagnostic. The independent unit is the
+source state, not a placement, repeat, or frame.
+
+E14 remains historical motivation: its older Base + fixed-careful + Oracle gate
+found three placements and no validation placement. It is not migrated into v2
+and is not recovery-training or generalization evidence. The old wall line and
+E13 are likewise motivation/appendix with their original scope limits.
 
 Use “representation–behavior dissociation”, “decoded but not used”, and
 “represented but not read out into safe action” in formal text. “Knows but does
@@ -44,9 +50,12 @@ The plan uses the same claim vocabulary, C0–C13, as `CLAIMS.md`.
 - Preserve the tall-wall treatment; put the lowered d62 detour in a distinct
   scenario root with parent/fingerprint metadata.
 - Release a manifest, claims ledger, audit command, and zero-GPU tests.
-- Before E14 training, obtain validation-split placements that pass the same
-  unmodified gate and add repeated Base rollouts to measure policy-level crash
-  reproducibility. Exact captured-action replay alone is a simulator check.
+- Before E15 training, run the implemented P0-E inventory/frontier/generator gate, obtain
+  source-diverse accepted train and validation cohorts under one exact H, and
+  seal the final held-out cohort only after method/protocol choices are frozen.
+- Require checkpoint/Base/dataset/protocol identities, the complete baseline
+  matrix, primary task/catastrophe outcomes, false intervention, task
+  preservation, and source-cluster analysis before any learned claim.
 
 ## SHOULD
 

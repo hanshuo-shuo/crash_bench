@@ -35,3 +35,14 @@ of the Base-crash + Careful-crash + safe task-completing Oracle configuration;
 they do not yet establish a learned recovery result or held-out generalization.
 See `results/ANALYSIS_glass_recovery_acceptance.md` and
 `results/glass_recovery_acceptance_smoke_20260809.json`.
+
+E15/v2 is the current experiment line but has no claim ID or tracked learned
+result. Code-complete plumbing, synthetic CPU training, or fake-environment
+evaluation cannot support a learned-result claim. Promotion requires a sealed
+accepted cohort and pair IDs, exact replay evidence, disjoint train/validation/
+final-held-out source and family counts, checkpoint/Base/dataset/protocol
+identities, the full predeclared baseline matrix, source-cluster analysis,
+primary safe task success and catastrophe outcomes, and explicit clean-control
+false-intervention and task-preservation metrics. E14 artifacts cannot satisfy
+this contract by reinterpretation or migration without v2 recollection and
+revalidation.

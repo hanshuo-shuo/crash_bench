@@ -1557,6 +1557,16 @@ def _limits(args: argparse.Namespace) -> dict[str, int]:
     }
 
 
+def _ordered_placements(placements: list[GlassPlacement]) -> list[GlassPlacement]:
+    """Return the predeclared P0-E order without observing candidate outcomes."""
+
+    return sorted(placements, key=lambda placement: (
+        placement.split,
+        int(placement.metadata.get("candidate_order_index", 10**9)),
+        placement.placement_id,
+    ))
+
+
 def _rejection_counts(rejected: list[dict]) -> dict[str, int]:
     counts = {
         reason: 0 for reason in (
@@ -1843,9 +1853,10 @@ def main() -> None:
             "blocked_appendix_enabled": bool(args.appendix_blocked),
         }
 
-    # High fractions are more likely to be true glass catastrophes, which makes
-    # a tiny smoke request deterministic while the full run still sees all specs.
-    ordered = sorted(placements, key=lambda p: (p.split, -p.nominal_fraction, p.placement_id))
+    # P0-E freezes a stratified candidate order before any outcome is observed.
+    # Never recover the old high-fraction-first selection rule: stopping after
+    # the first successes under that order would bias both geometry and yield.
+    ordered = _ordered_placements(placements)
     for placement in ordered:
         if len(accepted[placement.split]) >= limits[placement.split]:
             continue

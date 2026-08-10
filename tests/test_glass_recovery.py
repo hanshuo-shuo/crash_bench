@@ -72,6 +72,7 @@ from scripts.collect_glass_recovery_pairs import (
     _observation_sha256,
     _oracle_rejection_reason,
     _oracle_configs,
+    _ordered_placements,
     _partition_scene,
     _primary_protocol,
     _read_attempt_ledger,
@@ -87,7 +88,17 @@ from scripts.collect_glass_recovery_pairs import (
 from scripts.prepare_glass_recovery_placements import (
     _blocked_barrier_offsets,
     _collision_free_path_fraction,
+    _file_sha256,
+    _load_source_traces,
+    _minimum_initial_body_clearance,
+    _sample_trace_anchor,
     _state_layout,
+    _state_layout_from_indices,
+)
+from scripts.audit_glass_core_artifacts import run_audit
+from scripts.run_glass_avoidability_frontier import (
+    FRONTIER_HORIZONS,
+    summarize_frontier_rows,
 )
 from scripts.replay_glass_recovery_pair import accepted_pair_dir_from_manifest
 
@@ -292,6 +303,35 @@ def test_glass_placement_design_rejects_split_state_leakage():
     ]
     with pytest.raises(ValueError, match="leaks across splits"):
         validate_placement_design(leaked)
+
+
+def test_v2_physical_family_and_scene_fingerprints_fail_closed():
+    placements = []
+    for split, family, scene in (
+        ("train", "family-a", "scene-a"),
+        ("validation", "family-b", "scene-b"),
+        ("heldout", "family-c", "scene-c"),
+    ):
+        payload = _placement(split, split, f"state-{split}", f"{split}/family").to_dict()
+        payload["metadata"] = {
+            "geometry_family_fingerprint": family,
+            "physical_scene_sha256": scene,
+        }
+        placements.append(GlassPlacement.from_dict(payload))
+    summary = validate_placement_design(placements)
+    assert summary["physical_scene_count"] == 3
+    leaked_family = [*placements]
+    payload = leaked_family[-1].to_dict()
+    payload["metadata"]["geometry_family_fingerprint"] = "family-a"
+    leaked_family[-1] = GlassPlacement.from_dict(payload)
+    with pytest.raises(ValueError, match="geometry family leaks"):
+        validate_placement_design(leaked_family)
+    duplicate_scene = [*placements]
+    payload = duplicate_scene[-1].to_dict()
+    payload["metadata"]["physical_scene_sha256"] = "scene-a"
+    duplicate_scene[-1] = GlassPlacement.from_dict(payload)
+    with pytest.raises(ValueError, match="duplicate physical scene"):
+        validate_placement_design(duplicate_scene)
 
 
 def test_glass_placement_rejects_non_boolean_mobility_marker():
@@ -1560,6 +1600,196 @@ def test_source_state_splits_are_disjoint_and_stratified():
     assert not (sets["train"] & sets["heldout"])
     assert not (sets["validation"] & sets["heldout"])
     assert min(sets["heldout"]) == 0 and max(sets["heldout"]) >= 40
+
+
+def test_successful_source_trace_manifest_and_path_sampling_are_fail_closed(tmp_path):
+    eef = np.asarray([
+        [0.0, 0.0, 1.0],
+        [0.0, 1.0, 1.0],
+        [1.0, 1.0, 1.0],
+    ], dtype=np.float64)
+    bodies = np.asarray([
+        [[-0.5, -0.5, 1.0], [-0.4, -0.5, 1.0]],
+        [[0.0, 0.5, 1.0], [0.0, 0.6, 1.0]],
+        [[0.5, 1.0, 1.0], [0.6, 1.0, 1.0]],
+    ], dtype=np.float64)
+    actions = np.zeros((3, 7), dtype=np.float32)
+    paths = {}
+    for name, value in (("eef", eef), ("bodies", bodies), ("actions", actions)):
+        path = tmp_path / f"{name}.npy"
+        np.save(path, value)
+        paths[name] = path
+    manifest = tmp_path / "traces.json"
+    manifest.write_text(json.dumps({
+        "schema_version": 1,
+        "kind": "glass_recovery_nominal_source_traces",
+        "traces": [{
+            "task_suite": "libero_spatial",
+            "task_id": 0,
+            "source_state_index": 7,
+            "source_state_sha256": "s" * 64,
+            "task_succeeded": True,
+            "eef_xyz_path": paths["eef"].name,
+            "eef_xyz_sha256": _file_sha256(paths["eef"]),
+            "robot_body_xyz_path": paths["bodies"].name,
+            "robot_body_xyz_sha256": _file_sha256(paths["bodies"]),
+            "actions_path": paths["actions"].name,
+            "actions_sha256": _file_sha256(paths["actions"]),
+        }],
+    }) + "\n")
+    traces, payload = _load_source_traces(
+        manifest, suite="libero_spatial", task_id=0
+    )
+    assert payload["kind"] == "glass_recovery_nominal_source_traces"
+    assert set(traces) == {7}
+    anchor, tangent, fraction = _sample_trace_anchor(
+        traces[7]["_eef_xyz"], 0.75, np.asarray([2.0, 2.0]), 0.1
+    )
+    assert anchor == pytest.approx([0.5, 1.0])
+    assert tangent == pytest.approx([1.0, 0.0])
+    assert fraction == pytest.approx(0.75)
+    assert _minimum_initial_body_clearance(
+        anchor, traces[7]["_robot_body_xyz"], 0.03
+    ) > 1.0
+    layout = _state_layout_from_indices([2, 7, 11], 1, 1, 1)
+    assert sorted(value for values in layout.values() for value in values) == [2, 7, 11]
+
+    payload = json.loads(manifest.read_text())
+    payload["traces"][0]["actions_sha256"] = "0" * 64
+    manifest.write_text(json.dumps(payload) + "\n")
+    with pytest.raises(ValueError, match="actions file/hash mismatch"):
+        _load_source_traces(manifest, suite="libero_spatial", task_id=0)
+
+
+def test_candidate_order_is_predeclared_not_high_fraction_first():
+    low = GlassPlacement(**{
+        **_placement("low", "train", "state-low", "train/family").to_dict(),
+        "nominal_fraction": 0.45,
+        "metadata": {"candidate_order_index": 0},
+    })
+    high = GlassPlacement(**{
+        **_placement("high", "train", "state-high", "train/family").to_dict(),
+        "nominal_fraction": 0.70,
+        "metadata": {"candidate_order_index": 1},
+    })
+    assert [row.placement_id for row in _ordered_placements([high, low])] == [
+        "low", "high"
+    ]
+
+
+def test_salvage_inventory_is_read_only_append_only_and_never_promotes_v1(tmp_path):
+    source = tmp_path / "historical_e14"
+    pair_root = source / "dataset" / "train" / "pair_1"
+    pair_root.mkdir(parents=True)
+    np.save(pair_root / "precrash_onpath_state.npy", np.asarray([1.0, 2.0]))
+    np.savez_compressed(pair_root / "controller_state.npz", goal=np.asarray([3.0]))
+    for name in ("nominal_catastrophe", "oracle_recovery", "off_path_control"):
+        np.savez_compressed(pair_root / f"{name}.npz", value=np.asarray([1.0]))
+    attempt_key = "a" * 64
+    common = {
+        "pair_id": "pair_1",
+        "placement_id": "placement_1",
+        "split": "train",
+        "source_state_sha256": "b" * 64,
+        "scene_sha256": "c" * 64,
+        "branch_start_state_sha256": "d" * 64,
+        "n_steps": 25,
+    }
+    records = [
+        {
+            **common,
+            "trajectory_kind": "nominal_catastrophe",
+            "arrays_path": "train/pair_1/nominal_catastrophe.npz",
+            "metadata": {
+                "attempt_key": attempt_key,
+                "controller_state_sha256": "e" * 64,
+                "action_replay_evidence": {"verified": True, "n_actions": 25},
+            },
+        },
+        {
+            **common,
+            "trajectory_kind": "oracle_recovery",
+            "arrays_path": "train/pair_1/oracle_recovery.npz",
+            "metadata": {
+                "attempt_key": attempt_key,
+                "oracle_verification": {
+                    "independent_recapture": True,
+                    "recapture_success": True,
+                },
+            },
+        },
+        {
+            **common,
+            "trajectory_kind": "off_path_control",
+            "arrays_path": "train/pair_1/off_path_control.npz",
+            "succeeded": True,
+            "outcome": "task_success",
+            "metadata": {"attempt_key": attempt_key},
+        },
+    ]
+    (pair_root / "pair.json").write_text(json.dumps({
+        "attempt_identity": {
+            "attempt_key": attempt_key,
+            "code_commit": "1" * 40,
+            "checkpoint_revision": "2" * 40,
+            "rollout_seed": 0,
+            "protocol_sha256": "3" * 64,
+        },
+        "records": records,
+    }) + "\n")
+    before = {
+        path.relative_to(source).as_posix(): _file_sha256(path)
+        for path in source.rglob("*") if path.is_file()
+    }
+    audit = tmp_path / "pilot_a" / "core_salvage_audit.jsonl"
+    summary = tmp_path / "pilot_a" / "h_realignment_summary.json"
+    args = Namespace(
+        source_root=str(source),
+        output=str(audit),
+        summary_out=str(summary),
+        target_h=20,
+        expected_run_commit="1" * 40,
+        expected_checkpoint_revision="2" * 40,
+        read_only=True,
+        overwrite_summary=False,
+    )
+    result = run_audit(args)
+    assert result["attempts"] == 1
+    assert result["static_recollection_candidates"] == 1
+    row = json.loads(audit.read_text())
+    assert row["realignment"]["advance_captured_actions"] == 5
+    assert row["realignment"]["direct_v2_promotion_allowed"] is False
+    first_audit = audit.read_bytes()
+    args.overwrite_summary = True
+    rerun = run_audit(args)
+    assert rerun["newly_appended_attempts"] == 0
+    assert audit.read_bytes() == first_audit
+    after = {
+        path.relative_to(source).as_posix(): _file_sha256(path)
+        for path in source.rglob("*") if path.is_file()
+    }
+    assert after == before
+
+
+def test_avoidability_frontier_prefers_h20_and_requires_complete_grid():
+    rows = []
+    for horizon in FRONTIER_HORIZONS:
+        for index in range(10):
+            successes = 6 if horizon == 20 else 8 if horizon == 30 else 0
+            rows.append({
+                "placement_id": f"p{index}",
+                "horizon_actions": horizon,
+                "base_catastrophe": True,
+                "exact_h_replay_verified": True,
+                "oracle_safe_task_success": index < successes,
+                "rejection_reason": None if index < successes else "no_oracle_recovery",
+            })
+    summary = summarize_frontier_rows(rows, min_safe_task_success_rate=0.5)
+    assert summary["qualified_horizons"] == [30, 20]
+    assert summary["recommended_horizon_actions"] == 20
+    assert summary["go"] is True
+    with pytest.raises(ValueError, match="does not cover every candidate/H"):
+        summarize_frontier_rows(rows[:-1], min_safe_task_success_rate=0.5)
 
 
 def test_recovery_metrics_do_not_reward_always_stop():

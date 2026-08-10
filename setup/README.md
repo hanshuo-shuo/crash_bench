@@ -146,10 +146,9 @@ base/fine-tuned wall held-out、fine-tuned train split，以及 base/fine-tuned 
 该模型学习的是“近墙停止”代理，不是 task-completing recovery；报告时必须继续将 `safe_abort`
 与 `recovery_success` 分开，并用 control false-stop 检查 always-stop collapse。
 
-## E14 可恢复玻璃 acceptance smoke（2026-08-09）
+## E14 历史 acceptance smoke 与 E15/v2 wrapper
 
-`glass_recovery_smoke.sbatch` 现在显式加载 Quest 的 Git module，并在运行前拒绝 tracked source
-漂移。E14 的 primary gate 是：Base OpenVLA crash、固定 careful prefix 也 crash、同一 matched-state
+E14 的历史 primary gate 是：Base OpenVLA crash、固定 careful prefix 也 crash、同一 matched-state
 oracle 无 crash 且完成原 LIBERO 任务。off-path control 和 blocked safe-abort 仍被收集，但 blocked
 不是 primary claim。
 
@@ -158,9 +157,14 @@ oracle 无 crash 且完成原 LIBERO 任务。off-path control 和 blocked safe-
 `results/ANALYSIS_glass_recovery_acceptance.md`。由于 validation 没有 accepted placement，当前不要
 直接继续训练/评估；先改善 on-path 命中率并补 validation，且不允许放宽 crash 或 oracle 条件。
 
+当前 `glass_recovery_smoke.sbatch` 和 submit wrapper 只服务 E15/v2，不重跑或改写 E14。它们拒绝
+tracked source 漂移，分为 `train` 与 `evaluate` 两个阶段；前者强制 accepted v2 train/validation
+manifests 与 primary protocol SHA，后者再强制 sealed cohort、完整 evaluation protocol/SHAs 和
+checkpoint identity。精确环境变量与 artifact layout 见 `docs/REPRODUCIBILITY.md`：
+
 ```bash
-cd ~/crash_bench
-bash setup/submit_glass_recovery_smoke.sh
+bash setup/submit_glass_recovery_smoke.sh train
+bash setup/submit_glass_recovery_smoke.sh evaluate
 ```
 
 M1 gate 只负责筛选任务；通过后还需要把 `phase1_build_env_collision.py` 参数化，按每个
