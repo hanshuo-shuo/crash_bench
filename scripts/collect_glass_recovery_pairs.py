@@ -1423,6 +1423,8 @@ def collect_pair(
                 "peak_glass_force_n": round(float(nominal["peak_force"]), 4),
                 "source_scan_collision_step": int(scan["collision_step"]),
                 "source_scan_precrash_index": state_index,
+                "source_scan_anchor_state_sha256": onpath_hash,
+                "source_scan_anchor_controller_state_sha256": controller_state_hash,
                 "selected_precrash_horizon_steps": selected_horizon,
                 "precrash_selection_attempts": selection_attempts,
                 "action_replay_evidence": {

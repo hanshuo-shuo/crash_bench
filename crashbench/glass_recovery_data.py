@@ -513,6 +513,22 @@ def validate_primary_pair(records: Iterable[PairedTrajectoryRecord]) -> dict[str
         raise ValueError(f"{pair_id} nominal suffix is not exactly trigger_horizon_actions long")
     if nominal.metadata.get("time_to_catastrophe_actions") != trigger_horizon:
         raise ValueError(f"{pair_id} nominal time_to_catastrophe_actions is inconsistent")
+    source_scan_index = nominal.metadata.get("source_scan_precrash_index")
+    source_scan_collision = nominal.metadata.get("source_scan_collision_step")
+    if (
+        not isinstance(source_scan_index, int)
+        or not isinstance(source_scan_collision, int)
+        or source_scan_index < 0
+        or steps_until_event(source_scan_collision, source_scan_index) != trigger_horizon
+    ):
+        raise ValueError(f"{pair_id} source-scan timing does not identify the exact-H anchor")
+    if (
+        nominal.metadata.get("source_scan_anchor_state_sha256")
+        != nominal.branch_start_state_sha256
+        or nominal.metadata.get("source_scan_anchor_controller_state_sha256")
+        != nominal.metadata.get("controller_state_sha256")
+    ):
+        raise ValueError(f"{pair_id} source-scan anchor identity is inconsistent")
     replay = nominal.metadata.get("action_replay_evidence")
     if not isinstance(replay, Mapping) or not replay.get("verified"):
         raise ValueError(f"{pair_id} lacks verified captured-action replay evidence")
@@ -544,12 +560,15 @@ def validate_primary_pair(records: Iterable[PairedTrajectoryRecord]) -> dict[str
     ):
         raise ValueError(f"{pair_id} oracle recoverability/trigger evidence is incomplete")
     oracle_verification = oracle_evidence.get("oracle_verification")
+    oracle_config = oracle_evidence.get("oracle_config")
     if (
         not isinstance(oracle_verification, Mapping)
+        or not isinstance(oracle_config, Mapping)
         or oracle_verification.get("search_success") is not True
         or oracle_verification.get("independent_recapture") is not True
         or oracle_verification.get("recapture_success") is not True
-        or not oracle_verification.get("search_successful_config_sha256")
+        or oracle_verification.get("search_successful_config_sha256")
+        != canonical_sha256(oracle_config)
     ):
         raise ValueError(
             f"{pair_id} oracle requires successful search and independent recapture"

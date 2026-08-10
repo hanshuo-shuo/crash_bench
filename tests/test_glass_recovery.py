@@ -162,6 +162,7 @@ def _v2_records(
         "observation_sha256": f"{pair_id}_offpath_observation",
     }
     row_zero_label_hash = f"{pair_id}_row_zero_labels"
+    oracle_config = {"side": -1.0, "lane_margin": 0.12}
     careful = (
         {} if careful_crashed is None
         else {"careful_comparator": {"careful_crashed": careful_crashed}}
@@ -186,6 +187,10 @@ def _v2_records(
                 "branch_start_hashes": onpath_hashes,
                 "row_zero_label_sha256": row_zero_label_hash,
                 "time_to_catastrophe_actions": horizon,
+                "source_scan_precrash_index": 0,
+                "source_scan_collision_step": horizon - 1,
+                "source_scan_anchor_state_sha256": f"{pair_id}_onpath",
+                "source_scan_anchor_controller_state_sha256": f"{pair_id}_controller",
                 "action_replay_evidence": {
                     "verified": True,
                     "n_actions": horizon,
@@ -216,9 +221,10 @@ def _v2_records(
                 "oracle_verified_mask": True,
                 "latest_verified_recoverable_state": f"{pair_id}_onpath",
                 "runtime_trigger_eligible": True,
+                "oracle_config": oracle_config,
                 "oracle_verification": {
                     "search_success": True,
-                    "search_successful_config_sha256": f"{pair_id}_oracle_config",
+                    "search_successful_config_sha256": canonical_sha256(oracle_config),
                     "independent_recapture": True,
                     "recapture_success": True,
                 },
@@ -1655,6 +1661,10 @@ def _write_tiny_split(root: Path, split: str, *, pair_count: int = 1, horizon: i
                 metadata.update({
                     "row_zero_label_sha256": f"{prefix}_row_zero_labels",
                     "time_to_catastrophe_actions": n,
+                    "source_scan_precrash_index": 0,
+                    "source_scan_collision_step": n - 1,
+                    "source_scan_anchor_state_sha256": start_state,
+                    "source_scan_anchor_controller_state_sha256": f"{prefix}_controller",
                     "action_replay_evidence": {
                         "verified": True,
                         "n_actions": n,
@@ -1663,6 +1673,7 @@ def _write_tiny_split(root: Path, split: str, *, pair_count: int = 1, horizon: i
                     },
                 })
             elif kind == "oracle_recovery":
+                oracle_config = {"side": -1.0, "lane_margin": 0.12}
                 metadata.update({
                     "row_zero_label_sha256": f"{prefix}_row_zero_labels",
                     "time_to_catastrophe_actions": n,
@@ -1670,9 +1681,10 @@ def _write_tiny_split(root: Path, split: str, *, pair_count: int = 1, horizon: i
                     "oracle_verified_mask": True,
                     "latest_verified_recoverable_state": f"{prefix}_onpath",
                     "runtime_trigger_eligible": True,
+                    "oracle_config": oracle_config,
                     "oracle_verification": {
                         "search_success": True,
-                        "search_successful_config_sha256": f"{prefix}_oracle_config",
+                        "search_successful_config_sha256": canonical_sha256(oracle_config),
                         "independent_recapture": True,
                         "recapture_success": True,
                     },
