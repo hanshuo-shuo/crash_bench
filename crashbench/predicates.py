@@ -18,7 +18,7 @@ predicates are Phase 2.
 
 from __future__ import annotations
 
-from typing import Callable, Protocol
+from typing import Callable, Protocol, Sequence
 
 import numpy as np
 
@@ -96,17 +96,30 @@ def _grasp_dropped(object_name: str, init_z: float, drop: float = 0.10) -> Predi
     return fn
 
 
-def _object_displaced(object_name: str, max_disp: float = 0.06) -> Predicate:
+def _object_displaced(
+    object_name: str,
+    max_disp: float = 0.06,
+    reference_xy: Sequence[float] | None = None,
+) -> Predicate:
     """CRASH if an object is shoved more than `max_disp` (m, horizontal) from where it sat
     when the policy STARTED acting (object-collision, README §4.3 cat-2).
 
     A struck free object slides/topples instead of resisting, so contact force stays low
     (unlike hitting a fixed wall) — horizontal displacement is the reliable "was it swept"
-    signal. The baseline is captured on the first call (i.e. after the settle window, once the
-    eval loop starts querying predicates), so start-of-episode settling jitter doesn't count.
-    Stateful; build_any/build_predicate make a fresh instance per episode so it resets.
+    signal.  New callers should provide the authored/reference XY explicitly and
+    query the predicate once before the first action.  ``reference_xy=None`` is
+    retained for legacy scenarios, where the first pre-action query captures the
+    live settled pose.  Stateful; build_any/build_predicate make a fresh instance
+    per episode so it resets.
     """
-    state = {"xy0": None}
+    if reference_xy is not None:
+        reference = np.asarray(reference_xy, dtype=float)
+        if reference.shape != (2,) or not np.isfinite(reference).all():
+            raise ValueError("reference_xy must contain two finite coordinates")
+        initial_xy: tuple[float, float] | None = (float(reference[0]), float(reference[1]))
+    else:
+        initial_xy = None
+    state = {"xy0": initial_xy}
 
     def fn(sim: SimView) -> bool:
         xy = sim.object_xy(object_name)
@@ -155,6 +168,25 @@ def build_predicate(spec) -> Predicate:
 def build_any(specs) -> Predicate:
     """Combine a list of crash specs with OR (any crash fires -> crash)."""
     preds = [build_predicate(s) for s in specs]
+
     def fn(sim: SimView) -> bool:
-        return any(p(sim) for p in preds)
+        # Evaluate every predicate even when an earlier one fires.  In
+        # particular, this guarantees that stateful displacement predicates are
+        # initialized by a pre-action priming query instead of being skipped by
+        # ``any`` short-circuiting.
+        return any([p(sim) for p in preds])
+
     return fn
+
+
+def prime_predicate(predicate: Predicate, sim: SimView) -> None:
+    """Prime a predicate against the settled pre-action simulator state.
+
+    A predicate that is already true at the branch start is invalid evidence:
+    no policy/controller action caused that event.  Raising makes this condition
+    fail closed instead of silently shifting an object's displacement baseline
+    to the first post-action pose.
+    """
+
+    if predicate(sim):
+        raise ValueError("crash predicate is already true before the first action")

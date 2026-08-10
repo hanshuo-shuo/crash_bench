@@ -39,16 +39,18 @@ from crashbench.envs.libero_adapter import ROBOT_CONTACT_BODIES
 from crashbench.glass_recovery_data import (
     HAZARD_TYPES,
     RISK_HORIZONS,
+    SCHEMA_VERSION,
     TRAJECTORY_KINDS,
     GlassPlacement,
     PairedTrajectoryRecord,
     array_sha256,
     canonical_sha256,
     read_placement_manifest,
+    steps_until_event,
     validate_episode_arrays,
     validate_paired_records,
 )
-from crashbench.predicates import build_any
+from crashbench.predicates import build_any, prime_predicate
 from crashbench.recovery import DetourComplete, RetreatHold
 from crashbench.scenario import PredicateSpec
 
@@ -78,7 +80,9 @@ def _glass_predicate_specs(glasses: list[dict]) -> list[PredicateSpec]:
                 "object_name": name, "max_tilt_deg": GLASS_TILT_DEG,
             }),
             PredicateSpec("object_displaced", {
-                "object_name": name, "max_disp": GLASS_DISPLACEMENT_M,
+                "object_name": name,
+                "max_disp": GLASS_DISPLACEMENT_M,
+                "reference_xy": list(glass["pos"][:2]),
             }),
         ])
     specs.append(PredicateSpec("contact_force", {
@@ -93,6 +97,13 @@ def _glass_force(sim, glasses: list[dict]) -> float:
     return float(sim.max_contact_force(
         list(ROBOT_CONTACT_BODIES), against=[glass["name"] for glass in glasses]
     ))
+
+
+def _prime_glass_predicates(crash, sim) -> None:
+    try:
+        prime_predicate(crash, sim)
+    except ValueError as exc:
+        raise CandidateRejected("invalid_initial_state", str(exc)) from exc
 
 
 def _controller_state_sha256(state: dict[str, np.ndarray]) -> str:
@@ -150,6 +161,7 @@ def _finalize_arrays(
     kind: str,
     collision_step: int | None = None,
     counterfactual_collision_step: int | None = None,
+    right_censored: bool = False,
 ) -> dict[str, np.ndarray]:
     if not rows:
         raise ValueError("cannot finalize an empty trajectory")
@@ -159,30 +171,60 @@ def _finalize_arrays(
     severity = np.zeros(n, dtype=np.float32)
     severity_mask = np.zeros(n, dtype=np.float32)
     forces = np.asarray([row["force_after"] for row in rows], dtype=np.float32)
+    time_to_catastrophe = np.full(n, -1, dtype=np.int32)
+    time_to_catastrophe_mask = np.zeros(n, dtype=np.float32)
+    oracle_recoverable = np.zeros(n, dtype=np.float32)
+    oracle_verified_mask = np.zeros(n, dtype=np.float32)
+    latest_verified_recoverable_state = np.zeros(n, dtype=np.float32)
+    runtime_trigger_eligible = np.zeros(n, dtype=np.float32)
 
     if kind == "nominal_catastrophe":
         if collision_step is None:
             raise ValueError("nominal branch needs collision_step")
         for index in range(n):
-            remaining = collision_step - index
-            risk[index] = [float(0 <= remaining <= horizon) for horizon in RISK_HORIZONS]
+            remaining = steps_until_event(collision_step, index)
+            time_to_catastrophe[index] = remaining
+            time_to_catastrophe_mask[index] = 1.0
+            risk[index] = [
+                float(1 <= remaining <= horizon) for horizon in RISK_HORIZONS
+            ]
         risk_mask[:] = 1.0
         severity = _future_max(forces, max(RISK_HORIZONS))
         severity_mask[:] = 1.0
+        oracle_recoverable[0] = 1.0
+        oracle_verified_mask[0] = 1.0
+        latest_verified_recoverable_state[0] = 1.0
+        runtime_trigger_eligible[0] = 1.0
     elif kind == "off_path_control":
-        risk_mask[:] = 1.0
-        severity_mask[:] = 1.0
+        if right_censored:
+            for index in range(n):
+                observed_actions = n - index
+                risk_mask[index] = [
+                    float(observed_actions >= horizon) for horizon in RISK_HORIZONS
+                ]
+                severity_mask[index] = float(observed_actions >= max(RISK_HORIZONS))
+        else:
+            risk_mask[:] = 1.0
+            severity_mask[:] = 1.0
     else:
         # The first recovery/abort observation is exactly state-matched to a
         # counterfactual nominal crash.  Once the intervention changes state we
         # do not fabricate counterfactual labels, so only row zero is supervised.
         if counterfactual_collision_step is not None:
+            remaining = steps_until_event(counterfactual_collision_step, 0)
+            time_to_catastrophe[0] = remaining
+            time_to_catastrophe_mask[0] = 1.0
             risk[0] = [
-                float(counterfactual_collision_step <= horizon) for horizon in RISK_HORIZONS
+                float(1 <= remaining <= horizon) for horizon in RISK_HORIZONS
             ]
             risk_mask[0] = 1.0
             severity[0] = float(max(row.get("counterfactual_peak_force", 0.0) for row in rows))
             severity_mask[0] = 1.0
+            oracle_verified_mask[0] = 1.0
+            if kind == "oracle_recovery":
+                oracle_recoverable[0] = 1.0
+                latest_verified_recoverable_state[0] = 1.0
+                runtime_trigger_eligible[0] = 1.0
 
     hazard_index = HAZARD_TYPES.index("none" if kind == "off_path_control" else "glass")
     recovery_mask = np.full(n, float(kind in {"oracle_recovery", "blocked_safe_abort"}),
@@ -209,8 +251,14 @@ def _finalize_arrays(
         "invariance_mask": invariance_mask,
         "sensitivity_mask": sensitivity_mask,
         "glass_force_after": forces,
+        "time_to_catastrophe_actions": time_to_catastrophe,
+        "time_to_catastrophe_mask": time_to_catastrophe_mask,
+        "oracle_recoverable_from_this_state": oracle_recoverable,
+        "oracle_verified_mask": oracle_verified_mask,
+        "latest_verified_recoverable_state": latest_verified_recoverable_state,
+        "runtime_trigger_eligible": runtime_trigger_eligible,
     }
-    validate_episode_arrays(arrays, n)
+    validate_episode_arrays(arrays, n, schema_version=SCHEMA_VERSION)
     return arrays
 
 
@@ -226,6 +274,7 @@ def _roll_nominal(
     capture_rows: bool = False,
 ) -> dict:
     crash = build_any(_glass_predicate_specs(glasses))
+    _prime_glass_predicates(crash, env.sim_view)
     states: list[np.ndarray] = []
     controller_states: list[dict[str, np.ndarray]] = []
     rows: list[dict] = []
@@ -277,6 +326,7 @@ def _replay_nominal_actions(
     """Verify a sampled Base OpenVLA catastrophe without sampling it twice."""
 
     crash = build_any(_glass_predicate_specs(glasses))
+    _prime_glass_predicates(crash, env.sim_view)
     peak_force = 0.0
     for step, row in enumerate(rows):
         action = np.asarray(row["executed_action"], dtype=np.float32)
@@ -310,6 +360,7 @@ def _run_controller(
     counterfactual_peak_force: float = 0.0,
 ) -> dict:
     crash = build_any(_glass_predicate_specs(glasses))
+    _prime_glass_predicates(crash, env.sim_view)
     rows: list[dict] = []
     controller_trace: list[dict] = []
     peak_force = 0.0
@@ -566,6 +617,7 @@ def _run_offpath(
 ) -> dict:
     glasses = [placement.off_path_glass]
     crash = build_any(_glass_predicate_specs(glasses))
+    _prime_glass_predicates(crash, env.sim_view)
     rows: list[dict] = []
     peak_force = 0.0
     for step in range(max_steps):
@@ -874,7 +926,11 @@ def collect_pair(
         raise RuntimeError(f"{pair_id}: matched off-path control crashed")
     if not offpath["rows"]:
         raise RuntimeError(f"{pair_id}: matched off-path control has no frames")
-    offpath_arrays = _finalize_arrays(offpath["rows"], kind="off_path_control")
+    offpath_arrays = _finalize_arrays(
+        offpath["rows"],
+        kind="off_path_control",
+        right_censored=not bool(offpath["succeeded"]),
+    )
     offpath_path = pair_root / "off_path_control.npz"
     _save_arrays(offpath_path, offpath_arrays)
     closest_control_index, closest_control_row = min(
@@ -1089,9 +1145,9 @@ def collect_pair(
         _record(
             placement, "off_path_control", pair_id, matched_hash, offpath_start_hash,
             offpath_path, offpath_arrays,
-            outcome="recovery_success" if offpath["succeeded"] else "safe_abort",
+            outcome="task_success" if offpath["succeeded"] else "timeout",
             crashed=False, succeeded=bool(offpath["succeeded"]),
-            safe_abort=not bool(offpath["succeeded"]), oracle_verified=False,
+            safe_abort=False, oracle_verified=False,
             scene=[placement.off_path_glass], metadata={
                 "controller_state_sha256": controller_state_hash,
                 "peak_glass_force_n": round(float(offpath["peak_force"]), 4),
@@ -1142,6 +1198,7 @@ def _rejection_counts(rejected: list[dict]) -> dict[str, int]:
             "no_oracle_recovery",
             "oracle_collision",
             "oracle_task_failure",
+            "off_path_timeout",
             "careful_did_not_crash",
             "invalid_initial_state",
             "other",

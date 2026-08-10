@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import tempfile
 from argparse import Namespace
 from pathlib import Path
@@ -14,12 +15,17 @@ from crashbench.envs.libero_adapter import LiberoEnv, inject_obstacles_xml
 from crashbench.glass_recovery_data import (
     HAZARD_TYPES,
     RISK_HORIZONS,
+    SCHEMA_VERSION,
     GlassPlacement,
     PairedTrajectoryRecord,
     array_sha256,
+    exact_h_anchor_index,
+    read_trajectory_manifest,
+    steps_until_event,
     validate_episode_arrays,
     validate_paired_records,
     validate_placement_design,
+    validate_primary_pair,
     write_trajectory_manifest,
 )
 from crashbench.glass_recovery_model import (
@@ -34,14 +40,17 @@ from scripts.train_glass_recovery import (
 from crashbench.metrics import summarize_recovery_rows
 from crashbench.policies.glass_recovery_policy import GlassRecoveryPolicy
 from crashbench.recovery import DetourComplete
+from crashbench.predicates import build_predicate, prime_predicate
+from crashbench.scenario import PredicateSpec
 from scripts.collect_glass_recovery_pairs import (
     CAREFUL_PROMPT_PREFIX,
-    _accepted_verification,
+    _finalize_arrays,
     _oracle_rejection_reason,
     _oracle_configs,
     _partition_scene,
-    _primary_gate_pair_ids,
+    _replay_nominal_actions,
     _rejection_counts,
+    _roll_nominal,
     _safe_abort_configs,
     _stable_abort,
 )
@@ -74,6 +83,129 @@ def _placement(identifier: str, split: str, state_hash: str, cluster: str) -> Gl
     )
 
 
+def _trajectory_rows(n: int) -> list[dict]:
+    return [
+        {
+            "image": np.zeros((2, 2, 3), dtype=np.uint8),
+            "hidden": np.zeros(4, dtype=np.float32),
+            "robot_state": np.zeros(8, dtype=np.float32),
+            "nominal_action": np.zeros(7, dtype=np.float32),
+            "target_action": np.zeros(7, dtype=np.float32),
+            "executed_action": np.zeros(7, dtype=np.float32),
+            "force_after": 0.0,
+            "counterfactual_peak_force": 30.0,
+        }
+        for _ in range(n)
+    ]
+
+
+def _v2_records(
+    *,
+    pair_id: str = "pair_v2",
+    split: str = "train",
+    horizon: int = 3,
+    include_blocked: bool = False,
+    careful_crashed: bool | None = None,
+) -> list[PairedTrajectoryRecord]:
+    common = dict(
+        pair_id=pair_id,
+        placement_id=f"{pair_id}_placement",
+        split=split,
+        source_state_sha256=f"{pair_id}_source",
+        matched_robot_state_sha256=f"{pair_id}_robot",
+        instruction="pick and place",
+        task_suite="libero_spatial",
+        task_id=0,
+        trigger_horizon_actions=horizon,
+        schema_version=SCHEMA_VERSION,
+    )
+    controller = {"controller_state_sha256": f"{pair_id}_controller"}
+    careful = (
+        {} if careful_crashed is None
+        else {"careful_comparator": {"careful_crashed": careful_crashed}}
+    )
+    records = [
+        PairedTrajectoryRecord(
+            **common,
+            trajectory_kind="nominal_catastrophe",
+            branch_start_state_sha256=f"{pair_id}_onpath",
+            arrays_path=f"{split}/{pair_id}/nominal.npz",
+            n_steps=horizon,
+            outcome="crash",
+            crashed=True,
+            succeeded=False,
+            safe_abort=False,
+            oracle_verified=False,
+            scene_sha256=f"{pair_id}_onpath_scene",
+            metadata={
+                **controller,
+                **careful,
+                "time_to_catastrophe_actions": horizon,
+                "action_replay_evidence": {
+                    "verified": True,
+                    "n_actions": horizon,
+                    "expected_catastrophe_action_index": horizon - 1,
+                    "actual_catastrophe_action_index": horizon - 1,
+                },
+            },
+        ),
+        PairedTrajectoryRecord(
+            **common,
+            trajectory_kind="oracle_recovery",
+            branch_start_state_sha256=f"{pair_id}_onpath",
+            arrays_path=f"{split}/{pair_id}/oracle.npz",
+            n_steps=2,
+            outcome="recovery_success",
+            crashed=False,
+            succeeded=True,
+            safe_abort=False,
+            oracle_verified=True,
+            scene_sha256=f"{pair_id}_onpath_scene",
+            metadata={
+                **controller,
+                "time_to_catastrophe_actions": horizon,
+                "oracle_recoverable_from_this_state": True,
+                "oracle_verified_mask": True,
+                "latest_verified_recoverable_state": f"{pair_id}_onpath",
+                "runtime_trigger_eligible": True,
+            },
+        ),
+        PairedTrajectoryRecord(
+            **common,
+            trajectory_kind="off_path_control",
+            branch_start_state_sha256=f"{pair_id}_offpath",
+            arrays_path=f"{split}/{pair_id}/control.npz",
+            n_steps=2,
+            outcome="task_success",
+            crashed=False,
+            succeeded=True,
+            safe_abort=False,
+            oracle_verified=False,
+            scene_sha256=f"{pair_id}_offpath_scene",
+            metadata={**controller, "termination": "task_success"},
+        ),
+    ]
+    if include_blocked:
+        records.append(PairedTrajectoryRecord(
+            **common,
+            trajectory_kind="blocked_safe_abort",
+            branch_start_state_sha256=f"{pair_id}_blocked",
+            arrays_path=f"{split}/{pair_id}/blocked.npz",
+            n_steps=2,
+            outcome="safe_abort",
+            crashed=False,
+            succeeded=False,
+            safe_abort=True,
+            oracle_verified=True,
+            scene_sha256=f"{pair_id}_blocked_scene",
+            metadata={
+                **controller,
+                "blocked_evidence": {"controller_class": "finite grid"},
+            },
+        ))
+    return records
+
+
 def test_glass_placement_design_rejects_split_state_leakage():
     train_hash = array_sha256(np.asarray([1.0, 2.0]))
     heldout_hash = array_sha256(np.asarray([3.0, 4.0]))
@@ -98,12 +230,18 @@ def test_glass_placement_rejects_non_boolean_mobility_marker():
         GlassPlacement.from_dict(payload)
 
 
-def test_four_way_pair_requires_exact_nominal_oracle_state():
+def test_glass_placement_allows_no_blocked_auxiliary_design():
+    payload = _placement("primary_only", "train", "state", "train/nominal").to_dict()
+    payload["blocked_glasses"] = []
+    assert GlassPlacement.from_dict(payload).blocked_glasses == []
+
+
+def test_legacy_v1_pair_remains_readable_but_cannot_enter_v2_primary():
     common = dict(
         pair_id="pair_0", placement_id="placement_0", split="train",
         source_state_sha256="source", matched_robot_state_sha256="robot",
         arrays_path="train/pair/branch.npz", instruction="pick", n_steps=2,
-        scene_sha256="scene",
+        scene_sha256="scene", schema_version=1,
     )
     records = [
         PairedTrajectoryRecord(
@@ -129,6 +267,8 @@ def test_four_way_pair_requires_exact_nominal_oracle_state():
         ),
     ]
     assert validate_paired_records(records)["pairs"] == 1
+    with pytest.raises(ValueError, match="legacy schema v1"):
+        validate_primary_pair(records)
     changed = [records[0], PairedTrajectoryRecord(
         **{**records[1].to_dict(), "branch_start_state_sha256": "different"}
     ), *records[2:]]
@@ -147,6 +287,251 @@ def test_four_way_pair_requires_exact_nominal_oracle_state():
     ]
     with pytest.raises(ValueError, match="controller state"):
         validate_paired_records(controller_changed)
+
+
+def test_legacy_v1_manifest_is_read_only_compatible(tmp_path):
+    records = []
+    for record in _v2_records(include_blocked=True):
+        payload = record.to_dict()
+        payload.pop("schema_version")
+        payload.pop("task_suite")
+        payload.pop("task_id")
+        payload.pop("trigger_horizon_actions")
+        records.append(payload)
+    manifest = tmp_path / "legacy.jsonl"
+    manifest.write_text("".join(json.dumps(row) + "\n" for row in records))
+    legacy = read_trajectory_manifest(manifest)
+    assert {record.schema_version for record in legacy} == {1}
+    with pytest.raises(ValueError, match="read-only"):
+        write_trajectory_manifest(tmp_path / "copy.jsonl", legacy)
+
+
+def test_h1_labels_only_observation_whose_next_action_catastrophizes():
+    rows = _trajectory_rows(5)
+    arrays = _finalize_arrays(
+        rows, kind="nominal_catastrophe", collision_step=4
+    )
+    assert np.array_equal(arrays["time_to_catastrophe_actions"], [5, 4, 3, 2, 1])
+    assert np.array_equal(arrays["risk_targets"][:, 0], [0, 0, 0, 0, 1])
+
+
+def test_exact_h_anchor_suffix_catastrophizes_after_exactly_h_actions():
+    collision_action_index = 7
+    horizon = 3
+    anchor = exact_h_anchor_index(collision_action_index, horizon)
+    assert anchor == 5
+    assert steps_until_event(collision_action_index, anchor) == horizon
+    suffix = list(range(anchor, collision_action_index + 1))
+    assert len(suffix) == horizon
+    assert suffix[-1] - anchor == horizon - 1
+
+    class Sim:
+        libero_done = False
+
+        def __init__(self):
+            self.xy = (0.0, 0.0)
+
+        def object_xy(self, name):
+            return self.xy
+
+        def object_tilt_deg(self, name):
+            return 0.0
+
+        def max_contact_force(self, bodies, against=None):
+            return 0.0
+
+    class Env:
+        def __init__(self, move_on_action):
+            self.sim_view = Sim()
+            self.steps = 0
+            self.move_on_action = move_on_action
+
+        def step(self, action):
+            self.steps += 1
+            if self.steps == self.move_on_action:
+                self.sim_view.xy = (0.061, 0.0)
+            return {}, 0.0, False, {}
+
+    rows = [{"executed_action": np.zeros(7, dtype=np.float32)} for _ in range(horizon)]
+    replay = _replay_nominal_actions(Env(horizon), {}, [_glass()], rows)
+    assert replay["crashed"] is True
+    assert replay["collision_step"] == horizon - 1
+    early = _replay_nominal_actions(Env(horizon), {}, [_glass()], rows[:-1])
+    assert early["crashed"] is False
+
+
+def test_oracle_row_zero_risk_equals_exact_matched_nominal_row():
+    horizon = 5
+    nominal = _finalize_arrays(
+        _trajectory_rows(horizon),
+        kind="nominal_catastrophe",
+        collision_step=horizon - 1,
+    )
+    oracle = _finalize_arrays(
+        _trajectory_rows(2),
+        kind="oracle_recovery",
+        counterfactual_collision_step=horizon - 1,
+    )
+    assert np.array_equal(oracle["risk_targets"][0], nominal["risk_targets"][0])
+    assert np.array_equal(oracle["risk_mask"][0], nominal["risk_mask"][0])
+    assert oracle["time_to_catastrophe_actions"][0] == horizon
+
+
+def test_explicit_reference_detects_first_action_glass_displacement():
+    sim = SimpleNamespace(object_xy=lambda name: sim.xy)
+    sim.xy = (0.0, 0.0)
+    displaced = build_predicate(PredicateSpec("object_displaced", {
+        "object_name": "glass",
+        "max_disp": 0.06,
+        "reference_xy": [0.0, 0.0],
+    }))
+    prime_predicate(displaced, sim)
+    sim.xy = (0.061, 0.0)
+    assert displaced(sim) is True
+
+
+def test_collector_detects_displacement_caused_by_first_action():
+    class Sim:
+        libero_done = False
+
+        def __init__(self):
+            self.xy = (0.0, 0.0)
+
+        def object_xy(self, name):
+            return self.xy
+
+        def object_tilt_deg(self, name):
+            return 0.0
+
+        def max_contact_force(self, bodies, against=None):
+            return 0.0
+
+    class Env:
+        def __init__(self):
+            self.sim_view = Sim()
+
+        def policy_observation(self, obs, resize_size):
+            return {
+                "full_image": np.zeros((2, 2, 3), dtype=np.uint8),
+                "state": np.zeros(8, dtype=np.float32),
+            }
+
+        def step(self, action):
+            self.sim_view.xy = (0.061, 0.0)
+            return {}, 0.0, False, {}
+
+    policy = SimpleNamespace(
+        resize_size=2,
+        last_hidden=np.zeros(4, dtype=np.float32),
+        act=lambda observation, instruction: np.zeros(7, dtype=np.float32),
+    )
+    result = _roll_nominal(Env(), policy, {}, "pick", [_glass()], 2)
+    assert result["crashed"] is True
+    assert result["collision_step"] == 0
+    assert result["steps_to_event"] == 1
+
+
+def test_timeout_control_tail_is_right_censored():
+    arrays = _finalize_arrays(
+        _trajectory_rows(4), kind="off_path_control", right_censored=True
+    )
+    assert np.array_equal(arrays["risk_mask"][:, 0], [1, 1, 1, 1])
+    assert np.array_equal(arrays["risk_mask"][:, 1], [1, 1, 0, 0])
+    assert np.array_equal(arrays["risk_mask"][:, 2], [0, 0, 0, 0])
+    assert np.array_equal(arrays["severity_mask"], [0, 0, 0, 0])
+
+
+def test_v2_arrays_are_default_fail_closed_but_v1_is_explicitly_readable():
+    arrays = _finalize_arrays(
+        _trajectory_rows(2), kind="nominal_catastrophe", collision_step=1
+    )
+    for key in (
+        "time_to_catastrophe_actions",
+        "time_to_catastrophe_mask",
+        "oracle_recoverable_from_this_state",
+        "oracle_verified_mask",
+        "latest_verified_recoverable_state",
+        "runtime_trigger_eligible",
+    ):
+        arrays.pop(key)
+    with pytest.raises(ValueError, match="episode arrays missing"):
+        validate_episode_arrays(arrays)
+    assert validate_episode_arrays(arrays, schema_version=1) == 2
+
+
+def test_v2_arrays_reject_risk_and_oracle_semantic_contradictions():
+    arrays = _finalize_arrays(
+        _trajectory_rows(3), kind="nominal_catastrophe", collision_step=2
+    )
+    arrays["risk_targets"][0] = 0.0
+    with pytest.raises(ValueError, match="risk_targets disagree"):
+        validate_episode_arrays(arrays)
+
+    arrays = _finalize_arrays(
+        _trajectory_rows(3), kind="nominal_catastrophe", collision_step=2
+    )
+    arrays["oracle_verified_mask"][0] = 0.0
+    with pytest.raises(ValueError, match="recoverability must be verified"):
+        validate_episode_arrays(arrays)
+
+
+def test_v2_missing_controller_hash_fails_primary_admission():
+    records = _v2_records()
+    payload = records[2].to_dict()
+    payload["metadata"] = {}
+    records[2] = PairedTrajectoryRecord(**payload)
+    with pytest.raises(ValueError, match="controller hash"):
+        validate_primary_pair(records)
+
+
+@pytest.mark.parametrize("field,value", [
+    ("task_id", 1),
+    ("split", "validation"),
+    ("instruction", "different instruction"),
+])
+def test_v2_cross_task_split_or_instruction_mismatch_fails(field, value):
+    records = _v2_records()
+    payload = records[2].to_dict()
+    payload[field] = value
+    records[2] = PairedTrajectoryRecord(**payload)
+    with pytest.raises(ValueError, match=field):
+        validate_primary_pair(records)
+
+
+def test_careful_and_optional_blocked_do_not_change_primary_acceptance():
+    without_aux = _v2_records(careful_crashed=False)
+    with_aux = _v2_records(include_blocked=True, careful_crashed=True)
+    assert validate_primary_pair(without_aux)["pair_id"] == "pair_v2"
+    result = validate_primary_pair(with_aux)
+    assert result["pair_id"] == "pair_v2"
+    assert result["blocked_auxiliary_present"] is True
+
+
+def test_offpath_timeout_is_not_safe_abort_or_primary_utility_control():
+    records = _v2_records()
+    payload = records[2].to_dict()
+    payload.update(outcome="timeout", succeeded=False, safe_abort=False)
+    payload["metadata"] = {
+        **payload["metadata"], "termination": "timeout", "right_censored": True,
+    }
+    records[2] = PairedTrajectoryRecord(**payload)
+    with pytest.raises(ValueError, match="complete the original task"):
+        validate_primary_pair(records)
+    payload["safe_abort"] = True
+    with pytest.raises(ValueError, match="timeout cannot be safe_abort"):
+        PairedTrajectoryRecord(**payload)
+
+
+@pytest.mark.parametrize("record_index,bad_outcome", [
+    (0, "timeout"),
+    (1, "task_success"),
+    (2, "timeout"),
+])
+def test_v2_primary_branches_require_canonical_outcomes(record_index, bad_outcome):
+    payload = _v2_records()[record_index].to_dict()
+    payload["outcome"] = bad_outcome
+    with pytest.raises(ValueError, match="outcome must be"):
+        PairedTrajectoryRecord(**payload)
 
 
 def test_controller_state_roundtrip_restores_osc_interpolators():
@@ -294,10 +679,10 @@ def test_episode_array_schema():
         "recovery_mask": np.zeros(n), "invariance_mask": np.ones(n),
         "sensitivity_mask": np.zeros(n),
     }
-    assert validate_episode_arrays(arrays) == n
+    assert validate_episode_arrays(arrays, schema_version=1) == n
     arrays["nominal_action"] = np.zeros((n, 6))
     with pytest.raises(ValueError, match=r"\[N, 7\]"):
-        validate_episode_arrays(arrays)
+        validate_episode_arrays(arrays, schema_version=1)
 
 
 class _FakeBase:
@@ -479,6 +864,7 @@ def test_primary_gate_helpers_keep_rejections_auditable():
         "no_oracle_recovery": 0,
         "oracle_collision": 0,
         "oracle_task_failure": 0,
+        "off_path_timeout": 0,
         "careful_did_not_crash": 1,
         "invalid_initial_state": 0,
         "other": 1,
@@ -524,68 +910,6 @@ def test_careful_gate_uses_fixed_prefix_and_restores_policy(monkeypatch):
     assert result["careful_succeeded"] is False
     assert result["careful_peak_glass_force_n"] == 40.0
     assert result["careful_steps_to_event"] == 7
-
-
-def test_accepted_verification_reports_three_way_gate():
-    common = dict(
-        pair_id="pair", placement_id="placement", split="train",
-        source_state_sha256="source", matched_robot_state_sha256="robot",
-        instruction="pick", n_steps=1, scene_sha256="scene",
-    )
-    records = [
-        PairedTrajectoryRecord(
-            **common, trajectory_kind="nominal_catastrophe",
-            branch_start_state_sha256="onpath", arrays_path="nominal.npz",
-            outcome="crash", crashed=True, succeeded=False, safe_abort=False,
-            oracle_verified=False, metadata={"primary_acceptance": {
-                "base_crash": True, "oracle_safe_task_success": True,
-                "careful_crashed": True, "careful_succeeded": False,
-                "careful_peak_glass_force_n": 31.2, "careful_steps_to_event": 44,
-            }},
-        ),
-        PairedTrajectoryRecord(
-            **common, trajectory_kind="oracle_recovery",
-            branch_start_state_sha256="onpath", arrays_path="oracle.npz",
-            outcome="recovery_success", crashed=False, succeeded=True, safe_abort=False,
-            oracle_verified=True,
-        ),
-        PairedTrajectoryRecord(
-            **common, trajectory_kind="off_path_control",
-            branch_start_state_sha256="offpath", arrays_path="control.npz",
-            outcome="recovery_success", crashed=False, succeeded=True, safe_abort=False,
-            oracle_verified=False,
-        ),
-        PairedTrajectoryRecord(
-            **common, trajectory_kind="blocked_safe_abort",
-            branch_start_state_sha256="blocked", arrays_path="abort.npz",
-            outcome="safe_abort", crashed=False, succeeded=False, safe_abort=True,
-            oracle_verified=True, metadata={
-                "blocked_evidence": {"controller_class": "grid"}
-            },
-        ),
-    ]
-    assert _accepted_verification(records) == [{
-        "placement_id": "pair",
-        "base_crashed": True,
-        "careful_crashed": True,
-        "careful_succeeded": False,
-        "careful_peak_glass_force_n": 31.2,
-        "careful_steps_to_event": 44,
-        "oracle_crashed": False,
-        "oracle_task_succeeded": True,
-    }]
-    assert _primary_gate_pair_ids(records) == {"pair"}
-    legacy = [
-        PairedTrajectoryRecord(**{
-            **record.to_dict(),
-            "metadata": (
-                {} if record.trajectory_kind == "nominal_catastrophe"
-                else record.metadata
-            ),
-        })
-        for record in records
-    ]
-    assert _primary_gate_pair_ids(legacy) == set()
 
 
 def test_blocked_barrier_is_dense_and_nonoverlapping():
@@ -652,42 +976,9 @@ def test_replay_selects_accepted_pair_from_manifest_not_first_directory(tmp_path
     accepted = dataset / "train" / "glass_recovery_train_0002"
     rejected.mkdir(parents=True)
     accepted.mkdir()
-    common = dict(
-        pair_id="glass_recovery_train_0002", placement_id="placement", split="train",
-        source_state_sha256="source", matched_robot_state_sha256="robot",
-        instruction="pick", n_steps=1, scene_sha256="scene",
+    records = _v2_records(
+        pair_id="glass_recovery_train_0002", horizon=1, include_blocked=True
     )
-    records = [
-        PairedTrajectoryRecord(
-            **common, trajectory_kind="nominal_catastrophe",
-            branch_start_state_sha256="onpath",
-            arrays_path="train/glass_recovery_train_0002/nominal_catastrophe.npz",
-            outcome="crash", crashed=True, succeeded=False, safe_abort=False,
-            oracle_verified=False,
-        ),
-        PairedTrajectoryRecord(
-            **common, trajectory_kind="oracle_recovery",
-            branch_start_state_sha256="onpath",
-            arrays_path="train/glass_recovery_train_0002/oracle_recovery.npz",
-            outcome="recovery_success", crashed=False, succeeded=True, safe_abort=False,
-            oracle_verified=True,
-        ),
-        PairedTrajectoryRecord(
-            **common, trajectory_kind="off_path_control",
-            branch_start_state_sha256="offpath",
-            arrays_path="train/glass_recovery_train_0002/off_path_control.npz",
-            outcome="recovery_success", crashed=False, succeeded=True, safe_abort=False,
-            oracle_verified=False,
-        ),
-        PairedTrajectoryRecord(
-            **common, trajectory_kind="blocked_safe_abort",
-            branch_start_state_sha256="blocked",
-            arrays_path="train/glass_recovery_train_0002/blocked_safe_abort.npz",
-            outcome="safe_abort", crashed=False, succeeded=False, safe_abort=True,
-            oracle_verified=True,
-            metadata={"blocked_evidence": {"controller_class": "grid"}},
-        ),
-    ]
     write_trajectory_manifest(dataset / "train.jsonl", records)
     (accepted / "pair.json").write_text("{}\n")
 
@@ -700,28 +991,46 @@ def _write_tiny_split(root: Path, split: str):
         "nominal_catastrophe", "oracle_recovery", "off_path_control", "blocked_safe_abort",
     )):
         n = 2
-        risk_positive = kind != "off_path_control"
-        arrays = {
-            "hidden": np.full((n, 6), kind_index, dtype=np.float16),
-            "robot_state": np.zeros((n, 8), dtype=np.float32),
-            "nominal_action": np.zeros((n, 7), dtype=np.float32),
-            "target_action": np.full((n, 7), 0.2 if kind != "off_path_control" else 0,
-                                     dtype=np.float32),
-            "executed_action": np.zeros((n, 7), dtype=np.float32),
-            "risk_targets": np.full((n, 5), float(risk_positive), dtype=np.float32),
-            "risk_mask": np.ones((n, 5), dtype=np.float32),
-            "hazard_type": np.full(n, int(risk_positive), dtype=np.int64),
-            "severity_force": np.full(n, 20.0 if risk_positive else 0, dtype=np.float32),
-            "severity_mask": np.ones(n, dtype=np.float32),
-            "abort_target": np.full(n, float(kind == "blocked_safe_abort"), dtype=np.float32),
-            "recovery_mask": np.full(n, float(kind in {"oracle_recovery", "blocked_safe_abort"}),
-                                     dtype=np.float32),
-            "invariance_mask": np.full(n, float(kind == "off_path_control"), dtype=np.float32),
-            "sensitivity_mask": np.full(n, float(kind == "oracle_recovery"), dtype=np.float32),
-        }
+        rows = _trajectory_rows(n)
+        for row in rows:
+            row["hidden"] = np.full(6, kind_index, dtype=np.float32)
+            row["target_action"] = np.full(
+                7, 0.2 if kind != "off_path_control" else 0, dtype=np.float32
+            )
+        if kind == "nominal_catastrophe":
+            arrays = _finalize_arrays(rows, kind=kind, collision_step=n - 1)
+        elif kind == "off_path_control":
+            arrays = _finalize_arrays(rows, kind=kind)
+        else:
+            arrays = _finalize_arrays(
+                rows, kind=kind, counterfactual_collision_step=n - 1
+            )
         array_rel = Path(split) / f"{kind}.npz"
         (root / array_rel).parent.mkdir(parents=True, exist_ok=True)
         np.savez_compressed(root / array_rel, **arrays)
+        metadata = {"controller_state_sha256": f"{split}_controller"}
+        if kind == "nominal_catastrophe":
+            metadata.update({
+                "time_to_catastrophe_actions": n,
+                "action_replay_evidence": {
+                    "verified": True,
+                    "n_actions": n,
+                    "expected_catastrophe_action_index": n - 1,
+                    "actual_catastrophe_action_index": n - 1,
+                },
+            })
+        elif kind == "oracle_recovery":
+            metadata.update({
+                "time_to_catastrophe_actions": n,
+                "oracle_recoverable_from_this_state": True,
+                "oracle_verified_mask": True,
+                "latest_verified_recoverable_state": f"{split}_onpath",
+                "runtime_trigger_eligible": True,
+            })
+        elif kind == "off_path_control":
+            metadata["termination"] = "task_success"
+        else:
+            metadata["blocked_evidence"] = {"controller_class": "grid"}
         records.append(PairedTrajectoryRecord(
             pair_id=f"{split}_pair", placement_id=f"{split}_placement", split=split,
             trajectory_kind=kind, source_state_sha256=f"{split}_source",
@@ -729,16 +1038,21 @@ def _write_tiny_split(root: Path, split: str):
             branch_start_state_sha256=(f"{split}_onpath" if kind in {
                 "nominal_catastrophe", "oracle_recovery"} else f"{split}_{kind}"),
             arrays_path=array_rel.as_posix(), instruction="pick", n_steps=n,
+            task_suite="libero_spatial", task_id=0,
+            trigger_horizon_actions=n, schema_version=SCHEMA_VERSION,
             outcome=("crash" if kind == "nominal_catastrophe" else
-                     "recovery_success" if kind in {"oracle_recovery", "off_path_control"}
-                     else "safe_abort"),
+                     "recovery_success" if kind == "oracle_recovery" else
+                     "task_success" if kind == "off_path_control" else "safe_abort"),
             crashed=kind == "nominal_catastrophe",
             succeeded=kind in {"oracle_recovery", "off_path_control"},
             safe_abort=kind == "blocked_safe_abort",
             oracle_verified=kind in {"oracle_recovery", "blocked_safe_abort"},
-            scene_sha256=f"scene_{kind}",
-            metadata=({"blocked_evidence": {"controller_class": "grid"}}
-                      if kind == "blocked_safe_abort" else {}),
+            scene_sha256=(
+                f"{split}_onpath_scene" if kind in {
+                    "nominal_catastrophe", "oracle_recovery"
+                } else f"{split}_{kind}_scene"
+            ),
+            metadata=metadata,
         ))
     write_trajectory_manifest(root / f"{split}.jsonl", records)
 
