@@ -283,6 +283,70 @@ def read_trajectory_manifest(path: str | Path) -> list[PairedTrajectoryRecord]:
     return records
 
 
+def validate_auxiliary_records(
+    records: Iterable[PairedTrajectoryRecord],
+) -> dict[str, Any]:
+    """Validate a standalone schema-v2 blocked-appendix cohort."""
+
+    records = list(records)
+    seen_pairs: set[str] = set()
+    state_splits: dict[str, set[str]] = {}
+    for record in records:
+        if record.schema_version != SCHEMA_VERSION:
+            raise ValueError("auxiliary manifests require schema v2")
+        if record.trajectory_kind != "blocked_safe_abort":
+            raise ValueError("auxiliary manifests may contain only blocked_safe_abort rows")
+        if record.pair_id in seen_pairs:
+            raise ValueError(f"duplicate auxiliary pair {record.pair_id}")
+        seen_pairs.add(record.pair_id)
+        state_splits.setdefault(record.source_state_sha256, set()).add(record.split)
+        if not record.metadata.get("attempt_key"):
+            raise ValueError(f"{record.pair_id} auxiliary record requires an attempt key")
+        controller_hash = record.metadata.get("controller_state_sha256")
+        hashes = record.metadata.get("branch_start_hashes")
+        if not isinstance(hashes, Mapping):
+            raise ValueError(f"{record.pair_id} auxiliary record requires branch-start hashes")
+        if (
+            hashes.get("simulator_state_sha256") != record.branch_start_state_sha256
+            or not hashes.get("observation_sha256")
+            or hashes.get("controller_state_sha256") != controller_hash
+        ):
+            raise ValueError(f"{record.pair_id} auxiliary branch-start hashes are inconsistent")
+    leaked = {key: sorted(value) for key, value in state_splits.items() if len(value) > 1}
+    if leaked:
+        raise ValueError(f"source initial state leaks across auxiliary splits: {leaked}")
+    return {
+        "records": len(records),
+        "pairs": len(seen_pairs),
+        "records_by_split": {
+            split: sum(record.split == split for record in records) for split in SPLITS
+        },
+    }
+
+
+def write_auxiliary_trajectory_manifest(
+    path: str | Path,
+    records: Iterable[PairedTrajectoryRecord],
+) -> None:
+    records = list(records)
+    validate_auxiliary_records(records)
+    target = Path(path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text("".join(
+        json.dumps(record.to_dict(), sort_keys=True) + "\n" for record in records
+    ))
+
+
+def read_auxiliary_trajectory_manifest(path: str | Path) -> list[PairedTrajectoryRecord]:
+    records = [
+        PairedTrajectoryRecord.from_dict(json.loads(line))
+        for line in Path(path).read_text().splitlines()
+        if line.strip()
+    ]
+    validate_auxiliary_records(records)
+    return records
+
+
 def validate_placement_design(placements: Iterable[GlassPlacement]) -> dict[str, Any]:
     placements = list(placements)
     if not placements:
@@ -404,8 +468,31 @@ def validate_primary_pair(records: Iterable[PairedTrajectoryRecord]) -> dict[str
     }
     if None in controller_hashes or "" in controller_hashes or len(controller_hashes) != 1:
         raise ValueError(f"{pair_id} primary branches require one shared controller hash")
+    attempt_keys = {record.metadata.get("attempt_key") for record in primary.values()}
+    if None in attempt_keys or "" in attempt_keys or len(attempt_keys) != 1:
+        raise ValueError(f"{pair_id} primary branches require one shared attempt key")
     if any(not record.scene_sha256 for record in primary.values()):
         raise ValueError(f"{pair_id} primary branches require scene hashes")
+
+    branch_hashes: dict[str, Mapping[str, Any]] = {}
+    for kind, record in primary.items():
+        hashes = record.metadata.get("branch_start_hashes")
+        if not isinstance(hashes, Mapping):
+            raise ValueError(f"{pair_id} {kind} requires exact branch-start hashes")
+        required_hashes = {
+            "simulator_state_sha256",
+            "controller_state_sha256",
+            "observation_sha256",
+        }
+        if any(not hashes.get(key) for key in required_hashes):
+            raise ValueError(f"{pair_id} {kind} has incomplete branch-start hashes")
+        if hashes.get("simulator_state_sha256") != record.branch_start_state_sha256:
+            raise ValueError(f"{pair_id} {kind} simulator hash disagrees with its start state")
+        if hashes.get("controller_state_sha256") != record.metadata.get(
+            "controller_state_sha256"
+        ):
+            raise ValueError(f"{pair_id} {kind} controller hash is inconsistent")
+        branch_hashes[kind] = hashes
 
     nominal = primary["nominal_catastrophe"]
     oracle = primary["oracle_recovery"]
@@ -416,6 +503,12 @@ def validate_primary_pair(records: Iterable[PairedTrajectoryRecord]) -> dict[str
         raise ValueError(f"{pair_id} nominal and oracle branches are not exact-state matched")
     if nominal.scene_sha256 != oracle.scene_sha256:
         raise ValueError(f"{pair_id} nominal and oracle branches do not share the scene hash")
+    if dict(branch_hashes["nominal_catastrophe"]) != dict(
+        branch_hashes["oracle_recovery"]
+    ):
+        raise ValueError(
+            f"{pair_id} nominal and oracle simulator/controller/observation hashes differ"
+        )
     if nominal.n_steps != trigger_horizon:
         raise ValueError(f"{pair_id} nominal suffix is not exactly trigger_horizon_actions long")
     if nominal.metadata.get("time_to_catastrophe_actions") != trigger_horizon:
@@ -431,6 +524,13 @@ def validate_primary_pair(records: Iterable[PairedTrajectoryRecord]) -> dict[str
     ):
         raise ValueError(f"{pair_id} action replay does not prove an exact-H catastrophe")
 
+    label_hashes = {
+        nominal.metadata.get("row_zero_label_sha256"),
+        oracle.metadata.get("row_zero_label_sha256"),
+    }
+    if None in label_hashes or "" in label_hashes or len(label_hashes) != 1:
+        raise ValueError(f"{pair_id} oracle row-zero labels do not match the nominal anchor")
+
     if not oracle.oracle_verified or oracle.crashed or not oracle.succeeded:
         raise ValueError(f"{pair_id} oracle branch is not verified safe task completion")
     oracle_evidence = oracle.metadata
@@ -443,9 +543,22 @@ def validate_primary_pair(records: Iterable[PairedTrajectoryRecord]) -> dict[str
         or oracle_evidence.get("runtime_trigger_eligible") is not True
     ):
         raise ValueError(f"{pair_id} oracle recoverability/trigger evidence is incomplete")
+    oracle_verification = oracle_evidence.get("oracle_verification")
+    if (
+        not isinstance(oracle_verification, Mapping)
+        or oracle_verification.get("search_success") is not True
+        or oracle_verification.get("independent_recapture") is not True
+        or oracle_verification.get("recapture_success") is not True
+        or not oracle_verification.get("search_successful_config_sha256")
+    ):
+        raise ValueError(
+            f"{pair_id} oracle requires successful search and independent recapture"
+        )
 
     if control.crashed or not control.succeeded or control.safe_abort:
         raise ValueError(f"{pair_id} off_path_control must safely complete the original task")
+    if control.metadata.get("termination") != "task_success":
+        raise ValueError(f"{pair_id} off_path_control lacks task-success termination evidence")
     return {
         "pair_id": pair_id,
         "schema_version": SCHEMA_VERSION,

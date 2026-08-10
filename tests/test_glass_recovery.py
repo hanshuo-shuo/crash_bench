@@ -19,10 +19,13 @@ from crashbench.glass_recovery_data import (
     GlassPlacement,
     PairedTrajectoryRecord,
     array_sha256,
+    canonical_sha256,
     exact_h_anchor_index,
+    read_auxiliary_trajectory_manifest,
     read_trajectory_manifest,
     steps_until_event,
     validate_episode_arrays,
+    validate_auxiliary_records,
     validate_paired_records,
     validate_placement_design,
     validate_primary_pair,
@@ -43,16 +46,29 @@ from crashbench.recovery import DetourComplete
 from crashbench.predicates import build_predicate, prime_predicate
 from crashbench.scenario import PredicateSpec
 from scripts.collect_glass_recovery_pairs import (
+    ATTEMPT_LEDGER_NAME,
     CAREFUL_PROMPT_PREFIX,
+    _align_oracle_row_zero_labels,
+    _append_attempt_event,
+    _attempt_identity,
+    _attempt_ledger_summary,
+    _attempt_pair_root,
+    _branch_start_hashes,
     _finalize_arrays,
+    _observation_sha256,
     _oracle_rejection_reason,
     _oracle_configs,
     _partition_scene,
+    _primary_protocol,
+    _read_attempt_ledger,
     _replay_nominal_actions,
     _rejection_counts,
     _roll_nominal,
     _safe_abort_configs,
+    _search_oracle,
     _stable_abort,
+    _terminal_attempts,
+    _write_manifests,
 )
 from scripts.prepare_glass_recovery_placements import (
     _blocked_barrier_offsets,
@@ -120,6 +136,18 @@ def _v2_records(
         schema_version=SCHEMA_VERSION,
     )
     controller = {"controller_state_sha256": f"{pair_id}_controller"}
+    attempt = {"attempt_key": f"{pair_id}_attempt"}
+    onpath_hashes = {
+        "simulator_state_sha256": f"{pair_id}_onpath",
+        "controller_state_sha256": f"{pair_id}_controller",
+        "observation_sha256": f"{pair_id}_onpath_observation",
+    }
+    offpath_hashes = {
+        "simulator_state_sha256": f"{pair_id}_offpath",
+        "controller_state_sha256": f"{pair_id}_controller",
+        "observation_sha256": f"{pair_id}_offpath_observation",
+    }
+    row_zero_label_hash = f"{pair_id}_row_zero_labels"
     careful = (
         {} if careful_crashed is None
         else {"careful_comparator": {"careful_crashed": careful_crashed}}
@@ -139,7 +167,10 @@ def _v2_records(
             scene_sha256=f"{pair_id}_onpath_scene",
             metadata={
                 **controller,
+                **attempt,
                 **careful,
+                "branch_start_hashes": onpath_hashes,
+                "row_zero_label_sha256": row_zero_label_hash,
                 "time_to_catastrophe_actions": horizon,
                 "action_replay_evidence": {
                     "verified": True,
@@ -163,11 +194,20 @@ def _v2_records(
             scene_sha256=f"{pair_id}_onpath_scene",
             metadata={
                 **controller,
+                **attempt,
+                "branch_start_hashes": onpath_hashes,
+                "row_zero_label_sha256": row_zero_label_hash,
                 "time_to_catastrophe_actions": horizon,
                 "oracle_recoverable_from_this_state": True,
                 "oracle_verified_mask": True,
                 "latest_verified_recoverable_state": f"{pair_id}_onpath",
                 "runtime_trigger_eligible": True,
+                "oracle_verification": {
+                    "search_success": True,
+                    "search_successful_config_sha256": f"{pair_id}_oracle_config",
+                    "independent_recapture": True,
+                    "recapture_success": True,
+                },
             },
         ),
         PairedTrajectoryRecord(
@@ -182,7 +222,12 @@ def _v2_records(
             safe_abort=False,
             oracle_verified=False,
             scene_sha256=f"{pair_id}_offpath_scene",
-            metadata={**controller, "termination": "task_success"},
+            metadata={
+                **controller,
+                **attempt,
+                "branch_start_hashes": offpath_hashes,
+                "termination": "task_success",
+            },
         ),
     ]
     if include_blocked:
@@ -200,6 +245,12 @@ def _v2_records(
             scene_sha256=f"{pair_id}_blocked_scene",
             metadata={
                 **controller,
+                **attempt,
+                "branch_start_hashes": {
+                    "simulator_state_sha256": f"{pair_id}_blocked",
+                    "controller_state_sha256": f"{pair_id}_controller",
+                    "observation_sha256": f"{pair_id}_blocked_observation",
+                },
                 "blocked_evidence": {"controller_class": "finite grid"},
             },
         ))
@@ -372,9 +423,13 @@ def test_oracle_row_zero_risk_equals_exact_matched_nominal_row():
         kind="oracle_recovery",
         counterfactual_collision_step=horizon - 1,
     )
+    assert oracle["severity_force"][0] != nominal["severity_force"][0]
+    label_hash = _align_oracle_row_zero_labels(nominal, oracle)
     assert np.array_equal(oracle["risk_targets"][0], nominal["risk_targets"][0])
     assert np.array_equal(oracle["risk_mask"][0], nominal["risk_mask"][0])
+    assert oracle["severity_force"][0] == nominal["severity_force"][0]
     assert oracle["time_to_catastrophe_actions"][0] == horizon
+    assert isinstance(label_hash, str) and len(label_hash) == 64
 
 
 def test_explicit_reference_detects_first_action_glass_displacement():
@@ -484,6 +539,62 @@ def test_v2_missing_controller_hash_fails_primary_admission():
         validate_primary_pair(records)
 
 
+def test_v2_requires_exact_simulator_controller_and_observation_hashes():
+    records = _v2_records()
+    payload = records[1].to_dict()
+    payload["metadata"] = {
+        **payload["metadata"],
+        "branch_start_hashes": {
+            **payload["metadata"]["branch_start_hashes"],
+            "observation_sha256": "different_observation",
+        },
+    }
+    records[1] = PairedTrajectoryRecord(**payload)
+    with pytest.raises(ValueError, match="hashes differ"):
+        validate_primary_pair(records)
+
+    records = _v2_records()
+    payload = records[2].to_dict()
+    payload["metadata"] = {
+        **payload["metadata"],
+        "branch_start_hashes": {
+            "simulator_state_sha256": payload["branch_start_state_sha256"],
+            "controller_state_sha256": payload["metadata"]["controller_state_sha256"],
+        },
+    }
+    records[2] = PairedTrajectoryRecord(**payload)
+    with pytest.raises(ValueError, match="incomplete branch-start hashes"):
+        validate_primary_pair(records)
+
+
+def test_v2_requires_oracle_search_and_independent_recapture_evidence():
+    for field in ("search_success", "independent_recapture", "recapture_success"):
+        records = _v2_records()
+        payload = records[1].to_dict()
+        payload["metadata"] = {
+            **payload["metadata"],
+            "oracle_verification": {
+                **payload["metadata"]["oracle_verification"],
+                field: False,
+            },
+        }
+        records[1] = PairedTrajectoryRecord(**payload)
+        with pytest.raises(ValueError, match="independent recapture"):
+            validate_primary_pair(records)
+
+
+def test_v2_requires_oracle_row_zero_label_hash_to_match_nominal_anchor():
+    records = _v2_records()
+    payload = records[1].to_dict()
+    payload["metadata"] = {
+        **payload["metadata"],
+        "row_zero_label_sha256": "different_labels",
+    }
+    records[1] = PairedTrajectoryRecord(**payload)
+    with pytest.raises(ValueError, match="row-zero labels"):
+        validate_primary_pair(records)
+
+
 @pytest.mark.parametrize("field,value", [
     ("task_id", 1),
     ("split", "validation"),
@@ -505,6 +616,47 @@ def test_careful_and_optional_blocked_do_not_change_primary_acceptance():
     result = validate_primary_pair(with_aux)
     assert result["pair_id"] == "pair_v2"
     assert result["blocked_auxiliary_present"] is True
+
+
+def test_blocked_appendix_uses_a_separate_manifest(tmp_path):
+    primary = _v2_records()
+    blocked = _v2_records(include_blocked=True)[-1]
+    _write_manifests(
+        tmp_path,
+        primary,
+        {"test": True},
+        blocked_appendix_records=[blocked],
+    )
+    primary_rows = [
+        json.loads(line) for line in (tmp_path / "train.jsonl").read_text().splitlines()
+    ]
+    appendix_rows = [
+        json.loads(line)
+        for line in (tmp_path / "blocked_appendix.jsonl").read_text().splitlines()
+    ]
+    assert {row["trajectory_kind"] for row in primary_rows} == {
+        "nominal_catastrophe", "oracle_recovery", "off_path_control",
+    }
+    assert [row["trajectory_kind"] for row in appendix_rows] == ["blocked_safe_abort"]
+    loaded_appendix = read_auxiliary_trajectory_manifest(
+        tmp_path / "blocked_appendix.jsonl"
+    )
+    assert loaded_appendix == [blocked]
+    assert validate_auxiliary_records(loaded_appendix)["pairs"] == 1
+    with pytest.raises(ValueError, match="cannot enter primary manifests"):
+        _write_manifests(tmp_path, [*primary, blocked], {"test": True})
+
+
+def test_empty_current_cohort_clears_stale_primary_manifests(tmp_path):
+    for split in ("train", "validation", "heldout"):
+        (tmp_path / f"{split}.jsonl").write_text("stale\n")
+    _write_manifests(tmp_path, [], {"protocol": "current"})
+    for split in ("train", "validation", "heldout"):
+        assert (tmp_path / f"{split}.jsonl").read_text() == ""
+    assert (tmp_path / "blocked_appendix.jsonl").read_text() == ""
+    summary = json.loads((tmp_path / "collection_summary.json").read_text())
+    assert summary["validation"]["pairs"] == 0
+    assert summary["metadata"]["protocol"] == "current"
 
 
 def test_offpath_timeout_is_not_safe_abort_or_primary_utility_control():
@@ -762,6 +914,70 @@ def test_oracle_grid_can_reuse_clean_control_grasp_pose():
     assert all(config["grasp_xy_offset"] == [-0.002, -0.05] for config in configs)
 
 
+def test_oracle_success_is_searched_then_independently_recaptured(monkeypatch):
+    placement_payload = _placement("oracle", "train", "state", "train/nominal").to_dict()
+    placement_payload["metadata"] = {"bowl_xyz": [0.1, 0.2, 0.9]}
+    placement = GlassPlacement.from_dict(placement_payload)
+    config = {
+        "side": -1.0,
+        "lane_margin": 0.12,
+        "transit_z": 1.2,
+        "descend_off": 0.012,
+        "orientation_target": None,
+        "path_aligned": True,
+        "grasp_xy_offset": [0.0, 0.0],
+    }
+    monkeypatch.setattr(glass_collector, "_oracle_configs", lambda *args: [config])
+    monkeypatch.setattr(glass_collector, "DetourComplete", lambda *args, **kwargs: object())
+    capture_modes = []
+
+    def fake_run_controller(*args, capture_rows, **kwargs):
+        capture_modes.append(capture_rows)
+        return {
+            "crashed": False,
+            "succeeded": True,
+            "steps": 4,
+            "peak_force": 1.0,
+            "controller_final_stage": 8,
+            "initial_target_z_m": 0.9,
+            "max_target_z_m": 1.0,
+            "controller_trace": [],
+            "obs": {
+                "akita_black_bowl_1_pos": np.asarray([0.5, 0.6, 0.91]),
+                "plate_1_pos": np.asarray([0.5, 0.6, 0.90]),
+            },
+            "rows": _trajectory_rows(2) if capture_rows else [],
+        }
+
+    monkeypatch.setattr(glass_collector, "_run_controller", fake_run_controller)
+    reset_calls = []
+
+    def reset():
+        reset_calls.append(len(reset_calls))
+        return {
+            "akita_black_bowl_1_pos": np.asarray([0.1, 0.2, 0.9]),
+            "plate_1_pos": np.asarray([0.5, 0.6, 0.9]),
+        }
+
+    collected, attempts = _search_oracle(
+        reset,
+        SimpleNamespace(),
+        SimpleNamespace(),
+        placement,
+        [placement.on_path_glass],
+        20,
+        collect_success=True,
+        counterfactual_peak_force=30.0,
+    )
+    assert len(attempts) == 1
+    assert attempts[0]["selected_for_independent_recapture"] is True
+    assert capture_modes == [False, True]
+    assert len(reset_calls) == 2
+    assert collected["verification"]["search_success"] is True
+    assert collected["verification"]["independent_recapture"] is True
+    assert collected["verification"]["recapture_success"] is True
+
+
 def test_safe_abort_search_prefers_hold_and_requires_stability():
     configs = _safe_abort_configs(0.14, 0.10)
     assert configs[0] == {"name": "hold", "back": 0.0, "up": 0.0}
@@ -857,18 +1073,249 @@ def test_primary_gate_helpers_keep_rejections_auditable():
     assert _rejection_counts([
         {"reason": "no_base_crash"},
         {"reason": "no_base_crash"},
-        {"reason": "careful_did_not_crash"},
+        {"reason": "off_path_catastrophe"},
         {},
     ]) == {
         "no_base_crash": 2,
         "no_oracle_recovery": 0,
         "oracle_collision": 0,
         "oracle_task_failure": 0,
+        "oracle_recapture_failure": 0,
+        "off_path_catastrophe": 1,
         "off_path_timeout": 0,
-        "careful_did_not_crash": 1,
+        "off_path_no_frames": 0,
         "invalid_initial_state": 0,
+        "exact_state_restore_mismatch": 0,
         "other": 1,
     }
+
+
+def test_exact_branch_start_hashes_include_observation_dtype_and_shape():
+    env = SimpleNamespace(
+        flat_state=lambda: np.asarray([0.0, 1.0], dtype=np.float64),
+        controller_state=lambda: {"goal": np.asarray([1.0], dtype=np.float64)},
+    )
+    observation = {
+        "state": np.asarray([1.0, 2.0], dtype=np.float32),
+        "image": np.zeros((2, 2, 3), dtype=np.uint8),
+    }
+    hashes = _branch_start_hashes(env, observation)
+    assert set(hashes) == {
+        "simulator_state_sha256", "controller_state_sha256", "observation_sha256",
+    }
+    assert hashes["observation_sha256"] == _observation_sha256(observation)
+    changed_dtype = {**observation, "state": observation["state"].astype(np.float64)}
+    assert _observation_sha256(changed_dtype) != hashes["observation_sha256"]
+
+
+def test_attempt_ledger_is_append_only_and_resume_keeps_terminal_rejection(tmp_path):
+    args = Namespace(
+        precrash_horizon=20,
+        settle_steps=10,
+        target_state_threshold=0.03,
+        scan_steps=220,
+        control_steps=220,
+        oracle_steps=900,
+        annotate_careful=False,
+        appendix_blocked=False,
+    )
+    protocol_sha256 = canonical_sha256(_primary_protocol(args))
+    placement = _placement("ledger", "train", "state", "train/nominal")
+    identity = _attempt_identity(
+        placement,
+        rollout_seed=17,
+        checkpoint_revision="a" * 40,
+        code_commit="b" * 40,
+        protocol_sha256=protocol_sha256,
+    )
+    ledger = tmp_path / ATTEMPT_LEDGER_NAME
+    _append_attempt_event(ledger, identity, "started", split="train")
+    first_bytes = ledger.read_bytes()
+    _append_attempt_event(
+        ledger,
+        identity,
+        "rejected",
+        split="train",
+        reason="no_base_crash",
+        deterministic=True,
+    )
+    assert ledger.read_bytes().startswith(first_bytes)
+    rows = _read_attempt_ledger(ledger)
+    terminal = _terminal_attempts(rows)
+    assert terminal[identity["attempt_key"]]["event"] == "rejected"
+    _append_attempt_event(
+        ledger,
+        identity,
+        "skipped_deterministic_rejection",
+        reason="no_base_crash",
+    )
+    rows = _read_attempt_ledger(ledger)
+    assert [row["event"] for row in rows] == [
+        "started", "rejected", "skipped_deterministic_rejection",
+    ]
+    assert _terminal_attempts(rows)[identity["attempt_key"]]["event"] == "rejected"
+    summary = _attempt_ledger_summary(
+        rows,
+        protocol_sha256=protocol_sha256,
+        checkpoint_revision="a" * 40,
+        code_commit="b" * 40,
+        rollout_seed=17,
+    )
+    assert summary["unique_attempts"] == 1
+    assert summary["deterministic_rejections"] == 1
+    assert summary["rejection_counts"]["no_base_crash"] == 1
+
+    different_seed = _attempt_identity(
+        placement,
+        rollout_seed=18,
+        checkpoint_revision="a" * 40,
+        code_commit="b" * 40,
+        protocol_sha256=protocol_sha256,
+    )
+    assert different_seed["attempt_key"] != identity["attempt_key"]
+    first_root = _attempt_pair_root(tmp_path, placement, identity)
+    second_root = _attempt_pair_root(tmp_path, placement, different_seed)
+    assert first_root != second_root
+    assert identity["attempt_key"] in first_root.name
+    assert different_seed["attempt_key"] in second_root.name
+
+
+def test_primary_protocol_excludes_careful_and_blocked_appendix_flags():
+    common = dict(
+        precrash_horizon=20,
+        settle_steps=10,
+        target_state_threshold=0.03,
+        scan_steps=220,
+        control_steps=220,
+        oracle_steps=900,
+    )
+    base = Namespace(**common, annotate_careful=False, appendix_blocked=False)
+    annotated = Namespace(**common, annotate_careful=True, appendix_blocked=True)
+    assert _primary_protocol(base) == _primary_protocol(annotated)
+    changed_h = Namespace(**{**common, "precrash_horizon": 30})
+    assert canonical_sha256(_primary_protocol(base)) != canonical_sha256(
+        _primary_protocol(changed_h)
+    )
+
+
+def test_collector_completes_provenance_preflight_before_output_write(
+    tmp_path, monkeypatch,
+):
+    output = tmp_path / "new_output"
+    placement_payload = {
+        "design": {
+            "placements_by_split": {"train": 0, "validation": 0, "heldout": 0}
+        }
+    }
+    monkeypatch.setattr(
+        glass_collector,
+        "read_placement_manifest",
+        lambda path: ([], placement_payload),
+    )
+
+    def fake_repository_provenance(root, require_clean):
+        assert require_clean is True
+        assert not output.exists()
+        return {"git_commit": "b" * 40}
+
+    monkeypatch.setattr(
+        glass_collector, "repository_provenance", fake_repository_provenance
+    )
+    monkeypatch.delenv("CB_CODE_COMMIT", raising=False)
+    monkeypatch.setattr(glass_collector.sys, "argv", [
+        "collect_glass_recovery_pairs.py",
+        "--output", str(output),
+        "--checkpoint-revision", "a" * 40,
+        "--max-train", "0",
+        "--max-validation", "0",
+        "--max-heldout", "0",
+    ])
+    glass_collector.main()
+    assert output.is_dir()
+    assert json.loads((output / "collection_summary.json").read_text())["validation"][
+        "pairs"
+    ] == 0
+
+
+def test_incomplete_resume_materializes_recovered_pair_in_primary_manifest(
+    tmp_path, monkeypatch,
+):
+    output = tmp_path / "resume_output"
+    placement = _placement("resume_pair", "train", "state", "train/nominal")
+    args = Namespace(
+        checkpoint="openvla/openvla-7b-finetuned-libero-spatial",
+        unnorm_key="libero_spatial",
+        precrash_horizon=20,
+        settle_steps=10,
+        target_state_threshold=0.03,
+        scan_steps=220,
+        control_steps=220,
+        oracle_steps=900,
+    )
+    protocol_sha256 = canonical_sha256(_primary_protocol(args))
+    identity = _attempt_identity(
+        placement,
+        rollout_seed=0,
+        checkpoint_revision="a" * 40,
+        code_commit="b" * 40,
+        protocol_sha256=protocol_sha256,
+    )
+    pair_root = _attempt_pair_root(output, placement, identity)
+    pair_root.mkdir(parents=True)
+    records = []
+    for record in _v2_records(pair_id=placement.placement_id, horizon=20):
+        payload = record.to_dict()
+        payload.update(
+            placement_id=placement.placement_id,
+            source_state_sha256=placement.source_state_sha256,
+            instruction=placement.instruction,
+            task_suite=placement.task_suite,
+            task_id=placement.task_id,
+            arrays_path=(
+                Path("train") / pair_root.name / Path(record.arrays_path).name
+            ).as_posix(),
+        )
+        payload["metadata"] = {
+            **payload["metadata"],
+            "attempt_key": identity["attempt_key"],
+        }
+        records.append(PairedTrajectoryRecord(**payload))
+    (pair_root / "pair.json").write_text(json.dumps({
+        "schema_version": SCHEMA_VERSION,
+        "attempt_identity": identity,
+        "records": [record.to_dict() for record in records],
+    }))
+    placement_payload = {
+        "design": {
+            "placements_by_split": {"train": 1, "validation": 0, "heldout": 0}
+        }
+    }
+    monkeypatch.setattr(
+        glass_collector,
+        "read_placement_manifest",
+        lambda path: ([placement], placement_payload),
+    )
+    monkeypatch.setattr(
+        glass_collector,
+        "repository_provenance",
+        lambda root, require_clean: {"git_commit": "b" * 40},
+    )
+    monkeypatch.delenv("CB_CODE_COMMIT", raising=False)
+    monkeypatch.setattr(glass_collector.sys, "argv", [
+        "collect_glass_recovery_pairs.py",
+        "--output", str(output),
+        "--checkpoint-revision", "a" * 40,
+        "--max-train", "2",
+        "--max-validation", "0",
+        "--max-heldout", "0",
+    ])
+    with pytest.raises(SystemExit, match="could not meet requested"):
+        glass_collector.main()
+    manifest_rows = [
+        json.loads(line) for line in (output / "train.jsonl").read_text().splitlines()
+    ]
+    assert len(manifest_rows) == 3
+    assert {row["pair_id"] for row in manifest_rows} == {placement.placement_id}
 
 
 def test_careful_gate_uses_fixed_prefix_and_restores_policy(monkeypatch):
@@ -985,6 +1432,24 @@ def test_replay_selects_accepted_pair_from_manifest_not_first_directory(tmp_path
     assert accepted_pair_dir_from_manifest(dataset / "train.jsonl") == accepted.resolve()
 
 
+def test_replay_resolves_attempt_scoped_pair_directory(tmp_path):
+    dataset = tmp_path / "dataset"
+    pair_id = "glass_recovery_train_0002"
+    attempt_key = "a" * 64
+    pair_dir = dataset / "train" / f"{pair_id}__attempt_{attempt_key}"
+    pair_dir.mkdir(parents=True)
+    records = []
+    for record in _v2_records(pair_id=pair_id, horizon=1):
+        payload = record.to_dict()
+        payload["arrays_path"] = (
+            Path("train") / pair_dir.name / Path(record.arrays_path).name
+        ).as_posix()
+        records.append(PairedTrajectoryRecord(**payload))
+    write_trajectory_manifest(dataset / "train.jsonl", records)
+    (pair_dir / "pair.json").write_text("{}\n")
+    assert accepted_pair_dir_from_manifest(dataset / "train.jsonl") == pair_dir.resolve()
+
+
 def _write_tiny_split(root: Path, split: str):
     records = []
     for kind_index, kind in enumerate((
@@ -1008,9 +1473,27 @@ def _write_tiny_split(root: Path, split: str):
         array_rel = Path(split) / f"{kind}.npz"
         (root / array_rel).parent.mkdir(parents=True, exist_ok=True)
         np.savez_compressed(root / array_rel, **arrays)
-        metadata = {"controller_state_sha256": f"{split}_controller"}
+        start_state = (
+            f"{split}_onpath" if kind in {"nominal_catastrophe", "oracle_recovery"}
+            else f"{split}_{kind}"
+        )
+        metadata = {
+            "controller_state_sha256": f"{split}_controller",
+            "attempt_key": f"{split}_attempt",
+        }
+        if kind != "blocked_safe_abort":
+            metadata["branch_start_hashes"] = {
+                "simulator_state_sha256": start_state,
+                "controller_state_sha256": f"{split}_controller",
+                "observation_sha256": (
+                    f"{split}_onpath_observation"
+                    if kind in {"nominal_catastrophe", "oracle_recovery"}
+                    else f"{split}_{kind}_observation"
+                ),
+            }
         if kind == "nominal_catastrophe":
             metadata.update({
+                "row_zero_label_sha256": f"{split}_row_zero_labels",
                 "time_to_catastrophe_actions": n,
                 "action_replay_evidence": {
                     "verified": True,
@@ -1021,11 +1504,18 @@ def _write_tiny_split(root: Path, split: str):
             })
         elif kind == "oracle_recovery":
             metadata.update({
+                "row_zero_label_sha256": f"{split}_row_zero_labels",
                 "time_to_catastrophe_actions": n,
                 "oracle_recoverable_from_this_state": True,
                 "oracle_verified_mask": True,
                 "latest_verified_recoverable_state": f"{split}_onpath",
                 "runtime_trigger_eligible": True,
+                "oracle_verification": {
+                    "search_success": True,
+                    "search_successful_config_sha256": f"{split}_oracle_config",
+                    "independent_recapture": True,
+                    "recapture_success": True,
+                },
             })
         elif kind == "off_path_control":
             metadata["termination"] = "task_success"
@@ -1035,8 +1525,7 @@ def _write_tiny_split(root: Path, split: str):
             pair_id=f"{split}_pair", placement_id=f"{split}_placement", split=split,
             trajectory_kind=kind, source_state_sha256=f"{split}_source",
             matched_robot_state_sha256=f"{split}_robot",
-            branch_start_state_sha256=(f"{split}_onpath" if kind in {
-                "nominal_catastrophe", "oracle_recovery"} else f"{split}_{kind}"),
+            branch_start_state_sha256=start_state,
             arrays_path=array_rel.as_posix(), instruction="pick", n_steps=n,
             task_suite="libero_spatial", task_id=0,
             trigger_horizon_actions=n, schema_version=SCHEMA_VERSION,
