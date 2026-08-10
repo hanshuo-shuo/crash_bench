@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 import tempfile
 from argparse import Namespace
+from collections import Counter
+from dataclasses import asdict
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -14,6 +16,7 @@ import scripts.collect_glass_recovery_pairs as glass_collector
 from crashbench.envs.libero_adapter import LiberoEnv, inject_obstacles_xml
 from crashbench.glass_recovery_data import (
     HAZARD_TYPES,
+    PRIMARY_TRAJECTORY_KINDS,
     RISK_HORIZONS,
     SCHEMA_VERSION,
     GlassPlacement,
@@ -32,13 +35,24 @@ from crashbench.glass_recovery_data import (
     write_trajectory_manifest,
 )
 from crashbench.glass_recovery_model import (
+    HIDDEN_HOOK_IDENTITY,
+    PRIMARY_CHECKPOINT_KIND,
+    PRIMARY_DISABLED_AUXILIARY_HEADS,
+    PRIMARY_DISABLED_AUXILIARY_TERMS,
+    TTE_DEFINITION,
+    GlassLossWeights,
     GlassRecoveryConfig,
     GlassRecoveryNetwork,
     glass_recovery_loss,
+    state_dict_sha256,
 )
 from scripts.train_glass_recovery import (
+    PHASES,
+    PairPhaseBatchSampler,
+    PairedFrameDataset,
+    _episode_qualified_scores,
     _episode_max_scores,
-    _select_episode_risk_threshold,
+    _select_timely_risk_threshold,
 )
 from crashbench.metrics import summarize_recovery_rows
 from crashbench.policies.glass_recovery_policy import GlassRecoveryPolicy
@@ -777,6 +791,58 @@ def test_joint_critic_recovery_loss_and_checkpoint_roundtrip():
         assert metadata["calibration"]["threshold"] == 0.5
 
 
+def test_primary_loss_owns_only_risk_recovery_and_control_invariance():
+    weights = GlassLossWeights()
+    weights.validate_primary()
+    assert asdict(weights) == {
+        "recovery_bc": 1.0,
+        "risk": 1.0,
+        "hazard": 0.0,
+        "severity": 0.0,
+        "abort": 0.0,
+        "control_invariance": 0.5,
+        "hazard_sensitivity": 0.0,
+    }
+    model = GlassRecoveryNetwork(GlassRecoveryConfig(
+        hidden_dim=6, width=8, depth=1, dropout=0.0,
+    ))
+    batch = _batch()
+    outputs = model(batch["hidden"], batch["robot_state"], batch["nominal_action"])
+    loss, _ = glass_recovery_loss(outputs, batch, weights=weights)
+    loss.backward()
+    assert model.hazard_head.weight.grad is None
+    assert model.severity_head.weight.grad is None
+    assert model.abort_head.weight.grad is None
+    with pytest.raises(ValueError, match="zero auxiliary loss weights"):
+        GlassLossWeights(abort=0.1).validate_primary()
+
+
+def test_blocked_rows_cannot_enter_recovery_bc_even_with_legacy_mask():
+    outputs = {
+        "risk_logits": torch.zeros(2, len(RISK_HORIZONS)),
+        "hazard_logits": torch.zeros(2, len(HAZARD_TYPES)),
+        "severity_log": torch.zeros(2),
+        "abort_logit": torch.zeros(2),
+        "recovery_action": torch.stack((torch.zeros(7), torch.ones(7))),
+        "action_delta": torch.stack((torch.zeros(7), torch.ones(7))),
+    }
+    batch = {
+        "risk_targets": torch.zeros(2, len(RISK_HORIZONS)),
+        "risk_mask": torch.ones(2, len(RISK_HORIZONS)),
+        "hazard_type": torch.zeros(2, dtype=torch.long),
+        "severity_force": torch.zeros(2),
+        "severity_mask": torch.ones(2),
+        "abort_target": torch.zeros(2),
+        "target_action": torch.zeros(2, 7),
+        "recovery_mask": torch.ones(2),
+        "invariance_mask": torch.zeros(2),
+        "sensitivity_mask": torch.zeros(2),
+        "trajectory_kind": torch.tensor([1, 3]),
+    }
+    _, terms = glass_recovery_loss(outputs, batch, weights=GlassLossWeights())
+    assert terms["recovery_bc"].item() == pytest.approx(0.0)
+
+
 def test_direct_recovery_action_can_reverse_saturated_nominal_action():
     model = GlassRecoveryNetwork(GlassRecoveryConfig(
         hidden_dim=6, width=8, depth=1, dropout=0.0,
@@ -803,20 +869,27 @@ def test_critic_predictions_condition_on_nominal_action():
     assert not torch.allclose(outputs["risk_logits"][0], outputs["risk_logits"][1])
 
 
-def test_episode_max_threshold_calibrates_false_interventions_by_episode():
-    frame_scores = np.asarray([0.01, 0.10, 0.20, 0.30, 0.80, 0.90])
+def test_calibration_maximizes_certified_timely_trigger_not_any_crossing():
+    # The nominal episode's late 0.99 crossing is outside the certified window;
+    # calibration must optimize its row-zero 0.70 score instead.
+    frame_scores = np.asarray([0.10, 0.60, 0.20, 0.55, 0.70, 0.99])
     valid = np.ones(6, dtype=bool)
+    qualified = np.asarray([0, 0, 0, 0, 1, 0], dtype=bool)
     episode_ids = np.asarray([0, 0, 1, 1, 2, 2])
     kinds = np.asarray([2, 2, 2, 2, 0, 0])
     controls = _episode_max_scores(frame_scores, valid, episode_ids, kinds, 2)
-    catastrophes = _episode_max_scores(frame_scores, valid, episode_ids, kinds, 0)
-    calibration = _select_episode_risk_threshold(controls, catastrophes, 0.0)
-    assert np.array_equal(controls, [0.10, 0.30])
-    assert np.array_equal(catastrophes, [0.90])
-    assert calibration["threshold"] == pytest.approx(0.9)
+    timely = _episode_qualified_scores(
+        frame_scores, valid, qualified, episode_ids, kinds, 0
+    )
+    calibration = _select_timely_risk_threshold(controls, timely, 0.0)
+    assert np.array_equal(controls, [0.60, 0.55])
+    assert np.array_equal(timely, [0.70])
+    assert calibration["threshold"] == pytest.approx(0.7)
     assert calibration["control_episode_fpr"] == 0.0
-    assert calibration["catastrophe_episode_tpr"] == 1.0
-    assert calibration["calibration_unit"] == "episode_max_risk"
+    assert calibration["timely_trigger_rate"] == 1.0
+    assert calibration["calibration_unit"] == (
+        "control_episode_max_vs_certified_trigger_frame"
+    )
 
 
 def test_episode_array_schema():
@@ -841,15 +914,45 @@ class _FakeBase:
     capture_hidden = True
     resize_size = 224
 
-    def __init__(self):
+    def __init__(self, revision: str = "a" * 40, unnorm_key: str = "libero_spatial"):
         self.last_hidden = None
+        self.checkpoint_identity = {"resolved_revision": revision}
+        self.cfg = SimpleNamespace(unnorm_key=unnorm_key)
 
     def act(self, observation, instruction):
         self.last_hidden = np.ones(4, dtype=np.float32)
         return np.asarray([0.1, 0.0, 0.0, 0.0, 0.0, 0.0, -1.0], dtype=np.float32)
 
 
-def _constant_checkpoint(path: Path, risk_bias: float, abort_bias: float):
+def _primary_checkpoint_metadata(horizon: int = 5) -> dict:
+    return {
+        "checkpoint_kind": PRIMARY_CHECKPOINT_KIND,
+        "base_resolved_revision": "a" * 40,
+        "unnorm_key": "libero_spatial",
+        "hidden_hook_identity": HIDDEN_HOOK_IDENTITY,
+        "train_manifest_sha256": "b" * 64,
+        "validation_manifest_sha256": "c" * 64,
+        "trajectory_schema_version": SCHEMA_VERSION,
+        "protocol_sha256": "d" * 64,
+        "trigger_horizon_actions": horizon,
+        "tte_definition": TTE_DEFINITION,
+        "seed": 17,
+        "disabled_auxiliary_heads": list(PRIMARY_DISABLED_AUXILIARY_HEADS),
+        "disabled_auxiliary_loss_terms": list(PRIMARY_DISABLED_AUXILIARY_TERMS),
+        "loss_weights": asdict(GlassLossWeights()),
+        "calibration": {
+            "threshold": 0.5,
+            "horizon": horizon,
+            "objective": (
+                "maximize_timely_trigger_rate_subject_to_clean_control_episode_fpr"
+            ),
+            "ownership": "recovery_latched_until_terminal_or_reset",
+            "abort_enabled": False,
+        },
+    }
+
+
+def _constant_checkpoint(path: Path, risk_bias: float, abort_bias: float, *, metadata=None):
     model = GlassRecoveryNetwork(GlassRecoveryConfig(
         hidden_dim=4, width=8, depth=1, dropout=0.0,
     ))
@@ -858,10 +961,10 @@ def _constant_checkpoint(path: Path, risk_bias: float, abort_bias: float):
     model.risk_head.bias.data.fill_(risk_bias)
     model.abort_head.bias.data.fill_(abort_bias)
     model.action_head.bias.data.fill_(0.5)
-    model.save_checkpoint(path)
+    model.save_checkpoint(path, metadata or _primary_checkpoint_metadata())
 
 
-def test_runtime_gate_nominal_recovery_and_abort():
+def test_runtime_ownership_latches_recovery_until_terminal_or_reset_and_disables_abort():
     observation = {"state": np.asarray([0.2, 0.0, 0.9, 0, 0, 0, 0, 0], dtype=np.float32)}
     with tempfile.TemporaryDirectory() as directory:
         root = Path(directory)
@@ -869,16 +972,73 @@ def test_runtime_gate_nominal_recovery_and_abort():
         _constant_checkpoint(low, -10.0, -10.0)
         _constant_checkpoint(recover, 10.0, -10.0)
         _constant_checkpoint(abort, 10.0, 10.0)
-        nominal_policy = GlassRecoveryPolicy(_FakeBase(), str(low), device="cpu")
+        nominal_policy = GlassRecoveryPolicy(
+            _FakeBase(), str(low), risk_horizon=5, device="cpu"
+        )
         assert np.allclose(nominal_policy.act(observation, "pick")[:3], [0.1, 0.0, 0.0])
         assert nominal_policy.mode == "nominal"
-        recovery_policy = GlassRecoveryPolicy(_FakeBase(), str(recover), device="cpu")
+        recovery_policy = GlassRecoveryPolicy(
+            _FakeBase(), str(recover), risk_horizon=5, device="cpu"
+        )
         recovery_action = recovery_policy.act(observation, "pick")
-        assert recovery_policy.mode == "recovery"
+        assert recovery_policy.mode == "recovery_latched"
         assert not np.allclose(recovery_action, [0.1, 0, 0, 0, 0, 0, -1])
-        abort_policy = GlassRecoveryPolicy(_FakeBase(), str(abort), device="cpu")
+        with torch.no_grad():
+            recovery_policy.model.risk_head.bias.fill_(-10.0)
+        second = recovery_policy.act(observation, "pick")
+        assert recovery_policy.mode == "recovery_latched"
+        assert np.allclose(second, recovery_action)
+        assert recovery_policy.last_decision["ownership_age"] == 1
+        assert recovery_policy.decisions[0]["first_trigger"] is True
+        assert recovery_policy.decisions[1]["first_trigger"] is False
+        for key in (
+            "risk_vector", "nominal_action", "recovery_action", "executed_action",
+            "mode", "first_trigger_step", "ownership_age",
+        ):
+            assert key in recovery_policy.last_decision
+        recovery_policy.mark_terminal()
+        with pytest.raises(RuntimeError, match="after terminal"):
+            recovery_policy.act(observation, "pick")
+        recovery_policy.reset()
+        assert recovery_policy.mode == "nominal"
+        assert recovery_policy.ownership_age is None
+
+        abort_policy = GlassRecoveryPolicy(
+            _FakeBase(), str(abort), risk_horizon=5, device="cpu"
+        )
         abort_policy.act(observation, "pick")
-        assert abort_policy.mode == "abort"
+        assert abort_policy.mode == "recovery_latched"
+        assert abort_policy.abort_enabled is False
+        with pytest.raises(ValueError, match="abort is disabled"):
+            GlassRecoveryPolicy(
+                _FakeBase(), str(abort), risk_horizon=5,
+                abort_controller=object(), device="cpu",
+            )
+
+
+def test_runtime_fails_closed_on_checkpoint_base_h_and_contract_mismatch():
+    with tempfile.TemporaryDirectory() as directory:
+        root = Path(directory)
+        checkpoint = root / "valid.pt"
+        _constant_checkpoint(checkpoint, -10.0, -10.0)
+        with pytest.raises(ValueError, match="resolved revision"):
+            GlassRecoveryPolicy(
+                _FakeBase(revision="e" * 40), str(checkpoint),
+                risk_horizon=5, device="cpu",
+            )
+        with pytest.raises(ValueError, match="runtime H"):
+            GlassRecoveryPolicy(
+                _FakeBase(), str(checkpoint), risk_horizon=10, device="cpu"
+            )
+
+        bad_metadata = _primary_checkpoint_metadata()
+        bad_metadata["train_manifest_sha256"] = "not-a-sha"
+        malformed = root / "malformed.pt"
+        _constant_checkpoint(malformed, -10.0, -10.0, metadata=bad_metadata)
+        with pytest.raises(ValueError, match="train_manifest_sha256"):
+            GlassRecoveryPolicy(
+                _FakeBase(), str(malformed), risk_horizon=5, device="cpu"
+            )
 
 
 def test_detour_compensates_grasp_offset_before_placing():
@@ -1450,100 +1610,152 @@ def test_replay_resolves_attempt_scoped_pair_directory(tmp_path):
     assert accepted_pair_dir_from_manifest(dataset / "train.jsonl") == pair_dir.resolve()
 
 
-def _write_tiny_split(root: Path, split: str):
+def _write_tiny_split(root: Path, split: str, *, pair_count: int = 1, horizon: int = 5):
     records = []
-    for kind_index, kind in enumerate((
-        "nominal_catastrophe", "oracle_recovery", "off_path_control", "blocked_safe_abort",
-    )):
-        n = 2
-        rows = _trajectory_rows(n)
-        for row in rows:
-            row["hidden"] = np.full(6, kind_index, dtype=np.float32)
-            row["target_action"] = np.full(
-                7, 0.2 if kind != "off_path_control" else 0, dtype=np.float32
+    for pair_number in range(pair_count):
+        prefix = f"{split}_{pair_number}"
+        for kind_index, kind in enumerate(PRIMARY_TRAJECTORY_KINDS):
+            n = horizon
+            rows = _trajectory_rows(n)
+            for row in rows:
+                row["hidden"] = np.full(6, pair_number + kind_index, dtype=np.float32)
+                row["target_action"] = np.full(
+                    7, 0.2 if kind == "oracle_recovery" else 0, dtype=np.float32
+                )
+            if kind == "nominal_catastrophe":
+                arrays = _finalize_arrays(rows, kind=kind, collision_step=n - 1)
+            elif kind == "off_path_control":
+                arrays = _finalize_arrays(rows, kind=kind)
+            else:
+                arrays = _finalize_arrays(
+                    rows, kind=kind, counterfactual_collision_step=n - 1
+                )
+            array_rel = Path(split) / prefix / f"{kind}.npz"
+            (root / array_rel).parent.mkdir(parents=True, exist_ok=True)
+            np.savez_compressed(root / array_rel, **arrays)
+            start_state = (
+                f"{prefix}_onpath"
+                if kind in {"nominal_catastrophe", "oracle_recovery"}
+                else f"{prefix}_{kind}"
             )
-        if kind == "nominal_catastrophe":
-            arrays = _finalize_arrays(rows, kind=kind, collision_step=n - 1)
-        elif kind == "off_path_control":
-            arrays = _finalize_arrays(rows, kind=kind)
-        else:
-            arrays = _finalize_arrays(
-                rows, kind=kind, counterfactual_collision_step=n - 1
-            )
-        array_rel = Path(split) / f"{kind}.npz"
-        (root / array_rel).parent.mkdir(parents=True, exist_ok=True)
-        np.savez_compressed(root / array_rel, **arrays)
-        start_state = (
-            f"{split}_onpath" if kind in {"nominal_catastrophe", "oracle_recovery"}
-            else f"{split}_{kind}"
-        )
-        metadata = {
-            "controller_state_sha256": f"{split}_controller",
-            "attempt_key": f"{split}_attempt",
-        }
-        if kind != "blocked_safe_abort":
+            metadata = {
+                "controller_state_sha256": f"{prefix}_controller",
+                "attempt_key": f"{prefix}_attempt",
+            }
             metadata["branch_start_hashes"] = {
                 "simulator_state_sha256": start_state,
-                "controller_state_sha256": f"{split}_controller",
+                "controller_state_sha256": f"{prefix}_controller",
                 "observation_sha256": (
-                    f"{split}_onpath_observation"
+                    f"{prefix}_onpath_observation"
                     if kind in {"nominal_catastrophe", "oracle_recovery"}
-                    else f"{split}_{kind}_observation"
+                    else f"{prefix}_{kind}_observation"
                 ),
             }
-        if kind == "nominal_catastrophe":
-            metadata.update({
-                "row_zero_label_sha256": f"{split}_row_zero_labels",
-                "time_to_catastrophe_actions": n,
-                "action_replay_evidence": {
-                    "verified": True,
-                    "n_actions": n,
-                    "expected_catastrophe_action_index": n - 1,
-                    "actual_catastrophe_action_index": n - 1,
-                },
-            })
-        elif kind == "oracle_recovery":
-            metadata.update({
-                "row_zero_label_sha256": f"{split}_row_zero_labels",
-                "time_to_catastrophe_actions": n,
-                "oracle_recoverable_from_this_state": True,
-                "oracle_verified_mask": True,
-                "latest_verified_recoverable_state": f"{split}_onpath",
-                "runtime_trigger_eligible": True,
-                "oracle_verification": {
-                    "search_success": True,
-                    "search_successful_config_sha256": f"{split}_oracle_config",
-                    "independent_recapture": True,
-                    "recapture_success": True,
-                },
-            })
-        elif kind == "off_path_control":
-            metadata["termination"] = "task_success"
-        else:
-            metadata["blocked_evidence"] = {"controller_class": "grid"}
-        records.append(PairedTrajectoryRecord(
-            pair_id=f"{split}_pair", placement_id=f"{split}_placement", split=split,
-            trajectory_kind=kind, source_state_sha256=f"{split}_source",
-            matched_robot_state_sha256=f"{split}_robot",
-            branch_start_state_sha256=start_state,
-            arrays_path=array_rel.as_posix(), instruction="pick", n_steps=n,
-            task_suite="libero_spatial", task_id=0,
-            trigger_horizon_actions=n, schema_version=SCHEMA_VERSION,
-            outcome=("crash" if kind == "nominal_catastrophe" else
-                     "recovery_success" if kind == "oracle_recovery" else
-                     "task_success" if kind == "off_path_control" else "safe_abort"),
-            crashed=kind == "nominal_catastrophe",
-            succeeded=kind in {"oracle_recovery", "off_path_control"},
-            safe_abort=kind == "blocked_safe_abort",
-            oracle_verified=kind in {"oracle_recovery", "blocked_safe_abort"},
-            scene_sha256=(
-                f"{split}_onpath_scene" if kind in {
-                    "nominal_catastrophe", "oracle_recovery"
-                } else f"{split}_{kind}_scene"
-            ),
-            metadata=metadata,
-        ))
+            if kind == "nominal_catastrophe":
+                metadata.update({
+                    "row_zero_label_sha256": f"{prefix}_row_zero_labels",
+                    "time_to_catastrophe_actions": n,
+                    "action_replay_evidence": {
+                        "verified": True,
+                        "n_actions": n,
+                        "expected_catastrophe_action_index": n - 1,
+                        "actual_catastrophe_action_index": n - 1,
+                    },
+                })
+            elif kind == "oracle_recovery":
+                metadata.update({
+                    "row_zero_label_sha256": f"{prefix}_row_zero_labels",
+                    "time_to_catastrophe_actions": n,
+                    "oracle_recoverable_from_this_state": True,
+                    "oracle_verified_mask": True,
+                    "latest_verified_recoverable_state": f"{prefix}_onpath",
+                    "runtime_trigger_eligible": True,
+                    "oracle_verification": {
+                        "search_success": True,
+                        "search_successful_config_sha256": f"{prefix}_oracle_config",
+                        "independent_recapture": True,
+                        "recapture_success": True,
+                    },
+                })
+            else:
+                metadata["termination"] = "task_success"
+            records.append(PairedTrajectoryRecord(
+                pair_id=f"{prefix}_pair", placement_id=f"{prefix}_placement", split=split,
+                trajectory_kind=kind, source_state_sha256=f"{prefix}_source",
+                matched_robot_state_sha256=f"{prefix}_robot",
+                branch_start_state_sha256=start_state,
+                arrays_path=array_rel.as_posix(), instruction="pick", n_steps=n,
+                task_suite="libero_spatial", task_id=0,
+                trigger_horizon_actions=n, schema_version=SCHEMA_VERSION,
+                outcome=("crash" if kind == "nominal_catastrophe" else
+                         "recovery_success" if kind == "oracle_recovery" else
+                         "task_success"),
+                crashed=kind == "nominal_catastrophe",
+                succeeded=kind in {"oracle_recovery", "off_path_control"},
+                safe_abort=False,
+                oracle_verified=kind == "oracle_recovery",
+                scene_sha256=(
+                    f"{prefix}_onpath_scene" if kind in {
+                        "nominal_catastrophe", "oracle_recovery"
+                    } else f"{prefix}_{kind}_scene"
+                ),
+                metadata=metadata,
+            ))
     write_trajectory_manifest(root / f"{split}.jsonl", records)
+    protocol = {
+        "name": "glass_recovery_primary_v2_test",
+        "schema_version": SCHEMA_VERSION,
+        "precrash_horizon_actions": horizon,
+        "policy": {
+            "checkpoint": "fake/openvla",
+            "unnorm_key": "libero_spatial",
+        },
+    }
+    (root / "collection_summary.json").write_text(json.dumps({
+        "schema_version": SCHEMA_VERSION,
+        "metadata": {
+            "checkpoint_identity": {
+                "requested_revision": "a" * 40,
+                "resolved_revision": "a" * 40,
+            },
+            "primary_protocol": protocol,
+            "primary_protocol_sha256": canonical_sha256(protocol),
+        },
+    }, indent=2) + "\n")
+
+
+def test_pair_uniform_phase_sampler_has_fixed_exact_and_first_k_quotas(tmp_path):
+    _write_tiny_split(tmp_path, "train", pair_count=2)
+    dataset = PairedFrameDataset(tmp_path / "train.jsonl", first_k=2)
+    sampler = PairPhaseBatchSampler(dataset, batch_size=16, seed=7)
+    pair_phase_counts = Counter()
+    for batch in sampler:
+        phases = [dataset.item_phases[index] for index in batch]
+        assert Counter(phases) == {
+            "nominal_far_safe": 4,
+            "nominal_imminent": 2,
+            "exact_trigger": 2,
+            "oracle_first_k": 2,
+            "oracle_continuation": 2,
+            "off_path_control": 4,
+        }
+        for index in batch:
+            record_index, _ = dataset.index[index]
+            pair_phase_counts[(
+                dataset.records[record_index].pair_id,
+                dataset.item_phases[index],
+            )] += 1
+    for phase in PHASES:
+        counts = [pair_phase_counts[(pair_id, phase)] for pair_id in dataset.pair_ids]
+        assert max(counts) - min(counts) <= 1
+
+
+def test_main_training_dataset_rejects_blocked_appendix_rows(tmp_path):
+    write_trajectory_manifest(
+        tmp_path / "train.jsonl", _v2_records(include_blocked=True)
+    )
+    with pytest.raises(ValueError, match="excludes auxiliary trajectories"):
+        PairedFrameDataset(tmp_path / "train.jsonl")
 
 
 def test_tiny_training_pipeline_runs_end_to_end():
@@ -1556,13 +1768,14 @@ def test_tiny_training_pipeline_runs_end_to_end():
         args = Namespace(
             train_manifest=str(root / "train.jsonl"),
             validation_manifest=str(root / "validation.jsonl"),
-            output=str(root / "checkpoint"), device="cpu", max_steps=2, batch_size=4,
+            output=str(root / "checkpoint"), device="cpu", max_steps=2, batch_size=8,
             learning_rate=3e-4, weight_decay=0.0, max_grad_norm=1.0,
             width=8, depth=1, dropout=0.0,
             sensitivity_margin=0.2, lambda_recovery=1.0, lambda_risk=1.0,
-            lambda_hazard=0.25, lambda_severity=0.25, lambda_abort=0.5,
-            lambda_invariance=0.5, lambda_sensitivity=0.25,
-            gating_horizon=10, max_control_episode_fpr=0.5, exit_threshold_ratio=0.5,
+            lambda_hazard=0.0, lambda_severity=0.0, lambda_abort=0.0,
+            lambda_invariance=0.5, lambda_sensitivity=0.0,
+            gating_horizon=5, first_k=2, max_control_episode_fpr=0.5,
+            exit_threshold_ratio=0.5,
             abort_threshold=0.6, eval_every=1, log_every=1,
             num_workers=0, cache_size=2, seed=17, overwrite=False,
         )
@@ -1572,5 +1785,25 @@ def test_tiny_training_pipeline_runs_end_to_end():
         )
         assert model.config.hidden_dim == 6
         assert metadata["heldout_used_for_training_or_calibration"] is False
-        assert metadata["calibration"]["horizon"] == 10
-        assert metadata["calibration"]["calibration_unit"] == "episode_max_risk"
+        assert metadata["calibration"]["horizon"] == 5
+        assert metadata["calibration"]["calibration_unit"] == (
+            "control_episode_max_vs_certified_trigger_frame"
+        )
+        assert metadata["loss_weights"] == metadata["validation_loss_weights"]
+        assert metadata["disabled_auxiliary_heads"] == list(
+            PRIMARY_DISABLED_AUXILIARY_HEADS
+        )
+        best, best_metadata = GlassRecoveryNetwork.load_checkpoint(
+            root / "checkpoint" / "best.pt"
+        )
+        assert state_dict_sha256(model) == state_dict_sha256(best)
+        assert metadata["published_from"] == "best.pt"
+        assert metadata["published_model_state_sha256"] == best_metadata[
+            "model_state_sha256"
+        ]
+        for key in (
+            "base_resolved_revision", "train_manifest_sha256",
+            "validation_manifest_sha256", "trajectory_schema_version",
+            "protocol_sha256", "trigger_horizon_actions", "tte_definition",
+        ):
+            assert key in metadata

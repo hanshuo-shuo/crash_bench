@@ -4,7 +4,9 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
+import math
 import os
 import random
 import sys
@@ -12,19 +14,23 @@ from collections import Counter, OrderedDict
 from dataclasses import asdict
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Iterator, Mapping
 
 import numpy as np
 import torch
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import CosineAnnealingLR
-from torch.utils.data import DataLoader, Dataset, WeightedRandomSampler
+from torch.utils.data import DataLoader, Dataset, Sampler
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from crashbench.glass_recovery_data import (
     HAZARD_TYPES,
+    PRIMARY_TRAJECTORY_KINDS,
     RISK_HORIZONS,
+    SCHEMA_VERSION,
     PairedTrajectoryRecord,
+    canonical_sha256,
     read_trajectory_manifest,
     validate_episode_arrays,
 )
@@ -32,28 +38,140 @@ from crashbench.glass_recovery_model import (
     GlassLossWeights,
     GlassRecoveryConfig,
     GlassRecoveryNetwork,
+    HIDDEN_HOOK_IDENTITY,
+    PRIMARY_CHECKPOINT_KIND,
+    PRIMARY_DISABLED_AUXILIARY_HEADS,
+    PRIMARY_DISABLED_AUXILIARY_TERMS,
+    TTE_DEFINITION,
     glass_recovery_loss,
+    state_dict_sha256,
 )
+
+
+PHASES = (
+    "nominal_far_safe",
+    "nominal_imminent",
+    "exact_trigger",
+    "oracle_first_k",
+    "oracle_continuation",
+    "off_path_control",
+)
+# Eighths make the paper's 25/25/12.5/12.5/25 pilot target exact.  The
+# imminent/certified-trigger quarter is split evenly so the exact certified
+# trigger cannot be diluted by the rest of a nominal suffix.
+PHASE_BATCH_UNITS = OrderedDict((
+    ("nominal_far_safe", 2),
+    ("nominal_imminent", 1),
+    ("exact_trigger", 1),
+    ("oracle_first_k", 1),
+    ("oracle_continuation", 1),
+    ("off_path_control", 2),
+))
 
 
 class PairedFrameDataset(Dataset):
     """Lazy frame view over compressed per-trajectory arrays."""
 
-    def __init__(self, manifest: str | Path, cache_size: int = 2):
+    def __init__(self, manifest: str | Path, cache_size: int = 2, first_k: int = 5):
         self.manifest = Path(manifest)
         self.root = self.manifest.parent
         self.records = read_trajectory_manifest(self.manifest)
+        if int(first_k) < 1:
+            raise ValueError("first_k must be positive")
+        self.first_k = int(first_k)
+        bad_versions = sorted({
+            record.schema_version for record in self.records
+            if record.schema_version != SCHEMA_VERSION
+        })
+        if bad_versions:
+            raise ValueError(
+                "main training accepts only schema-v2 primary manifests; "
+                f"found schema versions {bad_versions}"
+            )
+        bad_kinds = sorted({
+            record.trajectory_kind for record in self.records
+            if record.trajectory_kind not in PRIMARY_TRAJECTORY_KINDS
+        })
+        if bad_kinds:
+            raise ValueError(
+                "main training excludes auxiliary trajectories; "
+                f"found {bad_kinds}"
+            )
         self.index: list[tuple[int, int]] = []
         self.kinds: list[str] = []
+        self.item_phases: list[str] = []
+        self.pair_ids = sorted({record.pair_id for record in self.records})
+        self.pair_to_index = {pair_id: index for index, pair_id in enumerate(self.pair_ids)}
+        self.phase_indices: dict[str, dict[str, list[int]]] = {
+            phase: {pair_id: [] for pair_id in self.pair_ids} for phase in PHASES
+        }
         self.cache_size = max(1, int(cache_size))
         self._cache: OrderedDict[int, dict[str, np.ndarray]] = OrderedDict()
         for record_index, record in enumerate(self.records):
             with np.load(self.root / record.arrays_path) as arrays:
-                validate_episode_arrays(arrays, record.n_steps)
-            self.index.extend((record_index, frame) for frame in range(record.n_steps))
-            self.kinds.extend([record.trajectory_kind] * record.n_steps)
+                validate_episode_arrays(
+                    arrays, record.n_steps, schema_version=record.schema_version
+                )
+                phases = self._record_phases(record, arrays)
+            for frame, phase in enumerate(phases):
+                item_index = len(self.index)
+                self.index.append((record_index, frame))
+                self.kinds.append(record.trajectory_kind)
+                self.item_phases.append(phase)
+                self.phase_indices[phase][record.pair_id].append(item_index)
         if not self.index:
             raise ValueError("training dataset has no frames")
+
+        missing = {
+            pair_id: [
+                phase for phase in PHASES
+                if not self.phase_indices[phase][pair_id]
+            ]
+            for pair_id in self.pair_ids
+        }
+        missing = {pair_id: phases for pair_id, phases in missing.items() if phases}
+        if missing:
+            raise ValueError(
+                "every accepted pair must support every main sampling phase; "
+                f"missing {missing}"
+            )
+
+    def _record_phases(
+        self,
+        record: PairedTrajectoryRecord,
+        arrays: Mapping[str, np.ndarray],
+    ) -> list[str]:
+        if record.trajectory_kind == "off_path_control":
+            return ["off_path_control"] * record.n_steps
+        if record.trajectory_kind == "oracle_recovery":
+            return [
+                "oracle_first_k" if frame < self.first_k else "oracle_continuation"
+                for frame in range(record.n_steps)
+            ]
+        if record.trajectory_kind != "nominal_catastrophe":
+            raise ValueError(
+                f"unsupported main trajectory kind {record.trajectory_kind!r}"
+            )
+
+        horizon = int(record.trigger_horizon_actions or 0)
+        if horizon < 2:
+            raise ValueError(f"{record.pair_id} needs H >= 2 for phase-balanced training")
+        times = np.asarray(arrays["time_to_catastrophe_actions"], dtype=int)
+        certified = np.asarray(arrays["runtime_trigger_eligible"], dtype=bool)
+        if int(certified.sum()) != 1:
+            raise ValueError(
+                f"{record.pair_id} nominal branch needs exactly one certified trigger frame"
+            )
+        midpoint = max(1, horizon // 2)
+        phases = []
+        for remaining, is_certified in zip(times, certified):
+            if is_certified:
+                phases.append("exact_trigger")
+            elif int(remaining) > midpoint:
+                phases.append("nominal_far_safe")
+            else:
+                phases.append("nominal_imminent")
+        return phases
 
     def __len__(self) -> int:
         return len(self.index)
@@ -78,6 +196,8 @@ class PairedFrameDataset(Dataset):
             "hidden", "robot_state", "nominal_action", "target_action",
             "risk_targets", "risk_mask", "severity_force", "severity_mask",
             "abort_target", "recovery_mask", "invariance_mask", "sensitivity_mask",
+            "time_to_catastrophe_actions", "time_to_catastrophe_mask",
+            "runtime_trigger_eligible",
         )
         out = {
             key: torch.as_tensor(np.asarray(arrays[key][frame], dtype=np.float32))
@@ -85,20 +205,179 @@ class PairedFrameDataset(Dataset):
         }
         out["hazard_type"] = torch.tensor(int(arrays["hazard_type"][frame]), dtype=torch.long)
         out["trajectory_kind"] = torch.tensor(
-            ("nominal_catastrophe", "oracle_recovery", "off_path_control", "blocked_safe_abort")
+            ("nominal_catastrophe", "oracle_recovery", "off_path_control")
             .index(self.records[record_index].trajectory_kind),
             dtype=torch.long,
         )
         out["episode_id"] = torch.tensor(record_index, dtype=torch.long)
+        out["pair_id"] = torch.tensor(
+            self.pair_to_index[self.records[record_index].pair_id], dtype=torch.long
+        )
+        out["frame_index"] = torch.tensor(frame, dtype=torch.long)
+        out["sampling_phase"] = torch.tensor(
+            PHASES.index(self.item_phases[item]), dtype=torch.long
+        )
         return out
 
-    def balanced_sampler(self, seed: int) -> WeightedRandomSampler:
-        counts = Counter(self.kinds)
-        weights = torch.as_tensor([1.0 / counts[kind] for kind in self.kinds], dtype=torch.double)
-        return WeightedRandomSampler(
-            weights, num_samples=len(weights), replacement=True,
-            generator=torch.Generator().manual_seed(seed),
+    def phase_counts(self) -> dict[str, int]:
+        return dict(Counter(self.item_phases))
+
+
+class PairPhaseBatchSampler(Sampler[list[int]]):
+    """Fixed-quota batches with uniform pair selection inside every phase."""
+
+    def __init__(self, dataset: PairedFrameDataset, batch_size: int, seed: int):
+        if int(batch_size) < 8 or int(batch_size) % 8:
+            raise ValueError("phase-balanced batch_size must be a positive multiple of 8")
+        self.dataset = dataset
+        self.batch_size = int(batch_size)
+        self.seed = int(seed)
+        self.epoch = 0
+        self.quotas = {
+            phase: units * (self.batch_size // 8)
+            for phase, units in PHASE_BATCH_UNITS.items()
+        }
+        self.num_batches = max(1, math.ceil(len(dataset) / self.batch_size))
+
+    def __len__(self) -> int:
+        return self.num_batches
+
+    def __iter__(self) -> Iterator[list[int]]:
+        rng = random.Random(self.seed + self.epoch)
+        self.epoch += 1
+        pair_orders: dict[str, list[str]] = {}
+        pair_cursors = {phase: 0 for phase in PHASES}
+
+        def next_pair(phase: str) -> str:
+            order = pair_orders.get(phase, [])
+            cursor = pair_cursors[phase]
+            if cursor >= len(order):
+                order = list(self.dataset.pair_ids)
+                rng.shuffle(order)
+                pair_orders[phase] = order
+                cursor = 0
+            pair_cursors[phase] = cursor + 1
+            return order[cursor]
+
+        for _ in range(self.num_batches):
+            batch: list[int] = []
+            for phase, quota in self.quotas.items():
+                for _ in range(quota):
+                    pair_id = next_pair(phase)
+                    pool = self.dataset.phase_indices[phase][pair_id]
+                    batch.append(pool[rng.randrange(len(pool))])
+            rng.shuffle(batch)
+            yield batch
+
+
+def _file_sha256(path: str | Path) -> str:
+    digest = hashlib.sha256()
+    with Path(path).open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _manifest_collection_contract(dataset: PairedFrameDataset) -> dict:
+    """Resolve and cross-check the P0-B collection contract for one split."""
+
+    summary_path = dataset.manifest.parent / "collection_summary.json"
+    if not summary_path.is_file():
+        raise ValueError(
+            f"{dataset.manifest} needs sibling collection_summary.json for provenance"
         )
+    summary = json.loads(summary_path.read_text())
+    if summary.get("schema_version") != SCHEMA_VERSION:
+        raise ValueError(f"{summary_path} is not schema v{SCHEMA_VERSION}")
+    metadata = summary.get("metadata")
+    if not isinstance(metadata, Mapping):
+        raise ValueError(f"{summary_path} lacks collection metadata")
+    protocol = metadata.get("primary_protocol")
+    protocol_sha256 = metadata.get("primary_protocol_sha256")
+    if not isinstance(protocol, Mapping) or not protocol_sha256:
+        raise ValueError(f"{summary_path} lacks the primary protocol and SHA")
+    if canonical_sha256(protocol) != protocol_sha256:
+        raise ValueError(f"{summary_path} primary protocol SHA is invalid")
+    checkpoint_identity = metadata.get("checkpoint_identity")
+    if not isinstance(checkpoint_identity, Mapping):
+        raise ValueError(f"{summary_path} lacks Base checkpoint identity")
+    resolved_revision = checkpoint_identity.get("resolved_revision")
+    if not resolved_revision:
+        raise ValueError(f"{summary_path} lacks Base resolved revision")
+    policy_protocol = protocol.get("policy")
+    if not isinstance(policy_protocol, Mapping) or not policy_protocol.get("unnorm_key"):
+        raise ValueError(f"{summary_path} lacks the Base unnorm key")
+
+    versions = {record.schema_version for record in dataset.records}
+    horizons = {record.trigger_horizon_actions for record in dataset.records}
+    if versions != {SCHEMA_VERSION}:
+        raise ValueError(f"{dataset.manifest} is not a pure schema-v2 cohort")
+    if len(horizons) != 1 or None in horizons:
+        raise ValueError(f"{dataset.manifest} does not declare one fixed H")
+    horizon = int(next(iter(horizons)))
+    if int(protocol.get("precrash_horizon_actions", -1)) != horizon:
+        raise ValueError(f"{dataset.manifest} H disagrees with its collection protocol")
+    return {
+        "base_resolved_revision": str(resolved_revision),
+        "unnorm_key": str(policy_protocol["unnorm_key"]),
+        "protocol_sha256": str(protocol_sha256),
+        "trajectory_schema_version": SCHEMA_VERSION,
+        "trigger_horizon_actions": horizon,
+        "collection_summary": str(summary_path),
+    }
+
+
+def _training_provenance(
+    train_data: PairedFrameDataset,
+    validation_data: PairedFrameDataset,
+    args: argparse.Namespace,
+) -> dict:
+    train_contract = _manifest_collection_contract(train_data)
+    validation_contract = _manifest_collection_contract(validation_data)
+    agreement_fields = (
+        "base_resolved_revision",
+        "unnorm_key",
+        "protocol_sha256",
+        "trajectory_schema_version",
+        "trigger_horizon_actions",
+    )
+    mismatches = {
+        field: (train_contract[field], validation_contract[field])
+        for field in agreement_fields
+        if train_contract[field] != validation_contract[field]
+    }
+    if mismatches:
+        raise ValueError(f"train/validation collection contracts disagree: {mismatches}")
+
+    explicit = {
+        "base_resolved_revision": getattr(args, "base_resolved_revision", None),
+        "unnorm_key": getattr(args, "unnorm_key", None),
+        "protocol_sha256": getattr(args, "protocol_sha256", None),
+        "trigger_horizon_actions": getattr(args, "trigger_horizon", None),
+    }
+    for field, expected in explicit.items():
+        if expected is not None and str(expected) != str(train_contract[field]):
+            raise ValueError(
+                f"configured {field}={expected!r} disagrees with manifest "
+                f"value {train_contract[field]!r}"
+            )
+    if train_contract["trigger_horizon_actions"] not in RISK_HORIZONS:
+        raise ValueError(
+            "fixed H must select an available risk head; got "
+            f"H={train_contract['trigger_horizon_actions']} and heads={RISK_HORIZONS}"
+        )
+    return {
+        **{field: train_contract[field] for field in agreement_fields},
+        "hidden_hook_identity": str(
+            getattr(args, "hidden_hook_identity", HIDDEN_HOOK_IDENTITY)
+        ),
+        "train_manifest": str(train_data.manifest),
+        "train_manifest_sha256": _file_sha256(train_data.manifest),
+        "validation_manifest": str(validation_data.manifest),
+        "validation_manifest_sha256": _file_sha256(validation_data.manifest),
+        "tte_definition": TTE_DEFINITION,
+        "seed": int(args.seed),
+    }
 
 
 def _move(batch: dict, device: torch.device) -> dict:
@@ -144,40 +423,69 @@ def _episode_max_scores(
     return np.asarray(maxima, dtype=float)
 
 
-def _select_episode_risk_threshold(
+def _episode_qualified_scores(
+    scores: np.ndarray,
+    valid: np.ndarray,
+    qualified: np.ndarray,
+    episode_ids: np.ndarray,
+    trajectory_kinds: np.ndarray,
+    selected_kind: int,
+) -> np.ndarray:
+    """Return the best score only over certified timely-trigger frames."""
+
+    return _episode_max_scores(
+        scores,
+        np.asarray(valid, dtype=bool) & np.asarray(qualified, dtype=bool),
+        episode_ids,
+        trajectory_kinds,
+        selected_kind,
+    )
+
+
+def _select_timely_risk_threshold(
     control_episode_scores: np.ndarray,
-    catastrophe_episode_scores: np.ndarray,
+    timely_trigger_episode_scores: np.ndarray,
     max_control_episode_fpr: float,
 ) -> dict:
-    """Select an enter threshold in the same episode-level unit as evaluation."""
+    """Maximize timely triggers subject to clean-control episode FPR."""
 
     controls = np.asarray(control_episode_scores, dtype=float)
-    catastrophes = np.asarray(catastrophe_episode_scores, dtype=float)
-    if not len(controls) or not len(catastrophes):
-        raise ValueError("risk calibration needs control and catastrophe validation episodes")
-    candidates = np.unique(np.concatenate(([1.0], controls, catastrophes, [0.0])))
+    timely = np.asarray(timely_trigger_episode_scores, dtype=float)
+    if not len(controls) or not len(timely):
+        raise ValueError("risk calibration needs control and timely-trigger validation episodes")
+    if not 0.0 <= float(max_control_episode_fpr) <= 1.0:
+        raise ValueError("max_control_episode_fpr must lie in [0, 1]")
+    candidates = np.unique(np.concatenate(([1.0], controls, timely, [0.0])))
     best = None
     for threshold in candidates:
         fpr = float((controls >= threshold).mean())
-        tpr = float((catastrophes >= threshold).mean())
+        timely_rate = float((timely >= threshold).mean())
         if fpr <= max_control_episode_fpr + 1e-12:
-            key = (tpr, -fpr, float(threshold))
+            key = (timely_rate, -fpr, float(threshold))
             if best is None or key > best[0]:
-                best = (key, threshold, fpr, tpr)
+                best = (key, threshold, fpr, timely_rate)
     assert best is not None
     return {
         "threshold": float(best[1]),
         "control_episode_fpr": best[2],
-        "catastrophe_episode_tpr": best[3],
+        "timely_trigger_rate": best[3],
         "max_control_episode_fpr": float(max_control_episode_fpr),
         "control_episodes": int(len(controls)),
-        "catastrophe_episodes": int(len(catastrophes)),
-        "calibration_unit": "episode_max_risk",
+        "certified_trigger_episodes": int(len(timely)),
+        "calibration_unit": "control_episode_max_vs_certified_trigger_frame",
+        "objective": "maximize_timely_trigger_rate_subject_to_clean_control_episode_fpr",
     }
 
 
 @torch.inference_mode()
-def evaluate(model: GlassRecoveryNetwork, loader: DataLoader, device: torch.device) -> tuple[float, dict]:
+def evaluate(
+    model: GlassRecoveryNetwork,
+    loader: DataLoader,
+    device: torch.device,
+    *,
+    weights: GlassLossWeights,
+    sensitivity_margin: float,
+) -> tuple[float, dict]:
     model.eval()
     loss_values = []
     risk_scores, risk_targets, risk_masks = [], [], []
@@ -185,11 +493,16 @@ def evaluate(model: GlassRecoveryNetwork, loader: DataLoader, device: torch.devi
     severity_pred, severity_target, severity_mask = [], [], []
     abort_scores, abort_targets = [], []
     action_deltas, invariance_masks, sensitivity_masks = [], [], []
-    episode_ids, trajectory_kinds = [], []
+    episode_ids, trajectory_kinds, trigger_eligible = [], [], []
     for batch in loader:
         batch = _move(batch, device)
         outputs = model(batch["hidden"], batch["robot_state"], batch["nominal_action"])
-        loss, _ = glass_recovery_loss(outputs, batch)
+        loss, _ = glass_recovery_loss(
+            outputs,
+            batch,
+            weights=weights,
+            sensitivity_margin=sensitivity_margin,
+        )
         loss_values.append(float(loss.cpu()))
         risk_scores.append(torch.sigmoid(outputs["risk_logits"]).cpu().numpy())
         risk_targets.append(batch["risk_targets"].cpu().numpy())
@@ -206,6 +519,7 @@ def evaluate(model: GlassRecoveryNetwork, loader: DataLoader, device: torch.devi
         sensitivity_masks.append(batch["sensitivity_mask"].cpu().numpy())
         episode_ids.append(batch["episode_id"].cpu().numpy())
         trajectory_kinds.append(batch["trajectory_kind"].cpu().numpy())
+        trigger_eligible.append(batch["runtime_trigger_eligible"].cpu().numpy())
     risk_scores = np.concatenate(risk_scores)
     risk_targets = np.concatenate(risk_targets)
     risk_masks = np.concatenate(risk_masks).astype(bool)
@@ -221,6 +535,7 @@ def evaluate(model: GlassRecoveryNetwork, loader: DataLoader, device: torch.devi
     sensitivity_masks = np.concatenate(sensitivity_masks).astype(bool)
     episode_ids = np.concatenate(episode_ids)
     trajectory_kinds = np.concatenate(trajectory_kinds)
+    trigger_eligible = np.concatenate(trigger_eligible).astype(bool)
     metrics = {
         "risk_auc_by_horizon": {
             str(horizon): _auc(risk_scores[:, index][risk_masks[:, index]],
@@ -248,6 +563,7 @@ def evaluate(model: GlassRecoveryNetwork, loader: DataLoader, device: torch.devi
         "_abort_targets": abort_targets,
         "_episode_ids": episode_ids,
         "_trajectory_kinds": trajectory_kinds,
+        "_runtime_trigger_eligible": trigger_eligible,
     }
 
 
@@ -262,8 +578,23 @@ def train(args: argparse.Namespace) -> None:
     torch.cuda.manual_seed_all(args.seed)
     device = torch.device(args.device or ("cuda" if torch.cuda.is_available() else "cpu"))
 
-    train_data = PairedFrameDataset(args.train_manifest, cache_size=args.cache_size)
-    validation_data = PairedFrameDataset(args.validation_manifest, cache_size=args.cache_size)
+    first_k = int(getattr(args, "first_k", 5))
+    train_data = PairedFrameDataset(
+        args.train_manifest, cache_size=args.cache_size, first_k=first_k
+    )
+    validation_data = PairedFrameDataset(
+        args.validation_manifest, cache_size=args.cache_size, first_k=first_k
+    )
+    provenance = _training_provenance(train_data, validation_data, args)
+    gating_horizon = getattr(args, "gating_horizon", None)
+    if gating_horizon is None:
+        gating_horizon = provenance["trigger_horizon_actions"]
+    if int(gating_horizon) != int(provenance["trigger_horizon_actions"]):
+        raise ValueError(
+            "primary gating horizon must equal certified H; "
+            f"got gating={gating_horizon}, H={provenance['trigger_horizon_actions']}"
+        )
+    gating_horizon = int(gating_horizon)
     first = train_data[0]
     config = GlassRecoveryConfig(
         hidden_dim=int(first["hidden"].numel()),
@@ -281,10 +612,14 @@ def train(args: argparse.Namespace) -> None:
         control_invariance=args.lambda_invariance,
         hazard_sensitivity=args.lambda_sensitivity,
     )
+    weights.validate_primary()
+    disabled_auxiliary_heads = list(PRIMARY_DISABLED_AUXILIARY_HEADS)
+    sampler = PairPhaseBatchSampler(train_data, args.batch_size, args.seed)
     train_loader = DataLoader(
-        train_data, batch_size=args.batch_size,
-        sampler=train_data.balanced_sampler(args.seed),
-        num_workers=args.num_workers, pin_memory=device.type == "cuda", drop_last=False,
+        train_data,
+        batch_sampler=sampler,
+        num_workers=args.num_workers,
+        pin_memory=device.type == "cuda",
     )
     validation_loader = DataLoader(
         validation_data, batch_size=args.batch_size, shuffle=False,
@@ -294,7 +629,33 @@ def train(args: argparse.Namespace) -> None:
     scheduler = CosineAnnealingLR(optimizer, T_max=max(1, args.max_steps))
     iterator = iter(train_loader)
     best_loss = float("inf")
+    best_step: int | None = None
     trace = []
+    checkpoint_contract = {
+        "checkpoint_kind": PRIMARY_CHECKPOINT_KIND,
+        **provenance,
+        "loss_weights": asdict(weights),
+        "disabled_auxiliary_heads": disabled_auxiliary_heads,
+        "disabled_auxiliary_loss_terms": list(PRIMARY_DISABLED_AUXILIARY_TERMS),
+        "enabled_objectives": ["risk", "recovery_bc", "control_invariance"],
+        "sampler": {
+            "name": "pair_uniform_phase_balanced",
+            "batch_size": int(args.batch_size),
+            "first_k": first_k,
+            "fixed_batch_quota": dict(sampler.quotas),
+            "phase_counts": train_data.phase_counts(),
+            "phase_definition": {
+                "exact_trigger": "runtime_trigger_eligible == 1",
+                "nominal_far_safe": "non-trigger nominal TTE > floor(H / 2)",
+                "nominal_imminent": "non-trigger nominal TTE <= floor(H / 2)",
+                "oracle_first_k": "oracle frame_index < K",
+                "oracle_continuation": "oracle frame_index >= K",
+                "off_path_control": "all matched off-path task-success frames",
+            },
+        },
+        "validation_criterion": "configured_primary_validation_loss",
+        "validation_loss_weights": asdict(weights),
+    }
     model.train()
     for step in range(1, args.max_steps + 1):
         try:
@@ -323,18 +684,73 @@ def train(args: argparse.Namespace) -> None:
         if step == 1 or step % args.log_every == 0:
             print(json.dumps(row), flush=True)
         if step % args.eval_every == 0 or step == args.max_steps:
-            validation_loss, validation_metrics = evaluate(model, validation_loader, device)
+            validation_loss, validation_metrics = evaluate(
+                model,
+                validation_loader,
+                device,
+                weights=weights,
+                sensitivity_margin=args.sensitivity_margin,
+            )
             public_metrics = {key: value for key, value in validation_metrics.items()
                               if not key.startswith("_")}
             print(json.dumps({"step": step, "validation_loss": validation_loss,
                               **public_metrics}), flush=True)
             if validation_loss < best_loss:
                 best_loss = validation_loss
-                model.save_checkpoint(output / "best.pt", metadata={"step": step})
+                best_step = step
+                model_digest = state_dict_sha256(model)
+                model.save_checkpoint(output / "best.pt", metadata={
+                    **checkpoint_contract,
+                    "selected_step": step,
+                    "selected_validation_loss": best_loss,
+                    "model_state_sha256": model_digest,
+                })
             model.train()
 
-    validation_loss, validation_metrics = evaluate(model, validation_loader, device)
-    calibration_index = RISK_HORIZONS.index(args.gating_horizon)
+    if best_step is None or not (output / "best.pt").is_file():
+        raise RuntimeError("training did not produce a selected best checkpoint")
+
+    # Keep the terminal optimization state for diagnosis, but do not calibrate
+    # or publish it.  The selected checkpoint is reloaded below.
+    last_validation_loss, last_validation_metrics = evaluate(
+        model,
+        validation_loader,
+        device,
+        weights=weights,
+        sensitivity_margin=args.sensitivity_margin,
+    )
+    last_digest = state_dict_sha256(model)
+    model.save_checkpoint(output / "last.pt", metadata={
+        **checkpoint_contract,
+        "last_step": int(args.max_steps),
+        "last_validation_loss": last_validation_loss,
+        "model_state_sha256": last_digest,
+        "selected_best_step": best_step,
+    })
+
+    best_model, best_metadata = GlassRecoveryNetwork.load_checkpoint(
+        output / "best.pt", map_location=device
+    )
+    best_model.to(device).eval()
+    best_digest = state_dict_sha256(best_model)
+    if best_metadata.get("model_state_sha256") != best_digest:
+        raise RuntimeError("reloaded best checkpoint state digest is inconsistent")
+    if best_metadata.get("checkpoint_kind") != PRIMARY_CHECKPOINT_KIND:
+        raise RuntimeError("reloaded best checkpoint lost its primary contract")
+    validation_loss, validation_metrics = evaluate(
+        best_model,
+        validation_loader,
+        device,
+        weights=weights,
+        sensitivity_margin=args.sensitivity_margin,
+    )
+    if not math.isclose(validation_loss, best_loss, rel_tol=1e-7, abs_tol=1e-9):
+        raise RuntimeError(
+            "reloaded best checkpoint does not reproduce its selection loss: "
+            f"selected={best_loss}, reloaded={validation_loss}"
+        )
+
+    calibration_index = RISK_HORIZONS.index(gating_horizon)
     mask = validation_metrics["_risk_masks"][:, calibration_index]
     scores = validation_metrics["_risk_scores"][:, calibration_index]
     control_episode_scores = _episode_max_scores(
@@ -344,47 +760,59 @@ def train(args: argparse.Namespace) -> None:
         validation_metrics["_trajectory_kinds"],
         selected_kind=2,
     )
-    catastrophe_episode_scores = _episode_max_scores(
+    timely_trigger_episode_scores = _episode_qualified_scores(
         scores,
         mask,
+        validation_metrics["_runtime_trigger_eligible"],
         validation_metrics["_episode_ids"],
         validation_metrics["_trajectory_kinds"],
         selected_kind=0,
     )
-    calibration = _select_episode_risk_threshold(
+    calibration = _select_timely_risk_threshold(
         control_episode_scores,
-        catastrophe_episode_scores,
+        timely_trigger_episode_scores,
         args.max_control_episode_fpr,
     )
     calibration.update({
-        "horizon": args.gating_horizon,
-        "exit_threshold": max(0.0, calibration["threshold"] * args.exit_threshold_ratio),
-        "abort_threshold": args.abort_threshold,
+        "horizon": gating_horizon,
+        "certified_horizon_actions": provenance["trigger_horizon_actions"],
+        "ownership": "recovery_latched_until_terminal_or_reset",
+        "abort_enabled": False,
     })
     public_metrics = {key: value for key, value in validation_metrics.items()
                       if not key.startswith("_")}
     metadata = {
+        **checkpoint_contract,
         "created_at_utc": datetime.now(timezone.utc).isoformat(),
         "code_commit": os.environ.get("CB_CODE_COMMIT"),
         "method": (
             "frozen OpenVLA hidden + robot state + nominal action joint critic; "
             "direct recovery action head"
         ),
-        "train_manifest": str(args.train_manifest),
-        "validation_manifest": str(args.validation_manifest),
         "heldout_used_for_training_or_calibration": False,
-        "loss_weights": asdict(weights),
         "calibration": calibration,
         "validation_loss": validation_loss,
         "validation_metrics": public_metrics,
+        "selected_best_step": best_step,
+        "selected_best_validation_loss": best_loss,
+        "selected_best_model_state_sha256": best_digest,
+        "published_model_state_sha256": best_digest,
+        "published_from": "best.pt",
+        "last_validation_loss": last_validation_loss,
+        "last_model_state_sha256": last_digest,
         "train_frames": len(train_data),
         "validation_frames": len(validation_data),
         "train_kind_counts": dict(Counter(train_data.kinds)),
     }
-    model.save_checkpoint(output / "last.pt", metadata=metadata)
-    # Promote the final calibrated state for inference; ``best.pt`` remains an
-    # uncalibrated diagnostic snapshot.
-    model.save_checkpoint(output / "glass_recovery.pt", metadata=metadata)
+    best_model.save_checkpoint(output / "glass_recovery.pt", metadata=metadata)
+    published_model, published_metadata = GlassRecoveryNetwork.load_checkpoint(
+        output / "glass_recovery.pt", map_location="cpu"
+    )
+    published_digest = state_dict_sha256(published_model)
+    if published_digest != best_digest:
+        raise RuntimeError("published checkpoint weights differ from selected best checkpoint")
+    if published_metadata.get("published_from") != "best.pt":
+        raise RuntimeError("published checkpoint does not identify its selected source")
     (output / "training_summary.json").write_text(json.dumps(metadata, indent=2) + "\n")
     (output / "train_metrics.jsonl").write_text(
         "".join(json.dumps(row) + "\n" for row in trace)
@@ -409,13 +837,23 @@ def main() -> None:
     parser.add_argument("--sensitivity-margin", type=float, default=0.20)
     parser.add_argument("--lambda-recovery", type=float, default=1.0)
     parser.add_argument("--lambda-risk", type=float, default=1.0)
-    parser.add_argument("--lambda-hazard", type=float, default=0.25)
-    parser.add_argument("--lambda-severity", type=float, default=0.25)
-    parser.add_argument("--lambda-abort", type=float, default=0.5)
+    # Retain the legacy flags so old commands fail with a precise primary-loss
+    # error instead of an argparse error.  Main checkpoints require all four
+    # auxiliary values to remain zero.
+    parser.add_argument("--lambda-hazard", type=float, default=0.0)
+    parser.add_argument("--lambda-severity", type=float, default=0.0)
+    parser.add_argument("--lambda-abort", type=float, default=0.0)
     parser.add_argument("--lambda-invariance", type=float, default=0.5)
-    parser.add_argument("--lambda-sensitivity", type=float, default=0.25)
-    parser.add_argument("--gating-horizon", type=int, choices=RISK_HORIZONS, default=10)
+    parser.add_argument("--lambda-sensitivity", type=float, default=0.0)
+    parser.add_argument("--gating-horizon", type=int, choices=RISK_HORIZONS, default=None)
+    parser.add_argument("--first-k", type=int, default=5)
     parser.add_argument("--max-control-episode-fpr", type=float, default=0.05)
+    parser.add_argument("--base-resolved-revision", default=None)
+    parser.add_argument("--unnorm-key", default=None)
+    parser.add_argument("--protocol-sha256", default=None)
+    parser.add_argument("--trigger-horizon", type=int, default=None)
+    # Deprecated primary-wrapper knobs are accepted for command compatibility;
+    # latched ownership and disabled abort make them intentionally inert.
     parser.add_argument("--exit-threshold-ratio", type=float, default=0.5)
     parser.add_argument("--abort-threshold", type=float, default=0.60)
     parser.add_argument("--eval-every", type=int, default=50)
@@ -425,8 +863,8 @@ def main() -> None:
     parser.add_argument("--seed", type=int, default=17)
     parser.add_argument("--overwrite", action="store_true")
     args = parser.parse_args()
-    if args.max_steps < 1 or args.batch_size < 1:
-        raise SystemExit("max-steps and batch-size must be positive")
+    if args.max_steps < 1 or args.batch_size < 1 or args.first_k < 1:
+        raise SystemExit("max-steps, batch-size, and first-k must be positive")
     train(args)
 
 

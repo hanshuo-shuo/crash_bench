@@ -5,10 +5,11 @@ concatenated with the 8-D LIBERO robot state and nominal 7-D action, then passed
 through this small joint network.  The outputs are:
 
 * collision logits for 1/3/5/10/20 steps;
-* causal hazard type;
-* log1p future contact-force severity;
-* blocked/safe-abort logit;
 * a direct bounded 7-D recovery action.
+
+The hazard, severity, and abort heads remain in the module and checkpoint
+format so historical E14 checkpoints stay readable.  P0-C primary checkpoints
+train only risk, recovery behavior cloning, and clean-control invariance.
 """
 
 from __future__ import annotations
@@ -17,11 +18,31 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Mapping
 
+import hashlib
+
 import torch
 from torch import nn
 from torch.nn import functional as F
 
 from crashbench.glass_recovery_data import HAZARD_TYPES, RISK_HORIZONS
+
+
+PRIMARY_CHECKPOINT_KIND = "glass_recovery_primary"
+TTE_DEFINITION = (
+    "steps_until_event(event_action_index=c, observation_index=i) = c - i + 1 "
+    "actions from pre-action observation s_i"
+)
+HIDDEN_HOOK_IDENTITY = (
+    "OpenVLAPolicy.language_model.model.norm:prefill_last_prompt_token"
+)
+PRIMARY_DISABLED_AUXILIARY_HEADS = (
+    "hazard",
+    "severity",
+    "abort",
+)
+PRIMARY_DISABLED_AUXILIARY_TERMS = PRIMARY_DISABLED_AUXILIARY_HEADS + (
+    "hazard_sensitivity",
+)
 
 
 @dataclass(frozen=True)
@@ -38,11 +59,35 @@ class GlassRecoveryConfig:
 class GlassLossWeights:
     recovery_bc: float = 1.0
     risk: float = 1.0
-    hazard: float = 0.25
-    severity: float = 0.25
-    abort: float = 0.5
+    hazard: float = 0.0
+    severity: float = 0.0
+    abort: float = 0.0
     control_invariance: float = 0.5
-    hazard_sensitivity: float = 0.25
+    hazard_sensitivity: float = 0.0
+
+    def validate_primary(self) -> None:
+        """Fail closed if an auxiliary objective is enabled for a main run."""
+
+        nonzero = {
+            name: float(getattr(self, name))
+            for name in PRIMARY_DISABLED_AUXILIARY_TERMS
+            if float(getattr(self, name)) != 0.0
+        }
+        if nonzero:
+            raise ValueError(
+                "primary checkpoints require zero auxiliary loss weights; "
+                f"got {nonzero}"
+            )
+        enabled = {
+            "risk": float(self.risk),
+            "recovery_bc": float(self.recovery_bc),
+            "control_invariance": float(self.control_invariance),
+        }
+        if any(value <= 0.0 for value in enabled.values()):
+            raise ValueError(
+                "primary risk, recovery_bc, and control_invariance weights "
+                f"must be positive; got {enabled}"
+            )
 
 
 class GlassRecoveryNetwork(nn.Module):
@@ -138,6 +183,22 @@ class GlassRecoveryNetwork(nn.Module):
         return model, dict(payload.get("metadata", {}))
 
 
+def state_dict_sha256(model: nn.Module) -> str:
+    """Stable digest of parameter names, dtypes, shapes, and tensor bytes."""
+
+    digest = hashlib.sha256()
+    for name, tensor in sorted(model.state_dict().items()):
+        value = tensor.detach().cpu().contiguous()
+        digest.update(name.encode("utf-8"))
+        digest.update(b"\0")
+        digest.update(str(value.dtype).encode("ascii"))
+        digest.update(b"\0")
+        digest.update(str(tuple(value.shape)).encode("ascii"))
+        digest.update(b"\0")
+        digest.update(value.numpy().tobytes())
+    return digest.hexdigest()
+
+
 def _masked_mean(value: torch.Tensor, mask: torch.Tensor) -> torch.Tensor:
     mask = mask.to(dtype=value.dtype)
     return (value * mask).sum() / mask.sum().clamp_min(1.0)
@@ -165,7 +226,14 @@ def glass_recovery_loss(
     abort = F.binary_cross_entropy_with_logits(outputs["abort_logit"], batch["abort_target"])
 
     action_error = (outputs["recovery_action"] - batch["target_action"]).pow(2).mean(dim=-1)
-    recovery_bc = _masked_mean(action_error, batch["recovery_mask"])
+    recovery_mask = batch["recovery_mask"]
+    if "trajectory_kind" in batch:
+        # Index 3 is the historical/appendix blocked_safe_abort branch.  Main
+        # schema-v2 datasets reject it entirely, and this second guard prevents
+        # a legacy or manually assembled batch from turning abort demonstrations
+        # into recovery action targets.
+        recovery_mask = recovery_mask * (batch["trajectory_kind"] != 3)
+    recovery_bc = _masked_mean(action_error, recovery_mask)
     invariance_error = outputs["action_delta"].pow(2).mean(dim=-1)
     invariance = _masked_mean(invariance_error, batch["invariance_mask"])
     action_change = torch.linalg.vector_norm(outputs["action_delta"], dim=-1)
@@ -181,5 +249,16 @@ def glass_recovery_loss(
         "control_invariance": invariance,
         "hazard_sensitivity": sensitivity,
     }
-    total = sum(getattr(weights, name) * value for name, value in terms.items())
+    # Exclude zero-weight terms from the autograd graph entirely.  Multiplying
+    # an auxiliary term by zero would still create zero gradients, which in
+    # turn lets decoupled optimizer weight decay mutate a supposedly disabled
+    # head in a main run.
+    enabled_terms = [
+        float(getattr(weights, name)) * value
+        for name, value in terms.items()
+        if float(getattr(weights, name)) != 0.0
+    ]
+    if not enabled_terms:
+        raise ValueError("glass recovery loss has no enabled terms")
+    total = sum(enabled_terms)
     return total, terms
