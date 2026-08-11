@@ -495,9 +495,13 @@ class LiberoEnv:
         """Unwrap LIBERO/robosuite wrappers to the environment owning runtime state."""
 
         raw = self.env
-        while not hasattr(raw, "robots") and hasattr(raw, "env"):
+        # LIBERO's ControlEnv exposes ``robots`` as a forwarding property, but
+        # episode counters, observables, and the observation cache live on its
+        # nested robosuite task env. Stopping merely because ``robots`` exists
+        # silently omits done/timestep and observable history from snapshots.
+        while not hasattr(raw, "_observables") and hasattr(raw, "env"):
             raw = raw.env
-        if not hasattr(raw, "robots"):
+        if not hasattr(raw, "robots") or not hasattr(raw, "_observables"):
             raise RuntimeError("could not locate robosuite runtime environment")
         return raw
 

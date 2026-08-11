@@ -798,7 +798,9 @@ def test_controller_state_roundtrip_restores_osc_interpolators():
         "camera": observable._current_observed_value.copy()
     }
     env = LiberoEnv.__new__(LiberoEnv)
-    env.env = SimpleNamespace(env=raw)
+    # Match LIBERO ControlEnv: it forwards ``robots`` but does not own the
+    # episode counters or observables. The adapter must continue unwrapping.
+    env.env = SimpleNamespace(env=raw, robots=[robot])
     model = SimpleNamespace(nv=2, na=1, nu=2)
     data = SimpleNamespace(
         qacc_warmstart=np.asarray([0.4, 0.5]),
