@@ -184,6 +184,19 @@ def test_policy_registry():
         assert "SEPARATE" in raised or "separate" in raised
 
 
+def test_openvla_episode_reset_clears_capture_state():
+    from crashbench.policies.openvla_policy import OpenVLAPolicy
+
+    policy = OpenVLAPolicy.__new__(OpenVLAPolicy)
+    policy.last_hidden = np.ones(2)
+    policy._cap_seq = 5
+    policy._cap_vec = np.ones(2)
+    policy.reset()
+    assert policy.last_hidden is None
+    assert policy._cap_seq == -1
+    assert policy._cap_vec is None
+
+
 def test_careful_prompt_conditions_are_fixed_and_hazard_specific():
     from crashbench.prompts import compose_instruction, prompt_templates_for_report
 

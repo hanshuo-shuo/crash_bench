@@ -155,6 +155,13 @@ class OpenVLAPolicy:
     def resize_size(self) -> int:
         return self._resize_size
 
+    def reset(self) -> None:
+        """Start a fresh episode; base OpenVLA has no temporal action buffer."""
+
+        self.last_hidden = None
+        self._cap_seq = -1
+        self._cap_vec = None
+
     def act(self, observation: dict, instruction: str) -> np.ndarray:
         from experiments.robot.robot_utils import (
             get_action, normalize_gripper_action, invert_gripper_action,
