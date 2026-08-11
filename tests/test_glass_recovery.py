@@ -103,7 +103,12 @@ from scripts.run_glass_avoidability_frontier import (
     FRONTIER_HORIZONS,
     summarize_frontier_rows,
 )
-from scripts.realign_glass_core_artifacts import summarize_realignment
+from scripts.realign_glass_core_artifacts import (
+    PilotARejected,
+    _observation_restore_diagnostics,
+    _require_simulator_controller_hashes,
+    summarize_realignment,
+)
 from scripts.replay_glass_recovery_pair import accepted_pair_dir_from_manifest
 
 
@@ -1966,6 +1971,40 @@ def test_pilot_a_summary_requires_every_candidate_to_pass_every_gate():
     )
     assert summary["go"] is False
     assert "attempts_do_not_have_unique_provenance" in summary["no_go_reasons"]
+
+
+def test_pilot_a_requires_exact_simulator_controller_but_audits_observation_drift():
+    expected_hashes = {
+        "simulator_state_sha256": "a" * 64,
+        "controller_state_sha256": "b" * 64,
+        "observation_sha256": "c" * 64,
+    }
+    actual_hashes = {**expected_hashes, "observation_sha256": "d" * 64}
+    _require_simulator_controller_hashes(
+        actual_hashes, expected_hashes, label="historical replay"
+    )
+    with pytest.raises(PilotARejected, match="controller_state_sha256"):
+        _require_simulator_controller_hashes(
+            {**actual_hashes, "controller_state_sha256": "e" * 64},
+            expected_hashes,
+            label="historical replay",
+        )
+
+    expected_observation = {
+        "image": np.zeros((2, 2, 3), dtype=np.uint8),
+        "state": np.asarray([1.0, 2.0], dtype=np.float32),
+    }
+    restored_observation = {
+        "image": np.ones((2, 2, 3), dtype=np.uint8),
+        "state": np.asarray([1.0, 2.0], dtype=np.float32),
+    }
+    diagnostic = _observation_restore_diagnostics(
+        expected_observation, restored_observation
+    )
+    assert diagnostic["exact"] is False
+    assert diagnostic["differing_field_count"] == 1
+    assert diagnostic["differing_fields"][0]["field"] == "image"
+    assert diagnostic["differing_fields"][0]["differing_elements"] == 12
 
 
 def test_avoidability_frontier_prefers_h20_and_requires_complete_grid():

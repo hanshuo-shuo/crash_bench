@@ -40,8 +40,8 @@ from scripts.collect_glass_recovery_pairs import (
     _controller_state_sha256,
     _glass_force,
     _glass_predicate_specs,
+    _observation_sha256,
     _prime_glass_predicates,
-    _require_branch_start_hashes,
     _search_oracle,
 )
 
@@ -153,6 +153,78 @@ def _predicate_start_diagnostics(
         "pre_action_tilt_deg": float(env.sim_view.object_tilt_deg(glass["name"])),
         "pre_action_glass_force_n": _glass_force(
             env.sim_view, [placement.on_path_glass]
+        ),
+    }
+
+
+def _require_simulator_controller_hashes(
+    actual: Mapping[str, str],
+    expected: Mapping[str, str],
+    *,
+    label: str,
+) -> None:
+    mismatched = [
+        key for key in ("simulator_state_sha256", "controller_state_sha256")
+        if actual.get(key) != expected.get(key)
+    ]
+    if mismatched:
+        reason = (
+            "exact_controller_state_unavailable"
+            if "controller_state_sha256" in mismatched
+            else "exact_state_restore_mismatch"
+        )
+        raise PilotARejected(
+            reason, f"{label} did not restore exact hashes: {mismatched}"
+        )
+
+
+def _observation_restore_diagnostics(
+    expected: Mapping[str, Any],
+    actual: Mapping[str, Any],
+) -> dict[str, Any]:
+    differences = []
+    for key in sorted(set(expected) | set(actual)):
+        if key not in expected or key not in actual:
+            differences.append({
+                "field": key,
+                "reason": "missing_from_expected" if key not in expected else "missing_from_actual",
+            })
+            continue
+        before = np.asarray(expected[key])
+        after = np.asarray(actual[key])
+        if before.shape != after.shape or before.dtype != after.dtype:
+            differences.append({
+                "field": key,
+                "reason": "shape_or_dtype",
+                "expected_shape": list(before.shape),
+                "actual_shape": list(after.shape),
+                "expected_dtype": str(before.dtype),
+                "actual_dtype": str(after.dtype),
+            })
+            continue
+        if np.array_equal(before, after):
+            continue
+        difference: dict[str, Any] = {"field": key, "reason": "value"}
+        if np.issubdtype(before.dtype, np.number):
+            delta = np.abs(before.astype(np.float64) - after.astype(np.float64))
+            difference.update({
+                "max_abs_difference": float(np.max(delta)) if delta.size else 0.0,
+                "differing_elements": int(np.count_nonzero(delta)),
+                "elements": int(delta.size),
+            })
+        differences.append(difference)
+    expected_hash = _observation_sha256(expected)
+    actual_hash = _observation_sha256(actual)
+    return {
+        "exact": expected_hash == actual_hash,
+        "expected_observation_sha256": expected_hash,
+        "restored_observation_sha256": actual_hash,
+        "differing_field_count": len(differences),
+        "differing_fields": differences,
+        "interpretation": (
+            "diagnostic_only; historical E14 did not capture every observable "
+            "delay/history field, so simulator/controller hashes plus empirical "
+            "suffix and oracle replay are authoritative"
         ),
     }
 
@@ -301,6 +373,9 @@ def _run_candidate(
 
         aligned_state = env.flat_state()
         aligned_controller = env.controller_state()
+        aligned_observation = {
+            key: np.asarray(value).copy() for key, value in obs.items()
+        }
         aligned_state_hash = array_sha256(aligned_state)
         aligned_controller_hash = _controller_state_sha256(aligned_controller)
         aligned_start_hashes = _branch_start_hashes(env, obs)
@@ -318,14 +393,15 @@ def _run_candidate(
             raise PilotARejected(
                 "exact_controller_state_unavailable", str(exc)
             ) from exc
-        try:
-            _require_branch_start_hashes(
-                _branch_start_hashes(env, replay_obs),
-                aligned_start_hashes,
-                label=f"{placement_id} aligned-H replay",
-            )
-        except CandidateRejected as exc:
-            raise PilotARejected("exact_state_restore_mismatch", str(exc)) from exc
+        replay_start_hashes = _branch_start_hashes(env, replay_obs)
+        _require_simulator_controller_hashes(
+            replay_start_hashes,
+            aligned_start_hashes,
+            label=f"{placement_id} aligned-H replay",
+        )
+        observation_restore = _observation_restore_diagnostics(
+            aligned_observation, replay_obs
+        )
         replay_crash, aligned_predicate = _predicate_start_diagnostics(env, placement)
         progress["repaired_first_action_predicate_checks_pass"] = True
         evidence["aligned_state"] = {
@@ -336,6 +412,7 @@ def _run_candidate(
             "branch_start_hashes": aligned_start_hashes,
         }
         evidence["repaired_first_action_predicate"] = aligned_predicate
+        evidence["observation_restore_diagnostic"] = observation_restore
         event_action_index = None
         peak_force = 0.0
         suffix = actions[advance_actions:]
@@ -374,16 +451,27 @@ def _run_candidate(
             )
         progress["exact_h_nominal_suffix_replay_verified"] = True
 
+        oracle_reset_observation_hashes: list[str] = []
+
         def reset_aligned_onpath() -> dict:
             reset_obs = env.reset_to_exact(
                 aligned_state, movable_objects=[placement.on_path_glass]
             )
             env.restore_controller_state(aligned_controller)
-            _require_branch_start_hashes(
-                _branch_start_hashes(env, reset_obs),
+            reset_hashes = _branch_start_hashes(env, reset_obs)
+            _require_simulator_controller_hashes(
+                reset_hashes,
                 aligned_start_hashes,
                 label=f"{placement_id} aligned-H oracle reset",
             )
+            oracle_reset_observation_hashes.append(
+                reset_hashes["observation_sha256"]
+            )
+            if len(set(oracle_reset_observation_hashes)) != 1:
+                raise PilotARejected(
+                    "oracle_reset_observation_nondeterministic",
+                    "aligned-H oracle resets produced different observations",
+                )
             return reset_obs
 
         old_oracle_config = oracle_record.get("metadata", {}).get("oracle_config")
@@ -441,6 +529,8 @@ def _run_candidate(
                 "peak_glass_force_n": float(oracle["peak_force"]),
                 "config": oracle["config"],
                 "verification": verification,
+                "reset_observation_sha256": oracle_reset_observation_hashes[0],
+                "reset_count": len(oracle_reset_observation_hashes),
             },
         }
     except PilotARejected as exc:
