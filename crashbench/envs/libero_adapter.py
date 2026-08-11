@@ -407,6 +407,10 @@ class LiberoEnv:
             self.env.seed(seed)
         self.seed_value = int(seed)
         self.sim_view = LiberoSimView(self.env)
+        # Keep the exact source bytes associated with the live model. MuJoCo's
+        # get_xml() output is not a canonical model identity, so reserializing
+        # the same compiled model later can produce a different text hash.
+        self._continuation_model_xml = str(self.env.sim.model.get_xml())
 
     def seed(self, seed: int) -> None:
         self.seed_value = int(seed)
@@ -436,6 +440,7 @@ class LiberoEnv:
         """
         if not obstacles and not movable_objects:
             self.env.reset()
+            model_xml = str(self.env.sim.model.get_xml())
             obs = self.env.set_init_state(init_state)
         else:
             self.env.reset()                                   # clean rebuild from BDDL
@@ -448,8 +453,10 @@ class LiberoEnv:
             xml = inject_obstacles_xml(xml, obstacles or [])
             xml = inject_movable_objects_xml(xml, movable_objects or [])
             self.env.reset_from_xml_string(xml)                # rebuild WITH injected bodies
+            model_xml = xml
             state = self._splice_movable_state(init_state, nq0, nv0, movable_objects or [])
             obs = self.env.set_init_state(state)               # set spliced state, no reset
+        self._continuation_model_xml = model_xml
         self.sim_view.peak_force = 0.0                         # reset impact tracker per episode
         self.sim_view.update(obs, done=False)
         return obs
@@ -478,7 +485,11 @@ class LiberoEnv:
         exact XML bytes.
         """
 
-        return str(self.env.sim.model.get_xml())
+        model_xml = getattr(self, "_continuation_model_xml", None)
+        if model_xml is None:
+            model_xml = str(self.env.sim.model.get_xml())
+            self._continuation_model_xml = model_xml
+        return model_xml
 
     def _raw_env(self):
         """Unwrap LIBERO/robosuite wrappers to the environment owning runtime state."""
@@ -586,6 +597,11 @@ class LiberoEnv:
                     snapshot[f"{prefix}.{name}"] = encode(getattr(observable, name))
         for cache_name, value in getattr(raw, "_obs_cache", {}).items():
             snapshot[f"obs_cache.{cache_name}"] = encode(value)
+        # Observable internals define future sampling, but they do not always
+        # reconstruct the exact wrapper-level dictionary received by the
+        # policy. Persist that policy-boundary observation explicitly.
+        for observation_name, value in getattr(self.sim_view, "_obs", {}).items():
+            snapshot[f"observation.{observation_name}"] = encode(value)
         return snapshot
 
     def restore_controller_state(
@@ -663,8 +679,14 @@ class LiberoEnv:
             }
             if cache or any(key.startswith("obs_cache.") for key in snapshot):
                 raw._obs_cache = cache
+        captured_observation = {
+            key[len("observation."):]: np.asarray(value).copy()
+            for key, value in snapshot.items() if key.startswith("observation.")
+        }
         observation = (
-            raw._get_observations()
+            captured_observation
+            if restore_observables and captured_observation
+            else raw._get_observations()
             if hasattr(raw, "_get_observations")
             else dict(getattr(self.sim_view, "_obs", {}))
         )
@@ -687,13 +709,16 @@ class LiberoEnv:
             if obstacles or movable_objects:
                 raise ValueError("model_xml cannot be combined with obstacle reinjection")
             self.env.reset_from_xml_string(model_xml)
+            continuation_model_xml = str(model_xml)
         else:
             self.env.reset()
+            continuation_model_xml = str(self.env.sim.model.get_xml())
         if model_xml is None and (obstacles or movable_objects):
             xml = self.env.sim.model.get_xml()
             xml = inject_obstacles_xml(xml, obstacles or [])
             xml = inject_movable_objects_xml(xml, movable_objects or [])
             self.env.reset_from_xml_string(xml)
+            continuation_model_xml = xml
         model = self._raw_model()
         expected = 1 + int(model.nq) + int(model.nv)
         state = np.asarray(flat_state, dtype=np.float64)
@@ -702,6 +727,7 @@ class LiberoEnv:
                 f"exact state shape {state.shape} != ({expected},) for rebuilt model"
             )
         obs = self.env.set_init_state(state)
+        self._continuation_model_xml = continuation_model_xml
         self.sim_view.peak_force = 0.0
         self.sim_view.update(obs, done=False)
         return obs

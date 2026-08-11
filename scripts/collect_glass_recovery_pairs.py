@@ -131,7 +131,7 @@ def _controller_state_sha256(state: dict[str, np.ndarray]) -> str:
         raise ValueError(f"controller state contains object arrays: {sorted(object_keys)}")
     return canonical_sha256({
         key: array_sha256(value) for key, value in sorted(state.items())
-        if not key.startswith(("observable.", "obs_cache."))
+        if not key.startswith(("observable.", "obs_cache.", "observation."))
     })
 
 

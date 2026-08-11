@@ -809,7 +809,15 @@ def test_controller_state_roundtrip_restores_osc_interpolators():
         mocap_quat=np.asarray([[1.0, 0.0, 0.0, 0.0]]),
         userdata=np.asarray([1.6]), plugin_state=np.asarray([1.7]),
     )
-    env.sim_view = SimpleNamespace(_live_mj=lambda: (model, data))
+    restored_observations = []
+    env.sim_view = SimpleNamespace(
+        _live_mj=lambda: (model, data),
+        _obs={
+            "camera": np.asarray([4.0, 5.0]),
+            "derived-state": np.asarray([8.0, 9.0]),
+        },
+        update=lambda obs, done: restored_observations.append((obs, done)),
+    )
     snapshot = env.controller_state()
     assert snapshot["robot0.controller.ori_ref"].shape == (0,)
     assert all(not value.dtype.hasobject for value in snapshot.values())
@@ -826,7 +834,7 @@ def test_controller_state_roundtrip_restores_osc_interpolators():
     observable._sampled = False
     action_buffer.current[:] = -1
 
-    env.restore_controller_state(snapshot)
+    restored = env.restore_controller_state(snapshot)
 
     assert controller.updated_with_force is True
     assert np.array_equal(controller.goal_pos, [1.0, 2.0, 3.0])
@@ -842,6 +850,9 @@ def test_controller_state_roundtrip_restores_osc_interpolators():
     assert observable._sampled is True
     assert np.array_equal(observable._current_observed_value, [4.0, 5.0])
     assert np.array_equal(action_buffer.current, [0.2, 0.3])
+    assert np.array_equal(restored["camera"], [4.0, 5.0])
+    assert np.array_equal(restored["derived-state"], [8.0, 9.0])
+    assert restored_observations[-1][0] is restored
 
 
 def test_exact_reset_can_rebuild_from_captured_model_xml_without_reinjection():
@@ -868,6 +879,7 @@ def test_exact_reset_can_rebuild_from_captured_model_xml_without_reinjection():
     assert "unexpected_reset" not in calls
     assert np.array_equal(obs["state"], state)
     assert sim_view.peak_force == 0.0
+    assert env.model_xml() == "<mujoco/>"
 
 
 def _batch(n=4, hidden_dim=6):
