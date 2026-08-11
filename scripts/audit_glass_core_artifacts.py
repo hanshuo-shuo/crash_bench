@@ -159,6 +159,52 @@ def discover_attempts(source_root: Path) -> list[dict]:
                     "pair_path": None,
                 }
 
+    # E14 predates the append-only attempt ledger.  Its final collection
+    # summary is the only surviving terminal record for rejected placements,
+    # so inventory those rows without pretending that the synthetic IDs recover
+    # identities for retries from earlier jobs.
+    for summary_path in sorted(source_root.rglob("collection_summary.json")):
+        summary = _read_json(summary_path)
+        metadata = summary.get("metadata", {})
+        checkpoint = metadata.get("checkpoint_identity", {})
+        checkpoint_revision = (
+            checkpoint.get("resolved_revision")
+            or checkpoint.get("model_config_commit_hash")
+            or "unknown"
+        )
+        rejected = metadata.get("rejected", [])
+        if not isinstance(rejected, list):
+            raise ValueError(f"{summary_path} metadata.rejected must be a list")
+        for index, rejected_row in enumerate(rejected):
+            if not isinstance(rejected_row, Mapping):
+                raise ValueError(
+                    f"{summary_path} metadata.rejected[{index}] must be an object"
+                )
+            identity = canonical_sha256({
+                "collection_summary": summary_path.relative_to(source_root).as_posix(),
+                "rejected_index": index,
+                "placement_id": rejected_row.get("placement_id"),
+                "split": rejected_row.get("split"),
+                "reason": rejected_row.get("reason"),
+                "error": rejected_row.get("error"),
+            })
+            attempts.setdefault(identity, {
+                "attempt_id": identity,
+                "identity_quality": "collection_summary_index_synthetic",
+                "ledger": {
+                    "event": "rejected",
+                    "placement_id": rejected_row.get("placement_id"),
+                    "split": rejected_row.get("split"),
+                    "reason": rejected_row.get("reason"),
+                    "error": rejected_row.get("error"),
+                    "code_commit": metadata.get("code_commit", "unknown"),
+                    "checkpoint_revision": checkpoint_revision,
+                    "_ledger_path": summary_path,
+                    "_ledger_line": index + 1,
+                },
+                "pair_path": None,
+            })
+
     for pair_path in sorted(source_root.rglob("pair.json")):
         pair = _read_json(pair_path)
         records = _record_map(pair)
@@ -367,6 +413,54 @@ def _existing_rows(path: Path) -> dict[str, dict]:
     return rows
 
 
+def _historical_attempt_accounting(
+    historical_summary: Path | None,
+    rows: list[dict],
+) -> dict | None:
+    """Compare discoverable raw records with the immutable E14 accounting.
+
+    This deliberately fails closed.  A stable synthetic ID for a surviving
+    summary row does not recover the identity of an overwritten stochastic
+    retry from an earlier job.
+    """
+
+    if historical_summary is None:
+        return None
+    payload = _read_json(historical_summary)
+    aggregate = payload.get("aggregate_attempt_accounting", {})
+    reported = int(aggregate.get("candidate_rollout_attempts", 0))
+    reported_rejected = int(aggregate.get("rejected_attempts", 0))
+    reported_accepted = int(aggregate.get("accepted_admissions", 0))
+    discoverable = len(rows)
+    missing = max(0, reported - discoverable)
+    note = str(aggregate.get("accounting_note", ""))
+    retries_reported = "retr" in note.lower() or any(
+        "retr" in str(value).lower() for value in payload.get("limitations", [])
+    )
+    explicit = sum(
+        row.get("attempt_identity_quality") == "explicit_attempt_key" for row in rows
+    )
+    unique_provenance = bool(
+        reported > 0
+        and discoverable == reported
+        and explicit == reported
+        and not retries_reported
+    )
+    return {
+        "historical_summary": str(historical_summary),
+        "historical_summary_sha256": file_sha256(historical_summary),
+        "reported_candidate_rollout_attempts": reported,
+        "reported_rejected_attempts": reported_rejected,
+        "reported_accepted_admissions": reported_accepted,
+        "discoverable_terminal_attempt_records": discoverable,
+        "explicit_attempt_keys": explicit,
+        "unrecoverable_attempt_identity_lower_bound": missing,
+        "stochastic_retries_reported": retries_reported,
+        "attempts_have_unique_provenance": unique_provenance,
+        "accounting_note": note,
+    }
+
+
 def run_audit(args: argparse.Namespace) -> dict:
     source_root = Path(args.source_root).resolve()
     output = Path(args.output).resolve()
@@ -426,6 +520,23 @@ def run_audit(args: argparse.Namespace) -> dict:
     if summary_out.exists() and not args.overwrite_summary:
         raise SystemExit(f"refusing to overwrite {summary_out}; pass --overwrite-summary")
     all_rows = [*existing.values(), *new_rows]
+    historical_summary_arg = getattr(args, "historical_summary", None)
+    historical_summary = (
+        Path(historical_summary_arg).resolve() if historical_summary_arg else None
+    )
+    historical_accounting = _historical_attempt_accounting(
+        historical_summary, all_rows
+    )
+    no_go_reasons = []
+    if (
+        historical_accounting is not None
+        and not historical_accounting["attempts_have_unique_provenance"]
+    ):
+        no_go_reasons.append(
+            "historical_retry_attempts_lack_unique_preserved_provenance"
+        )
+        if historical_accounting["unrecoverable_attempt_identity_lower_bound"]:
+            no_go_reasons.append("historical_attempt_terminal_records_incomplete")
     summary = {
         "schema_version": 1,
         "kind": "glass_core_h_realignment_inventory_summary",
@@ -448,9 +559,31 @@ def run_audit(args: argparse.Namespace) -> dict:
             row["retry_integrity"]["possible_overwrite"] for row in all_rows
         ),
         "direct_v2_promotions": 0,
+        "historical_attempt_accounting": historical_accounting,
+        "pilot_a_decision": {
+            "go": False if no_go_reasons else None,
+            "decision": (
+                "no_go_stop_before_gpu_realignment"
+                if no_go_reasons else "inventory_complete_real_replay_required"
+            ),
+            "no_go_reasons": no_go_reasons,
+            "gpu_realignment_submitted": False,
+            "go_checks": {
+                "attempts_have_unique_provenance": (
+                    None if historical_accounting is None
+                    else historical_accounting["attempts_have_unique_provenance"]
+                ),
+                "exact_h_nominal_suffix_replay_rate": None,
+                "oracle_independent_replay_rate": None,
+                "repaired_first_action_predicate_checks_pass": None,
+            },
+        },
         "replayability_status": (
-            "requires_real_LIBERO_replay_and_oracle_recollection"
-            if all_rows else "no_attempts_discovered"
+            "blocked_by_historical_attempt_provenance_no_go"
+            if no_go_reasons else (
+                "requires_real_LIBERO_replay_and_oracle_recollection"
+                if all_rows else "no_attempts_discovered"
+            )
         ),
     }
     summary_out.parent.mkdir(parents=True, exist_ok=True)
@@ -472,6 +605,10 @@ def main() -> None:
     parser.add_argument("--target-h", type=int, default=20)
     parser.add_argument("--expected-run-commit", required=True)
     parser.add_argument("--expected-checkpoint-revision", required=True)
+    parser.add_argument(
+        "--historical-summary",
+        help="immutable tracked E14 summary used to detect missing retry identities",
+    )
     parser.add_argument("--read-only", action="store_true")
     parser.add_argument("--overwrite-summary", action="store_true")
     args = parser.parse_args()

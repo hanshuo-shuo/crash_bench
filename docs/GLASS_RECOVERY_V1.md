@@ -235,6 +235,7 @@ python scripts/audit_glass_core_artifacts.py \
   --target-h 20 \
   --expected-run-commit 7bb6d7de805280d084b2dc68084796aec2e0619e \
   --expected-checkpoint-revision 962318cec55ac10993ff0f5f43eda9a270b4c873 \
+  --historical-summary results/glass_recovery_acceptance_smoke_20260809.json \
   --read-only
 ```
 

@@ -1750,6 +1750,7 @@ def test_salvage_inventory_is_read_only_append_only_and_never_promotes_v1(tmp_pa
         target_h=20,
         expected_run_commit="1" * 40,
         expected_checkpoint_revision="2" * 40,
+        historical_summary=None,
         read_only=True,
         overwrite_summary=False,
     )
@@ -1769,6 +1770,77 @@ def test_salvage_inventory_is_read_only_append_only_and_never_promotes_v1(tmp_pa
         for path in source.rglob("*") if path.is_file()
     }
     assert after == before
+
+
+def test_salvage_inventory_fails_closed_when_historical_retries_lost_identity(tmp_path):
+    source = tmp_path / "historical_e14"
+    pair_root = source / "dataset" / "train" / "pair_1"
+    pair_root.mkdir(parents=True)
+    np.save(pair_root / "precrash_onpath_state.npy", np.asarray([1.0]))
+    np.savez_compressed(pair_root / "controller_state.npz", goal=np.asarray([1.0]))
+    for name in ("nominal_catastrophe", "oracle_recovery", "off_path_control"):
+        np.savez_compressed(pair_root / f"{name}.npz", value=np.asarray([1.0]))
+    records = [
+        {
+            "pair_id": "pair_1", "placement_id": "accepted", "split": "train",
+            "trajectory_kind": kind, "n_steps": 20,
+            "arrays_path": f"train/pair_1/{kind}.npz",
+            "succeeded": kind == "off_path_control",
+            "metadata": {
+                "action_replay_evidence": {"verified": True},
+                "oracle_verification": (
+                    {"independent_recapture": True, "recapture_success": True}
+                    if kind == "oracle_recovery" else {}
+                ),
+            },
+        }
+        for kind in ("nominal_catastrophe", "oracle_recovery", "off_path_control")
+    ]
+    (pair_root / "pair.json").write_text(json.dumps({"records": records}) + "\n")
+    (source / "dataset" / "collection_summary.json").write_text(json.dumps({
+        "metadata": {
+            "code_commit": "1" * 40,
+            "checkpoint_identity": {"resolved_revision": "2" * 40},
+            "rejected": [{
+                "placement_id": "rejected", "split": "train",
+                "reason": "no_base_crash", "error": "rejected",
+            }],
+        },
+    }) + "\n")
+    historical_summary = tmp_path / "tracked_e14.json"
+    historical_summary.write_text(json.dumps({
+        "aggregate_attempt_accounting": {
+            "candidate_rollout_attempts": 3,
+            "rejected_attempts": 2,
+            "accepted_admissions": 1,
+            "accounting_note": "resume reran previously rejected candidates",
+        },
+        "limitations": ["The run contains retries."],
+    }) + "\n")
+    args = Namespace(
+        source_root=str(source),
+        output=str(tmp_path / "pilot_a" / "core_salvage_audit.jsonl"),
+        summary_out=str(tmp_path / "pilot_a" / "h_realignment_summary.json"),
+        target_h=20,
+        expected_run_commit="1" * 40,
+        expected_checkpoint_revision="2" * 40,
+        historical_summary=str(historical_summary),
+        read_only=True,
+        overwrite_summary=False,
+    )
+    result = run_audit(args)
+    assert result["attempts"] == 2
+    assert result["historical_attempt_accounting"][
+        "unrecoverable_attempt_identity_lower_bound"
+    ] == 1
+    assert result["historical_attempt_accounting"][
+        "attempts_have_unique_provenance"
+    ] is False
+    assert result["pilot_a_decision"]["go"] is False
+    assert result["pilot_a_decision"]["gpu_realignment_submitted"] is False
+    assert result["replayability_status"] == (
+        "blocked_by_historical_attempt_provenance_no_go"
+    )
 
 
 def test_avoidability_frontier_prefers_h20_and_requires_complete_grid():
