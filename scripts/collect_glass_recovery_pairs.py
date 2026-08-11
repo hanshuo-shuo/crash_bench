@@ -1315,7 +1315,8 @@ def collect_pair(
     }, indent=2) + "\n")
     if not nominal_replay_verified:
         raise CandidateRejected(
-            "no_base_crash", f"{pair_id}: captured nominal actions failed exact-state replay"
+            "nominal_replay_failure",
+            f"{pair_id}: captured nominal actions failed exact-state replay",
         )
     nominal = {
         "crashed": True,
@@ -1597,6 +1598,7 @@ def _rejection_counts(rejected: list[dict]) -> dict[str, int]:
     counts = {
         reason: 0 for reason in (
             "no_base_crash",
+            "nominal_replay_failure",
             "no_oracle_recovery",
             "oracle_collision",
             "oracle_task_failure",

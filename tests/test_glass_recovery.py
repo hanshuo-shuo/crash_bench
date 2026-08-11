@@ -103,6 +103,7 @@ from scripts.audit_glass_core_artifacts import (
 from scripts.run_glass_avoidability_frontier import (
     FRONTIER_HORIZONS,
     _collector_command,
+    _rows_for_horizon,
     summarize_frontier_rows,
 )
 from scripts.realign_glass_core_artifacts import (
@@ -1312,10 +1313,12 @@ def test_primary_gate_helpers_keep_rejections_auditable():
     assert _rejection_counts([
         {"reason": "no_base_crash"},
         {"reason": "no_base_crash"},
+        {"reason": "nominal_replay_failure"},
         {"reason": "off_path_catastrophe"},
         {},
     ]) == {
         "no_base_crash": 2,
+        "nominal_replay_failure": 1,
         "no_oracle_recovery": 0,
         "oracle_collision": 0,
         "oracle_task_failure": 0,
@@ -2104,6 +2107,36 @@ def test_avoidability_frontier_prefers_h20_and_requires_complete_grid():
     assert summary["go"] is True
     with pytest.raises(ValueError, match="does not cover every candidate/H"):
         summarize_frontier_rows(rows[:-1], min_safe_task_success_rate=0.5)
+
+
+def test_frontier_counts_nominal_replay_failure_as_base_catastrophe(tmp_path):
+    pair = tmp_path / "h_40" / "train" / "attempt"
+    pair.mkdir(parents=True)
+    (pair / "nominal_replay.json").write_text(json.dumps({
+        "verified": False,
+        "crashed": False,
+    }) + "\n")
+    (tmp_path / "h_40" / "attempts.jsonl").write_text(json.dumps({
+        "event": "rejected",
+        "attempt_key": "a" * 64,
+        "placement_id": "p0",
+        "split": "train",
+        "reason": "nominal_replay_failure",
+        "artifact_dir": "train/attempt",
+    }) + "\n")
+    rows = _rows_for_horizon(tmp_path, 40)
+    assert rows == [{
+        "placement_id": "p0",
+        "split": "train",
+        "attempt_key": "a" * 64,
+        "horizon_actions": 40,
+        "terminal_event": "rejected",
+        "rejection_reason": "nominal_replay_failure",
+        "base_catastrophe": True,
+        "exact_h_replay_verified": False,
+        "oracle_safe_task_success": False,
+        "oracle_catastrophe_or_failure": False,
+    }]
 
 
 def test_frontier_marks_short_h_collections_as_diagnostic():

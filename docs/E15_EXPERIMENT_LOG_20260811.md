@@ -82,6 +82,7 @@ therefore not counted as Pilot B scientific outcomes:
 | 9052358 | `49348ac` | CANCELLED | 00:01:48 | review found the declared H=15/10/5 calls would be rejected by the collector's primary H>=20 guard | add an explicit frontier-only short-H diagnostic flag; ordinary collection still requires H>=20 |
 | 9052476 | `c6deaa8` | FAILED | 00:03:43 | source state 6 also produced 0/2 candidates, showing that task success alone does not imply hazard-generation eligibility | allocate split-disjoint reserve states before screening and advance only in a fixed split-local order |
 | 9052757 | `4dbde7e` | CANCELLED | 00:26:05 | candidate authoring completed, but the frontier inherited the legacy 900-step oracle-search budget while source, Base, and planned evaluation branches use 220 actions | retain the outcome-blind placement manifest, discard the partial H=40 rollout, and rerun all H values from scratch with a 220-step oracle budget |
+| 9054219 | `9d78d0b` | CANCELLED | 00:07:08 | a live Base catastrophe whose captured exact-H suffix failed replay was mislabeled `no_base_crash`, incorrectly removing it from the exact-replay denominator | introduce `nominal_replay_failure`, count it as a Base catastrophe with failed exact replay, add a frontier regression test, and rerun from the same manifest under a fresh root |
 
 These iterations produced no H outcome. No candidate was repeatedly rerun to
 make Base crash. The generator now separates two eligibility facts:
@@ -150,6 +151,24 @@ The rerun uses a fresh root and executes every H in {40,30,20,15,10,5} with a
 budget and still exceeds the 138, 145, and 146 actions used by the three
 independently recaptured Pilot A oracle successes.
 
+The first 220-action rerun, job `9054219` under r6, was also stopped before any
+H summary. Its H=40 ledger had 12 terminal attempts when review found that
+`train_0006` produced a live Base catastrophe but failed captured-suffix replay;
+the collector assigned `no_base_crash`, and the frontier therefore excluded it
+from both the Base-catastrophe and exact-replay denominators. That bookkeeping
+would make the exact-replay gate anti-conservative. All r6 rollout artifacts are
+excluded after fixing the reason taxonomy; the next run again starts all H
+values from scratch and retains the same placement manifest.
+
+The overlapping partial r5/r6 H=40 attempts also expose process-level live-Base
+variation: several event indices shifted by one or two actions, and two scenes
+changed between early-crash/no-crash or early-crash/later-crash outcomes. This
+is consistent with the already audited LIBERO camera/observable-history state
+not being serialized by exact simulator/controller reset, but it is not used to
+select candidates. Every final-run candidate receives exactly one attempt, and
+the exact-H suffix gate still requires byte-identical simulator/controller
+restore plus 100% replay among observed Base catastrophes.
+
 Required decision fields:
 
 - path-proposal Base-catastrophe yield
@@ -168,6 +187,28 @@ a go summary. Validation and train exact-anchor cohorts are sealed from
 accepted manifests and checkpoint hashes without reading evaluation outcomes.
 The same A100 device class is used for training/evaluation to keep the pilot
 runtime consistent with Pilot B.
+
+The following one-seed training/evaluation configuration was fixed while the
+Pilot B r6 frontier was still running, before any completed frontier summary or
+accepted fixed-H dataset existed:
+
+- training seed 17; AdamW, learning rate 3e-4, weight decay 0.01;
+- 1,000 optimization steps, batch size 256, width 512, depth 2, dropout 0.10;
+- the declared 25/25/12.5/12.5/25 pair-uniform phase sampler, with K=5 oracle
+  first-action frames and evaluation every 50 steps;
+- best checkpoint selected by the configured primary validation loss, followed
+  by validation-only risk calibration under a 5% clean-control episode-FPR
+  constraint;
+- one validation rollout seed (101), 220 actions, for the minimum component
+  pilots; Pilot E additionally uses a sealed train exact-anchor cohort only for
+  the required overfit diagnostic;
+- no hyperparameter sweep and no dev-test/held-out outcome used for training,
+  checkpoint selection, calibration, or the minimum C--F pilot decisions.
+
+If Pilot B passes, evaluation conditions remain sequentially restricted to the
+condition needed by each gate: oracle-timed oracle recovery (C), learned risk
+gate plus oracle recovery (D), oracle-timed learned recovery (E), and only then
+Base versus the full learned gate/recovery composition (F).
 
 ## Paper-facing interpretation status
 
