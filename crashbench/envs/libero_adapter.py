@@ -522,11 +522,11 @@ class LiberoEnv:
         value = np.asarray(encoded)
         if value.size == 0 and (current is None or name == "ori_ref"):
             setattr(owner, name, None)
-        elif isinstance(current, (bool, np.bool_)):
+        elif value.shape == () and value.dtype.kind == "b":
             setattr(owner, name, bool(value.item()))
-        elif isinstance(current, (int, np.integer)):
+        elif value.shape == () and value.dtype.kind in "iu":
             setattr(owner, name, int(value.item()))
-        elif isinstance(current, (float, np.floating)):
+        elif value.shape == () and value.dtype.kind in "fc":
             setattr(owner, name, float(value.item()))
         else:
             setattr(owner, name, value.copy())

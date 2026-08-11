@@ -831,7 +831,9 @@ def test_controller_state_roundtrip_restores_osc_interpolators():
     data.act[:] = -1
     data.ctrl[:] = -1
     data.qfrc_applied[:] = -1
-    raw.cur_time, raw.timestep, raw.done = 0.0, 0, True
+    # A fresh robosuite reset initializes cur_time as integer zero. Restore
+    # must follow the snapshot dtype rather than truncate the captured float.
+    raw.cur_time, raw.timestep, raw.done = 0, 0, True
     observable._current_observed_value[:] = -1
     observable._sampled = False
     action_buffer.current[:] = -1
