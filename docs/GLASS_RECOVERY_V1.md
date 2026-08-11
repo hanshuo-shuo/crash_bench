@@ -225,19 +225,49 @@ canonical collector and prefers H=20 when its predeclared gate passes.
 
 ## Commands
 
-Pilot A read-only inventory (no model load):
+Pilot A provenance reconstruction and read-only inventory (no model load).  A
+fresh output root is required because an earlier fallback inventory without the
+two complete Slurm logs is retained append-only as a no-go record:
 
 ```bash
+export CB_PILOT_A_RUN_ROOT=results/glass_recovery_v2/pilot_a_recovery_20260811
 python scripts/audit_glass_core_artifacts.py \
   --source-root results/glass_recovery_v1/smoke_acceptance_20260809 \
-  --output results/glass_recovery_v2/pilot_a/core_salvage_audit.jsonl \
-  --summary-out results/glass_recovery_v2/pilot_a/h_realignment_summary.json \
+  --output "$CB_PILOT_A_RUN_ROOT/core_salvage_audit.jsonl" \
+  --summary-out "$CB_PILOT_A_RUN_ROOT/inventory_summary.json" \
   --target-h 20 \
   --expected-run-commit 7bb6d7de805280d084b2dc68084796aec2e0619e \
   --expected-checkpoint-revision 962318cec55ac10993ff0f5f43eda9a270b4c873 \
   --historical-summary results/glass_recovery_acceptance_smoke_20260809.json \
+  --attempt-log 8880075=glass_recovery_smoke_8880075.log \
+  --attempt-log 8880346=glass_collect_more_8880346.log \
   --read-only
 ```
+
+The log parser requires every `COLLECT` line to have one matching terminal
+event and validates 39+70=109 attempts, per-job rejection counts, accepted IDs,
+commit, checkpoint, and placement-manifest identity against the immutable E14
+summary.  It labels every recovered key `slurm_log_reconstructed`; it does not
+claim that E14 originally had an append-only ledger.
+
+Exact-H realignment is a separate GPU/EGL diagnostic.  It loads no VLA model,
+writes nothing below the E14 root, and never promotes a historical pair to v2:
+
+```bash
+export CB_PILOT_A_SOURCE_ROOT=results/glass_recovery_v1/smoke_acceptance_20260809
+export CB_PILOT_A_AUDIT="$CB_PILOT_A_RUN_ROOT/core_salvage_audit.jsonl"
+export CB_PILOT_A_INVENTORY_SUMMARY="$CB_PILOT_A_RUN_ROOT/inventory_summary.json"
+export CB_PILOT_A_PLACEMENTS="$CB_PILOT_A_SOURCE_ROOT/placements/placements.json"
+export CB_PILOT_A_OUTPUT_ROOT="$CB_PILOT_A_RUN_ROOT/realignment"
+export CB_PILOT_A_SUMMARY_OUT="$CB_PILOT_A_RUN_ROOT/h_realignment_summary.json"
+export CB_PILOT_A_H=20
+bash setup/submit_glass_core_realign.sh
+```
+
+Pilot A is go only if all 109 attempts have unique reconstructed provenance and
+all three complete accepted artifacts pass exact controller restore, repaired
+pre-action predicate priming, catastrophe on suffix action 20, and independent
+oracle recapture.  Any failure leaves `pilot_b_allowed=false`.
 
 GPU source-trace capture and a 20-candidate development frontier design:
 

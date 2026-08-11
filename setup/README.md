@@ -167,6 +167,11 @@ bash setup/submit_glass_recovery_smoke.sh train
 bash setup/submit_glass_recovery_smoke.sh evaluate
 ```
 
+E14 的 Pilot A 修复使用独立的 `submit_glass_core_realign.sh`。先按
+`docs/GLASS_RECOVERY_V1.md` 用两份历史 Slurm 日志生成 109-row provenance inventory，再提交
+realignment；该作业只验证 exact-H/predicate/oracle，不加载 OpenVLA、不生成 v2 manifest，也不会
+自动进入 Pilot B。
+
 M1 gate 只负责筛选任务；通过后还需要把 `phase1_build_env_collision.py` 参数化，按每个
 通过任务录 nominal 轨迹并生成 on/off-path corridor 场景，才进入跨任务主实验。
 

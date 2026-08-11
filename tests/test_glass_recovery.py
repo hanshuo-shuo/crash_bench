@@ -95,11 +95,15 @@ from scripts.prepare_glass_recovery_placements import (
     _state_layout,
     _state_layout_from_indices,
 )
-from scripts.audit_glass_core_artifacts import run_audit
+from scripts.audit_glass_core_artifacts import (
+    reconstruct_attempts_from_logs,
+    run_audit,
+)
 from scripts.run_glass_avoidability_frontier import (
     FRONTIER_HORIZONS,
     summarize_frontier_rows,
 )
+from scripts.realign_glass_core_artifacts import summarize_realignment
 from scripts.replay_glass_recovery_pair import accepted_pair_dir_from_manifest
 
 
@@ -1183,6 +1187,26 @@ def test_oracle_success_is_searched_then_independently_recaptured(monkeypatch):
     assert collected["verification"]["independent_recapture"] is True
     assert collected["verification"]["recapture_success"] is True
 
+    capture_modes.clear()
+    reset_calls.clear()
+    collected, attempts = _search_oracle(
+        reset,
+        SimpleNamespace(),
+        None,
+        placement,
+        [placement.on_path_glass],
+        20,
+        collect_success=True,
+        counterfactual_peak_force=30.0,
+        preferred_configs=[config],
+        capture_success_rows=False,
+    )
+    assert len(attempts) == 1  # preferred + grid duplicate is deduplicated
+    assert capture_modes == [False, False]
+    assert len(reset_calls) == 2
+    assert collected["rows"] == []
+    assert collected["verification"]["recapture_success"] is True
+
 
 def test_safe_abort_search_prefers_hold_and_requires_stability():
     configs = _safe_abort_configs(0.14, 0.10)
@@ -1841,6 +1865,107 @@ def test_salvage_inventory_fails_closed_when_historical_retries_lost_identity(tm
     assert result["replayability_status"] == (
         "blocked_by_historical_attempt_provenance_no_go"
     )
+
+
+def test_salvage_inventory_reconstructs_unique_attempts_from_complete_slurm_logs(tmp_path):
+    commit = "1" * 40
+    checkpoint = "2" * 40
+    manifest_sha = "3" * 64
+    first_log = tmp_path / "first_101.log"
+    first_log.write_text(
+        f"CODE_COMMIT={commit}\n"
+        "COLLECT retry_me split=train fraction=0.56\n"
+        "REJECT retry_me: CandidateRejected: nominal placement did not produce a catastrophe\n"
+        "COLLECT accepted_a split=heldout fraction=0.53\n"
+        "ACCEPT accepted_a; counts={}\n"
+    )
+    second_log = tmp_path / "second_202.log"
+    second_log.write_text(
+        "COLLECT retry_me split=train fraction=0.56\n"
+        "REJECT retry_me: CandidateRejected: careful-prompt policy did not crash\n"
+        "COLLECT accepted_b split=train fraction=0.49\n"
+        "ACCEPT accepted_b; counts={}\n"
+    )
+    historical = tmp_path / "historical.json"
+    historical.write_text(json.dumps({
+        "aggregate_attempt_accounting": {
+            "candidate_rollout_attempts": 4,
+            "rejected_attempts": 2,
+            "accepted_admissions": 2,
+            "accounting_note": "resume reran previously rejected candidates",
+        },
+        "provenance": {
+            "git_commit": commit,
+            "checkpoint_revision": checkpoint,
+            "placement_manifest_sha256": manifest_sha,
+            "slurm_jobs": [
+                {
+                    "job_id": 101,
+                    "candidate_rollout_attempts": 2,
+                    "newly_accepted": ["accepted_a"],
+                    "rejection_counts": {"no_base_crash": 1},
+                },
+                {
+                    "job_id": 202,
+                    "candidate_rollout_attempts": 2,
+                    "newly_accepted": ["accepted_b"],
+                    "rejection_counts": {"careful_did_not_crash": 1},
+                },
+            ],
+        },
+    }) + "\n")
+    attempts = reconstruct_attempts_from_logs(
+        [f"101={first_log}", f"202={second_log}"], historical
+    )
+    assert len(attempts) == 4
+    assert len({row["attempt_id"] for row in attempts}) == 4
+    retries = [row for row in attempts if row["ledger"]["placement_id"] == "retry_me"]
+    assert len(retries) == 2
+    assert len({row["attempt_id"] for row in retries}) == 2
+    assert {row["reconstruction"]["slurm_job_id"] for row in retries} == {
+        "101", "202"
+    }
+    assert all(
+        row["identity_quality"] == "slurm_log_reconstructed" for row in attempts
+    )
+
+
+def test_pilot_a_summary_requires_every_candidate_to_pass_every_gate():
+    inventory = {
+        "historical_attempt_accounting": {"attempts_have_unique_provenance": True}
+    }
+    passing = [
+        {
+            "placement_id": f"p{index}",
+            "status": "passed",
+            "exact_controller_state_available": True,
+            "repaired_first_action_predicate_checks_pass": True,
+            "exact_h_nominal_suffix_replay_verified": True,
+            "oracle_independent_replay_verified": True,
+        }
+        for index in range(3)
+    ]
+    summary = summarize_realignment(passing, inventory, target_h=20)
+    assert summary["go"] is True
+    assert summary["pilot_b_allowed"] is True
+    assert summary["rates"]["exact_h_nominal_suffix_replay_rate"] == 1.0
+    assert summary["rates"]["oracle_independent_replay_rate"] == 1.0
+
+    failed = [dict(row) for row in passing]
+    failed[1]["status"] = "no_go"
+    failed[1]["oracle_independent_replay_verified"] = False
+    summary = summarize_realignment(failed, inventory, target_h=20)
+    assert summary["go"] is False
+    assert summary["pilot_b_allowed"] is False
+    assert "oracle_independent_replay_below_100_percent" in summary["no_go_reasons"]
+
+    summary = summarize_realignment(
+        passing,
+        {"historical_attempt_accounting": {"attempts_have_unique_provenance": False}},
+        target_h=20,
+    )
+    assert summary["go"] is False
+    assert "attempts_do_not_have_unique_provenance" in summary["no_go_reasons"]
 
 
 def test_avoidability_frontier_prefers_h20_and_requires_complete_grid():

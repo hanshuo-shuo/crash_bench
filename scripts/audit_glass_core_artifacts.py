@@ -12,6 +12,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import sys
 from collections import Counter, defaultdict
 from datetime import datetime, timezone
@@ -130,10 +131,212 @@ def _pair_attempt_key(pair: Mapping[str, Any], records: Mapping[str, dict]) -> s
     return next(iter(values)) if len(values) == 1 else None
 
 
-def discover_attempts(source_root: Path) -> list[dict]:
+def _rejection_reason_from_log(message: str) -> str:
+    if (
+        "nominal placement did not produce a catastrophe" in message
+        or "captured nominal actions failed exact-state replay" in message
+    ):
+        return "no_base_crash"
+    if "careful-prompt policy did not crash" in message:
+        return "careful_did_not_crash"
+    if "no safe task-completing oracle found" in message:
+        return "oracle_task_failure"
+    if "oracle" in message.lower() and "collision" in message.lower():
+        return "oracle_collision"
+    return "other"
+
+
+def reconstruct_attempts_from_logs(
+    log_specs: Iterable[str],
+    historical_summary: Path,
+) -> list[dict]:
+    """Reconstruct unique E14 attempts from immutable job/ordinal log evidence."""
+
+    payload = _read_json(historical_summary)
+    provenance = payload.get("provenance", {})
+    aggregate = payload.get("aggregate_attempt_accounting", {})
+    code_commit = str(provenance.get("git_commit", "unknown"))
+    checkpoint_revision = str(provenance.get("checkpoint_revision", "unknown"))
+    placement_manifest_sha256 = str(
+        provenance.get("placement_manifest_sha256", "unknown")
+    )
+    job_rows = provenance.get("slurm_jobs", [])
+    jobs = {str(row.get("job_id")): row for row in job_rows}
+    if not jobs or len(jobs) != len(job_rows):
+        raise ValueError("historical summary has missing/duplicate Slurm job IDs")
+
+    specs: dict[str, Path] = {}
+    for spec in log_specs:
+        job_id, separator, path_text = str(spec).partition("=")
+        if not separator or not job_id.isdigit() or not path_text:
+            raise ValueError("--attempt-log must have the form JOB_ID=PATH")
+        if job_id in specs:
+            raise ValueError(f"duplicate attempt log for Slurm job {job_id}")
+        specs[job_id] = Path(path_text).resolve()
+    if set(specs) != set(jobs):
+        raise ValueError(
+            "attempt logs must cover exactly the historical Slurm jobs: "
+            f"logs={sorted(specs)} summary={sorted(jobs)}"
+        )
+
+    attempts: list[dict] = []
+    collect_pattern = re.compile(
+        r"^COLLECT\s+(\S+)\s+split=(\S+)\s+fraction=(\S+)\s*$"
+    )
+    terminal_pattern = re.compile(r"^(ACCEPT|REJECT)\s+([^:;]+)[:;](.*)$")
+    for job_id, log_path in specs.items():
+        if not log_path.is_file():
+            raise FileNotFoundError(f"attempt log does not exist: {log_path}")
+        lines = log_path.read_text(errors="replace").splitlines()
+        log_sha256 = file_sha256(log_path)
+        declared_commits = {
+            match.group(1)
+            for line in lines
+            if (match := re.search(r"\bCODE_COMMIT=([0-9a-f]{40})\b", line))
+        }
+        if declared_commits and declared_commits != {code_commit}:
+            raise ValueError(
+                f"Slurm job {job_id} log commit {sorted(declared_commits)} "
+                f"does not match historical summary {code_commit}"
+            )
+
+        pending: dict | None = None
+        job_attempts: list[dict] = []
+        for line_number, line in enumerate(lines, 1):
+            collect_match = collect_pattern.match(line)
+            if collect_match:
+                if pending is not None:
+                    raise ValueError(
+                        f"{log_path}:{line_number} starts a new attempt before "
+                        f"{pending['placement_id']} has a terminal outcome"
+                    )
+                pending = {
+                    "placement_id": collect_match.group(1),
+                    "split": collect_match.group(2),
+                    "nominal_fraction": float(collect_match.group(3)),
+                    "collect_line": line_number,
+                }
+                continue
+            terminal_match = terminal_pattern.match(line)
+            if terminal_match is None:
+                continue
+            if pending is None:
+                raise ValueError(f"{log_path}:{line_number} has an orphan terminal event")
+            event_name, placement_id, terminal_text = terminal_match.groups()
+            if placement_id != pending["placement_id"]:
+                raise ValueError(
+                    f"{log_path}:{line_number} terminal placement {placement_id} "
+                    f"does not match pending {pending['placement_id']}"
+                )
+            ordinal = len(job_attempts)
+            event = "accepted" if event_name == "ACCEPT" else "rejected"
+            reason = (
+                None if event == "accepted"
+                else _rejection_reason_from_log(terminal_text)
+            )
+            identity_payload = {
+                "identity_kind": "e14_slurm_log_reconstruction_v1",
+                "slurm_job_id": job_id,
+                "attempt_ordinal": ordinal,
+                "placement_id": placement_id,
+                "split": pending["split"],
+                "code_commit": code_commit,
+                "checkpoint_revision": checkpoint_revision,
+                "placement_manifest_sha256": placement_manifest_sha256,
+            }
+            attempt_id = canonical_sha256(identity_payload)
+            job_attempts.append({
+                "attempt_id": attempt_id,
+                "identity_quality": "slurm_log_reconstructed",
+                "ledger": {
+                    "event": event,
+                    "placement_id": placement_id,
+                    "split": pending["split"],
+                    "reason": reason,
+                    "error": terminal_text.strip() if event == "rejected" else None,
+                    "code_commit": code_commit,
+                    "checkpoint_revision": checkpoint_revision,
+                    "rollout_seed": 0,
+                    "_ledger_path": log_path,
+                    "_ledger_line": line_number,
+                },
+                "pair_path": None,
+                "reconstruction": {
+                    **identity_payload,
+                    "attempt_id": attempt_id,
+                    "log_path": str(log_path),
+                    "log_sha256": log_sha256,
+                    "collect_line": pending["collect_line"],
+                    "terminal_line": line_number,
+                    "terminal_event": event,
+                    "terminal_text": terminal_text.strip(),
+                    "nominal_fraction_logged": pending["nominal_fraction"],
+                    "commit_evidence": (
+                        "job_log" if declared_commits else "tracked_historical_summary"
+                    ),
+                },
+            })
+            pending = None
+        if pending is not None:
+            raise ValueError(
+                f"{log_path} ends before {pending['placement_id']} has a terminal outcome"
+            )
+
+        expected_job = jobs[job_id]
+        expected_count = int(expected_job.get("candidate_rollout_attempts", -1))
+        if len(job_attempts) != expected_count:
+            raise ValueError(
+                f"Slurm job {job_id} reconstructed {len(job_attempts)} attempts, "
+                f"expected {expected_count}"
+            )
+        actual_accepted = sorted(
+            row["ledger"]["placement_id"] for row in job_attempts
+            if row["ledger"]["event"] == "accepted"
+        )
+        expected_accepted = sorted(str(value) for value in (
+            expected_job.get("newly_accepted") or []
+        ))
+        if actual_accepted != expected_accepted:
+            raise ValueError(
+                f"Slurm job {job_id} accepted IDs {actual_accepted} "
+                f"do not match {expected_accepted}"
+            )
+        actual_rejections = dict(Counter(
+            row["ledger"]["reason"] for row in job_attempts
+            if row["ledger"]["event"] == "rejected"
+        ))
+        expected_rejections = {
+            str(key): int(value) for key, value in
+            expected_job.get("rejection_counts", {}).items()
+            if int(value) != 0
+        }
+        if actual_rejections != expected_rejections:
+            raise ValueError(
+                f"Slurm job {job_id} rejection counts {actual_rejections} "
+                f"do not match {expected_rejections}"
+            )
+        attempts.extend(job_attempts)
+
+    reported = int(aggregate.get("candidate_rollout_attempts", -1))
+    if len(attempts) != reported:
+        raise ValueError(
+            f"reconstructed {len(attempts)} total attempts, expected {reported}"
+        )
+    attempt_ids = {row["attempt_id"] for row in attempts}
+    if len(attempt_ids) != len(attempts):
+        raise ValueError("reconstructed attempt IDs are not unique")
+    return attempts
+
+
+def discover_attempts(
+    source_root: Path,
+    reconstructed_attempts: Iterable[Mapping[str, Any]] | None = None,
+) -> list[dict]:
     """Return terminal ledger attempts plus pair-only historical attempts."""
 
-    attempts: dict[str, dict] = {}
+    attempts: dict[str, dict] = {
+        str(row["attempt_id"]): dict(row) for row in (reconstructed_attempts or [])
+    }
     for name in LEDGER_NAMES:
         for ledger in sorted(source_root.rglob(name)):
             latest: dict[str, dict] = {}
@@ -159,11 +362,14 @@ def discover_attempts(source_root: Path) -> list[dict]:
                     "pair_path": None,
                 }
 
-    # E14 predates the append-only attempt ledger.  Its final collection
+    # E14 predates the append-only attempt ledger.  Without complete job logs,
+    # its final collection
     # summary is the only surviving terminal record for rejected placements,
     # so inventory those rows without pretending that the synthetic IDs recover
     # identities for retries from earlier jobs.
-    for summary_path in sorted(source_root.rglob("collection_summary.json")):
+    for summary_path in (
+        [] if reconstructed_attempts else sorted(source_root.rglob("collection_summary.json"))
+    ):
         summary = _read_json(summary_path)
         metadata = summary.get("metadata", {})
         checkpoint = metadata.get("checkpoint_identity", {})
@@ -209,10 +415,27 @@ def discover_attempts(source_root: Path) -> list[dict]:
         pair = _read_json(pair_path)
         records = _record_map(pair)
         explicit = _pair_attempt_key(pair, records)
-        identity = explicit or canonical_sha256({
-            "pair_path": pair_path.relative_to(source_root).as_posix(),
-            "pair_sha256": file_sha256(pair_path),
-        })
+        accepted_matches = [
+            row for row in attempts.values()
+            if row.get("ledger", {}).get("event") == "accepted"
+            and str(row.get("ledger", {}).get("placement_id")) == str(
+                next(iter(records.values()), {}).get("placement_id")
+                or next(iter(records.values()), {}).get("pair_id")
+            )
+        ]
+        if explicit:
+            identity = explicit
+        elif len(accepted_matches) == 1:
+            identity = str(accepted_matches[0]["attempt_id"])
+        elif accepted_matches:
+            raise ValueError(
+                f"accepted pair {pair_path} matches multiple reconstructed attempts"
+            )
+        else:
+            identity = canonical_sha256({
+                "pair_path": pair_path.relative_to(source_root).as_posix(),
+                "pair_sha256": file_sha256(pair_path),
+            })
         attempt = attempts.setdefault(identity, {
             "attempt_id": identity,
             "identity_quality": "explicit_attempt_key" if explicit else "pair_path_synthetic",
@@ -335,6 +558,7 @@ def _build_audit_row(
             "protocol_sha256": ledger.get("protocol_sha256")
             or pair.get("attempt_identity", {}).get("protocol_sha256"),
             "expected_identity_matches": provenance_matches,
+            "attempt_reconstruction": attempt.get("reconstruction"),
         },
         "hashes": {
             "source_state_sha256": nominal.get("source_state_sha256"),
@@ -372,8 +596,16 @@ def _build_audit_row(
             ],
             "possible_overwrite": bool(
                 placement_retry_counts.get(placement_id, 1) > 1
-                and attempt["identity_quality"] != "explicit_attempt_key"
+                and attempt["identity_quality"] not in {
+                    "explicit_attempt_key", "slurm_log_reconstructed"
+                }
             ),
+            "raw_directory_reused_across_attempts": bool(
+                placement_retry_counts.get(placement_id, 1) > 1
+            ),
+            "unique_attempt_identity_preserved": attempt["identity_quality"] in {
+                "explicit_attempt_key", "slurm_log_reconstructed"
+            },
         },
         "realignment": {
             "target_h_actions": target_h,
@@ -440,11 +672,16 @@ def _historical_attempt_accounting(
     explicit = sum(
         row.get("attempt_identity_quality") == "explicit_attempt_key" for row in rows
     )
+    reconstructed = sum(
+        row.get("attempt_identity_quality") == "slurm_log_reconstructed"
+        for row in rows
+    )
+    identity_covered = explicit + reconstructed
     unique_provenance = bool(
         reported > 0
         and discoverable == reported
-        and explicit == reported
-        and not retries_reported
+        and identity_covered == reported
+        and len({str(row.get("attempt_id")) for row in rows}) == reported
     )
     return {
         "historical_summary": str(historical_summary),
@@ -454,6 +691,7 @@ def _historical_attempt_accounting(
         "reported_accepted_admissions": reported_accepted,
         "discoverable_terminal_attempt_records": discoverable,
         "explicit_attempt_keys": explicit,
+        "slurm_log_reconstructed_attempt_keys": reconstructed,
         "unrecoverable_attempt_identity_lower_bound": missing,
         "stochastic_retries_reported": retries_reported,
         "attempts_have_unique_provenance": unique_provenance,
@@ -481,7 +719,18 @@ def run_audit(args: argparse.Namespace) -> dict:
         path.relative_to(source_root).as_posix(): (path.stat().st_size, path.stat().st_mtime_ns)
         for path in source_root.rglob("*") if path.is_file()
     }
-    attempts = discover_attempts(source_root)
+    historical_summary_arg = getattr(args, "historical_summary", None)
+    historical_summary = (
+        Path(historical_summary_arg).resolve() if historical_summary_arg else None
+    )
+    attempt_logs = list(getattr(args, "attempt_log", None) or [])
+    if attempt_logs and historical_summary is None:
+        raise SystemExit("--attempt-log requires --historical-summary")
+    reconstructed_attempts = (
+        reconstruct_attempts_from_logs(attempt_logs, historical_summary)
+        if attempt_logs and historical_summary is not None else None
+    )
+    attempts = discover_attempts(source_root, reconstructed_attempts)
     placement_counts = Counter()
     for attempt in attempts:
         ledger = attempt.get("ledger") or {}
@@ -520,10 +769,6 @@ def run_audit(args: argparse.Namespace) -> dict:
     if summary_out.exists() and not args.overwrite_summary:
         raise SystemExit(f"refusing to overwrite {summary_out}; pass --overwrite-summary")
     all_rows = [*existing.values(), *new_rows]
-    historical_summary_arg = getattr(args, "historical_summary", None)
-    historical_summary = (
-        Path(historical_summary_arg).resolve() if historical_summary_arg else None
-    )
     historical_accounting = _historical_attempt_accounting(
         historical_summary, all_rows
     )
@@ -558,6 +803,13 @@ def run_audit(args: argparse.Namespace) -> dict:
         "possible_overwrites": sum(
             row["retry_integrity"]["possible_overwrite"] for row in all_rows
         ),
+        "raw_directory_reuses": sum(
+            row["retry_integrity"]["raw_directory_reused_across_attempts"]
+            for row in all_rows
+        ),
+        "attempt_identity_qualities": dict(Counter(
+            row["attempt_identity_quality"] for row in all_rows
+        )),
         "direct_v2_promotions": 0,
         "historical_attempt_accounting": historical_accounting,
         "pilot_a_decision": {
@@ -608,6 +860,13 @@ def main() -> None:
     parser.add_argument(
         "--historical-summary",
         help="immutable tracked E14 summary used to detect missing retry identities",
+    )
+    parser.add_argument(
+        "--attempt-log",
+        action="append",
+        default=[],
+        metavar="JOB_ID=PATH",
+        help="complete E14 Slurm log; repeat once for every historical job",
     )
     parser.add_argument("--read-only", action="store_true")
     parser.add_argument("--overwrite-summary", action="store_true")

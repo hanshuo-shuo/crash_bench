@@ -754,14 +754,34 @@ def _search_oracle(
     counterfactual_peak_force: float,
     orientation_targets: list[list[float] | None] | None = None,
     control_grasp_offset: list[float] | None = None,
+    preferred_configs: list[Mapping[str, Any]] | None = None,
+    capture_success_rows: bool = True,
 ) -> tuple[dict | None, list[dict]]:
     attempts: list[dict] = []
     successful_config: dict | None = None
     successful_attempt_index: int | None = None
-    for attempt_index, config in enumerate(_oracle_configs(
-        float(placement.metadata["bowl_xyz"][2]), orientation_targets,
-        control_grasp_offset,
-    )):
+    configs: list[dict[str, Any]] = []
+    seen_config_hashes: set[str] = set()
+    for raw_config in [
+        *(preferred_configs or []),
+        *_oracle_configs(
+            float(placement.metadata["bowl_xyz"][2]), orientation_targets,
+            control_grasp_offset,
+        ),
+    ]:
+        config = dict(raw_config)
+        required = {
+            "side", "lane_margin", "transit_z", "descend_off",
+            "orientation_target", "path_aligned", "grasp_xy_offset",
+        }
+        missing = sorted(required - set(config))
+        if missing:
+            raise ValueError(f"oracle config is missing fields: {missing}")
+        config_hash = canonical_sha256(config)
+        if config_hash not in seen_config_hashes:
+            configs.append(config)
+            seen_config_hashes.add(config_hash)
+    for attempt_index, config in enumerate(configs):
         obs = reset()
         bowl = np.asarray(obs[f"{TARGET}_pos"], dtype=float)
         plate = np.asarray(obs[f"{PLATE}_pos"], dtype=float)
@@ -816,7 +836,8 @@ def _search_oracle(
     )
     collected = _run_controller(
         env, policy, obs, placement.instruction, glasses, controller, max_steps,
-        capture_rows=True, counterfactual_peak_force=counterfactual_peak_force,
+        capture_rows=capture_success_rows,
+        counterfactual_peak_force=counterfactual_peak_force,
     )
     if collected["crashed"] or not collected["succeeded"]:
         raise CandidateRejected(

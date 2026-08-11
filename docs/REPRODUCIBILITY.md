@@ -73,7 +73,12 @@ records a predeclared order that the collector must preserve.
 the source root, hashes every discovered evidence file, and appends only unseen
 attempt IDs to `core_salvage_audit.jsonl`. Its `static_candidate_for_recollection`
 field is not a migration decision: `direct_v2_promotion_allowed` is always
-false. Use the exact Pilot A command in `GLASS_RECOVERY_V1.md`.
+false.  For E14 it reconstructs job-scoped attempt IDs only when all historical
+Slurm logs are supplied and their terminal rows/counts agree with the immutable
+tracked summary.  `realign_glass_core_artifacts.py` then performs exact-H action
+replay and deterministic oracle search plus independent recapture on a GPU/EGL
+node without loading OpenVLA or writing into E14. Use the exact Pilot A commands
+in `GLASS_RECOVERY_V1.md`.
 
 `run_glass_avoidability_frontier.py --print-commands` is a no-rollout preflight.
 `--execute` runs the canonical collector independently at H=40,30,20,15,10,5
