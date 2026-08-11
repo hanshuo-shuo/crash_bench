@@ -2326,6 +2326,8 @@ def test_tiny_training_pipeline_runs_end_to_end():
             "control_episode_max_vs_certified_trigger_frame"
         )
         assert metadata["loss_weights"] == metadata["validation_loss_weights"]
+        assert 0.0 <= metadata["train_metrics"]["gripper_sign_accuracy"] <= 1.0
+        assert 0.0 <= metadata["validation_metrics"]["gripper_sign_accuracy"] <= 1.0
         assert metadata["disabled_auxiliary_heads"] == list(
             PRIMARY_DISABLED_AUXILIARY_HEADS
         )

@@ -44,7 +44,7 @@ COMMIT="$($GIT_BIN rev-parse HEAD)"
 [[ "${CB_CODE_COMMIT:-$COMMIT}" == "$COMMIT" ]]
 
 SOURCE_ROOT="$RUN_ROOT/source_traces_task0"
-SOURCE_MANIFEST="$SOURCE_ROOT/source_traces.json"
+SOURCE_MANIFEST="${CB_PILOT_B_SOURCE_MANIFEST:-$SOURCE_ROOT/source_traces.json}"
 
 case "$STAGE" in
   source_traces)
@@ -70,7 +70,7 @@ case "$STAGE" in
       --train-placements 10 --validation-placements 5 --heldout-placements 5 \
       --train-accepted-targets 2 --validation-accepted-targets 1 \
       --heldout-accepted-targets 1 \
-      --train-states 4 --validation-states 2 --heldout-states 2
+      --train-states 8 --validation-states 5 --heldout-states 5
     python scripts/run_glass_avoidability_frontier.py \
       --placements "$FRONTIER_PLACEMENTS/placements.json" \
       --output-root "$FRONTIER_ROOT" \

@@ -633,6 +633,10 @@ the data support it. If only H=30 works, add H=30 everywhere and describe it as
 a 30-action intervention horizon. Never retain a T-10/T-20 name for an oracle
 that works only much earlier.
 
+The Pilot B frontier spreads its 10/5/5 candidates over 8/5/5 source states,
+so the H decision is not determined by a two-state validation or held-out
+slice.
+
 If recovery is possible only near episode start, the benchmark does not support
 "imminent but avoidable" and scene/oracle design must be repaired before
 training.

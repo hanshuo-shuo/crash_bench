@@ -493,6 +493,7 @@ def evaluate(
     severity_pred, severity_target, severity_mask = [], [], []
     abort_scores, abort_targets = [], []
     action_deltas, invariance_masks, sensitivity_masks = [], [], []
+    recovery_actions, target_actions, recovery_masks = [], [], []
     episode_ids, trajectory_kinds, trigger_eligible = [], [], []
     for batch in loader:
         batch = _move(batch, device)
@@ -517,6 +518,9 @@ def evaluate(
         action_deltas.append(torch.linalg.vector_norm(outputs["action_delta"], dim=-1).cpu().numpy())
         invariance_masks.append(batch["invariance_mask"].cpu().numpy())
         sensitivity_masks.append(batch["sensitivity_mask"].cpu().numpy())
+        recovery_actions.append(outputs["recovery_action"].cpu().numpy())
+        target_actions.append(batch["target_action"].cpu().numpy())
+        recovery_masks.append(batch["recovery_mask"].cpu().numpy())
         episode_ids.append(batch["episode_id"].cpu().numpy())
         trajectory_kinds.append(batch["trajectory_kind"].cpu().numpy())
         trigger_eligible.append(batch["runtime_trigger_eligible"].cpu().numpy())
@@ -533,6 +537,9 @@ def evaluate(
     action_deltas = np.concatenate(action_deltas)
     invariance_masks = np.concatenate(invariance_masks).astype(bool)
     sensitivity_masks = np.concatenate(sensitivity_masks).astype(bool)
+    recovery_actions = np.concatenate(recovery_actions)
+    target_actions = np.concatenate(target_actions)
+    recovery_masks = np.concatenate(recovery_masks).astype(bool)
     episode_ids = np.concatenate(episode_ids)
     trajectory_kinds = np.concatenate(trajectory_kinds)
     trigger_eligible = np.concatenate(trigger_eligible).astype(bool)
@@ -553,6 +560,13 @@ def evaluate(
         ),
         "hazard_action_delta_l2_mean": (
             float(action_deltas[sensitivity_masks].mean()) if sensitivity_masks.any() else None
+        ),
+        "gripper_sign_accuracy": (
+            float((
+                (recovery_actions[recovery_masks, -1] >= 0.0)
+                == (target_actions[recovery_masks, -1] >= 0.0)
+            ).mean())
+            if recovery_masks.any() else None
         ),
     }
     return float(np.mean(loss_values)), metrics | {
@@ -623,6 +637,10 @@ def train(args: argparse.Namespace) -> None:
     )
     validation_loader = DataLoader(
         validation_data, batch_size=args.batch_size, shuffle=False,
+        num_workers=args.num_workers, pin_memory=device.type == "cuda", drop_last=False,
+    )
+    train_eval_loader = DataLoader(
+        train_data, batch_size=args.batch_size, shuffle=False,
         num_workers=args.num_workers, pin_memory=device.type == "cuda", drop_last=False,
     )
     optimizer = AdamW(model.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay)
@@ -749,6 +767,13 @@ def train(args: argparse.Namespace) -> None:
             "reloaded best checkpoint does not reproduce its selection loss: "
             f"selected={best_loss}, reloaded={validation_loss}"
         )
+    train_loss, train_metrics = evaluate(
+        best_model,
+        train_eval_loader,
+        device,
+        weights=weights,
+        sensitivity_margin=args.sensitivity_margin,
+    )
 
     calibration_index = RISK_HORIZONS.index(gating_horizon)
     mask = validation_metrics["_risk_masks"][:, calibration_index]
@@ -781,6 +806,8 @@ def train(args: argparse.Namespace) -> None:
     })
     public_metrics = {key: value for key, value in validation_metrics.items()
                       if not key.startswith("_")}
+    public_train_metrics = {key: value for key, value in train_metrics.items()
+                            if not key.startswith("_")}
     metadata = {
         **checkpoint_contract,
         "created_at_utc": datetime.now(timezone.utc).isoformat(),
@@ -793,6 +820,8 @@ def train(args: argparse.Namespace) -> None:
         "calibration": calibration,
         "validation_loss": validation_loss,
         "validation_metrics": public_metrics,
+        "train_loss": train_loss,
+        "train_metrics": public_train_metrics,
         "selected_best_step": best_step,
         "selected_best_validation_loss": best_loss,
         "selected_best_model_state_sha256": best_digest,
