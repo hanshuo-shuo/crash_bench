@@ -105,6 +105,8 @@ from scripts.run_glass_avoidability_frontier import (
 )
 from scripts.realign_glass_core_artifacts import (
     PilotARejected,
+    _oracle_reset_observation_diagnostics,
+    _oracle_reset_relevant_observation,
     _observation_restore_diagnostics,
     _require_simulator_controller_hashes,
     summarize_realignment,
@@ -2005,6 +2007,42 @@ def test_pilot_a_requires_exact_simulator_controller_but_audits_observation_drif
     assert diagnostic["differing_field_count"] == 1
     assert diagnostic["differing_fields"][0]["field"] == "image"
     assert diagnostic["differing_fields"][0]["differing_elements"] == 12
+
+
+def test_pilot_a_oracle_reset_observation_drift_is_audited_not_pre_rejected():
+    first = {
+        "robot0_eef_pos": np.asarray([0.1, 0.2, 0.3], dtype=np.float32),
+        "robot0_eef_quat": np.asarray([0.0, 0.0, 0.0, 1.0], dtype=np.float32),
+        "robot0_gripper_qpos": np.asarray([0.01, -0.01], dtype=np.float32),
+        "akita_black_bowl_1_pos": np.asarray([0.4, 0.5, 0.6], dtype=np.float32),
+        "plate_1_pos": np.asarray([0.7, 0.8, 0.9], dtype=np.float32),
+        "agentview_image": np.zeros((2, 2, 3), dtype=np.uint8),
+    }
+    second = {
+        **first,
+        "robot0_eef_pos": np.asarray([0.101, 0.2, 0.3], dtype=np.float32),
+        "agentview_image": np.ones((2, 2, 3), dtype=np.uint8),
+    }
+    relevant = [
+        _oracle_reset_relevant_observation(observation)
+        for observation in (first, second)
+    ]
+    diagnostic = _oracle_reset_observation_diagnostics(
+        [_observation_sha256(first), _observation_sha256(second)],
+        relevant,
+    )
+    assert diagnostic["reset_count"] == 2
+    assert diagnostic["full_observation_exact_across_resets"] is False
+    assert diagnostic["oracle_relevant_observation_exact_across_resets"] is False
+    assert diagnostic["field_diagnostics"]["robot0_eef_pos"][
+        "max_abs_difference_from_first"
+    ] == pytest.approx(0.001, abs=1e-8)
+    assert "empirical oracle acceptance gate" in diagnostic["interpretation"]
+
+
+def test_pilot_a_oracle_reset_requires_controller_observation_fields():
+    with pytest.raises(PilotARejected, match="robot0_eef_pos"):
+        _oracle_reset_relevant_observation({})
 
 
 def test_avoidability_frontier_prefers_h20_and_requires_complete_grid():

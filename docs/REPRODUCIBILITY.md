@@ -76,9 +76,13 @@ field is not a migration decision: `direct_v2_promotion_allowed` is always
 false.  For E14 it reconstructs job-scoped attempt IDs only when all historical
 Slurm logs are supplied and their terminal rows/counts agree with the immutable
 tracked summary.  `realign_glass_core_artifacts.py` then performs exact-H action
-replay and deterministic oracle search plus independent recapture on a GPU/EGL
-node without loading OpenVLA or writing into E14. Use the exact Pilot A commands
-in `GLASS_RECOVERY_V1.md`.
+replay and a bounded oracle search plus independent recapture on a GPU/EGL node
+without loading OpenVLA or writing into E14. Every oracle reset must reproduce
+the simulator and controller hashes exactly. Full observation and
+controller-used field drift are retained as diagnostics because E14 did not
+save LIBERO's observable delay/history state; acceptance still requires the
+searched config to succeed again in a fresh independent rollout. Use the exact
+Pilot A commands in `GLASS_RECOVERY_V1.md`.
 
 `run_glass_avoidability_frontier.py --print-commands` is a no-rollout preflight.
 `--execute` runs the canonical collector independently at H=40,30,20,15,10,5

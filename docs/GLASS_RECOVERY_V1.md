@@ -264,6 +264,14 @@ export CB_PILOT_A_H=20
 bash setup/submit_glass_core_realign.sh
 ```
 
+E14 saved exact simulator and OSC controller state, but not every LIBERO
+observable delay/history buffer. The runner therefore requires the
+simulator/controller hashes on every aligned-H reset, records full-observation
+and controller-relevant field drift as audit evidence, and uses actual rollout
+outcomes as the oracle gate: one search success followed by a fresh independent
+success with the identical config. Camera or derived-observation hash drift
+alone is not oracle failure.
+
 Pilot A is go only if all 109 attempts have unique reconstructed provenance and
 all three complete accepted artifacts pass exact controller restore, repaired
 pre-action predicate priming, catastrophe on suffix action 20, and independent
