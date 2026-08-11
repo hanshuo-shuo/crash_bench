@@ -77,6 +77,7 @@ from scripts.collect_glass_recovery_pairs import (
     _primary_protocol,
     _read_attempt_ledger,
     _replay_nominal_actions,
+    _require_branch_start_hashes,
     _rejection_counts,
     _roll_nominal,
     _safe_abort_configs,
@@ -1343,6 +1344,25 @@ def test_exact_branch_start_hashes_include_observation_dtype_and_shape():
     assert hashes["observation_sha256"] == _observation_sha256(observation)
     changed_dtype = {**observation, "state": observation["state"].astype(np.float64)}
     assert _observation_sha256(changed_dtype) != hashes["observation_sha256"]
+
+
+def test_exact_branch_restore_allows_observation_history_drift_only():
+    expected = {
+        "simulator_state_sha256": "a" * 64,
+        "controller_state_sha256": "b" * 64,
+        "observation_sha256": "c" * 64,
+    }
+    _require_branch_start_hashes(
+        {**expected, "observation_sha256": "d" * 64},
+        expected,
+        label="replay",
+    )
+    with pytest.raises(glass_collector.CandidateRejected, match="controller_state_sha256"):
+        _require_branch_start_hashes(
+            {**expected, "controller_state_sha256": "e" * 64},
+            expected,
+            label="replay",
+        )
 
 
 def test_attempt_ledger_is_append_only_and_resume_keeps_terminal_rejection(tmp_path):

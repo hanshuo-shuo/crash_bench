@@ -46,6 +46,7 @@ from scripts.eval_glass_recovery import (
     MAIN_CONDITIONS,
     NONPRIVILEGED_CONDITIONS,
     PRIVILEGED_CONDITIONS,
+    _restore_identity_evidence,
     file_sha256,
     load_evaluation_contract,
     run_evaluation_episode,
@@ -55,6 +56,27 @@ from scripts.eval_glass_recovery import (
 BASE_REVISION = "a" * 40
 PROTOCOL_H = 5
 CHECKPOINT_SHA256 = "c" * 64
+
+
+def test_runtime_restore_requires_state_and_controller_but_audits_observation():
+    expected = {
+        "simulator_state_sha256": "a" * 64,
+        "controller_state_sha256": "b" * 64,
+        "observation_sha256": "c" * 64,
+    }
+    evidence = _restore_identity_evidence(
+        {**expected, "observation_sha256": "d" * 64},
+        expected,
+        label="exact anchor",
+    )
+    assert evidence["simulator_controller_exact"] is True
+    assert evidence["observation_exact"] is False
+    with pytest.raises(RuntimeError, match="simulator_state_sha256"):
+        _restore_identity_evidence(
+            {**expected, "simulator_state_sha256": "e" * 64},
+            expected,
+            label="exact anchor",
+        )
 
 
 def _glass(name: str = "glass_1", x: float = 0.0) -> dict:

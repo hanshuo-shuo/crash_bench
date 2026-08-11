@@ -848,6 +848,25 @@ def _runtime_hashes(env, obs: Mapping[str, Any]) -> dict[str, str]:
     }
 
 
+def _restore_identity_evidence(
+    actual: Mapping[str, str], expected: Mapping[str, str], *, label: str
+) -> dict[str, Any]:
+    """Require exact simulator/controller restore and retain observation drift."""
+
+    required = ("simulator_state_sha256", "controller_state_sha256")
+    mismatched = [key for key in required if actual.get(key) != expected.get(key)]
+    if mismatched:
+        raise RuntimeError(f"{label} restore mismatch for {mismatched}")
+    expected_observation = expected.get("observation_sha256")
+    actual_observation = actual.get("observation_sha256")
+    return {
+        "simulator_controller_exact": True,
+        "observation_exact": expected_observation == actual_observation,
+        "expected_observation_sha256": expected_observation,
+        "restored_observation_sha256": actual_observation,
+    }
+
+
 def _reset_episode(
     env,
     pair: AcceptedEvaluationPair,
@@ -855,7 +874,7 @@ def _reset_episode(
     mode: str,
     regime: str,
     settle_steps: int,
-) -> tuple[dict, list[dict], int, int]:
+) -> tuple[dict, list[dict], int, int, dict[str, Any] | None]:
     placement = pair.placement
     glasses = (
         [placement.on_path_glass] if regime == "treatment" else [placement.off_path_glass]
@@ -870,7 +889,7 @@ def _reset_episode(
         collision_timeline = int(
             pair.records["nominal_catastrophe"].metadata["source_scan_collision_step"]
         )
-        return obs, glasses, deadline, collision_timeline
+        return obs, glasses, deadline, collision_timeline, None
     if mode != "exact_anchor":
         raise ValueError(f"unknown evaluation mode {mode}")
     state_path = pair.onpath_state_path if regime == "treatment" else pair.offpath_state_path
@@ -885,11 +904,11 @@ def _reset_episode(
     ]
     expected = expected_record.metadata["branch_start_hashes"]
     actual = _runtime_hashes(env, obs)
-    if actual != expected:
-        raise RuntimeError(
-            f"exact-anchor runtime restore mismatch for {placement.placement_id}/{regime}: "
-            f"expected={expected}, actual={actual}"
-        )
+    restore_evidence = _restore_identity_evidence(
+        actual,
+        expected,
+        label=f"exact-anchor {placement.placement_id}/{regime}",
+    )
     model = env._raw_model()
     matched_robot_state = env._strip_movable_state(
         exact_state, int(model.nq), int(model.nv), len(glasses)
@@ -899,7 +918,7 @@ def _reset_episode(
             f"exact-anchor matched robot/task state mismatch for "
             f"{placement.placement_id}/{regime}"
         )
-    return obs, glasses, 0, pair.horizon - 1
+    return obs, glasses, 0, pair.horizon - 1, restore_evidence
 
 
 def _save_trigger_state(
@@ -946,11 +965,11 @@ def _posthoc_oracle(
             "observation_sha256",
         )
     }
-    if restored_identity != expected_runtime_identity:
-        raise RuntimeError(
-            "post-hoc oracle trigger-state restore mismatch: "
-            f"expected={expected_runtime_identity}, actual={restored_identity}"
-        )
+    restore_evidence = _restore_identity_evidence(
+        restored_identity,
+        expected_runtime_identity,
+        label="post-hoc oracle trigger-state",
+    )
     controller = _make_oracle_controller(pair, glasses, obs)
     controller.engage(obs)
     predicates = _build_attributed_predicates(glasses, env.sim_view)
@@ -970,6 +989,7 @@ def _posthoc_oracle(
                 "steps": step + 1,
                 "catastrophe_predicates": attribution,
                 "peak_glass_force_n": float(peak_glass_force),
+                "restore_identity": restore_evidence,
             }
         if env.sim_view.libero_done:
             return {
@@ -981,6 +1001,7 @@ def _posthoc_oracle(
                 "steps": step + 1,
                 "catastrophe_predicates": [],
                 "peak_glass_force_n": float(peak_glass_force),
+                "restore_identity": restore_evidence,
             }
     return {
         "status": "completed",
@@ -991,6 +1012,7 @@ def _posthoc_oracle(
         "steps": max_steps,
         "catastrophe_predicates": [],
         "peak_glass_force_n": float(peak_glass_force),
+        "restore_identity": restore_evidence,
     }
 
 
@@ -1023,9 +1045,13 @@ def run_evaluation_episode(
         pass
     if hasattr(env, "seed"):
         env.seed(int(rollout_seed))
-    obs, glasses, recoverability_deadline, collision_timeline = _reset_episode(
-        env, pair, mode=mode, regime=regime, settle_steps=settle_steps
-    )
+    (
+        obs,
+        glasses,
+        recoverability_deadline,
+        collision_timeline,
+        anchor_restore,
+    ) = _reset_episode(env, pair, mode=mode, regime=regime, settle_steps=settle_steps)
     predicates = _build_attributed_predicates(glasses, env.sim_view)
     policy = EvaluationPolicy(
         base,
@@ -1192,6 +1218,7 @@ def run_evaluation_episode(
         ),
         "certified_recoverability_deadline_step": recoverability_deadline,
         "latest_recoverability_deadline_step": recoverability_deadline,
+        "anchor_restore_identity": anchor_restore,
         "timely_trigger": timely_trigger,
         "post_hoc_trigger_state_oracle": posthoc,
         "trigger_state": trigger_identity,

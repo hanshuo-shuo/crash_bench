@@ -159,11 +159,14 @@ def _require_branch_start_hashes(
     *,
     label: str,
 ) -> None:
-    if dict(actual) != dict(expected):
-        mismatched = sorted(
-            key for key in set(actual) | set(expected)
-            if actual.get(key) != expected.get(key)
-        )
+    # LIBERO's simulator and controller snapshots are the exact replay
+    # contract.  Rendered observations also contain camera and observable
+    # history that reset_to_exact does not serialize; Pilot A showed that this
+    # full hash can drift even when the state/action suffix and an independent
+    # oracle recapture reproduce exactly.
+    required = ("simulator_state_sha256", "controller_state_sha256")
+    mismatched = [key for key in required if actual.get(key) != expected.get(key)]
+    if mismatched:
         raise CandidateRejected(
             "exact_state_restore_mismatch",
             f"{label} did not restore exact trigger hashes: {mismatched}",
