@@ -351,6 +351,12 @@ def author(args: argparse.Namespace) -> dict:
     states = np.asarray(env.default_init_states())
     source_traces: dict[int, dict] = {}
     trace_payload: dict | None = None
+    reserve = int(getattr(args, "source_state_reserve", 0))
+    desired_state_counts = {
+        "train": args.train_states,
+        "validation": args.validation_states,
+        "heldout": args.heldout_states,
+    }
     if args.source_trace_manifest:
         source_traces, trace_payload = _load_source_traces(
             args.source_trace_manifest, suite=args.suite, task_id=args.task_id,
@@ -361,12 +367,13 @@ def author(args: argparse.Namespace) -> dict:
         if invalid_indices:
             raise ValueError(f"source trace indices exceed LIBERO states: {invalid_indices}")
         layout = _state_layout_from_indices(
-            list(source_traces), args.train_states, args.validation_states,
-            args.heldout_states,
+            list(source_traces), args.train_states + reserve,
+            args.validation_states + reserve, args.heldout_states + reserve,
         )
     elif args.legacy_straight_path:
         layout = _state_layout(
-            len(states), args.train_states, args.validation_states, args.heldout_states
+            len(states), args.train_states + reserve,
+            args.validation_states + reserve, args.heldout_states + reserve,
         )
     else:
         raise SystemExit(
@@ -384,19 +391,27 @@ def author(args: argparse.Namespace) -> dict:
     proposal_accounting = {
         split: {"proposed": 0, "invalid_initial_overlap": 0,
                 "fixed_replay_no_catastrophe": 0, "screen_retained": 0,
-                "duplicate_physical_scene": 0}
+                "duplicate_physical_scene": 0, "source_states_screened": 0,
+                "source_states_selected": 0, "source_states_skipped": 0}
         for split in requested_counts
     }
+    selected_layout = {split: [] for split in requested_counts}
     for split, indices in layout.items():
-        quotas = _quotas(requested_counts[split], indices)
+        quotas = _quotas(
+            requested_counts[split], list(range(desired_state_counts[split]))
+        )
         geometry_families = GEOMETRY[split]
         split_counter = 0
-        for state_slot, (source_index, quota) in enumerate(zip(indices, quotas)):
+        for state_slot, source_index in enumerate(indices):
+            if len(selected_layout[split]) >= desired_state_counts[split]:
+                break
+            quota = quotas[len(selected_layout[split])]
+            proposal_accounting[split]["source_states_screened"] += 1
+            placement_mark = len(placements)
             state = np.asarray(states[source_index], dtype=np.float64)
             state_rel = Path("states") / split / f"libero_state_{source_index:03d}.npy"
             state_path = output / state_rel
             state_path.parent.mkdir(parents=True, exist_ok=True)
-            np.save(state_path, state)
             state_hash = array_sha256(state)
             source_trace = source_traces.get(source_index)
             if source_trace is not None and source_trace.get("source_state_sha256") != state_hash:
@@ -608,10 +623,23 @@ def author(args: argparse.Namespace) -> dict:
                 accepted_for_state += 1
                 proposal_accounting[split]["screen_retained"] += 1
             if accepted_for_state != quota:
-                raise RuntimeError(
-                    f"source state {source_index} supplied {accepted_for_state}/{quota} "
-                    "screen-retained unique candidates; increase proposal budget or repair traces"
-                )
+                for placement in placements[placement_mark:]:
+                    physical_scenes.remove(
+                        str(placement.metadata["physical_scene_sha256"])
+                    )
+                del placements[placement_mark:]
+                split_counter -= accepted_for_state
+                proposal_accounting[split]["screen_retained"] -= accepted_for_state
+                proposal_accounting[split]["source_states_skipped"] += 1
+                continue
+            np.save(state_path, state)
+            selected_layout[split].append(source_index)
+            proposal_accounting[split]["source_states_selected"] += 1
+        if len(selected_layout[split]) != desired_state_counts[split]:
+            raise RuntimeError(
+                f"split {split} retained {len(selected_layout[split])}/"
+                f"{desired_state_counts[split]} source states from its fixed reserve pool"
+            )
 
     payload = write_placement_manifest(
         output / "placements.json",
@@ -631,7 +659,9 @@ def author(args: argparse.Namespace) -> dict:
                 "heldout": args.heldout_accepted_targets,
             },
             "proposal_accounting": proposal_accounting,
-            "source_state_indices": layout,
+            "source_state_indices": selected_layout,
+            "source_state_candidate_indices": layout,
+            "source_state_reserve_per_split": reserve,
             "source_trace_manifest": (
                 None if args.source_trace_manifest is None
                 else str(Path(args.source_trace_manifest).resolve())
@@ -681,6 +711,7 @@ def main() -> None:
     parser.add_argument("--train-states", type=int, default=30)
     parser.add_argument("--validation-states", type=int, default=8)
     parser.add_argument("--heldout-states", type=int, default=12)
+    parser.add_argument("--source-state-reserve", type=int, default=0)
     parser.add_argument("--settle-steps", type=int, default=10)
     parser.add_argument("--bowl-rest-offset", type=float, default=0.005)
     parser.add_argument("--control-offset", type=float, default=0.20)
@@ -713,6 +744,7 @@ def main() -> None:
             or args.initial_body_clearance < 0
             or not 0.05 < args.max_nominal_fraction < 0.95
             or args.max_proposals_per_candidate < 1
+            or args.source_state_reserve < 0
             or args.candidates_per_accepted_target < 5):
         raise SystemExit(
             "target radius and minimum clearance must be positive; margin non-negative; "

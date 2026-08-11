@@ -1216,6 +1216,31 @@ def test_zero_gpu_v2_integration_collection_training_latch_cohort_eval_analysis(
     _, checkpoint_metadata = GlassRecoveryNetwork.load_checkpoint(checkpoint)
     checkpoint_sha = file_sha256(checkpoint)
 
+    from scripts.seal_glass_recovery_evaluation import seal
+
+    sealed = seal(Namespace(
+        placements=str(files["placements"]),
+        dataset=str(files["manifests"]["validation"].parent),
+        split="validation",
+        checkpoint=[str(checkpoint)],
+        pair_ids=None,
+        rollout_seeds=[101],
+        max_steps=4,
+        output=str(tmp_path / "e15" / "sealed_validation"),
+    ))
+    sealed_contract = load_evaluation_contract(
+        placement_manifest=files["placements"],
+        trajectory_manifest=files["manifests"]["validation"],
+        evaluation_cohort=sealed["cohort"],
+        protocol=sealed["protocol"],
+        checkpoint_metadata=checkpoint_metadata,
+        checkpoint_sha256=checkpoint_sha,
+        base_checkpoint_revision=BASE_REVISION,
+        unnorm_key="libero_spatial",
+    )
+    assert len(sealed_contract.pairs) == 1
+    assert sealed["source_states"] == 1
+
     # Seal the already accepted cohort and produced checkpoint into the final
     # evaluation protocol before any held-out episode is selected or run.
     protocol = json.loads(files["protocol"].read_text())

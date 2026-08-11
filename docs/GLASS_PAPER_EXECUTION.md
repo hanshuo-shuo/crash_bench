@@ -650,13 +650,15 @@ training.
 3. propose glass anchors along the actual pregrasp approach corridor;
 4. retain target-clearance and no-initial-overlap constraints;
 5. use fixed captured-action replay as a cheap hazard-validity screen;
-6. retain live Base and exact oracle rollouts as final authorities;
-7. separate candidate counts from accepted targets;
-8. begin with at least five candidates per accepted target;
-9. use a predeclared stratified candidate order rather than high-fraction
+6. allocate split-disjoint reserve source states before screening, and replace
+   a zero-yield state only by the next state in that fixed split-local order;
+7. retain live Base and exact oracle rollouts as final authorities;
+8. separate candidate counts from accepted targets;
+9. begin with at least five candidates per accepted target;
+10. use a predeclared stratified candidate order rather than high-fraction
    first-success selection;
-10. deduplicate by physical scene hash after all clamps/jitter;
-11. add split-independent geometry-family and physical-geometry fingerprints.
+11. deduplicate by physical scene hash after all clamps/jitter;
+12. add split-independent geometry-family and physical-geometry fingerprints.
 
 ### Go
 

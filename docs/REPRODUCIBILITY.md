@@ -120,6 +120,18 @@ cohort and evaluation protocol without looking at final-held-out outcomes, then
 export the additional inputs:
 
 ```bash
+python scripts/seal_glass_recovery_evaluation.py \
+  --placements /path/to/accepted-placements.json \
+  --dataset /path/to/accepted-dataset-root \
+  --split validation \
+  --checkpoint /path/to/train_seed_17/glass_recovery.pt \
+  --output "$CB_GLASS_RECOVERY_RUN_ROOT/sealed_validation"
+```
+
+The sealer consumes accepted manifests and checkpoint identities only; it does
+not read evaluation outcomes.
+
+```bash
 export CB_GLASS_RECOVERY_PLACEMENT_MANIFEST="$CB_GLASS_RECOVERY_RUN_ROOT/placements/placements.json"
 export CB_GLASS_RECOVERY_TRAJECTORY_MANIFEST="$CB_GLASS_RECOVERY_RUN_ROOT/dataset/heldout.jsonl"
 export CB_GLASS_RECOVERY_EVALUATION_COHORT="$CB_GLASS_RECOVERY_RUN_ROOT/sealed/heldout_cohort.json"

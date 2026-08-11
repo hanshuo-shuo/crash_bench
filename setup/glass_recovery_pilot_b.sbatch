@@ -70,7 +70,8 @@ case "$STAGE" in
       --train-placements 10 --validation-placements 5 --heldout-placements 5 \
       --train-accepted-targets 2 --validation-accepted-targets 1 \
       --heldout-accepted-targets 1 \
-      --train-states 8 --validation-states 5 --heldout-states 5
+      --train-states 8 --validation-states 5 --heldout-states 5 \
+      --source-state-reserve "${CB_PILOT_B_SOURCE_STATE_RESERVE:-4}"
     python scripts/run_glass_avoidability_frontier.py \
       --placements "$FRONTIER_PLACEMENTS/placements.json" \
       --output-root "$FRONTIER_ROOT" \
@@ -96,7 +97,8 @@ case "$STAGE" in
       --heldout-accepted-targets 5 \
       --train-states "${CB_PILOT_B_TRAIN_STATES:-15}" \
       --validation-states "${CB_PILOT_B_VALIDATION_STATES:-8}" \
-      --heldout-states "${CB_PILOT_B_HELDOUT_STATES:-8}"
+      --heldout-states "${CB_PILOT_B_HELDOUT_STATES:-8}" \
+      --source-state-reserve "${CB_PILOT_B_SOURCE_STATE_RESERVE:-4}"
     COLLECTION_STATUS=0
     python scripts/collect_glass_recovery_pairs.py \
       --placements "$DATA_PLACEMENTS/placements.json" \
