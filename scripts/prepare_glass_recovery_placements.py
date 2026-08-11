@@ -578,7 +578,11 @@ def author(args: argparse.Namespace) -> dict:
                         "physical_geometry_fingerprint": physical_geometry_fingerprint,
                         "physical_scene_sha256": physical_scene_sha256,
                         "candidate_order_index": split_counter,
-                        "candidate_order_policy": "predeclared_state_geometry_stratified_v2",
+                        "source_selected_slot": len(selected_layout[split]),
+                        "source_candidate_local_index": local_index,
+                        "candidate_order_policy": (
+                            "predeclared_source_round_robin_then_geometry_v3"
+                        ),
                         "proposal_kind": (
                             "nominal_eef_arclength" if source_trace is not None
                             else "legacy_home_to_bowl_chord"

@@ -658,7 +658,8 @@ training.
 8. separate candidate counts from accepted targets;
 9. begin with at least five candidates per accepted target;
 10. use a predeclared stratified candidate order rather than high-fraction
-   first-success selection;
+   first-success selection; within a split, visit the first candidate from
+   every selected source before any source's second candidate;
 11. deduplicate by physical scene hash after all clamps/jitter;
 12. add split-independent geometry-family and physical-geometry fingerprints.
 

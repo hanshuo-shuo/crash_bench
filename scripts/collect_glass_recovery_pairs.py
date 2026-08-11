@@ -1586,6 +1586,8 @@ def _ordered_placements(placements: list[GlassPlacement]) -> list[GlassPlacement
 
     return sorted(placements, key=lambda placement: (
         placement.split,
+        int(placement.metadata.get("source_candidate_local_index", 0)),
+        int(placement.metadata.get("source_selected_slot", 0)),
         int(placement.metadata.get("candidate_order_index", 10**9)),
         placement.placement_id,
     ))

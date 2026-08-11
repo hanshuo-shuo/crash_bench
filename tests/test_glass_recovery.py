@@ -1728,6 +1728,25 @@ def test_candidate_order_is_predeclared_not_high_fraction_first():
         "low", "high"
     ]
 
+    round_robin = []
+    for source_slot in range(2):
+        for local_index in range(2):
+            base = _placement(
+                f"s{source_slot}-c{local_index}", "train",
+                f"state-{source_slot}", "train/family",
+            )
+            round_robin.append(GlassPlacement(**{
+                **base.to_dict(),
+                "metadata": {
+                    "source_selected_slot": source_slot,
+                    "source_candidate_local_index": local_index,
+                    "candidate_order_index": source_slot * 2 + local_index,
+                },
+            }))
+    assert [row.placement_id for row in _ordered_placements(round_robin)] == [
+        "s0-c0", "s1-c0", "s0-c1", "s1-c1",
+    ]
+
 
 def test_salvage_inventory_is_read_only_append_only_and_never_promotes_v1(tmp_path):
     source = tmp_path / "historical_e14"
