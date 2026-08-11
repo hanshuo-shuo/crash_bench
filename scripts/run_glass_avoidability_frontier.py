@@ -186,7 +186,7 @@ def main() -> None:
     parser.add_argument("--settle-steps", type=int, default=10)
     parser.add_argument("--scan-steps", type=int, default=220)
     parser.add_argument("--control-steps", type=int, default=220)
-    parser.add_argument("--oracle-steps", type=int, default=900)
+    parser.add_argument("--oracle-steps", type=int, default=220)
     parser.add_argument("--min-candidates", type=int, default=10)
     parser.add_argument("--max-candidates", type=int, default=20)
     parser.add_argument("--min-safe-task-success-rate", type=float, default=0.5)

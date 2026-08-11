@@ -61,24 +61,30 @@ case "$STAGE" in
   frontier)
     test -f "$SOURCE_MANIFEST"
     FRONTIER_PLACEMENTS="$RUN_ROOT/frontier_placements"
+    FRONTIER_MANIFEST="${CB_PILOT_B_FRONTIER_PLACEMENT_MANIFEST:-}"
     FRONTIER_ROOT="$RUN_ROOT/frontier_task0"
-    python scripts/prepare_glass_recovery_placements.py \
-      --output "$FRONTIER_PLACEMENTS" \
-      --source-trace-manifest "$SOURCE_MANIFEST" \
-      --checkpoint-revision "$REVISION" \
-      --unnorm-key "$UNNORM_KEY" \
-      --train-placements 10 --validation-placements 5 --heldout-placements 5 \
-      --train-accepted-targets 2 --validation-accepted-targets 1 \
-      --heldout-accepted-targets 1 \
-      --train-states 8 --validation-states 5 --heldout-states 5 \
-      --source-state-reserve "${CB_PILOT_B_SOURCE_STATE_RESERVE:-4}"
+    if [[ -z "$FRONTIER_MANIFEST" ]]; then
+      python scripts/prepare_glass_recovery_placements.py \
+        --output "$FRONTIER_PLACEMENTS" \
+        --source-trace-manifest "$SOURCE_MANIFEST" \
+        --checkpoint-revision "$REVISION" \
+        --unnorm-key "$UNNORM_KEY" \
+        --train-placements 10 --validation-placements 5 --heldout-placements 5 \
+        --train-accepted-targets 2 --validation-accepted-targets 1 \
+        --heldout-accepted-targets 1 \
+        --train-states 8 --validation-states 5 --heldout-states 5 \
+        --source-state-reserve "${CB_PILOT_B_SOURCE_STATE_RESERVE:-4}"
+      FRONTIER_MANIFEST="$FRONTIER_PLACEMENTS/placements.json"
+    fi
+    test -f "$FRONTIER_MANIFEST"
     python scripts/run_glass_avoidability_frontier.py \
-      --placements "$FRONTIER_PLACEMENTS/placements.json" \
+      --placements "$FRONTIER_MANIFEST" \
       --output-root "$FRONTIER_ROOT" \
       --checkpoint "$CHECKPOINT" \
       --checkpoint-revision "$REVISION" \
       --unnorm-key "$UNNORM_KEY" \
       --rollout-seed 0 \
+      --oracle-steps 220 \
       --execute
     ;;
 
@@ -95,10 +101,10 @@ case "$STAGE" in
       --train-placements 50 --validation-placements 25 --heldout-placements 25 \
       --train-accepted-targets 10 --validation-accepted-targets 5 \
       --heldout-accepted-targets 5 \
-      --train-states "${CB_PILOT_B_TRAIN_STATES:-15}" \
-      --validation-states "${CB_PILOT_B_VALIDATION_STATES:-8}" \
-      --heldout-states "${CB_PILOT_B_HELDOUT_STATES:-8}" \
-      --source-state-reserve "${CB_PILOT_B_SOURCE_STATE_RESERVE:-4}"
+      --train-states "${CB_PILOT_B_TRAIN_STATES:-12}" \
+      --validation-states "${CB_PILOT_B_VALIDATION_STATES:-6}" \
+      --heldout-states "${CB_PILOT_B_HELDOUT_STATES:-6}" \
+      --source-state-reserve "${CB_PILOT_B_SOURCE_STATE_RESERVE:-7}"
     COLLECTION_STATUS=0
     python scripts/collect_glass_recovery_pairs.py \
       --placements "$DATA_PLACEMENTS/placements.json" \
@@ -108,7 +114,7 @@ case "$STAGE" in
       --unnorm-key "$UNNORM_KEY" \
       --rollout-seed 0 \
       --max-train 10 --max-validation 5 --max-heldout 5 \
-      --precrash-horizon "$HORIZON" || COLLECTION_STATUS=$?
+      --precrash-horizon "$HORIZON" --oracle-steps 220 || COLLECTION_STATUS=$?
     python scripts/summarize_glass_pilot_b.py \
       --frontier-summary "$RUN_ROOT/frontier_task0/frontier_summary.json" \
       --placements "$DATA_PLACEMENTS/placements.json" \

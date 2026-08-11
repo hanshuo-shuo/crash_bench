@@ -67,8 +67,9 @@ The final source capture was Quest job `9050752` on `qgpu0401`:
 - successful no-glass task completions: 47 (94%)
 - 220-action timeouts: indices 10, 13, and 37
 
-The 47 successful states are sufficient for the default 15/8/8 disjoint
-train/validation/dev-test source pools plus fixed reserve states.
+The 47 successful states are sufficient for the final 12/6/6 disjoint
+train/validation/dev-test source pools plus seven split-local fixed reserves
+(45 preallocated source states total).
 
 ## Pilot B implementation audit before frontier outcomes
 
@@ -80,6 +81,7 @@ therefore not counted as Pilot B scientific outcomes:
 | 9051808 | `3e8ca09` | FAILED | 00:04:48 | 4/2/2 source layout selected state 39, which produced 0/2 fixed-screen candidates | broaden frontier to the frozen 8/5/5 minimum source diversity |
 | 9052358 | `49348ac` | CANCELLED | 00:01:48 | review found the declared H=15/10/5 calls would be rejected by the collector's primary H>=20 guard | add an explicit frontier-only short-H diagnostic flag; ordinary collection still requires H>=20 |
 | 9052476 | `c6deaa8` | FAILED | 00:03:43 | source state 6 also produced 0/2 candidates, showing that task success alone does not imply hazard-generation eligibility | allocate split-disjoint reserve states before screening and advance only in a fixed split-local order |
+| 9052757 | `4dbde7e` | CANCELLED | 00:26:05 | candidate authoring completed, but the frontier inherited the legacy 900-step oracle-search budget while source, Base, and planned evaluation branches use 220 actions | retain the outcome-blind placement manifest, discard the partial H=40 rollout, and rerun all H values from scratch with a 220-step oracle budget |
 
 These iterations produced no H outcome. No candidate was repeatedly rerun to
 make Base crash. The generator now separates two eligibility facts:
@@ -91,6 +93,12 @@ make Base crash. The generator now separates two eligibility facts:
 Zero-yield states are retained in proposal accounting and replaced only by the
 next preallocated split-local reserve state. Live Base and oracle outcomes do
 not choose source states.
+
+For the later 50/25/25 fixed-H proposal pool, the pre-outcome defaults are
+12/6/6 selected source states with seven split-local reserves (45 disjoint
+source candidates total). This keeps per-state geometry quotas near four or
+five while the round-robin live candidate order exposes at least 10/5/5 source
+states before second candidates whenever those first candidates pass.
 
 Additional code audit fixes made before later pilots:
 
@@ -107,10 +115,40 @@ Additional code audit fixes made before later pilots:
 
 ## Pilot B frontier and collection results
 
-The fixed-reserve frontier was submitted as Quest job `9052757`, pinned to
-commit `4dbde7e`, with fresh root
-`results/glass_recovery_v2/pilot_b_task0_20260811_r5`. Results will be added
-after all 20 candidates are evaluated at H={40,30,20,15,10,5}.
+The first fixed-reserve frontier was submitted as Quest job `9052757`, pinned
+to commit `4dbde7e`, with fresh root
+`results/glass_recovery_v2/pilot_b_task0_20260811_r5`. It was cancelled at
+00:26:05 and is a superseded technical run, not Pilot B evidence. At H=40,
+seven candidates terminated because the live catastrophe occurred before a
+40-action anchor existed, five did not reproduce a live Base catastrophe, and
+one candidate reached exact replay and the matched off-path branch but was
+still inside oracle search when the job was terminated. No H was completed and
+no `frontier_summary.json` was written.
+
+Candidate authoring completed before OpenVLA frontier rollout with placement
+manifest SHA-256
+`dfd763e7771d02f8705184411eaf136dd8ec9bdf0850f5e2a9b0141e997fd652`:
+
+| Split | Fixed proposals | Fixed-replay catastrophes retained | Source states screened | Source states selected | Selected indices |
+|---|---:|---:|---:|---:|---|
+| train | 97 | 10 | 12 | 8 | 2, 19, 24, 26, 35, 38, 43, 47 |
+| validation | 21 | 5 | 6 | 5 | 1, 12, 18, 23, 29 |
+| dev-test | 21 | 5 | 6 | 5 | 5, 11, 17, 22, 28 |
+
+All 119 rejected fixed proposals were `fixed_replay_no_catastrophe`; there
+were zero initial-overlap or duplicate-scene rejections. The final design has
+20 unique physical scenes, exact 10/5/5 placement counts, exact 8/5/5 source
+counts, and two dev-test geometry families. This 20/139 (14.4%) cheap-screen
+retention rate is a generator statistic, not the live Base-catastrophe yield
+used by the Pilot B gate.
+
+The r5 placement manifest is outcome-blind with respect to the OpenVLA and
+oracle branches, so the clean rerun reuses it byte-for-byte rather than drawing
+a more favorable candidate set. All partial r5 rollout artifacts are excluded.
+The rerun uses a fresh root and executes every H in {40,30,20,15,10,5} with a
+220-action oracle budget. This matches the 220-action source/Base/evaluation
+budget and still exceeds the 138, 145, and 146 actions used by the three
+independently recaptured Pilot A oracle successes.
 
 Required decision fields:
 
