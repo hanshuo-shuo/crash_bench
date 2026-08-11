@@ -3,7 +3,7 @@
 # Submit one stage at a time with setup/submit_glass_recovery_pilot_b.sh.
 #SBATCH --account=p33100
 #SBATCH --partition=gengpu
-#SBATCH --gres=gpu:h100:1
+#SBATCH --gres=gpu:a100:1
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8

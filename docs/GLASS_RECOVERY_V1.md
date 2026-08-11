@@ -316,7 +316,9 @@ On Quest, the same Pilot B sequence is submitted one gate at a time with
 `setup/submit_glass_recovery_pilot_b.sh source_traces|frontier|collect`. The
 frontier stage uses 20 development candidates; collection uses a separate
 50/25/25 proposal set and requests the minimum 10/5/5 accepted cohort. Do not
-submit `collect` until `frontier_summary.json` supplies the frozen H.
+submit `collect` until `frontier_summary.json` supplies the frozen H. All three
+Pilot B stages use one A100 to avoid cross-stage hardware variation and H100
+queue dependence.
 
 E15 uses a two-stage smoke because the evaluation protocol can seal a checkpoint
 SHA only after training. Both stages refuse dirty tracked source. `train`
