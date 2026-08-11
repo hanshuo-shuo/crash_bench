@@ -50,9 +50,11 @@ The plan uses the same claim vocabulary, C0–C13, as `CLAIMS.md`.
 - Preserve the tall-wall treatment; put the lowered d62 detour in a distinct
   scenario root with parent/fingerprint metadata.
 - Release a manifest, claims ledger, audit command, and zero-GPU tests.
-- Before E15 training, run the implemented P0-E inventory/frontier/generator gate, obtain
-  source-diverse accepted train and validation cohorts under one exact H, and
-  seal the final held-out cohort only after method/protocol choices are frozen.
+- The E15 inventory/frontier/generator gate has been run. Respect its Pilot B
+  no-go: no tested H had exact replay or oracle recoverability sufficient for a
+  source-diverse fixed-H cohort, so do not train or seal held-out data from this
+  run. Any renewal needs a new outcome-blind frontier after the snapshot/replay
+  contract is repaired.
 - Require checkpoint/Base/dataset/protocol identities, the complete baseline
   matrix, primary task/catastrophe outcomes, false intervention, task
   preservation, and source-cluster analysis before any learned claim.
@@ -95,3 +97,8 @@ The plan uses the same claim vocabulary, C0–C13, as `CLAIMS.md`.
   rollout attempts (train=2, validation=0, heldout=1). Its dominant rejection
   was `no_base_crash` (92 attempts), so it is evidence for a clean gate and a
   remaining placement-yield problem, not a denominator for a safety headline.
+- E15 Pilot B separates placement yield from recoverable-population viability.
+  The 20-scene frontier achieved 50%--75% live Base-catastrophe yield across H,
+  but exact replay reached at most 58.3% and oracle safe task success at most
+  14.3%. Report this as a frozen feasibility no-go, not as failed model training
+  and not as evidence against recovery methods that were never trained.

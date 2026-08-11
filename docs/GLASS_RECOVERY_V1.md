@@ -283,9 +283,9 @@ candidate-level rates are 3/3. The historical suffixes had lengths 30, 77, and
 44; advancing 10, 57, and 24 captured actions placed each catastrophe exactly
 on zero-based suffix index 19. Each preferred historical oracle config then
 succeeded in its search rollout and fresh independent recapture. Pilot B is
-allowed but was not submitted. See the tracked
-`results/glass_recovery_pilot_a_20260811.json`; detailed evidence remains in the
-ignored Pilot A root.
+allowed. See the tracked `results/glass_recovery_pilot_a_20260811.json`; detailed
+evidence remains in the ignored Pilot A root. Pilot B was subsequently run and
+stopped the sequence with a complete frontier no-go, as recorded below.
 
 GPU source-trace capture and a 20-candidate development frontier design:
 
@@ -301,7 +301,8 @@ python scripts/prepare_glass_recovery_placements.py \
   --checkpoint-revision "$CB_BASE_CHECKPOINT_REVISION" \
   --train-placements 10 --validation-placements 5 --heldout-placements 5 \
   --train-accepted-targets 2 --validation-accepted-targets 1 --heldout-accepted-targets 1 \
-  --train-states 4 --validation-states 2 --heldout-states 2
+  --train-states 8 --validation-states 5 --heldout-states 5 \
+  --source-state-reserve 4
 
 python scripts/run_glass_avoidability_frontier.py \
   --placements results/glass_recovery_v2/frontier_placements/placements.json \
@@ -319,6 +320,15 @@ frontier stage uses 20 development candidates; collection uses a separate
 submit `collect` until `frontier_summary.json` supplies the frozen H. All three
 Pilot B stages use one A100 to avoid cross-stage hardware variation and H100
 queue dependence.
+
+The final frontier job `9055676` completed all 120 candidate/H attempts at
+commit `dd10252` with no technical failures. No tested H reached either 100%
+exact replay or 50% oracle safe task success conditional on a live Base
+catastrophe; `recommended_horizon_actions` is null. Therefore `collect` was not
+submitted and the two-stage train/evaluate commands below remain an unused
+contract, not the continuation of this run. See
+`results/glass_recovery_pilot_b_frontier_20260811.json` and
+`docs/E15_EXPERIMENT_LOG_20260811.md`.
 
 E15 uses a two-stage smoke because the evaluation protocol can seal a checkpoint
 SHA only after training. Both stages refuse dirty tracked source. `train`

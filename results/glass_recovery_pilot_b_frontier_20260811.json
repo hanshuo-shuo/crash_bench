@@ -1,0 +1,282 @@
+{
+  "schema_version": 1,
+  "kind": "glass_recovery_pilot_b_frontier_result",
+  "experiment_id": "E15",
+  "status": "pilot_b_frontier_complete_no_go",
+  "created_date": "2026-08-11",
+  "created_at_utc": "2026-08-11T12:03:24.877678+00:00",
+  "objective": "Test one frozen 20-scene task-0 design at H in {40,30,20,15,10,5} and freeze a common horizon only if live Base catastrophes replay exactly and remain recoverable by the independently recaptured oracle.",
+  "decision": {
+    "value": "pilot_b_no_go",
+    "go": false,
+    "reason": "no common tested H has usable exact-replay recoverability",
+    "recommended_horizon_actions": null,
+    "qualified_horizons": [],
+    "pilot_b_fixed_h_collection_allowed": false,
+    "pilot_b_fixed_h_collection_executed": false,
+    "pilot_c_allowed": false,
+    "minimum_sequence_stopped": true,
+    "no_go_reasons": [
+      "fixed_h_not_viable",
+      "no_h_reached_100_percent_exact_nominal_replay",
+      "no_h_reached_50_percent_oracle_safe_task_success_given_live_base_catastrophe"
+    ]
+  },
+  "provenance": {
+    "runner_git_commit": "dd10252fdab4648423010c4666833b539ca402bf",
+    "base_checkpoint": "openvla/openvla-7b-finetuned-libero-spatial",
+    "base_checkpoint_revision": "962318cec55ac10993ff0f5f43eda9a270b4c873",
+    "unnorm_key": "libero_spatial",
+    "rollout_seed": 0,
+    "task_suite": "libero_spatial",
+    "task_id": 0,
+    "oracle_action_budget": 220,
+    "source_trace_manifest": "results/glass_recovery_v2/pilot_b_task0_20260811_r2/source_traces_task0/source_traces.json",
+    "source_trace_manifest_sha256": "fa484682aa7bb5745ffe023454d9b43e7a87d90a5eab0e69aa1c4ef1aa21f68f",
+    "source_capture_git_commit": "90344edfca8c50ffc4ae9af374d5164b90da9184",
+    "placement_manifest": "results/glass_recovery_v2/pilot_b_task0_20260811_r5/frontier_placements/placements.json",
+    "placement_manifest_sha256": "dfd763e7771d02f8705184411eaf136dd8ec9bdf0850f5e2a9b0141e997fd652",
+    "ignored_output_root": "results/glass_recovery_v2/pilot_b_task0_20260811_r7/frontier_task0",
+    "frontier_summary": {
+      "path": "results/glass_recovery_v2/pilot_b_task0_20260811_r7/frontier_task0/frontier_summary.json",
+      "sha256": "1c5c197163ee7c51b58cc2a72d80be2c38d3a15f3b42c6b5dbb68292ed2f37a4"
+    },
+    "frontier_rows": {
+      "path": "results/glass_recovery_v2/pilot_b_task0_20260811_r7/frontier_task0/frontier_rows.jsonl",
+      "sha256": "3d27071dba5193299de01d211d1a48fbaf84e73739e7860b64bb363adcf2f4b5"
+    },
+    "slurm_job": {
+      "job_id": 9055676,
+      "state": "FAILED",
+      "exit_code": "1:0",
+      "disposition": "expected_scientific_no_go_exit_after_complete_grid",
+      "elapsed": "01:51:29",
+      "node": "qgpu0205",
+      "hardware": "NVIDIA A100-PCIE-40GB"
+    },
+    "superseded_technical_runs": [
+      {
+        "job_id": 9052757,
+        "git_commit": "4dbde7ee1ddda82214cffcde11d63488f9d159e1",
+        "state": "CANCELLED",
+        "elapsed": "00:26:05",
+        "finding": "legacy 900-action oracle budget differed from the 220-action pilot budget"
+      },
+      {
+        "job_id": 9054219,
+        "git_commit": "9d78d0b61b2c6f7b84093fd4676010aa285b9fad",
+        "state": "CANCELLED",
+        "elapsed": "00:07:08",
+        "finding": "nominal suffix replay failures were incorrectly classified as no_base_crash and excluded from the exact-replay denominator"
+      }
+    ]
+  },
+  "candidate_design": {
+    "candidates": 20,
+    "physical_scenes": 20,
+    "unique_source_states": 18,
+    "physical_scene_sha256": [
+      "0bbba77d4b8d48f7492df72212cb0ccd09da00339ea5e40f30c04497ac9e036d",
+      "174882caf12ad60b91d44cca13f9ae3030d1e28f9b190dcd681e269ed5c62643",
+      "2372984399934502feed2f5ddcd7352f4eb811bcfcf4d9475f01d1b3f5a76fac",
+      "2409b5f4f0055252bfd20ada399cc80d75e5cf3666e6da0b844d4f6d2f33ec99",
+      "2817dc25586ccc581cfb97d8bbac42104fd5d1c70f6c9656b8afb943ac107161",
+      "43690e975ca88f23179baf8bc0d94359c23b920333217956ee92de66db505d32",
+      "53435167755cb2eb365bbf8eed2ace24b748aae134d2aaa603f97196424b87da",
+      "58b26661d185898c9f0fca0ecb6ab6863ebcd92a9768229d2248a69ba5235f19",
+      "5fde221d2b70e04c79891af45c695d1a10ecb2dc4a52272f4c6157f3ab75863c",
+      "6ae5a3a33c3b3f757be3f127fcb641440bb6606b2d7b89c41db49d2675c6284c",
+      "6d82f4af2a7a12e758cafa9550eb8c2972ceb42f91de3876ed9246f86d00462d",
+      "8bf080f01feaae53c4c505517f552eb07820d8174dd34a9f6be036f7476b1341",
+      "9a5ae8d4340000ae2b58befbe803381a8c697e188fbb507bc05c62f3e98533e1",
+      "9a6fdc04800530aa07178802cdabe1c2e90d6a4988f8152681ec3c6edb8be5b4",
+      "a29c2d07b9c157e61780104ab2bf067425cfcb8b9a6fbcf6421592ada2953f4c",
+      "c7385188c21c05e06f9559905437bb61d6684cec784759d6e0b1968a86cbe215",
+      "cd7881d346c8f53bfd191fed83c14c1a698be23e1c29b3eaadbc40b9a7470932",
+      "cef7d1750d9a6de6bc96c121c1d79c0e0ec8e1e09f63fd29e1fb513c0fb1dbd5",
+      "ef724833f49258e5e07b64fd1c136f9a927d53f34c90d27ef93389d82f8894a9",
+      "fe7c24d63b2539b660d95251c99b60e9f6f1beaa02c2e4529c4ef2d8e78109af"
+    ],
+    "placements_by_split": {
+      "train": 10,
+      "validation": 5,
+      "heldout_dev_test": 5
+    },
+    "source_states_by_split": {
+      "train": 8,
+      "validation": 5,
+      "heldout_dev_test": 5
+    },
+    "geometry_families_by_split": {
+      "train": 1,
+      "validation": 1,
+      "heldout_dev_test": 2
+    },
+    "fixed_action_screen": {
+      "proposals": 139,
+      "retained": 20,
+      "retention_rate": 0.14388489208633093,
+      "rejected_fixed_replay_no_catastrophe": 119,
+      "initial_overlap_rejections": 0,
+      "duplicate_scene_rejections": 0
+    },
+    "split_unit": "source LIBERO initial-state sha256; never shared across splits"
+  },
+  "attempt_accounting": {
+    "horizons": [40, 30, 20, 15, 10, 5],
+    "candidates_per_horizon": 20,
+    "terminal_attempts": 120,
+    "unique_attempt_keys": 120,
+    "attempts_have_unique_provenance": true,
+    "one_terminal_attempt_per_candidate_horizon": true,
+    "technical_failures": 0,
+    "accepted_pairs_across_all_horizons": 5,
+    "rejected_attempts": 115,
+    "exact_replay_verified_attempts": 30,
+    "complete_primary_pair_artifacts": 5,
+    "matched_offpath_task_success_artifacts": 19,
+    "protocol_sha256_by_horizon": {
+      "40": "56ceba145eca93e358e7c151bc501dcd2f82f13738c868d1a2e980483bce4322",
+      "30": "955f67ceab1ee79a34edb4040b0ea9242706e91d6956d17d77910a7e88292de3",
+      "20": "0f63171d616745f0985c433c5ab5dd9638f02fb3655175de165c6dcde1d21abb",
+      "15": "ef9b58fe21595aa33811cd931c2c5bf5157b75b56a2c56324844d9a7a0c3f731",
+      "10": "68c643d768194348001c759e31c5a9c16d7b4cc0f507560cd0fbb1fc3d1c1ade",
+      "5": "8ee2b46dd8fd8a874e8605d13018b0f8927c697f59f45cb9e8a8d38301497d4a"
+    },
+    "accepted_pair_ids_by_horizon": {
+      "40": [],
+      "30": [],
+      "20": ["glass_recovery_heldout_0002"],
+      "15": ["glass_recovery_train_0004"],
+      "10": [
+        "glass_recovery_validation_0000",
+        "glass_recovery_validation_0003"
+      ],
+      "5": ["glass_recovery_train_0008"]
+    }
+  },
+  "frontier": {
+    "minimum_oracle_safe_task_success_rate_given_base_catastrophe": 0.5,
+    "required_exact_nominal_replay_rate_given_base_catastrophe": 1.0,
+    "horizons": {
+      "40": {
+        "candidates": 20,
+        "base_catastrophes": 13,
+        "path_proposal_base_catastrophe_yield": 0.65,
+        "exact_replays": 2,
+        "exact_h_replay_rate_given_base_catastrophe": 0.15384615384615385,
+        "oracle_safe_task_successes": 0,
+        "oracle_safe_task_success_rate_given_base_catastrophe": 0.0,
+        "qualified": false,
+        "rejection_reasons": {
+          "invalid_initial_state": 10,
+          "no_base_crash": 7,
+          "nominal_replay_failure": 1,
+          "off_path_catastrophe": 1,
+          "oracle_task_failure": 1
+        }
+      },
+      "30": {
+        "candidates": 20,
+        "base_catastrophes": 10,
+        "path_proposal_base_catastrophe_yield": 0.5,
+        "exact_replays": 4,
+        "exact_h_replay_rate_given_base_catastrophe": 0.4,
+        "oracle_safe_task_successes": 0,
+        "oracle_safe_task_success_rate_given_base_catastrophe": 0.0,
+        "qualified": false,
+        "rejection_reasons": {
+          "invalid_initial_state": 5,
+          "no_base_crash": 10,
+          "nominal_replay_failure": 1,
+          "off_path_catastrophe": 2,
+          "oracle_task_failure": 2
+        }
+      },
+      "20": {
+        "candidates": 20,
+        "base_catastrophes": 12,
+        "path_proposal_base_catastrophe_yield": 0.6,
+        "exact_replays": 7,
+        "exact_h_replay_rate_given_base_catastrophe": 0.5833333333333334,
+        "oracle_safe_task_successes": 1,
+        "oracle_safe_task_success_rate_given_base_catastrophe": 0.08333333333333333,
+        "qualified": false,
+        "rejection_reasons": {
+          "invalid_initial_state": 4,
+          "no_base_crash": 8,
+          "nominal_replay_failure": 1,
+          "off_path_catastrophe": 1,
+          "off_path_timeout": 2,
+          "oracle_task_failure": 3
+        }
+      },
+      "15": {
+        "candidates": 20,
+        "base_catastrophes": 12,
+        "path_proposal_base_catastrophe_yield": 0.6,
+        "exact_replays": 4,
+        "exact_h_replay_rate_given_base_catastrophe": 0.3333333333333333,
+        "oracle_safe_task_successes": 1,
+        "oracle_safe_task_success_rate_given_base_catastrophe": 0.08333333333333333,
+        "qualified": false,
+        "rejection_reasons": {
+          "invalid_initial_state": 4,
+          "no_base_crash": 8,
+          "nominal_replay_failure": 4,
+          "off_path_catastrophe": 2,
+          "oracle_task_failure": 1
+        }
+      },
+      "10": {
+        "candidates": 20,
+        "base_catastrophes": 14,
+        "path_proposal_base_catastrophe_yield": 0.7,
+        "exact_replays": 7,
+        "exact_h_replay_rate_given_base_catastrophe": 0.5,
+        "oracle_safe_task_successes": 2,
+        "oracle_safe_task_success_rate_given_base_catastrophe": 0.14285714285714285,
+        "qualified": false,
+        "rejection_reasons": {
+          "invalid_initial_state": 5,
+          "no_base_crash": 6,
+          "nominal_replay_failure": 2,
+          "off_path_catastrophe": 2,
+          "oracle_collision": 1,
+          "oracle_task_failure": 2
+        }
+      },
+      "5": {
+        "candidates": 20,
+        "base_catastrophes": 15,
+        "path_proposal_base_catastrophe_yield": 0.75,
+        "exact_replays": 6,
+        "exact_h_replay_rate_given_base_catastrophe": 0.4,
+        "oracle_safe_task_successes": 1,
+        "oracle_safe_task_success_rate_given_base_catastrophe": 0.06666666666666667,
+        "qualified": false,
+        "rejection_reasons": {
+          "invalid_initial_state": 5,
+          "no_base_crash": 5,
+          "nominal_replay_failure": 4,
+          "off_path_timeout": 1,
+          "oracle_task_failure": 4
+        }
+      }
+    }
+  },
+  "gate_interpretation": {
+    "path_proposal_yield_gate": "passed descriptively at every H: 50% to 75% live Base-catastrophe yield",
+    "exact_replay_gate": "failed at every H: best was H=20 with 7/12 (58.3%)",
+    "oracle_recoverability_gate": "failed at every H: best was H=10 with 2/14 (14.3%)",
+    "formal_pilot_b_cohort_gates": "not evaluated because the required common fixed H was unavailable",
+    "paper_story": "The path-based proposal generator raises live catastrophe yield above the old placement-yield bottleneck, but broad-population exact-H replay and task-completing oracle recovery do not survive the frozen gate. The three historical Pilot A successes are therefore selected existence witnesses rather than evidence of a scalable recoverable population."
+  },
+  "limitations": [
+    "Frontier candidates span one LIBERO task and one OpenVLA checkpoint.",
+    "Full camera and observable-history state is not serialized by the LIBERO exact reset; simulator and controller state are exact, but live Base event timing varied across superseded fresh processes.",
+    "The five accepted pairs occur at four different H values and cannot be pooled into a fixed-H training cohort.",
+    "No formal 10/5/5 fixed-H dataset, learned checkpoint, detector pilot, recovery pilot, or end-to-end evaluation was produced."
+  ],
+  "next_action": "Stop the minimum sequence. Before any renewed collection, repair or redefine the exact observation/controller snapshot contract and demonstrate exact suffix replay plus oracle task completion on a new outcome-blind frontier; do not tune on the r7 candidates."
+}

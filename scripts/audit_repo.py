@@ -434,12 +434,13 @@ def audit() -> list[str]:
                 if row["oracle"]["crashed"] or not row["oracle"]["task_succeeded"]:
                     errors.append(f"E14 oracle gate failed for {row['placement_id']}")
 
-    # E15 Pilot A is a completed salvage/replay gate, not a learned result. Pin
-    # its denominators, exact-H result, and explicit non-promotion boundary.
+    # E15 Pilot A is a completed salvage/replay gate and Pilot B is a completed
+    # frontier no-go. Pin both results without promoting either to a learned
+    # recovery claim.
     e15_entry = next((entry for entry in manifest.get("entries", [])
                       if entry.get("experiment_id") == "E15"), None)
     if e15_entry is None:
-        errors.append("manifest lacks E15 Pilot A provenance")
+        errors.append("manifest lacks E15 execution provenance")
     else:
         pilot_a_path = ROOT / "results/glass_recovery_pilot_a_20260811.json"
         if pilot_a_path.exists():
@@ -486,16 +487,59 @@ def audit() -> list[str]:
                 for row in candidates
             ):
                 errors.append("E15 Pilot A candidate replay/oracle gate drifted")
-            if e15_entry["git_commit"] != pilot_a["provenance"]["runner_git_commit"]:
-                errors.append("E15 Pilot A run commit differs from manifest")
-            if e15_entry["status"] != pilot_a["status"]:
-                errors.append("E15 Pilot A status differs from manifest")
-            if e14_entry is not None and set(e15_entry["scenario_fingerprints"]) != set(
-                e14_entry["scenario_fingerprints"]
+            if "results/glass_recovery_pilot_a_20260811.json" not in e15_entry.get(
+                "result_files", []
             ):
-                errors.append("E15 Pilot A source scenes differ from E14 manifest")
+                errors.append("E15 manifest omits the Pilot A result")
 
-    # A Pilot A entry must not be mistaken for a learned result. If E15 is ever
+        pilot_b_path = ROOT / "results/glass_recovery_pilot_b_frontier_20260811.json"
+        if pilot_b_path.exists():
+            pilot_b = read_json(pilot_b_path)
+            expected = {
+                "kind": "glass_recovery_pilot_b_frontier_result",
+                "status": "pilot_b_frontier_complete_no_go",
+                "decision.value": "pilot_b_no_go",
+                "decision.go": False,
+                "decision.recommended_horizon_actions": None,
+                "decision.qualified_horizons": [],
+                "decision.pilot_b_fixed_h_collection_executed": False,
+                "decision.pilot_c_allowed": False,
+                "provenance.runner_git_commit": "dd10252fdab4648423010c4666833b539ca402bf",
+                "provenance.slurm_job.job_id": 9055676,
+                "provenance.slurm_job.state": "FAILED",
+                "provenance.slurm_job.exit_code": "1:0",
+                "candidate_design.candidates": 20,
+                "candidate_design.physical_scenes": 20,
+                "candidate_design.unique_source_states": 18,
+                "attempt_accounting.terminal_attempts": 120,
+                "attempt_accounting.unique_attempt_keys": 120,
+                "attempt_accounting.attempts_have_unique_provenance": True,
+                "attempt_accounting.one_terminal_attempt_per_candidate_horizon": True,
+                "attempt_accounting.technical_failures": 0,
+                "attempt_accounting.accepted_pairs_across_all_horizons": 5,
+            }
+            for dotted, value in expected.items():
+                if dotted_get(pilot_b, dotted) != value:
+                    errors.append(f"E15 Pilot B mismatch: {dotted}")
+            horizons = pilot_b.get("frontier", {}).get("horizons", {})
+            if set(horizons) != {"40", "30", "20", "15", "10", "5"}:
+                errors.append("E15 Pilot B horizon grid differs from the frozen frontier")
+            elif any(row.get("qualified") is not False for row in horizons.values()):
+                errors.append("E15 Pilot B no-go contains a qualified horizon")
+            if "results/glass_recovery_pilot_b_frontier_20260811.json" not in (
+                e15_entry.get("result_files", [])
+            ):
+                errors.append("E15 manifest omits the Pilot B frontier result")
+            if e15_entry.get("git_commit") != pilot_b["provenance"]["runner_git_commit"]:
+                errors.append("E15 Pilot B run commit differs from manifest")
+            if e15_entry.get("status") != pilot_b["status"]:
+                errors.append("E15 Pilot B status differs from manifest")
+            if set(e15_entry.get("scenario_fingerprints", [])) != set(
+                pilot_b.get("candidate_design", {}).get("physical_scene_sha256", [])
+            ):
+                errors.append("E15 Pilot B physical-scene fingerprints differ from manifest")
+
+    # Pilot A/B entries must not be mistaken for a learned result. If E15 is ever
     # promoted, require a separate machine-readable learned-result artifact with
     # every semantic guard declared by P0-F.
     if e15_entry is not None and e15_entry.get("status") in LEARNED_PROMOTION_STATUSES:

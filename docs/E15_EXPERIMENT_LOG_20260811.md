@@ -169,24 +169,69 @@ select candidates. Every final-run candidate receives exactly one attempt, and
 the exact-H suffix gate still requires byte-identical simulator/controller
 restore plus 100% replay among observed Base catastrophes.
 
-Required decision fields:
+### Final r7 frontier
 
-- path-proposal Base-catastrophe yield
-- exact nominal replay rate conditional on Base catastrophe
-- oracle safe task success by H
-- chosen fixed H, if any
-- matched off-path catastrophe and task-success rates
-- accepted pair and distinct source-state counts by split
-- geometry-family counts
-- one terminal attempt per candidate and technical-failure count
+Quest A100 job `9055676` ran the complete outcome-blind grid at commit
+`dd10252` under
+`results/glass_recovery_v2/pilot_b_task0_20260811_r7/frontier_task0`.
+It evaluated all 20 candidates exactly once at every declared H and finished
+the 120-cell grid in 01:51:29 on `qgpu0205`. Slurm state `FAILED`, exit `1:0`,
+is the runner's expected scientific no-go exit after writing the complete
+summary, not a technical failure.
+
+- terminal attempts: 120/120; unique attempt keys: 120/120
+- one terminal attempt per candidate/H: yes
+- runner commit across terminal events: `dd10252fdab4648423010c4666833b539ca402bf`
+- technical `failed` events: 0
+- complete accepted three-branch artifacts across all H: 5
+- frontier summary SHA-256:
+  `1c5c197163ee7c51b58cc2a72d80be2c38d3a15f3b42c6b5dbb68292ed2f37a4`
+- frontier rows SHA-256:
+  `3d27071dba5193299de01d211d1a48fbaf84e73739e7860b64bb363adcf2f4b5`
+
+| H | Base catastrophes / 20 | Path yield | Exact replays / Base catastrophes | Exact rate | Oracle safe task successes / Base catastrophes | Oracle rate | Qualified |
+|---:|---:|---:|---:|---:|---:|---:|---|
+| 40 | 13/20 | 65% | 2/13 | 15.4% | 0/13 | 0% | no |
+| 30 | 10/20 | 50% | 4/10 | 40.0% | 0/10 | 0% | no |
+| 20 | 12/20 | 60% | 7/12 | 58.3% | 1/12 | 8.3% | no |
+| 15 | 12/20 | 60% | 4/12 | 33.3% | 1/12 | 8.3% | no |
+| 10 | 14/20 | 70% | 7/14 | 50.0% | 2/14 | 14.3% | no |
+| 5 | 15/20 | 75% | 6/15 | 40.0% | 1/15 | 6.7% | no |
+
+All H values pass the descriptive >=30% live Base-catastrophe yield target, so
+the swept-path proposal mechanism does improve the old placement-yield
+bottleneck. None approaches the required 100% exact replay, however, and none
+reaches the frontier's 50% oracle safe-task-success threshold. H=20 has the
+best exact replay rate; H=10 has the best oracle rate. Neither is close enough
+to freeze honestly.
+
+The five complete accepted pairs are not a cohort because they occur at four
+different horizons:
+
+- H=20: `glass_recovery_heldout_0002`
+- H=15: `glass_recovery_train_0004`
+- H=10: `glass_recovery_validation_0000`,
+  `glass_recovery_validation_0003`
+- H=5: `glass_recovery_train_0008`
+
+Across the full repeated-H diagnostic there were 30 verified exact replays, 19
+matched off-path task-success artifacts, and five independently recaptured
+oracle primary pairs. These pooled counts are descriptive only because the same
+physical scenes recur across H. At any single H, the accepted count is at most
+two, far below the fixed-H 10/5/5 cohort requirement.
+
+Decision: `pilot_b_no_go`. `recommended_horizon_actions=null` and
+`qualified_horizons=[]`. The fixed-H 50/25/25 proposal/collection stage was not
+run, so formal fixed-H off-path rates, accepted 10/5/5 counts, source diversity,
+and family coverage are correctly left unevaluated. The tracked machine record
+is `results/glass_recovery_pilot_b_frontier_20260811.json`.
 
 ## Pilots C--F
 
-Not yet executed. Each section remains blocked until the previous pilot writes
-a go summary. Validation and train exact-anchor cohorts are sealed from
-accepted manifests and checkpoint hashes without reading evaluation outcomes.
-The same A100 device class is used for training/evaluation to keep the pilot
-runtime consistent with Pilot B.
+Not executed. Pilot B wrote a scientific no-go, so the frozen sequence stops
+before formal collection, training, cohort sealing, or Pilot C. No schema-v2
+fixed-H dataset, learned checkpoint, detector result, recovery result, or
+end-to-end result exists.
 
 The following one-seed training/evaluation configuration was fixed while the
 Pilot B r6 frontier was still running, before any completed frontier summary or
@@ -205,18 +250,26 @@ accepted fixed-H dataset existed:
 - no hyperparameter sweep and no dev-test/held-out outcome used for training,
   checkpoint selection, calibration, or the minimum C--F pilot decisions.
 
-If Pilot B passes, evaluation conditions remain sequentially restricted to the
-condition needed by each gate: oracle-timed oracle recovery (C), learned risk
-gate plus oracle recovery (D), oracle-timed learned recovery (E), and only then
-Base versus the full learned gate/recovery composition (F).
+The predeclared C--F configuration above remains unused. Any renewed study must
+begin with a new outcome-blind frontier after repairing or redefining the exact
+observation/controller snapshot contract; it must not tune on the exposed r7
+candidates.
 
 ## Paper-facing interpretation status
 
-The positive result currently supported is narrow: Pilot A reproduced three
-historical avoidable catastrophes, and Base completed 47/50 no-glass task-0
-source rollouts used by the new generator. There is not yet a v2 data-feasibility
-result, learned detector result, learned recovery result, or end-to-end safety
-claim. Generator failures are useful methodology evidence: successful nominal
-task execution is necessary but not sufficient for a valid counterfactual
-hazard placement, which motivates the captured-action screen and explicit
-proposal denominator.
+The result is a useful negative feasibility story. Pilot A reproduced three
+historically selected avoidable catastrophes, and Base completed 47/50 no-glass
+source rollouts. The new generator then raised live Base-catastrophe yield to
+50%--75%, showing that proposal placement is no longer the dominant bottleneck.
+But broad-population exact-H suffix replay remained only 15.4%--58.3%, and
+oracle safe task success remained 0%--14.3% conditional on live Base
+catastrophe. The three Pilot A scenes are therefore existence witnesses, not a
+scalable recoverable population.
+
+This no-go prevents a misleading learned-recovery story: there is no honest
+fixed H, no v2 training cohort, and no learned or end-to-end safety claim. The
+technical lesson is that exact simulator/controller hashes are insufficient
+for stable broad-population replay when camera and observable-history state is
+not serialized, while the control lesson is that even exact-replaying states
+rarely admit task-completing recovery under the declared oracle class and
+220-action budget.

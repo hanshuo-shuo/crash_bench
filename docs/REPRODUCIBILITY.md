@@ -90,7 +90,13 @@ job `9044175`). The full `core_salvage_audit.jsonl`, exact state/controller
 snapshots, oracle-search records, and schema-v2 realignment summary are ignored
 but retained locally and on Quest under
 `results/glass_recovery_v2/pilot_a_recovery_20260811/`; the tracked record pins
-their hashes and sizes. Pilot B was not run.
+their hashes and sizes. Pilot B subsequently completed its 120-cell H frontier
+in Quest job `9055676`; the tracked no-go record is
+`results/glass_recovery_pilot_b_frontier_20260811.json`, and the complete ignored
+rows remain under
+`results/glass_recovery_v2/pilot_b_task0_20260811_r7/frontier_task0/` on Quest.
+No fixed H was selected, so fixed-H collection and all later stages were not
+run.
 
 `run_glass_avoidability_frontier.py --print-commands` is a no-rollout preflight.
 `--execute` runs the canonical collector independently at H=40,30,20,15,10,5

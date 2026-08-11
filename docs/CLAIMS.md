@@ -36,13 +36,16 @@ they do not yet establish a learned recovery result or held-out generalization.
 See `results/ANALYSIS_glass_recovery_acceptance.md` and
 `results/glass_recovery_acceptance_smoke_20260809.json`.
 
-E15/v2 is the current experiment line but has no claim ID or tracked learned
-result. Code-complete plumbing, synthetic CPU training, or fake-environment
-evaluation cannot support a learned-result claim. Promotion requires a sealed
-accepted cohort and pair IDs, exact replay evidence, disjoint train/validation/
-final-held-out source and family counts, checkpoint/Base/dataset/protocol
-identities, the full predeclared baseline matrix, source-cluster analysis,
-primary safe task success and catastrophe outcomes, and explicit clean-control
-false-intervention and task-preservation metrics. E14 artifacts cannot satisfy
-this contract by reinterpretation or migration without v2 recollection and
-revalidation.
+E15/v2 is the current experiment line but has no claim ID or learned result.
+Its tracked Pilot B frontier is a feasibility no-go: all 120 candidate/H cells
+completed, but no H met the exact-replay and oracle-recoverability gates, so no
+fixed-H dataset or checkpoint was produced. Code-complete plumbing, synthetic
+CPU training, or fake-environment evaluation cannot support a learned-result
+claim. Any future promotion still requires a sealed accepted cohort and pair
+IDs, exact replay evidence, disjoint train/validation/final-held-out source and
+family counts, checkpoint/Base/dataset/protocol identities, the full
+predeclared baseline matrix, source-cluster analysis, primary safe task success
+and catastrophe outcomes, and explicit clean-control false-intervention and
+task-preservation metrics. E14 artifacts and the five r7 pairs scattered across
+four different H values cannot satisfy this contract by reinterpretation,
+pooling, or migration.
