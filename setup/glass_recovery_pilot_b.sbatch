@@ -97,6 +97,7 @@ case "$STAGE" in
       --train-states "${CB_PILOT_B_TRAIN_STATES:-15}" \
       --validation-states "${CB_PILOT_B_VALIDATION_STATES:-8}" \
       --heldout-states "${CB_PILOT_B_HELDOUT_STATES:-8}"
+    COLLECTION_STATUS=0
     python scripts/collect_glass_recovery_pairs.py \
       --placements "$DATA_PLACEMENTS/placements.json" \
       --output "$DATA_ROOT" \
@@ -105,7 +106,15 @@ case "$STAGE" in
       --unnorm-key "$UNNORM_KEY" \
       --rollout-seed 0 \
       --max-train 10 --max-validation 5 --max-heldout 5 \
-      --precrash-horizon "$HORIZON"
+      --precrash-horizon "$HORIZON" || COLLECTION_STATUS=$?
+    python scripts/summarize_glass_pilot_b.py \
+      --frontier-summary "$RUN_ROOT/frontier_task0/frontier_summary.json" \
+      --placements "$DATA_PLACEMENTS/placements.json" \
+      --dataset "$DATA_ROOT" \
+      --out "$RUN_ROOT/pilot_b_summary.json"
+    if (( COLLECTION_STATUS != 0 )); then
+      exit "$COLLECTION_STATUS"
+    fi
     ;;
 
   *)
