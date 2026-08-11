@@ -84,6 +84,14 @@ save LIBERO's observable delay/history state; acceptance still requires the
 searched config to succeed again in a fresh independent rollout. Use the exact
 Pilot A commands in `GLASS_RECOVERY_V1.md`.
 
+The completed Pilot A run is tracked in
+`results/glass_recovery_pilot_a_20260811.json` (runner commit `42c3060`, Quest
+job `9044175`). The full `core_salvage_audit.jsonl`, exact state/controller
+snapshots, oracle-search records, and schema-v2 realignment summary are ignored
+but retained locally and on Quest under
+`results/glass_recovery_v2/pilot_a_recovery_20260811/`; the tracked record pins
+their hashes and sizes. Pilot B was not run.
+
 `run_glass_avoidability_frontier.py --print-commands` is a no-rollout preflight.
 `--execute` runs the canonical collector independently at H=40,30,20,15,10,5
 and writes per-attempt rows plus a frozen recommendation. Its input must contain

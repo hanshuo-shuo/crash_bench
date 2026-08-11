@@ -434,11 +434,70 @@ def audit() -> list[str]:
                 if row["oracle"]["crashed"] or not row["oracle"]["task_succeeded"]:
                     errors.append(f"E14 oracle gate failed for {row['placement_id']}")
 
-    # Merely adding E15 to the index is not a result.  If its manifest status is
-    # ever promoted, require a tracked machine-readable learned-result artifact
-    # with every semantic guard declared by P0-F.
+    # E15 Pilot A is a completed salvage/replay gate, not a learned result. Pin
+    # its denominators, exact-H result, and explicit non-promotion boundary.
     e15_entry = next((entry for entry in manifest.get("entries", [])
                       if entry.get("experiment_id") == "E15"), None)
+    if e15_entry is None:
+        errors.append("manifest lacks E15 Pilot A provenance")
+    else:
+        pilot_a_path = ROOT / "results/glass_recovery_pilot_a_20260811.json"
+        if pilot_a_path.exists():
+            pilot_a = read_json(pilot_a_path)
+            expected = {
+                "kind": "glass_recovery_pilot_a_result",
+                "status": "pilot_a_complete_go",
+                "decision.value": "pilot_a_go",
+                "decision.go": True,
+                "decision.pilot_b_allowed": True,
+                "decision.pilot_b_executed": False,
+                "provenance.runner_git_commit": "42c30607b23afaeff264dbe343dcb82add3d6656",
+                "provenance.slurm_job.job_id": 9044175,
+                "provenance.slurm_job.state": "COMPLETED",
+                "historical_attempt_accounting.attempts": 109,
+                "historical_attempt_accounting.unique_attempt_ids": 109,
+                "historical_attempt_accounting.attempts_have_unique_provenance": True,
+                "historical_attempt_accounting.unrecoverable_attempt_identity_lower_bound": 0,
+                "gate.target_h_actions": 20,
+                "gate.candidate_count": 3,
+                "gate.rates.exact_controller_state_available": 1.0,
+                "gate.rates.repaired_first_action_predicate_checks": 1.0,
+                "gate.rates.exact_h_nominal_suffix_replay": 1.0,
+                "gate.rates.oracle_independent_replay": 1.0,
+                "gate.direct_v2_promotions": 0,
+                "gate.candidate_role": "development_salvage_only",
+            }
+            for dotted, value in expected.items():
+                if dotted_get(pilot_a, dotted) != value:
+                    errors.append(f"E15 Pilot A mismatch: {dotted}")
+            expected_ids = {
+                "glass_recovery_heldout_0023",
+                "glass_recovery_train_0051",
+                "glass_recovery_train_0074",
+            }
+            candidates = pilot_a.get("candidates", [])
+            if {row.get("placement_id") for row in candidates} != expected_ids:
+                errors.append("E15 Pilot A candidate IDs differ from the final summary")
+            if any(
+                row.get("catastrophe_action_index_zero_based") != 19
+                or row.get("remaining_actions") != 20
+                or row.get("oracle_independent_recapture_success") is not True
+                or row.get("oracle_relevant_observation_exact_across_resets") is not True
+                for row in candidates
+            ):
+                errors.append("E15 Pilot A candidate replay/oracle gate drifted")
+            if e15_entry["git_commit"] != pilot_a["provenance"]["runner_git_commit"]:
+                errors.append("E15 Pilot A run commit differs from manifest")
+            if e15_entry["status"] != pilot_a["status"]:
+                errors.append("E15 Pilot A status differs from manifest")
+            if e14_entry is not None and set(e15_entry["scenario_fingerprints"]) != set(
+                e14_entry["scenario_fingerprints"]
+            ):
+                errors.append("E15 Pilot A source scenes differ from E14 manifest")
+
+    # A Pilot A entry must not be mistaken for a learned result. If E15 is ever
+    # promoted, require a separate machine-readable learned-result artifact with
+    # every semantic guard declared by P0-F.
     if e15_entry is not None and e15_entry.get("status") in LEARNED_PROMOTION_STATUSES:
         learned_payload = None
         for rel in e15_entry.get("result_files", []):

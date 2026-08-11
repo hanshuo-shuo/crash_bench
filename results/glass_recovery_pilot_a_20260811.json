@@ -1,0 +1,166 @@
+{
+  "schema_version": 1,
+  "kind": "glass_recovery_pilot_a_result",
+  "experiment_id": "E15",
+  "status": "pilot_a_complete_go",
+  "created_date": "2026-08-11",
+  "created_at_utc": "2026-08-11T06:11:57.110897+00:00",
+  "objective": "Recover unique provenance for the ignored E14 raw root, realign every complete candidate to exact H=20, replay the repaired catastrophe predicate, and independently reproduce safe task-completing oracle success.",
+  "decision": {
+    "value": "pilot_a_go",
+    "go": true,
+    "pilot_b_allowed": true,
+    "pilot_b_executed": false,
+    "no_go_reasons": []
+  },
+  "provenance": {
+    "runner_git_commit": "42c30607b23afaeff264dbe343dcb82add3d6656",
+    "historical_e14_git_commit": "7bb6d7de805280d084b2dc68084796aec2e0619e",
+    "historical_checkpoint": "openvla/openvla-7b-finetuned-libero-spatial",
+    "historical_checkpoint_revision": "962318cec55ac10993ff0f5f43eda9a270b4c873",
+    "historical_source_root": "results/glass_recovery_v1/smoke_acceptance_20260809",
+    "historical_source_root_read_only": true,
+    "pilot_a_ignored_root": "results/glass_recovery_v2/pilot_a_recovery_20260811",
+    "placement_manifest_sha256": "454af9f91cc464f785e000efb93a67c57d1f1299e1015571986c309e5ff0f091",
+    "core_salvage_audit": {
+      "path": "results/glass_recovery_v2/pilot_a_recovery_20260811/core_salvage_audit.jsonl",
+      "sha256": "7aea3b3d24811f036a96a5ad3348b83dd70fb44f0b5feed8aadf0daae3f009b8",
+      "bytes": 377818
+    },
+    "inventory_summary": {
+      "path": "results/glass_recovery_v2/pilot_a_recovery_20260811/inventory_summary.json",
+      "sha256": "3c824294ba6650b19e72b4312896bea40a1f73d1266086297d22d9e1f697f622",
+      "bytes": 2219
+    },
+    "realignment_summary": {
+      "path": "results/glass_recovery_v2/pilot_a_recovery_20260811/h_realignment_summary_r3.json",
+      "sha256": "8c456414220314d96dac6c9061150d650bc2bc6e8e3c675ac92f792d22f9ba19",
+      "bytes": 47056,
+      "schema_version": 2
+    },
+    "slurm_job": {
+      "job_id": 9044175,
+      "state": "COMPLETED",
+      "exit_code": "0:0",
+      "elapsed": "00:02:09",
+      "node": "qgpu3010",
+      "hardware": "NVIDIA H100 80GB HBM3"
+    },
+    "diagnostic_iterations": [
+      {
+        "job_id": 9043439,
+        "runner_git_commit": "f85f97b898b5e635f56f9f836bbd61bc07301c60",
+        "disposition": "superseded_code_diagnostic",
+        "finding": "The first runner incorrectly required the original historical observation hash after exact simulator/controller restore."
+      },
+      {
+        "job_id": 9043782,
+        "runner_git_commit": "f857a92fcb184607a54d1921b450b4eed939dc4b",
+        "disposition": "superseded_code_diagnostic",
+        "finding": "The second runner incorrectly required full reset observations, including camera and unsaved observable history, to hash identically before empirical oracle replay."
+      },
+      {
+        "job_id": 9044175,
+        "runner_git_commit": "42c30607b23afaeff264dbe343dcb82add3d6656",
+        "disposition": "final_pilot_a_evidence",
+        "finding": "Exact simulator/controller reset remained mandatory; observation drift was audited; oracle search and fresh independent recapture were executed."
+      }
+    ]
+  },
+  "historical_attempt_accounting": {
+    "attempts": 109,
+    "unique_attempt_ids": 109,
+    "attempts_have_unique_provenance": true,
+    "attempt_identity_quality": {
+      "slurm_log_reconstructed": 109
+    },
+    "identity_components": "Slurm job ID, within-job attempt ordinal, placement, run commit, checkpoint revision, and placement-manifest identity",
+    "accepted": 3,
+    "rejected": 106,
+    "unique_placements": 101,
+    "raw_directory_reuses": 16,
+    "possible_overwrites": 0,
+    "unrecoverable_attempt_identity_lower_bound": 0,
+    "rejection_counts": {
+      "no_base_crash": 92,
+      "careful_did_not_crash": 12,
+      "oracle_task_failure": 1,
+      "other": 1
+    }
+  },
+  "gate": {
+    "target_h_actions": 20,
+    "candidate_count": 3,
+    "candidate_statuses": {
+      "passed": 3
+    },
+    "rates": {
+      "exact_controller_state_available": 1.0,
+      "repaired_first_action_predicate_checks": 1.0,
+      "exact_h_nominal_suffix_replay": 1.0,
+      "oracle_independent_replay": 1.0
+    },
+    "direct_v2_promotions": 0,
+    "candidate_role": "development_salvage_only"
+  },
+  "candidates": [
+    {
+      "placement_id": "glass_recovery_heldout_0023",
+      "historical_split_label": "heldout",
+      "historical_attempt_id": "b1770c3db67f74b5770c7cfcae73badf19a6b815f2c2b66ccfafeb36ab9f5186",
+      "old_suffix_actions": 30,
+      "advance_captured_actions": 10,
+      "remaining_actions": 20,
+      "catastrophe_action_index_zero_based": 19,
+      "nominal_peak_glass_force_n": 44.77250885207603,
+      "oracle_search_attempts": 1,
+      "oracle_steps": 138,
+      "oracle_peak_glass_force_n": 0.0,
+      "oracle_config_sha256": "4f4e69b72ae199716062ea0613fa8070f88619449a4d11fe841e299812515a68",
+      "oracle_independent_recapture_success": true,
+      "oracle_relevant_observation_exact_across_resets": true,
+      "full_observation_exact_across_resets": false
+    },
+    {
+      "placement_id": "glass_recovery_train_0051",
+      "historical_split_label": "train",
+      "historical_attempt_id": "6ec9a5375eaaff27825418b871bfe097ea698913c61d9f1d47e0ca4ae29e6b92",
+      "old_suffix_actions": 77,
+      "advance_captured_actions": 57,
+      "remaining_actions": 20,
+      "catastrophe_action_index_zero_based": 19,
+      "nominal_peak_glass_force_n": 32.95979643023947,
+      "oracle_search_attempts": 1,
+      "oracle_steps": 146,
+      "oracle_peak_glass_force_n": 0.8836381474019163,
+      "oracle_config_sha256": "0724b8c862b0a762b906f09f5d37da5012f11287e88e72f0a71a27ac43c2b96f",
+      "oracle_independent_recapture_success": true,
+      "oracle_relevant_observation_exact_across_resets": true,
+      "full_observation_exact_across_resets": false
+    },
+    {
+      "placement_id": "glass_recovery_train_0074",
+      "historical_split_label": "train",
+      "historical_attempt_id": "f3c46c89dbda1b2359ab50880c4e8836cceea4029989bb1596e5fb62413d9b5e",
+      "old_suffix_actions": 44,
+      "advance_captured_actions": 24,
+      "remaining_actions": 20,
+      "catastrophe_action_index_zero_based": 19,
+      "nominal_peak_glass_force_n": 27.145414728524575,
+      "oracle_search_attempts": 1,
+      "oracle_steps": 145,
+      "oracle_peak_glass_force_n": 4.048667471851341,
+      "oracle_config_sha256": "dc05446461813e3478fd27a0441e06c458de88af9c6cd8f9732f1fcc59365d26",
+      "oracle_independent_recapture_success": true,
+      "oracle_relevant_observation_exact_across_resets": true,
+      "full_observation_exact_across_resets": false
+    }
+  ],
+  "observation_restore_interpretation": "Every aligned-H branch reproduced simulator and controller hashes exactly. Full observations differed because E14 did not snapshot LIBERO camera and observable delay/history state; all EEF pose, gripper, target, and plate fields used by the oracle or its trace were byte-identical across the search and independent-recapture resets.",
+  "limitations": [
+    "Pilot A establishes salvage provenance and replayability for three historical candidates only; it is not a learned recovery result.",
+    "The candidates remain development_salvage_only and no E14 artifact is directly promoted into a v2 training or evaluation manifest.",
+    "The historical split labels are descriptive only and must not be reused to claim a sealed v2 held-out evaluation.",
+    "Pilot B is permitted by the minimum sequence but was not executed in this run."
+  ]
+}

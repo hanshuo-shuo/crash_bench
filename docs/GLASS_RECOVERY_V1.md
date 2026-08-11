@@ -277,6 +277,16 @@ all three complete accepted artifacts pass exact controller restore, repaired
 pre-action predicate priming, catastrophe on suffix action 20, and independent
 oracle recapture.  Any failure leaves `pilot_b_allowed=false`.
 
+The final run passed on 2026-08-11 at runner commit `42c3060`, Quest H100 job
+`9044175`: 109/109 attempts have unique reconstructed identities and all four
+candidate-level rates are 3/3. The historical suffixes had lengths 30, 77, and
+44; advancing 10, 57, and 24 captured actions placed each catastrophe exactly
+on zero-based suffix index 19. Each preferred historical oracle config then
+succeeded in its search rollout and fresh independent recapture. Pilot B is
+allowed but was not submitted. See the tracked
+`results/glass_recovery_pilot_a_20260811.json`; detailed evidence remains in the
+ignored Pilot A root.
+
 GPU source-trace capture and a 20-candidate development frontier design:
 
 ```bash

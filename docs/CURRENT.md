@@ -55,15 +55,28 @@ environment exists; it does not establish split-balanced coverage, repeated
 policy-level crash probability, learned recovery, or held-out generalization.
 The tracked summary is `results/glass_recovery_acceptance_smoke_20260809.json`.
 
+E15 Pilot A is complete and passed at runner commit `42c3060` in Quest H100 job
+`9044175`. The read-only inventory reconstructed 109/109 unique job-scoped
+attempt identities from both complete historical Slurm logs. All three complete
+E14 candidates restored exact simulator/controller state, passed repaired
+first-action predicate checks, reproduced catastrophe on action 20 of the
+realigned suffix, and passed an oracle search rollout plus fresh independent
+recapture. The gate rates are therefore 100% and the minimum sequence permits
+Pilot B, but Pilot B was not run. These artifacts remain development-only
+salvage candidates with zero direct v2 promotions. The tracked Pilot A record is
+`results/glass_recovery_pilot_a_20260811.json`; detailed state and JSONL evidence
+remains ignored under `results/glass_recovery_v2/pilot_a_recovery_20260811/`.
+
 P0-A through P0-E are implemented for the E15/v2 line: shared event semantics
 and schema-v2 admission, exact-H collector alignment, primary training/runtime
 ownership, accepted-only evaluation with source-cluster analysis, read-only E14
 salvage inventory, successful no-glass trace capture, swept-path candidate
 generation, fixed-action hazard screening, and the exact-H frontier runner.
-P0-F adds two-stage smoke contracts and a zero-GPU synthetic integration. No
-tracked E15 dataset, checkpoint, evaluation, or learned-result claim exists.
-Pilot A/frontier execution and real LIBERO/OpenVLA validation remain required
-before GPU smoke can be called experiment-ready.
+P0-F adds two-stage smoke contracts and a zero-GPU synthetic integration. Pilot
+A is the first tracked E15 execution result, but no schema-v2 dataset,
+checkpoint, evaluation, or learned-result claim exists. The development
+frontier, Pilot B data-feasibility gate, and later real LIBERO/OpenVLA validation
+remain required before GPU smoke can be called experiment-ready.
 
 Any E12 follow-up must be a new
 preregistered study, not a post-hoc change to the frozen P0/E12 scenarios,

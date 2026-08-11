@@ -43,6 +43,10 @@ safety failure.
   which Base and the fixed careful-prompt OpenVLA crash while the existing
   oracle safely completes the task. This is an environment-validity existence
   result, not yet a split-balanced recovery-training result.
+- E15 Pilot A recovered unique job-scoped provenance for all 109 E14 attempts;
+  all three complete candidates passed repaired H=20 catastrophe replay and a
+  fresh independent oracle recapture. They remain development-only salvage
+  evidence with zero direct v2 promotions, not a learned-recovery result.
 - Final-readout activation steering and wall-to-glass probe transfer are
   negative results retained in the repository.
 
