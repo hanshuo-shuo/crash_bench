@@ -1,5 +1,6 @@
 #!/bin/bash
-# Pilot B task-0 feasibility: source traces, H frontier, then 10/5/5 collection.
+# Pilot B task-0 feasibility: diagnose continuation, then run a fresh frontier
+# and (only after a go) 10/5/5 collection.
 # Submit one stage at a time with setup/submit_glass_recovery_pilot_b.sh.
 #SBATCH --account=p33100
 #SBATCH --partition=gengpu
@@ -56,6 +57,21 @@ case "$STAGE" in
       --rollout-seed 0 \
       --settle-steps 10 \
       --max-steps 220
+    ;;
+
+  diagnose)
+    DIAGNOSTIC_PLACEMENTS="${CB_PILOT_B_DIAGNOSTIC_PLACEMENTS:?set to the exposed diagnostic-only placement manifest}"
+    test -f "$DIAGNOSTIC_PLACEMENTS"
+    python scripts/diagnose_glass_continuation_oracle.py \
+      --placements "$DIAGNOSTIC_PLACEMENTS" \
+      --output "$RUN_ROOT/continuation_oracle_diagnostic_h${CB_PILOT_B_DIAGNOSTIC_H:-20}.json" \
+      --checkpoint "$CHECKPOINT" \
+      --checkpoint-revision "$REVISION" \
+      --unnorm-key "$UNNORM_KEY" \
+      --rollout-seed 0 \
+      --horizon "${CB_PILOT_B_DIAGNOSTIC_H:-20}" \
+      --max-candidates "${CB_PILOT_B_DIAGNOSTIC_CANDIDATES:-6}" \
+      --oracle-steps "${CB_PILOT_B_DIAGNOSTIC_ORACLE_STEPS:-220}"
     ;;
 
   frontier)

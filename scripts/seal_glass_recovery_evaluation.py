@@ -91,6 +91,13 @@ def seal(args: argparse.Namespace) -> dict:
             pair_root / "matched_robot_state.npy",
             pair_root / "controller_state.npz",
         ]
+        if "model_xml_sha256" in group[0].metadata.get("branch_start_hashes", {}):
+            required.append(pair_root / "onpath_model.xml")
+        control = next(
+            record for record in group if record.trajectory_kind == "off_path_control"
+        )
+        if "model_xml_sha256" in control.metadata.get("branch_start_hashes", {}):
+            required.append(pair_root / "offpath_model.xml")
         for path in required:
             if not path.is_file():
                 raise SystemExit(f"missing accepted artifact {path}")

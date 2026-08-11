@@ -776,14 +776,38 @@ def test_controller_state_roundtrip_restores_osc_interpolators():
             start=np.asarray([0.0, 0.1, 0.2]), goal=np.asarray([0.3, 0.4, 0.5]), step=1,
         ),
     )
+    observable = SimpleNamespace(
+        _time_since_last_sample=0.02,
+        _current_delay=0.0,
+        _current_observed_value=np.asarray([4.0, 5.0]),
+        _sampled=True,
+    )
+    action_buffer = SimpleNamespace(
+        current=np.asarray([0.2, 0.3]), last=np.asarray([0.0, 0.1])
+    )
+    robot = SimpleNamespace(
+        controller=controller, torques=np.asarray([0.11, 0.12]),
+        recent_actions=action_buffer,
+    )
+    raw = SimpleNamespace(
+        robots=[robot], cur_time=1.25, timestep=25, done=False,
+        _observables={"camera": observable},
+        _obs_cache={"camera": np.asarray([4.0, 5.0])},
+    )
+    raw._get_observations = lambda: {
+        "camera": observable._current_observed_value.copy()
+    }
     env = LiberoEnv.__new__(LiberoEnv)
-    env.env = SimpleNamespace(env=SimpleNamespace(
-        robots=[SimpleNamespace(controller=controller)]
-    ))
+    env.env = SimpleNamespace(env=raw)
     model = SimpleNamespace(nv=2, na=1, nu=2)
     data = SimpleNamespace(
         qacc_warmstart=np.asarray([0.4, 0.5]),
         act=np.asarray([0.6]), ctrl=np.asarray([0.7, 0.8]),
+        qfrc_applied=np.asarray([0.9, 1.0]),
+        xfrc_applied=np.asarray([[1.1, 1.2]]),
+        mocap_pos=np.asarray([[1.3, 1.4, 1.5]]),
+        mocap_quat=np.asarray([[1.0, 0.0, 0.0, 0.0]]),
+        userdata=np.asarray([1.6]), plugin_state=np.asarray([1.7]),
     )
     env.sim_view = SimpleNamespace(_live_mj=lambda: (model, data))
     snapshot = env.controller_state()
@@ -796,6 +820,11 @@ def test_controller_state_roundtrip_restores_osc_interpolators():
     data.qacc_warmstart[:] = -1
     data.act[:] = -1
     data.ctrl[:] = -1
+    data.qfrc_applied[:] = -1
+    raw.cur_time, raw.timestep, raw.done = 0.0, 0, True
+    observable._current_observed_value[:] = -1
+    observable._sampled = False
+    action_buffer.current[:] = -1
 
     env.restore_controller_state(snapshot)
 
@@ -808,6 +837,37 @@ def test_controller_state_roundtrip_restores_osc_interpolators():
     assert np.array_equal(data.qacc_warmstart, [0.4, 0.5])
     assert np.array_equal(data.act, [0.6])
     assert np.array_equal(data.ctrl, [0.7, 0.8])
+    assert np.array_equal(data.qfrc_applied, [0.9, 1.0])
+    assert (raw.cur_time, raw.timestep, raw.done) == (1.25, 25, False)
+    assert observable._sampled is True
+    assert np.array_equal(observable._current_observed_value, [4.0, 5.0])
+    assert np.array_equal(action_buffer.current, [0.2, 0.3])
+
+
+def test_exact_reset_can_rebuild_from_captured_model_xml_without_reinjection():
+    calls = []
+    model = SimpleNamespace(nq=2, nv=2)
+    wrapper = SimpleNamespace(
+        sim=SimpleNamespace(model=model),
+        reset=lambda: calls.append("unexpected_reset"),
+        reset_from_xml_string=lambda xml: calls.append(("xml", xml)),
+        set_init_state=lambda state: {"state": np.asarray(state).copy()},
+    )
+    sim_view = SimpleNamespace(
+        peak_force=9.0,
+        update=lambda obs, done: calls.append(("update", done, len(obs["state"]))),
+    )
+    env = LiberoEnv.__new__(LiberoEnv)
+    env.env = wrapper
+    env.sim_view = sim_view
+    state = np.asarray([0.5, 1.0, 2.0, 3.0, 4.0], dtype=np.float64)
+
+    obs = env.reset_to_exact(state, model_xml="<mujoco/>")
+
+    assert calls[0] == ("xml", "<mujoco/>")
+    assert "unexpected_reset" not in calls
+    assert np.array_equal(obs["state"], state)
+    assert sim_view.peak_force == 0.0
 
 
 def _batch(n=4, hidden_dim=6):
@@ -1110,11 +1170,13 @@ def test_detour_compensates_grasp_offset_before_placing():
     obs = {"robot0_eef_pos": np.asarray([0.0, 0.0, 1.2]),
            "bowl_pos": np.asarray([0.1, 0.2, 1.0])}
     controller.engage(obs)
-    controller.i = 7
+    controller.i = controller._carry_leg_index
     controller.step(obs)
     assert controller._carry_adjusted is True
     # Held bowl is +[.1,.2] from the EEF, so the EEF target is plate-offset.
-    assert np.allclose(controller.legs[7][1], [0.4, 0.4, 1.2])
+    assert np.allclose(
+        controller.legs[controller._carry_leg_index][1], [0.4, 0.4, 1.2]
+    )
 
 
 def test_oracle_grid_searches_both_grasp_heights():
@@ -1270,10 +1332,11 @@ def test_glass_detour_approaches_along_glass_target_path():
     )
     obs = {"robot0_eef_pos": np.asarray([-0.1, 0.0, 1.2])}
     controller.engage(obs)
-    # The third waypoint returns to the nominal path 2 cm before the bowl;
-    # the fourth completes only that short approach, rather than forcing +x.
-    assert np.allclose(controller.legs[2][1], [0.08, -0.0, 1.2])
-    assert np.allclose(controller.legs[3][1], [0.1, 0.0, 1.2])
+    # First retreat radially by 6 cm.  The final two approach waypoints then
+    # return to the nominal path 2 cm before the bowl and finish that short leg.
+    assert np.allclose(controller.legs[0][1], [-0.16, 0.0, 1.2])
+    assert np.allclose(controller.legs[4][1], [0.08, -0.0, 1.2])
+    assert np.allclose(controller.legs[5][1], [0.1, 0.0, 1.2])
 
 
 def test_glass_detour_uses_matched_control_grasp_offset():
@@ -1284,9 +1347,9 @@ def test_glass_detour_uses_matched_control_grasp_offset():
         grasp_xy_offset=[-0.002, -0.05],
     )
     controller.engage({"robot0_eef_pos": np.asarray([-0.1, 0.0, 1.2])})
-    assert np.allclose(controller.legs[3][1], [0.098, -0.05, 1.2])
-    assert np.allclose(controller.legs[4][1], [0.098, -0.05, 0.931])
-    assert np.allclose(controller.legs[6][1], [0.098, -0.05, 1.2])
+    assert np.allclose(controller.legs[5][1], [0.098, -0.05, 1.2])
+    assert np.allclose(controller.legs[6][1], [0.098, -0.05, 0.931])
+    assert np.allclose(controller.legs[8][1], [0.098, -0.05, 1.2])
 
 
 def test_late_glass_anchor_is_clamped_before_target_overlap():
@@ -1343,24 +1406,26 @@ def test_exact_branch_start_hashes_include_observation_dtype_and_shape():
     }
     hashes = _branch_start_hashes(env, observation)
     assert set(hashes) == {
-        "simulator_state_sha256", "controller_state_sha256", "observation_sha256",
+        "simulator_state_sha256", "controller_state_sha256",
+        "continuation_state_sha256", "observation_sha256",
     }
     assert hashes["observation_sha256"] == _observation_sha256(observation)
     changed_dtype = {**observation, "state": observation["state"].astype(np.float64)}
     assert _observation_sha256(changed_dtype) != hashes["observation_sha256"]
 
 
-def test_exact_branch_restore_allows_observation_history_drift_only():
+def test_exact_branch_restore_requires_serialized_observation_history():
     expected = {
         "simulator_state_sha256": "a" * 64,
         "controller_state_sha256": "b" * 64,
         "observation_sha256": "c" * 64,
     }
-    _require_branch_start_hashes(
-        {**expected, "observation_sha256": "d" * 64},
-        expected,
-        label="replay",
-    )
+    with pytest.raises(glass_collector.CandidateRejected, match="observation_sha256"):
+        _require_branch_start_hashes(
+            {**expected, "observation_sha256": "d" * 64},
+            expected,
+            label="replay",
+        )
     with pytest.raises(glass_collector.CandidateRejected, match="controller_state_sha256"):
         _require_branch_start_hashes(
             {**expected, "controller_state_sha256": "e" * 64},
