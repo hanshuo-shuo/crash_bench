@@ -134,6 +134,7 @@ def _collector_command(args: argparse.Namespace, horizon: int, counts: Mapping[s
         "--scan-steps", str(args.scan_steps),
         "--control-steps", str(args.control_steps),
         "--oracle-steps", str(args.oracle_steps),
+        "--frontier-diagnostic",
         "--no-resume",
     ]
 

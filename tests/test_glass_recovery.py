@@ -102,6 +102,7 @@ from scripts.audit_glass_core_artifacts import (
 )
 from scripts.run_glass_avoidability_frontier import (
     FRONTIER_HORIZONS,
+    _collector_command,
     summarize_frontier_rows,
 )
 from scripts.realign_glass_core_artifacts import (
@@ -2084,6 +2085,26 @@ def test_avoidability_frontier_prefers_h20_and_requires_complete_grid():
     assert summary["go"] is True
     with pytest.raises(ValueError, match="does not cover every candidate/H"):
         summarize_frontier_rows(rows[:-1], min_safe_task_success_rate=0.5)
+
+
+def test_frontier_marks_short_h_collections_as_diagnostic():
+    args = Namespace(
+        output_root="frontier",
+        placements="placements.json",
+        checkpoint="base",
+        checkpoint_revision="a" * 40,
+        rollout_seed=0,
+        unnorm_key="libero_spatial",
+        settle_steps=10,
+        scan_steps=220,
+        control_steps=220,
+        oracle_steps=900,
+    )
+    command = _collector_command(
+        args, 5, {"train": 10, "validation": 5, "heldout": 5}
+    )
+    assert "--frontier-diagnostic" in command
+    assert command[command.index("--precrash-horizon") + 1] == "5"
 
 
 def test_recovery_metrics_do_not_reward_always_stop():

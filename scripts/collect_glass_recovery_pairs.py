@@ -1733,6 +1733,7 @@ def main() -> None:
     parser.add_argument("--max-heldout", type=int, default=40)
     parser.add_argument("--settle-steps", type=int, default=10)
     parser.add_argument("--precrash-horizon", type=int, default=20)
+    parser.add_argument("--frontier-diagnostic", action="store_true")
     parser.add_argument("--target-state-threshold", type=float, default=0.03)
     parser.add_argument("--scan-steps", type=int, default=220)
     parser.add_argument("--branch-steps", type=int, default=80)
@@ -1746,10 +1747,17 @@ def main() -> None:
     parser.add_argument("--appendix-blocked", action="store_true")
     parser.add_argument("--resume", action=argparse.BooleanOptionalAction, default=True)
     args = parser.parse_args()
-    if args.precrash_horizon < max(RISK_HORIZONS) or args.target_state_threshold <= 0:
+    if (
+        args.precrash_horizon < 1
+        or (
+            args.precrash_horizon < max(RISK_HORIZONS)
+            and not args.frontier_diagnostic
+        )
+        or args.target_state_threshold <= 0
+    ):
         raise SystemExit(
-            f"precrash-horizon must be >= {max(RISK_HORIZONS)} and "
-            "target-state-threshold must be positive"
+            f"precrash-horizon must be >= {max(RISK_HORIZONS)} outside the "
+            "frontier diagnostic, and target-state-threshold must be positive"
         )
 
     placements, placement_payload = read_placement_manifest(args.placements)

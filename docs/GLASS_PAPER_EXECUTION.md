@@ -636,6 +636,8 @@ that works only much earlier.
 The Pilot B frontier spreads its 10/5/5 candidates over 8/5/5 source states,
 so the H decision is not determined by a two-state validation or held-out
 slice.
+Its collector calls are explicitly marked diagnostic so H=15/10/5 can be
+measured; ordinary primary collection continues to require H>=20.
 
 If recovery is possible only near episode start, the benchmark does not support
 "imminent but avoidable" and scene/oracle design must be repaired before
