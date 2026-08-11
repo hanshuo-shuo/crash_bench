@@ -7,7 +7,7 @@
 # Historical E14 artifacts are never inputs or output targets of this job.
 #SBATCH --account=p33100
 #SBATCH --partition=gengpu
-#SBATCH --gres=gpu:h100:1
+#SBATCH --gres=gpu:a100:1
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
@@ -128,9 +128,22 @@ done
 # do not equal the canonical hashes embedded in the supplied protocol file.
 python -c 'import json, os; from crashbench.glass_recovery_data import canonical_sha256; p=json.load(open(os.environ["CB_GLASS_RECOVERY_PROTOCOL"])); primary=canonical_sha256(p["primary_protocol"]); evaluation=canonical_sha256(p["evaluation_protocol"]); assert p["primary_protocol_sha256"] == primary == os.environ["CB_GLASS_RECOVERY_PRIMARY_PROTOCOL_SHA256"], "primary protocol SHA mismatch"; assert p["evaluation_protocol_sha256"] == evaluation == os.environ["CB_GLASS_RECOVERY_EVALUATION_PROTOCOL_SHA256"], "evaluation protocol SHA mismatch"'
 
-EVAL_OUT="$RUN_ROOT/eval_seed_${TRAIN_SEED}.json"
-SOURCE_ANALYSIS="$RUN_ROOT/analysis_seed_${TRAIN_SEED}_source_to_task.json"
-ANCHOR_ANALYSIS="$RUN_ROOT/analysis_seed_${TRAIN_SEED}_exact_anchor.json"
+EVAL_LABEL="${CB_GLASS_RECOVERY_EVAL_LABEL:-full}"
+[[ "$EVAL_LABEL" =~ ^[a-z0-9_]+$ ]] \
+  || { echo "CB_GLASS_RECOVERY_EVAL_LABEL must use lowercase letters, digits, or underscore" >&2; exit 2; }
+EVAL_OUT="$RUN_ROOT/eval_${EVAL_LABEL}_seed_${TRAIN_SEED}.json"
+SOURCE_ANALYSIS="$RUN_ROOT/analysis_${EVAL_LABEL}_seed_${TRAIN_SEED}_source_to_task.json"
+ANCHOR_ANALYSIS="$RUN_ROOT/analysis_${EVAL_LABEL}_seed_${TRAIN_SEED}_exact_anchor.json"
+EVAL_MODE_ARGS=()
+EVAL_CONDITION_ARGS=()
+if [[ -n "${CB_GLASS_RECOVERY_EVAL_MODES:-}" ]]; then
+  read -r -a EVAL_MODES <<< "$CB_GLASS_RECOVERY_EVAL_MODES"
+  EVAL_MODE_ARGS=(--mode "${EVAL_MODES[@]}")
+fi
+if [[ -n "${CB_GLASS_RECOVERY_EVAL_CONDITIONS:-}" ]]; then
+  read -r -a EVAL_CONDITIONS <<< "$CB_GLASS_RECOVERY_EVAL_CONDITIONS"
+  EVAL_CONDITION_ARGS=(--conditions "${EVAL_CONDITIONS[@]}")
+fi
 
 python scripts/eval_glass_recovery.py \
   --placement-manifest "$CB_GLASS_RECOVERY_PLACEMENT_MANIFEST" \
@@ -141,20 +154,26 @@ python scripts/eval_glass_recovery.py \
   --base-checkpoint "$CB_BASE_CHECKPOINT" \
   --base-checkpoint-revision "$CB_BASE_CHECKPOINT_REVISION" \
   --unnorm-key "$CB_BASE_UNNORM_KEY" \
+  "${EVAL_MODE_ARGS[@]}" \
+  "${EVAL_CONDITION_ARGS[@]}" \
   --out "$EVAL_OUT"
 
-python scripts/analyze_glass_recovery_eval.py \
-  --evaluation "$EVAL_OUT" \
-  --mode source_to_task \
-  --out "$SOURCE_ANALYSIS"
-python scripts/analyze_glass_recovery_eval.py \
-  --evaluation "$EVAL_OUT" \
-  --mode exact_anchor \
-  --out "$ANCHOR_ANALYSIS"
+if [[ "${CB_GLASS_RECOVERY_SKIP_ANALYSIS:-0}" != 1 ]]; then
+  python scripts/analyze_glass_recovery_eval.py \
+    --evaluation "$EVAL_OUT" \
+    --mode source_to_task \
+    --out "$SOURCE_ANALYSIS"
+  python scripts/analyze_glass_recovery_eval.py \
+    --evaluation "$EVAL_OUT" \
+    --mode exact_anchor \
+    --out "$ANCHOR_ANALYSIS"
+fi
 
 test -f "$EVAL_OUT"
-test -f "$SOURCE_ANALYSIS"
-test -f "$ANCHOR_ANALYSIS"
+if [[ "${CB_GLASS_RECOVERY_SKIP_ANALYSIS:-0}" != 1 ]]; then
+  test -f "$SOURCE_ANALYSIS"
+  test -f "$ANCHOR_ANALYSIS"
+fi
 echo "RUN_ROOT=$RUN_ROOT"
 echo "RESULT=$EVAL_OUT"
 echo "DONE @ $(date)"

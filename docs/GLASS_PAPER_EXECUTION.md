@@ -507,6 +507,8 @@ Start treatment at the certified on-path exact H state and matched control at
 its accepted off-path exact state. Restore controller state. This mode isolates
 recovery competence and supplies oracle-timed diagnostics; it is not a substitute
 for end-to-end detection evaluation.
+Pilot E may seal the accepted train split for this diagnostic mode only; paper
+evaluation remains validation or fresh held-out source states.
 
 ### Conditions
 

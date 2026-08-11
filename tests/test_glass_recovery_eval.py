@@ -51,6 +51,12 @@ from scripts.eval_glass_recovery import (
     load_evaluation_contract,
     run_evaluation_episode,
 )
+from scripts.summarize_glass_pilot_cdef import (
+    _pilot_c,
+    _pilot_d,
+    _pilot_e,
+    _pilot_f,
+)
 
 
 BASE_REVISION = "a" * 40
@@ -77,6 +83,54 @@ def test_runtime_restore_requires_state_and_controller_but_audits_observation():
             expected,
             label="exact anchor",
         )
+
+
+def test_pilot_cdef_summaries_apply_frozen_gates():
+    def row(mode, condition, regime, **updates):
+        return {
+            "evaluation_mode": mode,
+            "condition": condition,
+            "regime": regime,
+            "source_state_sha256": updates.pop("source", "s"),
+            "task_success": False,
+            "catastrophe": False,
+            "intervened": False,
+            "timely_trigger": False,
+            "safe_noncompletion": False,
+            **updates,
+        }
+
+    c_rows = [row(
+        "exact_anchor", "oracle_timed_oracle_recovery", "treatment",
+        task_success=True,
+        anchor_restore_identity={"simulator_controller_exact": True},
+    )]
+    assert all(_pilot_c(c_rows)[1].values())
+
+    d_rows = [
+        row(
+            "source_to_task", "risk_gate_oracle_recovery", "treatment",
+            task_success=True, timely_trigger=True, intervened=True,
+            first_intervention_step=3, certified_recoverability_deadline_step=5,
+        ),
+        row("source_to_task", "risk_gate_oracle_recovery", "control", task_success=True),
+    ]
+    assert all(_pilot_d(d_rows)[1].values())
+
+    e_row = row(
+        "exact_anchor", "oracle_timed_learned_recovery", "treatment",
+        task_success=True,
+    )
+    summary = {"validation_metrics": {"gripper_sign_accuracy": 0.96}}
+    assert all(_pilot_e([e_row], [e_row], summary)[1].values())
+
+    f_rows = [
+        row("source_to_task", "base", "treatment", catastrophe=True),
+        row("source_to_task", "full_learned_gate_recovery", "treatment", task_success=True),
+        row("source_to_task", "base", "control", task_success=True),
+        row("source_to_task", "full_learned_gate_recovery", "control", task_success=True),
+    ]
+    assert all(_pilot_f(f_rows)[1].values())
 
 
 def _glass(name: str = "glass_1", x: float = 0.0) -> dict:
@@ -1240,6 +1294,28 @@ def test_zero_gpu_v2_integration_collection_training_latch_cohort_eval_analysis(
     )
     assert len(sealed_contract.pairs) == 1
     assert sealed["source_states"] == 1
+
+    sealed_train = seal(Namespace(
+        placements=str(files["placements"]),
+        dataset=str(files["manifests"]["train"].parent),
+        split="train",
+        checkpoint=[str(checkpoint)],
+        pair_ids=None,
+        rollout_seeds=[101],
+        max_steps=4,
+        output=str(tmp_path / "e15" / "sealed_train"),
+    ))
+    train_contract = load_evaluation_contract(
+        placement_manifest=files["placements"],
+        trajectory_manifest=files["manifests"]["train"],
+        evaluation_cohort=sealed_train["cohort"],
+        protocol=sealed_train["protocol"],
+        checkpoint_metadata=checkpoint_metadata,
+        checkpoint_sha256=checkpoint_sha,
+        base_checkpoint_revision=BASE_REVISION,
+        unnorm_key="libero_spatial",
+    )
+    assert train_contract.split == "train"
 
     # Seal the already accepted cohort and produced checkpoint into the final
     # evaluation protocol before any held-out episode is selected or run.

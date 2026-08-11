@@ -168,8 +168,8 @@ def _load_protocol(path: Path) -> tuple[dict, str, dict, str, dict]:
     cohort_contract = _require_mapping(
         evaluation.get("cohort_contract"), "evaluation_protocol.cohort_contract"
     )
-    if cohort_contract.get("split") not in ("validation", "heldout"):
-        raise ValueError("evaluation cohort contract split must be validation or heldout")
+    if cohort_contract.get("split") not in ("train", "validation", "heldout"):
+        raise ValueError("evaluation cohort contract split must be train, validation, or heldout")
     pair_ids = cohort_contract.get("pair_ids")
     if (
         not isinstance(pair_ids, list)
@@ -361,8 +361,8 @@ def load_evaluation_contract(
     if cohort.get("kind") != "glass_recovery_accepted_evaluation_cohort":
         raise ValueError("evaluation cohort is not accepted-pair scoped")
     split = str(cohort.get("split", ""))
-    if split not in ("validation", "heldout"):
-        raise ValueError("evaluation cohort split must be validation or heldout")
+    if split not in ("train", "validation", "heldout"):
+        raise ValueError("evaluation cohort split must be train, validation, or heldout")
     if cohort.get("placement_manifest_sha256") != file_sha256(placement_path):
         raise ValueError("evaluation cohort placement manifest hash mismatch")
     if cohort.get("trajectory_manifest_sha256") != file_sha256(trajectory_path):
@@ -441,6 +441,10 @@ def load_evaluation_contract(
         trajectory_path
     ):
         raise ValueError("checkpoint validation manifest does not match evaluation manifest")
+    if split == "train" and metadata.get("train_manifest_sha256") != file_sha256(
+        trajectory_path
+    ):
+        raise ValueError("checkpoint train manifest does not match evaluation manifest")
 
     placements_by_id = {placement.placement_id: placement for placement in placements}
     records_by_pair: dict[str, list[PairedTrajectoryRecord]] = {}

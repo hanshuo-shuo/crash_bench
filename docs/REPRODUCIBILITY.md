@@ -149,6 +149,12 @@ unaccepted IDs, leakage, missing oracle verification, or any checkpoint/Base/
 schema/protocol/H mismatch. This layout is a command contract, not a learned
 result.
 
+For sequential Pilots C--F, set `CB_GLASS_RECOVERY_EVAL_LABEL`,
+`CB_GLASS_RECOVERY_EVAL_MODES`, and `CB_GLASS_RECOVERY_EVAL_CONDITIONS` before
+the evaluate submission, and set `CB_GLASS_RECOVERY_SKIP_ANALYSIS=1`. Apply the
+frozen gate with `scripts/summarize_glass_pilot_cdef.py` before submitting the
+next condition. Pilot jobs use the same A100 device class as Pilot B.
+
 If a future E15 manifest status is promoted to `frozen_learned_result`,
 `verified_learned_result`, or `claim_ready`, its tracked JSON must use
 `kind: glass_recovery_learned_result` and the exact audit keys implemented in

@@ -174,7 +174,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--placements", required=True)
     parser.add_argument("--dataset", required=True)
-    parser.add_argument("--split", choices=("validation", "heldout"), required=True)
+    parser.add_argument("--split", choices=("train", "validation", "heldout"), required=True)
     parser.add_argument("--checkpoint", nargs="+", required=True)
     parser.add_argument("--pair-ids", nargs="+")
     parser.add_argument("--rollout-seeds", type=int, nargs="+", default=[101])
