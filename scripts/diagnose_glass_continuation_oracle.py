@@ -72,10 +72,43 @@ def _captured_hashes(
     }
 
 
+def _runtime_differences(
+    expected: dict[str, np.ndarray], actual: dict[str, np.ndarray],
+) -> dict[str, Any]:
+    """Describe exact per-field snapshot drift without embedding large arrays."""
+
+    differences: dict[str, Any] = {}
+    for key in sorted(set(expected) | set(actual)):
+        if key not in expected:
+            differences[key] = {"kind": "unexpected"}
+            continue
+        if key not in actual:
+            differences[key] = {"kind": "missing"}
+            continue
+        left, right = np.asarray(expected[key]), np.asarray(actual[key])
+        if array_sha256(left) == array_sha256(right):
+            continue
+        detail: dict[str, Any] = {
+            "kind": "value_mismatch",
+            "expected_dtype": str(left.dtype),
+            "actual_dtype": str(right.dtype),
+            "expected_shape": list(left.shape),
+            "actual_shape": list(right.shape),
+            "expected_sha256": array_sha256(left),
+            "actual_sha256": array_sha256(right),
+        }
+        if left.shape == right.shape and left.dtype.kind in "biufc" and right.dtype.kind in "biufc":
+            delta = np.abs(left.astype(np.float64) - right.astype(np.float64))
+            detail["max_abs_delta"] = float(np.max(delta)) if delta.size else 0.0
+        differences[key] = detail
+    return differences
+
+
 def _restore_cell(
     reset: Callable[[], dict],
     env: LiberoEnv,
     expected: dict[str, str],
+    expected_runtime: dict[str, np.ndarray],
     *,
     label: str,
 ) -> tuple[dict | None, dict[str, Any]]:
@@ -87,6 +120,9 @@ def _restore_cell(
         return None, {
             "start_exact": False,
             "error": f"{type(exc).__name__}: {exc}",
+            "runtime_differences": _runtime_differences(
+                expected_runtime, env.controller_state()
+            ),
         }
     return obs, {"start_exact": True, "start_hashes": actual}
 
@@ -95,12 +131,15 @@ def _base_cell(
     reset: Callable[[], dict],
     env: LiberoEnv,
     expected: dict[str, str],
+    expected_runtime: dict[str, np.ndarray],
     glass: dict,
     suffix: list[dict],
     *,
     label: str,
 ) -> dict[str, Any]:
-    obs, cell = _restore_cell(reset, env, expected, label=label)
+    obs, cell = _restore_cell(
+        reset, env, expected, expected_runtime, label=label
+    )
     if obs is None:
         return cell
     try:
@@ -124,6 +163,7 @@ def _oracle_cell(
     reset: Callable[[], dict],
     env: LiberoEnv,
     expected: dict[str, str],
+    expected_runtime: dict[str, np.ndarray],
     policy,
     placement,
     *,
@@ -134,7 +174,9 @@ def _oracle_cell(
     label: str,
 ) -> dict[str, Any]:
     # Fail before search if even one reset cannot recover the captured anchor.
-    obs, cell = _restore_cell(reset, env, expected, label=label)
+    obs, cell = _restore_cell(
+        reset, env, expected, expected_runtime, label=label
+    )
     if obs is None:
         return cell
     try:
@@ -308,21 +350,11 @@ def main() -> None:
             control = {"error": f"{type(exc).__name__}: {exc}"}
 
         def reset_memory():
-            restored = memory_env.restore_to_exact_in_place(anchor, runtime)
-            _require_branch_start_hashes(
-                _branch_start_hashes(memory_env, restored), expected,
-                label=f"{placement.placement_id}/in-memory/reset",
-            )
-            return restored
+            return memory_env.restore_to_exact_in_place(anchor, runtime)
 
         def reset_serialized():
             restored = serialized_env.reset_to_exact(anchor, model_xml=model_xml)
-            restored = serialized_env.restore_controller_state(runtime)
-            _require_branch_start_hashes(
-                _branch_start_hashes(serialized_env, restored), expected,
-                label=f"{placement.placement_id}/serialized/reset",
-            )
-            return restored
+            return serialized_env.restore_controller_state(runtime)
 
         row.update(
             status="complete",
@@ -331,11 +363,12 @@ def main() -> None:
             control_probe=control,
             in_memory={
                 "base_suffix": _base_cell(
-                    reset_memory, memory_env, expected, placement.on_path_glass,
+                    reset_memory, memory_env, expected, runtime,
+                    placement.on_path_glass,
                     suffix, label=f"{placement.placement_id}/in-memory/base",
                 ),
                 "oracle_recovery": _oracle_cell(
-                    reset_memory, memory_env, expected, policy, placement,
+                    reset_memory, memory_env, expected, runtime, policy, placement,
                     oracle_steps=args.oracle_steps,
                     counterfactual_peak_force=float(scan["peak_force"]),
                     orientation_targets=orientations,
@@ -345,12 +378,13 @@ def main() -> None:
             },
             serialized={
                 "base_suffix": _base_cell(
-                    reset_serialized, serialized_env, expected,
+                    reset_serialized, serialized_env, expected, runtime,
                     placement.on_path_glass, suffix,
                     label=f"{placement.placement_id}/serialized/base",
                 ),
                 "oracle_recovery": _oracle_cell(
-                    reset_serialized, serialized_env, expected, policy, placement,
+                    reset_serialized, serialized_env, expected, runtime,
+                    policy, placement,
                     oracle_steps=args.oracle_steps,
                     counterfactual_peak_force=float(scan["peak_force"]),
                     orientation_targets=orientations,
