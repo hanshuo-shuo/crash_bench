@@ -109,6 +109,8 @@ Start at [docs/CURRENT.md](docs/CURRENT.md). See the
 and [script index](docs/SCRIPT_INDEX.md).
 The current E14 smoke is summarized in
 [results/ANALYSIS_glass_recovery_acceptance.md](results/ANALYSIS_glass_recovery_acceptance.md).
+The illustrated E14–E15 Pilot B/C progress and artifact inventory is in
+[docs/GLASS_RECOVERY_PROGRESS_REPORT_20260812.md](docs/GLASS_RECOVERY_PROGRESS_REPORT_20260812.md).
 Superseded planning and narrative snapshots are isolated in
 [`docs/archive/`](docs/archive/README.md).
 

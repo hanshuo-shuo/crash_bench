@@ -131,3 +131,5 @@ E15/v2 execution semantics and the immutable E14 record are in
 [GLASS_RECOVERY_V1.md](GLASS_RECOVERY_V1.md) and
 [ANALYSIS_glass_recovery_acceptance.md](../results/ANALYSIS_glass_recovery_acceptance.md).
 The non-disruptive script map is in [SCRIPT_INDEX.md](SCRIPT_INDEX.md).
+The illustrated glass-recovery evidence and media inventory is in
+[GLASS_RECOVERY_PROGRESS_REPORT_20260812.md](GLASS_RECOVERY_PROGRESS_REPORT_20260812.md).
