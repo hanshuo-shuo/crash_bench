@@ -39,7 +39,10 @@ def font(size: int, *, bold: bool = False) -> ImageFont.FreeTypeFont:
 
 def save(canvas: Image.Image, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    canvas.save(path, optimize=True)
+    if path.suffix.lower() in {".jpg", ".jpeg"}:
+        canvas.save(path, quality=84, optimize=True, progressive=True)
+    else:
+        canvas.save(path, optimize=True)
 
 
 def draw_funnel(out: Path) -> None:
@@ -140,7 +143,7 @@ def make_filmstrip(pair_dir: Path, pair_label: str, out: Path) -> None:
         ("Oracle: safe task completion", "oracle_recovery.npz", GREEN),
         ("Off-path control: task success", "off_path_control.npz", BLUE),
     ]
-    frame_w, frame_h, count = 224, 224, 6
+    frame_w, frame_h, count = 168, 168, 6
     left, top, gap = 315, 160, 15
     width = left + count * frame_w + (count - 1) * gap + 55
     height = top + len(rows) * (frame_h + 100) + 30
@@ -155,24 +158,24 @@ def make_filmstrip(pair_dir: Path, pair_label: str, out: Path) -> None:
         d.text((50, y + 78), title, fill=color, font=font(25, bold=True))
         d.text((50, y + 116), f"{len(images)} stored frames", fill=MUTED, font=font(21))
         for j, idx in enumerate(indices):
-            frame = Image.fromarray(images[idx])
+            frame = Image.fromarray(images[idx]).resize((frame_w, frame_h), Image.Resampling.LANCZOS)
             x = left + j * (frame_w + gap)
             canvas.paste(frame, (x, y))
             d.rectangle((x, y, x + frame_w - 1, y + frame_h - 1), outline=color, width=3)
             d.text((x + frame_w // 2, y + frame_h + 18), f"t={idx}", fill=INK, font=font(18), anchor="ma")
         y += frame_h + 100
-    save(canvas, out / f"fig_{pair_label}_filmstrip.png")
+    save(canvas, out / f"fig_{pair_label}_filmstrip.jpg")
 
 
 def make_oracle_gif(pair_dir: Path, pair_label: str, out: Path) -> None:
     images = load_images(pair_dir / "oracle_recovery.npz")
-    indices = sample_indices(len(images), min(60, len(images)))
+    indices = sample_indices(len(images), min(30, len(images)))
     frames = []
     for idx in indices:
-        frame = Image.fromarray(images[idx]).resize((448, 448), Image.Resampling.NEAREST)
+        frame = Image.fromarray(images[idx]).resize((224, 224), Image.Resampling.LANCZOS)
         d = ImageDraw.Draw(frame)
-        d.rectangle((0, 0, 448, 46), fill=(0, 0, 0))
-        d.text((14, 11), f"{pair_label}  oracle recovery  frame {idx}/{len(images)-1}", fill=(255, 255, 255), font=font(19, bold=True))
+        d.rectangle((0, 0, 224, 30), fill=(0, 0, 0))
+        d.text((7, 7), f"{pair_label}  t={idx}/{len(images)-1}", fill=(255, 255, 255), font=font(11, bold=True))
         frames.append(frame)
     path = out / f"{pair_label}_oracle_recovery.gif"
     frames[0].save(path, save_all=True, append_images=frames[1:], duration=110, loop=0, optimize=True)
