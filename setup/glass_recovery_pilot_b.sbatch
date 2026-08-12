@@ -62,6 +62,12 @@ case "$STAGE" in
   diagnose)
     DIAGNOSTIC_PLACEMENTS="${CB_PILOT_B_DIAGNOSTIC_PLACEMENTS:?set to the exposed diagnostic-only placement manifest}"
     test -f "$DIAGNOSTIC_PLACEMENTS"
+    DIAGNOSTIC_PLACEMENT_ARGS=()
+    if [[ -n "${CB_PILOT_B_DIAGNOSTIC_PLACEMENT_ID:-}" ]]; then
+      DIAGNOSTIC_PLACEMENT_ARGS=(
+        --placement-id "$CB_PILOT_B_DIAGNOSTIC_PLACEMENT_ID"
+      )
+    fi
     python scripts/diagnose_glass_continuation_oracle.py \
       --placements "$DIAGNOSTIC_PLACEMENTS" \
       --output "$RUN_ROOT/continuation_oracle_diagnostic_h${CB_PILOT_B_DIAGNOSTIC_H:-20}.json" \
@@ -71,7 +77,8 @@ case "$STAGE" in
       --rollout-seed 0 \
       --horizon "${CB_PILOT_B_DIAGNOSTIC_H:-20}" \
       --max-candidates "${CB_PILOT_B_DIAGNOSTIC_CANDIDATES:-6}" \
-      --oracle-steps "${CB_PILOT_B_DIAGNOSTIC_ORACLE_STEPS:-220}"
+      --oracle-steps "${CB_PILOT_B_DIAGNOSTIC_ORACLE_STEPS:-220}" \
+      "${DIAGNOSTIC_PLACEMENT_ARGS[@]}"
     ;;
 
   frontier)

@@ -753,14 +753,20 @@ def _oracle_configs(
     targets = [None] if orientation_targets is None else orientation_targets
     if control_grasp_offset is not None and len(control_grasp_offset) != 3:
         raise ValueError("control_grasp_offset must contain xyz")
-    grasp_pose = (
-        DEFAULT_BOWL_GRASP_OFFSET if control_grasp_offset is None
+    control_pose = (
+        None if control_grasp_offset is None
         else [float(value) for value in control_grasp_offset]
     )
-    grasp_xy_offset = [float(value) for value in grasp_pose[:2]]
-    descend_offsets = (
-        (float(grasp_pose[2]), 0.04)
-    )
+    pose_targets: list[tuple[list[float], list[float] | None]] = []
+    if control_pose is not None:
+        pose_targets.extend((control_pose, target) for target in targets)
+    # A successful whole-task control pose can still be a transient approach
+    # pose. Also try the stable post-close pose from the successful no-glass
+    # source trace, without imposing a brittle orientation target.
+    if control_pose is None or not np.allclose(
+        control_pose, DEFAULT_BOWL_GRASP_OFFSET, atol=1e-6
+    ):
+        pose_targets.append((DEFAULT_BOWL_GRASP_OFFSET, None))
     return [
         {
             "side": side,
@@ -769,11 +775,11 @@ def _oracle_configs(
             "descend_off": descend_off,
             "orientation_target": orientation_target,
             "path_aligned": True,
-            "grasp_xy_offset": grasp_xy_offset,
+            "grasp_xy_offset": [float(value) for value in grasp_pose[:2]],
             "departure_clearance": 0.06,
         }
-        for orientation_target in targets
-        for descend_off in descend_offsets
+        for grasp_pose, orientation_target in pose_targets
+        for descend_off in (float(grasp_pose[2]), 0.04)
         for lift in (0.30, 0.38)
         for lane in (0.12, 0.18)
         for side in (-1.0, 1.0)

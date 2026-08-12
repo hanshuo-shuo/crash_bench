@@ -1208,9 +1208,17 @@ def test_oracle_grid_can_reuse_clean_control_grasp_pose():
         orientation_targets=[[3.1, 0.0, 0.1], None],
         control_grasp_offset=[-0.002, -0.05, 0.021],
     )
-    assert len(configs) == 32
-    assert {config["descend_off"] for config in configs} == {0.021, 0.04}
-    assert all(config["grasp_xy_offset"] == [-0.002, -0.05] for config in configs)
+    assert len(configs) == 48
+    assert {config["descend_off"] for config in configs} == {0.018, 0.021, 0.04}
+    assert {tuple(config["grasp_xy_offset"]) for config in configs} == {
+        (-0.002, -0.05), (0.009, -0.04),
+    }
+    fallback = [
+        config for config in configs
+        if config["grasp_xy_offset"] == [0.009, -0.04]
+    ]
+    assert len(fallback) == 16
+    assert all(config["orientation_target"] is None for config in fallback)
 
 
 def test_oracle_success_is_searched_then_independently_recaptured(monkeypatch):

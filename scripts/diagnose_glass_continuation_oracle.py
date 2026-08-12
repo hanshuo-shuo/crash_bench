@@ -280,6 +280,10 @@ def main() -> None:
     parser.add_argument("--unnorm-key", default="libero_spatial")
     parser.add_argument("--horizon", type=int, default=20)
     parser.add_argument("--max-candidates", type=int, default=6)
+    parser.add_argument(
+        "--placement-id",
+        help="run only one named diagnostic placement",
+    )
     parser.add_argument("--rollout-seed", type=int, default=0)
     parser.add_argument("--settle-steps", type=int, default=10)
     parser.add_argument("--scan-steps", type=int, default=220)
@@ -290,7 +294,15 @@ def main() -> None:
         raise SystemExit("horizon and max-candidates must be positive")
 
     placements, _ = read_placement_manifest(args.placements)
-    selected = placements[: args.max_candidates]
+    if args.placement_id:
+        selected = [
+            placement for placement in placements
+            if placement.placement_id == args.placement_id
+        ]
+        if not selected:
+            raise SystemExit(f"unknown placement id: {args.placement_id}")
+    else:
+        selected = placements[: args.max_candidates]
     placement_root = Path(args.placements).resolve().parent
     policy = OpenVLAPolicy(
         pretrained_checkpoint=args.checkpoint,
