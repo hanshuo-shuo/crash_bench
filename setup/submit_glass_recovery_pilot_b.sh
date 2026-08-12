@@ -3,8 +3,8 @@ set -euo pipefail
 
 STAGE="${1:-}"
 case "$STAGE" in
-  source_traces|frontier|collect) ;;
-  *) echo "usage: $0 source_traces|frontier|collect" >&2; exit 2 ;;
+  source_traces|diagnose|frontier|collect) ;;
+  *) echo "usage: $0 source_traces|diagnose|frontier|collect" >&2; exit 2 ;;
 esac
 
 : "${CB_PILOT_B_ROOT:?set CB_PILOT_B_ROOT}"

@@ -273,3 +273,94 @@ for stable broad-population replay when camera and observable-history state is
 not serialized, while the control lesson is that even exact-replaying states
 rarely admit task-completing recovery under the declared oracle class and
 220-action budget.
+
+## Post-no-go engineering addendum: continuation repair
+
+This addendum records debugging performed after the r7 scientific no-go. It
+does not revise the r7 denominator, qualify H=20, admit exposed placements, or
+authorize Pilots C--F.
+
+The continuation implementation was repaired to serialize the complete
+MuJoCo/controller continuation, underlying robosuite episode state, observable
+timers/cache, exact policy-boundary observation, and the exact model XML source.
+Two additional defects were isolated: the adapter stopped at LIBERO's forwarding
+wrapper instead of the underlying robosuite env, and serialized reset truncated
+floating-point `cur_time` to integer zero.
+
+Quest job `9071778`, detached diagnostic commit
+`67f66392b15806c0c47475b01db70b5d75055004`, ran a diagnostic-only H=20 2x2 on
+the first two exposed r7 placements. Both produced live Base catastrophes.
+In-memory rewind and serialized rebuild each achieved 4/4 exact branch starts
+and 2/2 suffix replays, with collision exactly on suffix index 19. Thus the
+specific continuation/snapshot failure observed in r7 has an engineering fix.
+
+Oracle recovery remained 1/2 in both reset rows. The successful placement
+finished safely in 176 actions. On the failed placement, all 16 configurations
+were collision-free and the controller reached stage 12, but LIBERO task
+success remained false even with a 360-action budget; its matched off-path Base
+probe also failed to finish in 220 actions. The remaining blocker is therefore
+oracle/task controllability and outcome-blind scenario eligibility, not the
+known serialized-state defect or simple 220-step right censoring.
+
+The updated interpretation is: state continuation is now technically viable
+on this small exposed diagnostic, but broad recoverability at a common H is
+still unproven. A fresh outcome-blind frontier is required after freezing an
+improved oracle or a pre-outcome feasibility screen. The complete diagnostic
+analysis is in `docs/PILOT_B_REPAIR_20260811.md`.
+
+## Post-no-go engineering addendum: targeted oracle repair
+
+The previously failing exposed H=20 placement
+`glass_recovery_train_0001` was rerun alone after adding a practical grasp-pose
+fallback. Quest job `9094715`, detached diagnostic commit
+`e192b46817b7a60d40cfac223006be3f5afd28c8`, completed with exit `0:0`.
+
+Both the in-memory rewind and serialized rebuild matched all five branch-start
+identity layers, replayed the captured 20-action Base suffix, and collided on
+the expected suffix index 19. Both oracle branches were collision-free and
+completed the original task in 147 actions using the same configuration on
+search attempt 2. The off-path control completed in 70 actions. Thus the
+candidate that failed in job `9071778` now has a valid safe-task-completion
+witness in both reset paths.
+
+This is an engineering re-entry result, not a revision of r7: the placement is
+already exposed, the run is marked diagnostic-only, and it cannot enter a
+cohort. It does establish that the observed 1/2 oracle failure was repairable
+and that the project is not permanently blocked at Pilot B. The next permitted
+experiment is a small fresh outcome-blind H=20 frontier with the repaired
+snapshot and oracle frozen; no further exposed-scene tuning is needed before
+that run.
+
+## Fresh fixed-H=20 frontier after repair
+
+Quest job `9095054` tested the repaired implementation on 15 newly authored
+physical scenes at H=20. The nine source states (`3,6,9,14,16,20,21,34,40`)
+had zero overlap with all source states exposed in r7. The ledger contains all
+15 terminal events; the job was stopped after the result had become a
+mathematical no-go and before the runner wrote its automatic summary.
+
+Terminal outcomes were: three accepted pairs, three no-Base-crash candidates,
+one dirty H=20 anchor, two nominal replay failures, two off-path control
+catastrophes, and four oracle task failures. Strictly, there were 12 Base
+catastrophes, nine exact H=20 replays (75%), and three safe task-completing
+oracle successes (25%). Excluding the dirty takeover anchor gives 9/11 exact
+replay and 3/11 recovery. Both fail the frontier gates.
+
+The two replay failures were boundary-like rather than broad state drift: one
+collided one action early (index 18 versus 19), and the other reached 17.446 N
+without crossing the 25 N event threshold. The dominant failure was oracle
+coverage. Each of four explicit oracle failures exhausted 48 configurations,
+usually collided during final descent, reached only controller stage 6, and
+never lifted the bowl. The complete analysis and minimal re-entry proposal are
+in `docs/PILOT_B_FRESH_H20_20260812.md`.
+
+## Scoped controller-compatible H=20 re-entry
+
+The next and final development re-entry is predeclared in
+`docs/PILOT_B_CONTROLLER_COMPATIBLE_H20_20260812.md`. It tests only 10 new
+H=20 scenes and narrows the scientific claim to controller-compatible,
+robustly recoverable glass accidents. Candidate authoring now freezes 0.17 m
+glass-to-bowl clearance, 0.30 m off-path displacement, 0.024 m-radius glass,
+a 35 N fixed-action event-force floor, and a clean ungrasped bowl at the exact
+T-20 anchor. All source states exposed by r7 or the preceding fresh H=20 run
+are excluded before authoring.

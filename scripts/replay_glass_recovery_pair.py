@@ -104,8 +104,17 @@ def main() -> None:
     validate_episode_arrays(arrays, record.n_steps)
     env = LiberoEnv(placement.task_suite, placement.task_id)
     obstacles, movables = _partition_scene(glasses)
-    env.reset_to_exact(state, obstacles=obstacles, movable_objects=movables)
-    env.restore_controller_state(controller_state)
+    same_onpath_scene = args.branch in {"nominal_catastrophe", "oracle_recovery"}
+    model_xml_path = pair_dir / (
+        "onpath_model.xml" if same_onpath_scene else "offpath_model.xml"
+    )
+    if model_xml_path.is_file() and args.branch != "blocked_safe_abort":
+        env.reset_to_exact(state, model_xml=model_xml_path.read_text())
+    else:
+        env.reset_to_exact(state, obstacles=obstacles, movable_objects=movables)
+    env.restore_controller_state(
+        controller_state, restore_observables=same_onpath_scene
+    )
     crash = build_any(_glass_predicate_specs(glasses))
     success = build_predicate(PredicateSpec("libero_task_success", {}))
     crashed = succeeded = False

@@ -87,11 +87,14 @@ from scripts.collect_glass_recovery_pairs import (
     _write_manifests,
 )
 from scripts.prepare_glass_recovery_placements import (
+    GEOMETRY_PROFILES,
     _blocked_barrier_offsets,
     _collision_free_path_fraction,
     _file_sha256,
+    _fixed_action_hazard_screen,
     _load_source_traces,
     _minimum_initial_body_clearance,
+    _parse_source_state_exclusions,
     _sample_trace_anchor,
     _state_layout,
     _state_layout_from_indices,
@@ -485,6 +488,97 @@ def test_exact_h_anchor_suffix_catastrophizes_after_exactly_h_actions():
     assert early["crashed"] is False
 
 
+def test_controller_compatible_geometry_profile_uses_only_narrow_glasses():
+    profile = GEOMETRY_PROFILES["controller_compatible_narrow"]
+    radii = {
+        float(family[1][0])
+        for split_families in profile.values()
+        for family in split_families
+    }
+    assert radii == {0.024}
+
+
+def test_fixed_action_screen_requires_force_margin_and_clean_h20_anchor():
+    class Sim:
+        libero_done = False
+
+        def __init__(self, env):
+            self.env = env
+
+        def object_xy(self, name):
+            return (0.0, 0.0)
+
+        def object_tilt_deg(self, name):
+            return 0.0
+
+        def max_contact_force(self, bodies, against=None):
+            return self.env.force
+
+        def is_grasped(self, name):
+            return self.env.grasped
+
+    class Env:
+        def __init__(self, event_force, *, dirty_anchor=False):
+            self.event_force = event_force
+            self.dirty_anchor = dirty_anchor
+            self.sim_view = Sim(self)
+            self.steps = 0
+            self.force = 0.0
+            self.grasped = False
+
+        def _obs(self):
+            bowl = np.asarray([0.1, 0.2, 0.9], dtype=float)
+            if self.dirty_anchor and self.steps >= 2:
+                bowl[0] += 0.01
+            return {"akita_black_bowl_1_pos": bowl}
+
+        def reset_to(self, source_state, movable_objects):
+            self.steps = 0
+            self.force = 0.0
+            self.grasped = False
+            return self._obs()
+
+        def dummy_action(self):
+            return np.zeros(7)
+
+        def step(self, action):
+            self.force = self.event_force if self.steps == 21 else 0.0
+            self.steps += 1
+            return self._obs(), 0.0, False, {}
+
+    actions = np.zeros((30, 7), dtype=np.float32)
+    kwargs = dict(
+        settle_steps=0,
+        horizon_actions=20,
+        force_margin_n=10.0,
+        target_rest_threshold_m=0.005,
+    )
+    robust = _fixed_action_hazard_screen(
+        Env(40.0), np.zeros(3), _glass(), actions, **kwargs
+    )
+    assert robust["event_action_index"] == 21
+    assert robust["anchor_action_index"] == 2
+    assert robust["observed_force_margin_n"] == 15.0
+    assert robust["force_margin_qualified"] is True
+    assert robust["clean_precrash_anchor"] is True
+    assert robust["eligible"] is True
+
+    boundary = _fixed_action_hazard_screen(
+        Env(30.0), np.zeros(3), _glass(), actions, **kwargs
+    )
+    assert boundary["catastrophe"] is True
+    assert boundary["force_margin_qualified"] is False
+    assert boundary["eligible"] is False
+
+    dirty = _fixed_action_hazard_screen(
+        Env(40.0, dirty_anchor=True), np.zeros(3), _glass(), actions, **kwargs
+    )
+    assert dirty["force_margin_qualified"] is True
+    assert dirty["target_anchor_displacement_m"] == pytest.approx(0.01)
+    assert dirty["clean_precrash_anchor"] is False
+    assert dirty["eligible"] is False
+
+
 def test_oracle_row_zero_risk_equals_exact_matched_nominal_row():
     horizon = 5
     nominal = _finalize_arrays(
@@ -776,16 +870,50 @@ def test_controller_state_roundtrip_restores_osc_interpolators():
             start=np.asarray([0.0, 0.1, 0.2]), goal=np.asarray([0.3, 0.4, 0.5]), step=1,
         ),
     )
+    observable = SimpleNamespace(
+        _time_since_last_sample=0.02,
+        _current_delay=0.0,
+        _current_observed_value=np.asarray([4.0, 5.0]),
+        _sampled=True,
+    )
+    action_buffer = SimpleNamespace(
+        current=np.asarray([0.2, 0.3]), last=np.asarray([0.0, 0.1])
+    )
+    robot = SimpleNamespace(
+        controller=controller, torques=np.asarray([0.11, 0.12]),
+        recent_actions=action_buffer,
+    )
+    raw = SimpleNamespace(
+        robots=[robot], cur_time=1.25, timestep=25, done=False,
+        _observables={"camera": observable},
+        _obs_cache={"camera": np.asarray([4.0, 5.0])},
+    )
+    raw._get_observations = lambda: {
+        "camera": observable._current_observed_value.copy()
+    }
     env = LiberoEnv.__new__(LiberoEnv)
-    env.env = SimpleNamespace(env=SimpleNamespace(
-        robots=[SimpleNamespace(controller=controller)]
-    ))
+    # Match LIBERO ControlEnv: it forwards ``robots`` but does not own the
+    # episode counters or observables. The adapter must continue unwrapping.
+    env.env = SimpleNamespace(env=raw, robots=[robot])
     model = SimpleNamespace(nv=2, na=1, nu=2)
     data = SimpleNamespace(
         qacc_warmstart=np.asarray([0.4, 0.5]),
         act=np.asarray([0.6]), ctrl=np.asarray([0.7, 0.8]),
+        qfrc_applied=np.asarray([0.9, 1.0]),
+        xfrc_applied=np.asarray([[1.1, 1.2]]),
+        mocap_pos=np.asarray([[1.3, 1.4, 1.5]]),
+        mocap_quat=np.asarray([[1.0, 0.0, 0.0, 0.0]]),
+        userdata=np.asarray([1.6]), plugin_state=np.asarray([1.7]),
     )
-    env.sim_view = SimpleNamespace(_live_mj=lambda: (model, data))
+    restored_observations = []
+    env.sim_view = SimpleNamespace(
+        _live_mj=lambda: (model, data),
+        _obs={
+            "camera": np.asarray([4.0, 5.0]),
+            "derived-state": np.asarray([8.0, 9.0]),
+        },
+        update=lambda obs, done: restored_observations.append((obs, done)),
+    )
     snapshot = env.controller_state()
     assert snapshot["robot0.controller.ori_ref"].shape == (0,)
     assert all(not value.dtype.hasobject for value in snapshot.values())
@@ -796,8 +924,15 @@ def test_controller_state_roundtrip_restores_osc_interpolators():
     data.qacc_warmstart[:] = -1
     data.act[:] = -1
     data.ctrl[:] = -1
+    data.qfrc_applied[:] = -1
+    # A fresh robosuite reset initializes cur_time as integer zero. Restore
+    # must follow the snapshot dtype rather than truncate the captured float.
+    raw.cur_time, raw.timestep, raw.done = 0, 0, True
+    observable._current_observed_value[:] = -1
+    observable._sampled = False
+    action_buffer.current[:] = -1
 
-    env.restore_controller_state(snapshot)
+    restored = env.restore_controller_state(snapshot)
 
     assert controller.updated_with_force is True
     assert np.array_equal(controller.goal_pos, [1.0, 2.0, 3.0])
@@ -808,6 +943,41 @@ def test_controller_state_roundtrip_restores_osc_interpolators():
     assert np.array_equal(data.qacc_warmstart, [0.4, 0.5])
     assert np.array_equal(data.act, [0.6])
     assert np.array_equal(data.ctrl, [0.7, 0.8])
+    assert np.array_equal(data.qfrc_applied, [0.9, 1.0])
+    assert (raw.cur_time, raw.timestep, raw.done) == (1.25, 25, False)
+    assert observable._sampled is True
+    assert np.array_equal(observable._current_observed_value, [4.0, 5.0])
+    assert np.array_equal(action_buffer.current, [0.2, 0.3])
+    assert np.array_equal(restored["camera"], [4.0, 5.0])
+    assert np.array_equal(restored["derived-state"], [8.0, 9.0])
+    assert restored_observations[-1][0] is restored
+
+
+def test_exact_reset_can_rebuild_from_captured_model_xml_without_reinjection():
+    calls = []
+    model = SimpleNamespace(nq=2, nv=2)
+    wrapper = SimpleNamespace(
+        sim=SimpleNamespace(model=model),
+        reset=lambda: calls.append("unexpected_reset"),
+        reset_from_xml_string=lambda xml: calls.append(("xml", xml)),
+        set_init_state=lambda state: {"state": np.asarray(state).copy()},
+    )
+    sim_view = SimpleNamespace(
+        peak_force=9.0,
+        update=lambda obs, done: calls.append(("update", done, len(obs["state"]))),
+    )
+    env = LiberoEnv.__new__(LiberoEnv)
+    env.env = wrapper
+    env.sim_view = sim_view
+    state = np.asarray([0.5, 1.0, 2.0, 3.0, 4.0], dtype=np.float64)
+
+    obs = env.reset_to_exact(state, model_xml="<mujoco/>")
+
+    assert calls[0] == ("xml", "<mujoco/>")
+    assert "unexpected_reset" not in calls
+    assert np.array_equal(obs["state"], state)
+    assert sim_view.peak_force == 0.0
+    assert env.model_xml() == "<mujoco/>"
 
 
 def _batch(n=4, hidden_dim=6):
@@ -1110,17 +1280,20 @@ def test_detour_compensates_grasp_offset_before_placing():
     obs = {"robot0_eef_pos": np.asarray([0.0, 0.0, 1.2]),
            "bowl_pos": np.asarray([0.1, 0.2, 1.0])}
     controller.engage(obs)
-    controller.i = 7
+    controller.i = controller._carry_leg_index
     controller.step(obs)
     assert controller._carry_adjusted is True
     # Held bowl is +[.1,.2] from the EEF, so the EEF target is plate-offset.
-    assert np.allclose(controller.legs[7][1], [0.4, 0.4, 1.2])
+    assert np.allclose(
+        controller.legs[controller._carry_leg_index][1], [0.4, 0.4, 1.2]
+    )
 
 
 def test_oracle_grid_searches_both_grasp_heights():
     configs = _oracle_configs(0.9)
     assert len(configs) == 16
-    assert {config["descend_off"] for config in configs} == {0.012, 0.04}
+    assert {config["descend_off"] for config in configs} == {0.018, 0.04}
+    assert all(config["grasp_xy_offset"] == [0.009, -0.04] for config in configs)
 
 
 def test_oracle_grid_can_reuse_clean_control_grasp_pose():
@@ -1129,9 +1302,17 @@ def test_oracle_grid_can_reuse_clean_control_grasp_pose():
         orientation_targets=[[3.1, 0.0, 0.1], None],
         control_grasp_offset=[-0.002, -0.05, 0.021],
     )
-    assert len(configs) == 32
-    assert {config["descend_off"] for config in configs} == {0.021, 0.04}
-    assert all(config["grasp_xy_offset"] == [-0.002, -0.05] for config in configs)
+    assert len(configs) == 48
+    assert {config["descend_off"] for config in configs} == {0.018, 0.021, 0.04}
+    assert {tuple(config["grasp_xy_offset"]) for config in configs} == {
+        (-0.002, -0.05), (0.009, -0.04),
+    }
+    fallback = [
+        config for config in configs
+        if config["grasp_xy_offset"] == [0.009, -0.04]
+    ]
+    assert len(fallback) == 16
+    assert all(config["orientation_target"] is None for config in fallback)
 
 
 def test_oracle_success_is_searched_then_independently_recaptured(monkeypatch):
@@ -1270,10 +1451,11 @@ def test_glass_detour_approaches_along_glass_target_path():
     )
     obs = {"robot0_eef_pos": np.asarray([-0.1, 0.0, 1.2])}
     controller.engage(obs)
-    # The third waypoint returns to the nominal path 2 cm before the bowl;
-    # the fourth completes only that short approach, rather than forcing +x.
-    assert np.allclose(controller.legs[2][1], [0.08, -0.0, 1.2])
-    assert np.allclose(controller.legs[3][1], [0.1, 0.0, 1.2])
+    # First retreat radially by 6 cm.  The final two approach waypoints then
+    # return to the nominal path 2 cm before the bowl and finish that short leg.
+    assert np.allclose(controller.legs[0][1], [-0.16, 0.0, 1.2])
+    assert np.allclose(controller.legs[4][1], [0.08, -0.0, 1.2])
+    assert np.allclose(controller.legs[5][1], [0.1, 0.0, 1.2])
 
 
 def test_glass_detour_uses_matched_control_grasp_offset():
@@ -1284,9 +1466,9 @@ def test_glass_detour_uses_matched_control_grasp_offset():
         grasp_xy_offset=[-0.002, -0.05],
     )
     controller.engage({"robot0_eef_pos": np.asarray([-0.1, 0.0, 1.2])})
-    assert np.allclose(controller.legs[3][1], [0.098, -0.05, 1.2])
-    assert np.allclose(controller.legs[4][1], [0.098, -0.05, 0.931])
-    assert np.allclose(controller.legs[6][1], [0.098, -0.05, 1.2])
+    assert np.allclose(controller.legs[5][1], [0.098, -0.05, 1.2])
+    assert np.allclose(controller.legs[6][1], [0.098, -0.05, 0.931])
+    assert np.allclose(controller.legs[8][1], [0.098, -0.05, 1.2])
 
 
 def test_late_glass_anchor_is_clamped_before_target_overlap():
@@ -1343,24 +1525,26 @@ def test_exact_branch_start_hashes_include_observation_dtype_and_shape():
     }
     hashes = _branch_start_hashes(env, observation)
     assert set(hashes) == {
-        "simulator_state_sha256", "controller_state_sha256", "observation_sha256",
+        "simulator_state_sha256", "controller_state_sha256",
+        "continuation_state_sha256", "observation_sha256",
     }
     assert hashes["observation_sha256"] == _observation_sha256(observation)
     changed_dtype = {**observation, "state": observation["state"].astype(np.float64)}
     assert _observation_sha256(changed_dtype) != hashes["observation_sha256"]
 
 
-def test_exact_branch_restore_allows_observation_history_drift_only():
+def test_exact_branch_restore_requires_serialized_observation_history():
     expected = {
         "simulator_state_sha256": "a" * 64,
         "controller_state_sha256": "b" * 64,
         "observation_sha256": "c" * 64,
     }
-    _require_branch_start_hashes(
-        {**expected, "observation_sha256": "d" * 64},
-        expected,
-        label="replay",
-    )
+    with pytest.raises(glass_collector.CandidateRejected, match="observation_sha256"):
+        _require_branch_start_hashes(
+            {**expected, "observation_sha256": "d" * 64},
+            expected,
+            label="replay",
+        )
     with pytest.raises(glass_collector.CandidateRejected, match="controller_state_sha256"):
         _require_branch_start_hashes(
             {**expected, "controller_state_sha256": "e" * 64},
@@ -2109,6 +2293,30 @@ def test_avoidability_frontier_prefers_h20_and_requires_complete_grid():
         summarize_frontier_rows(rows[:-1], min_safe_task_success_rate=0.5)
 
 
+def test_fixed_h20_frontier_can_be_summarized_without_other_horizons():
+    rows = [{
+        "placement_id": f"fresh_{index}",
+        "horizon_actions": 20,
+        "base_catastrophe": True,
+        "exact_h_replay_verified": True,
+        "oracle_safe_task_success": index < 6,
+        "rejection_reason": None if index < 6 else "no_oracle_recovery",
+    } for index in range(10)]
+    summary = summarize_frontier_rows(
+        rows, min_safe_task_success_rate=0.5, horizons=[20]
+    )
+    assert summary["qualified_horizons"] == [20]
+    assert summary["recommended_horizon_actions"] == 20
+    assert summary["go"] is True
+
+
+def test_source_state_exclusions_are_compact_and_validated():
+    assert _parse_source_state_exclusions("2, 19,2,47") == {2, 19, 47}
+    assert _parse_source_state_exclusions("") == set()
+    with pytest.raises(ValueError, match="non-negative"):
+        _parse_source_state_exclusions("-1,2")
+
+
 def test_frontier_counts_nominal_replay_failure_as_base_catastrophe(tmp_path):
     pair = tmp_path / "h_40" / "train" / "attempt"
     pair.mkdir(parents=True)
@@ -2148,6 +2356,7 @@ def test_frontier_marks_short_h_collections_as_diagnostic():
         rollout_seed=0,
         unnorm_key="libero_spatial",
         settle_steps=10,
+        target_state_threshold=0.005,
         scan_steps=220,
         control_steps=220,
         oracle_steps=900,
@@ -2157,6 +2366,7 @@ def test_frontier_marks_short_h_collections_as_diagnostic():
     )
     assert "--frontier-diagnostic" in command
     assert command[command.index("--precrash-horizon") + 1] == "5"
+    assert command[command.index("--target-state-threshold") + 1] == "0.005"
 
 
 def test_recovery_metrics_do_not_reward_always_stop():

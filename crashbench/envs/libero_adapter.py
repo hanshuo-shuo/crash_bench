@@ -27,6 +27,37 @@ from pathlib import Path
 
 import numpy as np
 
+
+# Dynamic MuJoCo fields that are part of a continuation, but are omitted by
+# LIBERO's flattened ``[time, qpos, qvel]`` state.  Not every MuJoCo version
+# exposes every field, so capture is capability based and restore is driven by
+# the keys present in the snapshot.  In particular, qacc_warmstart carries the
+# iterative solver warm start while the applied-force, mocap, equality, user,
+# and plugin fields are inputs to the next integration step.
+_SIM_CONTINUATION_FIELDS = (
+    "qacc_warmstart",
+    "act",
+    "ctrl",
+    "qfrc_applied",
+    "xfrc_applied",
+    "mocap_pos",
+    "mocap_quat",
+    "eq_active",
+    "userdata",
+    "plugin_state",
+)
+
+_ROBOT_RUNTIME_BUFFERS = (
+    "recent_qpos",
+    "recent_actions",
+    "recent_torques",
+    "recent_ee_forcetorques",
+    "recent_ee_pose",
+    "recent_ee_vel",
+    "recent_ee_vel_buffer",
+    "recent_ee_acc",
+)
+
 def _default_openvla_root() -> str:
     """Repo whose `experiments.robot.*` we import. Defaults to base OpenVLA, but the
     env var CRASHBENCH_OPENVLA_ROOT overrides it — Path 3 (OpenVLA-OFT) sets this to the
@@ -376,6 +407,10 @@ class LiberoEnv:
             self.env.seed(seed)
         self.seed_value = int(seed)
         self.sim_view = LiberoSimView(self.env)
+        # Keep the exact source bytes associated with the live model. MuJoCo's
+        # get_xml() output is not a canonical model identity, so reserializing
+        # the same compiled model later can produce a different text hash.
+        self._continuation_model_xml = str(self.env.sim.model.get_xml())
 
     def seed(self, seed: int) -> None:
         self.seed_value = int(seed)
@@ -405,6 +440,7 @@ class LiberoEnv:
         """
         if not obstacles and not movable_objects:
             self.env.reset()
+            model_xml = str(self.env.sim.model.get_xml())
             obs = self.env.set_init_state(init_state)
         else:
             self.env.reset()                                   # clean rebuild from BDDL
@@ -417,8 +453,10 @@ class LiberoEnv:
             xml = inject_obstacles_xml(xml, obstacles or [])
             xml = inject_movable_objects_xml(xml, movable_objects or [])
             self.env.reset_from_xml_string(xml)                # rebuild WITH injected bodies
+            model_xml = xml
             state = self._splice_movable_state(init_state, nq0, nv0, movable_objects or [])
             obs = self.env.set_init_state(state)               # set spliced state, no reset
+        self._continuation_model_xml = model_xml
         self.sim_view.peak_force = 0.0                         # reset impact tracker per episode
         self.sim_view.update(obs, done=False)
         return obs
@@ -438,33 +476,90 @@ class LiberoEnv:
             np.asarray(data.qvel[:int(model.nv)], dtype=np.float64).copy(),
         ])
 
-    def controller_state(self) -> dict[str, np.ndarray]:
-        """Capture policy-boundary runtime state omitted by flat qpos/qvel."""
+    def model_xml(self) -> str:
+        """Return the exact compiled scene source used by the live simulator.
 
-        def encode(value) -> np.ndarray:
-            if value is None:
-                return np.empty(0, dtype=np.float64)
-            array = np.asarray(value)
-            if array.dtype.hasobject:
-                raise TypeError("controller runtime state cannot contain object arrays")
-            return array.copy()
+        Reconstructing an injected model from a newly randomized LIBERO reset is
+        not an exact-model contract even when qpos/qvel happen to hash equally.
+        Branches that claim continuation equivalence should rebuild from these
+        exact XML bytes.
+        """
+
+        model_xml = getattr(self, "_continuation_model_xml", None)
+        if model_xml is None:
+            model_xml = str(self.env.sim.model.get_xml())
+            self._continuation_model_xml = model_xml
+        return model_xml
+
+    def _raw_env(self):
+        """Unwrap LIBERO/robosuite wrappers to the environment owning runtime state."""
 
         raw = self.env
-        while not hasattr(raw, "robots") and hasattr(raw, "env"):
+        # LIBERO's ControlEnv exposes ``robots`` as a forwarding property, but
+        # episode counters, observables, and the observation cache live on its
+        # nested robosuite task env. Stopping merely because ``robots`` exists
+        # silently omits done/timestep and observable history from snapshots.
+        while not hasattr(raw, "_observables") and hasattr(raw, "env"):
             raw = raw.env
-        if not hasattr(raw, "robots"):
-            raise RuntimeError("could not locate robosuite robots for controller snapshot")
+        if not hasattr(raw, "robots") or not hasattr(raw, "_observables"):
+            raise RuntimeError("could not locate robosuite runtime environment")
+        return raw
+
+    @staticmethod
+    def _encode_runtime_value(value) -> np.ndarray:
+        if value is None:
+            return np.empty(0, dtype=np.float64)
+        array = np.asarray(value)
+        if array.dtype.hasobject:
+            raise TypeError("runtime state cannot contain object arrays")
+        return array.copy()
+
+    @staticmethod
+    def _assign_runtime_value(owner, name: str, encoded: np.ndarray) -> None:
+        """Restore a numeric attribute while preserving scalar Python types."""
+
+        current = getattr(owner, name, None)
+        value = np.asarray(encoded)
+        if value.size == 0 and (current is None or name == "ori_ref"):
+            setattr(owner, name, None)
+        elif value.shape == () and value.dtype.kind == "b":
+            setattr(owner, name, bool(value.item()))
+        elif value.shape == () and value.dtype.kind in "iu":
+            setattr(owner, name, int(value.item()))
+        elif value.shape == () and value.dtype.kind in "fc":
+            setattr(owner, name, float(value.item()))
+        else:
+            setattr(owner, name, value.copy())
+
+    def controller_state(self) -> dict[str, np.ndarray]:
+        """Capture the complete policy-boundary continuation state.
+
+        The historical name is retained for artifact compatibility, but the
+        snapshot now covers simulator integration inputs, OSC/interpolators,
+        robosuite episode counters, robot temporal buffers, observable values
+        and timers, and the observation cache.  All values remain plain numeric
+        arrays so the snapshot is safe to store in ``npz`` without pickle.
+        """
+
+        encode = self._encode_runtime_value
+        raw = self._raw_env()
         snapshot: dict[str, np.ndarray] = {}
-        model, data = self.sim_view._live_mj()
-        snapshot["sim.qacc_warmstart"] = np.asarray(
-            data.qacc_warmstart[:int(model.nv)]
-        ).copy()
-        snapshot["sim.act"] = np.asarray(data.act[:int(model.na)]).copy()
-        snapshot["sim.ctrl"] = np.asarray(data.ctrl[:int(model.nu)]).copy()
+        _, data = self.sim_view._live_mj()
+        for name in _SIM_CONTINUATION_FIELDS:
+            if hasattr(data, name):
+                snapshot[f"sim.{name}"] = encode(getattr(data, name))
+
+        for name in ("cur_time", "timestep", "done"):
+            if hasattr(raw, name):
+                snapshot[f"env.{name}"] = encode(getattr(raw, name))
+
         for robot_index, robot in enumerate(raw.robots):
             controller = robot.controller
             prefix = f"robot{robot_index}"
-            for name in ("goal_pos", "goal_ori", "ori_ref", "relative_ori"):
+            for name in (
+                "goal_pos", "goal_ori", "ori_ref", "relative_ori",
+                "initial_joint", "kp", "kd", "torques",
+            ):
                 if hasattr(controller, name):
                     snapshot[f"{prefix}.controller.{name}"] = encode(
                         getattr(controller, name)
@@ -480,29 +575,59 @@ class LiberoEnv:
                     snapshot[f"{prefix}.{interpolator_name}.{name}"] = encode(
                         getattr(interpolator, name)
                     )
+
+            if hasattr(robot, "torques"):
+                snapshot[f"{prefix}.torques"] = encode(robot.torques)
+            for buffer_name in _ROBOT_RUNTIME_BUFFERS:
+                buffer = getattr(robot, buffer_name, None)
+                if buffer is None:
+                    continue
+                for name, value in getattr(buffer, "__dict__", {}).items():
+                    try:
+                        snapshot[f"{prefix}.buffer.{buffer_name}.{name}"] = encode(value)
+                    except TypeError:
+                        # Buffer metadata can include implementation helpers; only
+                        # numeric continuation state belongs in the portable file.
+                        continue
+
+        observables = getattr(raw, "_observables", {})
+        for observable_name, observable in observables.items():
+            prefix = f"observable.{observable_name}"
+            for name in (
+                "_time_since_last_sample", "_current_delay",
+                "_current_observed_value", "_sampled",
+            ):
+                if hasattr(observable, name):
+                    snapshot[f"{prefix}.{name}"] = encode(getattr(observable, name))
+        for cache_name, value in getattr(raw, "_obs_cache", {}).items():
+            snapshot[f"obs_cache.{cache_name}"] = encode(value)
+        # Observable internals define future sampling, but they do not always
+        # reconstruct the exact wrapper-level dictionary received by the
+        # policy. Persist that policy-boundary observation explicitly.
+        for observation_name, value in getattr(self.sim_view, "_obs", {}).items():
+            snapshot[f"observation.{observation_name}"] = encode(value)
         return snapshot
 
-    def restore_controller_state(self, snapshot: dict[str, np.ndarray]) -> None:
-        """Restore a controller snapshot after a simulator-state reset."""
+    def restore_controller_state(
+        self,
+        snapshot: dict[str, np.ndarray],
+        *,
+        restore_observables: bool = True,
+    ):
+        """Restore a continuation snapshot and return its restored observation."""
 
-        raw = self.env
-        while not hasattr(raw, "robots") and hasattr(raw, "env"):
-            raw = raw.env
-        if not hasattr(raw, "robots"):
-            raise RuntimeError("could not locate robosuite robots for controller restore")
+        raw = self._raw_env()
         for robot_index, robot in enumerate(raw.robots):
             controller = robot.controller
             controller.update(force=True)
             prefix = f"robot{robot_index}"
-            for name in ("goal_pos", "goal_ori", "ori_ref", "relative_ori", "new_update"):
+            for name in (
+                "goal_pos", "goal_ori", "ori_ref", "relative_ori", "new_update",
+                "initial_joint", "kp", "kd", "torques",
+            ):
                 key = f"{prefix}.controller.{name}"
                 if key in snapshot:
-                    value = np.asarray(snapshot[key])
-                    setattr(
-                        controller, name,
-                        bool(value.item()) if name == "new_update"
-                        else None if value.size == 0 else value.copy(),
-                    )
+                    self._assign_runtime_value(controller, name, snapshot[key])
             for interpolator_name in ("interpolator_pos", "interpolator_ori"):
                 interpolator = getattr(controller, interpolator_name, None)
                 if interpolator is None:
@@ -510,27 +635,72 @@ class LiberoEnv:
                 for name in ("start", "goal", "step"):
                     key = f"{prefix}.{interpolator_name}.{name}"
                     if key in snapshot:
-                        value = np.asarray(snapshot[key])
-                        setattr(
-                            interpolator, name,
-                            int(value.item()) if name == "step" else value.copy(),
+                        self._assign_runtime_value(interpolator, name, snapshot[key])
+            torque_key = f"{prefix}.torques"
+            if torque_key in snapshot:
+                self._assign_runtime_value(robot, "torques", snapshot[torque_key])
+            for buffer_name in _ROBOT_RUNTIME_BUFFERS:
+                buffer = getattr(robot, buffer_name, None)
+                if buffer is None:
+                    continue
+                field_prefix = f"{prefix}.buffer.{buffer_name}."
+                for key, value in snapshot.items():
+                    if key.startswith(field_prefix):
+                        self._assign_runtime_value(
+                            buffer, key[len(field_prefix):], value
                         )
-        model, data = self.sim_view._live_mj()
-        expected_shapes = {
-            "sim.qacc_warmstart": (int(model.nv),),
-            "sim.act": (int(model.na),),
-            "sim.ctrl": (int(model.nu),),
-        }
-        for key, shape in expected_shapes.items():
+
+        # controller.update(force=True) calls mj_forward, so integration inputs
+        # must be restored after controller refresh.
+        _, data = self.sim_view._live_mj()
+        for name in _SIM_CONTINUATION_FIELDS:
+            key = f"sim.{name}"
+            if key not in snapshot:
+                continue
+            target = np.asarray(getattr(data, name))
             value = np.asarray(snapshot[key])
-            if value.shape != shape:
-                raise ValueError(f"{key} shape {value.shape} != restored model shape {shape}")
-        data.qacc_warmstart[:int(model.nv)] = snapshot["sim.qacc_warmstart"]
-        data.act[:int(model.na)] = snapshot["sim.act"]
-        data.ctrl[:int(model.nu)] = snapshot["sim.ctrl"]
+            if target.shape != value.shape:
+                raise ValueError(
+                    f"{key} shape {value.shape} != restored model shape {target.shape}"
+                )
+            target[...] = value
+
+        for name in ("cur_time", "timestep", "done"):
+            key = f"env.{name}"
+            if key in snapshot:
+                self._assign_runtime_value(raw, name, snapshot[key])
+
+        if restore_observables:
+            observables = getattr(raw, "_observables", {})
+            for observable_name, observable in observables.items():
+                prefix = f"observable.{observable_name}."
+                for key, value in snapshot.items():
+                    if key.startswith(prefix):
+                        self._assign_runtime_value(observable, key[len(prefix):], value)
+            cache = {
+                key[len("obs_cache."):]: np.asarray(value).copy()
+                for key, value in snapshot.items() if key.startswith("obs_cache.")
+            }
+            if cache or any(key.startswith("obs_cache.") for key in snapshot):
+                raw._obs_cache = cache
+        captured_observation = {
+            key[len("observation."):]: np.asarray(value).copy()
+            for key, value in snapshot.items() if key.startswith("observation.")
+        }
+        observation = (
+            captured_observation
+            if restore_observables and captured_observation
+            else raw._get_observations()
+            if hasattr(raw, "_get_observations")
+            else dict(getattr(self.sim_view, "_obs", {}))
+        )
+        if hasattr(self.sim_view, "update"):
+            self.sim_view.update(observation, done=bool(getattr(raw, "done", False)))
+        return observation
 
     def reset_to_exact(self, flat_state: np.ndarray, obstacles: list[dict] | None = None,
-                       movable_objects: list[dict] | None = None):
+                       movable_objects: list[dict] | None = None,
+                       model_xml: str | None = None):
         """Rebuild a requested injected scene and restore its *expanded* state.
 
         In contrast to :meth:`reset_to`, ``flat_state`` already contains the
@@ -539,12 +709,20 @@ class LiberoEnv:
         spliced twice.
         """
 
-        self.env.reset()
-        if obstacles or movable_objects:
+        if model_xml is not None:
+            if obstacles or movable_objects:
+                raise ValueError("model_xml cannot be combined with obstacle reinjection")
+            self.env.reset_from_xml_string(model_xml)
+            continuation_model_xml = str(model_xml)
+        else:
+            self.env.reset()
+            continuation_model_xml = str(self.env.sim.model.get_xml())
+        if model_xml is None and (obstacles or movable_objects):
             xml = self.env.sim.model.get_xml()
             xml = inject_obstacles_xml(xml, obstacles or [])
             xml = inject_movable_objects_xml(xml, movable_objects or [])
             self.env.reset_from_xml_string(xml)
+            continuation_model_xml = xml
         model = self._raw_model()
         expected = 1 + int(model.nq) + int(model.nv)
         state = np.asarray(flat_state, dtype=np.float64)
@@ -553,9 +731,34 @@ class LiberoEnv:
                 f"exact state shape {state.shape} != ({expected},) for rebuilt model"
             )
         obs = self.env.set_init_state(state)
+        self._continuation_model_xml = continuation_model_xml
         self.sim_view.peak_force = 0.0
         self.sim_view.update(obs, done=False)
         return obs
+
+    def restore_to_exact_in_place(
+        self,
+        flat_state: np.ndarray,
+        runtime_state: dict[str, np.ndarray],
+    ):
+        """Rewind the existing MjModel/MjData without rebuilding the scene.
+
+        This is the in-memory arm of the continuation diagnostic.  Comparing it
+        with :meth:`reset_to_exact` using captured ``model_xml`` separates a
+        dynamic snapshot defect from a model reconstruction defect.
+        """
+
+        model = self._raw_model()
+        state = np.asarray(flat_state, dtype=np.float64)
+        expected = 1 + int(model.nq) + int(model.nv)
+        if state.shape != (expected,):
+            raise ValueError(f"exact state shape {state.shape} != ({expected},)")
+        self.env.set_state(state)
+        self.env.sim.forward()
+        observation = self.restore_controller_state(runtime_state)
+        self.sim_view.peak_force = 0.0
+        self.sim_view.update(observation, done=False)
+        return observation
 
     def _raw_model(self):
         sim = self.env.sim

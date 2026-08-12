@@ -116,7 +116,7 @@ class DetourComplete:
                  target_name: str | None = None,
                  orientation_target=None, orientation_k: float = 2.0,
                  path_aligned: bool = False, pregrasp_offset: float = 0.02,
-                 grasp_xy_offset=None):
+                 grasp_xy_offset=None, departure_clearance: float = 0.06):
         self.wall, self.k, self.tol, self.leg_cap = wall, k, tol, leg_cap
         self.side, self.lane_margin = side, lane_margin
         self.bowl = np.asarray(target_pos, dtype=np.float32)
@@ -134,6 +134,9 @@ class DetourComplete:
         self.orientation_k = float(orientation_k)
         self.path_aligned = bool(path_aligned)
         self.pregrasp_offset = float(pregrasp_offset)
+        self.departure_clearance = float(departure_clearance)
+        if self.departure_clearance < 0:
+            raise ValueError("departure_clearance must be non-negative")
         self.grasp_xy_offset = (
             np.zeros(2, dtype=np.float32) if grasp_xy_offset is None
             else np.asarray(grasp_xy_offset, dtype=np.float32)
@@ -166,12 +169,21 @@ class DetourComplete:
             lane_offset = float(whx + self.lane_margin)
             lane_reference = glass_xy + self.side * lane_offset * lateral
             start_xy = np.asarray(eef[:2], dtype=np.float32)
-            first_xy = start_xy + lateral * float(np.dot(
-                lane_reference - start_xy, lateral
+            away = start_xy - glass_xy
+            away_norm = float(np.linalg.norm(away))
+            away_unit = -along if away_norm < 1e-6 else away / away_norm
+            depart_xy = start_xy + self.departure_clearance * away_unit
+            first_xy = depart_xy + lateral * float(np.dot(
+                lane_reference - depart_xy, lateral
             ))
             pregrasp_xy = grasp_xy - self.pregrasp_offset * along
             pregrasp_lane_xy = pregrasp_xy + self.side * lane_offset * lateral
             approach_legs = [
+                # First move radially away from the glass at the current
+                # height, then lift.  The old diagonal lift+sidestep could cut
+                # through the glass when H placed the wrist very close to it.
+                ("move", [float(depart_xy[0]), float(depart_xy[1]), float(eef[2])], O),
+                ("move", [float(depart_xy[0]), float(depart_xy[1]), ez], O),
                 ("move", [float(first_xy[0]), float(first_xy[1]), ez], O),
                 ("move", [float(pregrasp_lane_xy[0]), float(pregrasp_lane_xy[1]), ez], O),
                 ("move", [float(pregrasp_xy[0]), float(pregrasp_xy[1]), ez], O),
@@ -195,6 +207,8 @@ class DetourComplete:
             ("move", [float(p[0]), float(p[1]), float(p[2]) + self.place_off], C),    # 9. set on plate
             ("hold", O, self.release_steps),                    # 10. release + settle
         ]
+        self._carry_leg_index = len(approach_legs) + 3
+        self._place_leg_index = self._carry_leg_index + 1
         self.i = 0
         self._in_leg = 0
         self._carry_adjusted = False
@@ -222,14 +236,18 @@ class DetourComplete:
         # bowl--EEF xy offset before carrying/lowering.  Aiming the EEF itself at
         # plate center is not enough: the held bowl hangs off-center and misses
         # LIBERO's placement region.  This mirrors the verified offline witness.
-        if self.i == 7 and not self._carry_adjusted and self.target_name:
+        if self.i == self._carry_leg_index and not self._carry_adjusted and self.target_name:
             key = f"{self.target_name}_pos"
             if key in obs:
                 target_xy = np.asarray(obs[key], dtype=np.float32)[:2]
                 offset = target_xy - eef[:2]
                 px, py = float(self.plate[0] - offset[0]), float(self.plate[1] - offset[1])
-                self.legs[7] = ("move", [px, py, self.transit_z], GRIP_CLOSE)
-                self.legs[8] = ("move", [px, py, float(self.plate[2]) + self.place_off], GRIP_CLOSE)
+                self.legs[self._carry_leg_index] = (
+                    "move", [px, py, self.transit_z], GRIP_CLOSE
+                )
+                self.legs[self._place_leg_index] = (
+                    "move", [px, py, float(self.plate[2]) + self.place_off], GRIP_CLOSE
+                )
                 self._carry_adjusted = True
         leg = self.legs[self.i]
         self._in_leg += 1

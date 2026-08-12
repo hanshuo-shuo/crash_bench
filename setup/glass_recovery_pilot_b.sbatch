@@ -1,5 +1,6 @@
 #!/bin/bash
-# Pilot B task-0 feasibility: source traces, H frontier, then 10/5/5 collection.
+# Pilot B task-0 feasibility: diagnose continuation, then run a fresh frontier
+# and (only after a go) 10/5/5 collection.
 # Submit one stage at a time with setup/submit_glass_recovery_pilot_b.sh.
 #SBATCH --account=p33100
 #SBATCH --partition=gengpu
@@ -58,22 +59,61 @@ case "$STAGE" in
       --max-steps 220
     ;;
 
+  diagnose)
+    DIAGNOSTIC_PLACEMENTS="${CB_PILOT_B_DIAGNOSTIC_PLACEMENTS:?set to the exposed diagnostic-only placement manifest}"
+    test -f "$DIAGNOSTIC_PLACEMENTS"
+    DIAGNOSTIC_PLACEMENT_ARGS=()
+    if [[ -n "${CB_PILOT_B_DIAGNOSTIC_PLACEMENT_ID:-}" ]]; then
+      DIAGNOSTIC_PLACEMENT_ARGS=(
+        --placement-id "$CB_PILOT_B_DIAGNOSTIC_PLACEMENT_ID"
+      )
+    fi
+    python scripts/diagnose_glass_continuation_oracle.py \
+      --placements "$DIAGNOSTIC_PLACEMENTS" \
+      --output "$RUN_ROOT/continuation_oracle_diagnostic_h${CB_PILOT_B_DIAGNOSTIC_H:-20}.json" \
+      --checkpoint "$CHECKPOINT" \
+      --checkpoint-revision "$REVISION" \
+      --unnorm-key "$UNNORM_KEY" \
+      --rollout-seed 0 \
+      --horizon "${CB_PILOT_B_DIAGNOSTIC_H:-20}" \
+      --max-candidates "${CB_PILOT_B_DIAGNOSTIC_CANDIDATES:-6}" \
+      --oracle-steps "${CB_PILOT_B_DIAGNOSTIC_ORACLE_STEPS:-220}" \
+      "${DIAGNOSTIC_PLACEMENT_ARGS[@]}"
+    ;;
+
   frontier)
     test -f "$SOURCE_MANIFEST"
     FRONTIER_PLACEMENTS="$RUN_ROOT/frontier_placements"
     FRONTIER_MANIFEST="${CB_PILOT_B_FRONTIER_PLACEMENT_MANIFEST:-}"
     FRONTIER_ROOT="$RUN_ROOT/frontier_task0"
+    # Every source state exposed by the r7 frontier or the first fresh H=20
+    # frontier is excluded by default. Override only to reproduce an old run.
+    EXPOSED_SOURCE_STATES="${CB_PILOT_B_EXCLUDE_SOURCE_STATE_INDICES:-1,2,3,5,6,9,11,12,14,16,17,18,19,20,21,22,23,24,26,28,29,34,35,38,40,43,47}"
     if [[ -z "$FRONTIER_MANIFEST" ]]; then
       python scripts/prepare_glass_recovery_placements.py \
         --output "$FRONTIER_PLACEMENTS" \
         --source-trace-manifest "$SOURCE_MANIFEST" \
         --checkpoint-revision "$REVISION" \
         --unnorm-key "$UNNORM_KEY" \
-        --train-placements 10 --validation-placements 5 --heldout-placements 5 \
-        --train-accepted-targets 2 --validation-accepted-targets 1 \
-        --heldout-accepted-targets 1 \
-        --train-states 8 --validation-states 5 --heldout-states 5 \
-        --source-state-reserve "${CB_PILOT_B_SOURCE_STATE_RESERVE:-4}"
+        --development-frontier \
+        --geometry-profile controller_compatible_narrow \
+        --min-target-clearance "${CB_PILOT_B_MIN_TARGET_CLEARANCE:-0.17}" \
+        --control-offset "${CB_PILOT_B_CONTROL_OFFSET:-0.30}" \
+        --screen-horizon 20 \
+        --screen-force-margin "${CB_PILOT_B_SCREEN_FORCE_MARGIN_N:-10.0}" \
+        --screen-target-rest-threshold "${CB_PILOT_B_SCREEN_TARGET_REST_THRESHOLD_M:-0.005}" \
+        --max-proposals-per-candidate "${CB_PILOT_B_MAX_PROPOSALS_PER_CANDIDATE:-36}" \
+        --train-placements "${CB_PILOT_B_FRONTIER_TRAIN_PLACEMENTS:-4}" \
+        --validation-placements "${CB_PILOT_B_FRONTIER_VALIDATION_PLACEMENTS:-3}" \
+        --heldout-placements "${CB_PILOT_B_FRONTIER_HELDOUT_PLACEMENTS:-3}" \
+        --train-accepted-targets "${CB_PILOT_B_FRONTIER_TRAIN_TARGETS:-1}" \
+        --validation-accepted-targets "${CB_PILOT_B_FRONTIER_VALIDATION_TARGETS:-1}" \
+        --heldout-accepted-targets "${CB_PILOT_B_FRONTIER_HELDOUT_TARGETS:-1}" \
+        --train-states "${CB_PILOT_B_FRONTIER_TRAIN_STATES:-3}" \
+        --validation-states "${CB_PILOT_B_FRONTIER_VALIDATION_STATES:-2}" \
+        --heldout-states "${CB_PILOT_B_FRONTIER_HELDOUT_STATES:-2}" \
+        --exclude-source-state-indices "$EXPOSED_SOURCE_STATES" \
+        --source-state-reserve "${CB_PILOT_B_SOURCE_STATE_RESERVE:-2}"
       FRONTIER_MANIFEST="$FRONTIER_PLACEMENTS/placements.json"
     fi
     test -f "$FRONTIER_MANIFEST"
@@ -84,7 +124,9 @@ case "$STAGE" in
       --checkpoint-revision "$REVISION" \
       --unnorm-key "$UNNORM_KEY" \
       --rollout-seed 0 \
-      --oracle-steps 220 \
+      --target-state-threshold "${CB_PILOT_B_SCREEN_TARGET_REST_THRESHOLD_M:-0.005}" \
+      --oracle-steps "${CB_PILOT_B_FRONTIER_ORACLE_STEPS:-360}" \
+      --horizons ${CB_PILOT_B_FRONTIER_HORIZONS:-20} \
       --execute
     ;;
 

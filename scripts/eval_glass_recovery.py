@@ -51,6 +51,7 @@ from scripts.collect_glass_recovery_pairs import (
     CAREFUL_PROMPT_PREFIX,
     PLATE,
     TARGET,
+    _branch_start_hashes,
     _controller_glass,
     _controller_state_sha256,
     _glass_force,
@@ -243,6 +244,8 @@ class AcceptedEvaluationPair:
     offpath_state_path: Path
     matched_robot_state_path: Path
     controller_state_path: Path
+    onpath_model_xml_path: Path | None = None
+    offpath_model_xml_path: Path | None = None
 
     @property
     def family(self) -> str:
@@ -541,6 +544,8 @@ def load_evaluation_contract(
         offpath_state_path = pair_root / "offpath_start_state.npy"
         matched_robot_state_path = pair_root / "matched_robot_state.npy"
         controller_state_path = pair_root / "controller_state.npz"
+        onpath_model_xml_path = pair_root / "onpath_model.xml"
+        offpath_model_xml_path = pair_root / "offpath_model.xml"
         required_paths = [
             source_path,
             *arrays_paths.values(),
@@ -549,6 +554,12 @@ def load_evaluation_contract(
             matched_robot_state_path,
             controller_state_path,
         ]
+        if "model_xml_sha256" in nominal.metadata.get("branch_start_hashes", {}):
+            required_paths.append(onpath_model_xml_path)
+        if "model_xml_sha256" in by_kind["off_path_control"].metadata.get(
+            "branch_start_hashes", {}
+        ):
+            required_paths.append(offpath_model_xml_path)
         for required_path in required_paths:
             _verify_declared_file(file_hashes, required_path, roots=roots)
 
@@ -591,6 +602,12 @@ def load_evaluation_contract(
             offpath_state_path=offpath_state_path,
             matched_robot_state_path=matched_robot_state_path,
             controller_state_path=controller_state_path,
+            onpath_model_xml_path=(
+                onpath_model_xml_path if onpath_model_xml_path.is_file() else None
+            ),
+            offpath_model_xml_path=(
+                offpath_model_xml_path if offpath_model_xml_path.is_file() else None
+            ),
         ))
 
     selected_records = [record for pair in accepted_pairs for record in pair.records.values()]
@@ -651,6 +668,7 @@ def _make_oracle_controller(
         orientation_target=config["orientation_target"],
         path_aligned=bool(config["path_aligned"]),
         grasp_xy_offset=config["grasp_xy_offset"],
+        departure_clearance=float(config.get("departure_clearance", 0.06)),
     )
 
 
@@ -845,19 +863,23 @@ def _build_attributed_predicates(glasses: list[dict], sim_view):
 
 
 def _runtime_hashes(env, obs: Mapping[str, Any]) -> dict[str, str]:
-    return {
-        "simulator_state_sha256": array_sha256(env.flat_state()),
-        "controller_state_sha256": _controller_state_sha256(env.controller_state()),
-        "observation_sha256": _observation_sha256(obs),
-    }
+    return _branch_start_hashes(env, obs)
 
 
 def _restore_identity_evidence(
     actual: Mapping[str, str], expected: Mapping[str, str], *, label: str
 ) -> dict[str, Any]:
-    """Require exact simulator/controller restore and retain observation drift."""
+    """Require every continuation identity field declared by the cohort."""
 
-    required = ("simulator_state_sha256", "controller_state_sha256")
+    required = ["simulator_state_sha256", "controller_state_sha256"]
+    for key in ("continuation_state_sha256", "model_xml_sha256"):
+        if key in expected:
+            required.append(key)
+    # Legacy cohorts did not serialize observable history, so their observation
+    # hash remains diagnostic.  New continuation snapshots do serialize it and
+    # therefore require exact observation identity.
+    if "continuation_state_sha256" in expected and "observation_sha256" in expected:
+        required.append("observation_sha256")
     mismatched = [key for key in required if actual.get(key) != expected.get(key)]
     if mismatched:
         raise RuntimeError(f"{label} restore mismatch for {mismatched}")
@@ -865,6 +887,7 @@ def _restore_identity_evidence(
     actual_observation = actual.get("observation_sha256")
     return {
         "simulator_controller_exact": True,
+        "continuation_exact": True,
         "observation_exact": expected_observation == actual_observation,
         "expected_observation_sha256": expected_observation,
         "restored_observation_sha256": actual_observation,
@@ -898,11 +921,28 @@ def _reset_episode(
         raise ValueError(f"unknown evaluation mode {mode}")
     state_path = pair.onpath_state_path if regime == "treatment" else pair.offpath_state_path
     exact_state = np.load(state_path, allow_pickle=False)
-    obs = env.reset_to_exact(
-        exact_state, movable_objects=glasses
+    exact_model_xml_path = (
+        pair.onpath_model_xml_path if regime == "treatment"
+        else pair.offpath_model_xml_path
     )
+    if exact_model_xml_path is not None:
+        obs = env.reset_to_exact(
+            exact_state, model_xml=exact_model_xml_path.read_text()
+        )
+    else:
+        obs = env.reset_to_exact(exact_state, movable_objects=glasses)
     controller_state = _load_controller_state(pair.controller_state_path)
-    env.restore_controller_state(controller_state)
+    try:
+        restored_obs = env.restore_controller_state(
+            controller_state, restore_observables=(regime == "treatment")
+        )
+    except TypeError as exc:
+        if "restore_observables" not in str(exc):
+            raise
+        # Compatibility for zero-GPU test doubles and legacy external adapters.
+        restored_obs = env.restore_controller_state(controller_state)
+    if restored_obs is not None:
+        obs = restored_obs
     expected_record = pair.records[
         "nominal_catastrophe" if regime == "treatment" else "off_path_control"
     ]
@@ -945,6 +985,13 @@ def _save_trigger_state(
         "controller_state_file": str(controller_path),
         "controller_state_file_sha256": file_sha256(controller_path),
     }
+    if hasattr(env, "model_xml"):
+        model_xml_path = root / "model.xml"
+        model_xml_path.write_text(env.model_xml())
+        identity.update(
+            model_xml_file=str(model_xml_path),
+            model_xml_file_sha256=file_sha256(model_xml_path),
+        )
     return identity, state, controller
 
 
@@ -958,16 +1005,21 @@ def _posthoc_oracle(
     *,
     max_steps: int,
 ) -> dict[str, Any]:
-    obs = env.reset_to_exact(state, movable_objects=glasses)
-    env.restore_controller_state(dict(controller_state))
+    model_xml_file = expected_trigger_identity.get("model_xml_file")
+    if model_xml_file:
+        obs = env.reset_to_exact(state, model_xml=Path(str(model_xml_file)).read_text())
+    else:
+        obs = env.reset_to_exact(state, movable_objects=glasses)
+    restored_obs = env.restore_controller_state(dict(controller_state))
+    if restored_obs is not None:
+        obs = restored_obs
     restored_identity = _runtime_hashes(env, obs)
     expected_runtime_identity = {
         key: str(expected_trigger_identity[key])
         for key in (
-            "simulator_state_sha256",
-            "controller_state_sha256",
-            "observation_sha256",
-        )
+            "simulator_state_sha256", "controller_state_sha256",
+            "continuation_state_sha256", "observation_sha256", "model_xml_sha256",
+        ) if key in expected_trigger_identity
     }
     restore_evidence = _restore_identity_evidence(
         restored_identity,

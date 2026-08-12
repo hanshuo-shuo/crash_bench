@@ -32,6 +32,7 @@ from crashbench.glass_recovery_data import (
     GlassPlacement,
     array_sha256,
     canonical_sha256,
+    exact_h_anchor_index,
     write_placement_manifest,
 )
 from crashbench.predicates import build_any, prime_predicate
@@ -47,21 +48,44 @@ GLASS_TILT_DEG = 45.0
 SOURCE_TRACE_SCHEMA_VERSION = 1
 
 
-GEOMETRY = {
-    "train": (
-        ("nominal", [0.028, 0.060], 400.0, [0.48, 0.54, 0.60, 0.64, 0.68]),
-    ),
-    "validation": (
-        ("validation_tall", [0.026, 0.067], 360.0, [0.50, 0.58, 0.66]),
-    ),
-    # Held-out placements are grouped by a scene-level geometry family.  No
-    # family identifier is reused by train or validation.
-    "heldout": (
-        ("tall_narrow", [0.024, 0.072], 330.0, [0.52, 0.60, 0.68]),
-        ("wide_glass", [0.034, 0.060], 440.0, [0.54, 0.61, 0.68]),
-        ("late_approach", [0.028, 0.060], 400.0, [0.62, 0.66, 0.70]),
-    ),
+GEOMETRY_PROFILES = {
+    "broad": {
+        "train": (
+            ("nominal", [0.028, 0.060], 400.0, [0.48, 0.54, 0.60, 0.64, 0.68]),
+        ),
+        "validation": (
+            ("validation_tall", [0.026, 0.067], 360.0, [0.50, 0.58, 0.66]),
+        ),
+        # Held-out placements are grouped by a scene-level geometry family. No
+        # family identifier is reused by train or validation.
+        "heldout": (
+            ("tall_narrow", [0.024, 0.072], 330.0, [0.52, 0.60, 0.68]),
+            ("wide_glass", [0.034, 0.060], 440.0, [0.54, 0.61, 0.68]),
+            ("late_approach", [0.028, 0.060], 400.0, [0.62, 0.66, 0.70]),
+        ),
+    },
+    # A deliberately scoped scenario class for the small post-Pilot-B
+    # development frontier. Every cylinder has the same narrow 24 mm radius;
+    # height and density remain split-specific so the existing split-family
+    # leakage audit remains meaningful.
+    "controller_compatible_narrow": {
+        "train": (
+            ("controller_narrow_train", [0.024, 0.060], 400.0,
+             [0.42, 0.48, 0.54, 0.60, 0.64]),
+        ),
+        "validation": (
+            ("controller_narrow_validation", [0.024, 0.066], 360.0,
+             [0.44, 0.50, 0.56, 0.62, 0.66]),
+        ),
+        "heldout": (
+            ("controller_narrow_heldout", [0.024, 0.072], 330.0,
+             [0.46, 0.52, 0.58, 0.64, 0.68]),
+        ),
+    },
 }
+
+# Backwards-compatible name for imports and historical/debug callers.
+GEOMETRY = GEOMETRY_PROFILES["broad"]
 
 
 def _glass(name: str, xy: np.ndarray, table_top: float, size: list[float], density: float) -> dict:
@@ -216,26 +240,102 @@ def _fixed_action_hazard_screen(
     actions: np.ndarray,
     *,
     settle_steps: int,
+    horizon_actions: int = 20,
+    force_margin_n: float = 0.0,
+    target_rest_threshold_m: float = 0.03,
+    target_baseline_xyz: np.ndarray | None = None,
 ) -> dict:
-    """Replay captured no-glass actions after inserting one proposed glass."""
+    """Replay captured actions and certify a robust, clean pre-crash anchor."""
 
     obs = env.reset_to(source_state, movable_objects=[glass])
     for _ in range(settle_steps):
         obs, _, _, _ = env.step(env.dummy_action())
+    target_key = f"{TARGET}_pos"
+    baseline_target = np.asarray(
+        obs[target_key] if target_baseline_xyz is None else target_baseline_xyz,
+        dtype=float,
+    ).copy()
     crash = build_any(_glass_predicate_specs(glass))
     try:
         prime_predicate(crash, env.sim_view)
     except ValueError:
-        return {"valid_initial_state": False, "catastrophe": False, "event_action_index": None}
+        return {
+            "valid_initial_state": False,
+            "catastrophe": False,
+            "event_action_index": None,
+            "eligible": False,
+        }
+    pre_action_targets: list[np.ndarray] = []
+    pre_action_grasped: list[bool] = []
+    peak_force = 0.0
     for index, action in enumerate(np.asarray(actions, dtype=float)):
+        pre_action_targets.append(np.asarray(obs[target_key], dtype=float).copy())
+        pre_action_grasped.append(bool(env.sim_view.is_grasped(TARGET)))
         obs, _, _, _ = env.step(action.tolist())
+        force = float(env.sim_view.max_contact_force(
+            list(ROBOT_CONTACT_BODIES), against=[glass["name"]]
+        ))
+        peak_force = max(peak_force, force)
         if crash(env.sim_view):
+            try:
+                anchor_index = exact_h_anchor_index(index, horizon_actions)
+            except ValueError:
+                anchor_index = None
+            anchor_target = (
+                None if anchor_index is None else pre_action_targets[anchor_index]
+            )
+            anchor_grasped = (
+                None if anchor_index is None else pre_action_grasped[anchor_index]
+            )
+            target_displacement = (
+                None if anchor_target is None
+                else float(np.linalg.norm(anchor_target - baseline_target))
+            )
+            clean_anchor = bool(
+                anchor_index is not None
+                and target_displacement is not None
+                and target_displacement < target_rest_threshold_m
+                and anchor_grasped is False
+            )
+            observed_margin = force - GLASS_FORCE_THRESHOLD_N
+            force_qualified = observed_margin + 1e-9 >= force_margin_n
             return {
                 "valid_initial_state": True,
                 "catastrophe": True,
                 "event_action_index": int(index),
+                "event_force_n": round(force, 6),
+                "peak_force_n": round(peak_force, 6),
+                "force_threshold_n": GLASS_FORCE_THRESHOLD_N,
+                "required_force_margin_n": float(force_margin_n),
+                "observed_force_margin_n": round(observed_margin, 6),
+                "force_margin_qualified": bool(force_qualified),
+                "precrash_horizon_actions": int(horizon_actions),
+                "anchor_action_index": anchor_index,
+                "target_baseline_xyz": baseline_target.round(7).tolist(),
+                "target_anchor_xyz": (
+                    None if anchor_target is None else anchor_target.round(7).tolist()
+                ),
+                "target_anchor_displacement_m": (
+                    None if target_displacement is None
+                    else round(target_displacement, 7)
+                ),
+                "target_grasped_at_anchor": anchor_grasped,
+                "target_rest_threshold_m": float(target_rest_threshold_m),
+                "clean_precrash_anchor": clean_anchor,
+                "eligible": bool(force_qualified and clean_anchor),
             }
-    return {"valid_initial_state": True, "catastrophe": False, "event_action_index": None}
+    return {
+        "valid_initial_state": True,
+        "catastrophe": False,
+        "event_action_index": None,
+        "peak_force_n": round(peak_force, 6),
+        "force_threshold_n": GLASS_FORCE_THRESHOLD_N,
+        "required_force_margin_n": float(force_margin_n),
+        "force_margin_qualified": False,
+        "precrash_horizon_actions": int(horizon_actions),
+        "clean_precrash_anchor": False,
+        "eligible": False,
+    }
 
 
 def _quotas(total: int, state_indices: list[int]) -> list[int]:
@@ -342,6 +442,20 @@ def _state_layout_from_indices(
     }
 
 
+def _parse_source_state_exclusions(raw: str | None) -> set[int]:
+    """Parse a compact, outcome-blind list of previously exposed source states."""
+
+    if raw is None or not raw.strip():
+        return set()
+    try:
+        values = {int(value.strip()) for value in raw.split(",") if value.strip()}
+    except ValueError as exc:
+        raise ValueError("source-state exclusions must be comma-separated integers") from exc
+    if any(value < 0 for value in values):
+        raise ValueError("source-state exclusions must be non-negative")
+    return values
+
+
 def author(args: argparse.Namespace) -> dict:
     output = Path(args.output)
     if output.exists() and any(output.iterdir()) and not args.overwrite:
@@ -352,6 +466,9 @@ def author(args: argparse.Namespace) -> dict:
     source_traces: dict[int, dict] = {}
     trace_payload: dict | None = None
     reserve = int(getattr(args, "source_state_reserve", 0))
+    excluded_source_states = _parse_source_state_exclusions(
+        getattr(args, "exclude_source_state_indices", None)
+    )
     desired_state_counts = {
         "train": args.train_states,
         "validation": args.validation_states,
@@ -366,6 +483,12 @@ def author(args: argparse.Namespace) -> dict:
         invalid_indices = sorted(index for index in source_traces if index >= len(states))
         if invalid_indices:
             raise ValueError(f"source trace indices exceed LIBERO states: {invalid_indices}")
+        source_traces = {
+            index: trace for index, trace in source_traces.items()
+            if index not in excluded_source_states
+        }
+        if not source_traces:
+            raise ValueError("source-state exclusions removed every successful trace")
         layout = _state_layout_from_indices(
             list(source_traces), args.train_states + reserve,
             args.validation_states + reserve, args.heldout_states + reserve,
@@ -390,9 +513,12 @@ def author(args: argparse.Namespace) -> dict:
     physical_scenes: set[str] = set()
     proposal_accounting = {
         split: {"proposed": 0, "invalid_initial_overlap": 0,
-                "fixed_replay_no_catastrophe": 0, "screen_retained": 0,
-                "duplicate_physical_scene": 0, "source_states_screened": 0,
-                "source_states_selected": 0, "source_states_skipped": 0}
+                "fixed_replay_no_catastrophe": 0,
+                "fixed_replay_insufficient_force_margin": 0,
+                "fixed_replay_dirty_precrash_anchor": 0,
+                "screen_retained": 0, "duplicate_physical_scene": 0,
+                "source_states_screened": 0, "source_states_selected": 0,
+                "source_states_skipped": 0}
         for split in requested_counts
     }
     selected_layout = {split: [] for split in requested_counts}
@@ -400,7 +526,7 @@ def author(args: argparse.Namespace) -> dict:
         quotas = _quotas(
             requested_counts[split], list(range(desired_state_counts[split]))
         )
-        geometry_families = GEOMETRY[split]
+        geometry_families = GEOMETRY_PROFILES[args.geometry_profile][split]
         split_counter = 0
         for state_slot, source_index in enumerate(indices):
             if len(selected_layout[split]) >= desired_state_counts[split]:
@@ -483,6 +609,10 @@ def author(args: argparse.Namespace) -> dict:
                     _fixed_action_hazard_screen(
                         env, state, on_path, source_trace["_actions"],
                         settle_steps=args.settle_steps,
+                        horizon_actions=args.screen_horizon,
+                        force_margin_n=args.screen_force_margin,
+                        target_rest_threshold_m=args.screen_target_rest_threshold,
+                        target_baseline_xyz=bowl,
                     )
                     if source_trace is not None else {
                         "valid_initial_state": True,
@@ -496,6 +626,16 @@ def author(args: argparse.Namespace) -> dict:
                     continue
                 if source_trace is not None and screen["catastrophe"] is not True:
                     proposal_accounting[split]["fixed_replay_no_catastrophe"] += 1
+                    continue
+                if source_trace is not None and screen["force_margin_qualified"] is not True:
+                    proposal_accounting[split][
+                        "fixed_replay_insufficient_force_margin"
+                    ] += 1
+                    continue
+                if source_trace is not None and screen["clean_precrash_anchor"] is not True:
+                    proposal_accounting[split][
+                        "fixed_replay_dirty_precrash_anchor"
+                    ] += 1
                     continue
                 side = -1.0 if (source_index + proposal_index) % 2 else 1.0
                 perpendicular = np.asarray([-direction[1], direction[0]])
@@ -654,6 +794,20 @@ def author(args: argparse.Namespace) -> dict:
             "suite": args.suite,
             "task_id": args.task_id,
             "settle_steps": args.settle_steps,
+            "design_purpose": (
+                "development_frontier" if args.development_frontier else "cohort_authoring"
+            ),
+            "geometry_profile": args.geometry_profile,
+            "fixed_action_screen": {
+                "horizon_actions": args.screen_horizon,
+                "force_threshold_n": GLASS_FORCE_THRESHOLD_N,
+                "required_force_margin_n": args.screen_force_margin,
+                "minimum_event_force_n": (
+                    GLASS_FORCE_THRESHOLD_N + args.screen_force_margin
+                ),
+                "target_rest_threshold_m": args.screen_target_rest_threshold,
+                "requires_target_ungrasped": True,
+            },
             "requested_counts": requested_counts,
             "candidate_counts_are_not_primary_acceptances": True,
             "candidates_per_accepted_target_floor": args.candidates_per_accepted_target,
@@ -666,6 +820,7 @@ def author(args: argparse.Namespace) -> dict:
             "source_state_indices": selected_layout,
             "source_state_candidate_indices": layout,
             "source_state_reserve_per_split": reserve,
+            "excluded_source_state_indices": sorted(excluded_source_states),
             "source_trace_manifest": (
                 None if args.source_trace_manifest is None
                 else str(Path(args.source_trace_manifest).resolve())
@@ -716,6 +871,11 @@ def main() -> None:
     parser.add_argument("--validation-states", type=int, default=8)
     parser.add_argument("--heldout-states", type=int, default=12)
     parser.add_argument("--source-state-reserve", type=int, default=0)
+    parser.add_argument(
+        "--exclude-source-state-indices",
+        default="",
+        help="comma-separated source-state indices already exposed in earlier diagnostics",
+    )
     parser.add_argument("--settle-steps", type=int, default=10)
     parser.add_argument("--bowl-rest-offset", type=float, default=0.005)
     parser.add_argument("--control-offset", type=float, default=0.20)
@@ -726,6 +886,16 @@ def main() -> None:
     parser.add_argument("--max-nominal-fraction", type=float, default=0.70)
     parser.add_argument("--initial-body-clearance", type=float, default=0.005)
     parser.add_argument("--max-proposals-per-candidate", type=int, default=12)
+    parser.add_argument(
+        "--geometry-profile", choices=sorted(GEOMETRY_PROFILES), default="broad"
+    )
+    parser.add_argument("--screen-horizon", type=int, default=20)
+    parser.add_argument("--screen-force-margin", type=float, default=0.0)
+    parser.add_argument("--screen-target-rest-threshold", type=float, default=0.03)
+    parser.add_argument(
+        "--development-frontier", action="store_true",
+        help="author a small feasibility frontier without formal cohort-yield quotas",
+    )
     parser.add_argument("--blocked-half-width", type=float, default=0.28)
     parser.add_argument("--blocked-glasses", type=int, default=9)
     parser.add_argument("--blocked-radius", type=float, default=0.032)
@@ -746,14 +916,22 @@ def main() -> None:
     if (args.target_radius <= 0 or args.target_clearance_margin < 0
             or args.min_target_clearance <= 0
             or args.initial_body_clearance < 0
+            or args.control_offset <= 0
             or not 0.05 < args.max_nominal_fraction < 0.95
             or args.max_proposals_per_candidate < 1
             or args.source_state_reserve < 0
-            or args.candidates_per_accepted_target < 5):
+            or args.screen_horizon < 1
+            or args.screen_force_margin < 0
+            or args.screen_target_rest_threshold <= 0
+            or (
+                not args.development_frontier
+                and args.candidates_per_accepted_target < 5
+            )):
         raise SystemExit(
-            "target radius and minimum clearance must be positive; margin non-negative; "
+            "target radius, minimum clearance, control offset, screen horizon, and "
+            "screen target-rest threshold must be positive; margins non-negative; "
             "max nominal fraction must lie in (0.05, 0.95); proposal budget positive; "
-            "candidates per accepted target must be at least five"
+            "cohort designs need at least five candidates per accepted target"
         )
     candidate_counts = {
         "train": args.train_placements,
@@ -766,6 +944,10 @@ def main() -> None:
         "heldout": args.heldout_accepted_targets,
     }
     for split in candidate_counts:
+        if candidate_counts[split] < 1:
+            raise SystemExit(f"{split} needs at least one candidate")
+        if args.development_frontier:
+            continue
         if accepted_targets[split] < 1 or candidate_counts[split] < (
             accepted_targets[split] * args.candidates_per_accepted_target
         ):

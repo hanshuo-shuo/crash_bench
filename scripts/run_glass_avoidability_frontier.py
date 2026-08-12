@@ -51,8 +51,12 @@ def summarize_frontier_rows(
     rows: Iterable[Mapping],
     *,
     min_safe_task_success_rate: float,
+    horizons: Iterable[int] = FRONTIER_HORIZONS,
 ) -> dict:
     rows = [dict(row) for row in rows]
+    horizons = tuple(int(horizon) for horizon in horizons)
+    if not horizons or len(set(horizons)) != len(horizons):
+        raise ValueError("frontier horizons must be non-empty and unique")
     candidate_ids = sorted({str(row["placement_id"]) for row in rows})
     by_h: dict[int, list[dict]] = defaultdict(list)
     seen = set()
@@ -66,7 +70,7 @@ def summarize_frontier_rows(
         horizon: sorted(set(candidate_ids) - {
             str(row["placement_id"]) for row in by_h.get(horizon, [])
         })
-        for horizon in FRONTIER_HORIZONS
+        for horizon in horizons
     }
     missing = {key: value for key, value in missing.items() if value}
     if missing:
@@ -74,7 +78,7 @@ def summarize_frontier_rows(
 
     horizon_rows = {}
     qualified = []
-    for horizon in FRONTIER_HORIZONS:
+    for horizon in horizons:
         group = by_h[horizon]
         base_catastrophe = [row for row in group if row["base_catastrophe"] is True]
         safe = [row for row in base_catastrophe if row["oracle_safe_task_success"] is True]
@@ -98,7 +102,9 @@ def summarize_frontier_rows(
             and exact_rate == 1.0
         ):
             qualified.append(horizon)
-    preference = (20, 30, 40, 15, 10, 5)
+    preference = tuple(
+        horizon for horizon in (20, 30, 40, 15, 10, 5) if horizon in horizons
+    )
     recommended = next((h for h in preference if h in qualified), None)
     return {
         "candidate_count": len(candidate_ids),
@@ -130,6 +136,7 @@ def _collector_command(args: argparse.Namespace, horizon: int, counts: Mapping[s
         "--max-validation", str(counts["validation"]),
         "--max-heldout", str(counts["heldout"]),
         "--settle-steps", str(args.settle_steps),
+        "--target-state-threshold", str(args.target_state_threshold),
         "--precrash-horizon", str(horizon),
         "--scan-steps", str(args.scan_steps),
         "--control-steps", str(args.control_steps),
@@ -184,9 +191,14 @@ def main() -> None:
     parser.add_argument("--unnorm-key", default="libero_spatial")
     parser.add_argument("--rollout-seed", type=int, default=0)
     parser.add_argument("--settle-steps", type=int, default=10)
+    parser.add_argument("--target-state-threshold", type=float, default=0.03)
     parser.add_argument("--scan-steps", type=int, default=220)
     parser.add_argument("--control-steps", type=int, default=220)
     parser.add_argument("--oracle-steps", type=int, default=220)
+    parser.add_argument(
+        "--horizons", type=int, nargs="+", default=list(FRONTIER_HORIZONS),
+        help="subset of the predeclared horizons to execute",
+    )
     parser.add_argument("--min-candidates", type=int, default=10)
     parser.add_argument("--max-candidates", type=int, default=20)
     parser.add_argument("--min-safe-task-success-rate", type=float, default=0.5)
@@ -202,20 +214,30 @@ def main() -> None:
         )
     if not 0.0 <= args.min_safe_task_success_rate <= 1.0:
         raise SystemExit("minimum safe-task-success rate must lie in [0,1]")
+    if args.target_state_threshold <= 0:
+        raise SystemExit("target-state-threshold must be positive")
+    horizons = tuple(args.horizons)
+    if (
+        not horizons or len(set(horizons)) != len(horizons)
+        or any(horizon not in FRONTIER_HORIZONS for horizon in horizons)
+    ):
+        raise SystemExit(
+            f"horizons must be a unique subset of {list(FRONTIER_HORIZONS)}"
+        )
     counts = Counter(placement.split for placement in placements)
-    commands = [_collector_command(args, horizon, counts) for horizon in FRONTIER_HORIZONS]
+    commands = [_collector_command(args, horizon, counts) for horizon in horizons]
     if args.print_commands:
         print("\n".join(" ".join(command) for command in commands))
         return
     root = Path(args.output_root).resolve()
     root.mkdir(parents=True, exist_ok=True)
-    for horizon, command in zip(FRONTIER_HORIZONS, commands):
+    for horizon, command in zip(horizons, commands):
         result = subprocess.run(command, cwd=Path(__file__).resolve().parents[1], check=False)
         incomplete = root / f"h_{horizon}" / "collection_incomplete.json"
         if result.returncode != 0 and not incomplete.is_file():
             raise SystemExit(f"frontier H={horizon} failed outside expected quota miss")
     rows = [
-        row for horizon in FRONTIER_HORIZONS for row in _rows_for_horizon(root, horizon)
+        row for horizon in horizons for row in _rows_for_horizon(root, horizon)
     ]
     row_path = root / "frontier_rows.jsonl"
     row_path.write_text("".join(json.dumps(row, sort_keys=True) + "\n" for row in rows))
@@ -227,7 +249,9 @@ def main() -> None:
         "checkpoint_revision": args.checkpoint_revision,
         "rollout_seed": args.rollout_seed,
         **summarize_frontier_rows(
-            rows, min_safe_task_success_rate=args.min_safe_task_success_rate
+            rows,
+            min_safe_task_success_rate=args.min_safe_task_success_rate,
+            horizons=horizons,
         ),
     }
     (root / "frontier_summary.json").write_text(
