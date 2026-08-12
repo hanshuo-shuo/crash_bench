@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "kind": "glass_recovery_checkpoint_readiness_audit",
+  "status": "not_ready_for_learned_timing_or_joint_recovery",
+  "created_date": "2026-08-12",
+  "source": {
+    "evaluation_path_ignored": "results/glass_recovery_v2/pilot_c_scoped_certified_h20_20260812_r1/eval_pilot_c_dev360_treatment_seed_17.json",
+    "evaluation_sha256": "1d7e071e2b2c0bdaddf8fbae08204df5d15940ad5754748f30f705e9e950f64f",
+    "evaluation_git_commit": "b16bce3a93aa7819a237ba376bb50a8281d4f066",
+    "tracked_parent_summary": "results/glass_recovery_pilot_c_scoped_20260812.json",
+    "episodes": 6,
+    "source_states": 2,
+    "condition": "oracle_timed_oracle_recovery"
+  },
+  "checkpoint": {
+    "sha256": "87ab4bee583b5792c930d2810be520b5e0049e5b8f849a1ec16b7fa56a08ca95",
+    "training_git_commit": "2d53dcfef2a93a28be042ff4057520f7ba66a331",
+    "validation_manifest_sha256": "139a13ccaa9220f7c001fec2bfa78dc64a2115855c38070ade104f574501cba3",
+    "evaluation_trajectory_manifest_sha256": "139a13ccaa9220f7c001fec2bfa78dc64a2115855c38070ade104f574501cba3",
+    "training_pairs": 1,
+    "checkpoint_validation_pairs": 2,
+    "checkpoint_validation_reuses_development_evaluation_pairs": true
+  },
+  "timing_gate": {
+    "horizon_actions": 20,
+    "calibration_unit": "control_episode_max_vs_certified_trigger_frame",
+    "threshold": 1.0,
+    "control_episode_fpr": 0.0,
+    "checkpoint_timely_trigger_rate": 0.0,
+    "selected_risk_probability_maxima": [
+      {
+        "pair_id": "glass_recovery_heldout_0000",
+        "rollout_seed": 101,
+        "maximum": 0.805732011795044
+      },
+      {
+        "pair_id": "glass_recovery_heldout_0000",
+        "rollout_seed": 202,
+        "maximum": 0.8051384687423706
+      },
+      {
+        "pair_id": "glass_recovery_heldout_0000",
+        "rollout_seed": 303,
+        "maximum": 0.8067716360092163
+      },
+      {
+        "pair_id": "glass_recovery_heldout_0004",
+        "rollout_seed": 101,
+        "maximum": 0.763275682926178
+      },
+      {
+        "pair_id": "glass_recovery_heldout_0004",
+        "rollout_seed": 202,
+        "maximum": 0.7636865973472595
+      },
+      {
+        "pair_id": "glass_recovery_heldout_0004",
+        "rollout_seed": 303,
+        "maximum": 0.7636865973472595
+      }
+    ],
+    "observed_episode_maximum_range": [
+      0.763275682926178,
+      0.8067716360092163
+    ],
+    "threshold_crossing_episodes": 0,
+    "assessment": "Frame-level ranking signal exists, but a deployable operating point does not.",
+    "pilot_d_decision": "no_go_at_frozen_checkpoint"
+  },
+  "action_head": {
+    "training_gripper_sign_accuracy": 0.9562841530054644,
+    "validation_gripper_sign_accuracy": 0.8458646616541353,
+    "required_validation_gripper_sign_accuracy": 0.95,
+    "passes_gate": false,
+    "pilot_e_status": "not_run",
+    "assessment": "Learned actions require an Oracle-timing smoke before any joint evaluation."
+  },
+  "pilot_decisions": {
+    "pilot_c": "completed_oracle_upper_bound",
+    "pilot_d": "do_not_run_without_new_detector_and_calibration",
+    "pilot_e": "tiny_oracle_timing_smoke_only_if_action_route_is_revisited",
+    "pilot_f": "do_not_run_before_independent_d_and_e_signals"
+  },
+  "scope": [
+    "Derived from the hash-pinned ignored Pilot C evaluation JSON.",
+    "Pilot C uses Oracle timing and Oracle recovery actions; risk scores are diagnostic only.",
+    "The two source states are development data reused for checkpoint validation.",
+    "This audit is a run-readiness decision record, not a learned-recovery result."
+  ]
+}

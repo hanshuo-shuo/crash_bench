@@ -1,135 +1,128 @@
 # Current state
 
-The current paper question is E15: can a frozen VLA representation detect a
-certified imminent-but-avoidable movable-glass catastrophe early enough to hand
-off to a learned, latched controller that still completes the original task?
-The paper-primary estimand starts at the original LIBERO source state; exact-H
-anchor evaluation is a component diagnostic only.
+## Paper thesis
 
-The paper line remains **diagnose → localize → explain → exploit**, but the new
-main exploit target is task-completing learned glass recovery. Historical wall
-experiments motivate representation/readout failure; they are not evidence that
-E15 works.
+The current paper is **Decoded but Not Routed: Causal Diagnosis and Closed-Loop
+Repair of VLA Collision Failures**.
 
-The current claim vocabulary is C0–C13; definitions and evidence are in
-`CLAIMS.md`.
+Its central claim is narrower and stronger than the former glass-recovery plan:
+a VLA can encode an imminent path collision without routing that information into
+its action, and an explicit **risk-readout → controller** interface can repair the
+resulting behavior in closed loop.
 
-Completed historical evidence includes a wall corridor sweep, behavioral replication across
-OpenVLA, OpenVLA-OFT, and pi0 action heads, OpenVLA-family probes (with partial
-pi0 evidence), a non-braking diagnostic, safe-abort witnesses, a scoped
-probe-gated intervention, a glass dose response, and negative steering/transfer
-tests. The **Hazard Validity and Environment Generalization Experiment** is also
-complete (internal frozen run name: P0/E12), but it is a negative/indeterminate
-result. Generic full-arm swept-volume overlap did not reliably create a
-task-blocking hazard: calibration and held-out captures contained no positive
-T-5 frames, held-out vanilla had 0/50 crashes, and the preregistered
-hidden-over-baseline dissociation criterion was not supported.
+The paper uses the C0–C13 claim vocabulary defined in [CLAIMS.md](CLAIMS.md).
+The primary chain is C1/C2 → C3/C5/C13 → C7, with C11 as the mechanism ablation
+and C9/C10 as the glass extension.
 
-These wall results are motivation/appendix under the E15 line. Their most important limitation is external validity: the strongest causal and
-online intervention evidence is one LIBERO task and the OpenVLA-base on-path-wall
-mode. The low-wall d62 task-completion result is only an existence demo; it is
-not a general recovery result.
+## Evidence already closed
 
-The prompt scope was audited separately in E13 and is now a baseline/appendix result. The frozen vanilla scenarios
-contain only the LIBERO manipulation request; they never ask the model to avoid
-the injected wall or glass. E13 is complete at commit `f2636ee` (wall job
-`8389714`, glass job `8389715`, analysis job `8389716`): it compares task-only,
-generic-careful, and hazard-specific instructions on matched treatment/control
-sets, with five scenes per regime and K=3. Naming the hazard reduced treatment
-crashes from 15/15 to 13/15 for wall and from 9/15 to 2/15 for glass, but both
-hazards had 0/15 task successes under that prompt. Wall controls also remained
-poor (8/15 crashes, 0/15 task successes); glass controls mostly safe-aborted
-(11/15). The scoped conclusion is conservative stopping, not selective
-task-completing avoidance. This follow-up does not retrospectively change the
-frozen vanilla claims or add a new C-number.
+### 1. Swept-corridor causal localization
 
-E14 remains an immutable recoverable-glass **acceptance smoke**, not a completed
-recovery-learning result. At commit `7bb6d7d`, two Quest H100 collection stages
-made 109 rollout attempts and admitted three placements (train=2,
-validation=0, heldout=1). In every admitted placement Base OpenVLA crashed, the
-fixed prefix `Move carefully and avoid collisions while completing the task.`
-also crashed, and the existing matched-state oracle avoided the glass and
-completed the original LIBERO task. The accepted pairs contain 12 four-branch
-trajectory records. This establishes that the intended avoidable-catastrophe
-environment exists; it does not establish split-balanced coverage, repeated
-policy-level crash probability, learned recovery, or held-out generalization.
-The tracked summary is `results/glass_recovery_acceptance_smoke_20260809.json`.
+- Base OpenVLA crashes on 15/15 on-path walls and 0/33 clear off-path walls;
+  the boundary region changes gradually with clearance.
+- OpenVLA base, OpenVLA-OFT, and pi0 each reproduce the matched behavioral
+  contrast: 5/5 on-path crashes and 0/10 clear off-path crashes.
+- A movable-glass study provides a second contact mechanism: 30/50 on-path
+  crashes versus 0/50 matched off-path, with an f30→f70 dose response.
 
-E15 Pilot A is complete and passed at runner commit `42c3060` in Quest H100 job
-`9044175`. The read-only inventory reconstructed 109/109 unique job-scoped
-attempt identities from both complete historical Slurm logs. All three complete
-E14 candidates restored exact simulator/controller state, passed repaired
-first-action predicate checks, reproduced catastrophe on action 20 of the
-realigned suffix, and passed an oracle search rollout plus fresh independent
-recapture. The gate rates are therefore 100% and permitted Pilot B. These
-artifacts remain development-only salvage candidates with zero direct v2
-promotions. The tracked Pilot A record is
-`results/glass_recovery_pilot_a_20260811.json`; detailed state and JSONL evidence
-remains ignored under `results/glass_recovery_v2/pilot_a_recovery_20260811/`.
+These controls support a geometric statement about the executed swept corridor,
+not the broad claim that any novel obstacle causes failure.
 
-E15 Pilot B's 20-scene exact-H frontier is now complete and is a scientific
-no-go. Quest A100 job `9055676`, commit `dd10252`, completed all 120 unique
-candidate/H attempts at H={40,30,20,15,10,5} with no technical failures. Live
-Base-catastrophe yield was 50%--75%, so path-based placement improved the old
-yield bottleneck. Exact replay was only 15.4%--58.3%, however, and oracle safe
-task success was only 0%--14.3% conditional on a live Base catastrophe. No H
-qualified, `recommended_horizon_actions` is null, and the minimum sequence stops
-before formal fixed-H collection or Pilot C. The tracked result is
-`results/glass_recovery_pilot_b_frontier_20260811.json`; the ignored complete
-grid remains under
-`results/glass_recovery_v2/pilot_b_task0_20260811_r7/frontier_task0/` on Quest.
+### 2. Representation–action gap
 
-A later **scoped development re-entry** does not overturn that broad-population
-no-go. The complete fresh H=20 ledger from Quest job `9095054` certified three
-controller-compatible accidents among 15 candidates. It contained 12 Base
-catastrophes, nine exact H=20 replays, and three pairs satisfying Base crash,
-Oracle safe task completion, and off-path safe task completion. The
-certification yield is 3/15 overall and
-3/12 conditional on a Base catastrophe. A stricter 0.17 m / 0.30 m reauthoring
-job produced no candidate passing all prefilters, so those geometries are not
-claimed as successful evidence.
+- Frozen hidden-state probes decode collision imminence at T-5 with AUC 0.998
+  for OpenVLA and 0.903 for OFT. A glass-specific probe reaches 0.944.
+- In 25 paired wall episodes, there is no final-window EEF retreat; the
+  near-impact toward-wall command projection increases in 22/25.
+- Under strict leave-one-scenario-out analysis, hidden state has macro AUPRC
+  0.716 versus 0.442 for the strongest measured observable baseline.
 
-Scoped Pilot C is complete at evaluation commit `b16bce3`, Quest job `9099316`.
-It uses the two certified heldout-labelled pairs as **development data**, since
-the same pairs were used for checkpoint validation. At the exact H=20 anchor,
-oracle-timed Oracle recovery achieved 6/6 safe task successes, 0/6
-catastrophes, and 6/6 exact simulator/controller restores across three seeds per
-pair. This is a component-level Oracle upper bound for the certified subclass,
-not a learned gate/recovery result, final-held-out generalization, or arbitrary
-glass-layout claim. The tracked records are
-`results/glass_recovery_pilot_b_scoped_20260812.json` and
-`results/glass_recovery_pilot_c_scoped_20260812.json`; the paper sequence stops
-here rather than expanding to Pilot D/F.
+The supported language is “decoded but not routed,” “represented but not read
+out into safe action,” or “representation–behavior dissociation.” The repository
+does not use an unqualified mental-state claim such as “the model knows.”
 
-P0-A through P0-E are implemented for the E15/v2 line: shared event semantics
-and schema-v2 admission, exact-H collector alignment, primary training/runtime
-ownership, accepted-only evaluation with source-cluster analysis, read-only E14
-salvage inventory, successful no-glass trace capture, swept-path candidate
-generation, fixed-action hazard screening, and the exact-H frontier runner.
-P0-F adds two-stage smoke contracts and a zero-GPU synthetic integration. Pilot
-A, the broad Pilot B no-go, and the later scoped B/C development results are
-tracked E15 execution records. A tiny fixed-H schema-v2 dataset, checkpoint,
-and exact-anchor Oracle evaluation now exist, but no learned-result claim does.
-The broad Pilot B viability gate remains failed; only the explicitly scoped
-development Oracle upper bound is complete.
+### 3. Closed-loop routing repair
 
-Any E12 follow-up must be a new
-preregistered study, not a post-hoc change to the frozen P0/E12 scenarios,
-horizon, seeds, repeats, or thresholds. Separately, any renewed E12-style
-generalization study must begin with hazard validity: save nominal no-wall
-actions, replay those fixed actions after adding a proposed wall, and freeze
-only scenes where replay causes real robot--wall contact. Only then should
-closed-loop probe or guard generalization be tested. The task-phase confound
-diagnostic remains a strict-OOF, scenario-level frozen-capture result supporting
-only the scoped C13 wording; E12 did not independently validate it.
+- A wall probe triggers a latched structured `RetreatHold` controller.
+- The intervention changes 15/15 crashes to 0/15, mean peak force from 321.7 N
+  to 0 N, and produces 0/22 benign guard fires.
+- Direct final-readout activation steering leaves the crash rate at 100% for all
+  tested alphas. The diagnostic shows that the direction useful for detection is
+  not a reliable controller direction.
 
-See [PAPER_PLAN.md](PAPER_PLAN.md), [CLAIMS.md](CLAIMS.md),
-[EXPERIMENT_INDEX.md](EXPERIMENT_INDEX.md), and
-[REPRODUCIBILITY.md](REPRODUCIBILITY.md). The E13 protocol is in
-[CAREFUL_PROMPT_EXPERIMENT.md](CAREFUL_PROMPT_EXPERIMENT.md), and the
-E15/v2 execution semantics and the immutable E14 record are in
-[GLASS_RECOVERY_V1.md](GLASS_RECOVERY_V1.md) and
-[ANALYSIS_glass_recovery_acceptance.md](../results/ANALYSIS_glass_recovery_acceptance.md).
-The non-disruptive script map is in [SCRIPT_INDEX.md](SCRIPT_INDEX.md).
-The illustrated glass-recovery evidence and media inventory is in
-[GLASS_RECOVERY_PROGRESS_REPORT_20260812.md](GLASS_RECOVERY_PROGRESS_REPORT_20260812.md).
+This is a completed behavioral closed loop in one OpenVLA-base wall mode. It is
+not yet held-out-wall online generalization, an OFT online replication, or a
+general collision-avoidance system.
+
+## Glass: supporting evidence, not the title
+
+Glass closes the paper with the safety–utility distinction:
+
+- Hazard-specific prompting reduces treatment collision, especially for glass,
+  but both hazard-specific treatment cells have 0/15 task successes.
+- `RetreatHold` demonstrates safe abort, not task completion.
+- A scoped H=20 certification ledger finds three controller-compatible accidents
+  among 15 candidates (3/12 conditional on a Base catastrophe).
+- On two development source states, exact-anchor, Oracle-timed Oracle recovery
+  achieves 6/6 safe task successes and 0/6 catastrophes. The two states were also
+  used for checkpoint validation, so the independent sample size is two and this
+  is an Oracle upper bound only.
+
+The paper-facing interpretation and technical audit map are in
+[GLASS_SAFETY_UTILITY.md](appendix/GLASS_SAFETY_UTILITY.md). That appendix links
+the dated execution records when full restore, hash, authoring, or Slurm details
+are needed; those records are provenance sources, not the current run queue.
+
+## Why Pilots D/F are not active
+
+The frozen checkpoint does not support the old learned-recovery sequence:
+
+| Pilot | Timing | Action/controller | Current status |
+|---|---|---|---|
+| C | Oracle | Oracle | complete; 2 development states, 6/6 |
+| D | learned | Oracle | no-go at the frozen calibration |
+| E | Oracle | learned | prerequisite smoke not run |
+| F | learned | learned | blocked by D and E; do not run |
+
+The calibration threshold is 1.0 with timely-trigger rate 0.0; the six saved C
+episodes never reach that threshold. The checkpoint's validation gripper-sign
+accuracy is 0.846, below the frozen 0.95 gate. Therefore D would not hand off and
+F would collapse to Base. The defensible detector summary is:
+
+> Frame-level ranking signal exists, but a deployable operating point does not.
+
+The hash-pinned derived values are recorded in the
+[checkpoint readiness audit](../results/glass_recovery_checkpoint_readiness_audit_20260812.json).
+
+The path-stable E15 code remains in the repository for provenance and tests, but
+its submission wrappers are legacy-gated. Completing experiment labels is not a
+reason to spend GPU time.
+
+## Next experiment queue
+
+1. **Five-fold held-out online wall guard.** Fit/calibrate on four wall scenarios,
+   deploy only on the fifth, and test matched off-path/no-wall controls. This is
+   the highest-value generalization test.
+2. **Glass-specific learned timing → structured task-completing controller.** Use
+   a glass probe with `DetourComplete`, first on the two development pairs, then on
+   a small fresh certified cohort. Do not use the wall probe: its glass AUC is
+   0.359. Call the result learned detector + structured controller, not learned
+   recovery.
+3. **OFT-specific online guard replication.** Use OFT's own probe to trigger the
+   same `RetreatHold` interface.
+
+There is an artifact prerequisite before these jobs: the working tree contains
+the wall/OFT probe checkpoints but not the raw `hidden.npz`/`meta.json` needed for
+five-fold refitting. The glass directory contains only the probe summary, not a
+deployable checkpoint. Recover the Quest captures or recapture them before
+submitting GPU evaluations. See [REPRODUCIBILITY.md](REPRODUCIBILITY.md).
+
+## Navigation
+
+- Paper structure and cut list: [PAPER_PLAN.md](PAPER_PLAN.md)
+- Exact claims and caveats: [CLAIMS.md](CLAIMS.md)
+- Current versus appendix versus legacy experiments:
+  [EXPERIMENT_INDEX.md](EXPERIMENT_INDEX.md)
+- Script status: [SCRIPT_INDEX.md](SCRIPT_INDEX.md)
+- Frozen protocols and negative evidence: [appendix/](appendix/README.md)
+- Superseded execution timelines: [archive/](archive/README.md)

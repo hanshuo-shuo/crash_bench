@@ -1,26 +1,55 @@
 # Experiment index
 
-Stable identifiers below replace Phase/Path/Week labels in current documents.
-Status is based on tracked artifacts only.
+This index is organized by paper role, not execution date. Stable E identifiers
+remain unchanged so manifests and historical logs stay interpretable.
 
-| ID | Question; treatment / control | Scenario set; model | Command / sbatch | Raw result; analysis / figure | Status; claim; caveat |
+## Main paper
+
+| ID | Scientific role | Scenario/model | Canonical implementation | Tracked evidence | Status / limitation |
 |---|---|---|---|---|---|
-| E0 Nominal bridge gate | Does the evaluation bridge preserve nominal competence? | LIBERO nominal; OpenVLA | `nominal_task_gate.py`; `m1_nominal_gate.sbatch` | expected output `results/m1_nominal_gate.json` is not tracked | historical sanity only; C0; provenance gap |
-| E1 Wall corridor causal sweep | on-path wall / fixed visible off-path clearance sweep | `scenarios`, `scenarios_control`; OpenVLA base | `phase1_ood_control_v5.py`; `run_ood_control_v5.sbatch` | `pilot_final.json`, `pilot_control_final.json`, `ood_control_final.json`; `ANALYSIS_ood_control.md` | frozen; C1; transition zone and one task |
-| E2 Cross-policy behavior | same walls and controls / same geometry bins | base, OFT, pi0 | `run_pilot_*`; `path3_oft_compare.py` | `*_walls.json`, `*_controls.json`, `path3_oft_summary.json` | frozen; C2; action-head replication, not independent task diversity |
-| E3 Representation probe | imminent on-path collision / nowall and off-path frames | wall captures; base and OFT | `probe_selfreport.py`, `probe_selfreport_analysis.py` | `selfreport*/probe_summary.json`, `probe_T5.npz` | frozen; C3; capture dumps are ignored |
-| E4 Geometry-aligned braking | action near impact / nowall action magnitude | wall capture; base/OFT/pi0 | probe analyses and `wall_directed_braking.py` | probe summaries; optional braking output not tracked | frozen/partial; C5; not a full action-space causal test |
-| E5 Probe-gated intervention | guarded / bare on-path wall; guarded benign controls | tall on-path walls plus clear controls; OpenVLA base | `phase3_intervention.py`; `phase3_intervention.sbatch` | `intervention/{episodes,summary}.json`; `ANALYSIS_intervention.md` | frozen; C7; scoped controller and one mode |
-| E6 Glass object-collision | glass on path / matched off-path at f30–f70 | `scenarios_glass`; OpenVLA base | `phase2_glass_prototype.py`; `probe_glass_*` | `glass_prototype.json`, glass probe summary; `ANALYSIS_glass.md` | frozen; C9/C10; report full dose response |
-| E7 Activation steering | final-readout steering alpha sweep / alpha=0 | wall and nowall; OpenVLA base | `phase3_steering.py`, `phase3_steering_diag.py` | `steering/*.json`; `ANALYSIS_steering.md` | frozen negative; C11 |
-| E8 Recoverability witnesses | structured retreat or replay / bare collision path | wall scenarios | `phase2_witness.py`, `phase2_task_witness.py` | `witness.json`, `phase2_task_witness/summary.json`; `WITNESS.md` | frozen; C6; task witness is low-wall d62 only |
-| E9 Detour existence demo | low-wall task-completing detour / tall-wall failures | d62 low-wall variant | `phase2_task_witness.py`, `phase3_detour_handoff.py` | `phase2_task_witness/summary.json` | frozen existence demo; C12; not general recovery |
-| E10 Failed/blocked hazards | alternate hazards and mechanisms / nominal conditions | edge bowl, fixtures, cookies, grasp, border | Phase-2 helper scripts | `nowall.json`, `obj_collision.json`, `grasp*`, notes | retained negative evidence; see `NEGATIVE_RESULTS.md` |
-| E12 Hazard Validity and Environment Generalization Experiment (internal P0) | two tasks; 3/3/5 train/calibration/held-out wall placements; wall/nowall; probe/baseline analysis and 11-method online guard | `scenarios_p0`; exact OpenVLA revision | `p0_capture.py`, `p0_probe_analysis.py`, `p0_guard.py`; internal P0 sbatch chain | `p0_core_20260726_retry1/summary.json` | complete negative/indeterminate result; generic swept-volume overlap did not ensure a path-blocking hazard; no calibration/held-out positive frames; held-out vanilla 0/50 crashes |
-| E13 Careful-prompt follow-up | original task-only / generic careful / hazard-specific instruction; matched on-path/off-path controls | 5 treatment + 5 control scenes per hazard; K=3; 90 episodes each; OpenVLA base | `careful_prompt_eval.py`, `analyze_careful_prompt.py`; `submit_careful_prompt.sh` | `results/careful_prompt/{wall_prompt_matrix,glass_prompt_matrix,combined_summary}.json`; `ANALYSIS_careful_prompt.md` | complete at `f2636ee`: hazard-specific treatment crash wall 13/15 vs vanilla 15/15, glass 2/15 vs 9/15, but task success 0/15 for both; conservative stopping, not task-completing avoidance |
-| E14 Glass recovery acceptance smoke (historical) | Base crash + fixed careful-prompt crash + matched-state safe task-completing oracle; old four-branch data | 100/20/40 authored v1 design; OpenVLA base; accepted smoke train=2/validation=0/heldout=1 | historical scripts/sbatch at commit `7bb6d7d`; current `glass_recovery_smoke.sbatch` is E15-only | `glass_recovery_acceptance_smoke_20260809.json`; `ANALYSIS_glass_recovery_acceptance.md`; ignored raw root `results/glass_recovery_v1/smoke_acceptance_20260809/` | immutable acceptance smoke: 3 passing placements / 109 rollout attempts; environment-validity existence only; no v2 migration, learned result, or held-out generalization |
-| E15 Learned glass recovery v2 | exact-H Base catastrophe + independent matched-state Oracle safe task success + matched off-path safe task success; later scoped Oracle upper bound | task-0; broad 20-scene/18-source frontier plus scoped 15-scene H=20 ledger; OpenVLA base | `run_glass_avoidability_frontier.py`, `collect_glass_recovery_pairs.py`, `train_glass_recovery.py`, `seal_glass_recovery_evaluation.py`, `eval_glass_recovery.py`; Pilot B/C sbatch files | `glass_recovery_pilot_a_20260811.json`; `glass_recovery_pilot_b_frontier_20260811.json`; `glass_recovery_pilot_b_scoped_20260812.json`; `glass_recovery_pilot_c_scoped_20260812.json`; ignored detailed roots under `results/glass_recovery_v2/` | Broad frontier remains no-go. Scoped ledger certified 3/15 pairs (3/12 conditional Base accidents); exact-anchor oracle-timed Oracle recovery was 6/6 safe task success, 0/6 catastrophe on two development source states. Oracle upper bound only; no learned or final-held-out claim. |
+| E1 | swept-corridor wall causal sweep | `scenarios/`, `scenarios_control/`; OpenVLA | `phase1_ood_control_v5.py`; `run_ood_control_v5.sbatch` | `pilot_final.json`, `pilot_control_final.json`, `ood_control_final.json`; `ANALYSIS_ood_control.md` | frozen; C1; one task/wall family |
+| E2 | cross-action-head behavior | same matched wall/control geometry; Base, OFT, pi0 | `run_pilot_*`; `path3_oft_compare.py` | `*_walls.json`, `*_controls.json`, `path3_oft_summary.json` | frozen; C2; same embodiment/task |
+| E3 | representation risk readout | wall/nowall/off-path captures; Base and OFT | `probe_selfreport.py`, `probe_selfreport_analysis.py` | `selfreport*/probe_summary.json`, `probe_T5.npz` | frozen; C3; raw captures ignored |
+| E4 | geometry-aligned final-window behavior | paired wall/no-wall runs; Base/OFT/pi0 diagnostics | `wall_directed_braking.py` and probe analyses | probe summaries; `ANALYSIS_selfreport.md` | frozen/partial; C5; EEF measure |
+| E5 | explicit risk routing | Base vs probe-gated `RetreatHold`; benign controls | `phase3_intervention.py`; `phase3_intervention.sbatch` | `intervention/{episodes,summary}.json`; `ANALYSIS_intervention.md` | frozen; C7; fitted wall family |
+| E7 | detector-direction steering ablation | wall/nowall; OpenVLA | `phase3_steering*.py`; steering sbatch | `steering/*.json`; `ANALYSIS_steering.md` | frozen negative; C11 |
+| E11 | representation/observable confound | strict held-out-scenario frozen-capture analysis | `task_phase_confound_analysis.py` | `task_phase_confound/*.json`; analysis figure | frozen; C13 |
+| E6 | glass causal extension and transfer limit | f30–f70 matched glass; OpenVLA | `phase2_glass_prototype.py`, `probe_glass_*` | `glass_prototype.json`, glass probe summary; `ANALYSIS_glass.md` | frozen; C9/C10; closing evidence |
 
-Current canonical commands must be read together with
-[REPRODUCIBILITY.md](REPRODUCIBILITY.md); old sbatch paths remain available for
-historical reproducibility.
+## Next experiment queue — not yet evidence
+
+| Priority | Experiment | Gate before submission | Intended upgrade |
+|---|---|---|---|
+| N1 | five-fold held-out online wall guard | recover/recapture wall hidden/meta; freeze fold-local calibration | held-out generalization of the risk-routing interface |
+| N2 | glass-specific learned timing → `DetourComplete` | serialize a deployable glass probe; development signal before fresh cohort | safe task completion with learned detector + structured controller |
+| N3 | OFT-specific online `RetreatHold` guard | recover/recapture OFT hidden/meta; fit OFT probe only | cross-action-head routing replication |
+
+## Appendix experiments
+
+| ID | Role | Evidence | Status / caveat |
+|---|---|---|---|
+| E0 | nominal bridge gate | historical 400/500; expected `m1_nominal_gate.json` missing | provenance gap; C0 |
+| E8 | structured safe-abort witness | `witness.json`, `WITNESS.md` | frozen; C6; not task completion |
+| E9 | low-wall detour existence | `phase2_task_witness/summary.json` | frozen; C12; separate geometry |
+| E10 | failed/blocked hazard mechanisms | `nowall.json`, `obj_collision.json`, `grasp*` | retained negative evidence; [NEGATIVE_RESULTS.md](appendix/NEGATIVE_RESULTS.md) |
+| E12 | hazard-validity/generalization study (internal P0) | `p0_core_20260726_retry1/summary.json` | complete negative/indeterminate; no held-out vanilla crashes or positive T-5 frames |
+| E13 | prompt-scope baseline | `careful_prompt/*`; `ANALYSIS_careful_prompt.md` | complete; lower collision with 0/15 treatment task success |
+
+The complete E12 and E13 protocols are under [appendix/](appendix/README.md).
+
+## Path-stable legacy experiments
+
+| ID | Historical purpose | Frozen outcome | Why it is not current |
+|---|---|---|---|
+| E14 | recoverable-glass acceptance smoke | 3 accepted admissions from 109 attempts | environment-validity existence only; old v1 cohort |
+| E15 | broad exact-H glass recovery frontier | all 120 cells complete; no H qualified | feasibility no-go; no learned result |
+| E15-SCOPED | controller-compatible H=20 development route | 3/15 certified; Oracle 6/6 on two development states; checkpoint readiness audit | Oracle timing/actions; learned gate/action no-go; validation reuse; no final-held-out claim |
+
+The E14/E15 Python, setup, test, and result paths remain in place because they
+are mutually imported and bound by `results/manifest.json`. Submission wrappers
+are legacy-gated to prevent accidental GPU use. Their dated execution records are
+under [archive/glass_recovery_20260812/](archive/glass_recovery_20260812/README.md).
+
+For result-level provenance, use `results/manifest.json` and
+`results/claims_ledger.json`. For script status, use
+[SCRIPT_INDEX.md](SCRIPT_INDEX.md).

@@ -1,4 +1,7 @@
-# Glass catastrophe detection and task-completing recovery: execution plan
+# LEGACY — Glass catastrophe detection and task-completing recovery: execution plan
+
+> Superseded on 2026-08-12. This is a provenance snapshot, not the current paper
+> plan or run queue. See [CURRENT.md](../../CURRENT.md).
 
 > Status: implementation and experiment plan, not experimental evidence.
 >

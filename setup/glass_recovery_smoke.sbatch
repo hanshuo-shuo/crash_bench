@@ -18,6 +18,12 @@
 
 set -euo pipefail
 
+if [[ "${CB_ENABLE_LEGACY_GLASS_RECOVERY:-0}" != "1" ]]; then
+  echo "legacy E15 train/evaluate is disabled: current checkpoint does not justify Pilots D/F" >&2
+  echo "set CB_ENABLE_LEGACY_GLASS_RECOVERY=1 only for an explicit provenance diagnostic" >&2
+  exit 2
+fi
+
 require_env() {
   local name="$1"
   [[ -n "${!name:-}" ]] || { echo "required environment variable is empty: $name" >&2; exit 2; }

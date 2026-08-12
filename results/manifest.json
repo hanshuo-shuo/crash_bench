@@ -542,7 +542,46 @@
       "analysis_script": "scripts/summarize_glass_pilot_cdef.py",
       "figures": [],
       "status": "scoped_development_oracle_upper_bound_complete",
-      "notes": "The complete 15-scene H=20 ledger certified 3 pairs (3/12 conditional Base accidents). Exact-anchor oracle-timed Oracle recovery was 6/6 safe task success and 0/6 catastrophe on two development source states. The evaluation pairs were reused for checkpoint validation, and learned timing/actions were not evaluated; this is not final-held-out or learned-recovery evidence."
+      "notes": "The complete 15-scene H=20 ledger certified 3 pairs (3/12 conditional Base accidents). Exact-anchor oracle-timed Oracle recovery was 6/6 safe task success and 0/6 catastrophe on two development source states. The evaluation pairs were reused for checkpoint validation, and learned timing/actions were not evaluated. The separately registered E15-SCOPED-READINESS artifact records threshold=1.0, timely-trigger-rate=0.0, no threshold crossings in the six saved episodes, and validation gripper-sign accuracy 0.846; this is not final-held-out or learned-recovery evidence."
+    },
+    {
+      "experiment_id": "E15-SCOPED-READINESS",
+      "result_files": [
+        "results/glass_recovery_checkpoint_readiness_audit_20260812.json"
+      ],
+      "git_commit": "not separately recorded; source evaluation commit b16bce3a93aa7819a237ba376bb50a8281d4f066",
+      "created_date": "2026-08-12",
+      "model": "Frozen E15 learned risk gate/action checkpoint, diagnosed on Oracle-timed Oracle-recovery Pilot C trajectories",
+      "checkpoint": "protocol checkpoint sha256 87ab4bee583b5792c930d2810be520b5e0049e5b8f849a1ec16b7fa56a08ca95",
+      "scenario_root": "ignored root results/glass_recovery_v2/pilot_c_scoped_certified_h20_20260812_r1",
+      "scenario_fingerprints": [
+        "dc3c731bfdd38d0d0414303c88f7bfbd35375d6328928d04a2d5e8dc8b0ad3af",
+        "557f95ebda850b13a5db0e0ff85da9e1255ed7bd0799fa19411d9c914159b4df"
+      ],
+      "task_suite": "libero_spatial",
+      "task_id": 0,
+      "repeat_k": "K=3 seeds nested within each of 2 development source states",
+      "policy_options": {
+        "evaluation_condition": "oracle_timed_oracle_recovery",
+        "risk_scores_diagnostic_only": true,
+        "learned_policy_evaluated": false,
+        "pilot_d_decision": "no_go_at_frozen_checkpoint",
+        "pilot_f_decision": "do_not_run"
+      },
+      "threshold": {
+        "learned_gate": 1.0,
+        "required_validation_gripper_sign_accuracy": 0.95
+      },
+      "crash_predicate": "injected glass toppled beyond 45 degrees, displaced beyond 0.06 m from authored XY, or robot-versus-glass contact force at least 25 N",
+      "force_threshold_N": 25.0,
+      "seed_or_nondeterminism": "Seeds 101, 202, and 303 per source state; source states, not seeds, are the independent unit.",
+      "generating_script": null,
+      "sbatch": "none (zero-GPU direct extraction)",
+      "raw_log": "results/glass_recovery_v2/pilot_c_scoped_certified_h20_20260812_r1/eval_pilot_c_dev360_treatment_seed_17.json@sha256:1d7e071e2b2c0bdaddf8fbae08204df5d15940ad5754748f30f705e9e950f64f",
+      "analysis_script": null,
+      "figures": [],
+      "status": "not_ready_for_learned_timing_or_joint_recovery",
+      "notes": "Derived run-readiness decision record, not an experiment run. Values were directly extracted from the hash-pinned Pilot C evaluation. No generation commit or script is claimed; source evaluation and training commits are recorded inside the artifact."
     }
   ]
 }

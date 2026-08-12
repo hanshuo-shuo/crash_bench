@@ -504,7 +504,7 @@ def build(summary_path: Path, nonvlm_path: Path, vlm_path: Path, figures: Path,
     else:
         followup_status = (
             "The protocol and output paths are frozen in "
-            "docs/CAREFUL_PROMPT_EXPERIMENT.md; submission metadata was not present "
+            "docs/appendix/CAREFUL_PROMPT_EXPERIMENT.md; submission metadata was not present "
             "when this report was built."
         )
     add_callout(doc, "FOLLOW-UP STATUS", followup_status, color=BLUE)
@@ -588,7 +588,7 @@ def main():
     )
     ap.add_argument(
         "--out",
-        default="results/OpenVLA_Safety_Baseline_Prompt_Audit_20260731.docx",
+        default="results/generated_reports/OpenVLA_Safety_Baseline_Prompt_Audit.docx",
     )
     args = ap.parse_args()
     build(Path(args.summary), Path(args.nonvlm), Path(args.vlm), Path(args.figures),

@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import sys
@@ -30,9 +31,42 @@ CURRENT_DOCS = (
     ROOT / "docs/CLAIMS.md",
     ROOT / "docs/EXPERIMENT_INDEX.md",
     ROOT / "docs/REPRODUCIBILITY.md",
-    ROOT / "docs/NEGATIVE_RESULTS.md",
+    ROOT / "docs/SCRIPT_INDEX.md",
 )
-BANNED_CURRENT_TEXT = ("98.3%", "98.3 %", "It still might just be ood still.")
+APPENDIX_DOCS = (
+    ROOT / "docs/appendix/README.md",
+    ROOT / "docs/appendix/GLASS_SAFETY_UTILITY.md",
+    ROOT / "docs/appendix/CAREFUL_PROMPT_EXPERIMENT.md",
+    ROOT / "docs/appendix/P0_EXPERIMENT.md",
+    ROOT / "docs/appendix/NEGATIVE_RESULTS.md",
+)
+BANNED_CURRENT_TEXT = (
+    "98.3%",
+    "98.3 %",
+    "It still might just be ood still.",
+    "The current paper question is E15",
+    "the new main exploit target is task-completing learned glass recovery",
+    "current v2 learned-recovery line",
+    "frontier and later pilots pending",
+    "For sequential Pilots C--F",
+)
+REQUIRED_CURRENT_TEXT = {
+    ROOT / "README.md": (
+        "Decoded but Not Routed",
+        "risk-readout → controller",
+        "Pilots D/F are **not** current run targets",
+    ),
+    ROOT / "docs/CURRENT.md": (
+        "Decoded but Not Routed",
+        "Frame-level ranking signal exists, but a deployable operating point does not.",
+        "Five-fold held-out online wall guard",
+    ),
+    ROOT / "docs/PAPER_PLAN.md": (
+        "a detector direction need not be a controller direction",
+        "Pilots D/F are not run targets",
+        "Five-fold held-out online wall guard",
+    ),
+}
 SUPERSEDED_ROOT_DOCS = (
     "GIT_WORKFLOW.md",
     "OVERVIEW.md",
@@ -44,23 +78,29 @@ SUPERSEDED_ROOT_DOCS = (
     "STRATEGY.md",
     "motivation.md",
 )
-REQUIRED_ARCHIVE_DOCS = (
-    "OVERVIEW.md",
-    "P0_HANDOFF_20260726.md",
-    "PHASE1.md",
-    "REPORT.md",
-    "REPO_AUDIT.md",
-    "STRATEGY.md",
-    "motivation.md",
-)
-E15_DOCS = (
-    "GLASS_RECOVERY_V1.md",
-    "CURRENT.md",
-    "PAPER_PLAN.md",
-    "CLAIMS.md",
-    "EXPERIMENT_INDEX.md",
-    "SCRIPT_INDEX.md",
-    "REPRODUCIBILITY.md",
+REQUIRED_ARCHIVE_PATHS = (
+    "docs/archive/OVERVIEW.md",
+    "docs/archive/P0_HANDOFF_20260726.md",
+    "docs/archive/PHASE1.md",
+    "docs/archive/REPORT.md",
+    "docs/archive/REPO_AUDIT.md",
+    "docs/archive/STRATEGY.md",
+    "docs/archive/motivation.md",
+    "docs/archive/SETUP_README_20260812.md",
+    "docs/archive/glass_recovery_20260812/README.md",
+    "docs/archive/glass_recovery_20260812/GLASS_PAPER_EXECUTION.md",
+    "docs/archive/glass_recovery_20260812/GLASS_RECOVERY_V1.md",
+    "docs/archive/glass_recovery_20260812/GLASS_RECOVERY_PROGRESS_REPORT_20260812.md",
+    "docs/archive/glass_recovery_20260812/E15_EXPERIMENT_LOG_20260811.md",
+    "docs/archive/glass_recovery_20260812/PILOT_B_REPAIR_20260811.md",
+    "docs/archive/glass_recovery_20260812/PILOT_B_FRESH_H20_20260812.md",
+    "docs/archive/glass_recovery_20260812/PILOT_B_CONTROLLER_COMPATIBLE_H20_20260812.md",
+    "docs/archive/preliminary_reports/OpenVLA_Recovery_Finetune_Preliminary_Report_20260730.docx",
+    "docs/archive/preliminary_reports/OpenVLA_Safety_Baseline_Preliminary_Report_20260730.docx",
+    "docs/archive/preliminary_reports/OpenVLA_Safety_Baseline_Prompt_Audit_20260731.docx",
+    "legacy/README.md",
+    "legacy/setup/commit_p0_core.sh",
+    "legacy/setup/submit_next_round.sh",
 )
 E15_MAIN_BASELINE_CONDITIONS = {
     "base",
@@ -87,6 +127,34 @@ def dotted_get(value, path: str):
     for key in path.split("."):
         value = value[int(key)] if isinstance(value, list) else value[key]
     return value
+
+
+def markdown_local_link_errors(paths: tuple[Path, ...]) -> list[str]:
+    """Return missing relative Markdown targets for current, maintained docs."""
+
+    errors: list[str] = []
+    link_pattern = re.compile(r"!?\[[^\]]*\]\(([^)]+)\)")
+    for source in paths:
+        if not source.is_file():
+            errors.append(f"maintained document missing: {source.relative_to(ROOT)}")
+            continue
+        for raw_target in link_pattern.findall(source.read_text()):
+            target = raw_target.strip()
+            if target.startswith("<") and ">" in target:
+                target = target[1:target.index(">")]
+            else:
+                # None of the maintained links use spaces in paths. Removing an
+                # optional Markdown title keeps the checker intentionally small.
+                target = target.split(maxsplit=1)[0]
+            target = target.split("#", 1)[0]
+            if not target or target.startswith(("http://", "https://", "mailto:", "data:")):
+                continue
+            destination = (source.parent / target).resolve()
+            if not destination.exists():
+                errors.append(
+                    f"broken local link in {source.relative_to(ROOT)}: {raw_target}"
+                )
+    return errors
 
 
 def learned_recovery_semantic_errors(payload: dict) -> list[str]:
@@ -187,11 +255,15 @@ def audit() -> list[str]:
     for name in SUPERSEDED_ROOT_DOCS:
         if (ROOT / name).exists():
             errors.append(f"superseded root document reintroduced: {name}")
-    for name in REQUIRED_ARCHIVE_DOCS:
-        if not (ROOT / "docs/archive" / name).exists():
-            errors.append(f"historical archive document missing: docs/archive/{name}")
+    for relative in REQUIRED_ARCHIVE_PATHS:
+        if not (ROOT / relative).exists():
+            errors.append(f"historical archive artifact missing: {relative}")
+    for path in APPENDIX_DOCS:
+        if not path.is_file():
+            errors.append(f"appendix document missing: {path.relative_to(ROOT)}")
 
-    # Current docs must share the complete C0..C13 ledger vocabulary and no obsolete headline.
+    # Current docs must share the complete C0..C13 ledger vocabulary, foreground
+    # decoded-but-not-routed, and reject the superseded E15-first framing.
     claim_ids = set(re.findall(r"\bC(?:1[0-3]|[0-9])\b", (ROOT / "docs/CLAIMS.md").read_text()))
     expected_claim_ids = {f"C{i}" for i in range(14)}
     if claim_ids != expected_claim_ids:
@@ -204,16 +276,27 @@ def audit() -> list[str]:
         for banned in BANNED_CURRENT_TEXT:
             if banned in text:
                 errors.append(f"deprecated text {banned!r} in current doc {path.relative_to(ROOT)}")
+    for path, required_tokens in REQUIRED_CURRENT_TEXT.items():
+        text = path.read_text()
+        normalized_text = " ".join(text.split())
+        for token in required_tokens:
+            if " ".join(token.split()) not in normalized_text:
+                errors.append(
+                    f"current framing token {token!r} missing from {path.relative_to(ROOT)}"
+                )
     for name in ("CURRENT.md", "PAPER_PLAN.md", "CLAIMS.md"):
         if not (ROOT / "docs" / name).exists():
             errors.append(f"missing current document docs/{name}")
 
-    # E15 is a new protocol, while E14 remains immutable history.  Every user-
-    # facing experiment index must make that boundary explicit.
-    for name in E15_DOCS:
-        text = (ROOT / "docs" / name).read_text()
-        if "E15" not in text or "E14" not in text:
-            errors.append(f"docs/{name} does not distinguish E15 from E14")
+    maintained_link_docs = CURRENT_DOCS + APPENDIX_DOCS + (
+        ROOT / "setup/README.md",
+        ROOT / "crashbench/README.md",
+        ROOT / "docs/archive/README.md",
+        ROOT / "docs/archive/glass_recovery_20260812/README.md",
+        ROOT / "docs/archive/preliminary_reports/README.md",
+        ROOT / "legacy/README.md",
+    )
+    errors.extend(markdown_local_link_errors(maintained_link_docs))
 
     smoke = (ROOT / "setup/glass_recovery_smoke.sbatch").read_text()
     wrapper = (ROOT / "setup/submit_glass_recovery_smoke.sh").read_text()
@@ -228,10 +311,24 @@ def audit() -> list[str]:
         "CB_GLASS_RECOVERY_EVALUATION_PROTOCOL_SHA256",
     ):
         if token not in smoke:
-            errors.append(f"E15 smoke lacks required accepted-input token {token}")
-    for token in ("train|evaluate", "CB_GLASS_RECOVERY_EVALUATION_COHORT"):
+            errors.append(f"legacy E15 smoke lacks required accepted-input token {token}")
+    for token in (
+        "train|evaluate",
+        "CB_GLASS_RECOVERY_EVALUATION_COHORT",
+        "CB_ENABLE_LEGACY_GLASS_RECOVERY",
+    ):
         if token not in wrapper:
-            errors.append(f"E15 submit wrapper lacks required token {token}")
+            errors.append(f"legacy E15 submit wrapper lacks required token {token}")
+    for relative in (
+        "setup/glass_recovery_smoke.sbatch",
+        "setup/glass_recovery_pilot_b.sbatch",
+        "setup/glass_core_realign.sbatch",
+        "setup/submit_glass_recovery_smoke.sh",
+        "setup/submit_glass_recovery_pilot_b.sh",
+        "setup/submit_glass_core_realign.sh",
+    ):
+        if "CB_ENABLE_LEGACY_GLASS_RECOVERY" not in (ROOT / relative).read_text():
+            errors.append(f"legacy glass entry point lacks opt-in guard: {relative}")
     for stale in (
         "results/glass_recovery_v1",
         "prepare_glass_recovery_placements.py",
@@ -240,7 +337,7 @@ def audit() -> list[str]:
         "--max-placements",
     ):
         if stale in smoke:
-            errors.append(f"E15 smoke still contains v1/authored-cohort path {stale}")
+            errors.append(f"legacy E15 smoke still contains v1/authored-cohort path {stale}")
 
     # P0-E must remain an executable, fail-closed path rather than a prose-only
     # prerequisite.  These tokens pin the safeguards that previously caused the
@@ -539,6 +636,156 @@ def audit() -> list[str]:
             ):
                 errors.append("E15 Pilot B physical-scene fingerprints differ from manifest")
 
+    # The scoped re-entry is retained only as a development Oracle upper bound.
+    # Pin the small independent unit and validation reuse so 6/6 cannot drift
+    # into learned or final-held-out wording during future documentation edits.
+    scoped_entry = next((entry for entry in manifest.get("entries", [])
+                         if entry.get("experiment_id") == "E15-SCOPED"), None)
+    if scoped_entry is None:
+        errors.append("manifest lacks E15-SCOPED Oracle-upper-bound provenance")
+    else:
+        scoped_b_path = ROOT / "results/glass_recovery_pilot_b_scoped_20260812.json"
+        scoped_c_path = ROOT / "results/glass_recovery_pilot_c_scoped_20260812.json"
+        readiness_path = ROOT / "results/glass_recovery_checkpoint_readiness_audit_20260812.json"
+        if scoped_b_path.exists() and scoped_c_path.exists() and readiness_path.exists():
+            scoped_b = read_json(scoped_b_path)
+            scoped_c = read_json(scoped_c_path)
+            readiness = read_json(readiness_path)
+            expected_b = {
+                "status": "scoped_pilot_b_certification_complete",
+                "decision.broad_population_claim_allowed": False,
+                "frontier.horizon_actions": 20,
+                "frontier.candidate_scenes": 15,
+                "frontier.base_catastrophes": 12,
+                "frontier.exact_h_replays": 9,
+                "frontier.accepted_pairs": 3,
+                "frontier.yield_given_base_catastrophe": 0.25,
+            }
+            for dotted, value in expected_b.items():
+                if dotted_get(scoped_b, dotted) != value:
+                    errors.append(f"E15-SCOPED Pilot B mismatch: {dotted}")
+            expected_c = {
+                "status": "scoped_development_oracle_upper_bound_complete_go",
+                "scope.evaluation_mode": "exact_anchor",
+                "scope.condition": "oracle_timed_oracle_recovery",
+                "scope.cohort_role": "development_only",
+                "metrics.source_states": 2,
+                "metrics.episodes": 6,
+                "metrics.safe_task_successes": 6,
+                "metrics.catastrophes": 0,
+                "metrics.exact_simulator_controller_restores": 6,
+                "training_and_protocol.training_pairs": 1,
+                "training_and_protocol.checkpoint_validation_pairs": 2,
+                "training_and_protocol.checkpoint_validation_reuses_development_evaluation_pairs": True,
+            }
+            for dotted, value in expected_c.items():
+                if dotted_get(scoped_c, dotted) != value:
+                    errors.append(f"E15-SCOPED Pilot C mismatch: {dotted}")
+            accepted = scoped_b.get("accepted", [])
+            development_ids = {
+                row.get("placement_id") for row in accepted
+                if row.get("pilot_c_role") == "development_evaluation"
+            }
+            evaluated_ids = {
+                row.get("placement_id") for row in scoped_c.get("by_pair", [])
+            }
+            if len({row.get("source_state_sha256") for row in accepted}) != 3:
+                errors.append("E15-SCOPED accepted pairs do not have three source states")
+            if development_ids != evaluated_ids or len(evaluated_ids) != 2:
+                errors.append("E15-SCOPED Pilot C cohort differs from Pilot B development pairs")
+            if (
+                scoped_b["provenance"]["primary_protocol_sha256"]
+                != scoped_c["training_and_protocol"]["primary_protocol_sha256"]
+            ):
+                errors.append("E15-SCOPED Pilot B/C primary protocol hashes differ")
+            expected_readiness = {
+                "kind": "glass_recovery_checkpoint_readiness_audit",
+                "status": "not_ready_for_learned_timing_or_joint_recovery",
+                "source.episodes": 6,
+                "source.source_states": 2,
+                "source.evaluation_git_commit": "b16bce3a93aa7819a237ba376bb50a8281d4f066",
+                "checkpoint.training_git_commit": "2d53dcfef2a93a28be042ff4057520f7ba66a331",
+                "checkpoint.validation_manifest_sha256": "139a13ccaa9220f7c001fec2bfa78dc64a2115855c38070ade104f574501cba3",
+                "checkpoint.evaluation_trajectory_manifest_sha256": "139a13ccaa9220f7c001fec2bfa78dc64a2115855c38070ade104f574501cba3",
+                "timing_gate.threshold": 1.0,
+                "timing_gate.checkpoint_timely_trigger_rate": 0.0,
+                "timing_gate.threshold_crossing_episodes": 0,
+                "timing_gate.pilot_d_decision": "no_go_at_frozen_checkpoint",
+                "action_head.validation_gripper_sign_accuracy": 0.8458646616541353,
+                "action_head.required_validation_gripper_sign_accuracy": 0.95,
+                "action_head.passes_gate": False,
+                "action_head.pilot_e_status": "not_run",
+                "pilot_decisions.pilot_f": "do_not_run_before_independent_d_and_e_signals",
+            }
+            for dotted, value in expected_readiness.items():
+                if dotted_get(readiness, dotted) != value:
+                    errors.append(f"E15-SCOPED checkpoint readiness mismatch: {dotted}")
+            maxima = readiness.get("timing_gate", {}).get(
+                "selected_risk_probability_maxima", []
+            )
+            if len(maxima) != 6 or max(row.get("maximum", 1.0) for row in maxima) >= 1.0:
+                errors.append("E15-SCOPED readiness audit does not pin six subthreshold episodes")
+            if (
+                readiness.get("source", {}).get("evaluation_sha256")
+                != scoped_c.get("provenance", {}).get("evaluation_json_sha256")
+            ):
+                errors.append("E15-SCOPED readiness source hash differs from Pilot C summary")
+            raw_eval = ROOT / readiness.get("source", {}).get("evaluation_path_ignored", "")
+            if raw_eval.is_file():
+                raw_bytes = raw_eval.read_bytes()
+                if hashlib.sha256(raw_bytes).hexdigest() != readiness["source"]["evaluation_sha256"]:
+                    errors.append("local Pilot C evaluation differs from readiness source hash")
+                else:
+                    raw_payload = json.loads(raw_bytes)
+                    raw_maxima = [
+                        {
+                            "pair_id": episode["pair_id"],
+                            "rollout_seed": episode["rollout_seed"],
+                            "maximum": max(
+                                frame["selected_risk_probability"] for frame in episode["trace"]
+                            ),
+                        }
+                        for episode in raw_payload["episodes"]
+                    ]
+                    if raw_maxima != maxima:
+                        errors.append("readiness risk maxima differ from local Pilot C evaluation")
+                    crossing_count = sum(
+                        any(frame["threshold_crossing"] for frame in episode["trace"])
+                        for episode in raw_payload["episodes"]
+                    )
+                    if crossing_count != readiness["timing_gate"]["threshold_crossing_episodes"]:
+                        errors.append("readiness crossing count differs from local Pilot C evaluation")
+            expected_files = {
+                "results/glass_recovery_pilot_b_scoped_20260812.json",
+                "results/glass_recovery_pilot_c_scoped_20260812.json",
+            }
+            if set(scoped_entry.get("result_files", [])) != expected_files:
+                errors.append("E15-SCOPED manifest must contain only scoped Pilot B/C results")
+            if "results/glass_recovery_checkpoint_readiness_audit_20260812.json" in set(
+                scoped_entry.get("result_files", [])
+            ):
+                errors.append(
+                    "derived readiness audit is incorrectly attributed to E15-SCOPED run provenance"
+                )
+
+            readiness_entry = next((entry for entry in manifest.get("entries", [])
+                                    if entry.get("experiment_id") == "E15-SCOPED-READINESS"), None)
+            if readiness_entry is None:
+                errors.append("manifest lacks independent E15 checkpoint-readiness provenance")
+            else:
+                if readiness_entry.get("result_files") != [
+                    "results/glass_recovery_checkpoint_readiness_audit_20260812.json"
+                ]:
+                    errors.append("E15 checkpoint-readiness manifest result differs from decision record")
+                if readiness_entry.get("generating_script") is not None:
+                    errors.append("E15 checkpoint-readiness manifest fabricates a generating script")
+                if readiness_entry.get("analysis_script") is not None:
+                    errors.append("E15 checkpoint-readiness manifest fabricates an analysis script")
+                if readiness_entry.get("sbatch") != "none (zero-GPU direct extraction)":
+                    errors.append("E15 checkpoint-readiness manifest does not identify zero-GPU extraction")
+                if readiness_entry.get("status") != readiness.get("status"):
+                    errors.append("E15 checkpoint-readiness status differs from manifest")
+
     # Pilot A/B entries must not be mistaken for a learned result. If E15 is ever
     # promoted, require a separate machine-readable learned-result artifact with
     # every semantic guard declared by P0-F.
@@ -585,7 +832,11 @@ def main() -> None:
         print("Repository audit FAILED:")
         print("\n".join(f"- {error}" for error in errors))
         raise SystemExit(1)
-    print("Repository audit passed: current docs, E14/E15 semantics, smoke contracts, scenario fingerprints, manifest paths, and claim checks are consistent.")
+    print(
+        "Repository audit passed: decoded-not-routed framing, maintained links, "
+        "legacy glass guards, frozen E14/E15 semantics, scenario fingerprints, "
+        "manifest paths, and claim checks are consistent."
+    )
 
 
 if __name__ == "__main__":

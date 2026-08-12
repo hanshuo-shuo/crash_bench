@@ -422,7 +422,10 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--summary", default="results/oracle_recovery/report_assets/analysis_summary.json")
     parser.add_argument("--assets", default="results/oracle_recovery/report_assets")
-    parser.add_argument("--out", default="results/OpenVLA_Recovery_Finetune_Preliminary_Report_20260730.docx")
+    parser.add_argument(
+        "--out",
+        default="results/generated_reports/OpenVLA_Recovery_Finetune_Preliminary_Report.docx",
+    )
     args = parser.parse_args()
     build(Path(args.summary), Path(args.assets), Path(args.out))
 

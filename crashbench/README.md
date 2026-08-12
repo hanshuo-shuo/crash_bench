@@ -12,7 +12,7 @@ CrashBench studies. Experiment-specific logic remains in `scripts/`.
 | `policies/` | OpenVLA, OFT, pi0 adapters and the narrowly scoped probe guard |
 | `probe.py` | frozen probe utilities |
 | `recovery.py` | online `RetreatHold`, open-loop `WitnessReplay`, and experimental `DetourComplete` |
-| `glass_recovery_data.py`, `glass_recovery_model.py` | E14 matched-pair schema, validation, critic, and direct recovery-action head |
+| `glass_recovery_data.py`, `glass_recovery_model.py` | path-stable legacy E14/E15 schema, critic, and recovery-action head; retained for tests/provenance |
 
 Current verified status:
 
@@ -23,9 +23,10 @@ Current verified status:
 - Probe, guard, and structured safe-abort recovery exist.
 - `DetourComplete` is experimental and not a stable/general task-completion
   recovery solution. The tracked d62 task completion is a low-wall existence
-  demo. Separately, E14 has three glass placements where the matched-state
-  controller is a verified task-completing recoverability witness; this is not
-  yet a learned or general recovery result.
+  demo. Separately, exact-state glass evidence provides an Oracle upper bound on
+  two development source states; it is not a learned or general recovery result.
+- The former E14/E15 learned-recovery pipeline remains importable because its
+  tests and provenance are valuable, but it is not the current paper roadmap.
 - The `grasp_dropped` helper still uses an explicitly marked heuristic grasp check;
   it is not a validated core result path.
 

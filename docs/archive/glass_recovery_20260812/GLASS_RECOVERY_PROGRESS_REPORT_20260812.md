@@ -1,5 +1,11 @@
 # 玻璃碰撞恢复实验进度与证据盘点
 
+> **LEGACY / SUPERSEDED — 2026-08-12.** 这是冻结的执行审计，不是当前论文叙事或运行队列。
+> 文中“Pilot D/E/F 仍然开放”以及补完 learned recovery 的建议仅代表当时状态；当前决定是
+> **D no-go、F 不运行**。请以
+> [GLASS_SAFETY_UTILITY.md](../../appendix/GLASS_SAFETY_UTILITY.md) 和
+> [CURRENT.md](../../CURRENT.md) 为准。
+
 日期：2026-08-12  
 范围：E14、E15 Pilot A、Broad Pilot B、Scoped Pilot B、Pilot C  
 当前结论：完成了“可恢复事故认证 + Oracle 任务完成上界”的最小闭环；尚未验证 learned closed-loop recovery。

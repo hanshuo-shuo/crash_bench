@@ -1,6 +1,6 @@
-"""CrashBench: a benchmark for VLA crash recovery.
+"""CrashBench: controlled diagnosis and routing repair for VLA collisions.
 
-See PLAN.md / README.md for the design. The core loop:
+See README.md and docs/CURRENT.md for the current design. The core loop:
 
     reset env to scenario.initial_state
     for t in range(max_steps):

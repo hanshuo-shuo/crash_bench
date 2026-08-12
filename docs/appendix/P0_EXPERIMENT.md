@@ -76,7 +76,7 @@ git commit -m "Freeze P0 scenarios and experiment config"
 git push -u origin HEAD
 ```
 
-See the [historical P0 handoff](archive/P0_HANDOFF_20260726.md) for the authoring
+See the [historical P0 handoff](../archive/P0_HANDOFF_20260726.md) for the authoring
 and final job IDs, audit outcome, SSH workflow, and execution commands.
 
 ## Final result

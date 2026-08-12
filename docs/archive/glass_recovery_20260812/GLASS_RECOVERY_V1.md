@@ -1,4 +1,7 @@
-# Glass catastrophe critic + recovery adapter: E15 protocol v2
+# LEGACY — Glass catastrophe critic + recovery adapter: E15 protocol v2
+
+> Superseded protocol snapshot. Do not use it as the current paper plan or as a
+> reason to submit Pilots D/F. See [CURRENT.md](../../CURRENT.md).
 
 ## Scope
 

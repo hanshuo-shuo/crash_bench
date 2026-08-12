@@ -3,14 +3,21 @@
 # This script only calls sbatch; all GPU work happens on the compute nodes.
 #
 # Usage:
-#   bash setup/submit_next_round.sh m0
-#   bash setup/submit_next_round.sh gate
-#   bash setup/submit_next_round.sh baseline
-#   bash setup/submit_next_round.sh shield
-#   bash setup/submit_next_round.sh all
+#   bash legacy/setup/submit_next_round.sh m0
+#   bash legacy/setup/submit_next_round.sh gate
+#   bash legacy/setup/submit_next_round.sh baseline
+#   bash legacy/setup/submit_next_round.sh shield
+#   bash legacy/setup/submit_next_round.sh all
 
 set -euo pipefail
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+if [[ "${CB_ENABLE_LEGACY_SUBMISSIONS:-0}" != "1" ]]; then
+  echo "legacy multi-job paper-round submitter is disabled" >&2
+  echo "set CB_ENABLE_LEGACY_SUBMISSIONS=1 only to reproduce the historical workflow" >&2
+  exit 2
+fi
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
 
 submit() {
@@ -39,7 +46,7 @@ case "${1:-}" in
     submit phase3_intervention_expanded.sbatch
     ;;
   *)
-    echo "usage: bash setup/submit_next_round.sh {gate|baseline|shield|all}" >&2
+    echo "usage: bash legacy/setup/submit_next_round.sh {gate|baseline|shield|all}" >&2
     exit 2
     ;;
 esac

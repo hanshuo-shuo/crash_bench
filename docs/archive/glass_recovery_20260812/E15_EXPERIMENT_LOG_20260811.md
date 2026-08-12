@@ -1,4 +1,6 @@
-# E15 experiment log: Pilot A through minimum learned-recovery sequence
+# LEGACY — E15 experiment log: Pilot A through minimum learned-recovery sequence
+
+> Chronological provenance only; not the paper narrative or an active run queue.
 
 ## Scope and decision rule
 

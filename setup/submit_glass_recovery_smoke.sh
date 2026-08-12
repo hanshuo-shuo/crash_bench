@@ -2,6 +2,12 @@
 # Submit one provenance-linked E15/v2 train or accepted-only evaluation stage.
 set -euo pipefail
 
+if [[ "${CB_ENABLE_LEGACY_GLASS_RECOVERY:-0}" != "1" ]]; then
+  echo "legacy E15 train/evaluate is disabled: current checkpoint does not justify Pilots D/F" >&2
+  echo "set CB_ENABLE_LEGACY_GLASS_RECOVERY=1 only for an explicit provenance diagnostic" >&2
+  exit 2
+fi
+
 usage() {
   echo "usage: $0 train|evaluate" >&2
   exit 2

@@ -14,6 +14,12 @@
 
 set -euo pipefail
 
+if [[ "${CB_ENABLE_LEGACY_GLASS_RECOVERY:-0}" != "1" ]]; then
+  echo "legacy Pilot A realignment is disabled: the provenance audit is complete" >&2
+  echo "set CB_ENABLE_LEGACY_GLASS_RECOVERY=1 only for an explicit provenance diagnostic" >&2
+  exit 2
+fi
+
 require_env() {
   local name="$1"
   [[ -n "${!name:-}" ]] || { echo "required environment variable is empty: $name" >&2; exit 2; }

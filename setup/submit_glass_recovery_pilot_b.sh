@@ -1,6 +1,12 @@
 #!/bin/bash
 set -euo pipefail
 
+if [[ "${CB_ENABLE_LEGACY_GLASS_RECOVERY:-0}" != "1" ]]; then
+  echo "legacy Pilot B is disabled: the broad frontier is a frozen no-go" >&2
+  echo "set CB_ENABLE_LEGACY_GLASS_RECOVERY=1 only for an explicit provenance diagnostic" >&2
+  exit 2
+fi
+
 STAGE="${1:-}"
 case "$STAGE" in
   source_traces|diagnose|frontier|collect) ;;

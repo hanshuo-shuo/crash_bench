@@ -15,6 +15,12 @@
 
 set -euo pipefail
 
+if [[ "${CB_ENABLE_LEGACY_GLASS_RECOVERY:-0}" != "1" ]]; then
+  echo "legacy Pilot B collection is disabled: the scoped certified cohort is frozen for audit" >&2
+  echo "set CB_ENABLE_LEGACY_GLASS_RECOVERY=1 only for an explicit provenance diagnostic" >&2
+  exit 2
+fi
+
 STAGE="${CB_PILOT_B_STAGE:?set CB_PILOT_B_STAGE}"
 RUN_ROOT="${CB_PILOT_B_ROOT:?set CB_PILOT_B_ROOT}"
 CHECKPOINT="${CB_BASE_CHECKPOINT:-openvla/openvla-7b-finetuned-libero-spatial}"

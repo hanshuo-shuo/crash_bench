@@ -1,10 +1,17 @@
 #!/bin/bash
 # Verify, commit, and push exactly the P0 implementation files from this change.
 # This refuses unrelated worktree changes so a convenience command cannot sweep user work
-# into the commit. Usage: bash setup/commit_p0_core.sh [commit-message]
+# into the commit. Usage: bash legacy/setup/commit_p0_core.sh [commit-message]
 
 set -euo pipefail
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+if [[ "${CB_ENABLE_LEGACY_SUBMISSIONS:-0}" != "1" ]]; then
+  echo "legacy P0 commit/push helper is disabled" >&2
+  echo "set CB_ENABLE_LEGACY_SUBMISSIONS=1 only to reproduce the historical workflow" >&2
+  exit 2
+fi
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
 
 allowed=(
@@ -15,12 +22,12 @@ allowed=(
   crashbench/p0.py
   crashbench/policies/openvla_policy.py
   crashbench/provenance.py
-  docs/P0_EXPERIMENT.md
+  docs/appendix/P0_EXPERIMENT.md
   scripts/p0_capture.py
   scripts/p0_author_scenarios.py
   scripts/p0_guard.py
   scripts/p0_probe_analysis.py
-  setup/commit_p0_core.sh
+  legacy/setup/commit_p0_core.sh
   setup/p0_analyze.sbatch
   setup/p0_author_scenarios.sbatch
   setup/p0_capture.sbatch

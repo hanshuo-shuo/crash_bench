@@ -1,52 +1,60 @@
-# Claim ledger (human-readable)
+# Claim ledger
 
-This ledger is intentionally narrower than a paper abstract. “Frozen” means a
-tracked summary exists; it does not fill raw-log or checksum gaps. Result paths
-and machine-readable fields are mirrored in `results/claims_ledger.json`.
+This is the paper-facing wording for the C0–C13 machine-readable ledger in
+`results/claims_ledger.json`. “Frozen” means a tracked summary exists; it does
+not imply that ignored raw activations, logs, or videos are present locally.
 
-| ID | Exact claim | Evidence; data / analysis | n; scenarios; K; statistic | Scope, limitation, placement |
-|---|---|---|---|---|
-| C0 | The OpenVLA–LIBERO bridge has a historical nominal sanity result, but its current tracked result artifact is missing. | historical 400/500 cited in old docs; expected `m1_nominal_gate.json`; `nominal_task_gate.py` | 500 trials; 10 tasks; K not recorded; nominal success | Do not put in abstract until a manifest-backed result is tracked; C0 is a gate, not a safety claim. |
-| C1 | With a visible matched wall, collision rate depends on corridor intrusion: 15/15 on-path trials crash, while 0/33 clear off-path trials crash; the transition region is graded. | `ood_control_final.json`; `phase1_ood_control_analysis.py` | 15 on-path, 33 clear; 5 vs 11 walls; K=3; wall-level Fisher p=0.0002289 | One task, fixed wall family, base OpenVLA; abstract-eligible only with scope. |
-| C2 | The behavioral on-path/clear-off-path pattern is replicated in OpenVLA base, OpenVLA-OFT, and pi0 action-head architectures. | `path3_oft_summary.json`; `path3_oft_compare.py` | each: 5/5 on-path, 0/10 clear; 5/21 controls; K not recorded in summary | Same embodiment/task/data setting; base and OFT BORDER hits partly overlap. Abstract-eligible with “action-head replication”, not independence. |
-| C3 | In OpenVLA base and OFT, collision imminence is linearly decodable from frozen hidden states while behavior does not show sustained braking. | `selfreport/probe_summary.json`, `selfreport_oft/probe_summary.json`; probe analysis scripts | base T-5 AUC 0.998; OFT T-5 AUC 0.903; capture trial count unavailable in tracked summary | Frozen captures/raw metadata ignored; use “decoded but not used.” Abstract-eligible with scope. |
-| C4 | pi0 contains partial, tap-dependent probe evidence rather than a settled architecture-wide decoding conclusion. | `selfreport_pi0*/probe_summary.json`; probe analysis | T-5 AUC 0.728 (both taps); action-expert T-3 0.902, T-5 0.725; n unavailable | Do not use as a strong abstract claim; appendix/current limitation until confounds close. |
-| C5 | Near wall impact, measured translation magnitude is not lower than the nowall baseline, consistent with no sustained wall-directed braking. | base/OFT/pi0 probe summaries; `wall_directed_braking.py` | base 0.9598 vs 0.5495; OFT 0.973 vs 0.4976; pi0 0.82 vs 0.6646; capture n unavailable | Magnitude is a diagnostic, not a complete action-causality measure. Appendix/supporting claim. |
-| C6 | Structured retreat safe-abort witnesses avoid all five wall scenarios at zero recorded wall force. | `witness.json`; `phase2_witness.py`; `WITNESS.md` | 5 scenarios; one witness each; max wall force 0 N | Witness feasibility, not task completion. Abstract only as a short fairness qualifier. |
-| C7 | In the scoped OpenVLA-base on-path-wall mode, a wall-trained probe triggering RetreatHold changes 15/15 crashes to 0/15 and mean peak force 321.7 N to 0 N; it fires on 0/22 benign rollouts. | `intervention/{episodes,summary}.json`; `phase3_intervention.py` | treatment 15, benign 22; 5 treatment walls; K=3; online closed loop at thr=-0.422 | Structured controller, one task/mode, no general collision avoidance. The Hazard Validity and Environment Generalization Experiment (E12; internal P0) had 0/50 held-out vanilla crashes, so it does not extend this safety claim. Abstract-eligible only with all scope qualifiers. |
-| C8 | Frozen-capture threshold analysis shows a `[-0.7, 2.7]` operating window for the recorded wall setting; this is not an online validation of threshold 1.0. | `shield/{sweep,summary}.json`; `probe_shield_sweep.py` | 5 on-path captures, 20 negative episodes; 53 positive frames, 4,400 negative frames; pooled frame AUC 0.7195 | Offline only, captures unavailable; appendix/support for C7. |
-| C9 | Glass provides a second hazard with a full f30–f70 dose-response study; do not collapse selected f50–f70 bins into a category average headline. | `glass_prototype.json`; `phase2_glass_prototype.py`; `ANALYSIS_glass.md` | 100 episode rows; per-bin fields need manifest-backed recomputation | Different object-contact mechanism and frozen result schema; appendix/main figure depending on complete reanalysis. |
-| C10 | The wall-trained probe does not transfer to glass in the committed cross-hazard analysis. | `selfreport_glass/probe_glass_summary.json`; `probe_joint_transfer.py` | frame counts in frozen ignored metadata; summary only | Negative transfer limits the intervention claim; appendix and limitation. |
-| C11 | Final-readout steering is a negative result: tested alphas did not reduce wall crashes, and less than 10% of the probe-direction readout norm is retained on the action-token slice. | `steering/{summary,diag}.json`; `phase3_steering*.py` | 6 alphas x 10 treatment trials; action norm ratio 0.742/7.688=9.65% | Norm ratio, not a 90-degree angle. Appendix/mechanism support, not abstract. |
-| C12 | A task-completing d62 detour exists only for a separately identified lowered-wall scenario. | `phase2_task_witness/summary.json`; `phase2_task_witness.py` | 1 low-wall scenario; one replay/witness; 0 N wall force | Existence demo; tall-wall d70/d78/d85 attempts failed. Appendix only. |
-| C13 | Hidden states contain additional collision-predictive information beyond measured task progress, EEF pose, and action magnitude. | `task_phase_confound/task_phase_confound.json`; `task_phase_confound_analysis.py` | 5 held-out wall scenarios; strict OOF; primary hidden AUPRC 0.716 vs strongest observable 0.442; scenario bootstrap and exact grouped permutation | Frozen-capture, associational scope. The Hazard Validity and Environment Generalization Experiment (E12; internal P0) did not independently support this criterion because held-out contained zero positive T-5 frames; do not present C13 as replicated by E12. |
+## Primary chain
 
-Deprecated statement: `headline_suite.json`'s selected-band category average is
-historical and must not appear in current documentation or claims.
+| ID | Exact supported claim | Evidence and scale | Scope / paper role |
+|---|---|---|---|
+| C1 | With a visible matched wall, collision depends on swept-corridor intrusion: 15/15 on-path trials crash and 0/33 clear off-path trials crash; the transition region is graded. | `ood_control_final.json`; 5 on-path and 11 clear wall geometries; K=3; wall-level Fisher p=0.0002289 | One task and wall family; causal-localization headline. |
+| C2 | The matched on-path/clear-off-path behavioral contrast appears in OpenVLA base, OpenVLA-OFT, and pi0. | each model: 5/5 on-path, 0/10 clear; `path3_oft_summary.json` | Action-head replication in the same embodiment/task, not independent task diversity. |
+| C3 | Collision imminence is linearly decodable from frozen OpenVLA and OFT hidden states while safe behavior is not expressed. | T-5 AUC 0.998 and 0.903; `selfreport*/probe_summary.json` | Use “decoded but not routed”; pair with C5 rather than claiming mental state. |
+| C5 | In the final pre-impact window, the policy does not sustain wall-directed EEF braking. | 25 wall/no-wall pairs; 0/25 retreat; command projection rises/equal/falls in 22/2/1; probe summaries and `ANALYSIS_selfreport.md` | EEF-aligned behavior, not full-arm signed-distance causality. |
+| C13 | Hidden states contain collision-predictive information beyond measured task progress, EEF pose, and action magnitude. | strict held-out-scenario analysis; hidden AUPRC 0.716 vs strongest observable baseline 0.442; `task_phase_confound.json` | Associational, five wall scenarios; supporting dissociation evidence. |
+| C7 | In the scoped OpenVLA-base on-path-wall mode, a wall-risk readout routed to `RetreatHold` changes 15/15 crashes to 0/15, 321.7 N mean peak force to 0 N, and fires on 0/22 benign rollouts. | `intervention/{episodes,summary}.json`; 5 treatment walls, K=3; online threshold -0.422 | Closed-loop repair headline; one fitted wall family, structured safe-abort controller. |
 
-E13 is a completed prompt-scope follow-up, not a new claim ID. Hazard-specific
-language reduced treatment crashes but produced 0/15 treatment task successes
-for both wall and glass; the defensible interpretation is conservative stopping,
-not task-completing avoidance. See `results/ANALYSIS_careful_prompt.md`.
+## Supporting and boundary claims
 
-E14's verified recoverable-glass acceptance smoke is an environment-validity
-milestone, not a new claim ID. Its three accepted placements establish existence
-of the Base-crash + Careful-crash + safe task-completing Oracle configuration;
-they do not yet establish a learned recovery result or held-out generalization.
-See `results/ANALYSIS_glass_recovery_acceptance.md` and
-`results/glass_recovery_acceptance_smoke_20260809.json`.
+| ID | Exact supported claim | Evidence and scale | Scope / placement |
+|---|---|---|---|
+| C0 | The OpenVLA–LIBERO bridge has a historical 400/500 nominal sanity result, but the expected manifest-backed gate artifact is not tracked. | old setup record; expected `m1_nominal_gate.json` | Entry condition only; exclude from abstract. |
+| C4 | pi0 has partial, tap-dependent probe evidence rather than a settled architecture-wide decoding result. | T-5 AUC 0.728; action-expert T-3 0.902 and T-5 0.725 | Appendix until confounds and tap choice are closed. |
+| C6 | Structured retreat safe-abort witnesses avoid all five wall scenarios at zero recorded wall force. | `witness.json`; one witness per scenario | Feasibility of safe abort, not task completion. |
+| C8 | Frozen captures contain a wall-threshold operating window `[-0.7, 2.7]`; this does not validate threshold 1.0 online. | 53 positive and 4,400 negative frames; pooled AUC 0.7195; `shield/*.json` | Offline appendix support for C7. |
+| C9 | A movable-glass hazard shows an along-path dose response: 30/50 on-path crashes and 0/50 matched off-path crashes across f30–f70. | `glass_prototype.json`; five matched pairs, K=10 | Second contact mechanism and safety–utility setup; do not report a selected f50–f70 average. |
+| C10 | A glass-specific probe decodes glass risk, but the wall probe does not transfer to glass. | glass T-5 AUC 0.944; wall→glass AUC 0.359; `probe_glass_summary.json` | Supports hazard-specific readout; current repo lacks deployable glass probe weights. |
+| C11 | Final-readout steering is a negative result: every tested alpha leaves wall crash at 100%, and only 0.742/7.688 of the probe-direction readout norm remains on the action-token slice. | 6 alphas × 10 treatment trials; `steering/*.json` | Compact mechanism ablation: detector direction ≠ controller direction. |
+| C12 | A task-completing detour exists for a separately identified lowered d62 wall. | one low-wall replay/witness; 0 N | Existence demo only; never merge with the tall-wall treatment. |
 
-E15/v2 has no new claim ID and no learned recovery result. Its original tracked
-Pilot B frontier remains a broad feasibility no-go: all 120 candidate/H cells
-completed and no H met the source-diverse replay/recoverability gates. A later
-scoped development route certified three H=20 pairs from a complete 15-scene
-ledger (3/12 conditional on a Base catastrophe), then obtained 6/6 safe task
-successes and 0/6 catastrophes using exact-anchor, oracle-timed Oracle recovery
-on two development source states. This is a controller-compatible Oracle upper
-bound only. The two evaluation pairs were also used for checkpoint validation;
-the learned gate and learned action head were not evaluated. Therefore it does
-not establish final-held-out generalization, learned recovery, or arbitrary
-glass-layout coverage. Any future learned promotion still requires disjoint
-train/validation/final-held-out source and family counts, the full predeclared
-baseline matrix, source-cluster analysis, and clean-control false-intervention
-and task-preservation metrics.
+## Non-numbered paper boundaries
+
+E13 is a completed prompt-scope baseline, not a new claim ID. Hazard-specific
+language changes behavior but yields 0/15 treatment task successes for both wall
+and glass. The supported interpretation is conservative stopping.
+
+E14/E15 glass recovery is supporting counterfactual evidence, not a learned
+result. The broad frontier is a no-go. The scoped ledger certifies 3/15 accidents
+(3/12 conditional on a Base catastrophe), and Oracle timing/actions produce 6/6
+safe task successes on two development source states. The learned gate and learned
+action head were not evaluated in a valid closed loop; the evaluation states were
+also used for checkpoint validation.
+
+The separate `glass_recovery_checkpoint_readiness_audit_20260812.json` records
+why D/F are not active claims: the frozen gate has no threshold crossing in the
+six saved episodes, and validation gripper-sign accuracy is below its gate.
+
+Accordingly, the paper may say that a task-completing continuation physically
+exists from exact matched states. It may not claim learned recovery, final-held-out
+generalization, or arbitrary glass-layout coverage.
+
+## Deprecated wording
+
+- “The model knows it will crash.” Use “collision imminence is linearly
+  decodable from the frozen representation.”
+- “Architecture-independent.” Use “replicated across three action-head families
+  in the same task/embodiment.”
+- “Collision avoidance” for a safe abort.
+- “Learned recovery” for Oracle actions or a structured controller.
+- The selected-band category average in `headline_suite.json`.

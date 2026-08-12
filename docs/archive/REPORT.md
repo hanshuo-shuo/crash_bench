@@ -89,7 +89,7 @@ disobeyed an explicit avoidance request. A completed generic baseline using the 
 `move slowly, avoid collisions` also crashed 15/15, but that result applies only to that short,
 non-grounded wording. The separately registered E13 follow-up now compares task-only,
 generic-careful, and hazard-specific prompts on matched wall and glass treatment/control sets
-([protocol](docs/CAREFUL_PROMPT_EXPERIMENT.md)).
+([protocol](../appendix/CAREFUL_PROMPT_EXPERIMENT.md)).
 
 | wall_wide | wall_d62 | wall_d70 | wall_d78 | wall_d85 |
 | :---: | :---: | :---: | :---: | :---: |

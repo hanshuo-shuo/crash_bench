@@ -1,175 +1,141 @@
-# Reproducibility and result handling
+# Reproducibility and data availability
 
-The tracked repository supports zero-GPU integrity checks and analysis of tracked
-summaries. Full GPU reproduction needs the documented LIBERO/OpenVLA/OFT/openpi
-environments, model checkpoints, and several ignored raw captures/logs.
+The tracked repository supports zero-GPU integrity checks and analysis of frozen
+summaries. Full rollout reproduction requires the documented OpenVLA/LIBERO/OFT/
+openpi environments, model checkpoints, and ignored raw assets retained outside
+Git.
 
-## Zero-GPU checks
+## Zero-GPU verification
 
 ```bash
-python -m pytest \
-  tests/test_glass_recovery_eval.py::test_zero_gpu_v2_integration_collection_training_latch_cohort_eval_analysis -q
-python -m pytest tests -q
-python scripts/audit_repo.py
+PYTHONDONTWRITEBYTECODE=1 python -m pytest -p no:cacheprovider tests -q
+PYTHONDONTWRITEBYTECODE=1 python scripts/audit_repo.py
 git diff --check
 ```
 
-`audit_repo.py` validates document vocabulary, scenario fingerprints, manifest
-paths, claim-ledger result references, immutable E14 semantics, E15 smoke
-fail-closed inputs, and the semantic evidence contract for any future learned-
-recovery promotion. The targeted integration creates synthetic schema-v2 data,
-trains a tiny head on CPU, checks the runtime latch, selects a sealed fake
-cohort, runs a fake environment, and performs source-cluster analysis. Neither
-command reproduces GPU rollouts or recovers ignored activation/video assets.
+The audit checks current paper framing, local Markdown links, scenario
+fingerprints, manifest paths, frozen claim values, and E14/E15 provenance
+boundaries. Tests include the reusable evaluation/controller code and a synthetic
+glass-recovery integration; they do not turn that synthetic test into paper
+evidence.
 
-## GPU evaluation discipline
+## Evidence levels
 
-Use the sbatch file listed in `EXPERIMENT_INDEX.md`, write a new output path, and
-then add/update its manifest entry. Never overwrite a frozen result in place.
-The scenario root and fingerprints, checkpoint, commit, repeat count, thresholds,
-raw-log location, and script/sbatch must be recorded before a result is used in a
-claim.
+| Level | What is tracked | What it supports |
+|---|---|---|
+| claim-ready summary | result JSON plus manifest/claim-ledger entry | exact frozen paper claim within recorded scope |
+| analysis-only artifact | summary/figure without complete raw capture | inspection and limited recomputation |
+| ignored raw run | activations, traces, frames, videos, checkpoints, Slurm logs | full local/cluster reanalysis if still retained |
+| archived narrative | dated report, protocol, or execution log | provenance only; not current project truth |
 
-Tracked summaries are not substitutes for ignored raw assets:
+Never overwrite a frozen result. Write a new output path and record checkpoint
+revision, code commit, scenario fingerprints, repeat count, calibration unit,
+threshold, seed/nondeterminism policy, raw-log path, and analysis script in
+`results/manifest.json` before promoting a new claim.
 
-- Slurm logs (`*.log`), rollout videos, intermediate renders, and hidden-state
-  captures are ignored.
-- `results/selfreport*/hidden.npz` and `meta.json` are needed to regenerate
-  probe/shield analyses but are not committed.
-- E13's promoted wall and glass matrices retain all 180 episode rows, exact
-  effective instructions, checkpoint identity, commit, Slurm job IDs, and 20
-  scenario fingerprints. The combined JSON and Markdown are derived from those
-  tracked matrices; videos and Slurm logs remain ignored.
-- E14 rendered frames, hidden states, branch arrays, and checkpoints remain in
-  the ignored Quest run root. The promoted summary
-  `results/glass_recovery_acceptance_smoke_20260809.json` records its commit,
-  checkpoint revision, Slurm jobs, accepted state/scene hashes, attempt counts,
-  and SHA256 checksums for the ignored placement and collection manifests.
-- E14 is immutable v1 history. The current smoke path is E15/v2; reproducing the
-  historical E14 job requires checking out its recorded commit rather than
-  feeding v1 artifacts to current training/evaluation code.
-- The tall-wall geometry is the treatment root. Low-wall detour results must use
-  the separate `scenarios_detour_lowwall/` root.
+## Current main-line artifacts
 
-See `results/manifest.json` and `results/claims_ledger.json` for evidence-level
-provenance. The pre-refactor gap inventory remains available in the
-[historical repository audit](archive/REPO_AUDIT.md).
+### Swept-corridor causal study
 
-## E15 P0-E provenance gates
+- Tall-wall treatment scenarios: `scenarios/`.
+- Matched clearance controls: `scenarios_control/`.
+- Frozen Base results: `results/{pilot_final,pilot_control_final,ood_control_final}.json`.
+- Cross-policy summaries: `results/{base,oft,pi0}_*.json` and
+  `results/path3_oft_summary.json`.
+- Canonical commands: [EXPERIMENT_INDEX.md](EXPERIMENT_INDEX.md), E1/E2.
 
-`capture_glass_nominal_source_traces.py` writes one hash-checked manifest over
-successful and failed no-glass source rollouts. Only successful rows can enter
-candidate generation. Each successful row binds source-state index/hash,
-checkpoint identity, rollout seed, EEF trace, relevant robot-body sweep, and
-captured actions.
+The lowered d62 detour is a different scenario root,
+`scenarios_detour_lowwall/`, with a different fingerprint. It must never be used
+as the tall-wall treatment.
 
-`prepare_glass_recovery_placements.py` requires that manifest by default.
-`--legacy-straight-path` is an explicitly named historical/debug escape hatch
-and is not valid for E15. The generator performs captured-action hazard replay,
-initial-overlap and target-clearance checks, physical-scene deduplication, and
-records a predeclared order that the collector must preserve.
+### Representation and behavior
 
-`audit_glass_core_artifacts.py` requires `--read-only`, refuses outputs beneath
-the source root, hashes every discovered evidence file, and appends only unseen
-attempt IDs to `core_salvage_audit.jsonl`. Its `static_candidate_for_recollection`
-field is not a migration decision: `direct_v2_promotion_allowed` is always
-false.  For E14 it reconstructs job-scoped attempt IDs only when all historical
-Slurm logs are supplied and their terminal rows/counts agree with the immutable
-tracked summary.  `realign_glass_core_artifacts.py` then performs exact-H action
-replay and a bounded oracle search plus independent recapture on a GPU/EGL node
-without loading OpenVLA or writing into E14. Every oracle reset must reproduce
-the simulator and controller hashes exactly. Full observation and
-controller-used field drift are retained as diagnostics because E14 did not
-save LIBERO's observable delay/history state; acceptance still requires the
-searched config to succeed again in a fresh independent rollout. Use the exact
-Pilot A commands in `GLASS_RECOVERY_V1.md`.
+- Committed Base/OFT probe checkpoints:
+  `results/selfreport/probe_T5.npz` and
+  `results/selfreport_oft/probe_T5.npz`.
+- Frozen summaries: `results/selfreport*/probe_summary.json`.
+- Confound analysis: `results/task_phase_confound/`.
+- Online intervention: `results/intervention/`.
+- Steering ablation: `results/steering/`.
 
-The completed Pilot A run is tracked in
-`results/glass_recovery_pilot_a_20260811.json` (runner commit `42c3060`, Quest
-job `9044175`). The full `core_salvage_audit.jsonl`, exact state/controller
-snapshots, oracle-search records, and schema-v2 realignment summary are ignored
-but retained locally and on Quest under
-`results/glass_recovery_v2/pilot_a_recovery_20260811/`; the tracked record pins
-their hashes and sizes. Pilot B subsequently completed its 120-cell H frontier
-in Quest job `9055676`; the tracked no-go record is
-`results/glass_recovery_pilot_b_frontier_20260811.json`, and the complete ignored
-rows remain under
-`results/glass_recovery_v2/pilot_b_task0_20260811_r7/frontier_task0/` on Quest.
-No fixed H was selected, so fixed-H collection and all later stages were not
-run.
+The large `hidden.npz` and aligned `meta.json` files are gitignored. They are
+required to refit held-out folds or regenerate all probe analyses.
 
-`run_glass_avoidability_frontier.py --print-commands` is a no-rollout preflight.
-`--execute` runs the canonical collector independently at H=40,30,20,15,10,5
-and writes per-attempt rows plus a frozen recommendation. Its input must contain
-10--20 development candidates. Final held-out scenes must not be used in this
-decision.
+### Glass extension
 
-## E15 two-stage artifact contract
+- Frozen dose response: `results/glass_prototype.json`.
+- Glass probe summary: `results/selfreport_glass/probe_glass_summary.json`.
+- Prompt safety–utility baseline: `results/careful_prompt/`.
+- Scoped Oracle counterfactual summaries:
+  `results/glass_recovery_pilot_{b,c}_scoped_20260812.json`.
+- Derived frozen-checkpoint decision record:
+  `results/glass_recovery_checkpoint_readiness_audit_20260812.json`.
+- Paper-facing interpretation:
+  [appendix/GLASS_SAFETY_UTILITY.md](appendix/GLASS_SAFETY_UTILITY.md).
 
-The wrapper never authors placements or collects candidates. Before `train`,
-export all of the following from an accepted schema-v2 collection:
+The committed glass-probe directory does **not** contain raw hidden/meta or a
+serialized deployable probe. A learned-timing glass experiment therefore starts
+by recovering Quest captures or recapturing them and adding probe checkpoint
+serialization/runtime loading.
 
-```bash
-export CB_GLASS_RECOVERY_RUN_ROOT=results/glass_recovery_v2/e15_<run>
-export CB_GLASS_RECOVERY_TRAIN_MANIFEST="$CB_GLASS_RECOVERY_RUN_ROOT/dataset/train.jsonl"
-export CB_GLASS_RECOVERY_VALIDATION_MANIFEST="$CB_GLASS_RECOVERY_RUN_ROOT/dataset/validation.jsonl"
-export CB_GLASS_RECOVERY_PRIMARY_PROTOCOL_SHA256=<64-lowercase-hex>
-export CB_BASE_CHECKPOINT_REVISION=<immutable-OpenVLA-revision>
-export CB_BASE_UNNORM_KEY=libero_spatial
-export CB_GLASS_RECOVERY_H=<frozen-H>
-export CB_GLASS_RECOVERY_TRAIN_SEED=17
-bash setup/submit_glass_recovery_smoke.sh train
-```
+## Readiness for the prioritized new experiments
 
-After training, record the checkpoint SHA, freeze the accepted evaluation
-cohort and evaluation protocol without looking at final-held-out outcomes, then
-export the additional inputs:
+| Experiment | Present locally | Missing prerequisite |
+|---|---|---|
+| five-fold wall online guard | Base/OFT `probe_T5.npz`, scenarios, evaluation code | raw wall/OFT hidden/meta for fold-local refitting, or a new capture |
+| glass detector → `DetourComplete` | glass summary, controller and exact-state supporting summaries | raw glass capture, deployable probe weights, runtime loader, fresh cohort after development success |
+| OFT online guard | OFT probe summary/checkpoint and backend | fold-local calibration inputs and online replication protocol |
 
-```bash
-python scripts/seal_glass_recovery_evaluation.py \
-  --placements /path/to/accepted-placements.json \
-  --dataset /path/to/accepted-dataset-root \
-  --split validation \
-  --checkpoint /path/to/train_seed_17/glass_recovery.pt \
-  --output "$CB_GLASS_RECOVERY_RUN_ROOT/sealed_validation"
-```
+Threshold calibration for a new online result must be episode-level and isolated
+inside the training/calibration fold. A frame-level AUC does not by itself define
+a deployable operating point.
 
-The sealer consumes accepted manifests and checkpoint identities only; it does
-not read evaluation outcomes.
+## Frozen appendix studies
 
-```bash
-export CB_GLASS_RECOVERY_PLACEMENT_MANIFEST="$CB_GLASS_RECOVERY_RUN_ROOT/placements/placements.json"
-export CB_GLASS_RECOVERY_TRAJECTORY_MANIFEST="$CB_GLASS_RECOVERY_RUN_ROOT/dataset/heldout.jsonl"
-export CB_GLASS_RECOVERY_EVALUATION_COHORT="$CB_GLASS_RECOVERY_RUN_ROOT/sealed/heldout_cohort.json"
-export CB_GLASS_RECOVERY_PROTOCOL="$CB_GLASS_RECOVERY_RUN_ROOT/sealed/evaluation_protocol.json"
-export CB_GLASS_RECOVERY_EVALUATION_PROTOCOL_SHA256=<64-lowercase-hex>
-export CB_GLASS_RECOVERY_CHECKPOINT="$CB_GLASS_RECOVERY_RUN_ROOT/train_seed_17/glass_recovery.pt"
-export CB_BASE_CHECKPOINT=<local-OpenVLA-checkpoint-path>
-bash setup/submit_glass_recovery_smoke.sh evaluate
-```
+- E12/P0 is a complete negative/indeterminate result. Its calibration and
+  held-out captures contain no positive T-5 frames, and held-out Base already has
+  0/50 crashes. Do not retune its held-out scenarios or present it as guard
+  generalization. Protocol: [appendix/P0_EXPERIMENT.md](appendix/P0_EXPERIMENT.md).
+- E13 contains all 180 episode rows, effective instructions, job IDs, commit,
+  checkpoint identity, and scenario fingerprints. Protocol:
+  [appendix/CAREFUL_PROMPT_EXPERIMENT.md](appendix/CAREFUL_PROMPT_EXPERIMENT.md).
+- Other failed mechanisms and evidence gaps are listed in
+  [appendix/NEGATIVE_RESULTS.md](appendix/NEGATIVE_RESULTS.md).
 
-The protocol must predeclare source-to-task and exact-anchor modes, the full
-baseline matrix, rollout seeds, checkpoint SHA by training seed, and the exact
-accepted pair IDs and manifest hashes. The evaluator rejects authored-but-
-unaccepted IDs, leakage, missing oracle verification, or any checkpoint/Base/
-schema/protocol/H mismatch. This layout is a command contract, not a learned
-result.
+## Frozen E14/E15 legacy package
 
-For sequential Pilots C--F, set `CB_GLASS_RECOVERY_EVAL_LABEL`,
-`CB_GLASS_RECOVERY_EVAL_MODES`, and `CB_GLASS_RECOVERY_EVAL_CONDITIONS` before
-the evaluate submission, and set `CB_GLASS_RECOVERY_SKIP_ANALYSIS=1`. Apply the
-frozen gate with `scripts/summarize_glass_pilot_cdef.py` before submitting the
-next condition. Pilot jobs use the same A100 device class as Pilot B.
+E14/E15 code and tracked results remain at historical paths because the package
+has internal imports, tests execute those paths directly, and the manifest binds
+their provenance. The old learned-recovery sequence is not a current run target.
 
-If a future E15 manifest status is promoted to `frozen_learned_result`,
-`verified_learned_result`, or `claim_ready`, its tracked JSON must use
-`kind: glass_recovery_learned_result` and the exact audit keys implemented in
-`scripts/audit_repo.py`: `accepted_cohort.{sha256,pair_ids}`,
-`exact_replay_summary.{all_passed,n_pairs}`, split dictionaries under
-`source_state_counts` and `family_counts`, zero-valued overlap counts under
-`leakage_checks`, checkpoint/Base/dataset/protocol identity fields,
-`evaluation.{primary_mode,conditions}`, a `source_state_sha256` cluster
-analysis, and four denominator-bearing primary metrics (safe task success,
-catastrophe, clean-control false intervention, and clean-control task
-preservation). A code-only or fake-environment artifact intentionally fails
-that promotion contract.
+Frozen facts retained by `scripts/audit_repo.py` include:
+
+- E14: 109 attempts, 3 accepted admissions, immutable v1 commit and hashes;
+- Pilot A: exact H=20 salvage/replay and independent Oracle recapture;
+- broad Pilot B: 120 terminal candidate/H cells, no qualified horizon;
+- scoped B/C: 3/15 certified accidents and 6/6 Oracle-timed Oracle successes on
+  two development source states.
+- checkpoint readiness: no threshold crossings in the six saved Oracle-condition
+  episodes and validation gripper-sign accuracy below its frozen gate.
+
+The complete dated protocol, repair notes, Slurm history, hash/restore details,
+and illustrated audit are in
+[archive/glass_recovery_20260812/](archive/glass_recovery_20260812/README.md).
+Submission wrappers fail closed unless
+`CB_ENABLE_LEGACY_GLASS_RECOVERY=1` is explicitly exported. That opt-in exists
+for provenance diagnostics, not as a recommendation to run Pilots D/F.
+
+Local ignored `results/glass_recovery_v2/` is not a complete archival copy: the
+working tree has partial Pilot B arrays and a Pilot C evaluation JSON, while
+several manifests, branches, and snapshots remain cluster-side. Treat the tracked
+summaries and archived compact media as the self-contained repository evidence;
+verify Quest retention before claiming raw reproducibility.
+
+## Environment and current submission guide
+
+See [setup/README.md](../setup/README.md). Model environments are deliberately
+separate so OpenVLA, OFT, and pi0 dependency stacks do not overwrite one another.
+GPU jobs must use a new result root and a clean, recorded commit.
+
+The pre-refactor repository audit remains available at
+[archive/REPO_AUDIT.md](archive/REPO_AUDIT.md).

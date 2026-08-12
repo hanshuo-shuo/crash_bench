@@ -29,7 +29,7 @@ p = Path("scenarios/env_collision__T5__libero_spatial_t0_wall_d62/scenario.json"
 d = json.loads(p.read_text())
 half_z = float(d["obstacles"][0]["size"][2])
 if abs(half_z - 0.22) > 1e-6:
-    raise SystemExit("M0 geometry check failed: run bash setup/submit_next_round.sh m0 first")
+    raise SystemExit("M0 geometry check failed: run python scripts/prepare_m0_geometry.py first")
 print(f"M0 geometry check passed: d62 wall half-height={half_z}")
 PY
 
