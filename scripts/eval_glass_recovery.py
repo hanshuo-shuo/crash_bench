@@ -1352,6 +1352,13 @@ def main() -> None:
     parser.add_argument("--base-checkpoint-revision", required=True)
     parser.add_argument("--unnorm-key", required=True)
     parser.add_argument("--mode", choices=EVALUATION_MODES, nargs="+", default=list(EVALUATION_MODES))
+    parser.add_argument(
+        "--regime",
+        choices=("treatment", "control"),
+        nargs="+",
+        default=["treatment", "control"],
+        help="Evaluate one or both frozen placement regimes (default: both).",
+    )
     parser.add_argument("--conditions", choices=ALL_CONDITIONS, nargs="+", default=list(MAIN_CONDITIONS))
     parser.add_argument("--out", required=True)
     parser.add_argument("--overwrite", action="store_true")
@@ -1363,8 +1370,12 @@ def main() -> None:
     trigger_root = out.parent / f"{out.stem}_trigger_states"
     if trigger_root.exists():
         raise SystemExit(f"refusing to overwrite trigger-state artifacts at {trigger_root}")
-    if len(set(args.mode)) != len(args.mode) or len(set(args.conditions)) != len(args.conditions):
-        raise SystemExit("evaluation modes and conditions cannot contain duplicates")
+    if (
+        len(set(args.mode)) != len(args.mode)
+        or len(set(args.regime)) != len(args.regime)
+        or len(set(args.conditions)) != len(args.conditions)
+    ):
+        raise SystemExit("evaluation modes, regimes, and conditions cannot contain duplicates")
     if (
         "source_to_task" in args.mode
         and any(condition != "base" for condition in args.conditions)
@@ -1432,7 +1443,7 @@ def main() -> None:
         if key not in envs:
             envs[key] = LiberoEnv(*key)
         for mode in args.mode:
-            for regime in ("treatment", "control"):
+            for regime in args.regime:
                 for rollout_seed in rollout_seeds:
                     paired_base_collision_step: int | None = None
                     for condition in ordered_conditions:

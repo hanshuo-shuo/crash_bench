@@ -135,10 +135,15 @@ EVAL_OUT="$RUN_ROOT/eval_${EVAL_LABEL}_seed_${TRAIN_SEED}.json"
 SOURCE_ANALYSIS="$RUN_ROOT/analysis_${EVAL_LABEL}_seed_${TRAIN_SEED}_source_to_task.json"
 ANCHOR_ANALYSIS="$RUN_ROOT/analysis_${EVAL_LABEL}_seed_${TRAIN_SEED}_exact_anchor.json"
 EVAL_MODE_ARGS=()
+EVAL_REGIME_ARGS=()
 EVAL_CONDITION_ARGS=()
 if [[ -n "${CB_GLASS_RECOVERY_EVAL_MODES:-}" ]]; then
   read -r -a EVAL_MODES <<< "$CB_GLASS_RECOVERY_EVAL_MODES"
   EVAL_MODE_ARGS=(--mode "${EVAL_MODES[@]}")
+fi
+if [[ -n "${CB_GLASS_RECOVERY_EVAL_REGIMES:-}" ]]; then
+  read -r -a EVAL_REGIMES <<< "$CB_GLASS_RECOVERY_EVAL_REGIMES"
+  EVAL_REGIME_ARGS=(--regime "${EVAL_REGIMES[@]}")
 fi
 if [[ -n "${CB_GLASS_RECOVERY_EVAL_CONDITIONS:-}" ]]; then
   read -r -a EVAL_CONDITIONS <<< "$CB_GLASS_RECOVERY_EVAL_CONDITIONS"
@@ -155,6 +160,7 @@ python scripts/eval_glass_recovery.py \
   --base-checkpoint-revision "$CB_BASE_CHECKPOINT_REVISION" \
   --unnorm-key "$CB_BASE_UNNORM_KEY" \
   "${EVAL_MODE_ARGS[@]}" \
+  "${EVAL_REGIME_ARGS[@]}" \
   "${EVAL_CONDITION_ARGS[@]}" \
   --out "$EVAL_OUT"
 
