@@ -79,16 +79,39 @@ before formal fixed-H collection or Pilot C. The tracked result is
 grid remains under
 `results/glass_recovery_v2/pilot_b_task0_20260811_r7/frontier_task0/` on Quest.
 
+A later **scoped development re-entry** does not overturn that broad-population
+no-go. The complete fresh H=20 ledger from Quest job `9095054` certified three
+controller-compatible accidents among 15 candidates. It contained 12 Base
+catastrophes, nine exact H=20 replays, and three pairs satisfying Base crash,
+Oracle safe task completion, and off-path safe task completion. The
+certification yield is 3/15 overall and
+3/12 conditional on a Base catastrophe. A stricter 0.17 m / 0.30 m reauthoring
+job produced no candidate passing all prefilters, so those geometries are not
+claimed as successful evidence.
+
+Scoped Pilot C is complete at evaluation commit `b16bce3`, Quest job `9099316`.
+It uses the two certified heldout-labelled pairs as **development data**, since
+the same pairs were used for checkpoint validation. At the exact H=20 anchor,
+oracle-timed Oracle recovery achieved 6/6 safe task successes, 0/6
+catastrophes, and 6/6 exact simulator/controller restores across three seeds per
+pair. This is a component-level Oracle upper bound for the certified subclass,
+not a learned gate/recovery result, final-held-out generalization, or arbitrary
+glass-layout claim. The tracked records are
+`results/glass_recovery_pilot_b_scoped_20260812.json` and
+`results/glass_recovery_pilot_c_scoped_20260812.json`; the paper sequence stops
+here rather than expanding to Pilot D/F.
+
 P0-A through P0-E are implemented for the E15/v2 line: shared event semantics
 and schema-v2 admission, exact-H collector alignment, primary training/runtime
 ownership, accepted-only evaluation with source-cluster analysis, read-only E14
 salvage inventory, successful no-glass trace capture, swept-path candidate
 generation, fixed-action hazard screening, and the exact-H frontier runner.
 P0-F adds two-stage smoke contracts and a zero-GPU synthetic integration. Pilot
-A and the Pilot B frontier are tracked E15 execution results, but no fixed-H
-schema-v2 dataset, checkpoint, evaluation, or learned-result claim exists.
-Pilot B failed the frozen viability gate, so later real LIBERO/OpenVLA training
-and validation are blocked rather than pending routine execution.
+A, the broad Pilot B no-go, and the later scoped B/C development results are
+tracked E15 execution records. A tiny fixed-H schema-v2 dataset, checkpoint,
+and exact-anchor Oracle evaluation now exist, but no learned-result claim does.
+The broad Pilot B viability gate remains failed; only the explicitly scoped
+development Oracle upper bound is complete.
 
 Any E12 follow-up must be a new
 preregistered study, not a post-hoc change to the frozen P0/E12 scenarios,

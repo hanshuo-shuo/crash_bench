@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "kind": "glass_recovery_pilot_c_scoped_oracle_upper_bound_result",
+  "status": "scoped_development_oracle_upper_bound_complete_go",
+  "created_date": "2026-08-12",
+  "decision": {
+    "value": "pilot_c_go",
+    "go": true,
+    "paper_proof_of_concept_complete": true,
+    "additional_pilot_required_for_scoped_claim": false
+  },
+  "scope": {
+    "evaluation_mode": "exact_anchor",
+    "regime": "treatment",
+    "condition": "oracle_timed_oracle_recovery",
+    "cohort_role": "development_only",
+    "interpretation": "Oracle recovery upper bound on two Pilot-B-certified controller-compatible accidents.",
+    "not_evidence_for": [
+      "learned recovery action quality",
+      "learned trigger timing",
+      "final held-out generalization",
+      "arbitrary glass layouts"
+    ]
+  },
+  "metrics": {
+    "source_states": 2,
+    "episodes": 6,
+    "rollout_seeds": [101, 202, 303],
+    "safe_task_successes": 6,
+    "safe_task_success_rate": 1.0,
+    "catastrophes": 0,
+    "catastrophe_rate": 0.0,
+    "exact_simulator_controller_restores": 6,
+    "exact_simulator_controller_restore_rate": 1.0
+  },
+  "by_pair": [
+    {
+      "placement_id": "glass_recovery_heldout_0000",
+      "physical_scene_sha256": "dc3c731bfdd38d0d0414303c88f7bfbd35375d6328928d04a2d5e8dc8b0ad3af",
+      "episodes": 3,
+      "safe_task_successes": 3,
+      "catastrophes": 0,
+      "steps_each": 232
+    },
+    {
+      "placement_id": "glass_recovery_heldout_0004",
+      "physical_scene_sha256": "557f95ebda850b13a5db0e0ff85da9e1255ed7bd0799fa19411d9c914159b4df",
+      "episodes": 3,
+      "safe_task_successes": 3,
+      "catastrophes": 0,
+      "steps_each": 300
+    }
+  ],
+  "checks": {
+    "safe_task_success_at_least_90_percent": true,
+    "catastrophe_at_most_5_percent": true,
+    "exact_state_restore_stable": true
+  },
+  "training_and_protocol": {
+    "trigger_horizon_actions": 20,
+    "max_evaluation_steps": 360,
+    "training_seed": 17,
+    "training_pairs": 1,
+    "checkpoint_validation_pairs": 2,
+    "checkpoint_validation_reuses_development_evaluation_pairs": true,
+    "checkpoint_sha256": "87ab4bee583b5792c930d2810be520b5e0049e5b8f849a1ec16b7fa56a08ca95",
+    "primary_protocol_sha256": "0f531b939bbd02fec0f2ca5c3af9f82c386bf7ed0ee660b08f6f87a39dea0ae6",
+    "evaluation_protocol_sha256": "5b748cdde10798a299658a9b11c8a94fb46cb5e08f4f8c812c5284f0c3d93af3",
+    "evaluation_cohort_sha256": "65d024a9f7f359571572df28d3603fa1e45b6ac2e5d313066f6c330876ab2fb2"
+  },
+  "provenance": {
+    "training_git_commit": "2d53dcfef2a93a28be042ff4057520f7ba66a331",
+    "evaluation_git_commit": "b16bce3a93aa7819a237ba376bb50a8281d4f066",
+    "training_slurm_job": {
+      "job_id": 9098769,
+      "state": "COMPLETED",
+      "exit_code": "0:0"
+    },
+    "evaluation_slurm_job": {
+      "job_id": 9099316,
+      "state": "COMPLETED",
+      "exit_code": "0:0",
+      "elapsed": "00:09:47"
+    },
+    "evaluation_json_sha256": "1d7e071e2b2c0bdaddf8fbae08204df5d15940ad5754748f30f705e9e950f64f",
+    "pilot_c_summary_sha256": "405e05ff2f1080e467876331fde36bc0f352e105c4449e692558ce6957b439e8",
+    "ignored_run_root": "results/glass_recovery_v2/pilot_c_scoped_certified_h20_20260812_r1"
+  },
+  "known_limitations": [
+    "The two evaluation pairs were used for checkpoint validation, so they are development data rather than final held-out data.",
+    "Pilot C uses oracle timing and oracle recovery, not the learned risk gate or learned recovery actions.",
+    "Pilot C evaluates treatment only. Matched off-path task success was already required during Pilot B admission; legacy control exact-anchor observation hashes do not restore under the evaluator.",
+    "Three seeds per placement are repeats nested within only two independent source states."
+  ]
+}

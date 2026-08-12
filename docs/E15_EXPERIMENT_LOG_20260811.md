@@ -364,3 +364,46 @@ glass-to-bowl clearance, 0.30 m off-path displacement, 0.024 m-radius glass,
 a 35 N fixed-action event-force floor, and a clean ungrasped bowl at the exact
 T-20 anchor. All source states exposed by r7 or the preceding fresh H=20 run
 are excluded before authoring.
+
+## Final scoped Pilot B decision
+
+The stricter authoring run, Quest job `9096065`, yielded no candidate from the
+first three new source states after the 35 N force-margin, 5 mm clean-bowl, and
+all-exposed-source filters. It failed before any live frontier outcome and is
+not scientific evidence for or against recovery.
+
+The final paper route does not continue layout search. It treats job `9095054`'s
+complete 15-scene H=20 ledger as a certification/yield screen for the explicitly
+scoped class. The ledger has 12 Base catastrophes, nine exact H=20 replays, and
+three complete accepted pairs. Certification yield is therefore 3/15 overall
+and 3/12 conditional on a Base accident. All three accepted pairs have Base
+catastrophe, safe task-completing Oracle recovery, and matched off-path safe
+task success. This is sufficient to instantiate a small development
+proof-of-concept, while the original broad-population gate remains a no-go.
+
+## Scoped Pilot C oracle upper bound
+
+Quest job `9098769` trained the minimal protocol checkpoint from the single
+accepted train pair (seed 17, 40 updates). Because no validation pair was
+admitted, the two accepted heldout-labelled pairs were used for checkpoint
+validation and are hence explicitly relabelled **development-only**. Checkpoint
+SHA-256 is
+`87ab4bee583b5792c930d2810be520b5e0049e5b8f849a1ec16b7fa56a08ca95`.
+
+The first 220-action evaluation budget right-censored the known 232- and
+300-action successful recovery trajectories. The sealed development protocol
+was therefore rerun at the already-authorized Oracle budget of 360 actions;
+this is a budget correction, not outcome-dependent controller tuning. Pilot C
+uses exact-anchor treatment episodes with oracle timing and oracle recovery.
+Matched off-path task success was already required by Pilot B admission and was
+not repeated at exact anchor because the legacy control snapshot observation
+hash does not restore under the evaluator.
+
+Final Quest job `9099316` completed with exit `0:0`. Across the two certified
+development source states and seeds `{101,202,303}`, all 6/6 episodes were safe
+task successes, 0/6 were catastrophes, and 6/6 restored simulator/controller
+state exactly. The formal summarizer returned `pilot_c_go`. The result is an
+Oracle recovery upper bound for the certified subclass; it is not evidence for
+learned trigger timing, learned recovery actions, final held-out
+generalization, or arbitrary glass layouts. The sequence stops here rather than
+running Pilot D/F.

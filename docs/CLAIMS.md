@@ -36,16 +36,17 @@ they do not yet establish a learned recovery result or held-out generalization.
 See `results/ANALYSIS_glass_recovery_acceptance.md` and
 `results/glass_recovery_acceptance_smoke_20260809.json`.
 
-E15/v2 is the current experiment line but has no claim ID or learned result.
-Its tracked Pilot B frontier is a feasibility no-go: all 120 candidate/H cells
-completed, but no H met the exact-replay and oracle-recoverability gates, so no
-fixed-H dataset or checkpoint was produced. Code-complete plumbing, synthetic
-CPU training, or fake-environment evaluation cannot support a learned-result
-claim. Any future promotion still requires a sealed accepted cohort and pair
-IDs, exact replay evidence, disjoint train/validation/final-held-out source and
-family counts, checkpoint/Base/dataset/protocol identities, the full
-predeclared baseline matrix, source-cluster analysis, primary safe task success
-and catastrophe outcomes, and explicit clean-control false-intervention and
-task-preservation metrics. E14 artifacts and the five r7 pairs scattered across
-four different H values cannot satisfy this contract by reinterpretation,
-pooling, or migration.
+E15/v2 has no new claim ID and no learned recovery result. Its original tracked
+Pilot B frontier remains a broad feasibility no-go: all 120 candidate/H cells
+completed and no H met the source-diverse replay/recoverability gates. A later
+scoped development route certified three H=20 pairs from a complete 15-scene
+ledger (3/12 conditional on a Base catastrophe), then obtained 6/6 safe task
+successes and 0/6 catastrophes using exact-anchor, oracle-timed Oracle recovery
+on two development source states. This is a controller-compatible Oracle upper
+bound only. The two evaluation pairs were also used for checkpoint validation;
+the learned gate and learned action head were not evaluated. Therefore it does
+not establish final-held-out generalization, learned recovery, or arbitrary
+glass-layout coverage. Any future learned promotion still requires disjoint
+train/validation/final-held-out source and family counts, the full predeclared
+baseline matrix, source-cluster analysis, and clean-control false-intervention
+and task-preservation metrics.

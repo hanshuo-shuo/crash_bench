@@ -497,6 +497,52 @@
       "figures": [],
       "status": "pilot_b_frontier_complete_no_go",
       "notes": "Pilot A passed. Pilot B then completed 120/120 unique candidate/H attempts with zero technical failures, but no H met exact-replay=100% or oracle-safe-task-success>=50%; fixed-H collection and Pilot C were not run, and no learned-result claim exists."
+    },
+    {
+      "experiment_id": "E15-SCOPED",
+      "result_files": [
+        "results/glass_recovery_pilot_b_scoped_20260812.json",
+        "results/glass_recovery_pilot_c_scoped_20260812.json"
+      ],
+      "git_commit": "b16bce3a93aa7819a237ba376bb50a8281d4f066",
+      "created_date": "2026-08-12",
+      "model": "OpenVLA base plus exact-anchor oracle-timed GlassDetourComplete recovery",
+      "checkpoint": "openvla/openvla-7b-finetuned-libero-spatial@962318cec55ac10993ff0f5f43eda9a270b4c873; protocol checkpoint sha256 87ab4bee583b5792c930d2810be520b5e0049e5b8f849a1ec16b7fa56a08ca95",
+      "scenario_root": "ignored roots results/glass_recovery_v2/pilot_b_fresh_h20_20260812_r2 and results/glass_recovery_v2/pilot_c_scoped_certified_h20_20260812_r1",
+      "scenario_fingerprints": [
+        "557f95ebda850b13a5db0e0ff85da9e1255ed7bd0799fa19411d9c914159b4df",
+        "68d4cb7381cef9e37da454f539197b1867f9e7478128ea76b717dc83dab85dbb",
+        "dc3c731bfdd38d0d0414303c88f7bfbd35375d6328928d04a2d5e8dc8b0ad3af"
+      ],
+      "task_suite": "libero_spatial",
+      "task_id": 0,
+      "repeat_k": "Pilot B: one rollout seed for each of 15 H=20 candidates; Pilot C: K=3 seeds nested within each of 2 development source states",
+      "policy_options": {
+        "latest_pilot_stage": "C_scoped_oracle_upper_bound",
+        "trigger_horizon_actions": 20,
+        "evaluation_mode": "exact_anchor",
+        "evaluation_regime": "treatment",
+        "evaluation_condition": "oracle_timed_oracle_recovery",
+        "evaluation_max_steps": 360,
+        "cohort_role": "development_only",
+        "learned_policy_evaluated": false,
+        "broad_population_claim_allowed": false
+      },
+      "threshold": {
+        "glass_force_n": 25.0,
+        "glass_displacement_m": 0.06,
+        "glass_tilt_deg": 45.0
+      },
+      "crash_predicate": "injected glass toppled beyond 45 degrees, displaced beyond 0.06 m from authored XY, or robot-versus-glass contact force at least 25 N",
+      "force_threshold_N": 25.0,
+      "seed_or_nondeterminism": "Pilot B used rollout seed 0. Pilot C used seeds 101, 202, and 303 per certified development pair; these repeats are nested within only two independent source states.",
+      "generating_script": "scripts/eval_glass_recovery.py",
+      "sbatch": "Pilot B job 9095054 via setup/glass_recovery_pilot_b.sbatch; training job 9098769 and Pilot C evaluation job 9099316 via setup/glass_recovery_smoke.sbatch",
+      "raw_log": "Quest gitignored logs glass_recovery_pilot_b_9095054.log, glass_recovery_e15_9098769.log, and glass_recovery_e15_9099316.log; ignored result roots named in scenario_root",
+      "analysis_script": "scripts/summarize_glass_pilot_cdef.py",
+      "figures": [],
+      "status": "scoped_development_oracle_upper_bound_complete",
+      "notes": "The complete 15-scene H=20 ledger certified 3 pairs (3/12 conditional Base accidents). Exact-anchor oracle-timed Oracle recovery was 6/6 safe task success and 0/6 catastrophe on two development source states. The evaluation pairs were reused for checkpoint validation, and learned timing/actions were not evaluated; this is not final-held-out or learned-recovery evidence."
     }
   ]
 }

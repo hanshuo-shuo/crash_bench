@@ -51,3 +51,36 @@ bash setup/submit_glass_recovery_pilot_b.sh frontier
 
 The Slurm script pins the values above as defaults and writes the exact screen
 measurements into each placement's metadata.
+
+## Outcome and final scoped route
+
+Quest job `9096065` stopped during candidate authoring: none of the first three
+new source states passed the combined 35 N force-margin, 5 mm clean-bowl, and
+exposed-source exclusion screen. It produced zero frontier outcomes. Therefore
+the proposed 0.17 m / 0.30 m geometry is not represented as a successful run,
+and no further layout search was performed.
+
+For the paper proof-of-concept, Pilot B is instead reported as a certification
+and yield screen over the complete earlier fresh H=20 ledger from job `9095054`.
+Among 15 candidates, 12 produced a Base catastrophe, nine replayed exactly at
+H=20, and three passed all primary admission branches: exact-H Base
+catastrophe, independently recaptured safe task-completing Oracle recovery, and
+matched off-path safe task success. The resulting yield is 3/15 overall and
+3/12 conditional on a Base catastrophe. The three certified pair IDs are
+`glass_recovery_heldout_0000`, `glass_recovery_heldout_0004`, and
+`glass_recovery_train_0003`.
+
+This fallback does not retroactively claim the stricter geometry. The actual
+fresh-H=20 authoring required 0.12 m target clearance and used a 0.20 m
+off-path displacement; the two development-evaluation pairs happen to use the
+same narrow radius-0.024 m glass family. The allowed paper statement is only
+that a small certified controller-compatible subclass exists. The tracked
+record is `results/glass_recovery_pilot_b_scoped_20260812.json`.
+
+Pilot C then evaluated the two certified development-evaluation pairs at exact
+anchor with oracle timing and oracle recovery, three seeds per pair and a
+360-action budget. All 6/6 episodes completed the original task safely, with
+0/6 catastrophes and 6/6 exact simulator/controller restores (Quest job
+`9099316`). This is a development-only oracle upper bound, not a learned-policy
+or final-held-out result. No Pilot D/F expansion is required for this scoped
+paper story.

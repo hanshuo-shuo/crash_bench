@@ -47,6 +47,14 @@ safety failure.
   all three complete candidates passed repaired H=20 catastrophe replay and a
   fresh independent oracle recapture. They remain development-only salvage
   evidence with zero direct v2 promotions, not a learned-recovery result.
+- A later scoped E15 H=20 certification ledger found three complete accepted
+  accidents among 15 candidates (3/12 conditional on a Base catastrophe). This
+  supports existence of a controller-compatible recoverable subclass, not
+  arbitrary glass-layout coverage.
+- On the two certified development-evaluation accidents, exact-anchor,
+  oracle-timed Oracle recovery completed the task safely in 6/6 runs (three
+  seeds per source state) with 0/6 catastrophes. This is an Oracle upper bound,
+  not learned-policy held-out generalization.
 - Final-readout activation steering and wall-to-glass probe transfer are
   negative results retained in the repository.
 
@@ -88,7 +96,9 @@ new result in a claim, add its scenario fingerprints and execution provenance to
 The main causal and online intervention evidence is one task, a wall family,
 and OpenVLA base. The structured recovery controller is not general collision
 avoidance. The d62 task-completion witness is a low-wall existence demo, not a
-general task-completing recovery result. Raw logs, videos, and some hidden-state
+general task-completing recovery result. The scoped glass result has only two
+development source states and uses Oracle timing and actions; it is not a final
+learned recovery result. Raw logs, videos, and some hidden-state
 captures are intentionally gitignored; tracked summaries document the gap.
 
 ## Documentation

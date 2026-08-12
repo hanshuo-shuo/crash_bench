@@ -50,11 +50,11 @@ The plan uses the same claim vocabulary, C0–C13, as `CLAIMS.md`.
 - Preserve the tall-wall treatment; put the lowered d62 detour in a distinct
   scenario root with parent/fingerprint metadata.
 - Release a manifest, claims ledger, audit command, and zero-GPU tests.
-- The E15 inventory/frontier/generator gate has been run. Respect its Pilot B
-  no-go: no tested H had exact replay or oracle recoverability sufficient for a
-  source-diverse fixed-H cohort, so do not train or seal held-out data from this
-  run. Any renewal needs a new outcome-blind frontier after the snapshot/replay
-  contract is repaired.
+- Respect the broad E15 Pilot B no-go: no tested H supported a source-diverse
+  recoverable population. The later scoped route may be reported only as a
+  development certification/yield screen plus an exact-anchor Oracle upper
+  bound on two certified source states. Do not describe its heldout-labelled
+  pairs as final held-out data or its Oracle condition as learned recovery.
 - Require checkpoint/Base/dataset/protocol identities, the complete baseline
   matrix, primary task/catastrophe outcomes, false intervention, task
   preservation, and source-cluster analysis before any learned claim.
@@ -102,3 +102,8 @@ The plan uses the same claim vocabulary, C0–C13, as `CLAIMS.md`.
   but exact replay reached at most 58.3% and oracle safe task success at most
   14.3%. Report this as a frozen feasibility no-go, not as failed model training
   and not as evidence against recovery methods that were never trained.
+- The final scoped H=20 ledger has three certified pairs from 15 candidates
+  (3/12 conditional on a Base accident). Its two development-evaluation source
+  states achieve 6/6 safe task successes with Oracle timing/actions and 0/6
+  catastrophes. Report this as a controller-compatible Oracle upper bound and
+  stop; it does not support learned-policy or arbitrary-layout language.
