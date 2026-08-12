@@ -20,9 +20,12 @@ module load mamba/24.3.0
 source activate "$HOME/crash_bench/envs/openvla"
 export PYTHONNOUSERSITE=1 MUJOCO_GL=egl PYOPENGL_PLATFORM=egl
 cd "$HOME/crash_bench"
+REVISION="${CB_BASE_CHECKPOINT_REVISION:-962318cec55ac10993ff0f5f43eda9a270b4c873}"
 
 echo "== [1/2] capturing glass hidden states (glass / off-path / no-glass) =="
-python scripts/probe_glass_capture.py
+python scripts/probe_glass_capture.py \
+  --checkpoint-revision "$REVISION" \
+  --overwrite
 
 echo "== [2/2] within-glass probe + cross-hazard transfer + figure (CPU) =="
 python scripts/probe_glass_analysis.py

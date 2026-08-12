@@ -111,6 +111,9 @@ reason to spend GPU time.
 3. **OFT-specific online guard replication.** Use OFT's own probe to trigger the
    same `RetreatHold` interface.
 
+The executable D0 contract, commands, operating gates, and E stop rules are in
+[GLASS_RECOVERY_RESCUE.md](GLASS_RECOVERY_RESCUE.md).
+
 There is an artifact prerequisite before these jobs: the working tree contains
 the wall/OFT probe checkpoints but not the raw `hidden.npz`/`meta.json` needed for
 five-fold refitting. The glass directory contains only the probe summary, not a

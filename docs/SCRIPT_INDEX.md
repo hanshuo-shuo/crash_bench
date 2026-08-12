@@ -18,6 +18,7 @@ reproduction; it is not a recommended new experiment.
 | steering ablation | `phase3_steering.py`, `phase3_steering_diag.py`, `phase3_steering_figures.py` | steering sbatch files |
 | observable confound | `task_phase_confound_analysis.py` | none; reads frozen captures |
 | glass causal extension | `phase2_glass_prototype.py`, `probe_glass_capture.py`, `probe_glass_analysis.py`, `probe_glass_inject.py`, `probe_joint_transfer.py` | `phase2_glass_prototype.sbatch`, `probe_glass.sbatch` |
+| glass detector rescue D0 | `prepare_glass_detector_split.py`, `fit_glass_detector.py`; runtime artifact in `crashbench/glass_detector.py` | capture via revised `probe_glass.sbatch`; see `GLASS_RECOVERY_RESCUE.md` |
 
 `run_pilot.py` remains shared runtime code even though its earliest experiment
 configuration is historical. Status applies to use, not merely filename age.

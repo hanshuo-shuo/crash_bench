@@ -72,7 +72,9 @@ def logreg_score(model, X):
 
 
 # ---------- load ----------
-H = np.load(f"{IN}/hidden.npz")["H"].astype(np.float32)
+with np.load(f"{IN}/hidden.npz", allow_pickle=False) as archive:
+    hidden_key = "hidden" if "hidden" in archive.files else "H"
+    H = archive[hidden_key].astype(np.float32)
 meta = json.load(open(f"{IN}/meta.json"))
 cond = np.array([m["cond"] for m in meta])
 sid = np.array([m["scenario_id"] for m in meta])
