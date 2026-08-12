@@ -196,6 +196,22 @@ def _oracle_cell(
     except Exception as exc:
         return {**cell, "error": f"{type(exc).__name__}: {exc}"}
     selected = None if oracle is None else oracle.get("config")
+    best_failure = None
+    if oracle is None and attempts:
+        best = max(attempts, key=lambda row: (
+            int(row["controller_final_stage"]),
+            float(row.get("max_target_z_m") or -1.0),
+            -float(row.get("final_bowl_plate_xy_m") or 99.0),
+        ))
+        best_failure = {
+            key: best.get(key) for key in (
+                "attempt_index", "controller_final_stage", "crashed", "steps",
+                "initial_target_z_m", "max_target_z_m",
+                "final_bowl_plate_xy_m", "final_bowl_z_m", "side",
+                "lane_margin", "transit_z", "descend_off",
+                "orientation_target", "grasp_xy_offset",
+            )
+        }
     return {
         **cell,
         "safe_task_success": oracle is not None,
@@ -210,6 +226,7 @@ def _oracle_cell(
         ),
         "selected_config": selected,
         "selected_steps": None if oracle is None else int(oracle["steps"]),
+        "best_failure": best_failure,
     }
 
 
@@ -230,7 +247,7 @@ def _control_probe(
         "succeeded": bool(result["succeeded"]),
         "steps": int(result["steps"]),
     }
-    if result["crashed"] or not result["succeeded"] or not result["rows"]:
+    if result["crashed"] or not result["rows"]:
         return None, None, diagnostic
     baseline = np.asarray(placement.metadata["bowl_xyz"], dtype=float)
     _, closest = min(
@@ -245,6 +262,11 @@ def _control_probe(
     diagnostic.update(
         control_reach_orientation=orientation,
         control_grasp_offset_xyz=offset,
+        pose_usable=True,
+        pose_source=(
+            "successful_control" if result["succeeded"]
+            else "closest_collision_free_control_approach"
+        ),
     )
     return [orientation, None], offset, diagnostic
 

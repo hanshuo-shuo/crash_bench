@@ -62,6 +62,10 @@ from crashbench.scenario import PredicateSpec
 
 TARGET = "akita_black_bowl_1"
 PLATE = "plate_1"
+# Task-0 successful no-glass trace state_002: stable post-close EEF offset from
+# the bowl center. This is a practical fallback when a matched control rollout
+# approaches the bowl but does not itself finish the whole task.
+DEFAULT_BOWL_GRASP_OFFSET = [0.009, -0.04, 0.018]
 GLASS_FORCE_THRESHOLD_N = 25.0
 GLASS_DISPLACEMENT_M = 0.06
 GLASS_TILT_DEG = 45.0
@@ -749,13 +753,13 @@ def _oracle_configs(
     targets = [None] if orientation_targets is None else orientation_targets
     if control_grasp_offset is not None and len(control_grasp_offset) != 3:
         raise ValueError("control_grasp_offset must contain xyz")
-    grasp_xy_offset = (
-        [0.0, 0.0] if control_grasp_offset is None
-        else [float(value) for value in control_grasp_offset[:2]]
+    grasp_pose = (
+        DEFAULT_BOWL_GRASP_OFFSET if control_grasp_offset is None
+        else [float(value) for value in control_grasp_offset]
     )
+    grasp_xy_offset = [float(value) for value in grasp_pose[:2]]
     descend_offsets = (
-        (0.012, 0.04) if control_grasp_offset is None
-        else (float(control_grasp_offset[2]), 0.04)
+        (float(grasp_pose[2]), 0.04)
     )
     return [
         {

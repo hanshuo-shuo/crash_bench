@@ -1198,7 +1198,8 @@ def test_detour_compensates_grasp_offset_before_placing():
 def test_oracle_grid_searches_both_grasp_heights():
     configs = _oracle_configs(0.9)
     assert len(configs) == 16
-    assert {config["descend_off"] for config in configs} == {0.012, 0.04}
+    assert {config["descend_off"] for config in configs} == {0.018, 0.04}
+    assert all(config["grasp_xy_offset"] == [0.009, -0.04] for config in configs)
 
 
 def test_oracle_grid_can_reuse_clean_control_grasp_pose():
