@@ -564,6 +564,20 @@ def test_accepted_cohort_preflight_loads_only_manifest_accepted_pairs(tmp_path):
     assert set(contract.reference_manifests) == {"train", "validation"}
 
 
+def test_development_oracle_cohort_can_be_checkpoint_validation_set(tmp_path):
+    files = _build_contract_files(tmp_path)
+    heldout_sha = file_sha256(files["manifests"]["heldout"])
+    files["metadata"]["validation_manifest_sha256"] = heldout_sha
+    payload = files["cohort_payload"]
+    payload["development_only"] = True
+    payload["checkpoint_validation_role"] = "selected_heldout_cohort"
+    files["cohort"].write_text(json.dumps(payload) + "\n")
+
+    contract = _load(files)
+
+    assert set(contract.reference_manifests) == {"train"}
+
+
 def test_frozen_protocol_rejects_a_reselected_cohort(tmp_path):
     files = _build_contract_files(tmp_path)
     payload = files["cohort_payload"]

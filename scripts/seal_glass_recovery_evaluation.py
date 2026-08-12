@@ -36,6 +36,9 @@ def _artifact_key(path: Path, roots: tuple[Path, ...]) -> str:
 
 
 def seal(args: argparse.Namespace) -> dict:
+    development_overlap = bool(
+        getattr(args, "development_holdout_used_for_validation", False)
+    )
     placement_path = Path(args.placements).resolve()
     dataset_root = Path(args.dataset).resolve()
     trajectory_path = dataset_root / f"{args.split}.jsonl"
@@ -112,6 +115,15 @@ def seal(args: argparse.Namespace) -> dict:
         seed = str(metadata["seed"])
         if seed in checkpoint_hashes:
             raise SystemExit(f"duplicate checkpoint training seed {seed}")
+        if development_overlap:
+            if args.split != "heldout":
+                raise SystemExit(
+                    "development holdout-validation overlap requires split heldout"
+                )
+            if metadata.get("validation_manifest_sha256") != file_sha256(trajectory_path):
+                raise SystemExit(
+                    "checkpoint validation manifest is not the selected heldout manifest"
+                )
         checkpoint_hashes[seed] = file_sha256(checkpoint)
 
     evaluation = {
@@ -127,6 +139,7 @@ def seal(args: argparse.Namespace) -> dict:
             "placement_manifest_sha256": file_sha256(placement_path),
             "trajectory_manifest_sha256": file_sha256(trajectory_path),
         },
+        "development_only": development_overlap,
     }
     evaluation_sha = canonical_sha256(evaluation)
     protocol = {
@@ -147,7 +160,14 @@ def seal(args: argparse.Namespace) -> dict:
         "evaluation_protocol_sha256": evaluation_sha,
         "pairs": pair_rows,
         "file_sha256": file_hashes,
+        "development_only": development_overlap,
     }
+    if development_overlap:
+        cohort["checkpoint_validation_role"] = "selected_heldout_cohort"
+        cohort["scope_note"] = (
+            "development-only certified cohort; valid for privileged oracle-timed "
+            "Pilot C, not heldout learned-policy generalization"
+        )
     if args.split == "heldout":
         cohort["reference_manifests"] = {
             split: {
@@ -186,6 +206,14 @@ def main() -> None:
     parser.add_argument("--pair-ids", nargs="+")
     parser.add_argument("--rollout-seeds", type=int, nargs="+", default=[101])
     parser.add_argument("--max-steps", type=int, default=220)
+    parser.add_argument(
+        "--development-holdout-used-for-validation",
+        action="store_true",
+        help=(
+            "label a small development-only heldout cohort that also calibrated the "
+            "protocol-required checkpoint; use only for privileged oracle-timed Pilot C"
+        ),
+    )
     parser.add_argument("--output", required=True)
     args = parser.parse_args()
     if len(args.rollout_seeds) != len(set(args.rollout_seeds)) or args.max_steps < 1:

@@ -294,11 +294,29 @@ def _load_reference_manifests(
     selected_pairs = {record.pair_id for record in selected_records}
     selected_placements = {record.placement_id for record in selected_records}
     selected_sources = {record.source_state_sha256 for record in selected_records}
+    development_validation_overlap = bool(
+        cohort.get("development_only") is True
+        and cohort.get("checkpoint_validation_role") == "selected_heldout_cohort"
+    )
     resolved: dict[str, Path] = {}
     for split, metadata_key in (
         ("train", "train_manifest_sha256"),
         ("validation", "validation_manifest_sha256"),
     ):
+        if split == "validation" and development_validation_overlap:
+            selected_sha = str(cohort.get("trajectory_manifest_sha256", ""))
+            if checkpoint_metadata.get(metadata_key) != selected_sha:
+                raise ValueError(
+                    "development checkpoint validation manifest is not the selected "
+                    "heldout cohort"
+                )
+            # Pilot C's oracle-timed controller does not consume learned timing
+            # or learned recovery actions.  Permit the explicitly labeled
+            # development cohort to have calibrated the otherwise protocol-
+            # required checkpoint while retaining the independent train leak
+            # check below.  This mode must not be reported as heldout learned
+            # policy generalization.
+            continue
         entry = _require_mapping(references.get(split), f"reference_manifests.{split}")
         path = _resolve_declared_path(str(entry.get("path", "")), relative_to=cohort_path.parent)
         expected = str(entry.get("sha256", ""))
