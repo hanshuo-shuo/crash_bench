@@ -92,10 +92,16 @@ case "$STAGE" in
         --source-trace-manifest "$SOURCE_MANIFEST" \
         --checkpoint-revision "$REVISION" \
         --unnorm-key "$UNNORM_KEY" \
-        --train-placements 10 --validation-placements 5 --heldout-placements 5 \
-        --train-accepted-targets 2 --validation-accepted-targets 1 \
-        --heldout-accepted-targets 1 \
-        --train-states 8 --validation-states 5 --heldout-states 5 \
+        --train-placements "${CB_PILOT_B_FRONTIER_TRAIN_PLACEMENTS:-10}" \
+        --validation-placements "${CB_PILOT_B_FRONTIER_VALIDATION_PLACEMENTS:-5}" \
+        --heldout-placements "${CB_PILOT_B_FRONTIER_HELDOUT_PLACEMENTS:-5}" \
+        --train-accepted-targets "${CB_PILOT_B_FRONTIER_TRAIN_TARGETS:-2}" \
+        --validation-accepted-targets "${CB_PILOT_B_FRONTIER_VALIDATION_TARGETS:-1}" \
+        --heldout-accepted-targets "${CB_PILOT_B_FRONTIER_HELDOUT_TARGETS:-1}" \
+        --train-states "${CB_PILOT_B_FRONTIER_TRAIN_STATES:-8}" \
+        --validation-states "${CB_PILOT_B_FRONTIER_VALIDATION_STATES:-5}" \
+        --heldout-states "${CB_PILOT_B_FRONTIER_HELDOUT_STATES:-5}" \
+        --exclude-source-state-indices "${CB_PILOT_B_EXCLUDE_SOURCE_STATE_INDICES:-}" \
         --source-state-reserve "${CB_PILOT_B_SOURCE_STATE_RESERVE:-4}"
       FRONTIER_MANIFEST="$FRONTIER_PLACEMENTS/placements.json"
     fi
@@ -107,7 +113,8 @@ case "$STAGE" in
       --checkpoint-revision "$REVISION" \
       --unnorm-key "$UNNORM_KEY" \
       --rollout-seed 0 \
-      --oracle-steps 220 \
+      --oracle-steps "${CB_PILOT_B_FRONTIER_ORACLE_STEPS:-220}" \
+      --horizons ${CB_PILOT_B_FRONTIER_HORIZONS:-40 30 20 15 10 5} \
       --execute
     ;;
 

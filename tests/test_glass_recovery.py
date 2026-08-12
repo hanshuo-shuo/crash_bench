@@ -92,6 +92,7 @@ from scripts.prepare_glass_recovery_placements import (
     _file_sha256,
     _load_source_traces,
     _minimum_initial_body_clearance,
+    _parse_source_state_exclusions,
     _sample_trace_anchor,
     _state_layout,
     _state_layout_from_indices,
@@ -2197,6 +2198,30 @@ def test_avoidability_frontier_prefers_h20_and_requires_complete_grid():
     assert summary["go"] is True
     with pytest.raises(ValueError, match="does not cover every candidate/H"):
         summarize_frontier_rows(rows[:-1], min_safe_task_success_rate=0.5)
+
+
+def test_fixed_h20_frontier_can_be_summarized_without_other_horizons():
+    rows = [{
+        "placement_id": f"fresh_{index}",
+        "horizon_actions": 20,
+        "base_catastrophe": True,
+        "exact_h_replay_verified": True,
+        "oracle_safe_task_success": index < 6,
+        "rejection_reason": None if index < 6 else "no_oracle_recovery",
+    } for index in range(10)]
+    summary = summarize_frontier_rows(
+        rows, min_safe_task_success_rate=0.5, horizons=[20]
+    )
+    assert summary["qualified_horizons"] == [20]
+    assert summary["recommended_horizon_actions"] == 20
+    assert summary["go"] is True
+
+
+def test_source_state_exclusions_are_compact_and_validated():
+    assert _parse_source_state_exclusions("2, 19,2,47") == {2, 19, 47}
+    assert _parse_source_state_exclusions("") == set()
+    with pytest.raises(ValueError, match="non-negative"):
+        _parse_source_state_exclusions("-1,2")
 
 
 def test_frontier_counts_nominal_replay_failure_as_base_catastrophe(tmp_path):

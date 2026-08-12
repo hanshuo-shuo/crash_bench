@@ -342,6 +342,20 @@ def _state_layout_from_indices(
     }
 
 
+def _parse_source_state_exclusions(raw: str | None) -> set[int]:
+    """Parse a compact, outcome-blind list of previously exposed source states."""
+
+    if raw is None or not raw.strip():
+        return set()
+    try:
+        values = {int(value.strip()) for value in raw.split(",") if value.strip()}
+    except ValueError as exc:
+        raise ValueError("source-state exclusions must be comma-separated integers") from exc
+    if any(value < 0 for value in values):
+        raise ValueError("source-state exclusions must be non-negative")
+    return values
+
+
 def author(args: argparse.Namespace) -> dict:
     output = Path(args.output)
     if output.exists() and any(output.iterdir()) and not args.overwrite:
@@ -352,6 +366,9 @@ def author(args: argparse.Namespace) -> dict:
     source_traces: dict[int, dict] = {}
     trace_payload: dict | None = None
     reserve = int(getattr(args, "source_state_reserve", 0))
+    excluded_source_states = _parse_source_state_exclusions(
+        getattr(args, "exclude_source_state_indices", None)
+    )
     desired_state_counts = {
         "train": args.train_states,
         "validation": args.validation_states,
@@ -366,6 +383,12 @@ def author(args: argparse.Namespace) -> dict:
         invalid_indices = sorted(index for index in source_traces if index >= len(states))
         if invalid_indices:
             raise ValueError(f"source trace indices exceed LIBERO states: {invalid_indices}")
+        source_traces = {
+            index: trace for index, trace in source_traces.items()
+            if index not in excluded_source_states
+        }
+        if not source_traces:
+            raise ValueError("source-state exclusions removed every successful trace")
         layout = _state_layout_from_indices(
             list(source_traces), args.train_states + reserve,
             args.validation_states + reserve, args.heldout_states + reserve,
@@ -666,6 +689,7 @@ def author(args: argparse.Namespace) -> dict:
             "source_state_indices": selected_layout,
             "source_state_candidate_indices": layout,
             "source_state_reserve_per_split": reserve,
+            "excluded_source_state_indices": sorted(excluded_source_states),
             "source_trace_manifest": (
                 None if args.source_trace_manifest is None
                 else str(Path(args.source_trace_manifest).resolve())
@@ -716,6 +740,11 @@ def main() -> None:
     parser.add_argument("--validation-states", type=int, default=8)
     parser.add_argument("--heldout-states", type=int, default=12)
     parser.add_argument("--source-state-reserve", type=int, default=0)
+    parser.add_argument(
+        "--exclude-source-state-indices",
+        default="",
+        help="comma-separated source-state indices already exposed in earlier diagnostics",
+    )
     parser.add_argument("--settle-steps", type=int, default=10)
     parser.add_argument("--bowl-rest-offset", type=float, default=0.005)
     parser.add_argument("--control-offset", type=float, default=0.20)
