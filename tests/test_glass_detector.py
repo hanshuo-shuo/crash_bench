@@ -19,6 +19,11 @@ from crashbench.glass_detector import (
 )
 from scripts.prepare_glass_detector_split import _allocation, prepare
 from scripts.fit_glass_detector import fit as fit_d0
+import scripts.capture_glass_detector_placements as placement_capture
+from scripts.capture_glass_detector_placements import (
+    _episode_exclusion,
+    build_capture_plan,
+)
 
 
 def _episode_rows(
@@ -290,3 +295,52 @@ def test_d0_fit_writes_primary_and_both_baselines(tmp_path: Path):
     assert (output / "baseline_hidden_only.npz").is_file()
     assert (output / "baseline_robot_action_only.npz").is_file()
     assert (output / "d0_summary.json").is_file()
+
+
+def test_placement_capture_freezes_exposed_and_fresh_source_roles(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    exposed = [
+        SimpleNamespace(
+            placement_id=f"exposed_{split}", split=split,
+            source_state_sha256=f"source_{split}",
+        )
+        for split in ("train", "validation", "heldout")
+    ]
+    fresh = [
+        SimpleNamespace(
+            placement_id=f"fresh_{split}", split=split,
+            source_state_sha256=f"fresh_source_{split}",
+        )
+        for split in ("train", "validation", "heldout")
+    ]
+
+    def fake_read(path):
+        return (fresh if "fresh" in str(path) else exposed), {}
+
+    monkeypatch.setattr(placement_capture, "read_placement_manifest", fake_read)
+    plan, source_splits = build_capture_plan("exposed.json", "fresh.json")
+
+    assert len(plan) == 6
+    assert source_splits["source_train"] == "train"
+    assert source_splits["source_validation"] == "calibration"
+    assert source_splits["source_heldout"] == "calibration"
+    assert all(
+        source_splits[f"fresh_source_{split}"] == "development"
+        for split in ("train", "validation", "heldout")
+    )
+
+
+def test_placement_capture_excludes_invalid_control_and_missing_t20_anchor():
+    assert _episode_exclusion("offpath", {
+        "crashed": True, "collision_step": 30,
+    }) == "offpath_not_a_clean_control"
+    assert _episode_exclusion("glass", {
+        "crashed": True, "collision_step": 18,
+    }) == "onpath_collision_before_T20_anchor"
+    assert _episode_exclusion("glass", {
+        "crashed": True, "collision_step": 19,
+    }) is None
+    assert _episode_exclusion("noglass", {
+        "crashed": False, "collision_step": None,
+    }) is None

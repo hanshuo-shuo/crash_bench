@@ -34,6 +34,24 @@ ten-scenario capture is useful for pipeline validation but is too small for a
 deployable FPR claim; expand the source cohort before treating D0 as paper
 evidence.
 
+Quest retains two suitable placement designs. The exposed r5 design has 18
+independent source states: its original 8 train sources remain D0 train and its
+5 validation + 5 heldout sources become D0 calibration because all were exposed
+during engineering. The disjoint fresh r2 design has 9 sources and is
+development-only. The placement capture freezes that 8/10/9 assignment and
+collects all three matched conditions with complete features:
+
+```bash
+setup/submit_glass_detector_d0.sh smoke
+# Inspect the one-placement result before spending on the full capture.
+setup/submit_glass_detector_d0.sh full
+```
+
+The full job fits D0 automatically only after capture succeeds. Off-path
+episodes that actually collide and on-path episodes with no T−20 anchor are
+retained in `capture_manifest.json` as explicit exclusions; they are not
+silently converted into negative controls.
+
 ### Freeze source splits before fitting
 
 Generate a deterministic, condition-stratified manifest. Assignment consumes
