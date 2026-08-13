@@ -20,7 +20,7 @@ if [[ "$MODE" == "smoke" ]]; then
   RUN_TAG="$(date -u +%Y%m%dT%H%M%SZ)"
   OUTPUT="${CB_D0_OUTPUT:-results/glass_recovery_v2/d0_capture_smoke_${SHORT_COMMIT}_${RUN_TAG}}"
 else
-  OUTPUT="${CB_D0_OUTPUT:-results/glass_recovery_v2/d0_capture_full_20260812_r1}"
+  OUTPUT="${CB_D0_OUTPUT:-results/glass_recovery_v2/d0_capture_full_20260813_r2}"
 fi
 [[ ! -e "$OUTPUT" ]] || { echo "refusing existing output: $OUTPUT" >&2; exit 2; }
 

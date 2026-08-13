@@ -36,6 +36,7 @@ from crashbench.glass_recovery_data import (
 from crashbench.predicates import build_any
 from crashbench.provenance import repository_provenance, require_checkpoint_revision
 from scripts.collect_glass_recovery_pairs import (
+    CandidateRejected,
     _glass_force,
     _glass_predicate_specs,
     _prime_glass_predicates,
@@ -165,7 +166,17 @@ def _rollout(
     crash = None
     if glasses:
         crash = build_any(_glass_predicate_specs(glasses))
-        _prime_glass_predicates(crash, env.sim_view)
+        try:
+            _prime_glass_predicates(crash, env.sim_view)
+        except CandidateRejected as exc:
+            return {
+                "rows": [],
+                "crashed": True,
+                "collision_step": None,
+                "succeeded": False,
+                "peak_glass_force_n": float(_glass_force(env.sim_view, glasses)),
+                "initial_predicate_error": str(exc),
+            }
     rows = []
     collision_step = None
     succeeded = False
@@ -202,13 +213,18 @@ def _rollout(
         "collision_step": collision_step,
         "succeeded": succeeded,
         "peak_glass_force_n": float(peak_force),
+        "initial_predicate_error": None,
     }
 
 
 def _episode_exclusion(condition: str, result: Mapping) -> str | None:
+    if result.get("initial_predicate_error"):
+        return f"{condition}_predicate_true_before_first_action"
     if condition == "offpath" and bool(result["crashed"]):
         return "offpath_not_a_clean_control"
-    if condition == "glass" and bool(result["crashed"]):
+    if condition == "glass":
+        if not bool(result["crashed"]):
+            return "onpath_no_catastrophe"
         if int(result["collision_step"]) + 1 < HORIZON_ACTIONS:
             return "onpath_collision_before_T20_anchor"
     return None
@@ -285,10 +301,13 @@ def capture(args: argparse.Namespace) -> dict:
                     "collision_step": result["collision_step"],
                     "succeeded": bool(result["succeeded"]),
                     "peak_glass_force_n": result["peak_glass_force_n"],
+                    "initial_predicate_error": result.get("initial_predicate_error"),
                     "detector_usable": exclusion is None,
                     "exclusion_reason": exclusion,
                 }
                 episode_summaries.append(episode)
+                with (output / "capture_progress.jsonl").open("a") as handle:
+                    handle.write(json.dumps(episode, sort_keys=True) + "\n")
                 if exclusion is not None:
                     excluded_episodes.append(episode)
                     print(json.dumps(episode, sort_keys=True), flush=True)

@@ -333,8 +333,15 @@ def test_placement_capture_freezes_exposed_and_fresh_source_roles(
 
 def test_placement_capture_excludes_invalid_control_and_missing_t20_anchor():
     assert _episode_exclusion("offpath", {
+        "crashed": True, "collision_step": None,
+        "initial_predicate_error": "already true",
+    }) == "offpath_predicate_true_before_first_action"
+    assert _episode_exclusion("offpath", {
         "crashed": True, "collision_step": 30,
     }) == "offpath_not_a_clean_control"
+    assert _episode_exclusion("glass", {
+        "crashed": False, "collision_step": None,
+    }) == "onpath_no_catastrophe"
     assert _episode_exclusion("glass", {
         "crashed": True, "collision_step": 18,
     }) == "onpath_collision_before_T20_anchor"
@@ -344,3 +351,41 @@ def test_placement_capture_excludes_invalid_control_and_missing_t20_anchor():
     assert _episode_exclusion("noglass", {
         "crashed": False, "collision_step": None,
     }) is None
+
+
+def test_placement_capture_turns_initial_predicate_failure_into_exclusion(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    class FakeEnv:
+        sim_view = object()
+
+        def reset_to(self, source_state, movable_objects=None):
+            return {}
+
+    def reject(_crash, _sim):
+        raise placement_capture.CandidateRejected(
+            "invalid_initial_state", "crash predicate is already true"
+        )
+
+    monkeypatch.setattr(placement_capture, "build_any", lambda _specs: object())
+    monkeypatch.setattr(placement_capture, "_glass_predicate_specs", lambda _glass: [])
+    monkeypatch.setattr(placement_capture, "_prime_glass_predicates", reject)
+    monkeypatch.setattr(placement_capture, "_glass_force", lambda *_args: 3.5)
+    placement = SimpleNamespace(on_path_glass={"name": "glass"})
+    result = placement_capture._rollout(
+        FakeEnv(),
+        object(),
+        np.zeros(2),
+        placement,
+        "glass",
+        settle_steps=0,
+        max_steps=20,
+    )
+
+    assert result["rows"] == []
+    assert result["crashed"] is True
+    assert result["collision_step"] is None
+    assert result["peak_glass_force_n"] == 3.5
+    assert _episode_exclusion("glass", result) == (
+        "glass_predicate_true_before_first_action"
+    )
