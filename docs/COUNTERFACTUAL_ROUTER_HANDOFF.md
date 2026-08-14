@@ -1,16 +1,15 @@
 # Counterfactual option router: 2026-08-14 stage handoff
 
-## Decision
+## Decision (updated after job 9277740)
 
-The exact-state counterfactual data path is implemented and smoke-tested.  Do
-not run the full collector or train the router yet.  The current single frozen
-`DetourComplete` configuration produces no task-success recovery label on the
-valid development source, so a larger capture would contain safety-abort signal
-but no positive task-completing intervention advantage.
+The exact-state counterfactual premise now passes on development data.  One
+frozen, non-source-specific `DetourComplete` configuration has replicated
+task-success evidence and produces three distinct glass option orderings across
+T−30/T−20/T−10/T−5.  Full source-disjoint collection was submitted as Quest job
+`9284055`; do not fit a router until its outcome-diversity audit is complete.
 
-Resume only with a controller-only development sweep whose output is one frozen,
-non-source-specific structured option (or a predeclared left/right option set).
-Do not select a controller configuration using fresh evaluation outcomes.
+The controller configuration was selected only on already exposed development
+state evidence.  Do not revise it using full train/calibration outcomes.
 
 ## D0 result: risk-only baseline
 
@@ -55,7 +54,7 @@ Every rollout receives exactly one label: `task_success`, `catastrophe`, or
 by frame.  `DetourComplete` uses privileged glass/bowl/plate geometry; any future
 result must be described as learned routing plus a structured/privileged option.
 
-## Final smoke
+## Superseded negative smoke
 
 The final protocol-correct smoke is Quest job `9264961`, generated from clean
 commit `fda0844e2b189445c6d6cbd7f8ba79f01b74bc79`:
@@ -82,7 +81,7 @@ to safe noncompletion with 0 N peak glass force, while the frozen detour remains
 catastrophic.  Thus the smoke validates the label semantics and exact-state
 branching, but it does not establish a task-completing recoverability window.
 
-## Superseded diagnostic smoke
+## Superseded replay diagnostic smoke
 
 Quest job `9264451` used captured-action replay as Base and an unverified fixed
 detour configuration.  It completed and was useful for debugging, but is not the
@@ -90,9 +89,83 @@ protocol result: long-horizon replay reproduced the original control terminal
 outcome in only 8/15 cells.  Base was consequently corrected to online frozen-VLA
 continuation.  Do not pool job `9264451` with job `9264961`.
 
-## Resume gate
+## Controller-development checkpoint and frozen option
 
-Before any full capture or router training:
+The first full development sweep job `9276191` failed before simulation because
+two manifests reused placement IDs for different source states.  The corrected
+job `9277175` was intentionally stopped after an auditable partial checkpoint:
+the completed rows already contained multiple replicated successes, so spending
+the remaining GPU time was unnecessary.
+
+The checkpoint freeze used 44 completed rollout rows and selected the stable
+success with the lowest mean peak force:
+
+`results/counterfactual_router/detour_freeze_partial_d7bbf9f_20260814T1205Z`
+
+| Parameter | Frozen value |
+|---|---:|
+| side | −1 |
+| lane margin | 0.12 m |
+| lift offset | 0.38 m |
+| descend offset | 0.04 m |
+| grasp XY offset | [0.009, −0.04] m |
+| departure clearance | 0.06 m |
+
+Config ID `b76f8d0eec34` achieved task success in 2/2 exact-state repeats,
+averaging 169 controller steps and 1.4208 N peak glass force.  The freeze is a
+development choice and must remain fixed for the full collector.
+
+## Positive protocol-correct multi-H smoke
+
+Quest job `9277740` completed in 9:05 from clean commit
+`d7bbf9f86b78fdd8f351bd8fd509ef0b6fb30999`:
+
+`results/counterfactual_router/smoke_d7bbf9f86b78_20260814T115142Z`
+
+It retained `fresh:glass_recovery_heldout_0000` as one valid development source.
+T−40 was excluded because the catastrophe occurred before that horizon.  The
+remaining four horizons and all three conditions give 12 decision states and 36
+option rollouts: 17 task successes, 5 catastrophes, and 14 safe noncompletions.
+
+| Condition / horizon | Base | DetourComplete | RetreatHold |
+|---|---|---|---|
+| glass, T−30 | catastrophe (26.88 N) | task success (2.85 N) | safe noncompletion (0 N) |
+| glass, T−20 | catastrophe (21.22 N) | task success (0.26 N) | safe noncompletion (0 N) |
+| glass, T−10 | catastrophe (25.16 N) | safe noncompletion (1.55 N) | safe noncompletion (0 N) |
+| glass, T−5 | catastrophe (2.81 N) | safe noncompletion (0 N) | catastrophe (0.70 N) |
+| off-path, T−30/20/10/5 | task success | task success | safe noncompletion |
+| no-glass, T−30/20/10 | task success | task success | safe noncompletion |
+| no-glass, T−5 | safe noncompletion | task success | safe noncompletion |
+
+The important audit counts are:
+
+- all-three-options-identical decisions: 0/12;
+- `Base catastrophe + Detour task success`: 2/12;
+- `Base catastrophe + Retreat safe noncompletion`: 3/12;
+- Base-success decisions where at least one intervention is worse: 7/12;
+- distinct glass option-ordering patterns: 3.
+
+This is unusually clean evidence for the paper premise: the same exact state
+supports different causal consequences under different options; the useful
+option changes with timing; and unnecessary intervention has an observable task
+cost.  Under utility `success=1`, `safe noncompletion=0`, `catastrophe=-lambda`,
+with Base preferred on exact utility ties, the observed choices are Base on most
+clean controls, Detour at glass T−30/T−20, either safe option at T−10 (Retreat
+has lower measured force), and Detour at T−5.  It remains a one-source exposed
+development smoke—the source also supplied the H=20 controller-development
+checkpoint—so this is within-source timing evidence, not state generalization.
+Prevalence and learned routing must be assessed on the full source-disjoint
+capture.
+
+An automatic dependent submitter (`9277743`) failed with exit 127 because the
+short-partition environment did not place `git` on `PATH`.  The smoke audit itself
+passed.  Full was then submitted from the Quest login node as job `9284055`:
+
+`results/counterfactual_router/full_d7bbf9f86b78_20260814T131220Z`
+
+## Full-capture gate and next action
+
+The original resume gate is now satisfied:
 
 1. run a CPU/simulator-heavy, VLA-light controller sweep only on the already
    exposed Oracle-success development states;
@@ -100,9 +173,10 @@ Before any full capture or router training:
    left/right options;
 3. require at least one replicated cell where Base catastrophizes and a frozen
    detour option achieves task success;
-4. rerun this smoke without changing the option contract;
-5. only then collect source-disjoint train/calibration data and fit PCA plus the
-   small temporal router.
+4. rerun this smoke without changing the option contract — passed by `9277740`;
+5. collect source-disjoint train/calibration data — queued as `9284055`.
 
-If no common option survives step 3, stop F-lite rather than hiding per-state
-oracle search inside the meaning of `DetourComplete`.
+When `9284055` completes, first report the `H × option outcome` contingency,
+all-options-identical fraction, decision-critical counts, and option dominance.
+Only then fit train-only PCA and the minimal temporal supervised router.  Do not
+change the frozen option based on the full outcomes.

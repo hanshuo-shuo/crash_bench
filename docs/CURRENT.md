@@ -98,33 +98,49 @@ The path-stable E15 code remains in the repository for provenance and tests, but
 its submission wrappers are legacy-gated. Completing experiment labels is not a
 reason to spend GPU time.
 
-### Counterfactual-router diagnostic closure
+### Counterfactual-router exact-state option evidence
 
 A source-disjoint D0 recapture now closes the old missing-artifact question: the
 primary detector reaches calibration/development frame AUC 0.898/0.883, but has
 0% exact-T−20 timely trigger rate at the low-control-FPR operating point.  Risk
 ranking therefore remains a baseline, not a deployable router.
 
-The replacement exact-state option collector has also completed a development
-smoke.  It correctly labels online Base, frozen `DetourComplete`, and
-`RetreatHold` outcomes across T−20/T−10/T−5 and matched controls.  On the valid
-glass source, Base and Detour both catastrophize at all three horizons, while
-Retreat converts the outcome to safe noncompletion.  This validates the data
-contract but provides no task-completing recovery advantage, so full collection
-and router training are stopped.  Exact provenance, result paths, and the resume
-gate are in [COUNTERFACTUAL_ROUTER_HANDOFF.md](COUNTERFACTUAL_ROUTER_HANDOFF.md).
+A development-only exact-state sweep froze one non-source-specific structured
+`DetourComplete` configuration after two identical safe task successes on an
+exposed H=20 state.  With that configuration, the protocol-correct multi-H smoke
+(Quest job `9277740`, clean commit `d7bbf9f86b78`) produced the desired timing
+boundary on one exposed development source:
+
+| Glass horizon | Base | DetourComplete | RetreatHold |
+|---|---|---|---|
+| T−30 | catastrophe | task success | safe noncompletion |
+| T−20 | catastrophe | task success | safe noncompletion |
+| T−10 | catastrophe | safe noncompletion | safe noncompletion |
+| T−5 | catastrophe | safe noncompletion | catastrophe |
+
+Across the 12 matched glass/off-path/no-glass decisions, zero have identical
+outcomes under all three options.  Seven clean-control decisions show that Base
+can succeed while Retreat sacrifices completion; two glass decisions show a
+task-completing Detour advantage.  Thus Detour is not an always-best fixed
+recovery, and option value changes with both hazard condition and intervention
+time.  This is development evidence from one source, not a generalization
+claim; the source also supplied the H=20 controller-development checkpoint.
+Full source-disjoint collection is now active as Quest job `9284055` at
+`results/counterfactual_router/full_d7bbf9f86b78_20260814T131220Z`.
+
+Exact provenance, the prior negative smoke, frozen configuration, and audit are
+in [COUNTERFACTUAL_ROUTER_HANDOFF.md](COUNTERFACTUAL_ROUTER_HANDOFF.md).
 
 ## Next experiment queue
 
 1. **Five-fold held-out online wall guard.** Fit/calibrate on four wall scenarios,
    deploy only on the fifth, and test matched off-path/no-wall controls. This is
    the highest-value generalization test.
-2. **Freeze a reusable glass recovery option before any learned routing.** This
-   is not an active GPU queue item. Resume with a controller-only sweep on
-   already exposed development states; require a replicated Base-crash/Detour-
-   success cell before full counterfactual collection. If that gate fails, stop
-   F-lite. Call any surviving result learned routing plus a structured/privileged
-   controller, not learned recovery.
+2. **Complete the source-disjoint counterfactual option collection.** Full job
+   `9284055` is queued.  On completion, audit outcome diversity before fitting
+   any model, then train only the minimal temporal supervised router.  Call the
+   result learned routing plus a structured/privileged controller, not learned
+   recovery.
 3. **OFT-specific online guard replication.** Use OFT's own probe to trigger the
    same `RetreatHold` interface.
 
