@@ -13,6 +13,7 @@ from crashbench.counterfactual_router import (
 from scripts.sweep_counterfactual_detour import build_configs, summarize_sweep
 from scripts.collect_counterfactual_option_rollouts import _apply_frozen_detour_config
 from scripts.audit_counterfactual_smoke import summarize_smoke
+from scripts.freeze_partial_detour_sweep import select_stable_success
 
 
 def test_option_outcomes_are_exhaustive_and_exclusive():
@@ -160,3 +161,22 @@ def test_smoke_audit_blocks_fixed_recovery_degeneracy():
     summary = summarize_smoke(_smoke_rows([(40, repeated), (20, repeated), (5, repeated)]))
     assert summary["diagnostics"]["at_least_two_option_ordering_patterns"] is False
     assert summary["detour_advantage_states"] == 3
+
+
+def test_partial_sweep_freezes_lowest_force_replicated_success():
+    configs = build_configs(
+        sides=[-1, 1], lane_margins=[0.12], lift_offsets=[0.30],
+        descend_offsets=[0.018], grasp_xy_offsets=[[0.009, -0.04]],
+        departure_clearance=0.06,
+    )
+    rows = []
+    for config, force in zip(configs, [4.0, 1.0]):
+        for replicate in range(2):
+            rows.append({
+                "config_id": config["config_id"], "state_id": "a",
+                "replicate": replicate, "outcome": "task_success",
+                "peak_force_n": force, "steps": 100,
+            })
+    winner = select_stable_success(rows, configs, min_replicates=2)
+    assert winner["config"]["side"] == 1.0
+    assert winner["mean_peak_force_n"] == 1.0
