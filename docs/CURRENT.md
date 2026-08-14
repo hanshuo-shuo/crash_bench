@@ -125,8 +125,19 @@ task-completing Detour advantage.  Thus Detour is not an always-best fixed
 recovery, and option value changes with both hazard condition and intervention
 time.  This is development evidence from one source, not a generalization
 claim; the source also supplied the H=20 controller-development checkpoint.
-Full source-disjoint collection is now active as Quest job `9284055` at
-`results/counterfactual_router/full_d7bbf9f86b78_20260814T131220Z`.
+
+The first full attempt, Quest job `9284055`, failed after 20:40 because LIBERO
+overwrites robosuite's horizon `done` with task success: a long structured
+option exhausted the internal episode horizon, returned `done=False`, and the
+next step raised.  Its 21 complete decisions are diagnostic only and must not be
+pooled with the completed capture.  They nevertheless cover two calibration
+sources and retain counterfactual diversity: 1/21 all-option-identical, three
+Base-catastrophe/Detour-success states, seven Base-catastrophe/Retreat-safe
+states, and eleven Base-success states where an intervention is worse.
+
+Commit `e6052c4` now checks the internal robosuite terminal flag and labels
+horizon exhaustion as safe noncompletion.  Regression smoke `9285721` is queued;
+dependent submitter `9285726` will launch a clean full rerun after that smoke.
 
 Exact provenance, the prior negative smoke, frozen configuration, and audit are
 in [COUNTERFACTUAL_ROUTER_HANDOFF.md](COUNTERFACTUAL_ROUTER_HANDOFF.md).
@@ -136,8 +147,9 @@ in [COUNTERFACTUAL_ROUTER_HANDOFF.md](COUNTERFACTUAL_ROUTER_HANDOFF.md).
 1. **Five-fold held-out online wall guard.** Fit/calibrate on four wall scenarios,
    deploy only on the fifth, and test matched off-path/no-wall controls. This is
    the highest-value generalization test.
-2. **Complete the source-disjoint counterfactual option collection.** Full job
-   `9284055` is queued.  On completion, audit outcome diversity before fitting
+2. **Complete the source-disjoint counterfactual option collection.** Regression
+   smoke `9285721` and dependent full submitter `9285726` are queued after the
+   horizon-lifecycle fix.  On completion, audit outcome diversity before fitting
    any model, then train only the minimal temporal supervised router.  Call the
    result learned routing plus a structured/privileged controller, not learned
    recovery.

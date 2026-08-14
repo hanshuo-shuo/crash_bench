@@ -163,6 +163,53 @@ passed.  Full was then submitted from the Quest login node as job `9284055`:
 
 `results/counterfactual_router/full_d7bbf9f86b78_20260814T131220Z`
 
+## First full attempt: infrastructure failure with useful partial diagnostic
+
+Job `9284055` failed after 20:40 on clean commit `d7bbf9f86b78`.  LIBERO's task
+environment replaces the robosuite `done` return with `_check_success()`.  A
+long Detour rollout could therefore reach robosuite's internal episode horizon,
+return `done=False`, and raise `executing action in terminated episode` on its
+next step.  This is a lifecycle bug, not an option-outcome rejection.
+
+The failed directory is:
+
+`results/counterfactual_router/full_d7bbf9f86b78_20260814T131220Z`
+
+It has no capture manifest or feature archive and is not admissible training
+data.  It contains 64 option rows: 21 complete decisions plus one Base-only
+incomplete decision.  The complete subset is retained only as a diagnostic:
+
+| Partial diagnostic | Count |
+|---|---:|
+| calibration source states | 2 |
+| complete decisions | 21 |
+| all-three-options identical | 1 |
+| Base catastrophe + Detour task success | 3 |
+| Base catastrophe + Retreat safe noncompletion | 7 |
+| Base success + at least one worse intervention | 11 |
+
+The 21 decisions contain seven distinct outcome patterns.  In the seven glass
+decisions, the frozen Detour succeeds at three states, safely fails to complete
+at two, and catastrophizes at two.  This reinforces—not proves—the need for a
+router rather than fixed recovery.  Because collection stopped in deterministic
+plan order and only calibration sources are represented, none of these rates is
+a paper estimate and these rows must not be pooled with the rerun.
+
+Commit `e6052c4c16ad` adds an explicit `episode_terminated()` lifecycle signal.
+Both Base and structured options now map internal-horizon exhaustion to
+`safe_noncompletion` with termination reason `robosuite_episode_horizon`, while
+LIBERO task success remains the only `done` path labeled success.  The full test
+suite passes (152 tests), including a regression that prevents a post-terminal
+step.
+
+Regression smoke job `9285721` writes to:
+
+`results/counterfactual_router/smoke_e6052c4c16ad_20260814T135842Z`
+
+Dependent short job `9285726` explicitly loads Git and will submit a new clean
+full run after smoke success.  The earlier automatic submitter failure mode
+(missing Git on `PATH`) is therefore also addressed operationally.
+
 ## Full-capture gate and next action
 
 The original resume gate is now satisfied:
@@ -174,9 +221,11 @@ The original resume gate is now satisfied:
 3. require at least one replicated cell where Base catastrophizes and a frozen
    detour option achieves task success;
 4. rerun this smoke without changing the option contract — passed by `9277740`;
-5. collect source-disjoint train/calibration data — queued as `9284055`.
+5. collect source-disjoint train/calibration data — first attempt `9284055`
+   failed on the fixed lifecycle bug; regression chain `9285721` → `9285726` is
+   queued for the clean rerun.
 
-When `9284055` completes, first report the `H × option outcome` contingency,
-all-options-identical fraction, decision-critical counts, and option dominance.
-Only then fit train-only PCA and the minimal temporal supervised router.  Do not
-change the frozen option based on the full outcomes.
+When the clean rerun completes, first report the `H × option outcome`
+contingency, all-options-identical fraction, decision-critical counts, and
+option dominance. Only then fit train-only PCA and the minimal temporal
+supervised router. Do not change the frozen option based on the full outcomes.
