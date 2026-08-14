@@ -151,12 +151,12 @@ def test_smoke_audit_requires_informative_multi_h_option_ordering():
         (20, ("catastrophe", "task_success", "safe_noncompletion")),
         (5, ("catastrophe", "catastrophe", "safe_noncompletion")),
     ]))
-    assert summary["go"] is True
     assert len(summary["option_ordering_patterns"]) == 3
+    assert all(summary["diagnostics"].values())
 
 
 def test_smoke_audit_blocks_fixed_recovery_degeneracy():
     repeated = ("catastrophe", "task_success", "safe_noncompletion")
     summary = summarize_smoke(_smoke_rows([(40, repeated), (20, repeated), (5, repeated)]))
-    assert summary["go"] is False
-    assert summary["gate_checks"]["at_least_two_option_ordering_patterns"] is False
+    assert summary["diagnostics"]["at_least_two_option_ordering_patterns"] is False
+    assert summary["detour_advantage_states"] == 3

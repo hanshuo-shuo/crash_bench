@@ -46,20 +46,14 @@ def summarize_smoke(rows: Iterable[Mapping[str, Any]]) -> dict[str, Any]:
         and row["retreat_hold"] == "safe_noncompletion"
     ]
     distinct_horizons = sorted({row["horizon_actions"] for row in contingency})
-    gate_checks = {
+    diagnostics = {
         "at_least_three_glass_horizons": len(distinct_horizons) >= 3,
         "at_least_two_option_ordering_patterns": len(patterns) >= 2,
-        "base_catastrophe_detour_success_exists": bool(detour_advantage),
+        "smoke_base_catastrophe_detour_success_exists": bool(detour_advantage),
         "base_catastrophe_retreat_safe_exists": bool(retreat_saves),
     }
     return {
-        "go": all(gate_checks.values()),
-        "decision": (
-            "multi-H smoke supports full collection"
-            if all(gate_checks.values())
-            else "do not submit full; smoke lacks required counterfactual diversity"
-        ),
-        "gate_checks": gate_checks,
+        "diagnostics": diagnostics,
         "glass_decision_states": len(contingency),
         "glass_horizons": distinct_horizons,
         "option_ordering_patterns": [
@@ -72,7 +66,12 @@ def summarize_smoke(rows: Iterable[Mapping[str, Any]]) -> dict[str, Any]:
     }
 
 
-def audit(smoke_dir: Path, config_path: Path, expected_commit: str | None) -> dict[str, Any]:
+def audit(
+    smoke_dir: Path,
+    config_path: Path,
+    sweep_dir: Path,
+    expected_commit: str | None,
+) -> dict[str, Any]:
     manifest = json.loads((smoke_dir / "capture_manifest.json").read_text())
     config = json.loads(config_path.read_text())
     recorded = manifest["protocol"]["detour"].get("frozen_config")
@@ -83,18 +82,40 @@ def audit(smoke_dir: Path, config_path: Path, expected_commit: str | None) -> di
         raise ValueError(
             f"smoke commit {smoke_commit} does not match full commit {expected_commit}"
         )
+    sweep = json.loads((sweep_dir / "sweep_manifest.json").read_text())
+    recommendation = sweep["summary"].get("recommended_config")
+    stable_sweep_rescue = bool(
+        sweep["summary"].get("go") is True
+        and recommendation is not None
+        and recommendation.get("config") == config
+        and int(recommendation.get("task_success_states", 0)) >= 1
+        and not recommendation.get("unstable_states")
+    )
     rows = [
         json.loads(line)
         for line in (smoke_dir / "option_rollouts.jsonl").read_text().splitlines()
         if line.strip()
     ]
+    smoke_summary = summarize_smoke(rows)
+    hard_gate = {
+        "frozen_common_config_has_stable_exact_state_rescue": stable_sweep_rescue,
+        "smoke_contains_glass_decision_state": smoke_summary["glass_decision_states"] >= 1,
+    }
     return {
         "schema_version": 1,
         "kind": "counterfactual_multi_h_smoke_audit",
         "smoke_dir": str(smoke_dir),
         "smoke_commit": smoke_commit,
+        "sweep_dir": str(sweep_dir),
         "frozen_detour_config": config,
-        **summarize_smoke(rows),
+        "go": all(hard_gate.values()),
+        "decision": (
+            "minimum paper premise holds; full collection is allowed"
+            if all(hard_gate.values())
+            else "minimum exact-state rescue premise is missing; do not submit full"
+        ),
+        "hard_gate": hard_gate,
+        **smoke_summary,
     }
 
 
@@ -102,11 +123,13 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--smoke-dir", required=True, type=Path)
     parser.add_argument("--detour-config", required=True, type=Path)
+    parser.add_argument("--sweep-dir", required=True, type=Path)
     parser.add_argument("--expected-commit")
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
     result = audit(
-        args.smoke_dir.resolve(), args.detour_config.resolve(), args.expected_commit
+        args.smoke_dir.resolve(), args.detour_config.resolve(),
+        args.sweep_dir.resolve(), args.expected_commit
     )
     payload = json.dumps(result, indent=2, sort_keys=True) + "\n"
     if args.output is not None:

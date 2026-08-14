@@ -21,12 +21,15 @@ OUTPUT="${CB_CF_OUTPUT:-results/counterfactual_router/${MODE}_${SHORT_COMMIT}_${
 
 if [[ "$MODE" == "full" ]]; then
   : "${CB_CF_DETOUR_CONFIG:?full requires the frozen detour config from the development sweep}"
+  : "${CB_CF_SWEEP_DIR:?full requires the successful development sweep directory}"
   : "${CB_CF_SMOKE_DIR:?full requires the protocol-correct multi-H smoke directory}"
   [[ -f "$CB_CF_DETOUR_CONFIG" ]] || { echo "missing $CB_CF_DETOUR_CONFIG" >&2; exit 2; }
+  [[ -d "$CB_CF_SWEEP_DIR" ]] || { echo "missing $CB_CF_SWEEP_DIR" >&2; exit 2; }
   [[ -d "$CB_CF_SMOKE_DIR" ]] || { echo "missing $CB_CF_SMOKE_DIR" >&2; exit 2; }
   python scripts/audit_counterfactual_smoke.py \
     --smoke-dir "$CB_CF_SMOKE_DIR" \
     --detour-config "$CB_CF_DETOUR_CONFIG" \
+    --sweep-dir "$CB_CF_SWEEP_DIR" \
     --expected-commit "$COMMIT"
 fi
 
