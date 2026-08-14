@@ -168,44 +168,44 @@ def _restore_anchor(
     return obs
 
 
-def _run_base_replay(
+def _run_base_continue(
     env: LiberoEnv,
+    policy,
     obs: dict,
-    scan: Mapping[str, Any],
-    anchor_index: int,
+    instruction: str,
+    glasses: list[dict],
+    *,
+    max_steps: int,
 ) -> dict[str, Any]:
-    glasses = list(scan["glasses"])
     crash = None
     if glasses:
         crash = build_any(_glass_predicate_specs(glasses))
         _prime_glass_predicates(crash, env.sim_view)
     peak_force = 0.0
-    collision_step = None
-    succeeded = False
-    suffix = scan["rows"][anchor_index:]
-    for step, row in enumerate(suffix):
-        action = np.asarray(row["nominal_action"], dtype=np.float32)
+    for step in range(max_steps):
+        policy_obs = env.policy_observation(obs, policy.resize_size)
+        action = np.asarray(policy.act(policy_obs, instruction), dtype=np.float32)
         obs, _, done, _ = env.step(action.tolist())
         force = 0.0 if not glasses else _glass_force(env.sim_view, glasses)
         peak_force = max(peak_force, force)
         if crash is not None and crash(env.sim_view):
-            collision_step = step
-            break
+            return {
+                "crashed": True, "succeeded": False, "steps": step + 1,
+                "peak_force_n": float(peak_force),
+                "continuation_mode": "online_frozen_vla",
+            }
         if done:
-            succeeded = True
-            break
-    crashed = collision_step is not None
+            return {
+                "crashed": False, "succeeded": True, "steps": step + 1,
+                "peak_force_n": float(peak_force),
+                "continuation_mode": "online_frozen_vla",
+            }
     return {
-        "crashed": crashed,
-        "succeeded": succeeded,
-        "steps": step + 1 if suffix else 0,
+        "crashed": False,
+        "succeeded": False,
+        "steps": max_steps,
         "peak_force_n": float(peak_force),
-        "collision_step": collision_step,
-        "replay_actions": len(suffix),
-        "reproduced_scan_terminal": bool(
-            crashed == bool(scan["crashed"])
-            and succeeded == bool(scan["succeeded"])
-        ),
+        "continuation_mode": "online_frozen_vla",
     }
 
 
@@ -422,7 +422,11 @@ def collect(args: argparse.Namespace) -> dict[str, Any]:
                         label=f"{decision_id}:{option}",
                     )
                     if option == "base_continue":
-                        result = _run_base_replay(env, obs, scan, anchor_index)
+                        policy.reset()
+                        result = _run_base_continue(
+                            env, policy, obs, placement.instruction,
+                            list(scan["glasses"]), max_steps=args.base_steps,
+                        )
                     elif option == "detour_complete":
                         controller_glass = (
                             placement.on_path_glass if condition == "noglass"
@@ -483,7 +487,7 @@ def collect(args: argparse.Namespace) -> dict[str, Any]:
         "history_length": args.history_length,
         "conditions": list(CONDITIONS),
         "options": list(OPTIONS),
-        "base": "exact replay of captured frozen-OpenVLA continuation",
+        "base": "online frozen-OpenVLA continuation from the exact restored state",
         "detour": {
             "side": args.detour_side,
             "lane_margin": args.detour_lane_margin,
@@ -549,6 +553,7 @@ def main() -> None:
     parser.add_argument("--rollout-seed", type=int, default=0)
     parser.add_argument("--settle-steps", type=int, default=10)
     parser.add_argument("--scan-steps", type=int, default=220)
+    parser.add_argument("--base-steps", type=int, default=220)
     parser.add_argument("--detour-steps", type=int, default=900)
     parser.add_argument("--retreat-steps", type=int, default=80)
     parser.add_argument("--history-length", type=int, default=8)
@@ -563,10 +568,10 @@ def main() -> None:
     parser.add_argument("--placement-key", action="append")
     parser.add_argument("--max-placements", type=int)
     parser.add_argument("--target-valid-placements", type=int)
-    parser.add_argument("--detour-side", type=float, default=-1.0)
-    parser.add_argument("--detour-lane-margin", type=float, default=0.18)
-    parser.add_argument("--detour-lift-offset", type=float, default=0.38)
-    parser.add_argument("--detour-descend-offset", type=float, default=0.04)
+    parser.add_argument("--detour-side", type=float, default=1.0)
+    parser.add_argument("--detour-lane-margin", type=float, default=0.12)
+    parser.add_argument("--detour-lift-offset", type=float, default=0.30)
+    parser.add_argument("--detour-descend-offset", type=float, default=0.018)
     parser.add_argument("--detour-leg-cap", type=int, default=140)
     parser.add_argument("--detour-departure-clearance", type=float, default=0.06)
     parser.add_argument("--retreat-back", type=float, default=0.14)

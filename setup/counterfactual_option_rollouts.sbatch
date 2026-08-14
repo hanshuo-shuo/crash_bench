@@ -60,9 +60,9 @@ if [[ "$MODE" == "smoke" ]]; then
   # not grounds for an empty smoke dataset.
   SELECTION_ARGS=(
     --detector-splits development
-    --placement-key fresh:glass_recovery_train_0000
-    --placement-key fresh:glass_recovery_validation_0000
-    --placement-key fresh:glass_recovery_heldout_0002
+    --placement-key fresh:glass_recovery_heldout_0000
+    --placement-key fresh:glass_recovery_heldout_0004
+    --placement-key fresh:glass_recovery_train_0003
     --target-valid-placements 1
   )
 fi
