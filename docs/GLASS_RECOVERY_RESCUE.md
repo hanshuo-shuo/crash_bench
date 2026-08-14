@@ -1,4 +1,11 @@
-# Glass recovery rescue: D0 → D1 → F′
+# Glass recovery rescue: D0 → counterfactual routing
+
+> **2026-08-14 status:** D0 and the counterfactual collector smoke are complete.
+> D0 has ranking signal but no deployable T−20 operating point.  The exact-state
+> option collector is valid, but the frozen detour has 0/3 task successes on the
+> valid glass development states.  Full collection and router training are
+> stopped until a non-source-specific structured option passes the controller
+> freeze gate.  See [COUNTERFACTUAL_ROUTER_HANDOFF.md](COUNTERFACTUAL_ROUTER_HANDOFF.md).
 
 This branch preserves the old D/E/F experiment labels as history. New work uses
 new artifacts and names the learned component precisely:
@@ -96,11 +103,23 @@ source states, and a nonzero feasible operating point.
 
 ## D1: development-only online composition
 
-D1 is intentionally not submitted until D0 passes. It will connect the frozen
-`glass_detector.npz` to `DetourComplete` on the two existing development states
-and matched controls. This remains a privileged component diagnostic because
-the structured controller uses declared glass/task geometry. It must not be
-reported as learned recovery or as a final paper number.
+D1 is closed as a no-go: the completed D0 operating gate failed.  It must not be
+resubmitted merely to complete an experiment label.
+
+## Counterfactual option routing smoke
+
+The replacement direction learns option outcomes rather than a binary risk
+threshold.  Its collector runs online Base, frozen `DetourComplete`, and
+`RetreatHold` from byte-identical multi-H states and records task success,
+catastrophe, or safe noncompletion.  The implementation and final smoke are
+complete, but full collection is gated on a task-completing frozen option.
+
+The final smoke validates exact-state branching, eight-frame temporal features,
+source-state split enforcement, online Base continuation, and three-way outcome
+labels.  It does not validate the current detour: Base and Detour both
+catastrophize at T−20, T−10, and T−5 on the valid development source.  Do not fit
+a router to this smoke because it contains no positive task-completing advantage
+cell.
 
 ## E smoke: strict side lane
 

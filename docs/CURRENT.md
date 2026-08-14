@@ -98,16 +98,33 @@ The path-stable E15 code remains in the repository for provenance and tests, but
 its submission wrappers are legacy-gated. Completing experiment labels is not a
 reason to spend GPU time.
 
+### Counterfactual-router diagnostic closure
+
+A source-disjoint D0 recapture now closes the old missing-artifact question: the
+primary detector reaches calibration/development frame AUC 0.898/0.883, but has
+0% exact-T−20 timely trigger rate at the low-control-FPR operating point.  Risk
+ranking therefore remains a baseline, not a deployable router.
+
+The replacement exact-state option collector has also completed a development
+smoke.  It correctly labels online Base, frozen `DetourComplete`, and
+`RetreatHold` outcomes across T−20/T−10/T−5 and matched controls.  On the valid
+glass source, Base and Detour both catastrophize at all three horizons, while
+Retreat converts the outcome to safe noncompletion.  This validates the data
+contract but provides no task-completing recovery advantage, so full collection
+and router training are stopped.  Exact provenance, result paths, and the resume
+gate are in [COUNTERFACTUAL_ROUTER_HANDOFF.md](COUNTERFACTUAL_ROUTER_HANDOFF.md).
+
 ## Next experiment queue
 
 1. **Five-fold held-out online wall guard.** Fit/calibrate on four wall scenarios,
    deploy only on the fifth, and test matched off-path/no-wall controls. This is
    the highest-value generalization test.
-2. **Glass-specific learned timing → structured task-completing controller.** Use
-   a glass probe with `DetourComplete`, first on the two development pairs, then on
-   a small fresh certified cohort. Do not use the wall probe: its glass AUC is
-   0.359. Call the result learned detector + structured controller, not learned
-   recovery.
+2. **Freeze a reusable glass recovery option before any learned routing.** This
+   is not an active GPU queue item. Resume with a controller-only sweep on
+   already exposed development states; require a replicated Base-crash/Detour-
+   success cell before full counterfactual collection. If that gate fails, stop
+   F-lite. Call any surviving result learned routing plus a structured/privileged
+   controller, not learned recovery.
 3. **OFT-specific online guard replication.** Use OFT's own probe to trigger the
    same `RetreatHold` interface.
 
