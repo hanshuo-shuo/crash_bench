@@ -55,9 +55,16 @@ COMMIT="$($GIT_BIN rev-parse HEAD)"
 
 SELECTION_ARGS=()
 if [[ "$MODE" == "smoke" ]]; then
-  # Use one of the independent development placements, where exact-state
-  # DetourComplete behavior has previously been characterized.
-  SELECTION_ARGS=(--detector-splits development --max-placements 1)
+  # Try predeclared development candidates until one produces a usable Base
+  # catastrophe.  A single stochastic no-crash rollout is an audited exclusion,
+  # not grounds for an empty smoke dataset.
+  SELECTION_ARGS=(
+    --detector-splits development
+    --placement-key fresh:glass_recovery_train_0000
+    --placement-key fresh:glass_recovery_validation_0000
+    --placement-key fresh:glass_recovery_heldout_0002
+    --target-valid-placements 1
+  )
 fi
 
 python scripts/collect_counterfactual_option_rollouts.py \

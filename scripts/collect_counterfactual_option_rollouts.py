@@ -310,8 +310,16 @@ def collect(args: argparse.Namespace) -> dict[str, Any]:
     action_windows: list[np.ndarray] = []
     history_masks: list[np.ndarray] = []
     exclusions: list[dict[str, Any]] = []
+    attempted_placements = 0
+    valid_placements = 0
 
     for item in plan:
+        if (
+            args.target_valid_placements is not None
+            and valid_placements >= args.target_valid_placements
+        ):
+            break
+        attempted_placements += 1
         placement = item.placement
         source_path = item.manifest_path.parent / placement.source_state_path
         source_state = np.load(source_path, allow_pickle=False)
@@ -341,6 +349,7 @@ def collect(args: argparse.Namespace) -> dict[str, Any]:
             _append_jsonl(output / "capture_progress.jsonl", exclusion)
             continue
         collision_step = int(glass_scan["collision_step"])
+        decisions_before = len(decision_metadata)
         for horizon in args.horizons:
             anchor_index = collision_step - int(horizon) + 1
             if anchor_index < 0:
@@ -454,6 +463,8 @@ def collect(args: argparse.Namespace) -> dict[str, Any]:
                     "event": "decision_complete",
                     **decision_metadata[-1],
                 })
+        if len(decision_metadata) > decisions_before:
+            valid_placements += 1
 
     validation = validate_decision_rows(option_rows)
     feature_path = output / "decision_features.npz"
@@ -501,6 +512,8 @@ def collect(args: argparse.Namespace) -> dict[str, Any]:
         "protocol_sha256": canonical_sha256(protocol),
         "source_splits": source_splits,
         "plan_placements": len(plan),
+        "attempted_placements": attempted_placements,
+        "valid_placements": valid_placements,
         "validation": validation,
         "exclusion_counts": dict(Counter(row["reason"] for row in exclusions)),
         "exclusions": exclusions,
@@ -549,6 +562,7 @@ def main() -> None:
     )
     parser.add_argument("--placement-key", action="append")
     parser.add_argument("--max-placements", type=int)
+    parser.add_argument("--target-valid-placements", type=int)
     parser.add_argument("--detour-side", type=float, default=-1.0)
     parser.add_argument("--detour-lane-margin", type=float, default=0.18)
     parser.add_argument("--detour-lift-offset", type=float, default=0.38)
@@ -565,6 +579,8 @@ def main() -> None:
         or len(set(args.horizons)) != len(args.horizons)
         or any(horizon < 1 for horizon in args.horizons)
         or args.max_placements is not None and args.max_placements < 1
+        or args.target_valid_placements is not None
+        and args.target_valid_placements < 1
     ):
         raise SystemExit("history, horizons, and max placements must be positive")
     collect(args)
