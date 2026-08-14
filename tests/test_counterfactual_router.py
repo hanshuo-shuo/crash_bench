@@ -12,6 +12,7 @@ from crashbench.counterfactual_router import (
 )
 from scripts.sweep_counterfactual_detour import build_configs, summarize_sweep
 from scripts.collect_counterfactual_option_rollouts import _apply_frozen_detour_config
+from scripts.collect_counterfactual_option_rollouts import _run_structured_option
 from scripts.audit_counterfactual_smoke import summarize_smoke
 from scripts.freeze_partial_detour_sweep import select_stable_success
 
@@ -180,3 +181,34 @@ def test_partial_sweep_freezes_lowest_force_replicated_success():
     winner = select_stable_success(rows, configs, min_replicates=2)
     assert winner["config"]["side"] == 1.0
     assert winner["mean_peak_force_n"] == 1.0
+
+
+def test_structured_option_labels_internal_horizon_as_noncompletion():
+    class FakeEnv:
+        def __init__(self):
+            self.terminated = False
+
+        def episode_terminated(self):
+            return self.terminated
+
+        def step(self, action):
+            self.terminated = True
+            return {}, 0.0, False, {}
+
+    class FakeController:
+        i = 3
+
+        def engage(self, obs):
+            pass
+
+        def step(self, obs):
+            return np.zeros(7, dtype=np.float32)
+
+    result = _run_structured_option(
+        FakeEnv(), {}, [], FakeController(), max_steps=10
+    )
+    assert result == {
+        "crashed": False, "succeeded": False, "steps": 1,
+        "peak_force_n": 0.0, "controller_final_stage": 3,
+        "termination": "robosuite_episode_horizon",
+    }

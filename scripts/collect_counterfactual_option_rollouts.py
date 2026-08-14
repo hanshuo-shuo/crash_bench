@@ -183,6 +183,13 @@ def _run_base_continue(
         _prime_glass_predicates(crash, env.sim_view)
     peak_force = 0.0
     for step in range(max_steps):
+        if env.episode_terminated():
+            return {
+                "crashed": False, "succeeded": False, "steps": step,
+                "peak_force_n": float(peak_force),
+                "continuation_mode": "online_frozen_vla",
+                "termination": "robosuite_episode_horizon",
+            }
         policy_obs = env.policy_observation(obs, policy.resize_size)
         action = np.asarray(policy.act(policy_obs, instruction), dtype=np.float32)
         obs, _, done, _ = env.step(action.tolist())
@@ -199,6 +206,13 @@ def _run_base_continue(
                 "crashed": False, "succeeded": True, "steps": step + 1,
                 "peak_force_n": float(peak_force),
                 "continuation_mode": "online_frozen_vla",
+            }
+        if env.episode_terminated():
+            return {
+                "crashed": False, "succeeded": False, "steps": step + 1,
+                "peak_force_n": float(peak_force),
+                "continuation_mode": "online_frozen_vla",
+                "termination": "robosuite_episode_horizon",
             }
     return {
         "crashed": False,
@@ -224,6 +238,13 @@ def _run_structured_option(
     peak_force = 0.0
     controller.engage(obs)
     for step in range(max_steps):
+        if env.episode_terminated():
+            return {
+                "crashed": False, "succeeded": False, "steps": step,
+                "peak_force_n": float(peak_force),
+                "controller_final_stage": getattr(controller, "i", None),
+                "termination": "robosuite_episode_horizon",
+            }
         action = np.asarray(controller.step(obs), dtype=np.float32)
         obs, _, done, _ = env.step(action.tolist())
         force = 0.0 if not glasses else _glass_force(env.sim_view, glasses)
@@ -239,6 +260,13 @@ def _run_structured_option(
                 "crashed": False, "succeeded": True, "steps": step + 1,
                 "peak_force_n": float(peak_force),
                 "controller_final_stage": getattr(controller, "i", None),
+            }
+        if env.episode_terminated():
+            return {
+                "crashed": False, "succeeded": False, "steps": step + 1,
+                "peak_force_n": float(peak_force),
+                "controller_final_stage": getattr(controller, "i", None),
+                "termination": "robosuite_episode_horizon",
             }
     return {
         "crashed": False, "succeeded": False, "steps": max_steps,

@@ -811,6 +811,19 @@ class LiberoEnv:
         self.sim_view.update(obs, done=done)
         return obs, reward, done, info
 
+    def episode_terminated(self) -> bool:
+        """Return robosuite's internal terminal flag, including its horizon.
+
+        LIBERO overwrites the ``done`` returned by robosuite with task success.
+        Consequently a horizon termination can be returned as ``done=False``;
+        the following step then raises ``executing action in terminated
+        episode``.  Long structured options use this separate lifecycle signal
+        to label the rollout safe noncompletion without confusing horizon
+        exhaustion with task success.
+        """
+
+        return bool(getattr(self._raw_env(), "done", False))
+
     def render(self, obs, resize_size):
         from experiments.robot.libero.libero_utils import get_libero_image
         return get_libero_image(obs, resize_size)
