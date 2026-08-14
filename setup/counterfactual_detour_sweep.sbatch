@@ -16,7 +16,6 @@ set -euo pipefail
 
 OUTPUT="${CB_CF_SWEEP_OUTPUT:?set CB_CF_SWEEP_OUTPUT}"
 REPO_ROOT="${CB_REPO_ROOT:-$HOME/crash_bench}"
-EXPOSED_PLACEMENTS="${CB_D0_EXPOSED_PLACEMENTS:-results/glass_recovery_v2/pilot_b_task0_20260811_r5/frontier_placements/placements.json}"
 DEVELOPMENT_PLACEMENTS="${CB_D0_DEVELOPMENT_PLACEMENTS:-results/glass_recovery_v2/pilot_b_fresh_h20_20260812_r2/frontier_placements/placements.json}"
 PAIR_ROOT="${CB_CF_PAIR_ROOT:-results/glass_recovery_v2/pilot_b_fresh_h20_20260812_r2/frontier_task0/h_20/heldout}"
 PAIR_0000="${CB_CF_PAIR_0000:-$PAIR_ROOT/glass_recovery_heldout_0000__attempt_cc9dda351574b9f620fef5fd772e64cf864972ded4b8cac141903a68f5aa0191}"
@@ -39,7 +38,6 @@ COMMIT="$($GIT_BIN rev-parse HEAD)"
 [[ ! -e "$OUTPUT" ]]
 
 python scripts/sweep_counterfactual_detour.py \
-  --placements "$EXPOSED_PLACEMENTS" \
   --placements "$DEVELOPMENT_PLACEMENTS" \
   --pair-dir "$PAIR_0000" \
   --pair-dir "$PAIR_0004" \
