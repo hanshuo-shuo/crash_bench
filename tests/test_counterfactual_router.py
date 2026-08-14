@@ -12,6 +12,7 @@ from crashbench.counterfactual_router import (
 )
 from scripts.sweep_counterfactual_detour import build_configs, summarize_sweep
 from scripts.collect_counterfactual_option_rollouts import _apply_frozen_detour_config
+from scripts.audit_counterfactual_smoke import summarize_smoke
 
 
 def test_option_outcomes_are_exhaustive_and_exclusive():
@@ -128,3 +129,34 @@ def test_frozen_detour_config_is_applied_without_partial_defaults(tmp_path):
     assert _apply_frozen_detour_config(args) == config
     assert args.detour_side == -1.0
     assert args.detour_grasp_xy_offset == [-0.003, -0.05]
+
+
+def _smoke_rows(patterns):
+    rows = []
+    for index, (horizon, outcomes) in enumerate(patterns):
+        for option, outcome in zip(
+            ("base_continue", "detour_complete", "retreat_hold"), outcomes
+        ):
+            rows.append({
+                "decision_id": f"d{index}", "placement_key": "fresh:p0",
+                "source_state_sha256": "source", "condition": "glass",
+                "horizon_actions": horizon, "option": option, "outcome": outcome,
+            })
+    return rows
+
+
+def test_smoke_audit_requires_informative_multi_h_option_ordering():
+    summary = summarize_smoke(_smoke_rows([
+        (40, ("task_success", "task_success", "safe_noncompletion")),
+        (20, ("catastrophe", "task_success", "safe_noncompletion")),
+        (5, ("catastrophe", "catastrophe", "safe_noncompletion")),
+    ]))
+    assert summary["go"] is True
+    assert len(summary["option_ordering_patterns"]) == 3
+
+
+def test_smoke_audit_blocks_fixed_recovery_degeneracy():
+    repeated = ("catastrophe", "task_success", "safe_noncompletion")
+    summary = summarize_smoke(_smoke_rows([(40, repeated), (20, repeated), (5, repeated)]))
+    assert summary["go"] is False
+    assert summary["gate_checks"]["at_least_two_option_ordering_patterns"] is False
