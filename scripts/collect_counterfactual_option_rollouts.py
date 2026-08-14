@@ -260,9 +260,38 @@ def _detour_controller(obs: Mapping[str, Any], glass: dict, args: argparse.Names
         target_name=TARGET,
         orientation_target=None,
         path_aligned=True,
-        grasp_xy_offset=DEFAULT_BOWL_GRASP_OFFSET[:2],
+        grasp_xy_offset=args.detour_grasp_xy_offset,
         departure_clearance=args.detour_departure_clearance,
     )
+
+
+def _apply_frozen_detour_config(args: argparse.Namespace) -> dict[str, Any] | None:
+    if args.detour_config is None:
+        return None
+    path = Path(args.detour_config).resolve()
+    config = json.loads(path.read_text())
+    required = {
+        "side", "lane_margin", "lift_offset", "descend_offset",
+        "grasp_xy_offset", "departure_clearance", "orientation_target",
+        "path_aligned",
+    }
+    if set(config) != required:
+        raise ValueError(
+            f"frozen detour config keys must be exactly {sorted(required)}; "
+            f"got {sorted(config)}"
+        )
+    if config["orientation_target"] is not None or config["path_aligned"] is not True:
+        raise ValueError("counterfactual Detour requires null orientation and path alignment")
+    grasp_xy = [float(value) for value in config["grasp_xy_offset"]]
+    if len(grasp_xy) != 2:
+        raise ValueError("frozen detour grasp_xy_offset must contain two values")
+    args.detour_side = float(config["side"])
+    args.detour_lane_margin = float(config["lane_margin"])
+    args.detour_lift_offset = float(config["lift_offset"])
+    args.detour_descend_offset = float(config["descend_offset"])
+    args.detour_grasp_xy_offset = grasp_xy
+    args.detour_departure_clearance = float(config["departure_clearance"])
+    return config
 
 
 def _append_jsonl(path: Path, row: Mapping[str, Any]) -> None:
@@ -271,6 +300,7 @@ def _append_jsonl(path: Path, row: Mapping[str, Any]) -> None:
 
 
 def collect(args: argparse.Namespace) -> dict[str, Any]:
+    frozen_detour_config = _apply_frozen_detour_config(args)
     output = Path(args.output).resolve()
     if output.exists() and any(output.iterdir()) and not args.overwrite:
         raise SystemExit(f"refusing to overwrite non-empty {output}; pass --overwrite")
@@ -495,9 +525,10 @@ def collect(args: argparse.Namespace) -> dict[str, Any]:
             "descend_offset": args.detour_descend_offset,
             "leg_cap": args.detour_leg_cap,
             "departure_clearance": args.detour_departure_clearance,
-            "grasp_xy_offset": list(DEFAULT_BOWL_GRASP_OFFSET[:2]),
+            "grasp_xy_offset": list(args.detour_grasp_xy_offset),
             "path_aligned": True,
             "privileged_geometry": True,
+            "frozen_config": frozen_detour_config,
         },
         "retreat": {"back": args.retreat_back, "up": args.retreat_up},
         "terminal_outcomes": [
@@ -574,6 +605,14 @@ def main() -> None:
     parser.add_argument("--detour-descend-offset", type=float, default=0.018)
     parser.add_argument("--detour-leg-cap", type=int, default=140)
     parser.add_argument("--detour-departure-clearance", type=float, default=0.06)
+    parser.add_argument(
+        "--detour-grasp-xy-offset", type=float, nargs=2,
+        default=list(DEFAULT_BOWL_GRASP_OFFSET[:2]),
+    )
+    parser.add_argument(
+        "--detour-config",
+        help="frozen_detour_config.json emitted by the development-only sweep",
+    )
     parser.add_argument("--retreat-back", type=float, default=0.14)
     parser.add_argument("--retreat-up", type=float, default=0.10)
     parser.add_argument("--overwrite", action="store_true")

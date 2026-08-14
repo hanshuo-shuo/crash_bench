@@ -1,3 +1,6 @@
+import argparse
+import json
+
 import numpy as np
 import pytest
 
@@ -7,6 +10,8 @@ from crashbench.counterfactual_router import (
     temporal_window,
     validate_decision_rows,
 )
+from scripts.sweep_counterfactual_detour import build_configs, summarize_sweep
+from scripts.collect_counterfactual_option_rollouts import _apply_frozen_detour_config
 
 
 def test_option_outcomes_are_exhaustive_and_exclusive():
@@ -67,3 +72,59 @@ def test_option_table_rejects_source_split_leakage():
     rows.extend(_rows(source="a", split="development"))
     with pytest.raises(ValueError, match="leaks across"):
         validate_decision_rows(rows)
+
+
+def test_detour_sweep_recommends_one_common_stable_config():
+    configs = build_configs(
+        sides=[-1, 1], lane_margins=[0.12], lift_offsets=[0.30],
+        descend_offsets=[0.018], grasp_xy_offsets=[[0.009, -0.04]],
+        departure_clearance=0.06,
+    )
+    rows = []
+    for config in configs:
+        for state in ("a", "b"):
+            outcome = (
+                "task_success"
+                if config["side"] == 1 and state == "a"
+                else "safe_noncompletion"
+            )
+            for replicate in range(2):
+                rows.append({
+                    "config_id": config["config_id"], "state_id": state,
+                    "replicate": replicate, "outcome": outcome,
+                })
+    summary = summarize_sweep(rows, configs)
+    assert summary["go"] is True
+    assert summary["recommended_config"]["config"]["side"] == 1.0
+    assert summary["recommended_config"]["task_success_states"] == 1
+
+
+def test_detour_sweep_rejects_replicate_instability():
+    configs = build_configs(
+        sides=[1], lane_margins=[0.12], lift_offsets=[0.30],
+        descend_offsets=[0.018], grasp_xy_offsets=[[0.009, -0.04]],
+        departure_clearance=0.06,
+    )
+    rows = [
+        {"config_id": configs[0]["config_id"], "state_id": "a", "replicate": 0,
+         "outcome": "task_success"},
+        {"config_id": configs[0]["config_id"], "state_id": "a", "replicate": 1,
+         "outcome": "safe_noncompletion"},
+    ]
+    summary = summarize_sweep(rows, configs)
+    assert summary["go"] is False
+
+
+def test_frozen_detour_config_is_applied_without_partial_defaults(tmp_path):
+    config = {
+        "side": -1.0, "lane_margin": 0.18, "lift_offset": 0.38,
+        "descend_offset": 0.04, "grasp_xy_offset": [-0.003, -0.05],
+        "departure_clearance": 0.06, "orientation_target": None,
+        "path_aligned": True,
+    }
+    path = tmp_path / "frozen.json"
+    path.write_text(json.dumps(config))
+    args = argparse.Namespace(detour_config=str(path))
+    assert _apply_frozen_detour_config(args) == config
+    assert args.detour_side == -1.0
+    assert args.detour_grasp_xy_offset == [-0.003, -0.05]

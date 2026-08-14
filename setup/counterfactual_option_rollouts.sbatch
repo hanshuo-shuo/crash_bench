@@ -54,6 +54,11 @@ COMMIT="$($GIT_BIN rev-parse HEAD)"
 [[ -f "$DEVELOPMENT_PLACEMENTS" ]] || { echo "missing $DEVELOPMENT_PLACEMENTS" >&2; exit 2; }
 
 SELECTION_ARGS=()
+DETOUR_CONFIG_ARGS=()
+if [[ -n "${CB_CF_DETOUR_CONFIG:-}" ]]; then
+  [[ -f "$CB_CF_DETOUR_CONFIG" ]] || { echo "missing $CB_CF_DETOUR_CONFIG" >&2; exit 2; }
+  DETOUR_CONFIG_ARGS=(--detour-config "$CB_CF_DETOUR_CONFIG")
+fi
 if [[ "$MODE" == "smoke" ]]; then
   # Try predeclared development candidates until one produces a usable Base
   # catastrophe.  A single stochastic no-crash rollout is an audited exclusion,
@@ -77,6 +82,7 @@ python scripts/collect_counterfactual_option_rollouts.py \
   --rollout-seed 0 \
   --horizons 40 30 20 10 5 \
   --history-length 8 \
+  "${DETOUR_CONFIG_ARGS[@]}" \
   "${SELECTION_ARGS[@]}"
 
 echo "DONE mode=$MODE output=$OUTPUT @ $(date)"
