@@ -47,6 +47,7 @@ from scripts.capture_glass_detector_placements import (
     build_capture_plan,
 )
 from scripts.collect_glass_recovery_pairs import (
+    CandidateRejected,
     DEFAULT_BOWL_GRASP_OFFSET,
     PLATE,
     TARGET,
@@ -148,6 +149,30 @@ def _expected_hashes(scan: Mapping[str, Any], anchor_index: int) -> dict[str, st
             str(scan["model_xml"]).encode("utf-8")
         ).hexdigest(),
     }
+
+
+def _branch_start_catastrophic(
+    env: LiberoEnv,
+    scan: Mapping[str, Any],
+    anchor_index: int,
+    expected_hashes: Mapping[str, str],
+    *,
+    label: str,
+) -> bool:
+    """Reject anchors where catastrophe predates every branch action."""
+
+    glasses = list(scan["glasses"])
+    if not glasses:
+        return False
+    _restore_anchor(env, scan, anchor_index, expected_hashes, label=label)
+    crash = build_any(_glass_predicate_specs(glasses))
+    try:
+        _prime_glass_predicates(crash, env.sim_view)
+    except CandidateRejected as exc:
+        if exc.reason == "invalid_initial_state":
+            return True
+        raise
+    return False
 
 
 def _restore_anchor(
@@ -388,14 +413,25 @@ def collect(args: argparse.Namespace) -> dict[str, Any]:
             envs[env_key] = LiberoEnv(*env_key, seed=args.rollout_seed)
         env = envs[env_key]
         scans = {}
-        for condition in CONDITIONS:
-            _seed_everything(args.rollout_seed)
-            env.seed(args.rollout_seed)
-            policy.reset()
-            scans[condition] = _scan_condition(
-                env, policy, source_state, placement, condition,
-                settle_steps=args.settle_steps, max_steps=args.scan_steps,
-            )
+        try:
+            for condition in CONDITIONS:
+                _seed_everything(args.rollout_seed)
+                env.seed(args.rollout_seed)
+                policy.reset()
+                scans[condition] = _scan_condition(
+                    env, policy, source_state, placement, condition,
+                    settle_steps=args.settle_steps, max_steps=args.scan_steps,
+                )
+        except CandidateRejected as exc:
+            exclusion = {
+                "placement_key": item.key,
+                "source_state_sha256": placement.source_state_sha256,
+                "reason": f"scan_{exc.reason}",
+                "detail": str(exc),
+            }
+            exclusions.append(exclusion)
+            _append_jsonl(output / "capture_progress.jsonl", exclusion)
+            continue
         glass_scan = scans["glass"]
         if not glass_scan["crashed"]:
             exclusion = {
@@ -430,6 +466,20 @@ def collect(args: argparse.Namespace) -> dict[str, Any]:
                     })
                     continue
                 expected = _expected_hashes(scan, anchor_index)
+                if _branch_start_catastrophic(
+                    env, scan, anchor_index, expected,
+                    label=f"{item.key}:{condition}:H{horizon}:preflight",
+                ):
+                    exclusion = {
+                        "placement_key": item.key,
+                        "source_state_sha256": placement.source_state_sha256,
+                        "horizon_actions": int(horizon),
+                        "condition": condition,
+                        "reason": "branch_start_catastrophic",
+                    }
+                    exclusions.append(exclusion)
+                    _append_jsonl(output / "capture_progress.jsonl", exclusion)
+                    continue
                 feature_index = len(decision_metadata)
                 hidden, history_mask = temporal_window(
                     [row["hidden"] for row in scan["rows"]],

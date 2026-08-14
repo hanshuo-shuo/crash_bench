@@ -13,6 +13,7 @@ from crashbench.counterfactual_router import (
 from scripts.sweep_counterfactual_detour import build_configs, summarize_sweep
 from scripts.collect_counterfactual_option_rollouts import _apply_frozen_detour_config
 from scripts.collect_counterfactual_option_rollouts import _run_structured_option
+from scripts.collect_counterfactual_option_rollouts import _branch_start_catastrophic
 from scripts.audit_counterfactual_smoke import summarize_smoke
 from scripts.freeze_partial_detour_sweep import select_stable_success
 
@@ -212,3 +213,30 @@ def test_structured_option_labels_internal_horizon_as_noncompletion():
         "peak_force_n": 0.0, "controller_final_stage": 3,
         "termination": "robosuite_episode_horizon",
     }
+
+
+def test_branch_start_catastrophe_is_an_exclusion(monkeypatch):
+    class FakeEnv:
+        sim_view = object()
+
+    monkeypatch.setattr(
+        "scripts.collect_counterfactual_option_rollouts._restore_anchor",
+        lambda *args, **kwargs: {},
+    )
+    monkeypatch.setattr(
+        "scripts.collect_counterfactual_option_rollouts.build_any",
+        lambda specs: object(),
+    )
+
+    def reject(crash, sim):
+        from scripts.collect_glass_recovery_pairs import CandidateRejected
+        raise CandidateRejected("invalid_initial_state", "already catastrophic")
+
+    monkeypatch.setattr(
+        "scripts.collect_counterfactual_option_rollouts._prime_glass_predicates",
+        reject,
+    )
+    assert _branch_start_catastrophic(
+        FakeEnv(), {"glasses": [{"name": "g", "pos": [0, 0, 0], "size": [1, 1]}]},
+        0, {}, label="test",
+    ) is True
