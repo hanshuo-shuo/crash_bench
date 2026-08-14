@@ -72,6 +72,9 @@ results/phase2_task_witness/*.gif
 # Promote only reviewed summaries after the smoke/full run is complete.
 /results/glass_recovery_v1/
 /results/glass_recovery_v2/
+# Exact-state option rollouts contain raw temporal activations and branch logs.
+# Promote only reviewed aggregate summaries after analysis.
+/results/counterfactual_router/
 # Rebuilt DOCX reports are disposable outputs; dated frozen copies live in
 # docs/archive/preliminary_reports/ and must never be overwritten by builders.
 /results/generated_reports/
