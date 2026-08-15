@@ -1,0 +1,1826 @@
+{
+  "attempted_placements": 35,
+  "by_condition": {
+    "glass": {
+      "all_options_identical": 13,
+      "base_catastrophe_detour_success": 22,
+      "base_catastrophe_retreat_safe": 73,
+      "base_success_detour_worse": 1,
+      "base_success_retreat_worse": 2,
+      "counterfactual_oracle": {
+        "choice_counts_tie_break_base": {
+          "base_continue": 19,
+          "detour_complete": 59,
+          "retreat_hold": 23
+        },
+        "intervention_rate_tie_break_base": 0.8118811881188119,
+        "mean_utility_gain_over_base": 4.2772277227722775,
+        "mean_utility_lambda_5": -0.2079207920792079,
+        "outcomes": {
+          "catastrophe": 9,
+          "safe_noncompletion": 68,
+          "task_success": 24
+        },
+        "rates": {
+          "catastrophe": 0.0891089108910891,
+          "safe_noncompletion": 0.6732673267326733,
+          "task_success": 0.2376237623762376
+        }
+      },
+      "counterfactual_outcome_diversity": 88,
+      "decisions": 101,
+      "fixed_methods": {
+        "base_continue": {
+          "decisions": 101,
+          "mean_utility_lambda_5": -4.485148514851486,
+          "outcomes": {
+            "catastrophe": 91,
+            "safe_noncompletion": 8,
+            "task_success": 2
+          },
+          "rates": {
+            "catastrophe": 0.900990099009901,
+            "safe_noncompletion": 0.07920792079207921,
+            "task_success": 0.019801980198019802
+          }
+        },
+        "detour_complete": {
+          "decisions": 101,
+          "mean_utility_lambda_5": -1.504950495049505,
+          "outcomes": {
+            "catastrophe": 35,
+            "safe_noncompletion": 43,
+            "task_success": 23
+          },
+          "rates": {
+            "catastrophe": 0.3465346534653465,
+            "safe_noncompletion": 0.42574257425742573,
+            "task_success": 0.22772277227722773
+          }
+        },
+        "retreat_hold": {
+          "decisions": 101,
+          "mean_utility_lambda_5": -0.9900990099009901,
+          "outcomes": {
+            "catastrophe": 20,
+            "safe_noncompletion": 81,
+            "task_success": 0
+          },
+          "rates": {
+            "catastrophe": 0.19801980198019803,
+            "safe_noncompletion": 0.801980198019802,
+            "task_success": 0.0
+          }
+        }
+      },
+      "outcome_patterns": [
+        {
+          "count": 31,
+          "outcomes": {
+            "base_continue": "catastrophe",
+            "detour_complete": "safe_noncompletion",
+            "retreat_hold": "safe_noncompletion"
+          }
+        },
+        {
+          "count": 23,
+          "outcomes": {
+            "base_continue": "catastrophe",
+            "detour_complete": "catastrophe",
+            "retreat_hold": "safe_noncompletion"
+          }
+        },
+        {
+          "count": 19,
+          "outcomes": {
+            "base_continue": "catastrophe",
+            "detour_complete": "task_success",
+            "retreat_hold": "safe_noncompletion"
+          }
+        },
+        {
+          "count": 9,
+          "outcomes": {
+            "base_continue": "catastrophe",
+            "detour_complete": "catastrophe",
+            "retreat_hold": "catastrophe"
+          }
+        },
+        {
+          "count": 6,
+          "outcomes": {
+            "base_continue": "catastrophe",
+            "detour_complete": "safe_noncompletion",
+            "retreat_hold": "catastrophe"
+          }
+        },
+        {
+          "count": 4,
+          "outcomes": {
+            "base_continue": "safe_noncompletion",
+            "detour_complete": "safe_noncompletion",
+            "retreat_hold": "safe_noncompletion"
+          }
+        },
+        {
+          "count": 3,
+          "outcomes": {
+            "base_continue": "catastrophe",
+            "detour_complete": "task_success",
+            "retreat_hold": "catastrophe"
+          }
+        },
+        {
+          "count": 2,
+          "outcomes": {
+            "base_continue": "safe_noncompletion",
+            "detour_complete": "catastrophe",
+            "retreat_hold": "safe_noncompletion"
+          }
+        },
+        {
+          "count": 1,
+          "outcomes": {
+            "base_continue": "safe_noncompletion",
+            "detour_complete": "catastrophe",
+            "retreat_hold": "catastrophe"
+          }
+        },
+        {
+          "count": 1,
+          "outcomes": {
+            "base_continue": "safe_noncompletion",
+            "detour_complete": "safe_noncompletion",
+            "retreat_hold": "catastrophe"
+          }
+        },
+        {
+          "count": 1,
+          "outcomes": {
+            "base_continue": "task_success",
+            "detour_complete": "safe_noncompletion",
+            "retreat_hold": "safe_noncompletion"
+          }
+        },
+        {
+          "count": 1,
+          "outcomes": {
+            "base_continue": "task_success",
+            "detour_complete": "task_success",
+            "retreat_hold": "safe_noncompletion"
+          }
+        }
+      ],
+      "positive_oracle_value_over_base": 82,
+      "source_states": 20
+    },
+    "noglass": {
+      "all_options_identical": 2,
+      "base_catastrophe_detour_success": 0,
+      "base_catastrophe_retreat_safe": 0,
+      "base_success_detour_worse": 35,
+      "base_success_retreat_worse": 79,
+      "counterfactual_oracle": {
+        "choice_counts_tie_break_base": {
+          "base_continue": 81,
+          "detour_complete": 5,
+          "retreat_hold": 0
+        },
+        "intervention_rate_tie_break_base": 0.05813953488372093,
+        "mean_utility_gain_over_base": 0.05813953488372093,
+        "mean_utility_lambda_5": 0.9767441860465116,
+        "outcomes": {
+          "catastrophe": 0,
+          "safe_noncompletion": 2,
+          "task_success": 84
+        },
+        "rates": {
+          "catastrophe": 0.0,
+          "safe_noncompletion": 0.023255813953488372,
+          "task_success": 0.9767441860465116
+        }
+      },
+      "counterfactual_outcome_diversity": 84,
+      "decisions": 86,
+      "fixed_methods": {
+        "base_continue": {
+          "decisions": 86,
+          "mean_utility_lambda_5": 0.9186046511627907,
+          "outcomes": {
+            "catastrophe": 0,
+            "safe_noncompletion": 7,
+            "task_success": 79
+          },
+          "rates": {
+            "catastrophe": 0.0,
+            "safe_noncompletion": 0.08139534883720931,
+            "task_success": 0.9186046511627907
+          }
+        },
+        "detour_complete": {
+          "decisions": 86,
+          "mean_utility_lambda_5": 0.5697674418604651,
+          "outcomes": {
+            "catastrophe": 0,
+            "safe_noncompletion": 37,
+            "task_success": 49
+          },
+          "rates": {
+            "catastrophe": 0.0,
+            "safe_noncompletion": 0.43023255813953487,
+            "task_success": 0.5697674418604651
+          }
+        },
+        "retreat_hold": {
+          "decisions": 86,
+          "mean_utility_lambda_5": 0.0,
+          "outcomes": {
+            "catastrophe": 0,
+            "safe_noncompletion": 86,
+            "task_success": 0
+          },
+          "rates": {
+            "catastrophe": 0.0,
+            "safe_noncompletion": 1.0,
+            "task_success": 0.0
+          }
+        }
+      },
+      "outcome_patterns": [
+        {
+          "count": 44,
+          "outcomes": {
+            "base_continue": "task_success",
+            "detour_complete": "task_success",
+            "retreat_hold": "safe_noncompletion"
+          }
+        },
+        {
+          "count": 35,
+          "outcomes": {
+            "base_continue": "task_success",
+            "detour_complete": "safe_noncompletion",
+            "retreat_hold": "safe_noncompletion"
+          }
+        },
+        {
+          "count": 5,
+          "outcomes": {
+            "base_continue": "safe_noncompletion",
+            "detour_complete": "task_success",
+            "retreat_hold": "safe_noncompletion"
+          }
+        },
+        {
+          "count": 2,
+          "outcomes": {
+            "base_continue": "safe_noncompletion",
+            "detour_complete": "safe_noncompletion",
+            "retreat_hold": "safe_noncompletion"
+          }
+        }
+      ],
+      "positive_oracle_value_over_base": 5,
+      "source_states": 17
+    },
+    "offpath": {
+      "all_options_identical": 6,
+      "base_catastrophe_detour_success": 0,
+      "base_catastrophe_retreat_safe": 0,
+      "base_success_detour_worse": 24,
+      "base_success_retreat_worse": 76,
+      "counterfactual_oracle": {
+        "choice_counts_tie_break_base": {
+          "base_continue": 82,
+          "detour_complete": 4,
+          "retreat_hold": 0
+        },
+        "intervention_rate_tie_break_base": 0.046511627906976744,
+        "mean_utility_gain_over_base": 0.046511627906976744,
+        "mean_utility_lambda_5": 0.872093023255814,
+        "outcomes": {
+          "catastrophe": 1,
+          "safe_noncompletion": 5,
+          "task_success": 80
+        },
+        "rates": {
+          "catastrophe": 0.011627906976744186,
+          "safe_noncompletion": 0.05813953488372093,
+          "task_success": 0.9302325581395349
+        }
+      },
+      "counterfactual_outcome_diversity": 80,
+      "decisions": 86,
+      "fixed_methods": {
+        "base_continue": {
+          "decisions": 86,
+          "mean_utility_lambda_5": 0.8255813953488372,
+          "outcomes": {
+            "catastrophe": 1,
+            "safe_noncompletion": 9,
+            "task_success": 76
+          },
+          "rates": {
+            "catastrophe": 0.011627906976744186,
+            "safe_noncompletion": 0.10465116279069768,
+            "task_success": 0.8837209302325582
+          }
+        },
+        "detour_complete": {
+          "decisions": 86,
+          "mean_utility_lambda_5": 0.36046511627906974,
+          "outcomes": {
+            "catastrophe": 5,
+            "safe_noncompletion": 25,
+            "task_success": 56
+          },
+          "rates": {
+            "catastrophe": 0.05813953488372093,
+            "safe_noncompletion": 0.29069767441860467,
+            "task_success": 0.6511627906976745
+          }
+        },
+        "retreat_hold": {
+          "decisions": 86,
+          "mean_utility_lambda_5": -0.3488372093023256,
+          "outcomes": {
+            "catastrophe": 6,
+            "safe_noncompletion": 80,
+            "task_success": 0
+          },
+          "rates": {
+            "catastrophe": 0.06976744186046512,
+            "safe_noncompletion": 0.9302325581395349,
+            "task_success": 0.0
+          }
+        }
+      },
+      "outcome_patterns": [
+        {
+          "count": 52,
+          "outcomes": {
+            "base_continue": "task_success",
+            "detour_complete": "task_success",
+            "retreat_hold": "safe_noncompletion"
+          }
+        },
+        {
+          "count": 19,
+          "outcomes": {
+            "base_continue": "task_success",
+            "detour_complete": "safe_noncompletion",
+            "retreat_hold": "safe_noncompletion"
+          }
+        },
+        {
+          "count": 5,
+          "outcomes": {
+            "base_continue": "safe_noncompletion",
+            "detour_complete": "safe_noncompletion",
+            "retreat_hold": "safe_noncompletion"
+          }
+        },
+        {
+          "count": 4,
+          "outcomes": {
+            "base_continue": "safe_noncompletion",
+            "detour_complete": "task_success",
+            "retreat_hold": "safe_noncompletion"
+          }
+        },
+        {
+          "count": 4,
+          "outcomes": {
+            "base_continue": "task_success",
+            "detour_complete": "catastrophe",
+            "retreat_hold": "catastrophe"
+          }
+        },
+        {
+          "count": 1,
+          "outcomes": {
+            "base_continue": "catastrophe",
+            "detour_complete": "catastrophe",
+            "retreat_hold": "catastrophe"
+          }
+        },
+        {
+          "count": 1,
+          "outcomes": {
+            "base_continue": "task_success",
+            "detour_complete": "safe_noncompletion",
+            "retreat_hold": "catastrophe"
+          }
+        }
+      ],
+      "positive_oracle_value_over_base": 4,
+      "source_states": 17
+    }
+  },
+  "by_split": {
+    "calibration": {
+      "all_options_identical": 12,
+      "base_catastrophe_detour_success": 6,
+      "base_catastrophe_retreat_safe": 22,
+      "base_success_detour_worse": 29,
+      "base_success_retreat_worse": 58,
+      "counterfactual_oracle": {
+        "choice_counts_tie_break_base": {
+          "base_continue": 71,
+          "detour_complete": 18,
+          "retreat_hold": 7
+        },
+        "intervention_rate_tie_break_base": 0.2604166666666667,
+        "mean_utility_gain_over_base": 1.3229166666666667,
+        "mean_utility_lambda_5": 0.46875,
+        "outcomes": {
+          "catastrophe": 4,
+          "safe_noncompletion": 27,
+          "task_success": 65
+        },
+        "rates": {
+          "catastrophe": 0.041666666666666664,
+          "safe_noncompletion": 0.28125,
+          "task_success": 0.6770833333333334
+        }
+      },
+      "counterfactual_outcome_diversity": 84,
+      "decisions": 96,
+      "fixed_methods": {
+        "base_continue": {
+          "decisions": 96,
+          "mean_utility_lambda_5": -0.8541666666666666,
+          "outcomes": {
+            "catastrophe": 28,
+            "safe_noncompletion": 10,
+            "task_success": 58
+          },
+          "rates": {
+            "catastrophe": 0.2916666666666667,
+            "safe_noncompletion": 0.10416666666666667,
+            "task_success": 0.6041666666666666
+          }
+        },
+        "detour_complete": {
+          "decisions": 96,
+          "mean_utility_lambda_5": -0.4583333333333333,
+          "outcomes": {
+            "catastrophe": 16,
+            "safe_noncompletion": 44,
+            "task_success": 36
+          },
+          "rates": {
+            "catastrophe": 0.16666666666666666,
+            "safe_noncompletion": 0.4583333333333333,
+            "task_success": 0.375
+          }
+        },
+        "retreat_hold": {
+          "decisions": 96,
+          "mean_utility_lambda_5": -0.5208333333333334,
+          "outcomes": {
+            "catastrophe": 10,
+            "safe_noncompletion": 86,
+            "task_success": 0
+          },
+          "rates": {
+            "catastrophe": 0.10416666666666667,
+            "safe_noncompletion": 0.8958333333333334,
+            "task_success": 0.0
+          }
+        }
+      },
+      "outcome_patterns": [
+        {
+          "count": 29,
+          "outcomes": {
+            "base_continue": "task_success",
+            "detour_complete": "task_success",
+            "retreat_hold": "safe_noncompletion"
+          }
+        },
+        {
+          "count": 25,
+          "outcomes": {
+            "base_continue": "task_success",
+            "detour_complete": "safe_noncompletion",
+            "retreat_hold": "safe_noncompletion"
+          }
+        },
+        {
+          "count": 10,
+          "outcomes": {
+            "base_continue": "catastrophe",
+            "detour_complete": "safe_noncompletion",
+            "retreat_hold": "safe_noncompletion"
+          }
+        },
+        {
+          "count": 8,
+          "outcomes": {
+            "base_continue": "safe_noncompletion",
+            "detour_complete": "safe_noncompletion",
+            "retreat_hold": "safe_noncompletion"
+          }
+        },
+        {
+          "count": 7,
+          "outcomes": {
+            "base_continue": "catastrophe",
+            "detour_complete": "catastrophe",
+            "retreat_hold": "safe_noncompletion"
+          }
+        },
+        {
+          "count": 5,
+          "outcomes": {
+            "base_continue": "catastrophe",
+            "detour_complete": "task_success",
+            "retreat_hold": "safe_noncompletion"
+          }
+        },
+        {
+          "count": 4,
+          "outcomes": {
+            "base_continue": "catastrophe",
+            "detour_complete": "catastrophe",
+            "retreat_hold": "catastrophe"
+          }
+        },
+        {
+          "count": 4,
+          "outcomes": {
+            "base_continue": "task_success",
+            "detour_complete": "catastrophe",
+            "retreat_hold": "catastrophe"
+          }
+        },
+        {
+          "count": 1,
+          "outcomes": {
+            "base_continue": "catastrophe",
+            "detour_complete": "safe_noncompletion",
+            "retreat_hold": "catastrophe"
+          }
+        },
+        {
+          "count": 1,
+          "outcomes": {
+            "base_continue": "catastrophe",
+            "detour_complete": "task_success",
+            "retreat_hold": "catastrophe"
+          }
+        },
+        {
+          "count": 1,
+          "outcomes": {
+            "base_continue": "safe_noncompletion",
+            "detour_complete": "catastrophe",
+            "retreat_hold": "safe_noncompletion"
+          }
+        },
+        {
+          "count": 1,
+          "outcomes": {
+            "base_continue": "safe_noncompletion",
+            "detour_complete": "task_success",
+            "retreat_hold": "safe_noncompletion"
+          }
+        }
+      ],
+      "positive_oracle_value_over_base": 25,
+      "source_states": 7
+    },
+    "development": {
+      "all_options_identical": 7,
+      "base_catastrophe_detour_success": 6,
+      "base_catastrophe_retreat_safe": 31,
+      "base_success_detour_worse": 18,
+      "base_success_retreat_worse": 60,
+      "counterfactual_oracle": {
+        "choice_counts_tie_break_base": {
+          "base_continue": 68,
+          "detour_complete": 25,
+          "retreat_hold": 13
+        },
+        "intervention_rate_tie_break_base": 0.3584905660377358,
+        "mean_utility_gain_over_base": 1.7358490566037736,
+        "mean_utility_lambda_5": 0.41509433962264153,
+        "outcomes": {
+          "catastrophe": 5,
+          "safe_noncompletion": 32,
+          "task_success": 69
+        },
+        "rates": {
+          "catastrophe": 0.04716981132075472,
+          "safe_noncompletion": 0.3018867924528302,
+          "task_success": 0.6509433962264151
+        }
+      },
+      "counterfactual_outcome_diversity": 99,
+      "decisions": 106,
+      "fixed_methods": {
+        "base_continue": {
+          "decisions": 106,
+          "mean_utility_lambda_5": -1.320754716981132,
+          "outcomes": {
+            "catastrophe": 40,
+            "safe_noncompletion": 6,
+            "task_success": 60
+          },
+          "rates": {
+            "catastrophe": 0.37735849056603776,
+            "safe_noncompletion": 0.05660377358490566,
+            "task_success": 0.5660377358490566
+          }
+        },
+        "detour_complete": {
+          "decisions": 106,
+          "mean_utility_lambda_5": -0.41509433962264153,
+          "outcomes": {
+            "catastrophe": 19,
+            "safe_noncompletion": 36,
+            "task_success": 51
+          },
+          "rates": {
+            "catastrophe": 0.1792452830188679,
+            "safe_noncompletion": 0.33962264150943394,
+            "task_success": 0.4811320754716981
+          }
+        },
+        "retreat_hold": {
+          "decisions": 106,
+          "mean_utility_lambda_5": -0.5188679245283019,
+          "outcomes": {
+            "catastrophe": 11,
+            "safe_noncompletion": 95,
+            "task_success": 0
+          },
+          "rates": {
+            "catastrophe": 0.10377358490566038,
+            "safe_noncompletion": 0.8962264150943396,
+            "task_success": 0.0
+          }
+        }
+      },
+      "outcome_patterns": [
+        {
+          "count": 42,
+          "outcomes": {
+            "base_continue": "task_success",
+            "detour_complete": "task_success",
+            "retreat_hold": "safe_noncompletion"
+          }
+        },
+        {
+          "count": 17,
+          "outcomes": {
+            "base_continue": "task_success",
+            "detour_complete": "safe_noncompletion",
+            "retreat_hold": "safe_noncompletion"
+          }
+        },
+        {
+          "count": 14,
+          "outcomes": {
+            "base_continue": "catastrophe",
+            "detour_complete": "safe_noncompletion",
+            "retreat_hold": "safe_noncompletion"
+          }
+        },
+        {
+          "count": 13,
+          "outcomes": {
+            "base_continue": "catastrophe",
+            "detour_complete": "catastrophe",
+            "retreat_hold": "safe_noncompletion"
+          }
+        },
+        {
+          "count": 5,
+          "outcomes": {
+            "base_continue": "catastrophe",
+            "detour_complete": "catastrophe",
+            "retreat_hold": "catastrophe"
+          }
+        },
+        {
+          "count": 4,
+          "outcomes": {
+            "base_continue": "catastrophe",
+            "detour_complete": "task_success",
+            "retreat_hold": "safe_noncompletion"
+          }
+        },
+        {
+          "count": 3,
+          "outcomes": {
+            "base_continue": "safe_noncompletion",
+            "detour_complete": "task_success",
+            "retreat_hold": "safe_noncompletion"
+          }
+        },
+        {
+          "count": 2,
+          "outcomes": {
+            "base_continue": "catastrophe",
+            "detour_complete": "safe_noncompletion",
+            "retreat_hold": "catastrophe"
+          }
+        },
+        {
+          "count": 2,
+          "outcomes": {
+            "base_continue": "catastrophe",
+            "detour_complete": "task_success",
+            "retreat_hold": "catastrophe"
+          }
+        },
+        {
+          "count": 2,
+          "outcomes": {
+            "base_continue": "safe_noncompletion",
+            "detour_complete": "safe_noncompletion",
+            "retreat_hold": "safe_noncompletion"
+          }
+        },
+        {
+          "count": 1,
+          "outcomes": {
+            "base_continue": "safe_noncompletion",
+            "detour_complete": "catastrophe",
+            "retreat_hold": "catastrophe"
+          }
+        },
+        {
+          "count": 1,
+          "outcomes": {
+            "base_continue": "task_success",
+            "detour_complete": "safe_noncompletion",
+            "retreat_hold": "catastrophe"
+          }
+        }
+      ],
+      "positive_oracle_value_over_base": 38,
+      "source_states": 8
+    },
+    "train": {
+      "all_options_identical": 2,
+      "base_catastrophe_detour_success": 10,
+      "base_catastrophe_retreat_safe": 20,
+      "base_success_detour_worse": 13,
+      "base_success_retreat_worse": 39,
+      "counterfactual_oracle": {
+        "choice_counts_tie_break_base": {
+          "base_continue": 43,
+          "detour_complete": 25,
+          "retreat_hold": 3
+        },
+        "intervention_rate_tie_break_base": 0.39436619718309857,
+        "mean_utility_gain_over_base": 1.8309859154929577,
+        "mean_utility_lambda_5": 0.6901408450704225,
+        "outcomes": {
+          "catastrophe": 1,
+          "safe_noncompletion": 16,
+          "task_success": 54
+        },
+        "rates": {
+          "catastrophe": 0.014084507042253521,
+          "safe_noncompletion": 0.22535211267605634,
+          "task_success": 0.7605633802816901
+        }
+      },
+      "counterfactual_outcome_diversity": 69,
+      "decisions": 71,
+      "fixed_methods": {
+        "base_continue": {
+          "decisions": 71,
+          "mean_utility_lambda_5": -1.1408450704225352,
+          "outcomes": {
+            "catastrophe": 24,
+            "safe_noncompletion": 8,
+            "task_success": 39
+          },
+          "rates": {
+            "catastrophe": 0.3380281690140845,
+            "safe_noncompletion": 0.11267605633802817,
+            "task_success": 0.5492957746478874
+          }
+        },
+        "detour_complete": {
+          "decisions": 71,
+          "mean_utility_lambda_5": 0.22535211267605634,
+          "outcomes": {
+            "catastrophe": 5,
+            "safe_noncompletion": 25,
+            "task_success": 41
+          },
+          "rates": {
+            "catastrophe": 0.07042253521126761,
+            "safe_noncompletion": 0.352112676056338,
+            "task_success": 0.5774647887323944
+          }
+        },
+        "retreat_hold": {
+          "decisions": 71,
+          "mean_utility_lambda_5": -0.352112676056338,
+          "outcomes": {
+            "catastrophe": 5,
+            "safe_noncompletion": 66,
+            "task_success": 0
+          },
+          "rates": {
+            "catastrophe": 0.07042253521126761,
+            "safe_noncompletion": 0.9295774647887324,
+            "task_success": 0.0
+          }
+        }
+      },
+      "outcome_patterns": [
+        {
+          "count": 26,
+          "outcomes": {
+            "base_continue": "task_success",
+            "detour_complete": "task_success",
+            "retreat_hold": "safe_noncompletion"
+          }
+        },
+        {
+          "count": 13,
+          "outcomes": {
+            "base_continue": "task_success",
+            "detour_complete": "safe_noncompletion",
+            "retreat_hold": "safe_noncompletion"
+          }
+        },
+        {
+          "count": 10,
+          "outcomes": {
+            "base_continue": "catastrophe",
+            "detour_complete": "task_success",
+            "retreat_hold": "safe_noncompletion"
+          }
+        },
+        {
+          "count": 7,
+          "outcomes": {
+            "base_continue": "catastrophe",
+            "detour_complete": "safe_noncompletion",
+            "retreat_hold": "safe_noncompletion"
+          }
+        },
+        {
+          "count": 5,
+          "outcomes": {
+            "base_continue": "safe_noncompletion",
+            "detour_complete": "task_success",
+            "retreat_hold": "safe_noncompletion"
+          }
+        },
+        {
+          "count": 3,
+          "outcomes": {
+            "base_continue": "catastrophe",
+            "detour_complete": "catastrophe",
+            "retreat_hold": "safe_noncompletion"
+          }
+        },
+        {
+          "count": 3,
+          "outcomes": {
+            "base_continue": "catastrophe",
+            "detour_complete": "safe_noncompletion",
+            "retreat_hold": "catastrophe"
+          }
+        },
+        {
+          "count": 1,
+          "outcomes": {
+            "base_continue": "catastrophe",
+            "detour_complete": "catastrophe",
+            "retreat_hold": "catastrophe"
+          }
+        },
+        {
+          "count": 1,
+          "outcomes": {
+            "base_continue": "safe_noncompletion",
+            "detour_complete": "catastrophe",
+            "retreat_hold": "safe_noncompletion"
+          }
+        },
+        {
+          "count": 1,
+          "outcomes": {
+            "base_continue": "safe_noncompletion",
+            "detour_complete": "safe_noncompletion",
+            "retreat_hold": "catastrophe"
+          }
+        },
+        {
+          "count": 1,
+          "outcomes": {
+            "base_continue": "safe_noncompletion",
+            "detour_complete": "safe_noncompletion",
+            "retreat_hold": "safe_noncompletion"
+          }
+        }
+      ],
+      "positive_oracle_value_over_base": 28,
+      "source_states": 5
+    }
+  },
+  "capture_commit": "d4751330395eec11691f4830761b76f5f1ac36b7",
+  "capture_root": "results/counterfactual_router/full_d4751330395e_20260814T152231Z",
+  "exclusion_counts": {
+    "catastrophe_before_horizon": 14,
+    "condition_terminal_before_matched_anchor": 30,
+    "onpath_no_catastrophe": 7,
+    "scan_invalid_initial_state": 5
+  },
+  "glass_by_horizon": {
+    "10": {
+      "all_options_identical": 2,
+      "base_catastrophe_detour_success": 7,
+      "base_catastrophe_retreat_safe": 18,
+      "base_success_detour_worse": 0,
+      "base_success_retreat_worse": 0,
+      "counterfactual_oracle": {
+        "choice_counts_tie_break_base": {
+          "base_continue": 2,
+          "detour_complete": 12,
+          "retreat_hold": 9
+        },
+        "intervention_rate_tie_break_base": 0.9130434782608695,
+        "mean_utility_gain_over_base": 4.869565217391305,
+        "mean_utility_lambda_5": 0.08695652173913043,
+        "outcomes": {
+          "catastrophe": 1,
+          "safe_noncompletion": 15,
+          "task_success": 7
+        },
+        "rates": {
+          "catastrophe": 0.043478260869565216,
+          "safe_noncompletion": 0.6521739130434783,
+          "task_success": 0.30434782608695654
+        }
+      },
+      "counterfactual_outcome_diversity": 21,
+      "decisions": 23,
+      "fixed_methods": {
+        "base_continue": {
+          "decisions": 23,
+          "mean_utility_lambda_5": -4.782608695652174,
+          "outcomes": {
+            "catastrophe": 22,
+            "safe_noncompletion": 1,
+            "task_success": 0
+          },
+          "rates": {
+            "catastrophe": 0.9565217391304348,
+            "safe_noncompletion": 0.043478260869565216,
+            "task_success": 0.0
+          }
+        },
+        "detour_complete": {
+          "decisions": 23,
+          "mean_utility_lambda_5": -1.8695652173913044,
+          "outcomes": {
+            "catastrophe": 10,
+            "safe_noncompletion": 6,
+            "task_success": 7
+          },
+          "rates": {
+            "catastrophe": 0.43478260869565216,
+            "safe_noncompletion": 0.2608695652173913,
+            "task_success": 0.30434782608695654
+          }
+        },
+        "retreat_hold": {
+          "decisions": 23,
+          "mean_utility_lambda_5": -0.8695652173913043,
+          "outcomes": {
+            "catastrophe": 4,
+            "safe_noncompletion": 19,
+            "task_success": 0
+          },
+          "rates": {
+            "catastrophe": 0.17391304347826086,
+            "safe_noncompletion": 0.8260869565217391,
+            "task_success": 0.0
+          }
+        }
+      },
+      "outcome_patterns": [
+        {
+          "count": 9,
+          "outcomes": {
+            "base_continue": "catastrophe",
+            "detour_complete": "catastrophe",
+            "retreat_hold": "safe_noncompletion"
+          }
+        },
+        {
+          "count": 6,
+          "outcomes": {
+            "base_continue": "catastrophe",
+            "detour_complete": "task_success",
+            "retreat_hold": "safe_noncompletion"
+          }
+        },
+        {
+          "count": 3,
+          "outcomes": {
+            "base_continue": "catastrophe",
+            "detour_complete": "safe_noncompletion",
+            "retreat_hold": "safe_noncompletion"
+          }
+        },
+        {
+          "count": 2,
+          "outcomes": {
+            "base_continue": "catastrophe",
+            "detour_complete": "safe_noncompletion",
+            "retreat_hold": "catastrophe"
+          }
+        },
+        {
+          "count": 1,
+          "outcomes": {
+            "base_continue": "catastrophe",
+            "detour_complete": "catastrophe",
+            "retreat_hold": "catastrophe"
+          }
+        },
+        {
+          "count": 1,
+          "outcomes": {
+            "base_continue": "catastrophe",
+            "detour_complete": "task_success",
+            "retreat_hold": "catastrophe"
+          }
+        },
+        {
+          "count": 1,
+          "outcomes": {
+            "base_continue": "safe_noncompletion",
+            "detour_complete": "safe_noncompletion",
+            "retreat_hold": "safe_noncompletion"
+          }
+        }
+      ],
+      "positive_oracle_value_over_base": 21,
+      "source_states": 20
+    },
+    "20": {
+      "all_options_identical": 0,
+      "base_catastrophe_detour_success": 6,
+      "base_catastrophe_retreat_safe": 19,
+      "base_success_detour_worse": 0,
+      "base_success_retreat_worse": 1,
+      "counterfactual_oracle": {
+        "choice_counts_tie_break_base": {
+          "base_continue": 2,
+          "detour_complete": 16,
+          "retreat_hold": 5
+        },
+        "intervention_rate_tie_break_base": 0.9130434782608695,
+        "mean_utility_gain_over_base": 4.826086956521739,
+        "mean_utility_lambda_5": 0.30434782608695654,
+        "outcomes": {
+          "catastrophe": 0,
+          "safe_noncompletion": 16,
+          "task_success": 7
+        },
+        "rates": {
+          "catastrophe": 0.0,
+          "safe_noncompletion": 0.6956521739130435,
+          "task_success": 0.30434782608695654
+        }
+      },
+      "counterfactual_outcome_diversity": 23,
+      "decisions": 23,
+      "fixed_methods": {
+        "base_continue": {
+          "decisions": 23,
+          "mean_utility_lambda_5": -4.521739130434782,
+          "outcomes": {
+            "catastrophe": 21,
+            "safe_noncompletion": 1,
+            "task_success": 1
+          },
+          "rates": {
+            "catastrophe": 0.9130434782608695,
+            "safe_noncompletion": 0.043478260869565216,
+            "task_success": 0.043478260869565216
+          }
+        },
+        "detour_complete": {
+          "decisions": 23,
+          "mean_utility_lambda_5": -1.0,
+          "outcomes": {
+            "catastrophe": 6,
+            "safe_noncompletion": 10,
+            "task_success": 7
+          },
+          "rates": {
+            "catastrophe": 0.2608695652173913,
+            "safe_noncompletion": 0.43478260869565216,
+            "task_success": 0.30434782608695654
+          }
+        },
+        "retreat_hold": {
+          "decisions": 23,
+          "mean_utility_lambda_5": -0.6521739130434783,
+          "outcomes": {
+            "catastrophe": 3,
+            "safe_noncompletion": 20,
+            "task_success": 0
+          },
+          "rates": {
+            "catastrophe": 0.13043478260869565,
+            "safe_noncompletion": 0.8695652173913043,
+            "task_success": 0.0
+          }
+        }
+      },
+      "outcome_patterns": [
+        {
+          "count": 9,
+          "outcomes": {
+            "base_continue": "catastrophe",
+            "detour_complete": "safe_noncompletion",
+            "retreat_hold": "safe_noncompletion"
+          }
+        },
+        {
+          "count": 5,
+          "outcomes": {
+            "base_continue": "catastrophe",
+            "detour_complete": "catastrophe",
+            "retreat_hold": "safe_noncompletion"
+          }
+        },
+        {
+          "count": 5,
+          "outcomes": {
+            "base_continue": "catastrophe",
+            "detour_complete": "task_success",
+            "retreat_hold": "safe_noncompletion"
+          }
+        },
+        {
+          "count": 1,
+          "outcomes": {
+            "base_continue": "catastrophe",
+            "detour_complete": "safe_noncompletion",
+            "retreat_hold": "catastrophe"
+          }
+        },
+        {
+          "count": 1,
+          "outcomes": {
+            "base_continue": "catastrophe",
+            "detour_complete": "task_success",
+            "retreat_hold": "catastrophe"
+          }
+        },
+        {
+          "count": 1,
+          "outcomes": {
+            "base_continue": "safe_noncompletion",
+            "detour_complete": "catastrophe",
+            "retreat_hold": "catastrophe"
+          }
+        },
+        {
+          "count": 1,
+          "outcomes": {
+            "base_continue": "task_success",
+            "detour_complete": "task_success",
+            "retreat_hold": "safe_noncompletion"
+          }
+        }
+      ],
+      "positive_oracle_value_over_base": 21,
+      "source_states": 20
+    },
+    "30": {
+      "all_options_identical": 3,
+      "base_catastrophe_detour_success": 4,
+      "base_catastrophe_retreat_safe": 14,
+      "base_success_detour_worse": 1,
+      "base_success_retreat_worse": 1,
+      "counterfactual_oracle": {
+        "choice_counts_tie_break_base": {
+          "base_continue": 5,
+          "detour_complete": 15,
+          "retreat_hold": 1
+        },
+        "intervention_rate_tie_break_base": 0.7619047619047619,
+        "mean_utility_gain_over_base": 4.0,
+        "mean_utility_lambda_5": 0.0,
+        "outcomes": {
+          "catastrophe": 1,
+          "safe_noncompletion": 15,
+          "task_success": 5
+        },
+        "rates": {
+          "catastrophe": 0.047619047619047616,
+          "safe_noncompletion": 0.7142857142857143,
+          "task_success": 0.23809523809523808
+        }
+      },
+      "counterfactual_outcome_diversity": 18,
+      "decisions": 21,
+      "fixed_methods": {
+        "base_continue": {
+          "decisions": 21,
+          "mean_utility_lambda_5": -4.0,
+          "outcomes": {
+            "catastrophe": 17,
+            "safe_noncompletion": 3,
+            "task_success": 1
+          },
+          "rates": {
+            "catastrophe": 0.8095238095238095,
+            "safe_noncompletion": 0.14285714285714285,
+            "task_success": 0.047619047619047616
+          }
+        },
+        "detour_complete": {
+          "decisions": 21,
+          "mean_utility_lambda_5": -0.5238095238095238,
+          "outcomes": {
+            "catastrophe": 3,
+            "safe_noncompletion": 14,
+            "task_success": 4
+          },
+          "rates": {
+            "catastrophe": 0.14285714285714285,
+            "safe_noncompletion": 0.6666666666666666,
+            "task_success": 0.19047619047619047
+          }
+        },
+        "retreat_hold": {
+          "decisions": 21,
+          "mean_utility_lambda_5": -0.7142857142857143,
+          "outcomes": {
+            "catastrophe": 3,
+            "safe_noncompletion": 18,
+            "task_success": 0
+          },
+          "rates": {
+            "catastrophe": 0.14285714285714285,
+            "safe_noncompletion": 0.8571428571428571,
+            "task_success": 0.0
+          }
+        }
+      },
+      "outcome_patterns": [
+        {
+          "count": 10,
+          "outcomes": {
+            "base_continue": "catastrophe",
+            "detour_complete": "safe_noncompletion",
+            "retreat_hold": "safe_noncompletion"
+          }
+        },
+        {
+          "count": 3,
+          "outcomes": {
+            "base_continue": "catastrophe",
+            "detour_complete": "task_success",
+            "retreat_hold": "safe_noncompletion"
+          }
+        },
+        {
+          "count": 2,
+          "outcomes": {
+            "base_continue": "safe_noncompletion",
+            "detour_complete": "safe_noncompletion",
+            "retreat_hold": "safe_noncompletion"
+          }
+        },
+        {
+          "count": 1,
+          "outcomes": {
+            "base_continue": "catastrophe",
+            "detour_complete": "catastrophe",
+            "retreat_hold": "catastrophe"
+          }
+        },
+        {
+          "count": 1,
+          "outcomes": {
+            "base_continue": "catastrophe",
+            "detour_complete": "catastrophe",
+            "retreat_hold": "safe_noncompletion"
+          }
+        },
+        {
+          "count": 1,
+          "outcomes": {
+            "base_continue": "catastrophe",
+            "detour_complete": "safe_noncompletion",
+            "retreat_hold": "catastrophe"
+          }
+        },
+        {
+          "count": 1,
+          "outcomes": {
+            "base_continue": "catastrophe",
+            "detour_complete": "task_success",
+            "retreat_hold": "catastrophe"
+          }
+        },
+        {
+          "count": 1,
+          "outcomes": {
+            "base_continue": "safe_noncompletion",
+            "detour_complete": "catastrophe",
+            "retreat_hold": "safe_noncompletion"
+          }
+        },
+        {
+          "count": 1,
+          "outcomes": {
+            "base_continue": "task_success",
+            "detour_complete": "safe_noncompletion",
+            "retreat_hold": "safe_noncompletion"
+          }
+        }
+      ],
+      "positive_oracle_value_over_base": 16,
+      "source_states": 19
+    },
+    "40": {
+      "all_options_identical": 2,
+      "base_catastrophe_detour_success": 1,
+      "base_catastrophe_retreat_safe": 7,
+      "base_success_detour_worse": 0,
+      "base_success_retreat_worse": 0,
+      "counterfactual_oracle": {
+        "choice_counts_tie_break_base": {
+          "base_continue": 3,
+          "detour_complete": 7,
+          "retreat_hold": 1
+        },
+        "intervention_rate_tie_break_base": 0.7272727272727273,
+        "mean_utility_gain_over_base": 3.727272727272727,
+        "mean_utility_lambda_5": -0.36363636363636365,
+        "outcomes": {
+          "catastrophe": 1,
+          "safe_noncompletion": 9,
+          "task_success": 1
+        },
+        "rates": {
+          "catastrophe": 0.09090909090909091,
+          "safe_noncompletion": 0.8181818181818182,
+          "task_success": 0.09090909090909091
+        }
+      },
+      "counterfactual_outcome_diversity": 9,
+      "decisions": 11,
+      "fixed_methods": {
+        "base_continue": {
+          "decisions": 11,
+          "mean_utility_lambda_5": -4.090909090909091,
+          "outcomes": {
+            "catastrophe": 9,
+            "safe_noncompletion": 2,
+            "task_success": 0
+          },
+          "rates": {
+            "catastrophe": 0.8181818181818182,
+            "safe_noncompletion": 0.18181818181818182,
+            "task_success": 0.0
+          }
+        },
+        "detour_complete": {
+          "decisions": 11,
+          "mean_utility_lambda_5": -0.8181818181818182,
+          "outcomes": {
+            "catastrophe": 2,
+            "safe_noncompletion": 8,
+            "task_success": 1
+          },
+          "rates": {
+            "catastrophe": 0.18181818181818182,
+            "safe_noncompletion": 0.7272727272727273,
+            "task_success": 0.09090909090909091
+          }
+        },
+        "retreat_hold": {
+          "decisions": 11,
+          "mean_utility_lambda_5": -1.3636363636363635,
+          "outcomes": {
+            "catastrophe": 3,
+            "safe_noncompletion": 8,
+            "task_success": 0
+          },
+          "rates": {
+            "catastrophe": 0.2727272727272727,
+            "safe_noncompletion": 0.7272727272727273,
+            "task_success": 0.0
+          }
+        }
+      },
+      "outcome_patterns": [
+        {
+          "count": 5,
+          "outcomes": {
+            "base_continue": "catastrophe",
+            "detour_complete": "safe_noncompletion",
+            "retreat_hold": "safe_noncompletion"
+          }
+        },
+        {
+          "count": 1,
+          "outcomes": {
+            "base_continue": "catastrophe",
+            "detour_complete": "catastrophe",
+            "retreat_hold": "catastrophe"
+          }
+        },
+        {
+          "count": 1,
+          "outcomes": {
+            "base_continue": "catastrophe",
+            "detour_complete": "catastrophe",
+            "retreat_hold": "safe_noncompletion"
+          }
+        },
+        {
+          "count": 1,
+          "outcomes": {
+            "base_continue": "catastrophe",
+            "detour_complete": "safe_noncompletion",
+            "retreat_hold": "catastrophe"
+          }
+        },
+        {
+          "count": 1,
+          "outcomes": {
+            "base_continue": "catastrophe",
+            "detour_complete": "task_success",
+            "retreat_hold": "safe_noncompletion"
+          }
+        },
+        {
+          "count": 1,
+          "outcomes": {
+            "base_continue": "safe_noncompletion",
+            "detour_complete": "safe_noncompletion",
+            "retreat_hold": "catastrophe"
+          }
+        },
+        {
+          "count": 1,
+          "outcomes": {
+            "base_continue": "safe_noncompletion",
+            "detour_complete": "safe_noncompletion",
+            "retreat_hold": "safe_noncompletion"
+          }
+        }
+      ],
+      "positive_oracle_value_over_base": 8,
+      "source_states": 9
+    },
+    "5": {
+      "all_options_identical": 6,
+      "base_catastrophe_detour_success": 4,
+      "base_catastrophe_retreat_safe": 15,
+      "base_success_detour_worse": 0,
+      "base_success_retreat_worse": 0,
+      "counterfactual_oracle": {
+        "choice_counts_tie_break_base": {
+          "base_continue": 7,
+          "detour_complete": 9,
+          "retreat_hold": 7
+        },
+        "intervention_rate_tie_break_base": 0.6956521739130435,
+        "mean_utility_gain_over_base": 3.652173913043478,
+        "mean_utility_lambda_5": -1.1304347826086956,
+        "outcomes": {
+          "catastrophe": 6,
+          "safe_noncompletion": 13,
+          "task_success": 4
+        },
+        "rates": {
+          "catastrophe": 0.2608695652173913,
+          "safe_noncompletion": 0.5652173913043478,
+          "task_success": 0.17391304347826086
+        }
+      },
+      "counterfactual_outcome_diversity": 17,
+      "decisions": 23,
+      "fixed_methods": {
+        "base_continue": {
+          "decisions": 23,
+          "mean_utility_lambda_5": -4.782608695652174,
+          "outcomes": {
+            "catastrophe": 22,
+            "safe_noncompletion": 1,
+            "task_success": 0
+          },
+          "rates": {
+            "catastrophe": 0.9565217391304348,
+            "safe_noncompletion": 0.043478260869565216,
+            "task_success": 0.0
+          }
+        },
+        "detour_complete": {
+          "decisions": 23,
+          "mean_utility_lambda_5": -2.869565217391304,
+          "outcomes": {
+            "catastrophe": 14,
+            "safe_noncompletion": 5,
+            "task_success": 4
+          },
+          "rates": {
+            "catastrophe": 0.6086956521739131,
+            "safe_noncompletion": 0.21739130434782608,
+            "task_success": 0.17391304347826086
+          }
+        },
+        "retreat_hold": {
+          "decisions": 23,
+          "mean_utility_lambda_5": -1.5217391304347827,
+          "outcomes": {
+            "catastrophe": 7,
+            "safe_noncompletion": 16,
+            "task_success": 0
+          },
+          "rates": {
+            "catastrophe": 0.30434782608695654,
+            "safe_noncompletion": 0.6956521739130435,
+            "task_success": 0.0
+          }
+        }
+      },
+      "outcome_patterns": [
+        {
+          "count": 7,
+          "outcomes": {
+            "base_continue": "catastrophe",
+            "detour_complete": "catastrophe",
+            "retreat_hold": "safe_noncompletion"
+          }
+        },
+        {
+          "count": 6,
+          "outcomes": {
+            "base_continue": "catastrophe",
+            "detour_complete": "catastrophe",
+            "retreat_hold": "catastrophe"
+          }
+        },
+        {
+          "count": 4,
+          "outcomes": {
+            "base_continue": "catastrophe",
+            "detour_complete": "safe_noncompletion",
+            "retreat_hold": "safe_noncompletion"
+          }
+        },
+        {
+          "count": 4,
+          "outcomes": {
+            "base_continue": "catastrophe",
+            "detour_complete": "task_success",
+            "retreat_hold": "safe_noncompletion"
+          }
+        },
+        {
+          "count": 1,
+          "outcomes": {
+            "base_continue": "catastrophe",
+            "detour_complete": "safe_noncompletion",
+            "retreat_hold": "catastrophe"
+          }
+        },
+        {
+          "count": 1,
+          "outcomes": {
+            "base_continue": "safe_noncompletion",
+            "detour_complete": "catastrophe",
+            "retreat_hold": "safe_noncompletion"
+          }
+        }
+      ],
+      "positive_oracle_value_over_base": 16,
+      "source_states": 20
+    }
+  },
+  "kind": "counterfactual_option_capture_audit",
+  "overall": {
+    "all_options_identical": 21,
+    "base_catastrophe_detour_success": 22,
+    "base_catastrophe_retreat_safe": 73,
+    "base_success_detour_worse": 60,
+    "base_success_retreat_worse": 157,
+    "counterfactual_oracle": {
+      "choice_counts_tie_break_base": {
+        "base_continue": 182,
+        "detour_complete": 68,
+        "retreat_hold": 23
+      },
+      "intervention_rate_tie_break_base": 0.3333333333333333,
+      "mean_utility_gain_over_base": 1.6153846153846154,
+      "mean_utility_lambda_5": 0.5054945054945055,
+      "outcomes": {
+        "catastrophe": 10,
+        "safe_noncompletion": 75,
+        "task_success": 188
+      },
+      "rates": {
+        "catastrophe": 0.03663003663003663,
+        "safe_noncompletion": 0.27472527472527475,
+        "task_success": 0.6886446886446886
+      }
+    },
+    "counterfactual_outcome_diversity": 252,
+    "decisions": 273,
+    "fixed_methods": {
+      "base_continue": {
+        "decisions": 273,
+        "mean_utility_lambda_5": -1.10989010989011,
+        "outcomes": {
+          "catastrophe": 92,
+          "safe_noncompletion": 24,
+          "task_success": 157
+        },
+        "rates": {
+          "catastrophe": 0.336996336996337,
+          "safe_noncompletion": 0.08791208791208792,
+          "task_success": 0.575091575091575
+        }
+      },
+      "detour_complete": {
+        "decisions": 273,
+        "mean_utility_lambda_5": -0.26373626373626374,
+        "outcomes": {
+          "catastrophe": 40,
+          "safe_noncompletion": 105,
+          "task_success": 128
+        },
+        "rates": {
+          "catastrophe": 0.14652014652014653,
+          "safe_noncompletion": 0.38461538461538464,
+          "task_success": 0.46886446886446886
+        }
+      },
+      "retreat_hold": {
+        "decisions": 273,
+        "mean_utility_lambda_5": -0.47619047619047616,
+        "outcomes": {
+          "catastrophe": 26,
+          "safe_noncompletion": 247,
+          "task_success": 0
+        },
+        "rates": {
+          "catastrophe": 0.09523809523809523,
+          "safe_noncompletion": 0.9047619047619048,
+          "task_success": 0.0
+        }
+      }
+    },
+    "outcome_patterns": [
+      {
+        "count": 97,
+        "outcomes": {
+          "base_continue": "task_success",
+          "detour_complete": "task_success",
+          "retreat_hold": "safe_noncompletion"
+        }
+      },
+      {
+        "count": 55,
+        "outcomes": {
+          "base_continue": "task_success",
+          "detour_complete": "safe_noncompletion",
+          "retreat_hold": "safe_noncompletion"
+        }
+      },
+      {
+        "count": 31,
+        "outcomes": {
+          "base_continue": "catastrophe",
+          "detour_complete": "safe_noncompletion",
+          "retreat_hold": "safe_noncompletion"
+        }
+      },
+      {
+        "count": 23,
+        "outcomes": {
+          "base_continue": "catastrophe",
+          "detour_complete": "catastrophe",
+          "retreat_hold": "safe_noncompletion"
+        }
+      },
+      {
+        "count": 19,
+        "outcomes": {
+          "base_continue": "catastrophe",
+          "detour_complete": "task_success",
+          "retreat_hold": "safe_noncompletion"
+        }
+      },
+      {
+        "count": 11,
+        "outcomes": {
+          "base_continue": "safe_noncompletion",
+          "detour_complete": "safe_noncompletion",
+          "retreat_hold": "safe_noncompletion"
+        }
+      },
+      {
+        "count": 10,
+        "outcomes": {
+          "base_continue": "catastrophe",
+          "detour_complete": "catastrophe",
+          "retreat_hold": "catastrophe"
+        }
+      },
+      {
+        "count": 9,
+        "outcomes": {
+          "base_continue": "safe_noncompletion",
+          "detour_complete": "task_success",
+          "retreat_hold": "safe_noncompletion"
+        }
+      },
+      {
+        "count": 6,
+        "outcomes": {
+          "base_continue": "catastrophe",
+          "detour_complete": "safe_noncompletion",
+          "retreat_hold": "catastrophe"
+        }
+      },
+      {
+        "count": 4,
+        "outcomes": {
+          "base_continue": "task_success",
+          "detour_complete": "catastrophe",
+          "retreat_hold": "catastrophe"
+        }
+      },
+      {
+        "count": 3,
+        "outcomes": {
+          "base_continue": "catastrophe",
+          "detour_complete": "task_success",
+          "retreat_hold": "catastrophe"
+        }
+      },
+      {
+        "count": 2,
+        "outcomes": {
+          "base_continue": "safe_noncompletion",
+          "detour_complete": "catastrophe",
+          "retreat_hold": "safe_noncompletion"
+        }
+      },
+      {
+        "count": 1,
+        "outcomes": {
+          "base_continue": "safe_noncompletion",
+          "detour_complete": "catastrophe",
+          "retreat_hold": "catastrophe"
+        }
+      },
+      {
+        "count": 1,
+        "outcomes": {
+          "base_continue": "safe_noncompletion",
+          "detour_complete": "safe_noncompletion",
+          "retreat_hold": "catastrophe"
+        }
+      },
+      {
+        "count": 1,
+        "outcomes": {
+          "base_continue": "task_success",
+          "detour_complete": "safe_noncompletion",
+          "retreat_hold": "catastrophe"
+        }
+      }
+    ],
+    "positive_oracle_value_over_base": 91,
+    "source_states": 20
+  },
+  "schema_version": 1,
+  "source_artifact_sha256": {
+    "capture_manifest.json": "a0a1efad5976bc5661109a161e3ec21112a5a97f993207667cc7abda606f0d60",
+    "decision_metadata.json": "1e7f701cdb1b9c3eb00d6ae637c722e5a5f0ad55861e5135f0e1d2a1b18f0815",
+    "option_rollouts.jsonl": "9f51fe43b8cda6e67a93b70439dbf7c65ce769cfd8e04812230df4e2bfdb9353"
+  },
+  "utility": {
+    "catastrophe": -5.0,
+    "safe_noncompletion": 0.0,
+    "task_success": 1.0
+  },
+  "valid_placements": 23
+}

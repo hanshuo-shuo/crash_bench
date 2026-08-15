@@ -1,231 +1,160 @@
-# Counterfactual option router: 2026-08-14 stage handoff
+# Counterfactual option router: completed full-capture handoff
 
-## Decision (updated after job 9277740)
+## Current decision
 
-The exact-state counterfactual premise now passes on development data.  One
-frozen, non-source-specific `DetourComplete` configuration has replicated
-task-success evidence and produces three distinct glass option orderings across
-T−30/T−20/T−10/T−5.  Full source-disjoint collection was submitted as Quest job
-`9284055`; do not fit a router until its outcome-diversity audit is complete.
+The exact-state counterfactual premise passes the full audit. The official Quest
+capture is job `9288681`, completed with exit code 0 in 3:22:56 from clean commit
+`d4751330395eec11691f4830761b76f5f1ac36b7`:
 
-The controller configuration was selected only on already exposed development
-state evidence.  Do not revise it using full train/calibration outcomes.
+`results/counterfactual_router/full_d4751330395e_20260814T152231Z`
 
-## D0 result: risk-only baseline
+It contains 20 source states, 273 matched decisions, and 819 option rollouts.
+Only 21/273 decisions (7.69%) have identical outcomes under all three options;
+252/273 (92.31%) therefore carry counterfactual outcome information. The next
+experiment is the minimal source-disjoint supervised router. Do not modify the
+frozen options after seeing these outcomes.
 
-The complete D0 run is on Quest at:
+The machine-readable aggregate audit is
+`results/counterfactual_router_full_audit_20260815.json`; regenerate it with
+`scripts/analyze_counterfactual_option_capture.py`.
 
-`results/glass_recovery_v2/d0_capture_full_20260813_r2`
+## Frozen scientific contract
 
-It was generated from clean commit `c5b80c43c6690a45f18a76aa5e6ad1afefe8a697`.
-The capture contains 35 placements, 27 independent source states (8 train, 10
-calibration, 9 development), 105 episodes, 86 usable episodes, and 6,579 frames.
-
-The primary `hidden_robot_action` detector has frame AUC 0.898 on calibration
-and 0.883 on development, but its exact-T−20 timely-trigger rate is 0% at the
-low-control-FPR operating point on both splits.  The deployability gate failed
-because no positive operating point exists.  This is the frozen risk-only
-baseline and supports the statement that ranking risk is not sufficient for
-timely intervention.
-
-## Implemented counterfactual contract
-
-The implementation is:
-
-- `crashbench/counterfactual_router.py`: option/outcome vocabulary, causal
-  temporal windows, and source-disjoint validation;
-- `scripts/collect_counterfactual_option_rollouts.py`: exact-state multi-H
-  collector;
-- `setup/counterfactual_option_rollouts.sbatch` and
-  `setup/submit_counterfactual_option_rollouts.sh`: Quest execution;
-- `tests/test_counterfactual_router.py`: pure contract tests.
-
-Each decision stores an eight-frame causal window of raw frozen-VLA hidden state,
-8-D robot state, and 7-D nominal action.  PCA is intentionally deferred to
-training and must be fitted on training source states only.  From each
-byte-identical restored state the collector runs:
+Each decision uses an eight-frame causal history of the frozen VLA's 4096-D
+hidden state, 8-D robot state, and 7-D nominal action. From a byte-identical
+restored state, the collector evaluates:
 
 1. online frozen-VLA `base_continue`;
-2. one frozen, geometry-aware `detour_complete`;
+2. frozen geometry-aware `detour_complete`;
 3. latched `retreat_hold`.
 
-Every rollout receives exactly one label: `task_success`, `catastrophe`, or
-`safe_noncompletion`.  Split identity is keyed by `source_state_sha256`, never
-by frame.  `DetourComplete` uses privileged glass/bowl/plate geometry; any future
-result must be described as learned routing plus a structured/privileged option.
+Every rollout has exactly one outcome: `task_success`, `catastrophe`, or
+`safe_noncompletion`. Splits are keyed by source-state hash, never by frames or
+anchors. PCA and all learned preprocessing must be fitted on training sources
+only. `DetourComplete` uses privileged geometry, so the supported claim is
+learned routing over structured/privileged options, not end-to-end learned
+recovery.
 
-## Superseded negative smoke
+The frozen detour is config `b76f8d0eec34`: side −1, lane margin 0.12 m, lift
+offset 0.38 m, descend offset 0.04 m, grasp XY offset `[0.009, -0.04]` m, and
+departure clearance 0.06 m. It was selected on exposed development evidence
+before the full capture.
 
-The final protocol-correct smoke is Quest job `9264961`, generated from clean
-commit `fda0844e2b189445c6d6cbd7f8ba79f01b74bc79`:
+## Full-capture integrity
 
-`results/counterfactual_router/smoke_fda0844e2b18_20260814T081121Z`
-
-It completed in 11:51 with exit code 0.  Two predeclared development placements
-were retained as explicit `onpath_no_catastrophe` exclusions.  The valid source
-was `fresh:glass_recovery_train_0003`; its catastrophe occurred too early for
-T−40 and T−30, leaving nine decision states at T−20, T−10, and T−5 and 27 option
-rollouts.
-
-| Condition | Base | DetourComplete | RetreatHold |
-|---|---|---|---|
-| glass, T−20 | catastrophe | catastrophe | safe noncompletion |
-| glass, T−10 | catastrophe | catastrophe | safe noncompletion |
-| glass, T−5 | catastrophe | catastrophe | safe noncompletion |
-| off-path controls | 2 success, 1 noncompletion | 3 success | 3 noncompletion |
-| no-glass controls | 3 success | 3 success | 3 noncompletion |
-
-Aggregate outcomes are 11 task successes, 6 catastrophes, and 10 safe
-noncompletions.  On the three glass states, `RetreatHold` converts catastrophe
-to safe noncompletion with 0 N peak glass force, while the frozen detour remains
-catastrophic.  Thus the smoke validates the label semantics and exact-state
-branching, but it does not establish a task-completing recoverability window.
-
-## Superseded replay diagnostic smoke
-
-Quest job `9264451` used captured-action replay as Base and an unverified fixed
-detour configuration.  It completed and was useful for debugging, but is not the
-protocol result: long-horizon replay reproduced the original control terminal
-outcome in only 8/15 cells.  Base was consequently corrected to online frozen-VLA
-continuation.  Do not pool job `9264451` with job `9264961`.
-
-## Controller-development checkpoint and frozen option
-
-The first full development sweep job `9276191` failed before simulation because
-two manifests reused placement IDs for different source states.  The corrected
-job `9277175` was intentionally stopped after an auditable partial checkpoint:
-the completed rows already contained multiple replicated successes, so spending
-the remaining GPU time was unnecessary.
-
-The checkpoint freeze used 44 completed rollout rows and selected the stable
-success with the lowest mean peak force:
-
-`results/counterfactual_router/detour_freeze_partial_d7bbf9f_20260814T1205Z`
-
-| Parameter | Frozen value |
+| Item | Value |
 |---|---:|
-| side | −1 |
-| lane margin | 0.12 m |
-| lift offset | 0.38 m |
-| descend offset | 0.04 m |
-| grasp XY offset | [0.009, −0.04] m |
-| departure clearance | 0.06 m |
+| attempted / valid placements | 35 / 23 |
+| source states | 20 |
+| train / calibration / development sources | 5 / 7 / 8 |
+| matched decision states | 273 |
+| option rollouts | 819 |
+| success / catastrophe / safe noncompletion rows | 285 / 158 / 376 |
 
-Config ID `b76f8d0eec34` achieved task success in 2/2 exact-state repeats,
-averaging 169 controller steps and 1.4208 N peak glass force.  The freeze is a
-development choice and must remain fixed for the full collector.
+The final manifest sealed the feature archive and decision metadata. Declared
+exclusions were 14 `catastrophe_before_horizon`, 30
+`condition_terminal_before_matched_anchor`, 7 `onpath_no_catastrophe`, and 5
+`scan_invalid_initial_state`. These reduce available anchors; they are not
+silently relabeled rollouts.
 
-## Positive protocol-correct multi-H smoke
+## Outcome-diversity audit
 
-Quest job `9277740` completed in 9:05 from clean commit
-`d7bbf9f86b78fdd8f351bd8fd509ef0b6fb30999`:
+Utility is frozen for this first analysis as success `+1`, safe noncompletion
+`0`, catastrophe `−5`, with Base preferred on exact utility ties.
 
-`results/counterfactual_router/smoke_d7bbf9f86b78_20260814T115142Z`
+| Method | Success | Catastrophe | Safe noncompletion | Intervention | Mean utility |
+|---|---:|---:|---:|---:|---:|
+| Base only | 57.51% | 33.70% | 8.79% | 0% | −1.110 |
+| Always Detour | 46.89% | 14.65% | 38.46% | 100% | −0.264 |
+| Always Retreat | 0% | 9.52% | 90.48% | 100% | −0.476 |
+| Counterfactual Oracle | 68.86% | 3.66% | 27.47% | 33.33% | 0.505 |
 
-It retained `fresh:glass_recovery_heldout_0000` as one valid development source.
-T−40 was excluded because the catastrophe occurred before that horizon.  The
-remaining four horizons and all three conditions give 12 decision states and 36
-option rollouts: 17 task successes, 5 catastrophes, and 14 safe noncompletions.
+The Oracle chooses Base / Detour / Retreat on 182 / 68 / 23 decisions and gains
+1.615 mean utility over Base. It is a retrospective ceiling, not a deployable
+result. Its remaining ten catastrophes are states where no offered option avoids
+catastrophe.
 
-| Condition / horizon | Base | DetourComplete | RetreatHold |
-|---|---|---|---|
-| glass, T−30 | catastrophe (26.88 N) | task success (2.85 N) | safe noncompletion (0 N) |
-| glass, T−20 | catastrophe (21.22 N) | task success (0.26 N) | safe noncompletion (0 N) |
-| glass, T−10 | catastrophe (25.16 N) | safe noncompletion (1.55 N) | safe noncompletion (0 N) |
-| glass, T−5 | catastrophe (2.81 N) | safe noncompletion (0 N) | catastrophe (0.70 N) |
-| off-path, T−30/20/10/5 | task success | task success | safe noncompletion |
-| no-glass, T−30/20/10 | task success | task success | safe noncompletion |
-| no-glass, T−5 | safe noncompletion | task success | safe noncompletion |
+Decision-critical counts directly reject a fixed-recovery interpretation:
 
-The important audit counts are:
+- `Base catastrophe + Detour success`: 22;
+- `Base catastrophe + Retreat safe`: 73;
+- `Base success + Detour worse`: 60;
+- `Base success + Retreat worse`: 157;
+- positive Oracle value over Base: 91/273 (33.33%).
 
-- all-three-options-identical decisions: 0/12;
-- `Base catastrophe + Detour task success`: 2/12;
-- `Base catastrophe + Retreat safe noncompletion`: 3/12;
-- Base-success decisions where at least one intervention is worse: 7/12;
-- distinct glass option-ordering patterns: 3.
+In glass alone (101 decisions), Base catastrophizes on 91 (90.10%), while
+Detour succeeds on 23 but also catastrophizes on 35. The Oracle chooses Base /
+Detour / Retreat on 19 / 59 / 23, reaching 23.76% success, 8.91% catastrophe,
+and 67.33% safe noncompletion. Thus Detour is useful but clearly not universally
+best. On no-glass and off-path controls, Base succeeds on 91.86% and 88.37%; the
+Oracle intervenes on only 5.81% and 4.65%, respectively.
 
-This is unusually clean evidence for the paper premise: the same exact state
-supports different causal consequences under different options; the useful
-option changes with timing; and unnecessary intervention has an observable task
-cost.  Under utility `success=1`, `safe noncompletion=0`, `catastrophe=-lambda`,
-with Base preferred on exact utility ties, the observed choices are Base on most
-clean controls, Detour at glass T−30/T−20, either safe option at T−10 (Retreat
-has lower measured force), and Detour at T−5.  It remains a one-source exposed
-development smoke—the source also supplied the H=20 controller-development
-checkpoint—so this is within-source timing evidence, not state generalization.
-Prevalence and learned routing must be assessed on the full source-disjoint
-capture.
+Glass timing also changes option value:
 
-An automatic dependent submitter (`9277743`) failed with exit 127 because the
-short-partition environment did not place `git` on `PATH`.  The smoke audit itself
-passed.  Full was then submitted from the Quest login node as job `9284055`:
+| Horizon | N | Base catastrophe | Detour success | Detour catastrophe | Oracle catastrophe | Oracle choice B/D/R |
+|---:|---:|---:|---:|---:|---:|---:|
+| T−40 | 11 | 81.82% | 9.09% | 18.18% | 9.09% | 3 / 7 / 1 |
+| T−30 | 21 | 80.95% | 19.05% | 14.29% | 4.76% | 5 / 15 / 1 |
+| T−20 | 23 | 91.30% | 30.43% | 26.09% | 0% | 2 / 16 / 5 |
+| T−10 | 23 | 95.65% | 30.43% | 43.48% | 4.35% | 2 / 12 / 9 |
+| T−5 | 23 | 95.65% | 17.39% | 60.87% | 26.09% | 7 / 9 / 7 |
 
-`results/counterfactual_router/full_d7bbf9f86b78_20260814T131220Z`
+The late collapse of Detour and increased use of Retreat provide the desired
+timing-dependent boundary. T−40 has only 11 valid decisions, so the table is
+descriptive rather than a monotonicity claim.
 
-## First full attempt: infrastructure failure with useful partial diagnostic
+Held-out split audits remain diverse: train 69/71, calibration 84/96, and
+development 99/106 decisions have non-identical option outcomes. Evaluation
+must nevertheless aggregate uncertainty by source state because multiple
+horizons and conditions from one source are correlated.
 
-Job `9284055` failed after 20:40 on clean commit `d7bbf9f86b78`.  LIBERO's task
-environment replaces the robosuite `done` return with `_check_success()`.  A
-long Detour rollout could therefore reach robosuite's internal episode horizon,
-return `done=False`, and raise `executing action in terminated episode` on its
-next step.  This is a lifecycle bug, not an option-outcome rejection.
+| Split | Sources / decisions | Base success / catastrophe | Oracle success / catastrophe | Oracle utility gain |
+|---|---:|---:|---:|---:|
+| train | 5 / 71 | 54.93% / 33.80% | 76.06% / 1.41% | +1.831 |
+| calibration | 7 / 96 | 60.42% / 29.17% | 67.71% / 4.17% | +1.323 |
+| development | 8 / 106 | 56.60% / 37.74% | 65.09% / 4.72% | +1.736 |
 
-The failed directory is:
+The counterfactual ceiling improves catastrophe and mean utility in every
+source-disjoint split. This supports a stable decision-value premise; it does
+not establish that a learned router can recover that value.
 
-`results/counterfactual_router/full_d7bbf9f86b78_20260814T131220Z`
+## Minimal router next
 
-It has no capture manifest or feature archive and is not admissible training
-data.  It contains 64 option rows: 21 complete decisions plus one Base-only
-incomplete decision.  The complete subset is retained only as a diagnostic:
+Train only a simple supervised predictor of per-option outcome probabilities or
+expected utility from the causal history. Use train sources for fitting and PCA,
+calibration sources for the single operating choice, and development sources
+once for the reported comparison. The first closed-loop table should compare
+Base only, frozen D0 risk gate, Always Detour, Always Retreat, Learned Router,
+and Counterfactual Oracle on success, catastrophe, safe noncompletion,
+intervention rate, and Oracle/option-selection regret.
 
-| Partial diagnostic | Count |
-|---|---:|
-| calibration source states | 2 |
-| complete decisions | 21 |
-| all-three-options identical | 1 |
-| Base catastrophe + Detour task success | 3 |
-| Base catastrophe + Retreat safe noncompletion | 7 |
-| Base success + at least one worse intervention | 11 |
+Keep the four planned ablations only: single frame versus eight frames;
+hidden-only versus hidden+robot+action; single-H versus multi-H; binary risk
+versus counterfactual option supervision.
 
-The 21 decisions contain seven distinct outcome patterns.  In the seven glass
-decisions, the frozen Detour succeeds at three states, safely fails to complete
-at two, and catastrophizes at two.  This reinforces—not proves—the need for a
-router rather than fixed recovery.  Because collection stopped in deterministic
-plan order and only calibration sources are represented, none of these rates is
-a paper estimate and these rows must not be pooled with the rerun.
+## Provenance not to pool
 
-Commit `e6052c4c16ad` adds an explicit `episode_terminated()` lifecycle signal.
-Both Base and structured options now map internal-horizon exhaustion to
-`safe_noncompletion` with termination reason `robosuite_episode_horizon`, while
-LIBERO task success remains the only `done` path labeled success.  The full test
-suite passes (152 tests), including a regression that prevents a post-terminal
-step.
+| Job | Status | Use |
+|---|---|---|
+| `9277740` | successful positive smoke | exposed development timing evidence only |
+| `9284055` | failed after 21 complete decisions | lifecycle diagnostic only |
+| `9285934` | failed after 45 complete decisions | branch-start diagnostic only |
+| `9288443` | successful final smoke | regression evidence only |
+| `9288681` | successful full | sole official full capture |
 
-Regression smoke job `9285721` writes to:
+The two failed directories have no sealed final manifest/features and must never
+be pooled with the official capture. Their failures motivated the internal
+episode-horizon handling and pre-catastrophic-anchor exclusions now covered by
+tests.
 
-`results/counterfactual_router/smoke_e6052c4c16ad_20260814T135842Z`
+## D0 motivation retained
 
-Dependent short job `9285726` explicitly loads Git and will submit a new clean
-full run after smoke success.  The earlier automatic submitter failure mode
-(missing Git on `PATH`) is therefore also addressed operationally.
+The frozen D0 run at `results/glass_recovery_v2/d0_capture_full_20260813_r2`
+has calibration/development frame AUC 0.898/0.883 but 0% exact-T−20 timely
+trigger rate at the low-control-FPR operating point. The paper-facing bridge is:
 
-## Full-capture gate and next action
+> Knowing that failure is likely is not the same as knowing whether
+> intervention is beneficial.
 
-The original resume gate is now satisfied:
-
-1. run a CPU/simulator-heavy, VLA-light controller sweep only on the already
-   exposed Oracle-success development states;
-2. freeze one common structured configuration, or explicitly define separate
-   left/right options;
-3. require at least one replicated cell where Base catastrophizes and a frozen
-   detour option achieves task success;
-4. rerun this smoke without changing the option contract — passed by `9277740`;
-5. collect source-disjoint train/calibration data — first attempt `9284055`
-   failed on the fixed lifecycle bug; regression chain `9285721` → `9285726` is
-   queued for the clean rerun.
-
-When the clean rerun completes, first report the `H × option outcome`
-contingency, all-options-identical fraction, decision-critical counts, and
-option dominance. Only then fit train-only PCA and the minimal temporal
-supervised router. Do not change the frozen option based on the full outcomes.
+Risk ranking is therefore a baseline; exact-state option consequences supply
+the supervision for counterfactual action selection.

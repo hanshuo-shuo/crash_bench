@@ -16,6 +16,10 @@ from scripts.collect_counterfactual_option_rollouts import _run_structured_optio
 from scripts.collect_counterfactual_option_rollouts import _branch_start_catastrophic
 from scripts.audit_counterfactual_smoke import summarize_smoke
 from scripts.freeze_partial_detour_sweep import select_stable_success
+from scripts.analyze_counterfactual_option_capture import (
+    group_decisions,
+    summarize_decisions,
+)
 
 
 def test_option_outcomes_are_exhaustive_and_exclusive():
@@ -240,3 +244,28 @@ def test_branch_start_catastrophe_is_an_exclusion(monkeypatch):
         FakeEnv(), {"glasses": [{"name": "g", "pos": [0, 0, 0], "size": [1, 1]}]},
         0, {}, label="test",
     ) is True
+
+
+def test_counterfactual_capture_audit_uses_base_tie_break():
+    rows = []
+    patterns = [
+        ("task_success", "task_success", "safe_noncompletion"),
+        ("catastrophe", "task_success", "safe_noncompletion"),
+        ("catastrophe", "safe_noncompletion", "safe_noncompletion"),
+    ]
+    for index, outcomes in enumerate(patterns):
+        for option, outcome in zip(
+            ("base_continue", "detour_complete", "retreat_hold"), outcomes
+        ):
+            rows.append({
+                "decision_id": f"d{index}", "source_state_sha256": f"s{index}",
+                "placement_key": f"p{index}", "split": "train", "condition": "glass",
+                "horizon_actions": 20, "feature_index": index,
+                "option": option, "outcome": outcome,
+            })
+    summary = summarize_decisions(group_decisions(rows))
+    assert summary["counterfactual_oracle"]["choice_counts_tie_break_base"] == {
+        "base_continue": 1, "detour_complete": 2, "retreat_hold": 0,
+    }
+    assert summary["positive_oracle_value_over_base"] == 2
+    assert summary["all_options_identical"] == 0

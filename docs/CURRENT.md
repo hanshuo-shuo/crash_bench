@@ -105,53 +105,44 @@ primary detector reaches calibration/development frame AUC 0.898/0.883, but has
 0% exact-T−20 timely trigger rate at the low-control-FPR operating point.  Risk
 ranking therefore remains a baseline, not a deployable router.
 
-A development-only exact-state sweep froze one non-source-specific structured
-`DetourComplete` configuration after two identical safe task successes on an
-exposed H=20 state.  With that configuration, the protocol-correct multi-H smoke
-(Quest job `9277740`, clean commit `d7bbf9f86b78`) produced the desired timing
-boundary on one exposed development source:
+A development-only sweep froze one non-source-specific structured
+`DetourComplete` configuration before the full collection. The official full
+capture, Quest job `9288681` from clean commit `d4751330395e`, then completed in
+3:22:56 with 20 source states, 273 matched decisions, and 819 option rollouts.
+The sealed result is:
 
-| Glass horizon | Base | DetourComplete | RetreatHold |
-|---|---|---|---|
-| T−30 | catastrophe | task success | safe noncompletion |
-| T−20 | catastrophe | task success | safe noncompletion |
-| T−10 | catastrophe | safe noncompletion | safe noncompletion |
-| T−5 | catastrophe | safe noncompletion | catastrophe |
+`results/counterfactual_router/full_d4751330395e_20260814T152231Z`
 
-Across the 12 matched glass/off-path/no-glass decisions, zero have identical
-outcomes under all three options.  Seven clean-control decisions show that Base
-can succeed while Retreat sacrifices completion; two glass decisions show a
-task-completing Detour advantage.  Thus Detour is not an always-best fixed
-recovery, and option value changes with both hazard condition and intervention
-time.  This is development evidence from one source, not a generalization
-claim; the source also supplied the H=20 controller-development checkpoint.
+The counterfactual premise passes. Only 21/273 decisions (7.69%) have identical
+outcomes under all three options; 91/273 (33.33%) have positive Oracle value over
+Base. There are 22 `Base catastrophe + Detour success` states, 73 `Base
+catastrophe + Retreat safe` states, and—critically—60 `Base success + Detour
+worse` states. Detour is therefore useful but not an always-best recovery.
 
-The first full attempt, Quest job `9284055`, failed after 20:40 because LIBERO
-overwrites robosuite's horizon `done` with task success: a long structured
-option exhausted the internal episode horizon, returned `done=False`, and the
-next step raised.  Its 21 complete decisions are diagnostic only and must not be
-pooled with the completed capture.  They nevertheless cover two calibration
-sources and retain counterfactual diversity: 1/21 all-option-identical, three
-Base-catastrophe/Detour-success states, seven Base-catastrophe/Retreat-safe
-states, and eleven Base-success states where an intervention is worse.
+With utility success `+1`, safe noncompletion `0`, and catastrophe `−5`, Base /
+Always Detour / Always Retreat have catastrophe rates 33.70% / 14.65% / 9.52%.
+The retrospective Counterfactual Oracle chooses Base / Detour / Retreat on 182 /
+68 / 23 decisions and reaches 68.86% success, 3.66% catastrophe, 27.47% safe
+noncompletion, and 33.33% intervention. This is an upper bound, not a learned
+result.
 
-Commit `e6052c4` now checks the internal robosuite terminal flag and labels
-horizon exhaustion as safe noncompletion.  Regression smoke `9285721` is queued;
-dependent submitter `9285726` will launch a clean full rerun after that smoke.
-
-Exact provenance, the prior negative smoke, frozen configuration, and audit are
-in [COUNTERFACTUAL_ROUTER_HANDOFF.md](COUNTERFACTUAL_ROUTER_HANDOFF.md).
+The glass horizon table also shows the intended timing boundary: Detour success
+is 9.09%, 19.05%, 30.43%, 30.43%, and 17.39% at T−40/30/20/10/5, while its
+catastrophe rate rises to 60.87% at T−5 and Oracle increasingly uses Retreat.
+T−40 has only 11 valid states, so this is descriptive rather than a monotonicity
+claim. Exact tables, split audits, exclusions, and failed-run provenance are in
+[COUNTERFACTUAL_ROUTER_HANDOFF.md](COUNTERFACTUAL_ROUTER_HANDOFF.md).
 
 ## Next experiment queue
 
 1. **Five-fold held-out online wall guard.** Fit/calibrate on four wall scenarios,
    deploy only on the fifth, and test matched off-path/no-wall controls. This is
    the highest-value generalization test.
-2. **Complete the source-disjoint counterfactual option collection.** Regression
-   smoke `9285721` and dependent full submitter `9285726` are queued after the
-   horizon-lifecycle fix.  On completion, audit outcome diversity before fitting
-   any model, then train only the minimal temporal supervised router.  Call the
-   result learned routing plus a structured/privileged controller, not learned
+2. **Train the minimal source-disjoint counterfactual router.** The full capture
+   and outcome-diversity audit are complete. Fit train-only PCA and a simple
+   per-option outcome/utility predictor; use calibration sources for the frozen
+   operating choice and development sources once for the final comparison. Call
+   the result learned routing plus structured/privileged options, not learned
    recovery.
 3. **OFT-specific online guard replication.** Use OFT's own probe to trigger the
    same `RetreatHold` interface.
