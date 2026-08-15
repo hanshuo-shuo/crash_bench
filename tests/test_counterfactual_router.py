@@ -20,6 +20,12 @@ from scripts.analyze_counterfactual_option_capture import (
     group_decisions,
     summarize_decisions,
 )
+from scripts.train_minimal_counterfactual_router import (
+    calibrate_router_margin,
+    choose_router,
+    fit_weighted_ridge,
+    predict_ridge,
+)
 
 
 def test_option_outcomes_are_exhaustive_and_exclusive():
@@ -269,3 +275,19 @@ def test_counterfactual_capture_audit_uses_base_tie_break():
     }
     assert summary["positive_oracle_value_over_base"] == 2
     assert summary["all_options_identical"] == 0
+
+
+def test_source_balanced_ridge_and_router_calibration():
+    x = np.asarray([[0.0], [0.1], [1.0], [1.1]])
+    sources = np.asarray(["a", "a", "b", "b"])
+    target = np.asarray([
+        [1.0, 0.0, -5.0], [1.0, 0.0, -5.0],
+        [-5.0, 1.0, 0.0], [-5.0, 1.0, 0.0],
+    ])
+    model = fit_weighted_ridge(x, target, sources, alpha=0.01)
+    predicted = predict_ridge(model, x)
+    assert predicted.shape == target.shape
+    assert choose_router(predicted, margin=0.0).tolist() == [0, 0, 1, 1]
+    margin, summary = calibrate_router_margin(predicted, target, sources)
+    assert margin >= 0.0
+    assert summary["source_macro_utility"] == 1.0
