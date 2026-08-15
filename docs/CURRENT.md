@@ -133,17 +133,32 @@ T−40 has only 11 valid states, so this is descriptive rather than a monotonici
 claim. Exact tables, split audits, exclusions, and failed-run provenance are in
 [COUNTERFACTUAL_ROUTER_HANDOFF.md](COUNTERFACTUAL_ROUTER_HANDOFF.md).
 
+The first train-only PCA-16 plus source-balanced linear expected-utility router
+is also complete. On 106 decisions from eight held-out development sources, the
+8-frame hidden+robot+action primary recovers 34.78% of Oracle decision value,
+versus 14.67% for a binary-Base-risk gate with a calibrated fixed intervention.
+At similar intervention rates (41.51% versus 36.79%), counterfactual supervision
+raises success from 39.62% to 46.23% and lowers catastrophe from 29.25% to
+23.58%. It does not yet beat Always Detour under λ=5 utility.
+
+The predeclared single-frame hidden+robot+action ablation is stronger
+descriptively—54.72% success, 22.64% catastrophe, and 39.62% intervention—but
+was selected after inspecting development. It is the next architecture to
+freeze for fresh online evaluation, not a retroactive replacement for the
+primary. Full tables and interpretation are in
+[COUNTERFACTUAL_ROUTER_MINIMAL_RESULT.md](COUNTERFACTUAL_ROUTER_MINIMAL_RESULT.md).
+
 ## Next experiment queue
 
 1. **Five-fold held-out online wall guard.** Fit/calibrate on four wall scenarios,
    deploy only on the fifth, and test matched off-path/no-wall controls. This is
    the highest-value generalization test.
-2. **Train the minimal source-disjoint counterfactual router.** The full capture
-   and outcome-diversity audit are complete. Fit train-only PCA and a simple
-   per-option outcome/utility predictor; use calibration sources for the frozen
-   operating choice and development sources once for the final comparison. Call
-   the result learned routing plus structured/privileged options, not learned
-   recovery.
+2. **Fresh online evaluation of the frozen minimal counterfactual router.** The
+   offline source-disjoint router result is complete. Freeze the single-frame
+   hidden+robot+action candidate without further development tuning and compare
+   it with Base, binary risk, Always Detour, Always Retreat, and Oracle-timed
+   structured options in new rollouts. Call the result learned routing plus
+   structured/privileged options, not learned recovery.
 3. **OFT-specific online guard replication.** Use OFT's own probe to trigger the
    same `RetreatHold` interface.
 

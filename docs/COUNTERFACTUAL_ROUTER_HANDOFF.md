@@ -10,9 +10,10 @@ capture is job `9288681`, completed with exit code 0 in 3:22:56 from clean commi
 
 It contains 20 source states, 273 matched decisions, and 819 option rollouts.
 Only 21/273 decisions (7.69%) have identical outcomes under all three options;
-252/273 (92.31%) therefore carry counterfactual outcome information. The next
-experiment is the minimal source-disjoint supervised router. Do not modify the
-frozen options after seeing these outcomes.
+252/273 (92.31%) therefore carry counterfactual outcome information. The first
+minimal source-disjoint supervised router is now complete; see
+[COUNTERFACTUAL_ROUTER_MINIMAL_RESULT.md](COUNTERFACTUAL_ROUTER_MINIMAL_RESULT.md).
+Do not modify the frozen options after seeing these outcomes.
 
 The machine-readable aggregate audit is
 `results/counterfactual_router_full_audit_20260815.json`; regenerate it with
@@ -118,19 +119,21 @@ The counterfactual ceiling improves catastrophe and mean utility in every
 source-disjoint split. This supports a stable decision-value premise; it does
 not establish that a learned router can recover that value.
 
-## Minimal router next
+## Minimal router result and next action
 
-Train only a simple supervised predictor of per-option outcome probabilities or
-expected utility from the causal history. Use train sources for fitting and PCA,
-calibration sources for the single operating choice, and development sources
-once for the reported comparison. The first closed-loop table should compare
-Base only, frozen D0 risk gate, Always Detour, Always Retreat, Learned Router,
-and Counterfactual Oracle on success, catastrophe, safe noncompletion,
-intervention rate, and Oracle/option-selection regret.
+The train-only PCA-16 plus source-balanced linear utility router recovers 34.78%
+of Oracle decision value on development, versus 14.67% for binary-risk
+supervision. It lowers catastrophe from 29.25% to 23.58% and raises success from
+39.62% to 46.23% relative to that risk baseline at a nearby intervention rate.
+It does not beat Always Detour under the frozen λ=5 utility, so the result is
+positive method evidence rather than a completed deployment claim.
 
-Keep the four planned ablations only: single frame versus eight frames;
-hidden-only versus hidden+robot+action; single-H versus multi-H; binary risk
-versus counterfactual option supervision.
+The predeclared single-frame hidden+robot+action ablation is descriptively
+stronger than the 8-frame primary, reaching 54.72% success, 22.64% catastrophe,
+39.62% intervention, and 42.39% Oracle value recovery. Freeze that architecture
+as the next candidate and test it in fresh online rollouts; retain the 8-frame
+result as the original primary rather than rewriting the analysis after seeing
+development.
 
 ## Provenance not to pool
 
