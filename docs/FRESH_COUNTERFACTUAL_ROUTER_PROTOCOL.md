@@ -50,6 +50,15 @@ The paper analysis pools every eligible source from the default and random-reset
 cohorts and clusters the bootstrap by source; neither cohort is selected by its
 router result.
 
+The default-initialization run retained only five eligible sources and is
+therefore an operating-point pilot, not the confirmation sample.  Before any
+random-reset matched outcomes were collected, its frontier fixed
+`lambda=5, target=0.2` as the conservative secondary confirmation point: it was
+the lowest nonzero-intervention router point and was not dominated by another
+router point.  The originally declared `lambda=5, target=0.4` point remains the
+primary audit row and is not rewritten; the independent eight-source supplement
+reports both points and the complete predeclared frontier.
+
 Each accepted source contributes an on-path glass, matched off-path glass, and
 no-glass control.  Frozen Base first establishes the actual on-path collision.
 At exactly T-20 actions, the simulator and controller state is restored and
