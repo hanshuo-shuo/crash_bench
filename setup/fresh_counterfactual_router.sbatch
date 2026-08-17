@@ -49,11 +49,11 @@ OUTPUT="$RUN_ROOT/$MODE"
 
 SELECTION_ARGS=()
 if [[ "$MODE" == smoke ]]; then
-  # These first three source states are mechanical smoke only and are excluded
+  # These first two source states are mechanical smoke only and are excluded
   # from the official full cohort even when the first one succeeds.
-  SELECTION_ARGS=(--max-placements 3 --target-valid-placements 1)
+  SELECTION_ARGS=(--max-placements 2 --target-valid-placements 1)
 else
-  SELECTION_ARGS=(--skip-placements 3)
+  SELECTION_ARGS=(--skip-placements 2)
 fi
 
 python scripts/collect_fresh_counterfactual_router.py \

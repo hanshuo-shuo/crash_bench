@@ -28,9 +28,9 @@ used to fit or select any parameter.
 The source-trace inventory has 50 LIBERO initial states, 47 of which complete
 the no-glass task.  The 27 indices exposed by either previous placement manifest
 are excluded before authoring.  From the remaining 20 successful states, the
-fixed authoring screen selects 17 candidates and retains one reserve per
-authoring stratum.  The first three candidate positions are mechanical smoke
-only; the official full job evaluates the remaining 14 candidates.  Any live
+fixed authoring screen selects 12 candidates and retains two reserves per
+authoring stratum.  The first two candidate positions are mechanical smoke
+only; the official full job evaluates the remaining 10 candidates.  Any live
 eligibility failure is excluded as a whole source placement, never as an
 individual method or condition.
 

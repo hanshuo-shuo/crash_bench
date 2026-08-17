@@ -795,7 +795,9 @@ def author(args: argparse.Namespace) -> dict:
             "task_id": args.task_id,
             "settle_steps": args.settle_steps,
             "design_purpose": (
-                "development_frontier" if args.development_frontier else "cohort_authoring"
+                "fresh_evaluation" if getattr(args, "fresh_evaluation", False)
+                else "development_frontier" if args.development_frontier
+                else "cohort_authoring"
             ),
             "geometry_profile": args.geometry_profile,
             "fixed_action_screen": {
@@ -896,12 +898,18 @@ def main() -> None:
         "--development-frontier", action="store_true",
         help="author a small feasibility frontier without formal cohort-yield quotas",
     )
+    parser.add_argument(
+        "--fresh-evaluation", action="store_true",
+        help="author a small source-disjoint evaluation cohort without training-yield quotas",
+    )
     parser.add_argument("--blocked-half-width", type=float, default=0.28)
     parser.add_argument("--blocked-glasses", type=int, default=9)
     parser.add_argument("--blocked-radius", type=float, default=0.032)
     parser.add_argument("--blocked-half-height", type=float, default=0.20)
     parser.add_argument("--overwrite", action="store_true")
     args = parser.parse_args()
+    if args.development_frontier and args.fresh_evaluation:
+        raise SystemExit("development frontier and fresh evaluation are mutually exclusive")
     if args.source_trace_manifest and args.legacy_straight_path:
         raise SystemExit("source trace manifest and legacy straight path are mutually exclusive")
     if args.source_trace_manifest and not args.checkpoint_revision:
@@ -946,7 +954,7 @@ def main() -> None:
     for split in candidate_counts:
         if candidate_counts[split] < 1:
             raise SystemExit(f"{split} needs at least one candidate")
-        if args.development_frontier:
+        if args.development_frontier or args.fresh_evaluation:
             continue
         if accepted_targets[split] < 1 or candidate_counts[split] < (
             accepted_targets[split] * args.candidates_per_accepted_target
