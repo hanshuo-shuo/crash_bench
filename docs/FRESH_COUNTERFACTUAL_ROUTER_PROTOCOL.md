@@ -46,6 +46,9 @@ This supplement is triggered only by the eligibility count, before reading any
 router comparison, and keeps the already-frozen router, geometry, rollout seed,
 T-20 rule, options, and analysis unchanged.  Its collector stops after eight
 eligible sources, so it independently meets the planned 8--12 source range.
+The paper analysis pools every eligible source from the default and random-reset
+cohorts and clusters the bootstrap by source; neither cohort is selected by its
+router result.
 
 Each accepted source contributes an on-path glass, matched off-path glass, and
 no-glass control.  Frozen Base first establishes the actual on-path collision.

@@ -58,6 +58,7 @@ def load_fresh_capture(root: Path) -> dict[str, Any]:
         for row in decisions
     ], dtype=object)
     return {
+        "root": root,
         "manifest": json.loads((root / "capture_manifest.json").read_text()),
         "decisions": decisions,
         "outcomes": outcomes,
@@ -73,6 +74,40 @@ def load_fresh_capture(root: Path) -> dict[str, Any]:
         "sources": np.asarray([row["source_state_sha256"] for row in decisions]),
         "conditions": np.asarray([row["condition"] for row in decisions]),
     }
+
+
+def combine_fresh_captures(roots: list[Path]) -> dict[str, Any]:
+    """Concatenate complete, source-disjoint captures of the same frozen router."""
+
+    parts = [load_fresh_capture(root) for root in roots]
+    source_sets = [set(map(str, part["sources"])) for part in parts]
+    for index, sources in enumerate(source_sets):
+        for previous in source_sets[:index]:
+            if sources & previous:
+                raise ValueError("fresh captures contain overlapping source states")
+    return {
+        "root": parts[0]["root"],
+        "manifest": parts[0]["manifest"],
+        "component_roots": roots,
+        "decisions": sum((part["decisions"] for part in parts), []),
+        **{
+            key: np.concatenate([part[key] for part in parts], axis=0)
+            for key in (
+                "outcomes", "prompt_outcomes", "probabilities", "risk_scores",
+                "sources", "conditions",
+            )
+        },
+    }
+
+
+def _router_path(data: dict[str, Any]) -> Path:
+    declared = Path(data["manifest"]["router_model"])
+    if declared.is_file():
+        return declared
+    local = Path(data["root"]).parent / "router.json"
+    if local.is_file():
+        return local
+    raise FileNotFoundError(declared)
 
 
 def oracle_choice(outcomes: np.ndarray, catastrophe_cost: float) -> np.ndarray:
@@ -310,9 +345,17 @@ def _write_frontier_figure(rows: list[dict[str, Any]], output: Path) -> None:
     plt.close(fig)
 
 
-def analyze(root: Path, *, bootstrap_replicates: int, bootstrap_seed: int) -> dict[str, Any]:
-    data = load_fresh_capture(root)
-    router_path = Path(data["manifest"]["router_model"])
+def analyze(
+    root: Path,
+    *,
+    bootstrap_replicates: int,
+    bootstrap_seed: int,
+    additional_roots: list[Path] | None = None,
+    output_root: Path | None = None,
+) -> dict[str, Any]:
+    roots = [root, *(additional_roots or [])]
+    data = combine_fresh_captures(roots)
+    router_path = _router_path(data)
     router_manifest = json.loads(router_path.read_text())
     lambdas = [float(value) for value in router_manifest["calibration"]["lambdas"]]
     target_rates = [
@@ -461,6 +504,7 @@ def analyze(root: Path, *, bootstrap_replicates: int, bootstrap_seed: int) -> di
         "schema_version": 1,
         "kind": "fresh_counterfactual_router_source_cluster_analysis",
         "capture": str(root),
+        "component_captures": [str(value) for value in roots],
         "statistical_unit": "source_state_sha256",
         "n_independent_source_states": len(set(data["sources"])),
         "n_matched_decisions": len(data["outcomes"]),
@@ -483,26 +527,34 @@ def analyze(root: Path, *, bootstrap_replicates: int, bootstrap_seed: int) -> di
         "frontier_by_lambda": frontier_by_lambda,
         "acceptance": acceptance,
     }
-    output = root / "analysis.json"
+    destination = output_root or root
+    destination.mkdir(parents=True, exist_ok=True)
+    output = destination / "analysis.json"
     output.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")
-    with (root / "frontier.csv").open("w", newline="") as handle:
+    with (destination / "frontier.csv").open("w", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=list(csv_rows[0]))
         writer.writeheader()
         writer.writerows(csv_rows)
     figure_rows = frontier_by_lambda["lambda_5"]["points"]
-    _write_frontier_figure(figure_rows, root / "safety_success_frontier_lambda5.png")
+    _write_frontier_figure(
+        figure_rows, destination / "safety_success_frontier_lambda5.png"
+    )
     return result
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--capture", required=True, type=Path)
+    parser.add_argument("--additional-capture", action="append", type=Path, default=[])
+    parser.add_argument("--output", type=Path)
     parser.add_argument("--bootstrap-replicates", type=int, default=5000)
     parser.add_argument("--bootstrap-seed", type=int, default=20260817)
     args = parser.parse_args()
     result = analyze(
         args.capture.resolve(), bootstrap_replicates=args.bootstrap_replicates,
         bootstrap_seed=args.bootstrap_seed,
+        additional_roots=[path.resolve() for path in args.additional_capture],
+        output_root=None if args.output is None else args.output.resolve(),
     )
     print(json.dumps({
         "capture": result["capture"],
