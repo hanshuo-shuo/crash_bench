@@ -485,10 +485,20 @@ def analyze(
                     *selected, data["outcomes"], catastrophe_cost=catastrophe_cost,
                 ),
             })
-        pareto = _pareto_labels(rows)
+        pareto_including_oracle = _pareto_labels(rows)
+        pareto = _pareto_labels([
+            row for row in rows if row["method"] != "oracle"
+        ])
         for row in rows:
             row["pareto_optimal_success_catastrophe_intervention"] = row["label"] in pareto
-        frontier_by_lambda[key] = {"points": rows, "pareto_labels": pareto}
+            row["pareto_optimal_including_oracle_upper_bound"] = (
+                row["label"] in pareto_including_oracle
+            )
+        frontier_by_lambda[key] = {
+            "points": rows,
+            "pareto_labels": pareto,
+            "pareto_labels_including_oracle_upper_bound": pareto_including_oracle,
+        }
         csv_rows.extend(rows)
 
     lambda5 = headline["lambda_5"]
@@ -578,6 +588,95 @@ def analyze(
         router_is_pareto="router_target_0.2" in lambda5_pareto,
     )
 
+    frontier_point_audits = []
+    for catastrophe_cost in lambdas:
+        key = f"lambda_{catastrophe_cost:g}"
+        rows = frontier_by_lambda[key]["points"]
+        detour_point = next(row for row in rows if row["method"] == "always_detour")
+        for target_rate in target_rates:
+            router_point = next(
+                row for row in rows
+                if row["method"] == "router"
+                and row["calibration_target_intervention_rate"] == target_rate
+            )
+            risk_point = next(
+                row for row in rows
+                if row["method"] == "binary_risk_retreat"
+                and row["calibration_target_intervention_rate"] == target_rate
+            )
+            point_arrays = method_arrays(
+                "router", data, router_manifest,
+                catastrophe_cost=catastrophe_cost, target_rate=target_rate,
+            )
+            point_control = summarize_method(
+                *point_arrays, data, catastrophe_cost=catastrophe_cost,
+                indices=prompt_controls, draws=None,
+            )
+            label = f"router_target_{target_rate:.1f}"
+            audit = _acceptance_audit(
+                router_point, risk_point, detour_point, point_control,
+                prompt_control,
+                router_is_pareto=(
+                    label in frontier_by_lambda[key]["pareto_labels"]
+                ),
+            )
+            frontier_point_audits.append({
+                "lambda": catastrophe_cost,
+                "calibration_target_intervention_rate": target_rate,
+                "label": label,
+                "router": {
+                    metric: router_point[metric]
+                    for metric in (
+                        "task_success_rate", "catastrophe_rate",
+                        "intervention_rate", "unnecessary_intervention_rate",
+                    )
+                },
+                "binary_risk_retreat": {
+                    metric: risk_point[metric]
+                    for metric in (
+                        "task_success_rate", "catastrophe_rate",
+                        "intervention_rate", "unnecessary_intervention_rate",
+                    )
+                },
+                "control_task_success_rate": point_control["task_success_rate"],
+                "control_unnecessary_intervention_rate": point_control[
+                    "unnecessary_intervention_rate"
+                ],
+                "acceptance": audit,
+            })
+    audit_keys = (
+        "similar_rate_and_better_than_binary_risk",
+        "fixed_detour_tradeoff",
+        "controls_retained_better_than_hazard_prompt",
+        "router_adds_pareto_point",
+    )
+    frontier_acceptance = {
+        f"points_{key}": [
+            {
+                "lambda": point["lambda"],
+                "calibration_target_intervention_rate": point[
+                    "calibration_target_intervention_rate"
+                ],
+            }
+            for point in frontier_point_audits if point["acceptance"][key]
+        ]
+        for key in audit_keys
+    }
+    frontier_acceptance["joint_points_all_criteria_met"] = [
+        {
+            "lambda": point["lambda"],
+            "calibration_target_intervention_rate": point[
+                "calibration_target_intervention_rate"
+            ],
+        }
+        for point in frontier_point_audits
+        if point["acceptance"]["all_acceptance_criteria_met"]
+    ]
+    frontier_acceptance["all_frontier_acceptance_criteria_met"] = all(
+        frontier_acceptance[f"points_{key}"] for key in audit_keys
+    )
+    frontier_acceptance["point_audits"] = frontier_point_audits
+
     result = {
         "schema_version": 1,
         "kind": "fresh_counterfactual_router_source_cluster_analysis",
@@ -605,6 +704,7 @@ def analyze(
         "frontier_by_lambda": frontier_by_lambda,
         "acceptance": acceptance,
         "secondary_confirmation_operating_point": confirmation,
+        "frontier_level_acceptance": frontier_acceptance,
     }
     destination = output_root or root
     destination.mkdir(parents=True, exist_ok=True)

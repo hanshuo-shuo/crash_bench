@@ -87,6 +87,16 @@ The machine-readable acceptance audit checks whether the 40%-target router:
 3. retains controls better than the from-reset hazard prompt; and
 4. contributes a non-dominated success/catastrophe/intervention point.
 
+That fixed-point audit is retained for provenance, along with the post-pilot
+20%-target audit.  The paper's primary acceptance is additionally evaluated at
+the **frontier level**, as requested by the study design: it reports every
+predeclared `(lambda, target intervention rate)` point satisfying each of the
+four criteria and passes only when each criterion has at least one such point.
+It also reports whether any single point satisfies all four.  The deployable
+Pareto calculation excludes Counterfactual Oracle because Oracle is an upper
+bound, not a competing method; a second Pareto list including Oracle is retained
+in the same artifact.
+
 Quest entry point: `setup/submit_fresh_counterfactual_router.sh`.  It submits a
 freeze/authoring job, a source-exclusive GPU smoke, and the dependent full GPU
 evaluation plus analysis.  The eligibility-only supplement is submitted with
