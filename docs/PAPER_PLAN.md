@@ -68,11 +68,14 @@ End with a frontier, not a new main pipeline.
   successes for both wall and glass.
 - `RetreatHold` is a safe-abort controller.
 - Exact-state glass counterfactuals show that a task-completing continuation is
-  physically available: Oracle timing/actions achieve 6/6 on two development
-  source states.
+  physically available, and a frozen option-outcome router now yields a positive
+  fresh online safety-success-intervention frontier. In the independent
+  eight-source cohort, its strongest predeclared joint point reaches 87.5%
+  success and 8.33% catastrophe at 58.33% intervention.
 
-State the boundary explicitly: the current closed-loop learned component fixes
-collision behavior, while task-completing learned routing remains open.
+State the boundary explicitly: wall routing closes a safe-abort loop, while the
+glass result learns intervention value over structured privileged options. It is
+not an end-to-end learned recovery policy.
 
 ## Main figures and tables
 
@@ -104,17 +107,7 @@ independent units and keep threshold selection inside each training fold.
 This upgrades C7 from “operational on the fitted geometry set” to a held-out
 risk-routing interface test.
 
-### 2. Glass learned detector + structured task-completing controller
-
-Recover or recapture glass hidden states, serialize a deployable glass-specific
-probe, and use it to trigger `DetourComplete`. First run the two development pairs;
-only after a positive development signal freeze a small fresh certified cohort.
-The wall probe is not an acceptable substitute because wall→glass AUC is 0.359.
-
-Name the method by what is learned: **learned detector + structured controller**.
-Do not call the structured actions “learned recovery.”
-
-### 3. OFT-specific online guard replication
+### 2. OFT-specific online guard replication
 
 Use OFT's own representation and probe to trigger the same `RetreatHold`
 interface. This tests whether the routing abstraction, rather than one action

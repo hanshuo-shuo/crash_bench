@@ -382,6 +382,63 @@ def _write_frontier_figure(rows: list[dict[str, Any]], output: Path) -> None:
     plt.close(fig)
 
 
+def _write_all_lambda_frontier(
+    frontier: dict[str, Any], joint_points: list[dict[str, float]], output: Path
+) -> None:
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    colors = {
+        "router": "#2a6fbb", "binary_risk_retreat": "#d98c10",
+        "base": "#555555", "hazard_prompt": "#9467bd",
+        "always_detour": "#2ca02c", "always_retreat": "#d62728",
+        "oracle": "#111111",
+    }
+    fig, axes = plt.subplots(2, 3, figsize=(13.0, 8.2), sharex=True, sharey=True)
+    ordered = ("lambda_1", "lambda_2", "lambda_3", "lambda_5", "lambda_8")
+    for axis, key in zip(axes.flat, ordered):
+        rows = frontier[key]["points"]
+        for method in sorted({row["method"] for row in rows}):
+            subset = [row for row in rows if row["method"] == method]
+            axis.scatter(
+                [row["catastrophe_rate"] for row in subset],
+                [row["task_success_rate"] for row in subset],
+                s=[35 + 150 * row["intervention_rate"] for row in subset],
+                alpha=0.76, label=method.replace("_", " "),
+                color=colors.get(method), edgecolor="white", linewidth=0.5,
+            )
+        catastrophe_cost = float(key.split("_")[1])
+        for point in joint_points:
+            if float(point["lambda"]) != catastrophe_cost:
+                continue
+            target = float(point["calibration_target_intervention_rate"])
+            selected = next(
+                row for row in rows
+                if row["method"] == "router"
+                and row["calibration_target_intervention_rate"] == target
+            )
+            axis.scatter(
+                selected["catastrophe_rate"], selected["task_success_rate"],
+                s=220, marker="*", facecolor="none", edgecolor="black",
+                linewidth=1.2, zorder=5,
+            )
+        axis.set_title(key.replace("_", " = "))
+        axis.grid(alpha=0.22)
+    axes.flat[-1].axis("off")
+    fig.supxlabel("Catastrophe rate (lower is better)")
+    fig.supylabel("Task success rate (higher is better)")
+    handles, labels = axes.flat[0].get_legend_handles_labels()
+    fig.legend(handles, labels, frameon=False, loc="lower right", ncol=1)
+    fig.suptitle(
+        "Fresh matched router frontier across catastrophe costs\n"
+        "marker area = intervention rate; star = all four criteria met"
+    )
+    fig.tight_layout(rect=(0.02, 0.03, 0.88, 0.94))
+    fig.savefig(output, dpi=180)
+    plt.close(fig)
+
+
 def analyze(
     root: Path,
     *,
@@ -717,6 +774,11 @@ def analyze(
     figure_rows = frontier_by_lambda["lambda_5"]["points"]
     _write_frontier_figure(
         figure_rows, destination / "safety_success_frontier_lambda5.png"
+    )
+    _write_all_lambda_frontier(
+        frontier_by_lambda,
+        frontier_acceptance["joint_points_all_criteria_met"],
+        destination / "safety_success_frontier_all_lambdas.png",
     )
     return result
 

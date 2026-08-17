@@ -34,20 +34,26 @@ E13 is a completed prompt-scope baseline, not a new claim ID. Hazard-specific
 language changes behavior but yields 0/15 treatment task successes for both wall
 and glass. The supported interpretation is conservative stopping.
 
-E14/E15 glass recovery is supporting counterfactual evidence, not a learned
-result. The broad frontier is a no-go. The scoped ledger certifies 3/15 accidents
-(3/12 conditional on a Base catastrophe), and Oracle timing/actions produce 6/6
-safe task successes on two development source states. The learned gate and learned
-action head were not evaluated in a valid closed loop; the evaluation states were
-also used for checkpoint validation.
+The old E14/E15 sequence-action recovery remains supporting counterfactual
+evidence rather than a learned result. Separately, a frozen single-frame
+probabilistic outcome router has now been tested in a fresh online matched
+cohort. On eight independent random-reset sources, one predeclared frontier
+point reaches 87.5% success, 8.33% catastrophe, and 58.33% intervention versus
+41.67%, 8.33%, and 50.0% for rate-matched binary-risk-to-Retreat. The full
+predeclared frontier passes the paper acceptance audit; the combined 13-source
+frontier passes at the portfolio level but has no single all-criteria point.
+This supports learned intervention-value routing over structured, privileged
+options—not a learned action head or end-to-end learned recovery.
 
 The separate `glass_recovery_checkpoint_readiness_audit_20260812.json` records
 why D/F are not active claims: the frozen gate has no threshold crossing in the
 six saved episodes, and validation gripper-sign accuracy is below its gate.
 
 Accordingly, the paper may say that a task-completing continuation physically
-exists from exact matched states. It may not claim learned recovery, final-held-out
-generalization, or arbitrary glass-layout coverage.
+exists from exact matched states and that a frozen learned router recovers a
+useful fresh online frontier over those options. It may not claim end-to-end
+learned recovery, universal fixed-policy dominance, or arbitrary glass-layout
+coverage.
 
 ## Deprecated wording
 

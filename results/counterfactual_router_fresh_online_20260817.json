@@ -1,0 +1,303 @@
+{
+  "schema_version": 1,
+  "kind": "fresh_counterfactual_router_paper_summary",
+  "paper_status": {
+    "frontier_level_acceptance_met": true,
+    "independent_n8_has_joint_points_meeting_all_four_criteria": true,
+    "combined_n13_frontier_meets_all_four_criteria": true,
+    "combined_n13_has_joint_point_meeting_all_four_criteria": false,
+    "original_lambda5_target_0_4_fixed_point_audit_met": false,
+    "postpilot_lambda5_target_0_2_fixed_point_audit_met": false,
+    "supported_claim": "A frozen single-frame probabilistic outcome router contributes new deployable safety-success-intervention tradeoffs on fresh matched online rollouts and can outperform rate-matched binary risk routing while retaining controls better than a hazard prompt.",
+    "unsupported_claim": "One prespecified deployment operating point dominates every fixed baseline across both fresh cohorts."
+  },
+  "frozen_method": {
+    "feature_contract": "single-frame PCA-16 hidden + robot state + nominal action",
+    "prediction_target": "option-specific probabilities of task_success, catastrophe, and safe_noncompletion",
+    "options": [
+      "base_continue",
+      "detour_complete",
+      "retreat_hold"
+    ],
+    "catastrophe_costs": [
+      1.0,
+      2.0,
+      3.0,
+      5.0,
+      8.0
+    ],
+    "calibration_target_intervention_rates": [
+      0.1,
+      0.2,
+      0.3,
+      0.4,
+      0.5,
+      0.6,
+      0.7,
+      0.8,
+      0.9
+    ],
+    "training_calibration_development_source_counts": [
+      5,
+      7,
+      8
+    ],
+    "router_json_sha256": "757e220bc2e561aa8207ae3778a3021554b3031df2ec3eef376e1e56db938052",
+    "router_npz_sha256": "46fd264b5258cb1be20a4c16f259025dc6c5ab9650afc75d65742eed16412e69"
+  },
+  "execution": {
+    "default_state_chain": {
+      "code_commit": "2eab4a4a53dc254145b889de3b3224734f46f29b",
+      "prepare_job": "9677759",
+      "source_exclusive_smoke_job": "9677760",
+      "full_job": "9677761",
+      "full_job_state": "COMPLETED",
+      "run_root": "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z"
+    },
+    "random_reset_chain": {
+      "collection_code_commit": "9ed5ad656a0831dce9347cfa850407b7d2633851",
+      "frontier_acceptance_analysis_commit": "74853ed1ad99de837dcbf3e6bf5745a666df1c92",
+      "prepare_job": "9679136",
+      "full_job": "9679137",
+      "full_job_state": "COMPLETED",
+      "run_root": "results/counterfactual_router/fresh_random_9ed5ad656a08_20260817T0845Z"
+    }
+  },
+  "cohorts": {
+    "default_initialization_pilot": {
+      "attempted_source_placements": 12,
+      "eligible_source_states": 5,
+      "matched_decisions": 15,
+      "role": "eligibility-limited operating-point pilot"
+    },
+    "random_reset_confirmation": {
+      "sampled_reset_initializations": 30,
+      "nominal_task_successful_initializations": 25,
+      "attempted_source_placements": 12,
+      "eligible_source_states": 8,
+      "matched_decisions": 24,
+      "role": "independent fresh confirmation cohort"
+    },
+    "combined_all_eligible": {
+      "eligible_source_states": 13,
+      "matched_decisions": 39,
+      "source_overlap_between_components": 0,
+      "role": "all-source descriptive frontier and source-cluster bootstrap"
+    }
+  },
+  "statistics": {
+    "independent_unit": "source_state_sha256",
+    "conditions_per_source": [
+      "glass",
+      "offpath",
+      "noglass"
+    ],
+    "bootstrap": "5000 shared source-state cluster replicates",
+    "oracle_role": "upper bound only; excluded from deployable Pareto dominance and retained in a separate including-Oracle list"
+  },
+  "independent_n8_frontier_joint_point": {
+    "catastrophe_cost_lambda": 1.0,
+    "calibration_target_intervention_rate": 0.6,
+    "selection_status": "one of four all-criteria points in the fully predeclared frontier; not a prespecified single deployment point",
+    "methods": {
+      "base": {
+        "task_success_rate": 0.6666666666666666,
+        "catastrophe_rate": 0.3333333333333333,
+        "safe_noncompletion_rate": 0.0,
+        "intervention_rate": 0.0
+      },
+      "binary_risk_retreat": {
+        "task_success_rate": 0.4166666666666667,
+        "catastrophe_rate": 0.08333333333333333,
+        "safe_noncompletion_rate": 0.5,
+        "intervention_rate": 0.5
+      },
+      "always_detour": {
+        "task_success_rate": 0.7083333333333334,
+        "catastrophe_rate": 0.041666666666666664,
+        "safe_noncompletion_rate": 0.25,
+        "intervention_rate": 1.0
+      },
+      "hazard_prompt": {
+        "task_success_rate": 0.375,
+        "catastrophe_rate": 0.20833333333333334,
+        "safe_noncompletion_rate": 0.4166666666666667,
+        "intervention_rate": 1.0
+      },
+      "router": {
+        "task_success_rate": 0.875,
+        "catastrophe_rate": 0.08333333333333333,
+        "safe_noncompletion_rate": 0.041666666666666664,
+        "intervention_rate": 0.5833333333333334,
+        "unnecessary_intervention_rate": 0.2916666666666667,
+        "missed_beneficial_intervention_rate": 0.041666666666666664,
+        "mean_oracle_regret": 0.125,
+        "oracle_value_recovered": 0.7857142857142857,
+        "source_cluster_bootstrap_95_ci": {
+          "task_success_rate": [
+            0.75,
+            0.9583333333333334
+          ],
+          "catastrophe_rate": [
+            0.0,
+            0.20833333333333334
+          ],
+          "intervention_rate": [
+            0.375,
+            0.7916666666666666
+          ],
+          "mean_oracle_regret": [
+            0.041666666666666664,
+            0.25
+          ],
+          "oracle_value_recovered": [
+            0.5384615384615384,
+            0.9375
+          ]
+        }
+      },
+      "counterfactual_oracle": {
+        "task_success_rate": 0.9166666666666666,
+        "catastrophe_rate": 0.0,
+        "safe_noncompletion_rate": 0.08333333333333333,
+        "intervention_rate": 0.3333333333333333
+      }
+    },
+    "paired_router_minus_binary_risk_retreat": {
+      "task_success_rate": {
+        "difference": 0.4583333333333333,
+        "source_cluster_bootstrap_95_ci": [
+          0.25,
+          0.6666666666666666
+        ]
+      },
+      "catastrophe_rate": {
+        "difference": 0.0,
+        "source_cluster_bootstrap_95_ci": [
+          -0.125,
+          0.125
+        ]
+      },
+      "intervention_rate": {
+        "difference": 0.08333333333333337,
+        "source_cluster_bootstrap_95_ci": [
+          -0.08333333333333333,
+          0.2916666666666667
+        ]
+      }
+    },
+    "paired_router_minus_always_detour": {
+      "task_success_rate": {
+        "difference": 0.16666666666666663,
+        "source_cluster_bootstrap_95_ci": [
+          0.041666666666666664,
+          0.2916666666666667
+        ]
+      },
+      "catastrophe_rate": {
+        "difference": 0.041666666666666664,
+        "source_cluster_bootstrap_95_ci": [
+          0.0,
+          0.125
+        ]
+      },
+      "intervention_rate": {
+        "difference": -0.41666666666666663,
+        "source_cluster_bootstrap_95_ci": [
+          -0.625,
+          -0.20833333333333334
+        ]
+      }
+    },
+    "controls": {
+      "router_task_success_rate": 0.9375,
+      "router_intervention_rate": 0.4375,
+      "router_unnecessary_intervention_rate": 0.4375,
+      "hazard_prompt_task_success_rate": 0.5625,
+      "hazard_prompt_intervention_rate": 1.0,
+      "hazard_prompt_unnecessary_intervention_rate": 1.0
+    },
+    "glass_condition_router": {
+      "task_success_rate": 0.75,
+      "catastrophe_rate": 0.25,
+      "intervention_rate": 0.875
+    },
+    "joint_points_all_four_criteria": [
+      {
+        "lambda": 1.0,
+        "target_intervention_rate": 0.6
+      },
+      {
+        "lambda": 3.0,
+        "target_intervention_rate": 0.7
+      },
+      {
+        "lambda": 5.0,
+        "target_intervention_rate": 0.6
+      },
+      {
+        "lambda": 8.0,
+        "target_intervention_rate": 0.6
+      }
+    ]
+  },
+  "combined_n13_frontier": {
+    "frontier_level_acceptance_met": true,
+    "joint_points_all_four_criteria": [],
+    "risk_comparison_point": {
+      "lambda": 1.0,
+      "target_intervention_rate": 0.1,
+      "router_task_success_catastrophe_intervention": [
+        0.6923076923076923,
+        0.2564102564102564,
+        0.10256410256410256
+      ],
+      "binary_risk_task_success_catastrophe_intervention": [
+        0.6153846153846154,
+        0.2564102564102564,
+        0.07692307692307693
+      ],
+      "paired_task_success_difference_95_ci": [
+        0.0,
+        0.20512820512820512
+      ]
+    },
+    "fixed_detour_tradeoff_point": {
+      "lambda": 1.0,
+      "target_intervention_rate": 0.5,
+      "router_task_success_catastrophe_intervention": [
+        0.6923076923076923,
+        0.1282051282051282,
+        0.5384615384615384
+      ],
+      "always_detour_task_success_catastrophe_intervention": [
+        0.6410256410256411,
+        0.07692307692307693,
+        1.0
+      ],
+      "paired_intervention_difference_95_ci": [
+        -0.6666666666666666,
+        -0.2564102564102564
+      ]
+    },
+    "conservative_point_controls": {
+      "router_task_success_rate": 0.9615384615384616,
+      "router_intervention_rate": 0.038461538461538464,
+      "hazard_prompt_task_success_rate": 0.6538461538461539,
+      "hazard_prompt_intervention_rate": 1.0
+    }
+  },
+  "caveats": [
+    "The original lambda=5,target=0.4 point and the post-pilot lambda=5,target=0.2 point do not individually pass all four criteria.",
+    "The all-criteria n=8 operating points were identified from the fully predeclared frontier, not prespecified as a single deployment point.",
+    "The five-state default-initialization pilot is heterogeneous with the eight-state random-reset cohort; the combined 13-source frontier passes at the portfolio level but has no single all-criteria point.",
+    "DetourComplete uses privileged geometry, so the result is learned routing over structured options, not end-to-end learned recovery.",
+    "Source-level intervals remain wide at n=8 and n=13; frames, conditions, and rollout branches are not counted as independent samples."
+  ],
+  "artifacts": {
+    "independent_n8_analysis": "results/counterfactual_router/fresh_random_9ed5ad656a08_20260817T0845Z/full/analysis.json",
+    "independent_n8_frontier_csv": "results/counterfactual_router/fresh_random_9ed5ad656a08_20260817T0845Z/full/frontier.csv",
+    "combined_n13_analysis": "results/counterfactual_router/fresh_random_9ed5ad656a08_20260817T0845Z/combined_with_default/analysis.json",
+    "combined_n13_frontier_csv": "results/counterfactual_router/fresh_random_9ed5ad656a08_20260817T0845Z/combined_with_default/frontier.csv"
+  }
+}

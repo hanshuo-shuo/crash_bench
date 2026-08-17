@@ -101,3 +101,22 @@ Quest entry point: `setup/submit_fresh_counterfactual_router.sh`.  It submits a
 freeze/authoring job, a source-exclusive GPU smoke, and the dependent full GPU
 evaluation plus analysis.  The eligibility-only supplement is submitted with
 `setup/submit_fresh_counterfactual_router_supplement.sh` when needed.
+
+## Sealed outcome
+
+The default-state full job `9677761` retained 5/12 sources. The random-reset
+prepare/full jobs `9679136`/`9679137` sampled 30 new resets, found 25 nominal
+successes, and retained the first 8 eligible sources from 12 attempts. Both jobs
+completed with exit code 0. Router JSON/NPZ hashes are identical across runs and
+the eligible source sets are disjoint.
+
+The independent eight-source frontier passes the frontier-level audit. Four
+predeclared points satisfy all four criteria; the most compact paper point is
+`lambda=1,target=0.6` with 87.5% success, 8.33% catastrophe, and 58.33%
+intervention. The corresponding risk router has 41.67% success, 8.33%
+catastrophe, and 50.0% intervention; Always Detour has 70.83%, 4.17%, and 100%.
+The combined 13-source frontier also passes at the portfolio level, but no
+single combined point satisfies all four criteria. Fixed-point audits at the
+original 40% and post-pilot 20% `lambda=5` points remain negative. The exact
+paper summary is
+[`counterfactual_router_fresh_online_20260817.json`](../results/counterfactual_router_fresh_online_20260817.json).

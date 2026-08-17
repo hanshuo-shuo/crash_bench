@@ -15,14 +15,14 @@ remain unchanged so manifests and historical logs stay interpretable.
 | E7 | detector-direction steering ablation | wall/nowall; OpenVLA | `phase3_steering*.py`; steering sbatch | `steering/*.json`; `ANALYSIS_steering.md` | frozen negative; C11 |
 | E11 | representation/observable confound | strict held-out-scenario frozen-capture analysis | `task_phase_confound_analysis.py` | `task_phase_confound/*.json`; analysis figure | frozen; C13 |
 | E6 | glass causal extension and transfer limit | f30–f70 matched glass; OpenVLA | `phase2_glass_prototype.py`, `probe_glass_*` | `glass_prototype.json`, glass probe summary; `ANALYSIS_glass.md` | frozen; C9/C10; closing evidence |
+| E16 | fresh intervention-value routing frontier | matched glass/off-path/no-glass; frozen single-frame router | `collect_fresh_counterfactual_router.py`, `analyze_fresh_counterfactual_router.py` | `counterfactual_router_fresh_online_20260817.json`; Quest jobs `9677761`, `9679137` | frozen positive frontier; 8-source confirmation, 13-source combined heterogeneity; structured privileged options |
 
 ## Next experiment queue — not yet evidence
 
 | Priority | Experiment | Gate before submission | Intended upgrade |
 |---|---|---|---|
 | N1 | five-fold held-out online wall guard | recover/recapture wall hidden/meta; freeze fold-local calibration | held-out generalization of the risk-routing interface |
-| N2 | glass-specific learned timing → `DetourComplete` | serialize a deployable glass probe; development signal before fresh cohort | safe task completion with learned detector + structured controller |
-| N3 | OFT-specific online `RetreatHold` guard | recover/recapture OFT hidden/meta; fit OFT probe only | cross-action-head routing replication |
+| N2 | OFT-specific online `RetreatHold` guard | recover/recapture OFT hidden/meta; fit OFT probe only | cross-action-head routing replication |
 
 ## Appendix experiments
 

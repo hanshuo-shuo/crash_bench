@@ -130,10 +130,10 @@ positive method evidence rather than a completed deployment claim.
 
 The predeclared single-frame hidden+robot+action ablation is descriptively
 stronger than the 8-frame primary, reaching 54.72% success, 22.64% catastrophe,
-39.62% intervention, and 42.39% Oracle value recovery. Freeze that architecture
-as the next candidate and test it in fresh online rollouts; retain the 8-frame
-result as the original primary rather than rewriting the analysis after seeing
-development.
+39.62% intervention, and 42.39% Oracle value recovery. That architecture was
+subsequently frozen and tested in fresh online rollouts; the 8-frame result
+remains the original development primary rather than being rewritten after
+inspection.
 
 Include the completed E13 hazard-specific glass prompt as a second whole-episode
 baseline in that fresh evaluation. Existing E13 evidence is already informative
@@ -141,6 +141,42 @@ baseline in that fresh evaluation. Existing E13 evidence is already informative
 it comes from a different five-scenario cohort and cannot be inserted into the
 106-decision exact-state table. Run the exact prompt from reset on the same new
 episodes as Base and the router.
+
+## Fresh online frontier: completed
+
+The frozen single-frame outcome router has now been evaluated online. The
+default-state run (Quest `9677761`, commit `2eab4a4a53dc`) retained five eligible
+sources and is an operating-point pilot. The independent random-reset chain
+(prepare `9679136`, full `9679137`, collection commit `9ed5ad656a08`) sampled 30
+new task-0 resets, retained 25 nominal successes, and collected eight eligible
+sources / 24 matched decisions. The router JSON and NPZ hashes are identical
+across cohorts; source overlap is zero.
+
+The independent cohort passes the requested frontier audit. At the predeclared
+`lambda=1,target=0.6` point, Router / rate-matched risk / Always Detour have:
+
+| Method | Success | Catastrophe | Safe noncompletion | Intervention |
+|---|---:|---:|---:|---:|
+| Router | 87.50% | 8.33% | 4.17% | 58.33% |
+| Binary risk → Retreat | 41.67% | 8.33% | 50.00% | 50.00% |
+| Always Detour | 70.83% | 4.17% | 25.00% | 100% |
+| Base | 66.67% | 33.33% | 0% | 0% |
+| Counterfactual Oracle | 91.67% | 0% | 8.33% | 33.33% |
+
+Router beats risk by 45.83 success points at identical catastrophe point
+estimate and beats Always Detour by 16.67 success points with 41.67 fewer
+intervention points. The paired source-bootstrap success differences exclude
+zero; the Router-minus-Detour catastrophe interval includes equality. Router
+also retains 15/16 off-path/no-glass task successes, versus 9/16 for the hazard
+prompt.
+
+Four predeclared `(lambda,target)` points satisfy all four criteria in the
+eight-source cohort: `(1,0.6)`, `(3,0.7)`, `(5,0.6)`, and `(8,0.6)`. Across all
+13 eligible sources, the frontier satisfies every criterion but no one point
+satisfies all four. Keep both statements: this is a positive frontier result
+with cohort heterogeneity, not a universal fixed-policy dominance claim. Exact
+point estimates, intervals, job IDs, hashes, and artifact paths are in
+[`counterfactual_router_fresh_online_20260817.json`](../results/counterfactual_router_fresh_online_20260817.json).
 
 ## Provenance not to pool
 

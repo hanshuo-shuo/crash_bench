@@ -143,25 +143,55 @@ raises success from 39.62% to 46.23% and lowers catastrophe from 29.25% to
 
 The predeclared single-frame hidden+robot+action ablation is stronger
 descriptively—54.72% success, 22.64% catastrophe, and 39.62% intervention—but
-was selected after inspecting development. It is the next architecture to
-freeze for fresh online evaluation, not a retroactive replacement for the
-primary. Full tables and interpretation are in
+was selected after inspecting development. It was therefore frozen and taken
+to fresh online evaluation rather than retroactively replacing the original
+primary. Full development tables and interpretation are in
 [COUNTERFACTUAL_ROUTER_MINIMAL_RESULT.md](COUNTERFACTUAL_ROUTER_MINIMAL_RESULT.md).
+
+### Fresh online counterfactual-router result
+
+The fresh experiment is now complete. A five-source default-initialization run
+was too small for confirmation and was retained as an operating-point pilot.
+Before collecting any random-reset matched outcomes, the same router and option
+controllers were copied byte-for-byte into a new cohort. Quest jobs `9679136`
+and `9679137` produced 25 nominal-success placements and stopped after eight
+eligible sources (24 matched decisions). The two router artifacts have identical
+SHA-256 hashes, and the five plus eight eligible sources have zero overlap.
+
+The result supports the intended **frontier**, not one universal operating
+point. In the independent eight-source cohort, the predeclared
+`lambda=1,target=0.6` point reaches 87.5% task success, 8.33% catastrophe, and
+58.33% intervention. At a nearby rate, binary-risk-to-Retreat reaches 41.67%,
+8.33%, and 50.0%; Always Detour reaches 70.83%, 4.17%, and 100%. Paired
+source-cluster bootstrap differences for Router versus risk are +45.83 success
+points (95% CI +25.0,+66.67) and 0 catastrophe points (−12.5,+12.5). Versus
+Always Detour they are +16.67 success points (+4.17,+29.17), +4.17 catastrophe
+points (0,+12.5), and −41.67 intervention points (−62.5,−20.83).
+
+On the 16 off-path/no-glass controls, that router point retains 93.75% task
+success versus 56.25% for the from-reset hazard prompt. Four predeclared
+operating points satisfy all four frontier criteria in the independent cohort.
+When all 13 eligible sources are pooled, the frontier still satisfies all four
+criteria, but no single point satisfies all four; the default-state pilot and
+random-reset cohort are heterogeneous. The original `lambda=5,target=0.4` and
+post-pilot `lambda=5,target=0.2` fixed-point audits remain failed in the artifact
+and are not rewritten.
+
+The tracked paper summary is
+[`counterfactual_router_fresh_online_20260817.json`](../results/counterfactual_router_fresh_online_20260817.json).
+This is learned intervention-value routing over privileged structured options,
+not end-to-end learned recovery.
 
 ## Next experiment queue
 
 1. **Five-fold held-out online wall guard.** Fit/calibrate on four wall scenarios,
    deploy only on the fifth, and test matched off-path/no-wall controls. This is
    the highest-value generalization test.
-2. **Fresh online evaluation of the frozen minimal counterfactual router.** The
-   offline source-disjoint router result is complete. Freeze the single-frame
-   hidden+robot+action candidate without further development tuning and compare
-   it with Base, the exact E13 hazard-specific glass prompt from episode reset,
-   binary risk, Always Detour, Always Retreat, and Oracle-timed structured
-   options in new matched rollouts. Call the result learned routing plus
-   structured/privileged options, not learned recovery.
-3. **OFT-specific online guard replication.** Use OFT's own probe to trigger the
+2. **OFT-specific online guard replication.** Use OFT's own probe to trigger the
    same `RetreatHold` interface.
+3. **Do not tune the fresh router further.** A second task-family replication is
+   worthwhile only if needed for review; deeper sequence models and outcome-led
+   operating-point search are not the next priority.
 
 The executable D0 contract, commands, operating gates, and E stop rules are in
 [GLASS_RECOVERY_RESCUE.md](GLASS_RECOVERY_RESCUE.md).
