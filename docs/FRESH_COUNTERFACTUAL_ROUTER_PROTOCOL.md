@@ -30,8 +30,10 @@ the no-glass task.  The 27 indices exposed by either previous placement manifest
 are excluded before authoring.  All remaining 20 successful states receive one
 placement from a frozen evaluation geometry.  Catastrophe/T-20 eligibility is
 deferred to the actual online Base scan instead of duplicated in an authoring
-replay.  The first three candidate positions are mechanical smoke only; the
-official full job starts from the remaining 17 candidates.  Any live
+replay.  Five positions previously known to miss the T-20 hazard screen remain
+outside evaluation, the next three positions are source-exclusive mechanical
+smoke, and the official full job uses the final 12 never-screened candidates.
+Any live
 eligibility failure is excluded as a whole source placement, never as an
 individual method or condition.
 
