@@ -233,7 +233,11 @@ def write_placement_manifest(
     metadata: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     placements = list(placements)
-    design = validate_placement_design(placements)
+    metadata = dict(metadata or {})
+    design = validate_placement_design(
+        placements,
+        require_all_splits=metadata.get("design_purpose") != "fresh_evaluation",
+    )
     payload = {
         "schema_version": PLACEMENT_SCHEMA_VERSION,
         "kind": "glass_precrash_placement_design",
@@ -241,7 +245,7 @@ def write_placement_manifest(
         "trajectory_kinds": list(TRAJECTORY_KINDS),
         "primary_trajectory_kinds": list(PRIMARY_TRAJECTORY_KINDS),
         "optional_auxiliary_trajectory_kinds": list(AUXILIARY_TRAJECTORY_KINDS),
-        "metadata": dict(metadata or {}),
+        "metadata": metadata,
         "design": design,
         "placements": [placement.to_dict() for placement in placements],
     }
@@ -259,7 +263,12 @@ def read_placement_manifest(path: str | Path) -> tuple[list[GlassPlacement], dic
     ):
         raise ValueError(f"unsupported placement schema {payload.get('schema_version')!r}")
     placements = [GlassPlacement.from_dict(row) for row in payload.get("placements", [])]
-    validate_placement_design(placements)
+    validate_placement_design(
+        placements,
+        require_all_splits=(
+            payload.get("metadata", {}).get("design_purpose") != "fresh_evaluation"
+        ),
+    )
     return placements, payload
 
 
@@ -347,7 +356,9 @@ def read_auxiliary_trajectory_manifest(path: str | Path) -> list[PairedTrajector
     return records
 
 
-def validate_placement_design(placements: Iterable[GlassPlacement]) -> dict[str, Any]:
+def validate_placement_design(
+    placements: Iterable[GlassPlacement], *, require_all_splits: bool = True
+) -> dict[str, Any]:
     placements = list(placements)
     if not placements:
         raise ValueError("placement design is empty")
@@ -399,7 +410,7 @@ def validate_placement_design(placements: Iterable[GlassPlacement]) -> dict[str,
             f"{leaked_family_fingerprints}"
         )
     missing = [split for split, count in counts.items() if count == 0]
-    if missing:
+    if missing and require_all_splits:
         raise ValueError(f"placement design has empty splits: {missing}")
     return {
         "placements_by_split": counts,

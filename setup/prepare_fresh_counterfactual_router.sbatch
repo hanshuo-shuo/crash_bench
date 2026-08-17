@@ -43,8 +43,9 @@ python scripts/train_counterfactual_outcome_router.py \
   --l2 0.01
 
 # The 27 excluded indices are exactly those exposed by the two earlier
-# placement manifests.  The remaining 20 successful traces supply a compact
-# 12-source paper cohort with two reserves per authoring stratum.
+# placement manifests.  The remaining 20 successful traces form one evaluation
+# pool; the frozen held-out geometry accepts the first 12 and keeps eight reserve
+# states for screening failures.
 python scripts/prepare_glass_recovery_placements.py \
   --output "$RUN_ROOT/placements" \
   --source-trace-manifest "$SOURCE_TRACES" \
@@ -58,11 +59,11 @@ python scripts/prepare_glass_recovery_placements.py \
   --screen-force-margin 10.0 \
   --screen-target-rest-threshold 0.005 \
   --max-proposals-per-candidate 12 \
-  --train-placements 2 --validation-placements 4 --heldout-placements 6 \
-  --train-accepted-targets 1 --validation-accepted-targets 1 \
+  --train-placements 0 --validation-placements 0 --heldout-placements 12 \
+  --train-accepted-targets 0 --validation-accepted-targets 0 \
   --heldout-accepted-targets 1 \
-  --train-states 2 --validation-states 4 --heldout-states 6 \
-  --source-state-reserve 2 \
+  --train-states 0 --validation-states 0 --heldout-states 12 \
+  --source-state-reserve 8 \
   --exclude-source-state-indices 1,2,3,5,6,9,11,12,14,16,17,18,19,20,21,22,23,24,26,28,29,34,35,38,40,43,47
 
 echo "DONE prepare commit=$COMMIT root=$RUN_ROOT @ $(date)"

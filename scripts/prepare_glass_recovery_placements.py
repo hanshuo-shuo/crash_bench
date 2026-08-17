@@ -474,6 +474,10 @@ def author(args: argparse.Namespace) -> dict:
         "validation": args.validation_states,
         "heldout": args.heldout_states,
     }
+    reserve_by_split = {
+        split: reserve if count > 0 else 0
+        for split, count in desired_state_counts.items()
+    }
     if args.source_trace_manifest:
         source_traces, trace_payload = _load_source_traces(
             args.source_trace_manifest, suite=args.suite, task_id=args.task_id,
@@ -490,13 +494,16 @@ def author(args: argparse.Namespace) -> dict:
         if not source_traces:
             raise ValueError("source-state exclusions removed every successful trace")
         layout = _state_layout_from_indices(
-            list(source_traces), args.train_states + reserve,
-            args.validation_states + reserve, args.heldout_states + reserve,
+            list(source_traces),
+            args.train_states + reserve_by_split["train"],
+            args.validation_states + reserve_by_split["validation"],
+            args.heldout_states + reserve_by_split["heldout"],
         )
     elif args.legacy_straight_path:
         layout = _state_layout(
-            len(states), args.train_states + reserve,
-            args.validation_states + reserve, args.heldout_states + reserve,
+            len(states), args.train_states + reserve_by_split["train"],
+            args.validation_states + reserve_by_split["validation"],
+            args.heldout_states + reserve_by_split["heldout"],
         )
     else:
         raise SystemExit(
@@ -523,6 +530,8 @@ def author(args: argparse.Namespace) -> dict:
     }
     selected_layout = {split: [] for split in requested_counts}
     for split, indices in layout.items():
+        if desired_state_counts[split] == 0:
+            continue
         quotas = _quotas(
             requested_counts[split], list(range(desired_state_counts[split]))
         )
@@ -952,6 +961,14 @@ def main() -> None:
         "heldout": args.heldout_accepted_targets,
     }
     for split in candidate_counts:
+        if args.fresh_evaluation and candidate_counts[split] == 0:
+            if {
+                "train": args.train_states,
+                "validation": args.validation_states,
+                "heldout": args.heldout_states,
+            }[split] != 0:
+                raise SystemExit(f"{split} zero placements require zero states")
+            continue
         if candidate_counts[split] < 1:
             raise SystemExit(f"{split} needs at least one candidate")
         if args.development_frontier or args.fresh_evaluation:
