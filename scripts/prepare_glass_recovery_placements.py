@@ -614,7 +614,15 @@ def author(args: argparse.Namespace) -> dict:
                 if actual_target_clearance + 1e-8 < required_target_clearance:
                     raise RuntimeError("glass-target clearance clamp failed")
                 on_path = _glass("glass_1", anchor, table_top, size, density)
-                screen = (
+                screen = ({
+                    "valid_initial_state": True,
+                    "catastrophe": None,
+                    "event_action_index": None,
+                    "force_margin_qualified": None,
+                    "clean_precrash_anchor": None,
+                    "eligible": None,
+                    "status": "deferred_to_fresh_online_collector",
+                } if getattr(args, "skip_fixed_action_screen", False) else (
                     _fixed_action_hazard_screen(
                         env, state, on_path, source_trace["_actions"],
                         settle_steps=args.settle_steps,
@@ -629,19 +637,25 @@ def author(args: argparse.Namespace) -> dict:
                         "event_action_index": None,
                         "status": "legacy_straight_path_screen_skipped",
                     }
-                )
+                ))
                 if screen["valid_initial_state"] is not True:
                     proposal_accounting[split]["invalid_initial_overlap"] += 1
                     continue
-                if source_trace is not None and screen["catastrophe"] is not True:
+                if (source_trace is not None
+                        and not getattr(args, "skip_fixed_action_screen", False)
+                        and screen["catastrophe"] is not True):
                     proposal_accounting[split]["fixed_replay_no_catastrophe"] += 1
                     continue
-                if source_trace is not None and screen["force_margin_qualified"] is not True:
+                if (source_trace is not None
+                        and not getattr(args, "skip_fixed_action_screen", False)
+                        and screen["force_margin_qualified"] is not True):
                     proposal_accounting[split][
                         "fixed_replay_insufficient_force_margin"
                     ] += 1
                     continue
-                if source_trace is not None and screen["clean_precrash_anchor"] is not True:
+                if (source_trace is not None
+                        and not getattr(args, "skip_fixed_action_screen", False)
+                        and screen["clean_precrash_anchor"] is not True):
                     proposal_accounting[split][
                         "fixed_replay_dirty_precrash_anchor"
                     ] += 1
@@ -904,6 +918,10 @@ def main() -> None:
     parser.add_argument("--screen-force-margin", type=float, default=0.0)
     parser.add_argument("--screen-target-rest-threshold", type=float, default=0.03)
     parser.add_argument(
+        "--skip-fixed-action-screen", action="store_true",
+        help="defer fresh-cohort catastrophe/T-H eligibility to the online collector",
+    )
+    parser.add_argument(
         "--development-frontier", action="store_true",
         help="author a small feasibility frontier without formal cohort-yield quotas",
     )
@@ -919,6 +937,8 @@ def main() -> None:
     args = parser.parse_args()
     if args.development_frontier and args.fresh_evaluation:
         raise SystemExit("development frontier and fresh evaluation are mutually exclusive")
+    if args.skip_fixed_action_screen and not args.fresh_evaluation:
+        raise SystemExit("fixed-action screen may be skipped only for fresh evaluation")
     if args.source_trace_manifest and args.legacy_straight_path:
         raise SystemExit("source trace manifest and legacy straight path are mutually exclusive")
     if args.source_trace_manifest and not args.checkpoint_revision:

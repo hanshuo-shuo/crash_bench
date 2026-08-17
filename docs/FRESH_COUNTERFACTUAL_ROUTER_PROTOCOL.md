@@ -27,11 +27,11 @@ used to fit or select any parameter.
 
 The source-trace inventory has 50 LIBERO initial states, 47 of which complete
 the no-glass task.  The 27 indices exposed by either previous placement manifest
-are excluded before authoring.  From the remaining 20 successful states, one
-frozen evaluation-geometry pool accepts the first 12 candidates and retains
-eight reserve states for screen failures.  The first two candidate positions
-are mechanical smoke
-only; the official full job evaluates the remaining 10 candidates.  Any live
+are excluded before authoring.  All remaining 20 successful states receive one
+placement from a frozen evaluation geometry.  Catastrophe/T-20 eligibility is
+deferred to the actual online Base scan instead of duplicated in an authoring
+replay.  The first three candidate positions are mechanical smoke only; the
+official full job starts from the remaining 17 candidates.  Any live
 eligibility failure is excluded as a whole source placement, never as an
 individual method or condition.
 

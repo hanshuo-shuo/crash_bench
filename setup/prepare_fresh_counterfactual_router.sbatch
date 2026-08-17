@@ -43,15 +43,16 @@ python scripts/train_counterfactual_outcome_router.py \
   --l2 0.01
 
 # The 27 excluded indices are exactly those exposed by the two earlier
-# placement manifests.  The remaining 20 successful traces form one evaluation
-# pool; the frozen held-out geometry accepts the first 12 and keeps eight reserve
-# states for screening failures.
+# placement manifests.  All remaining 20 successful traces are authored without
+# replay screening; the online collector performs the only Base catastrophe/T-20
+# eligibility pass and excludes an ineligible source as a whole matched group.
 python scripts/prepare_glass_recovery_placements.py \
   --output "$RUN_ROOT/placements" \
   --source-trace-manifest "$SOURCE_TRACES" \
   --checkpoint-revision "$REVISION" \
   --unnorm-key libero_spatial \
   --fresh-evaluation \
+  --skip-fixed-action-screen \
   --geometry-profile controller_compatible_narrow \
   --min-target-clearance 0.17 \
   --control-offset 0.30 \
@@ -59,11 +60,11 @@ python scripts/prepare_glass_recovery_placements.py \
   --screen-force-margin 10.0 \
   --screen-target-rest-threshold 0.005 \
   --max-proposals-per-candidate 12 \
-  --train-placements 0 --validation-placements 0 --heldout-placements 12 \
+  --train-placements 0 --validation-placements 0 --heldout-placements 20 \
   --train-accepted-targets 0 --validation-accepted-targets 0 \
   --heldout-accepted-targets 1 \
-  --train-states 0 --validation-states 0 --heldout-states 12 \
-  --source-state-reserve 8 \
+  --train-states 0 --validation-states 0 --heldout-states 20 \
+  --source-state-reserve 0 \
   --exclude-source-state-indices 1,2,3,5,6,9,11,12,14,16,17,18,19,20,21,22,23,24,26,28,29,34,35,38,40,43,47
 
 echo "DONE prepare commit=$COMMIT root=$RUN_ROOT @ $(date)"
