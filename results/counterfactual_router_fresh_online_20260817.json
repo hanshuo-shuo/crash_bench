@@ -118,6 +118,12 @@
         "safe_noncompletion_rate": 0.25,
         "intervention_rate": 1.0
       },
+      "always_retreat": {
+        "task_success_rate": 0.0,
+        "catastrophe_rate": 0.0,
+        "safe_noncompletion_rate": 1.0,
+        "intervention_rate": 1.0
+      },
       "hazard_prompt": {
         "task_success_rate": 0.375,
         "catastrophe_rate": 0.20833333333333334,
@@ -295,9 +301,16 @@
     "Source-level intervals remain wide at n=8 and n=13; frames, conditions, and rollout branches are not counted as independent samples."
   ],
   "artifacts": {
-    "independent_n8_analysis": "results/counterfactual_router/fresh_random_9ed5ad656a08_20260817T0845Z/full/analysis.json",
-    "independent_n8_frontier_csv": "results/counterfactual_router/fresh_random_9ed5ad656a08_20260817T0845Z/full/frontier.csv",
-    "combined_n13_analysis": "results/counterfactual_router/fresh_random_9ed5ad656a08_20260817T0845Z/combined_with_default/analysis.json",
-    "combined_n13_frontier_csv": "results/counterfactual_router/fresh_random_9ed5ad656a08_20260817T0845Z/combined_with_default/frontier.csv"
+    "seven_method_main_table": "results/counterfactual_router_fresh_online_main_table.csv",
+    "independent_n8_analysis": "results/counterfactual_router_fresh_online_n8_analysis.json",
+    "independent_n8_frontier_csv": "results/counterfactual_router_fresh_online_n8_frontier.csv",
+    "independent_n8_all_lambda_figure": "results/counterfactual_router_fresh_online_n8_frontier_all_lambdas.png",
+    "independent_n8_lambda5_figure": "results/counterfactual_router_fresh_online_n8_frontier_lambda5.png",
+    "combined_n13_analysis": "results/counterfactual_router_fresh_online_n13_analysis.json",
+    "combined_n13_frontier_csv": "results/counterfactual_router_fresh_online_n13_frontier.csv",
+    "combined_n13_all_lambda_figure": "results/counterfactual_router_fresh_online_n13_frontier_all_lambdas.png",
+    "combined_n13_lambda5_figure": "results/counterfactual_router_fresh_online_n13_frontier_lambda5.png",
+    "paper_interpretation": "docs/COUNTERFACTUAL_ROUTER_MAIN_RESULT.md",
+    "raw_run_root": "results/counterfactual_router/fresh_random_9ed5ad656a08_20260817T0845Z"
   }
 }

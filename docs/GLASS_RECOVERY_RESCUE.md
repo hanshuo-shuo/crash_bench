@@ -1,11 +1,12 @@
 # Glass recovery rescue: D0 → counterfactual routing
 
-> **2026-08-14 status:** D0 and the counterfactual collector smoke are complete.
-> D0 has ranking signal but no deployable T−20 operating point.  The exact-state
-> option collector is valid, but the frozen detour has 0/3 task successes on the
-> valid glass development states.  Full collection and router training are
-> stopped until a non-source-specific structured option passes the controller
-> freeze gate.  See [COUNTERFACTUAL_ROUTER_HANDOFF.md](COUNTERFACTUAL_ROUTER_HANDOFF.md).
+> **Completed-path provenance:** this document preserves the execution logic
+> that led from the D0 no-go to counterfactual routing. Full option collection,
+> router training, and fresh online evaluation are now complete. The current
+> result is [COUNTERFACTUAL_ROUTER_MAIN_RESULT.md](COUNTERFACTUAL_ROUTER_MAIN_RESULT.md);
+> technical development history is
+> [COUNTERFACTUAL_ROUTER_HANDOFF.md](COUNTERFACTUAL_ROUTER_HANDOFF.md). The steps
+> below are not a current experiment queue.
 
 This branch preserves the old D/E/F experiment labels as history. New work uses
 new artifacts and names the learned component precisely:

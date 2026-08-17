@@ -1,167 +1,174 @@
 # Paper plan
 
-## Working title and one-sentence contribution
+## Working title and contribution
 
-**Decoded but Not Routed: Causal Diagnosis and Closed-Loop Repair of VLA
-Collision Failures**
+**Knowing When to Intervene: Counterfactual Outcome Routing for VLA Safety**
 
-VLA representations can make an imminent manipulation collision linearly
-readable while the action continues into impact; a small explicit
-**risk-readout → controller** interface repairs this representation–action
-misalignment in closed loop.
+A safety router should not merely predict whether the current policy may fail.
+It should predict how candidate interventions change task success,
+catastrophe, and safe noncompletion, and should override the Base policy only
+when the expected counterfactual benefit is sufficiently large.
 
-The paper uses the C0–C13 vocabulary in [CLAIMS.md](CLAIMS.md). It does not use
-E14/E15 execution order as its narrative structure.
+The paper uses the C0–C14 vocabulary in [CLAIMS.md](CLAIMS.md), with C14 as the
+headline result. Historical E14/E15 execution order is not a narrative outline.
 
 ## Four-act main text
 
-### Act I — Causal localization in the swept corridor
+### Act I — Risk detection is not intervention selection
 
-Start with matched geometry, not a benchmark catalog.
+Open with the decision problem rather than a catalog of hazards.
 
-- Same visible wall, on the executed path: 15/15 crash.
-- Same wall family, clear of the path: 0/33 crash.
-- Transition clearances: graded response.
-- Same matched contrast across OpenVLA, OFT, and pi0: 5/5 versus 0/10 per
-  action-head family.
-- Movable glass: 30/50 on-path versus 0/50 matched off-path, with an f30→f70
-  dose response.
+- A Base policy may complete the task or catastrophize.
+- Retreat can prevent catastrophe but produce safe noncompletion.
+- Detour can rescue a Base catastrophe but can also damage a Base success.
+- A prompt can alter behavior everywhere without producing useful selective
+  control.
 
-Main claim: collision follows membership in the policy's executed swept
-corridor, not obstacle novelty alone.
+The exact-state development capture makes this concrete: among 273 matched
+decisions, only 21 have identical outcomes under Base, Detour, and Retreat; 91
+have positive Oracle value over Base, while 60 are Base-success/Detour-worse.
 
-### Act II — The risk is decoded but not routed
+Main claim: a scalar Base-risk score cannot encode whether intervention is
+beneficial or which intervention should be chosen.
 
-Join the representation and behavior evidence in the same section.
+Use the older “decoded but not routed” evidence as motivation: collision risk is
+readable from frozen representations, but unsafe action continues. The scoped
+wall `risk-readout -> RetreatHold` result shows that explicit routing can close a
+safety loop, while its safe-abort behavior also exposes why task completion must
+be modeled explicitly.
 
-- OpenVLA T-5 AUC 0.998; OFT 0.903.
-- Glass-specific T-5 AUC 0.944 as a hazard-specific extension.
-- Hidden-only macro AUPRC 0.716 versus 0.442 for the strongest observable
-  baseline under strict held-out-scenario analysis.
-- No final-window EEF retreat in 25/25 wall episodes; toward-wall command
-  projection increases in 22/25.
+### Act II — Predict option outcomes and route conservatively
 
-Main claim: the signal is available to a simple readout but is not expressed as
-sustained braking. Use “representation–action gap,” not a generic “features
-predict failures” headline.
-
-### Act III — Close the loop with an explicit interface
-
-Introduce the interface as the causal repair:
+Introduce the intentionally small method:
 
 ```text
-frozen VLA state → risk readout → latched handoff → structured controller
+x = single-frame hidden + robot state + nominal action
+for option in {Base, Detour, Retreat}:
+    predict P(success), P(catastrophe), P(safe noncompletion)
+    U_lambda(option) = P(success) - lambda * P(catastrophe)
+choose best non-Base option only if advantage over Base > delta
 ```
 
-- `Probe → RetreatHold`: 15/15 → 0/15 crash, 321.7 N → 0 N, 0/22 benign fires.
-- Final-readout steering: 100% crash for all tested alphas.
+PCA and option heads use training sources only. `delta` and the rate-matched
+binary-risk thresholds use calibration sources only. The full grid
+`lambda in {1,2,3,5,8}` and target intervention rates 0.1 through 0.9 is frozen.
+Development is diagnostic; fresh outcomes fit no parameter.
 
-The contrast is mechanistic: a detector direction need not be a controller
-direction. Explicit routing succeeds where treating the probe direction as a
-native action knob fails.
+The method contribution is **intervention-value routing**, not a deeper sequence
+model, a world model, or an end-to-end action policy.
 
-### Act IV — Safety is not task completion
+### Act III — Fresh matched online evaluation
 
-End with a frontier, not a new main pipeline.
+Every accepted source contributes glass, matched off-path glass, and no-glass
+conditions. At the actual online T-20 anchor, Base, frozen privileged Detour,
+and Retreat are evaluated from the identical simulator/controller state. The
+hazard-specific prompt starts from the same episode reset.
 
-- Hazard-specific language reduces collision but produces 0/15 treatment task
-  successes for both wall and glass.
-- `RetreatHold` is a safe-abort controller.
-- Exact-state glass counterfactuals show that a task-completing continuation is
-  physically available, and a frozen option-outcome router now yields a positive
-  fresh online safety-success-intervention frontier. In the independent
-  eight-source cohort, its strongest predeclared joint point reaches 87.5%
-  success and 8.33% catastrophe at 58.33% intervention.
+Compare all seven methods together:
 
-State the boundary explicitly: wall routing closes a safe-abort loop, while the
-glass result learns intervention value over structured privileged options. It is
-not an end-to-end learned recovery policy.
+1. Base;
+2. Hazard Prompt;
+3. Binary Risk -> Retreat;
+4. Always Detour;
+5. Always Retreat;
+6. frozen Counterfactual Router;
+7. Counterfactual Oracle upper bound.
+
+Use source state—not frame, condition, anchor, or branch—as the independent
+unit. Report 5,000-replicate shared source-cluster bootstrap intervals and
+paired differences.
+
+### Act IV — A new frontier point, not universal dominance
+
+In the independent eight-source/24-decision cohort, the
+`lambda=1,target=0.6` display point reaches 87.5% success, 8.33% catastrophe,
+and 58.33% intervention. Binary Risk reaches 41.67%, 8.33%, and 50%; Always
+Detour reaches 70.83%, 4.17%, and 100%.
+
+The result has three complementary readings:
+
+- at a similar intervention rate and identical catastrophe point estimate,
+  Router preserves far more task success than Binary Risk;
+- versus Always Detour, Router trades a small catastrophe increase for higher
+  success and much less intervention;
+- on off-path/no-glass controls, Router retains 93.75% task success versus
+  56.25% for Hazard Prompt.
+
+Four predeclared frontier points jointly satisfy all four acceptance criteria.
+The combined 13-source frontier has no single all-criteria point, so end with the
+honest boundary: the method supplies a useful and adjustable Pareto frontier,
+not a single universally dominant deployment setting.
 
 ## Main figures and tables
 
-1. **Geometry causal panel:** top-down swept corridor, on-path/off-path matched
-   scenes, wall clearance curve, and compact glass dose response.
-2. **Decoded/not-routed panel:** probe performance beside final-window
-   wall-directed behavior.
-3. **Routing intervention panel:** Base versus probe-gated `RetreatHold`, including
-   force and benign-fire outcomes.
-4. **Safety–utility panel:** one whole-episode subpanel for Base versus the exact
-   hazard-specific prompt, and one matched exact-state/online subpanel for Base,
-   binary risk, fixed options, learned router, and Oracle. Do not mix the old
-   prompt cohort's 15 episodes with the router cohort's 106 decision anchors.
-5. **One glass filmstrip:** exact same state, Base catastrophe versus Oracle safe
-   task completion.
+1. **Decision-problem figure:** identical state branching to Base, Detour, and
+   Retreat; include one example where intervention helps and one where it hurts.
+2. **Method figure:** option-conditioned outcome heads, `U_lambda`, conservative
+   advantage margin, and Base-default handoff.
+3. **Fresh frontier figure:** all five catastrophe costs; catastrophe on x,
+   success on y, marker area as intervention, stars for all-criteria points.
+4. **Control/decision-quality figure or compact table:** unnecessary
+   intervention, missed beneficial intervention, regret, recovered Oracle value,
+   and off-path/no-glass retention.
+5. **Main seven-method table:** Base, Hazard Prompt, Binary Risk, Always Detour,
+   Always Retreat, Router, and Oracle with success, catastrophe, safe
+   noncompletion, and intervention.
 
-Keep the steering null as one compact ablation. Do not give every historical
-experiment its own main-text figure.
+The canonical numeric tables and current figures are in
+[COUNTERFACTUAL_ROUTER_MAIN_RESULT.md](COUNTERFACTUAL_ROUTER_MAIN_RESULT.md).
 
-## Highest-value new experiments
+## Supporting mechanism section
 
-### 1. Five-fold held-out online wall guard
+Keep the earlier wall chain compact:
 
-For each of five wall scenarios, fit and threshold on the other four, then deploy
-online only on the unseen wall. Evaluate the held-out on-path wall together with
-matched clear off-path and no-wall rollouts. Report folds/scenarios as the
-independent units and keep threshold selection inside each training fold.
+- swept-corridor causal localization: 15/15 on-path versus 0/33 clear;
+- representation readout: OpenVLA/OFT T-5 AUC 0.998/0.903;
+- no sustained final-window retreat in 25/25 wall episodes;
+- scoped probe-gated `RetreatHold`: 15/15 crashes to 0/15 and 0/22 benign fires;
+- final-readout activation steering remains at 100% crash.
 
-This upgrades C7 from “operational on the fitted geometry set” to a held-out
-risk-routing interface test.
-
-### 2. OFT-specific online guard replication
-
-Use OFT's own representation and probe to trigger the same `RetreatHold`
-interface. This tests whether the routing abstraction, rather than one action
-head, carries across model families.
-
-## Before running anything
-
-- Recover the ignored wall/OFT `hidden.npz` and `meta.json` files, or recapture
-  them; the committed probe checkpoints alone are insufficient for five-fold
-  refitting.
-- Recover/recapture glass activations and add probe serialization/runtime loading;
-  the repository currently has only a glass probe summary.
-- Freeze folds, episode-level threshold calibration, treatment/control sets,
-  repeat counts, and source-state independence before observing new outcomes.
-- Register new result paths, scenario fingerprints, checkpoint revisions, and
-  commits in `results/manifest.json`.
+This section supports the premise that information can be decoded yet fail to
+control behavior. It should not compete with the learned router for the paper
+headline.
 
 ## Appendix
 
-- Complete prompt matrix and instructions.
-- E12/P0 negative/indeterminate generalization study.
-- π0 probe taps and full probe diagnostics.
-- Threshold sweep and complete steering diagnostic.
-- Broad glass Pilot B no-go, certification funnel, exact restore/hash checks,
-  strict authoring details, Slurm provenance, and Oracle upper-bound traces.
-- Low-wall task-completion existence demo and other negative hazards.
-
-See [appendix/README.md](appendix/README.md).
+- full development router/ablation tables and split audits;
+- original and post-pilot failed fixed-point audits;
+- combined n=13 frontier and cohort heterogeneity;
+- complete prompt matrix and whole-episode instructions;
+- full wall, OFT, pi0, probe, confound, shield, and steering diagnostics;
+- broad glass E14/E15 no-go, certification funnel, Oracle upper-bound traces,
+  restore/hash details, and Slurm provenance;
+- negative hazard mechanisms and low-wall existence demonstrations.
 
 ## Cut from the main narrative
 
-- E14/E15 A/B/C/D/E/F chronology.
-- Broad B's 109-attempt authoring and repair timeline.
-- Full Slurm, hash, restore, and schema implementation details.
-- Seven-category benchmark language and selected-band glass averages.
-- E12 as positive generalization evidence.
-- Large prompt matrices, E12 internals, full π0 probe details, and repeated
-  same-seed tables.
-- Claims of universal safety, general recovery, or learned task completion.
-
-Pilots D/F are not run targets at the frozen checkpoint. If action learning is
-revisited at all, the minimum diagnostic is a tiny Oracle-timing E smoke: one
-train pair plus two development pairs, one seed each. A failed train pair ends
-the action-head route; train-only success diagnoses data diversity; only a
-development signal justifies rebuilding detector calibration.
+- chronological E14/E15 Pilot A/B/C/D/E/F storytelling;
+- deeper sequence models, Transformers, ensemble world models, or another
+  outcome-led threshold search;
+- claims that Hazard Prompt or Retreat constitutes task recovery;
+- claims that Oracle is a deployable competitor;
+- claims of universal safety, arbitrary-layout coverage, or production-scale
+  robustness;
+- separate headline figures for every historical diagnostic.
 
 ## Evidence discipline
 
-- 321.7 N is the intervention baseline mean, not the mean of every wall study.
-- Threshold 1.0 is not an online-validated wall operating point.
-- The glass 6/6 result has two independent development source states and Oracle
-  timing/actions.
-- The glass checkpoint's learned gate has timely-trigger rate 0.0 at threshold
-  1.0; its validation gripper-sign accuracy is 0.846, below the 0.95 gate.
-- Prompt-induced collision reduction without task success is conservative
-  stopping, not avoidance or recovery.
-- Tall-wall and low-wall d62 scenarios remain distinct in all claims and figures.
+- The independent confirmation has eight source states, not 24 independent
+  samples; the three conditions are clustered within source.
+- The display point is one of four all-criteria points in a fully predeclared
+  frontier, not a prespecified single deployment point.
+- The combined n=13 result passes criteria at different frontier locations but
+  has no joint all-criteria point.
+- Detour uses privileged geometry; the claim is learned option routing.
+- Oracle observes realized branches and is excluded from deployable Pareto
+  dominance.
+- Negative fixed-`lambda=5` audits stay visible.
+
+## Next experiment policy
+
+Do not tune this cohort further. If review requires another positive result,
+replicate the frozen router and option contract on a new task family. Five-fold
+held-out wall guard and OFT-specific online guard remain useful mechanism
+extensions, but they do not replace the current E16 headline.

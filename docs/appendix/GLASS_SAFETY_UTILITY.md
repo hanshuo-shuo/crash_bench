@@ -18,6 +18,11 @@ finishing the manipulation task.
    controller-compatible accidents among 15 candidates. Exact-anchor,
    Oracle-timed Oracle recovery completes 6/6 runs safely on two development
    source states.
+5. **A separate learned option router now has fresh evidence.** E16 freezes a
+   single-frame outcome router over Base, privileged `DetourComplete`, and
+   `RetreatHold`. On eight disjoint random-reset sources it contributes four
+   all-criteria frontier points. This closes intervention selection over
+   structured options; it does not validate the old D/E/F learned action head.
 
 ![Exact-state glass counterfactual filmstrip](../archive/glass_recovery_20260812/report_assets/glass_recovery_progress_20260812/fig_heldout_0000_filmstrip.jpg)
 
@@ -32,12 +37,14 @@ sample size remains two source states.
 - The learned risk gate has calibration threshold 1.0 and timely-trigger rate
   0.0 on the frozen checkpoint; saved C trajectories do not cross the threshold.
 - Validation gripper-sign accuracy is 0.846, below the frozen 0.95 gate.
-- No disjoint final-held-out learned-routing result exists.
+- No disjoint final-held-out end-to-end learned action policy exists. E16 is a
+  disjoint learned-routing result only over frozen structured options.
 
 Therefore the correct conclusion is:
 
-> Task-completing recovery is physically available in a small certified glass
-> subclass, but the current learned checkpoint does not close the loop.
+> Task-completing recovery is physically available, and a fresh learned router
+> can selectively choose among structured options; the old D/E/F learned gate
+> and action checkpoint still does not close an end-to-end recovery loop.
 
 ## Status of the old pilots
 
@@ -53,10 +60,9 @@ two development pairs, one seed each, with Oracle timing forced. Train failure
 ends the route; train success with development failure diagnoses insufficient
 diversity. Only a development signal justifies rebuilding detector calibration.
 
-The higher-value experiment is a **glass-specific learned detector + structured
-`DetourComplete` controller**. It first requires recovering or recapturing the
-glass activations and serializing a deployable probe; only a positive development
-result should lead to a fresh certified cohort.
+Do not resume this old action-head sequence to fill experiment labels. If a new
+experiment is required, replicate the frozen E16 option-router contract on a new
+task family rather than retuning the current glass cohorts.
 
 ## Provenance
 
@@ -70,6 +76,8 @@ result should lead to a fresh certified cohort.
   `results/glass_recovery_pilot_c_scoped_20260812.json`.
 - Learned-checkpoint run-readiness decision:
   `results/glass_recovery_checkpoint_readiness_audit_20260812.json`.
+- Fresh learned option router:
+  [`COUNTERFACTUAL_ROUTER_MAIN_RESULT.md`](../COUNTERFACTUAL_ROUTER_MAIN_RESULT.md).
 
 ### Technical audit map
 

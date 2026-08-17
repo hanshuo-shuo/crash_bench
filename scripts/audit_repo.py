@@ -29,6 +29,7 @@ CURRENT_DOCS = (
     ROOT / "docs/CURRENT.md",
     ROOT / "docs/PAPER_PLAN.md",
     ROOT / "docs/CLAIMS.md",
+    ROOT / "docs/COUNTERFACTUAL_ROUTER_MAIN_RESULT.md",
     ROOT / "docs/EXPERIMENT_INDEX.md",
     ROOT / "docs/REPRODUCIBILITY.md",
     ROOT / "docs/SCRIPT_INDEX.md",
@@ -52,19 +53,24 @@ BANNED_CURRENT_TEXT = (
 )
 REQUIRED_CURRENT_TEXT = {
     ROOT / "README.md": (
-        "Decoded but Not Routed",
-        "risk-readout → controller",
-        "Pilots D/F are **not** current run targets",
+        "Knowing When to Intervene",
+        "option-conditioned outcome prediction",
+        "Always Retreat",
     ),
     ROOT / "docs/CURRENT.md": (
-        "Decoded but Not Routed",
-        "Frame-level ranking signal exists, but a deployable operating point does not.",
-        "Five-fold held-out online wall guard",
+        "C0–C14",
+        "Four predeclared points meet all four frontier criteria",
+        "Do not tune a deeper sequence model",
     ),
     ROOT / "docs/PAPER_PLAN.md": (
-        "a detector direction need not be a controller direction",
-        "Pilots D/F are not run targets",
-        "Five-fold held-out online wall guard",
+        "Risk detection is not intervention selection",
+        "no single all-criteria point",
+        "Do not tune this cohort further",
+    ),
+    ROOT / "docs/COUNTERFACTUAL_ROUTER_MAIN_RESULT.md": (
+        "Seven methods in the matched comparison",
+        "Hazard Prompt",
+        "Oracle value recovered",
     ),
 }
 SUPERSEDED_ROOT_DOCS = (
@@ -262,15 +268,15 @@ def audit() -> list[str]:
         if not path.is_file():
             errors.append(f"appendix document missing: {path.relative_to(ROOT)}")
 
-    # Current docs must share the complete C0..C13 ledger vocabulary, foreground
-    # decoded-but-not-routed, and reject the superseded E15-first framing.
-    claim_ids = set(re.findall(r"\bC(?:1[0-3]|[0-9])\b", (ROOT / "docs/CLAIMS.md").read_text()))
-    expected_claim_ids = {f"C{i}" for i in range(14)}
+    # Current docs must share the complete C0..C14 ledger vocabulary, foreground
+    # intervention-value routing, and reject the superseded E15-first framing.
+    claim_ids = set(re.findall(r"\bC(?:1[0-4]|[0-9])\b", (ROOT / "docs/CLAIMS.md").read_text()))
+    expected_claim_ids = {f"C{i}" for i in range(15)}
     if claim_ids != expected_claim_ids:
         errors.append(f"docs/CLAIMS.md IDs {sorted(claim_ids)} != {sorted(expected_claim_ids)}")
     for name in ("CURRENT.md", "PAPER_PLAN.md"):
-        if "C0–C13" not in (ROOT / "docs" / name).read_text():
-            errors.append(f"docs/{name} does not declare the C0–C13 claim vocabulary")
+        if "C0–C14" not in (ROOT / "docs" / name).read_text():
+            errors.append(f"docs/{name} does not declare the C0–C14 claim vocabulary")
     for path in CURRENT_DOCS:
         text = path.read_text()
         for banned in BANNED_CURRENT_TEXT:
@@ -833,7 +839,7 @@ def main() -> None:
         print("\n".join(f"- {error}" for error in errors))
         raise SystemExit(1)
     print(
-        "Repository audit passed: decoded-not-routed framing, maintained links, "
+        "Repository audit passed: intervention-value routing framing, maintained links, "
         "legacy glass guards, frozen E14/E15 semantics, scenario fingerprints, "
         "manifest paths, and claim checks are consistent."
     )

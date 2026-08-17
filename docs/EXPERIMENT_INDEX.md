@@ -7,6 +7,7 @@ remain unchanged so manifests and historical logs stay interpretable.
 
 | ID | Scientific role | Scenario/model | Canonical implementation | Tracked evidence | Status / limitation |
 |---|---|---|---|---|---|
+| E16 | **headline fresh intervention-value routing frontier** | matched glass/off-path/no-glass; frozen single-frame router | `train_counterfactual_outcome_router.py`, `collect_fresh_counterfactual_router.py`, `analyze_fresh_counterfactual_router.py` | promoted summary, seven-method table, n8/n13 analyses, frontier CSVs, and four figures; Quest jobs `9677761`, `9679137` | frozen positive frontier; 8-source confirmation has four joint points; combined 13-source heterogeneity; structured privileged options |
 | E1 | swept-corridor wall causal sweep | `scenarios/`, `scenarios_control/`; OpenVLA | `phase1_ood_control_v5.py`; `run_ood_control_v5.sbatch` | `pilot_final.json`, `pilot_control_final.json`, `ood_control_final.json`; `ANALYSIS_ood_control.md` | frozen; C1; one task/wall family |
 | E2 | cross-action-head behavior | same matched wall/control geometry; Base, OFT, pi0 | `run_pilot_*`; `path3_oft_compare.py` | `*_walls.json`, `*_controls.json`, `path3_oft_summary.json` | frozen; C2; same embodiment/task |
 | E3 | representation risk readout | wall/nowall/off-path captures; Base and OFT | `probe_selfreport.py`, `probe_selfreport_analysis.py` | `selfreport*/probe_summary.json`, `probe_T5.npz` | frozen; C3; raw captures ignored |
@@ -15,14 +16,14 @@ remain unchanged so manifests and historical logs stay interpretable.
 | E7 | detector-direction steering ablation | wall/nowall; OpenVLA | `phase3_steering*.py`; steering sbatch | `steering/*.json`; `ANALYSIS_steering.md` | frozen negative; C11 |
 | E11 | representation/observable confound | strict held-out-scenario frozen-capture analysis | `task_phase_confound_analysis.py` | `task_phase_confound/*.json`; analysis figure | frozen; C13 |
 | E6 | glass causal extension and transfer limit | f30–f70 matched glass; OpenVLA | `phase2_glass_prototype.py`, `probe_glass_*` | `glass_prototype.json`, glass probe summary; `ANALYSIS_glass.md` | frozen; C9/C10; closing evidence |
-| E16 | fresh intervention-value routing frontier | matched glass/off-path/no-glass; frozen single-frame router | `collect_fresh_counterfactual_router.py`, `analyze_fresh_counterfactual_router.py` | `counterfactual_router_fresh_online_20260817.json`; Quest jobs `9677761`, `9679137` | frozen positive frontier; 8-source confirmation, 13-source combined heterogeneity; structured privileged options |
 
 ## Next experiment queue — not yet evidence
 
 | Priority | Experiment | Gate before submission | Intended upgrade |
 |---|---|---|---|
-| N1 | five-fold held-out online wall guard | recover/recapture wall hidden/meta; freeze fold-local calibration | held-out generalization of the risk-routing interface |
-| N2 | OFT-specific online `RetreatHold` guard | recover/recapture OFT hidden/meta; fit OFT probe only | cross-action-head routing replication |
+| N1 | frozen-router replication on a new task family | preserve model/options/grid; freeze a source-disjoint cohort before outcomes | test whether the intervention-value frontier transfers beyond task 0 |
+| N2 | five-fold held-out online wall guard | recover/recapture wall hidden/meta; freeze fold-local calibration | mechanism generalization of the older risk-routing interface |
+| N3 | OFT-specific online `RetreatHold` guard | recover/recapture OFT hidden/meta; fit OFT probe only | cross-action-head mechanism replication |
 
 ## Appendix experiments
 

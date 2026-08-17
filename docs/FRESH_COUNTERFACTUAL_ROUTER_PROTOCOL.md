@@ -1,5 +1,9 @@
 # Fresh online counterfactual router protocol
 
+The experiment is complete. This file remains the frozen design/provenance
+contract; final tables, figures, and interpretation are in
+[COUNTERFACTUAL_ROUTER_MAIN_RESULT.md](COUNTERFACTUAL_ROUTER_MAIN_RESULT.md).
+
 ## Frozen method
 
 The deployed model is intentionally linear and single-frame:
@@ -120,3 +124,5 @@ single combined point satisfies all four criteria. Fixed-point audits at the
 original 40% and post-pilot 20% `lambda=5` points remain negative. The exact
 paper summary is
 [`counterfactual_router_fresh_online_20260817.json`](../results/counterfactual_router_fresh_online_20260817.json).
+Promoted full analyses, frontier CSVs, and figures are indexed in
+[COUNTERFACTUAL_ROUTER_MAIN_RESULT.md](COUNTERFACTUAL_ROUTER_MAIN_RESULT.md).

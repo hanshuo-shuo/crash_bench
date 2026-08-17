@@ -1,5 +1,10 @@
 # Counterfactual option router: completed full-capture handoff
 
+> **Status:** this is the technical development/full-capture provenance record.
+> The paper-facing seven-method tables, fresh figures, plain-language story, and
+> final wording live in
+> [COUNTERFACTUAL_ROUTER_MAIN_RESULT.md](COUNTERFACTUAL_ROUTER_MAIN_RESULT.md).
+
 ## Current decision
 
 The exact-state counterfactual premise passes the full audit. The official Quest
@@ -119,7 +124,7 @@ The counterfactual ceiling improves catastrophe and mean utility in every
 source-disjoint split. This supports a stable decision-value premise; it does
 not establish that a learned router can recover that value.
 
-## Minimal router result and next action
+## Development router result and transition to fresh evaluation
 
 The train-only PCA-16 plus source-balanced linear utility router recovers 34.78%
 of Oracle decision value on development, versus 14.67% for binary-risk
@@ -161,6 +166,8 @@ The independent cohort passes the requested frontier audit. At the predeclared
 | Binary risk → Retreat | 41.67% | 8.33% | 50.00% | 50.00% |
 | Always Detour | 70.83% | 4.17% | 25.00% | 100% |
 | Base | 66.67% | 33.33% | 0% | 0% |
+| Hazard Prompt | 37.50% | 20.83% | 41.67% | 100% |
+| Always Retreat | 0% | 0% | 100% | 100% |
 | Counterfactual Oracle | 91.67% | 0% | 8.33% | 33.33% |
 
 Router beats risk by 45.83 success points at identical catastrophe point

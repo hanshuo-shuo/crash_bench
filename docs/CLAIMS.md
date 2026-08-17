@@ -1,10 +1,16 @@
 # Claim ledger
 
-This is the paper-facing wording for the C0–C13 machine-readable ledger in
+This is the paper-facing wording for the C0–C14 machine-readable ledger in
 `results/claims_ledger.json`. “Frozen” means a tracked summary exists; it does
 not imply that ignored raw activations, logs, or videos are present locally.
 
-## Primary chain
+## Headline claim
+
+| ID | Exact supported claim | Evidence and scale | Scope / paper role |
+|---|---|---|---|
+| C14 | A frozen single-frame probabilistic outcome router contributes a new safety--success--intervention tradeoff on fresh matched online rollouts. At the independent-cohort `lambda=1,target=0.6` point it reaches 87.5% task success, 8.33% catastrophe, and 58.33% intervention versus 41.67%, 8.33%, and 50.0% for rate-matched Binary Risk -> Retreat; four predeclared frontier points meet all four acceptance criteria. | E16; 8 independent random-reset source states, 3 matched conditions per source, 24 decisions; 5,000 source-cluster bootstrap replicates; `counterfactual_router_fresh_online_20260817.json` and promoted n8 analysis | Learned routing over Base and privileged structured Detour/Retreat options. The display point is not a prespecified single deployment point; combined n=13 has no joint all-criteria point. |
+
+## Causal and mechanism chain
 
 | ID | Exact supported claim | Evidence and scale | Scope / paper role |
 |---|---|---|---|
@@ -13,7 +19,7 @@ not imply that ignored raw activations, logs, or videos are present locally.
 | C3 | Collision imminence is linearly decodable from frozen OpenVLA and OFT hidden states while safe behavior is not expressed. | T-5 AUC 0.998 and 0.903; `selfreport*/probe_summary.json` | Use “decoded but not routed”; pair with C5 rather than claiming mental state. |
 | C5 | In the final pre-impact window, the policy does not sustain wall-directed EEF braking. | 25 wall/no-wall pairs; 0/25 retreat; command projection rises/equal/falls in 22/2/1; probe summaries and `ANALYSIS_selfreport.md` | EEF-aligned behavior, not full-arm signed-distance causality. |
 | C13 | Hidden states contain collision-predictive information beyond measured task progress, EEF pose, and action magnitude. | strict held-out-scenario analysis; hidden AUPRC 0.716 vs strongest observable baseline 0.442; `task_phase_confound.json` | Associational, five wall scenarios; supporting dissociation evidence. |
-| C7 | In the scoped OpenVLA-base on-path-wall mode, a wall-risk readout routed to `RetreatHold` changes 15/15 crashes to 0/15, 321.7 N mean peak force to 0 N, and fires on 0/22 benign rollouts. | `intervention/{episodes,summary}.json`; 5 treatment walls, K=3; online threshold -0.422 | Closed-loop repair headline; one fitted wall family, structured safe-abort controller. |
+| C7 | In the scoped OpenVLA-base on-path-wall mode, a wall-risk readout routed to `RetreatHold` changes 15/15 crashes to 0/15, 321.7 N mean peak force to 0 N, and fires on 0/22 benign rollouts. | `intervention/{episodes,summary}.json`; 5 treatment walls, K=3; online threshold -0.422 | Mechanism support for explicit routing; one fitted wall family and a structured safe-abort controller. |
 
 ## Supporting and boundary claims
 
@@ -30,20 +36,18 @@ not imply that ignored raw activations, logs, or videos are present locally.
 
 ## Non-numbered paper boundaries
 
-E13 is a completed prompt-scope baseline, not a new claim ID. Hazard-specific
-language changes behavior but yields 0/15 treatment task successes for both wall
-and glass. The supported interpretation is conservative stopping.
+E13 is a completed historical prompt-scope baseline, not a new claim ID.
+Hazard-specific language changes behavior but yields 0/15 treatment task
+successes for both wall and glass. E16 reruns the exact glass prompt from reset
+inside the fresh matched cohort: it intervenes on 100%, reaches 37.5% success,
+and has 66.67% unnecessary intervention. The supported interpretation is broad
+behavioral caution rather than selective routing or recovery.
 
 The old E14/E15 sequence-action recovery remains supporting counterfactual
-evidence rather than a learned result. Separately, a frozen single-frame
-probabilistic outcome router has now been tested in a fresh online matched
-cohort. On eight independent random-reset sources, one predeclared frontier
-point reaches 87.5% success, 8.33% catastrophe, and 58.33% intervention versus
-41.67%, 8.33%, and 50.0% for rate-matched binary-risk-to-Retreat. The full
-predeclared frontier passes the paper acceptance audit; the combined 13-source
-frontier passes at the portfolio level but has no single all-criteria point.
-This supports learned intervention-value routing over structured, privileged
-options—not a learned action head or end-to-end learned recovery.
+evidence rather than a learned result. E16/C14 is the learned result, but its
+Detour and Retreat actions remain structured options rather than a learned
+action head. Complete interpretation is frozen in
+[COUNTERFACTUAL_ROUTER_MAIN_RESULT.md](COUNTERFACTUAL_ROUTER_MAIN_RESULT.md).
 
 The separate `glass_recovery_checkpoint_readiness_audit_20260812.json` records
 why D/F are not active claims: the frozen gate has no threshold crossing in the

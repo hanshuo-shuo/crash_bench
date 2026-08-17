@@ -21,6 +21,7 @@ pin、sanity 记录和踩坑列表在归档 setup 文档中。
 
 | 论文部分 | 入口 |
 |---|---|
+| **fresh counterfactual router 主结果** | `submit_fresh_counterfactual_router.sh`, `submit_fresh_counterfactual_router_supplement.sh`；结果已冻结，不要覆盖重跑 |
 | wall causal sweep | `run_ood_control_v5.sbatch` |
 | Base/OFT/pi0 matched behavior | `run_pilot_base_matched.sbatch`, `run_pilot_oft.sbatch`, `run_pilot_openpi.sbatch` |
 | Base/OFT representation capture | `probe_selfreport.sbatch`, `probe_selfreport_oft.sbatch` |
@@ -36,14 +37,16 @@ pin、sanity 记录和踩坑列表在归档 setup 文档中。
 
 ## 下一轮实验
 
-优先级是：
+当前主结果已经完成。不要在现有 8/13-source cohort 上继续搜索更深 sequence model、
+Transformer、ensemble world model 或 outcome-led threshold。只有评审明确需要额外外推证据时，
+才按以下顺序考虑新实验：
 
-1. 五折 held-out wall online guard；
-2. glass-specific learned detector → structured `DetourComplete`；
+1. 在新 task family 上原样复制冻结的 counterfactual-router 方法和 frontier；
+2. 五折 held-out wall online guard；
 3. OFT-specific online `RetreatHold` replication。
 
-当前仓库还不能直接提交前两项：五折重训缺 wall/OFT raw hidden/meta；glass 只有 probe
-summary，没有可部署 checkpoint。先从 Quest 找回 capture 或重采，再冻结新协议和提交脚本。
+新 task-family replication 需要新的 source-disjoint cohort 和 task-compatible structured
+options。五折 wall/OFT 重训仍缺 raw hidden/meta，需要先从 Quest 找回 capture 或重采。
 
 ## Legacy glass recovery
 

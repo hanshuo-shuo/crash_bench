@@ -582,6 +582,68 @@
       "figures": [],
       "status": "not_ready_for_learned_timing_or_joint_recovery",
       "notes": "Derived run-readiness decision record, not an experiment run. Values were directly extracted from the hash-pinned Pilot C evaluation. No generation commit or script is claimed; source evaluation and training commits are recorded inside the artifact."
+    },
+    {
+      "experiment_id": "E16",
+      "result_files": [
+        "results/counterfactual_router_fresh_online_20260817.json",
+        "results/counterfactual_router_fresh_online_main_table.csv",
+        "results/counterfactual_router_fresh_online_n8_analysis.json",
+        "results/counterfactual_router_fresh_online_n8_frontier.csv",
+        "results/counterfactual_router_fresh_online_n13_analysis.json",
+        "results/counterfactual_router_fresh_online_n13_frontier.csv"
+      ],
+      "git_commit": "default collection 2eab4a4a53dc254145b889de3b3224734f46f29b; random-reset collection 9ed5ad656a0831dce9347cfa850407b7d2633851; frontier audit 74853ed1ad99de837dcbf3e6bf5745a666df1c92",
+      "created_date": "2026-08-17",
+      "model": "OpenVLA base plus frozen single-frame probabilistic counterfactual outcome router",
+      "checkpoint": "openvla/openvla-7b-finetuned-libero-spatial@962318cec55ac10993ff0f5f43eda9a270b4c873; router JSON sha256 757e220bc2e561aa8207ae3778a3021554b3031df2ec3eef376e1e56db938052; router NPZ sha256 46fd264b5258cb1be20a4c16f259025dc6c5ab9650afc75d65742eed16412e69",
+      "scenario_root": [
+        "ignored run results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z",
+        "ignored run results/counterfactual_router/fresh_random_9ed5ad656a08_20260817T0845Z"
+      ],
+      "scenario_fingerprints": [],
+      "task_suite": "libero_spatial",
+      "task_id": 0,
+      "repeat_k": "one rollout seed for each matched method branch; three conditions nested within each of 8 independent confirmation sources and 5 disjoint pilot sources",
+      "policy_options": {
+        "base": "frozen VLA continuation",
+        "detour": "frozen privileged DetourComplete",
+        "retreat": "latched RetreatHold",
+        "router_features": "single-frame train-only PCA-16 hidden + robot state + nominal action",
+        "outcomes": ["task_success", "catastrophe", "safe_noncompletion"],
+        "placement_manifest_sha256_by_cohort": {
+          "default_state": "4054d9592fe3fa323e11bca8292f9c1c9d0dc65d72d9edf35d2cf1a1d5a99215",
+          "random_reset": "e32dbe0b73520078cc72acaace849aa6669a53a7e7a825443f2c30052ba4d65e"
+        },
+        "catastrophe_costs": [1, 2, 3, 5, 8],
+        "target_intervention_rates": [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9],
+        "oracle_role": "upper bound only; excluded from deployable Pareto dominance"
+      },
+      "threshold": {
+        "decision_rule": "best non-Base predicted utility must exceed Base by calibration-frozen delta",
+        "glass_force_n": 25.0,
+        "bootstrap_replicates": 5000
+      },
+      "crash_predicate": "injected glass toppled beyond 45 degrees, displaced beyond 0.06 m from authored XY, or robot-versus-glass contact force at least 25 N",
+      "force_threshold_N": 25.0,
+      "seed_or_nondeterminism": "rollout seed 0; random-reset seeds begin at 2026081700; source-cluster bootstrap seed 20260817; source state is the independent unit",
+      "generating_script": "scripts/collect_fresh_counterfactual_router.py",
+      "sbatch": [
+        "setup/prepare_fresh_counterfactual_router.sbatch",
+        "setup/fresh_counterfactual_router.sbatch",
+        "setup/prepare_fresh_counterfactual_router_supplement.sbatch",
+        "setup/fresh_counterfactual_router_supplement.sbatch"
+      ],
+      "raw_log": "Quest gitignored run roots named in scenario_root; jobs 9677759/9677760/9677761 and 9679136/9679137",
+      "analysis_script": "scripts/analyze_fresh_counterfactual_router.py",
+      "figures": [
+        "results/counterfactual_router_fresh_online_n8_frontier_all_lambdas.png",
+        "results/counterfactual_router_fresh_online_n8_frontier_lambda5.png",
+        "results/counterfactual_router_fresh_online_n13_frontier_all_lambdas.png",
+        "results/counterfactual_router_fresh_online_n13_frontier_lambda5.png"
+      ],
+      "status": "frozen_positive_frontier",
+      "notes": "The independent n=8/24-decision cohort has four predeclared points meeting all four frontier criteria. The lambda=1,target=0.6 display point reaches 87.5% success, 8.33% catastrophe, and 58.33% intervention. Combined n=13 has no joint all-criteria point; original and post-pilot fixed lambda=5 audits remain negative. Structured Detour uses privileged geometry, so this is learned intervention-value routing rather than end-to-end learned recovery."
     }
   ]
 }

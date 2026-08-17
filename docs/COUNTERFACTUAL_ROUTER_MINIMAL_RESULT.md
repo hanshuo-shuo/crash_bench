@@ -1,5 +1,10 @@
 # Minimal counterfactual router: initial held-out result
 
+> **Status:** development-only architecture evidence retained for provenance.
+> The method was subsequently frozen and evaluated online; use
+> [COUNTERFACTUAL_ROUTER_MAIN_RESULT.md](COUNTERFACTUAL_ROUTER_MAIN_RESULT.md)
+> for the paper result.
+
 ## Status
 
 Quest job `9356753` completed in 27 seconds with exit code 0 from clean commit

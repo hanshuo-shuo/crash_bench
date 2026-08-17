@@ -35,6 +35,30 @@ threshold, seed/nondeterminism policy, raw-log path, and analysis script in
 
 ## Current main-line artifacts
 
+### Fresh counterfactual outcome router (E16)
+
+The paper-facing E16 package is self-contained in tracked, stable paths:
+
+- `results/counterfactual_router_fresh_online_20260817.json`: compact frozen
+  summary, hashes, jobs, cohorts, primary point, intervals, and wording bounds;
+- `results/counterfactual_router_fresh_online_main_table.csv`: complete
+  seven-method outcome and intervention-quality table;
+- `results/counterfactual_router_fresh_online_n8_{analysis.json,frontier.csv}`:
+  independent confirmation analysis and every predeclared frontier point;
+- `results/counterfactual_router_fresh_online_n13_{analysis.json,frontier.csv}`:
+  pooled descriptive analysis and every predeclared frontier point;
+- four promoted `counterfactual_router_fresh_online_n{8,13}_frontier_*.png`
+  figures.
+
+The canonical interpretation is
+[COUNTERFACTUAL_ROUTER_MAIN_RESULT.md](COUNTERFACTUAL_ROUTER_MAIN_RESULT.md), and
+the frozen collection contract is
+[FRESH_COUNTERFACTUAL_ROUTER_PROTOCOL.md](FRESH_COUNTERFACTUAL_ROUTER_PROTOCOL.md).
+The large branch logs, prompt rollouts, simulator states, source traces, and
+router copies remain under gitignored `results/counterfactual_router/` run
+roots. The promoted analyses permit complete table/frontier inspection without
+those raw assets; re-executing rollouts still requires Quest-side state.
+
 ### Swept-corridor causal study
 
 - Tall-wall treatment scenarios: `scenarios/`.
@@ -82,8 +106,8 @@ serialization/runtime loading.
 
 | Experiment | Present locally | Missing prerequisite |
 |---|---|---|
+| frozen-router new-task replication | model code, frozen feature/option contract, lambda/rate grid, analysis | a new source-disjoint task-family cohort and task-compatible structured options |
 | five-fold wall online guard | Base/OFT `probe_T5.npz`, scenarios, evaluation code | raw wall/OFT hidden/meta for fold-local refitting, or a new capture |
-| glass detector → `DetourComplete` | glass summary, controller and exact-state supporting summaries | raw glass capture, deployable probe weights, runtime loader, fresh cohort after development success |
 | OFT online guard | OFT probe summary/checkpoint and backend | fold-local calibration inputs and online replication protocol |
 
 Threshold calibration for a new online result must be episode-level and isolated
