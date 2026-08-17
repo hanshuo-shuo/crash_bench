@@ -7,6 +7,9 @@ import pytest
 from crashbench.counterfactual_router import (
     OPTIONS,
     classify_option_outcome,
+    conservative_option_choice,
+    option_utilities,
+    outcome_probabilities,
     temporal_window,
     validate_decision_rows,
 )
@@ -26,6 +29,10 @@ from scripts.train_minimal_counterfactual_router import (
     fit_weighted_ridge,
     predict_ridge,
 )
+from scripts.train_counterfactual_outcome_router import (
+    calibrate_margin_for_rate,
+)
+from scripts.analyze_fresh_counterfactual_router import metric_values, oracle_choice
 
 
 def test_option_outcomes_are_exhaustive_and_exclusive():
@@ -34,6 +41,67 @@ def test_option_outcomes_are_exhaustive_and_exclusive():
     assert classify_option_outcome(crashed=False, succeeded=False) == "safe_noncompletion"
     with pytest.raises(ValueError, match="both crash and succeed"):
         classify_option_outcome(crashed=True, succeeded=True)
+
+
+def test_probabilistic_router_exposes_lambda_and_base_margin():
+    logits = np.asarray([
+        [2.0, 1.0, 0.0],
+        [1.0, -1.0, 0.0],
+        [-1.0, -2.0, 2.0],
+    ])
+    probabilities = outcome_probabilities(logits)
+    np.testing.assert_allclose(probabilities.sum(axis=-1), 1.0)
+    utilities = option_utilities(probabilities, catastrophe_cost=2.0)
+    assert utilities[1] > utilities[0]
+    assert conservative_option_choice(
+        probabilities, catastrophe_cost=2.0, intervention_margin=0.0
+    ) == 1
+    assert conservative_option_choice(
+        probabilities, catastrophe_cost=2.0, intervention_margin=10.0
+    ) == 0
+
+
+def test_probabilistic_margin_is_calibrated_without_development_rows():
+    probabilities = np.asarray([
+        [[0.4, 0.5, 0.1], [0.8, 0.1, 0.1], [0.1, 0.1, 0.8]],
+        [[0.7, 0.1, 0.2], [0.8, 0.1, 0.1], [0.1, 0.1, 0.8]],
+        [[0.8, 0.1, 0.1], [0.7, 0.2, 0.1], [0.1, 0.1, 0.8]],
+        [[0.3, 0.6, 0.1], [0.2, 0.2, 0.6], [0.1, 0.1, 0.8]],
+    ])
+    outcomes = np.asarray([
+        ["catastrophe", "task_success", "safe_noncompletion"],
+        ["task_success", "task_success", "safe_noncompletion"],
+        ["task_success", "safe_noncompletion", "safe_noncompletion"],
+        ["catastrophe", "safe_noncompletion", "safe_noncompletion"],
+    ])
+    result = calibrate_margin_for_rate(
+        probabilities, outcomes, np.asarray(["a", "b", "c", "d"]),
+        catastrophe_cost=5.0, target_rate=0.5,
+    )
+    choice = conservative_option_choice(
+        probabilities, catastrophe_cost=5.0,
+        intervention_margin=result["delta"],
+    )
+    assert np.mean(choice != 0) == result["calibration_intervention_rate"]
+    assert abs(result["calibration_intervention_rate"] - 0.5) <= 0.25
+
+
+def test_fresh_metrics_use_realized_base_and_oracle_counterfactuals():
+    outcomes = np.asarray([
+        ["catastrophe", "task_success", "safe_noncompletion"],
+        ["task_success", "safe_noncompletion", "safe_noncompletion"],
+    ])
+    choice = np.asarray([1, 0])
+    selected = outcomes[np.arange(2), choice]
+    metrics = metric_values(
+        selected, choice != 0, outcomes, catastrophe_cost=5.0,
+    )
+    assert oracle_choice(outcomes, catastrophe_cost=5.0).tolist() == [1, 0]
+    assert metrics["task_success_rate"] == 1.0
+    assert metrics["unnecessary_intervention_rate"] == 0.0
+    assert metrics["missed_beneficial_intervention_rate"] == 0.0
+    assert metrics["mean_oracle_regret"] == 0.0
+    assert metrics["oracle_value_recovered"] == 1.0
 
 
 def test_temporal_window_is_causal_and_left_padded():

@@ -6,8 +6,11 @@ training so it can be fitted on source-disjoint training states only.
 
 from __future__ import annotations
 
+import json
 from collections import Counter, defaultdict
-from typing import Iterable, Mapping, Sequence
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Iterable, Mapping, Sequence
 
 import numpy as np
 
@@ -15,6 +18,104 @@ import numpy as np
 OPTIONS = ("base_continue", "detour_complete", "retreat_hold")
 OUTCOMES = ("task_success", "catastrophe", "safe_noncompletion")
 DEFAULT_HORIZONS = (40, 30, 20, 10, 5)
+
+
+def outcome_probabilities(logits: np.ndarray) -> np.ndarray:
+    """Convert option/outcome logits to probabilities along the outcome axis."""
+
+    values = np.asarray(logits, dtype=np.float64)
+    shifted = values - values.max(axis=-1, keepdims=True)
+    exp = np.exp(shifted)
+    return exp / exp.sum(axis=-1, keepdims=True)
+
+
+def option_utilities(
+    probabilities: np.ndarray, catastrophe_cost: float
+) -> np.ndarray:
+    """Compute ``p(success) - lambda * p(catastrophe)`` for each option."""
+
+    values = np.asarray(probabilities, dtype=np.float64)
+    return values[..., 0] - float(catastrophe_cost) * values[..., 1]
+
+
+def conservative_option_choice(
+    probabilities: np.ndarray,
+    *,
+    catastrophe_cost: float,
+    intervention_margin: float,
+) -> np.ndarray:
+    """Choose the best intervention only when its Base advantage clears delta."""
+
+    utility = option_utilities(probabilities, catastrophe_cost)
+    intervention = 1 + np.argmax(utility[..., 1:], axis=-1)
+    advantage = np.take_along_axis(
+        utility, np.expand_dims(intervention, axis=-1), axis=-1
+    )[..., 0] - utility[..., 0]
+    return np.where(advantage > float(intervention_margin), intervention, 0).astype(
+        np.int64
+    )
+
+
+@dataclass(frozen=True)
+class FrozenOutcomeRouter:
+    """Small deployable single-frame counterfactual outcome router."""
+
+    manifest: Mapping[str, Any]
+    pca_mean: np.ndarray
+    pca_components: np.ndarray
+    feature_mean: np.ndarray
+    feature_scale: np.ndarray
+    outcome_coef: np.ndarray
+    risk_coef: np.ndarray
+
+    @classmethod
+    def load(cls, manifest_path: str | Path) -> "FrozenOutcomeRouter":
+        path = Path(manifest_path).resolve()
+        manifest = json.loads(path.read_text())
+        artifact = path.parent / str(manifest["artifact_npz"])
+        with np.load(artifact) as archive:
+            arrays = {name: archive[name] for name in archive.files}
+        return cls(manifest=manifest, **arrays)
+
+    def features(
+        self, hidden: np.ndarray, robot_state: np.ndarray, nominal_action: np.ndarray
+    ) -> np.ndarray:
+        hidden = np.asarray(hidden, dtype=np.float64)
+        projected = (hidden - self.pca_mean) @ self.pca_components
+        return np.concatenate((
+            projected,
+            np.asarray(robot_state, dtype=np.float64),
+            np.asarray(nominal_action, dtype=np.float64),
+        ))
+
+    def predict(
+        self, hidden: np.ndarray, robot_state: np.ndarray, nominal_action: np.ndarray
+    ) -> dict[str, Any]:
+        feature = self.features(hidden, robot_state, nominal_action)
+        standardized = (feature - self.feature_mean) / self.feature_scale
+        design = np.concatenate((standardized, [1.0]))
+        probabilities = outcome_probabilities(
+            np.einsum("d,dok->ok", design, self.outcome_coef)
+        )
+        risk_logit = float(design @ self.risk_coef)
+        risk_probability = float(1.0 / (1.0 + np.exp(-np.clip(risk_logit, -40, 40))))
+        return {
+            "option_outcome_probabilities": probabilities,
+            "base_catastrophe_probability": risk_probability,
+        }
+
+    def choose(
+        self,
+        prediction: Mapping[str, Any],
+        *,
+        catastrophe_cost: float,
+        intervention_margin: float,
+    ) -> int:
+        return int(conservative_option_choice(
+            np.asarray(prediction["option_outcome_probabilities"]),
+            catastrophe_cost=catastrophe_cost,
+            intervention_margin=intervention_margin,
+        ))
 
 
 def classify_option_outcome(*, crashed: bool, succeeded: bool) -> str:

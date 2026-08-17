@@ -19,7 +19,7 @@ reproduction; it is not a recommended new experiment.
 | observable confound | `task_phase_confound_analysis.py` | none; reads frozen captures |
 | glass causal extension | `phase2_glass_prototype.py`, `probe_glass_capture.py`, `probe_glass_analysis.py`, `probe_glass_inject.py`, `probe_joint_transfer.py` | `phase2_glass_prototype.sbatch`, `probe_glass.sbatch` |
 | glass detector rescue D0 | `capture_glass_detector_placements.py`, `prepare_glass_detector_split.py`, `fit_glass_detector.py`; runtime artifact in `crashbench/glass_detector.py` | `glass_detector_d0_capture.sbatch`, `submit_glass_detector_d0.sh`; see `GLASS_RECOVERY_RESCUE.md` |
-| counterfactual option routing | `collect_counterfactual_option_rollouts.py`, `analyze_counterfactual_option_capture.py`, `train_minimal_counterfactual_router.py`; contract in `crashbench/counterfactual_router.py` | `counterfactual_option_rollouts.sbatch`, `submit_counterfactual_option_rollouts.sh`, `train_minimal_counterfactual_router.sbatch`; full capture, diversity audit, and first minimal router complete; see `COUNTERFACTUAL_ROUTER_MINIMAL_RESULT.md` |
+| counterfactual option routing | `collect_counterfactual_option_rollouts.py`, `train_counterfactual_outcome_router.py`, `collect_fresh_counterfactual_router.py`, `analyze_fresh_counterfactual_router.py`; contract in `crashbench/counterfactual_router.py` | `submit_fresh_counterfactual_router.sh` chains model/cohort freeze, source-exclusive smoke, fresh matched online evaluation, cluster bootstrap, and Pareto analysis; see `FRESH_COUNTERFACTUAL_ROUTER_PROTOCOL.md` |
 
 `run_pilot.py` remains shared runtime code even though its earliest experiment
 configuration is historical. Status applies to use, not merely filename age.
