@@ -54,7 +54,7 @@ python scripts/prepare_glass_recovery_placements.py \
   --fresh-evaluation \
   --skip-fixed-action-screen \
   --geometry-profile controller_compatible_narrow \
-  --min-target-clearance 0.17 \
+  --min-target-clearance 0.12 \
   --control-offset 0.30 \
   --screen-horizon 20 \
   --screen-force-margin 10.0 \
