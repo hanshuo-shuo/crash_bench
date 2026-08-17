@@ -39,6 +39,14 @@ Any live
 eligibility failure is excluded as a whole source placement, never as an
 individual method or condition.
 
+If the finite 12-state default-initialization pool yields fewer than eight live
+eligible sources, the confirmation cohort is completed from 30 task-0 random
+reset initializations generated with consecutive seeds beginning at 2026081700.
+This supplement is triggered only by the eligibility count, before reading any
+router comparison, and keeps the already-frozen router, geometry, rollout seed,
+T-20 rule, options, and analysis unchanged.  Its collector stops after eight
+eligible sources, so it independently meets the planned 8--12 source range.
+
 Each accepted source contributes an on-path glass, matched off-path glass, and
 no-glass control.  Frozen Base first establishes the actual on-path collision.
 At exactly T-20 actions, the simulator and controller state is restored and
@@ -69,4 +77,5 @@ The machine-readable acceptance audit checks whether the 40%-target router:
 
 Quest entry point: `setup/submit_fresh_counterfactual_router.sh`.  It submits a
 freeze/authoring job, a source-exclusive GPU smoke, and the dependent full GPU
-evaluation plus analysis.
+evaluation plus analysis.  The eligibility-only supplement is submitted with
+`setup/submit_fresh_counterfactual_router_supplement.sh` when needed.

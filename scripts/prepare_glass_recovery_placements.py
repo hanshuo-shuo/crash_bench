@@ -150,6 +150,24 @@ def _load_source_traces(
             if not artifact.is_file() or _file_sha256(artifact) != expected_sha:
                 raise ValueError(f"source trace {source_index} {label} file/hash mismatch")
             resolved[f"_{label}_resolved"] = artifact
+        if row.get("source_state_path") is not None:
+            artifact = (path.parent / str(row["source_state_path"])).resolve()
+            if (
+                not artifact.is_file()
+                or _file_sha256(artifact) != row.get("source_state_file_sha256")
+            ):
+                raise ValueError(
+                    f"source trace {source_index} source_state file/hash mismatch"
+                )
+            resolved["_source_state"] = np.asarray(
+                np.load(artifact, allow_pickle=False), dtype=np.float64
+            )
+            if array_sha256(resolved["_source_state"]) != row.get(
+                "source_state_sha256"
+            ):
+                raise ValueError(
+                    f"source trace {source_index} source_state array/hash mismatch"
+                )
         eef = np.load(resolved["_eef_xyz_resolved"], allow_pickle=False)
         bodies = np.load(resolved["_robot_body_xyz_resolved"], allow_pickle=False)
         actions = np.load(resolved["_actions_resolved"], allow_pickle=False)
@@ -543,12 +561,17 @@ def author(args: argparse.Namespace) -> dict:
             quota = quotas[len(selected_layout[split])]
             proposal_accounting[split]["source_states_screened"] += 1
             placement_mark = len(placements)
-            state = np.asarray(states[source_index], dtype=np.float64)
+            source_trace = source_traces.get(source_index)
+            state = np.asarray(
+                source_trace["_source_state"]
+                if source_trace is not None and "_source_state" in source_trace
+                else states[source_index],
+                dtype=np.float64,
+            )
             state_rel = Path("states") / split / f"libero_state_{source_index:03d}.npy"
             state_path = output / state_rel
             state_path.parent.mkdir(parents=True, exist_ok=True)
             state_hash = array_sha256(state)
-            source_trace = source_traces.get(source_index)
             if source_trace is not None and source_trace.get("source_state_sha256") != state_hash:
                 raise ValueError(
                     f"source trace {source_index} state hash differs from LIBERO state"
