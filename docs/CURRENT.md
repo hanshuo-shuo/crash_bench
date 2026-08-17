@@ -156,8 +156,9 @@ primary. Full tables and interpretation are in
 2. **Fresh online evaluation of the frozen minimal counterfactual router.** The
    offline source-disjoint router result is complete. Freeze the single-frame
    hidden+robot+action candidate without further development tuning and compare
-   it with Base, binary risk, Always Detour, Always Retreat, and Oracle-timed
-   structured options in new rollouts. Call the result learned routing plus
+   it with Base, the exact E13 hazard-specific glass prompt from episode reset,
+   binary risk, Always Detour, Always Retreat, and Oracle-timed structured
+   options in new matched rollouts. Call the result learned routing plus
    structured/privileged options, not learned recovery.
 3. **OFT-specific online guard replication.** Use OFT's own probe to trigger the
    same `RetreatHold` interface.

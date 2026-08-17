@@ -135,6 +135,13 @@ as the next candidate and test it in fresh online rollouts; retain the 8-frame
 result as the original primary rather than rewriting the analysis after seeing
 development.
 
+Include the completed E13 hazard-specific glass prompt as a second whole-episode
+baseline in that fresh evaluation. Existing E13 evidence is already informative
+(2/15 treatment catastrophes but 0/15 task successes and 13/15 safe aborts), but
+it comes from a different five-scenario cohort and cannot be inserted into the
+106-decision exact-state table. Run the exact prompt from reset on the same new
+episodes as Base and the router.
+
 ## Provenance not to pool
 
 | Job | Status | Use |

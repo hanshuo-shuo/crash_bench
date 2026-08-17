@@ -82,8 +82,10 @@ collision behavior, while task-completing learned routing remains open.
    wall-directed behavior.
 3. **Routing intervention panel:** Base versus probe-gated `RetreatHold`, including
    force and benign-fire outcomes.
-4. **Safety–utility panel:** collision, safe abort, and task success for Base,
-   prompted, guarded, and Oracle-counterfactual conditions.
+4. **Safety–utility panel:** one whole-episode subpanel for Base versus the exact
+   hazard-specific prompt, and one matched exact-state/online subpanel for Base,
+   binary risk, fixed options, learned router, and Oracle. Do not mix the old
+   prompt cohort's 15 episodes with the router cohort's 106 decision anchors.
 5. **One glass filmstrip:** exact same state, Base catastrophe versus Oracle safe
    task completion.
 
