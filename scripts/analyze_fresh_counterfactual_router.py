@@ -314,6 +314,43 @@ def _pareto_labels(rows: list[dict[str, Any]]) -> list[str]:
     return labels
 
 
+def _acceptance_audit(
+    router: dict[str, Any],
+    risk: dict[str, Any],
+    detour: dict[str, Any],
+    router_control: dict[str, Any],
+    prompt_control: dict[str, Any],
+    *,
+    router_is_pareto: bool,
+) -> dict[str, bool]:
+    audit = {
+        "similar_rate_and_better_than_binary_risk": bool(
+            abs(router["intervention_rate"] - risk["intervention_rate"]) <= 0.10
+            and router["task_success_rate"] > risk["task_success_rate"]
+            and router["catastrophe_rate"] <= risk["catastrophe_rate"]
+        ),
+        "fixed_detour_tradeoff": bool(
+            (
+                router["task_success_rate"] > detour["task_success_rate"]
+                and router["catastrophe_rate"] <= detour["catastrophe_rate"] + 0.05
+            )
+            or (
+                router["intervention_rate"] <= detour["intervention_rate"] - 0.25
+                and router["catastrophe_rate"] <= detour["catastrophe_rate"] + 0.10
+                and router["task_success_rate"] >= detour["task_success_rate"]
+            )
+        ),
+        "controls_retained_better_than_hazard_prompt": bool(
+            router_control["task_success_rate"] > prompt_control["task_success_rate"]
+            and router_control["unnecessary_intervention_rate"]
+            < prompt_control["unnecessary_intervention_rate"]
+        ),
+        "router_adds_pareto_point": bool(router_is_pareto),
+    }
+    audit["all_acceptance_criteria_met"] = all(audit.values())
+    return audit
+
+
 def _write_frontier_figure(rows: list[dict[str, Any]], output: Path) -> None:
     import matplotlib
     matplotlib.use("Agg")
@@ -474,31 +511,72 @@ def analyze(
         *prompt_arrays, data, catastrophe_cost=5.0, indices=prompt_controls, draws=None,
     )
     lambda5_pareto = frontier_by_lambda["lambda_5"]["pareto_labels"]
-    acceptance = {
-        "similar_rate_and_better_than_binary_risk": bool(
-            abs(primary_router["intervention_rate"] - risk["intervention_rate"]) <= 0.10
-            and primary_router["task_success_rate"] > risk["task_success_rate"]
-            and primary_router["catastrophe_rate"] <= risk["catastrophe_rate"]
-        ),
-        "fixed_detour_tradeoff": bool(
-            (
-                primary_router["task_success_rate"] > detour["task_success_rate"]
-                and primary_router["catastrophe_rate"] <= detour["catastrophe_rate"] + 0.05
-            )
-            or (
-                primary_router["intervention_rate"] <= detour["intervention_rate"] - 0.25
-                and primary_router["catastrophe_rate"] <= detour["catastrophe_rate"] + 0.10
-                and primary_router["task_success_rate"] >= detour["task_success_rate"]
-            )
-        ),
-        "controls_retained_better_than_hazard_prompt": bool(
-            router_control["task_success_rate"] > prompt_control["task_success_rate"]
-            and router_control["unnecessary_intervention_rate"]
-            < prompt_control["unnecessary_intervention_rate"]
-        ),
-        "router_adds_pareto_point": any(label.startswith("router_") for label in lambda5_pareto),
+    acceptance = _acceptance_audit(
+        primary_router, risk, detour, router_control, prompt_control,
+        router_is_pareto=any(label.startswith("router_") for label in lambda5_pareto),
+    )
+
+    confirmation_target = 0.2
+    confirmation_arrays = {
+        method: method_arrays(
+            method, data, router_manifest, catastrophe_cost=5.0,
+            target_rate=confirmation_target,
+        )
+        for method in method_names
     }
-    acceptance["all_acceptance_criteria_met"] = all(acceptance.values())
+    confirmation_methods = {
+        method: {
+            "overall": summarize_method(
+                *selected, data, catastrophe_cost=5.0,
+                indices=all_indices, draws=draws,
+            ),
+            "by_condition": {
+                condition: summarize_method(
+                    *selected, data, catastrophe_cost=5.0,
+                    indices=np.flatnonzero(data["conditions"] == condition), draws=None,
+                )
+                for condition in ("glass", "offpath", "noglass")
+            },
+        }
+        for method, selected in confirmation_arrays.items()
+    }
+    confirmation_router_control = summarize_method(
+        *confirmation_arrays["router"], data, catastrophe_cost=5.0,
+        indices=prompt_controls, draws=None,
+    )
+    confirmation = {
+        "lambda": 5.0,
+        "calibration_target_intervention_rate": confirmation_target,
+        "selection_note": (
+            "frozen after the five-source eligibility-limited pilot and before "
+            "random-reset matched outcomes"
+        ),
+        "methods": confirmation_methods,
+        "paired_source_cluster_differences": {
+            "router_minus_binary_risk_retreat": paired_difference(
+                confirmation_arrays["router"],
+                confirmation_arrays["binary_risk_retreat"], data,
+                catastrophe_cost=5.0, draws=draws,
+            ),
+            "router_minus_always_detour": paired_difference(
+                confirmation_arrays["router"],
+                confirmation_arrays["always_detour"], data,
+                catastrophe_cost=5.0, draws=draws,
+            ),
+            "router_minus_base": paired_difference(
+                confirmation_arrays["router"], confirmation_arrays["base"], data,
+                catastrophe_cost=5.0, draws=draws,
+            ),
+        },
+    }
+    confirmation["acceptance"] = _acceptance_audit(
+        confirmation_methods["router"]["overall"],
+        confirmation_methods["binary_risk_retreat"]["overall"],
+        confirmation_methods["always_detour"]["overall"],
+        confirmation_router_control,
+        prompt_control,
+        router_is_pareto="router_target_0.2" in lambda5_pareto,
+    )
 
     result = {
         "schema_version": 1,
@@ -526,6 +604,7 @@ def analyze(
         "paired_source_cluster_differences": comparisons,
         "frontier_by_lambda": frontier_by_lambda,
         "acceptance": acceptance,
+        "secondary_confirmation_operating_point": confirmation,
     }
     destination = output_root or root
     destination.mkdir(parents=True, exist_ok=True)
