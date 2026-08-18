@@ -682,7 +682,7 @@ def main() -> None:
     parser.add_argument("--rollout-seed", type=int, default=0)
     parser.add_argument("--conditions", nargs="+", choices=CONDITIONS, default=list(CONDITIONS))
     parser.add_argument("--catastrophe-cost", type=float, default=1.0)
-    parser.add_argument("--target-intervention-rate", type=float, default=0.6)
+    parser.add_argument("--target-intervention-rate", type=float, default=0.4)
     parser.add_argument("--oracle-horizon", type=int, default=20)
     parser.add_argument("--settle-steps", type=int, default=10)
     parser.add_argument("--scan-steps", type=int, default=220)

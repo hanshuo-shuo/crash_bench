@@ -22,6 +22,8 @@ DETOUR_CONFIG="${CB_CF_DETOUR_CONFIG:-results/counterfactual_router/detour_freez
 CHECKPOINT="${CB_BASE_CHECKPOINT:-openvla/openvla-7b-finetuned-libero-spatial}"
 REVISION="${CB_BASE_CHECKPOINT_REVISION:-962318cec55ac10993ff0f5f43eda9a270b4c873}"
 TARGET_VALID="${CB_P2_TARGET_VALID:-}"
+CATASTROPHE_COST="${CB_P2_CATASTROPHE_COST:-1}"
+TARGET_RATE="${CB_P2_TARGET_RATE:-0.4}"
 
 module purge
 module load mamba/24.3.0 git/2.47.0-gcc-12.4.0
@@ -63,8 +65,8 @@ python scripts/collect_dynamic_first_crossing_router.py \
   --checkpoint-revision "$REVISION" \
   --unnorm-key libero_spatial \
   --rollout-seed 0 \
-  --catastrophe-cost 1 \
-  --target-intervention-rate 0.6 \
+  --catastrophe-cost "$CATASTROPHE_COST" \
+  --target-intervention-rate "$TARGET_RATE" \
   --oracle-horizon 20 \
   --retreat-mode hold \
   "${SELECTION_ARGS[@]}"

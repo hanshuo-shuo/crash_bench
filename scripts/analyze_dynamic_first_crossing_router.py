@@ -158,6 +158,10 @@ def _write_report(analysis: Mapping[str, Any], path: Path) -> None:
         "calibrated advantage lower score crosses zero. T-20 is reported only as a "
         "privileged timing upper bound.",
         "",
+        f"Frozen point: `lambda={analysis['router_point']['catastrophe_cost']:g}`, "
+        f"`target={analysis['router_point']['target_intervention_rate']:.1f}`, "
+        f"`delta_cal={analysis['router_point']['calibration_margin']:.6g}`.",
+        "",
         "| Method | Task success | Catastrophe | Safe noncompletion | Intervention |",
         "|---|---:|---:|---:|---:|",
         f"| Dynamic first crossing | {_pct(dynamic['task_success_rate'])} | "

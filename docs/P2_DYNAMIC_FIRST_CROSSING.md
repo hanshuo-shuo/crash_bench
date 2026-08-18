@@ -19,6 +19,11 @@ where `delta_cal` is the already-frozen calibration-set conservative margin.
 This is deliberately named a calibrated lower score: the current frozen model
 does not contain a bootstrap ensemble or posterior variance.
 
+The primary dynamic point uses the router manifest's predeclared primary
+intervention-rate target (`lambda=1`, `target=0.4`). The historical
+`lambda=1,target=0.6` display point remains a diagnostic: its frozen margin is
+zero, so it is not the conservative deployment point for first crossing.
+
 The trigger is the first strict crossing
 
 ```text
