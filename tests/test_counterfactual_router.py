@@ -5,6 +5,7 @@ import numpy as np
 import pytest
 
 from crashbench.counterfactual_router import (
+    FirstCrossingRouter,
     OPTIONS,
     classify_option_outcome,
     conservative_option_choice,
@@ -13,6 +14,7 @@ from crashbench.counterfactual_router import (
     temporal_window,
     validate_decision_rows,
 )
+from scripts.analyze_dynamic_first_crossing_router import summarize_dynamic_rows
 from scripts.sweep_counterfactual_detour import build_configs, summarize_sweep
 from scripts.collect_counterfactual_option_rollouts import _apply_frozen_detour_config
 from scripts.collect_counterfactual_option_rollouts import _run_structured_option
@@ -71,6 +73,69 @@ def test_probabilistic_router_exposes_lambda_and_base_margin():
     assert conservative_option_choice(
         probabilities, catastrophe_cost=2.0, intervention_margin=10.0
     ) == 0
+
+
+def test_dynamic_router_latches_the_first_positive_calibrated_crossing():
+    gate = FirstCrossingRouter(catastrophe_cost=1.0, intervention_margin=0.2)
+    before = np.asarray([
+        [0.6, 0.1, 0.3],
+        [0.7, 0.1, 0.2],
+        [0.2, 0.1, 0.7],
+    ])
+    crossing = np.asarray([
+        [0.3, 0.5, 0.2],
+        [0.9, 0.05, 0.05],
+        [0.1, 0.1, 0.8],
+    ])
+    assert not gate.observe(before, action_index=3)["first_crossing"]
+    assert gate.observe(crossing, action_index=4)["first_crossing"]
+    assert gate.selected_option_index == 1
+    assert gate.trigger_action_index == 4
+    assert not gate.observe(crossing, action_index=5)["first_crossing"]
+    assert gate.selected_option_index == 1
+
+
+def test_dynamic_summary_reports_timing_choice_and_failure_modes():
+    common = {
+        "source_state_sha256": "source-a",
+        "first_trigger_to_collision_eef_distance_m": 0.04,
+        "intervention_duration_actions": 12,
+        "contact_force_p95_n": 2.0,
+        "contact_force_max_n": 3.0,
+        "t20_oracle_timing_upper_bound": {
+            "option_outcomes": {"detour_complete": "task_success"},
+        },
+    }
+    rows = [
+        {
+            **common,
+            "condition": "glass",
+            "reference_base_outcome": "catastrophe",
+            "selected_option": "retreat_hold",
+            "intervened": True,
+            "first_trigger_lead_time_actions": 4,
+            "missed_recovery_window": True,
+            "unnecessary_early_intervention": False,
+            "outcome": "safe_noncompletion",
+        },
+        {
+            **common,
+            "condition": "noglass",
+            "reference_base_outcome": "task_success",
+            "selected_option": "detour_complete",
+            "intervened": True,
+            "first_trigger_lead_time_actions": None,
+            "first_trigger_to_collision_eef_distance_m": None,
+            "missed_recovery_window": False,
+            "unnecessary_early_intervention": True,
+            "outcome": "task_success",
+        },
+    ]
+    summary = summarize_dynamic_rows(rows)
+    assert summary["selected_option_counts"]["retreat_hold"] == 1
+    assert summary["missed_recovery_window_rate"] == 0.5
+    assert summary["unnecessary_early_intervention_given_base_success"] == 1.0
+    assert summary["first_trigger_lead_time_actions"]["median"] == 4.0
 
 
 def test_probabilistic_margin_is_calibrated_without_development_rows():

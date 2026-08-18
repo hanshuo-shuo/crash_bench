@@ -89,6 +89,8 @@ def _scan_condition(
     controller_states: list[dict[str, np.ndarray]] = []
     observations: list[dict[str, np.ndarray]] = []
     rows: list[dict[str, np.ndarray | float]] = []
+    post_action_eef_positions: list[np.ndarray] = []
+    force_trace_n: list[float] = []
     collision_step = None
     succeeded = False
     peak_force = 0.0
@@ -113,6 +115,10 @@ def _scan_condition(
         obs, _, done, _ = env.step(nominal_action.tolist())
         force = 0.0 if not glasses else _glass_force(env.sim_view, glasses)
         peak_force = max(peak_force, force)
+        post_action_eef_positions.append(
+            np.asarray(obs["robot0_eef_pos"], dtype=np.float32).copy()
+        )
+        force_trace_n.append(float(force))
         row["glass_force_after"] = float(force)
         rows.append(row)
         if crash is not None and crash(env.sim_view):
@@ -129,6 +135,8 @@ def _scan_condition(
         "controller_states": controller_states,
         "observations": observations,
         "rows": rows,
+        "post_action_eef_positions": post_action_eef_positions,
+        "force_trace_n": force_trace_n,
         "collision_step": collision_step,
         "crashed": collision_step is not None,
         "succeeded": succeeded,

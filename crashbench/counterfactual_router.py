@@ -56,6 +56,70 @@ def conservative_option_choice(
     )
 
 
+def calibrated_advantage_lcb(
+    probabilities: np.ndarray,
+    *,
+    catastrophe_cost: float,
+    intervention_margin: float,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Return utility, Base-relative advantage, and calibrated lower score.
+
+    The frozen router has a calibration-set Base-favoring margin rather than a
+    bootstrap posterior.  Its deployable conservative score is therefore
+    ``LCB_cal(Delta(o)) = Delta_hat(o) - margin`` for non-Base options.  Base is
+    the reference and keeps score zero.
+    """
+
+    utility = option_utilities(probabilities, catastrophe_cost)
+    advantage = utility - utility[..., [0]]
+    lcb = advantage - float(intervention_margin)
+    lcb[..., 0] = 0.0
+    return utility, advantage, lcb
+
+
+@dataclass
+class FirstCrossingRouter:
+    """Episode-local first-crossing state machine with an option latch."""
+
+    catastrophe_cost: float
+    intervention_margin: float
+    selected_option_index: int | None = None
+    trigger_action_index: int | None = None
+
+    @property
+    def latched(self) -> bool:
+        return self.selected_option_index is not None
+
+    def reset(self) -> None:
+        self.selected_option_index = None
+        self.trigger_action_index = None
+
+    def observe(
+        self, probabilities: np.ndarray, *, action_index: int
+    ) -> dict[str, Any]:
+        """Score one causal decision state and latch at the first positive LCB."""
+
+        utility, advantage, lcb = calibrated_advantage_lcb(
+            probabilities,
+            catastrophe_cost=self.catastrophe_cost,
+            intervention_margin=self.intervention_margin,
+        )
+        candidate = 1 + int(np.argmax(lcb[1:]))
+        first_crossing = not self.latched and float(lcb[candidate]) > 0.0
+        if first_crossing:
+            self.selected_option_index = candidate
+            self.trigger_action_index = int(action_index)
+        return {
+            "action_index": int(action_index),
+            "utility": np.asarray(utility, dtype=np.float64),
+            "advantage_vs_base": np.asarray(advantage, dtype=np.float64),
+            "calibrated_lcb": np.asarray(lcb, dtype=np.float64),
+            "candidate_option_index": int(candidate),
+            "first_crossing": bool(first_crossing),
+            "latched_option_index": self.selected_option_index,
+        }
+
+
 @dataclass(frozen=True)
 class FrozenOutcomeRouter:
     """Small deployable single-frame counterfactual outcome router."""
