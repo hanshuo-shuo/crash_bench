@@ -21,7 +21,7 @@ pin、sanity 记录和踩坑列表在归档 setup 文档中。
 
 | 论文部分 | 入口 |
 |---|---|
-| **P2 动态 first-crossing Router** | `submit_dynamic_first_crossing_router.sh`；协议和指标见 `docs/P2_DYNAMIC_FIRST_CROSSING.md` |
+| **P2 动态 first-crossing Router** | 先运行 `submit_dynamic_first_crossing_calibration.sh` 冻结 trajectory-level boundary，再运行 `submit_dynamic_first_crossing_router.sh`；协议和指标见 `docs/P2_DYNAMIC_FIRST_CROSSING.md` |
 | **fresh counterfactual router 主结果** | `submit_fresh_counterfactual_router.sh`, `submit_fresh_counterfactual_router_supplement.sh`；结果已冻结，不要覆盖重跑 |
 | wall causal sweep | `run_ood_control_v5.sbatch` |
 | Base/OFT/pi0 matched behavior | `run_pilot_base_matched.sbatch`, `run_pilot_oft.sbatch`, `run_pilot_openpi.sbatch` |

@@ -24,6 +24,15 @@ intervention-rate target (`lambda=1`, `target=0.4`). The historical
 `lambda=1,target=0.6` display point remains a diagnostic: its frozen margin is
 zero, so it is not the conservative deployment point for first crossing.
 
+The first development cohort exposed a repeated-look failure: even a nonzero
+pointwise margin eventually crossed on every Base-success control. The revised
+P2 boundary is therefore calibrated at the source/trajectory level. For each
+original Router calibration source, it takes the maximum raw advantage over
+all actions, non-Base options, and Base-success off-path/no-glass trajectories,
+then freezes a one-sided split-conformal quantile. The primary sequential point
+uses `alpha=0.1` and keeps the same strict first-crossing/latch rule; no warm-up
+or hand-authored timing gate is added.
+
 The trigger is the first strict crossing
 
 ```text
@@ -67,7 +76,9 @@ samples.
 
 - runtime state machine: `crashbench/counterfactual_router.py`;
 - online capture: `scripts/collect_dynamic_first_crossing_router.py`;
+- sequential calibration: `scripts/calibrate_dynamic_first_crossing_router.py`;
 - report builder: `scripts/analyze_dynamic_first_crossing_router.py`;
+- calibration Quest job: `setup/dynamic_first_crossing_calibration.sbatch`;
 - Quest job: `setup/dynamic_first_crossing_router.sbatch`;
 - submission wrapper: `setup/submit_dynamic_first_crossing_router.sh`.
 

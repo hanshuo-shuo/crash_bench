@@ -9,7 +9,7 @@ reproduction; it is not a recommended new experiment.
 
 | Function | Python | Setup / submission |
 |---|---|---|
-| **P2 dynamic first-crossing routing** | `collect_dynamic_first_crossing_router.py`, `analyze_dynamic_first_crossing_router.py`; latch and calibrated LCB contract in `crashbench/counterfactual_router.py` | `dynamic_first_crossing_router.sbatch`, `submit_dynamic_first_crossing_router.sh`; protocol in `P2_DYNAMIC_FIRST_CROSSING.md` |
+| **P2 dynamic first-crossing routing** | `calibrate_dynamic_first_crossing_router.py`, `collect_dynamic_first_crossing_router.py`, `analyze_dynamic_first_crossing_router.py`; latch and sequential LCB contract in `crashbench/counterfactual_router.py` | `dynamic_first_crossing_calibration.sbatch`, `dynamic_first_crossing_router.sbatch`, submission wrappers; protocol in `P2_DYNAMIC_FIRST_CROSSING.md` |
 | **headline counterfactual option routing** | `train_counterfactual_outcome_router.py`, `collect_fresh_counterfactual_router.py`, `analyze_fresh_counterfactual_router.py`; contract in `crashbench/counterfactual_router.py` | frozen Quest chains in `submit_fresh_counterfactual_router.sh` and `submit_fresh_counterfactual_router_supplement.sh`; result and interpretation in `COUNTERFACTUAL_ROUTER_MAIN_RESULT.md` |
 | repository integrity | `audit_repo.py`, `update_scenario_manifest.py`, `prepare_m0_geometry.py` | none; zero-GPU |
 | wall causal sweep | `phase1_ood_control_v5.py`, `phase1_ood_control_analysis.py`, `probe_nominal_traj.py`, `phase1_make_figures.py` | `run_ood_control_v5.sbatch`, `probe_nominal_traj.sbatch` |

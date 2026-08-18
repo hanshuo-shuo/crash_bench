@@ -400,7 +400,32 @@ def collect(args: argparse.Namespace) -> dict[str, Any]:
     point = router.manifest["calibration"]["router_frontier"][
         f"lambda_{args.catastrophe_cost:g}"
     ][f"target_{args.target_intervention_rate:.1f}"]
-    intervention_margin = float(point["delta"])
+    pointwise_margin = float(point["delta"])
+    sequential_margin = None
+    sequential_boundary_record = None
+    if args.sequential_boundary is not None:
+        sequential_path = Path(args.sequential_boundary).resolve()
+        sequential_manifest = json.loads(sequential_path.read_text())
+        if (
+            float(sequential_manifest["catastrophe_cost"])
+            != float(args.catastrophe_cost)
+            or float(sequential_manifest["target_intervention_rate"])
+            != float(args.target_intervention_rate)
+            or sequential_manifest["router_model_sha256"] != _sha256(router_path)
+        ):
+            raise ValueError("sequential boundary does not match the frozen router point")
+        sequential_boundary_record = sequential_manifest["boundaries"][
+            f"alpha_{args.sequential_alpha:.1f}"
+        ]
+        sequential_margin = float(
+            sequential_boundary_record["sequential_margin"]
+        )
+        intervention_margin = float(
+            sequential_boundary_record["effective_margin"]
+        )
+    else:
+        sequential_path = None
+        intervention_margin = pointwise_margin
 
     from crashbench.policies import OpenVLAPolicy
     policy = OpenVLAPolicy(
@@ -624,8 +649,21 @@ def collect(args: argparse.Namespace) -> dict[str, Any]:
             "catastrophe_cost": float(args.catastrophe_cost),
             "target_intervention_rate": float(args.target_intervention_rate),
             "calibration_margin": intervention_margin,
-            "lcb_definition": "Delta_hat(option,Base) - calibration_margin",
+            "pointwise_margin": pointwise_margin,
+            "sequential_alpha": (
+                None if sequential_margin is None else float(args.sequential_alpha)
+            ),
+            "sequential_margin": sequential_margin,
+            "effective_margin": intervention_margin,
+            "lcb_definition": "Delta_hat(option,Base) - effective_margin",
         },
+        "sequential_boundary": (
+            None if sequential_path is None else {
+                "path": str(sequential_path),
+                "sha256": _sha256(sequential_path),
+                "selected_record": sequential_boundary_record,
+            }
+        ),
         "first_crossing_rule": "first action t with max non-Base calibrated LCB > 0",
         "latch_rule": "selected Detour/Retreat runs until its fixed option budget or episode termination",
         "oracle_timing_upper_bound": {
@@ -683,6 +721,8 @@ def main() -> None:
     parser.add_argument("--conditions", nargs="+", choices=CONDITIONS, default=list(CONDITIONS))
     parser.add_argument("--catastrophe-cost", type=float, default=1.0)
     parser.add_argument("--target-intervention-rate", type=float, default=0.4)
+    parser.add_argument("--sequential-boundary")
+    parser.add_argument("--sequential-alpha", type=float, default=0.1)
     parser.add_argument("--oracle-horizon", type=int, default=20)
     parser.add_argument("--settle-steps", type=int, default=10)
     parser.add_argument("--scan-steps", type=int, default=220)

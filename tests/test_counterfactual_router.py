@@ -11,6 +11,7 @@ from crashbench.counterfactual_router import (
     conservative_option_choice,
     option_utilities,
     outcome_probabilities,
+    split_conformal_upper_boundary,
     temporal_window,
     validate_decision_rows,
 )
@@ -93,6 +94,12 @@ def test_dynamic_router_latches_the_first_positive_calibrated_crossing():
     assert gate.trigger_action_index == 4
     assert not gate.observe(crossing, action_index=5)["first_crossing"]
     assert gate.selected_option_index == 1
+
+
+def test_sequential_boundary_uses_source_level_split_conformal_rank():
+    source_maxima = list(range(10))
+    assert split_conformal_upper_boundary(source_maxima, alpha=0.1) == 9.0
+    assert split_conformal_upper_boundary(source_maxima, alpha=0.2) == 8.0
 
 
 def test_dynamic_summary_reports_timing_choice_and_failure_modes():

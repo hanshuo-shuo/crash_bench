@@ -7,6 +7,7 @@ training so it can be fitted on source-disjoint training states only.
 from __future__ import annotations
 
 import json
+import math
 from collections import Counter, defaultdict
 from dataclasses import dataclass
 from pathlib import Path
@@ -75,6 +76,25 @@ def calibrated_advantage_lcb(
     lcb = advantage - float(intervention_margin)
     lcb[..., 0] = 0.0
     return utility, advantage, lcb
+
+
+def split_conformal_upper_boundary(
+    source_maxima: Sequence[float], *, alpha: float
+) -> float:
+    """One-sided source-level boundary for a strict first-crossing rule.
+
+    Each value must already be the maximum score over every repeated look and
+    control condition belonging to one calibration source.  The conformal rank
+    then controls a future source-level false crossing under exchangeability.
+    """
+
+    values = np.sort(np.asarray(source_maxima, dtype=np.float64))
+    if not len(values):
+        raise ValueError("source-level sequential calibration is empty")
+    if not 0.0 < float(alpha) < 1.0:
+        raise ValueError("alpha must lie strictly between zero and one")
+    rank = int(math.ceil((len(values) + 1) * (1.0 - float(alpha))))
+    return float(values[rank - 1]) if rank <= len(values) else float("inf")
 
 
 @dataclass

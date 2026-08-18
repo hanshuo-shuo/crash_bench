@@ -1,5 +1,5 @@
 #!/bin/bash
-# P2: from-reset dynamic first-crossing Router plus matched T-20 timing bound.
+# P2 sequential calibration: complete Base-success control trajectories.
 #SBATCH --account=p33100
 #SBATCH --partition=gengpu
 #SBATCH --gres=gpu:a100:1
@@ -7,25 +7,20 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=96G
-#SBATCH --time=08:00:00
-#SBATCH --job-name=p2_dynamic_router
+#SBATCH --time=03:00:00
+#SBATCH --job-name=p2_seq_cal
 #SBATCH --output=%x_%j.log
 
 set -euo pipefail
 
-OUTPUT="${CB_P2_OUTPUT:?set CB_P2_OUTPUT to a new output directory}"
+OUTPUT="${CB_P2_CAL_OUTPUT:?set CB_P2_CAL_OUTPUT to a new output directory}"
 REPO_ROOT="${CB_REPO_ROOT:-$HOME/crash_bench}"
 INPUT_ROOT="${CB_P2_INPUT_ROOT:-results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z}"
-PLACEMENTS="${CB_P2_PLACEMENTS:-$INPUT_ROOT/placements/placements.json}"
+PLACEMENTS="${CB_P2_CAL_PLACEMENTS:-results/glass_recovery_v2/pilot_b_task0_20260811_r5/frontier_placements/placements.json}"
 ROUTER="${CB_P2_ROUTER_MODEL:-$INPUT_ROOT/router.json}"
-DETOUR_CONFIG="${CB_CF_DETOUR_CONFIG:-results/counterfactual_router/detour_freeze_partial_d7bbf9f_20260814T1205Z/frozen_detour_config.json}"
+ROUTER_CAPTURE="${CB_P2_ROUTER_CAPTURE:-results/counterfactual_router/full_d4751330395e_20260814T152231Z/capture_manifest.json}"
 CHECKPOINT="${CB_BASE_CHECKPOINT:-openvla/openvla-7b-finetuned-libero-spatial}"
 REVISION="${CB_BASE_CHECKPOINT_REVISION:-962318cec55ac10993ff0f5f43eda9a270b4c873}"
-TARGET_VALID="${CB_P2_TARGET_VALID:-}"
-CATASTROPHE_COST="${CB_P2_CATASTROPHE_COST:-1}"
-TARGET_RATE="${CB_P2_TARGET_RATE:-0.4}"
-SEQUENTIAL_BOUNDARY="${CB_P2_SEQUENTIAL_BOUNDARY:-}"
-SEQUENTIAL_ALPHA="${CB_P2_SEQUENTIAL_ALPHA:-0.1}"
 
 module purge
 module load mamba/24.3.0 git/2.47.0-gcc-12.4.0
@@ -46,40 +41,23 @@ COMMIT="$(git rev-parse HEAD)"
 [[ "${CB_CODE_COMMIT:-$COMMIT}" == "$COMMIT" ]]
 [[ -f "$PLACEMENTS" ]]
 [[ -f "$ROUTER" ]]
-[[ -f "$DETOUR_CONFIG" ]]
+[[ -f "$ROUTER_CAPTURE" ]]
 [[ ! -e "$OUTPUT" ]]
 
-SELECTION_ARGS=()
-IFS='+' read -r -a P2_PLACEMENT_IDS <<< "${CB_P2_PLACEMENT_IDS:-}"
-for placement_id in "${P2_PLACEMENT_IDS[@]}"; do
-  [[ -z "$placement_id" ]] || SELECTION_ARGS+=(--placement-id "$placement_id")
-done
-if [[ -n "$TARGET_VALID" ]]; then
-  SELECTION_ARGS+=(--target-valid-placements "$TARGET_VALID")
-fi
-if [[ -n "$SEQUENTIAL_BOUNDARY" ]]; then
-  [[ -f "$SEQUENTIAL_BOUNDARY" ]]
-  SELECTION_ARGS+=(
-    --sequential-boundary "$SEQUENTIAL_BOUNDARY"
-    --sequential-alpha "$SEQUENTIAL_ALPHA"
-  )
-fi
-
-python scripts/collect_dynamic_first_crossing_router.py \
+python scripts/calibrate_dynamic_first_crossing_router.py \
   --placements "$PLACEMENTS" \
   --router-model "$ROUTER" \
-  --detour-config "$DETOUR_CONFIG" \
+  --router-capture-manifest "$ROUTER_CAPTURE" \
   --output "$OUTPUT" \
   --checkpoint "$CHECKPOINT" \
   --checkpoint-revision "$REVISION" \
   --unnorm-key libero_spatial \
   --rollout-seed 0 \
-  --catastrophe-cost "$CATASTROPHE_COST" \
-  --target-intervention-rate "$TARGET_RATE" \
-  --oracle-horizon 20 \
-  --retreat-mode hold \
-  "${SELECTION_ARGS[@]}"
-
-python scripts/analyze_dynamic_first_crossing_router.py --capture "$OUTPUT"
+  --splits validation heldout \
+  --conditions offpath noglass \
+  --catastrophe-cost 1 \
+  --target-intervention-rate 0.4 \
+  --alphas 0.1 0.2 0.3 0.4 \
+  --primary-alpha 0.1
 
 echo "DONE commit=$COMMIT output=$OUTPUT @ $(date)"
