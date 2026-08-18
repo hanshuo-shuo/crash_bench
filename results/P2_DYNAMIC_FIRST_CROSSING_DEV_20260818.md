@@ -1,6 +1,8 @@
 # P2 dynamic first-crossing Router: development cohort
 
-Status: **execution complete; dynamic timing helps, selective intervention fails**.
+Status: **superseded pointwise-boundary diagnostic; dynamic timing helps,
+selective intervention fails**. The trajectory-calibrated follow-up is in
+[`P2_SEQUENTIAL_FIRST_CROSSING_DEV_20260819.md`](P2_SEQUENTIAL_FIRST_CROSSING_DEV_20260819.md).
 
 Quest job `9776682` ran at commit `196d867d5dbd` on five frozen development
 source states, with glass, off-path, and no-glass conditions for each source.

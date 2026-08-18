@@ -99,3 +99,9 @@ success and catastrophe relative to Base and the fixed T-20 Router, but every
 Base-success control also crossed the pointwise boundary. The compact result,
 raw hashes, and next-method implication are in
 [`results/P2_DYNAMIC_FIRST_CROSSING_DEV_20260818.md`](../results/P2_DYNAMIC_FIRST_CROSSING_DEV_20260818.md).
+
+The final sequential-boundary development run reduces intervention from 100%
+to 16.7% and adds a small Pareto improvement over Base, but misses both known
+T-20 recovery windows because benign trajectories outrank them. The exact
+result and paper decision are in
+[`results/P2_SEQUENTIAL_FIRST_CROSSING_DEV_20260819.md`](../results/P2_SEQUENTIAL_FIRST_CROSSING_DEV_20260819.md).
