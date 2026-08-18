@@ -1,0 +1,2161 @@
+{
+  "coverage": {
+    "benchmark_records": 34,
+    "class_counts": {
+      "early_recoverable": 1,
+      "late_loss_control": 1,
+      "library_unsolved": 6,
+      "unnecessary": 26
+    },
+    "class_counts_by_split": {
+      "calibration": {
+        "early_recoverable": 0,
+        "late_loss_control": 0,
+        "library_unsolved": 2,
+        "unnecessary": 10
+      },
+      "development": {
+        "early_recoverable": 0,
+        "late_loss_control": 0,
+        "library_unsolved": 4,
+        "unnecessary": 8
+      },
+      "train": {
+        "early_recoverable": 1,
+        "late_loss_control": 1,
+        "library_unsolved": 0,
+        "unnecessary": 8
+      }
+    },
+    "complete_horizon_groups": 57,
+    "missing_classes": [],
+    "source_counts_by_split": {
+      "calibration": 7,
+      "development": 5,
+      "train": 3
+    },
+    "timing_choice_pairs": 1,
+    "trajectory_groups": 63
+  },
+  "fresh_protocol_requirements": {
+    "capture_all_horizons_in_one_job": true,
+    "do_not_select_one_anchor_after_outcomes": true,
+    "report": [
+      "four-class macro accuracy",
+      "early-vs-late paired option accuracy",
+      "success/catastrophe/safe-noncompletion by class",
+      "first-crossing trigger timing in the later dynamic phase"
+    ],
+    "retain_raw_fresh_features": true,
+    "source_disjoint_from": [
+      "0815f4806fc9a4fbd58c6627c8b92fd77f1b80ad4b8b4cd6d0c6e0541d488a7b",
+      "28c563172e6e13a0d3d84f1527243878c67a2140fa8c9a81ecb8b81ec9402dc8",
+      "2ef1381d9cfc0a92b107e2940bcf431c7494cd7067d032284f30a23c47b487cc",
+      "3f7887ee8820a4163a5033c81050731e85d1a310652a612f5b0ea5c450ec2043",
+      "5de3fa5396875480db81793738029227ed357caa91e5d24290ffc5cb0371f908",
+      "61f6ada542d03d1dd4d75a304f2674efa20660163c54b012b956522e98835cac",
+      "6292759eb45913ce4ed8447194504833f347d9355012e3228775797a4b0a7cd1",
+      "655347c9fb28aaf505e162e6bcad095d17e4bfee5506113825cfb3da6ca60845",
+      "69fa7e93588c6aea4b134efa44633d38556ce1656b46df276021920a664881a3",
+      "76fe1d96587ab928f6fb5d7750ecd048fd712eb3d66aa60feb972a3d9d56c9d1",
+      "821b498fc1fcb4e3c103635fa473d7577f718c4f633b273772954295c83ae585",
+      "9176c2514b8a62105f4d2b8a22a8a0b0236c5b9feda58c18ef64cea917b98d9d",
+      "986b3dff233a80cf0fd1c48f815600f49b95f83be0d9f898fee40d0a5c9dca63",
+      "a3e1c487338ecfe4ce59e1e8f0be7a20d0442476ad923022ec430bdb5470ee56",
+      "a992f0a563f4b0239708f4be6fa38192e6930b15387567b2d4a16568d4fa5671",
+      "b830bede73f505b84b88a6596e92c22a5a4c0ded1e275e8e5b28a599849d2df6",
+      "c8fa274849bf4beeb7c46b93a7de7a6242e5af2e9c83a395e8d0db16da5e81d8",
+      "d6796d48077a08484abd1252e6deb387d8b6a10bf445e66c4e6eaa0bde0f7818",
+      "ddd84e646ab0cdd38c0f283802f28ac361a412492f3872c7f489b95bb55d53af",
+      "f64d2a60c3b9cebc4b5e12f86f4978711b4ca1e7a3788d1756d078c45a1c1004"
+    ]
+  },
+  "go_for_fresh_pilot": true,
+  "kind": "p1_timing_option_choice_benchmark_authoring",
+  "protocol": {
+    "class_macro_average_required": true,
+    "horizons": [
+      30,
+      20,
+      10,
+      5
+    ],
+    "options": [
+      "base_continue",
+      "detour_complete",
+      "retreat_hold"
+    ],
+    "selection_unit": "at most one unnecessary and one library-unsolved point per trajectory",
+    "tie_break": "RetreatHold is the fail-safe choice when no option completes and Detour is catastrophe or safe noncompletion",
+    "timing_pair_rule": "same trajectory has an earlier recoverable anchor and a later loss-control anchor",
+    "trajectory_unit": "source_state_sha256 + placement_id + condition"
+  },
+  "records": [
+    {
+      "benchmark_class": "library_unsolved",
+      "condition": "glass",
+      "correct_option": "retreat_hold",
+      "decision_id": "d6337f0cccc18f4bebe07016fa813f0b4ff589acd6d94569b6df8579a7a637f4",
+      "horizon_actions": 5,
+      "outcomes": {
+        "base_continue": "catastrophe",
+        "detour_complete": "safe_noncompletion",
+        "retreat_hold": "safe_noncompletion"
+      },
+      "placement_id": "glass_recovery_heldout_0000",
+      "placement_key": "exposed:glass_recovery_heldout_0000",
+      "point_signature": "loss_control",
+      "source_state_sha256": "821b498fc1fcb4e3c103635fa473d7577f718c4f633b273772954295c83ae585",
+      "split": "calibration",
+      "timing_pair_id": null
+    },
+    {
+      "benchmark_class": "library_unsolved",
+      "condition": "glass",
+      "correct_option": "retreat_hold",
+      "decision_id": "3b94bd61b3e82b1508282b8b6f6164980744459548db1ad0fbb35df0556f1950",
+      "horizon_actions": 5,
+      "outcomes": {
+        "base_continue": "catastrophe",
+        "detour_complete": "safe_noncompletion",
+        "retreat_hold": "safe_noncompletion"
+      },
+      "placement_id": "glass_recovery_validation_0002",
+      "placement_key": "exposed:glass_recovery_validation_0002",
+      "point_signature": "loss_control",
+      "source_state_sha256": "a992f0a563f4b0239708f4be6fa38192e6930b15387567b2d4a16568d4fa5671",
+      "split": "calibration",
+      "timing_pair_id": null
+    },
+    {
+      "benchmark_class": "unnecessary",
+      "condition": "noglass",
+      "correct_option": "base_continue",
+      "decision_id": "ab1f14bd986007a3b2ecf47d815442c3aa1ef650b82f1240cab21b4d65b7b4ac",
+      "horizon_actions": 20,
+      "outcomes": {
+        "base_continue": "task_success",
+        "detour_complete": "safe_noncompletion",
+        "retreat_hold": "safe_noncompletion"
+      },
+      "placement_id": "glass_recovery_heldout_0004",
+      "placement_key": "exposed:glass_recovery_heldout_0004",
+      "point_signature": "unnecessary",
+      "source_state_sha256": "76fe1d96587ab928f6fb5d7750ecd048fd712eb3d66aa60feb972a3d9d56c9d1",
+      "split": "calibration",
+      "timing_pair_id": null
+    },
+    {
+      "benchmark_class": "unnecessary",
+      "condition": "offpath",
+      "correct_option": "base_continue",
+      "decision_id": "36cd365440fc812ef0e72e970a96b609054d53bb41013055bd8cfe944ae6202c",
+      "horizon_actions": 10,
+      "outcomes": {
+        "base_continue": "task_success",
+        "detour_complete": "safe_noncompletion",
+        "retreat_hold": "safe_noncompletion"
+      },
+      "placement_id": "glass_recovery_heldout_0004",
+      "placement_key": "exposed:glass_recovery_heldout_0004",
+      "point_signature": "unnecessary",
+      "source_state_sha256": "76fe1d96587ab928f6fb5d7750ecd048fd712eb3d66aa60feb972a3d9d56c9d1",
+      "split": "calibration",
+      "timing_pair_id": null
+    },
+    {
+      "benchmark_class": "unnecessary",
+      "condition": "noglass",
+      "correct_option": "base_continue",
+      "decision_id": "92576fc37c2d41fbfbd270b4917f78074dfa38e9b92da0dde848094f08d10057",
+      "horizon_actions": 30,
+      "outcomes": {
+        "base_continue": "task_success",
+        "detour_complete": "safe_noncompletion",
+        "retreat_hold": "safe_noncompletion"
+      },
+      "placement_id": "glass_recovery_heldout_0000",
+      "placement_key": "exposed:glass_recovery_heldout_0000",
+      "point_signature": "unnecessary",
+      "source_state_sha256": "821b498fc1fcb4e3c103635fa473d7577f718c4f633b273772954295c83ae585",
+      "split": "calibration",
+      "timing_pair_id": null
+    },
+    {
+      "benchmark_class": "unnecessary",
+      "condition": "offpath",
+      "correct_option": "base_continue",
+      "decision_id": "908070ca1dd9689c41e49874ec23583ba380085676ade4e261316dfc9aeb90e5",
+      "horizon_actions": 20,
+      "outcomes": {
+        "base_continue": "task_success",
+        "detour_complete": "safe_noncompletion",
+        "retreat_hold": "safe_noncompletion"
+      },
+      "placement_id": "glass_recovery_heldout_0000",
+      "placement_key": "exposed:glass_recovery_heldout_0000",
+      "point_signature": "unnecessary",
+      "source_state_sha256": "821b498fc1fcb4e3c103635fa473d7577f718c4f633b273772954295c83ae585",
+      "split": "calibration",
+      "timing_pair_id": null
+    },
+    {
+      "benchmark_class": "unnecessary",
+      "condition": "noglass",
+      "correct_option": "base_continue",
+      "decision_id": "7f80261cec138128156ae38d318492c2a5d002eeb9857326657b6fcf4802152b",
+      "horizon_actions": 30,
+      "outcomes": {
+        "base_continue": "task_success",
+        "detour_complete": "safe_noncompletion",
+        "retreat_hold": "safe_noncompletion"
+      },
+      "placement_id": "glass_recovery_heldout_0001",
+      "placement_key": "exposed:glass_recovery_heldout_0001",
+      "point_signature": "unnecessary",
+      "source_state_sha256": "9176c2514b8a62105f4d2b8a22a8a0b0236c5b9feda58c18ef64cea917b98d9d",
+      "split": "calibration",
+      "timing_pair_id": null
+    },
+    {
+      "benchmark_class": "unnecessary",
+      "condition": "offpath",
+      "correct_option": "base_continue",
+      "decision_id": "85674815336c9d8e58b0bf38bf2b2d29810f0edb2ea09b3cf876cab5f2b59473",
+      "horizon_actions": 20,
+      "outcomes": {
+        "base_continue": "task_success",
+        "detour_complete": "safe_noncompletion",
+        "retreat_hold": "safe_noncompletion"
+      },
+      "placement_id": "glass_recovery_heldout_0002",
+      "placement_key": "exposed:glass_recovery_heldout_0002",
+      "point_signature": "unnecessary",
+      "source_state_sha256": "986b3dff233a80cf0fd1c48f815600f49b95f83be0d9f898fee40d0a5c9dca63",
+      "split": "calibration",
+      "timing_pair_id": null
+    },
+    {
+      "benchmark_class": "unnecessary",
+      "condition": "offpath",
+      "correct_option": "base_continue",
+      "decision_id": "77e49e2984ccacab87bf108589d841bd21865cb4ce3d110c430a3cb277f6df9b",
+      "horizon_actions": 20,
+      "outcomes": {
+        "base_continue": "task_success",
+        "detour_complete": "safe_noncompletion",
+        "retreat_hold": "safe_noncompletion"
+      },
+      "placement_id": "glass_recovery_validation_0002",
+      "placement_key": "exposed:glass_recovery_validation_0002",
+      "point_signature": "unnecessary",
+      "source_state_sha256": "a992f0a563f4b0239708f4be6fa38192e6930b15387567b2d4a16568d4fa5671",
+      "split": "calibration",
+      "timing_pair_id": null
+    },
+    {
+      "benchmark_class": "unnecessary",
+      "condition": "noglass",
+      "correct_option": "base_continue",
+      "decision_id": "ce42361700188f5903885bc1affe1814e6390e128ef45d7452f5f6691aecd3d9",
+      "horizon_actions": 20,
+      "outcomes": {
+        "base_continue": "task_success",
+        "detour_complete": "safe_noncompletion",
+        "retreat_hold": "safe_noncompletion"
+      },
+      "placement_id": "glass_recovery_heldout_0003",
+      "placement_key": "exposed:glass_recovery_heldout_0003",
+      "point_signature": "unnecessary",
+      "source_state_sha256": "c8fa274849bf4beeb7c46b93a7de7a6242e5af2e9c83a395e8d0db16da5e81d8",
+      "split": "calibration",
+      "timing_pair_id": null
+    },
+    {
+      "benchmark_class": "unnecessary",
+      "condition": "offpath",
+      "correct_option": "base_continue",
+      "decision_id": "724e21d6f88cb9451630fa74d0b7a23e94b0dbc19c068bf2847245f11d2cec1c",
+      "horizon_actions": 30,
+      "outcomes": {
+        "base_continue": "task_success",
+        "detour_complete": "safe_noncompletion",
+        "retreat_hold": "safe_noncompletion"
+      },
+      "placement_id": "glass_recovery_validation_0004",
+      "placement_key": "exposed:glass_recovery_validation_0004",
+      "point_signature": "unnecessary",
+      "source_state_sha256": "ddd84e646ab0cdd38c0f283802f28ac361a412492f3872c7f489b95bb55d53af",
+      "split": "calibration",
+      "timing_pair_id": null
+    },
+    {
+      "benchmark_class": "unnecessary",
+      "condition": "noglass",
+      "correct_option": "base_continue",
+      "decision_id": "f9f81d4ec1291801bd60d73a44bd5248773051610454f3b61fc811a98d3b8174",
+      "horizon_actions": 10,
+      "outcomes": {
+        "base_continue": "task_success",
+        "detour_complete": "safe_noncompletion",
+        "retreat_hold": "safe_noncompletion"
+      },
+      "placement_id": "glass_recovery_validation_0004",
+      "placement_key": "exposed:glass_recovery_validation_0004",
+      "point_signature": "unnecessary",
+      "source_state_sha256": "ddd84e646ab0cdd38c0f283802f28ac361a412492f3872c7f489b95bb55d53af",
+      "split": "calibration",
+      "timing_pair_id": null
+    },
+    {
+      "benchmark_class": "library_unsolved",
+      "condition": "glass",
+      "correct_option": "retreat_hold",
+      "decision_id": "97376df45024d23f451f0cc9e7f16122c8ca877dd224d0c4fe25c5f3ec19d55b",
+      "horizon_actions": 5,
+      "outcomes": {
+        "base_continue": "catastrophe",
+        "detour_complete": "catastrophe",
+        "retreat_hold": "safe_noncompletion"
+      },
+      "placement_id": "glass_recovery_validation_0000",
+      "placement_key": "fresh:glass_recovery_validation_0000",
+      "point_signature": "loss_control",
+      "source_state_sha256": "5de3fa5396875480db81793738029227ed357caa91e5d24290ffc5cb0371f908",
+      "split": "development",
+      "timing_pair_id": null
+    },
+    {
+      "benchmark_class": "library_unsolved",
+      "condition": "glass",
+      "correct_option": "retreat_hold",
+      "decision_id": "05310bf4778fd61d5fb16ba6ff81057d91a23b5b7e3c97c55542a25ba546a91d",
+      "horizon_actions": 5,
+      "outcomes": {
+        "base_continue": "catastrophe",
+        "detour_complete": "catastrophe",
+        "retreat_hold": "safe_noncompletion"
+      },
+      "placement_id": "glass_recovery_train_0004",
+      "placement_key": "fresh:glass_recovery_train_0004",
+      "point_signature": "loss_control",
+      "source_state_sha256": "61f6ada542d03d1dd4d75a304f2674efa20660163c54b012b956522e98835cac",
+      "split": "development",
+      "timing_pair_id": null
+    },
+    {
+      "benchmark_class": "library_unsolved",
+      "condition": "glass",
+      "correct_option": "retreat_hold",
+      "decision_id": "4b8a554da0093a3ec951c15cfaddef82c5ff3bc10066c9992c01a050a711c5d5",
+      "horizon_actions": 5,
+      "outcomes": {
+        "base_continue": "catastrophe",
+        "detour_complete": "catastrophe",
+        "retreat_hold": "safe_noncompletion"
+      },
+      "placement_id": "glass_recovery_train_0000",
+      "placement_key": "fresh:glass_recovery_train_0000",
+      "point_signature": "loss_control",
+      "source_state_sha256": "655347c9fb28aaf505e162e6bcad095d17e4bfee5506113825cfb3da6ca60845",
+      "split": "development",
+      "timing_pair_id": null
+    },
+    {
+      "benchmark_class": "library_unsolved",
+      "condition": "glass",
+      "correct_option": "retreat_hold",
+      "decision_id": "1fd95ecb17a7648382c5c8fcc6a59f299f99ea9f6981f577828d8bb3174af1a6",
+      "horizon_actions": 5,
+      "outcomes": {
+        "base_continue": "catastrophe",
+        "detour_complete": "catastrophe",
+        "retreat_hold": "safe_noncompletion"
+      },
+      "placement_id": "glass_recovery_heldout_0003",
+      "placement_key": "fresh:glass_recovery_heldout_0003",
+      "point_signature": "loss_control",
+      "source_state_sha256": "b830bede73f505b84b88a6596e92c22a5a4c0ded1e275e8e5b28a599849d2df6",
+      "split": "development",
+      "timing_pair_id": null
+    },
+    {
+      "benchmark_class": "unnecessary",
+      "condition": "noglass",
+      "correct_option": "base_continue",
+      "decision_id": "2da3ff4accb1314decf6f703bb4f1345ab6dcdf3ffccc9f988da08a08ac45f61",
+      "horizon_actions": 20,
+      "outcomes": {
+        "base_continue": "task_success",
+        "detour_complete": "safe_noncompletion",
+        "retreat_hold": "safe_noncompletion"
+      },
+      "placement_id": "glass_recovery_train_0002",
+      "placement_key": "fresh:glass_recovery_train_0002",
+      "point_signature": "unnecessary",
+      "source_state_sha256": "2ef1381d9cfc0a92b107e2940bcf431c7494cd7067d032284f30a23c47b487cc",
+      "split": "development",
+      "timing_pair_id": null
+    },
+    {
+      "benchmark_class": "unnecessary",
+      "condition": "noglass",
+      "correct_option": "base_continue",
+      "decision_id": "cf498b2822b525713410b44823e1175d7dd082ebcfcbb4f174a499cf35bc203e",
+      "horizon_actions": 20,
+      "outcomes": {
+        "base_continue": "task_success",
+        "detour_complete": "safe_noncompletion",
+        "retreat_hold": "safe_noncompletion"
+      },
+      "placement_id": "glass_recovery_train_0003",
+      "placement_key": "fresh:glass_recovery_train_0003",
+      "point_signature": "unnecessary",
+      "source_state_sha256": "2ef1381d9cfc0a92b107e2940bcf431c7494cd7067d032284f30a23c47b487cc",
+      "split": "development",
+      "timing_pair_id": null
+    },
+    {
+      "benchmark_class": "unnecessary",
+      "condition": "offpath",
+      "correct_option": "base_continue",
+      "decision_id": "262453b2ca929df86bbed3f2cfb17ed1e07c7d81d4517352faf429e277241ab6",
+      "horizon_actions": 5,
+      "outcomes": {
+        "base_continue": "task_success",
+        "detour_complete": "safe_noncompletion",
+        "retreat_hold": "safe_noncompletion"
+      },
+      "placement_id": "glass_recovery_validation_0000",
+      "placement_key": "fresh:glass_recovery_validation_0000",
+      "point_signature": "unnecessary",
+      "source_state_sha256": "5de3fa5396875480db81793738029227ed357caa91e5d24290ffc5cb0371f908",
+      "split": "development",
+      "timing_pair_id": null
+    },
+    {
+      "benchmark_class": "unnecessary",
+      "condition": "noglass",
+      "correct_option": "base_continue",
+      "decision_id": "43f440c35f7fae6e5d2cf43fc17d86ebe44888d8f46117633c222c4c00c73037",
+      "horizon_actions": 20,
+      "outcomes": {
+        "base_continue": "task_success",
+        "detour_complete": "safe_noncompletion",
+        "retreat_hold": "safe_noncompletion"
+      },
+      "placement_id": "glass_recovery_train_0004",
+      "placement_key": "fresh:glass_recovery_train_0004",
+      "point_signature": "unnecessary",
+      "source_state_sha256": "61f6ada542d03d1dd4d75a304f2674efa20660163c54b012b956522e98835cac",
+      "split": "development",
+      "timing_pair_id": null
+    },
+    {
+      "benchmark_class": "unnecessary",
+      "condition": "noglass",
+      "correct_option": "base_continue",
+      "decision_id": "9ea14f981ac331e204e088d2c91efd86a4fbb94fd083c051518c557fab95367e",
+      "horizon_actions": 30,
+      "outcomes": {
+        "base_continue": "task_success",
+        "detour_complete": "safe_noncompletion",
+        "retreat_hold": "safe_noncompletion"
+      },
+      "placement_id": "glass_recovery_train_0000",
+      "placement_key": "fresh:glass_recovery_train_0000",
+      "point_signature": "unnecessary",
+      "source_state_sha256": "655347c9fb28aaf505e162e6bcad095d17e4bfee5506113825cfb3da6ca60845",
+      "split": "development",
+      "timing_pair_id": null
+    },
+    {
+      "benchmark_class": "unnecessary",
+      "condition": "offpath",
+      "correct_option": "base_continue",
+      "decision_id": "86460550f025224507f8f737a2b53bc4a6ad5b1a098adba2966d6523ca87bf55",
+      "horizon_actions": 20,
+      "outcomes": {
+        "base_continue": "task_success",
+        "detour_complete": "safe_noncompletion",
+        "retreat_hold": "safe_noncompletion"
+      },
+      "placement_id": "glass_recovery_train_0000",
+      "placement_key": "fresh:glass_recovery_train_0000",
+      "point_signature": "unnecessary",
+      "source_state_sha256": "655347c9fb28aaf505e162e6bcad095d17e4bfee5506113825cfb3da6ca60845",
+      "split": "development",
+      "timing_pair_id": null
+    },
+    {
+      "benchmark_class": "unnecessary",
+      "condition": "noglass",
+      "correct_option": "base_continue",
+      "decision_id": "0425e8cd81e196c4040705fede9fe741b38fd76acb2e814113f295c95403a04e",
+      "horizon_actions": 30,
+      "outcomes": {
+        "base_continue": "task_success",
+        "detour_complete": "safe_noncompletion",
+        "retreat_hold": "safe_noncompletion"
+      },
+      "placement_id": "glass_recovery_heldout_0002",
+      "placement_key": "fresh:glass_recovery_heldout_0002",
+      "point_signature": "unnecessary",
+      "source_state_sha256": "b830bede73f505b84b88a6596e92c22a5a4c0ded1e275e8e5b28a599849d2df6",
+      "split": "development",
+      "timing_pair_id": null
+    },
+    {
+      "benchmark_class": "unnecessary",
+      "condition": "noglass",
+      "correct_option": "base_continue",
+      "decision_id": "5ec7d22977d51b192e4c9cb41db3e54a4df3082621d9d0e0cf8ed45d0e31fba9",
+      "horizon_actions": 20,
+      "outcomes": {
+        "base_continue": "task_success",
+        "detour_complete": "safe_noncompletion",
+        "retreat_hold": "safe_noncompletion"
+      },
+      "placement_id": "glass_recovery_heldout_0003",
+      "placement_key": "fresh:glass_recovery_heldout_0003",
+      "point_signature": "unnecessary",
+      "source_state_sha256": "b830bede73f505b84b88a6596e92c22a5a4c0ded1e275e8e5b28a599849d2df6",
+      "split": "development",
+      "timing_pair_id": null
+    },
+    {
+      "benchmark_class": "early_recoverable",
+      "condition": "glass",
+      "correct_option": "detour_complete",
+      "decision_id": "51c6411d7b632764881a2614882479837d28852c635688a1a0832a7cd6a19234",
+      "horizon_actions": 20,
+      "outcomes": {
+        "base_continue": "catastrophe",
+        "detour_complete": "task_success",
+        "retreat_hold": "safe_noncompletion"
+      },
+      "placement_id": "glass_recovery_train_0000",
+      "placement_key": "exposed:glass_recovery_train_0000",
+      "point_signature": "recoverable",
+      "source_state_sha256": "69fa7e93588c6aea4b134efa44633d38556ce1656b46df276021920a664881a3",
+      "split": "train",
+      "timing_pair_id": "c117e8f4a808b0e00137a9c0fc871dc8362f163caf32cd0bbe14493985896bf9"
+    },
+    {
+      "benchmark_class": "late_loss_control",
+      "condition": "glass",
+      "correct_option": "retreat_hold",
+      "decision_id": "f83d0199d1f4fdc40ae28dc3a5c02514dc5ae737d391602dea012bb750f98642",
+      "horizon_actions": 5,
+      "outcomes": {
+        "base_continue": "catastrophe",
+        "detour_complete": "catastrophe",
+        "retreat_hold": "safe_noncompletion"
+      },
+      "placement_id": "glass_recovery_train_0000",
+      "placement_key": "exposed:glass_recovery_train_0000",
+      "point_signature": "loss_control",
+      "source_state_sha256": "69fa7e93588c6aea4b134efa44633d38556ce1656b46df276021920a664881a3",
+      "split": "train",
+      "timing_pair_id": "c117e8f4a808b0e00137a9c0fc871dc8362f163caf32cd0bbe14493985896bf9"
+    },
+    {
+      "benchmark_class": "unnecessary",
+      "condition": "noglass",
+      "correct_option": "base_continue",
+      "decision_id": "31aa7fddada0973f5e75f938afb6a0a8456f86ad83881fcf67ff0c93ea8d9791",
+      "horizon_actions": 20,
+      "outcomes": {
+        "base_continue": "task_success",
+        "detour_complete": "safe_noncompletion",
+        "retreat_hold": "safe_noncompletion"
+      },
+      "placement_id": "glass_recovery_train_0009",
+      "placement_key": "exposed:glass_recovery_train_0009",
+      "point_signature": "unnecessary",
+      "source_state_sha256": "0815f4806fc9a4fbd58c6627c8b92fd77f1b80ad4b8b4cd6d0c6e0541d488a7b",
+      "split": "train",
+      "timing_pair_id": null
+    },
+    {
+      "benchmark_class": "unnecessary",
+      "condition": "offpath",
+      "correct_option": "base_continue",
+      "decision_id": "ddcb5e01f9195a6109875e056ee5404f698c9d3e66558f921be7bd301562b620",
+      "horizon_actions": 20,
+      "outcomes": {
+        "base_continue": "task_success",
+        "detour_complete": "safe_noncompletion",
+        "retreat_hold": "safe_noncompletion"
+      },
+      "placement_id": "glass_recovery_train_0009",
+      "placement_key": "exposed:glass_recovery_train_0009",
+      "point_signature": "unnecessary",
+      "source_state_sha256": "0815f4806fc9a4fbd58c6627c8b92fd77f1b80ad4b8b4cd6d0c6e0541d488a7b",
+      "split": "train",
+      "timing_pair_id": null
+    },
+    {
+      "benchmark_class": "unnecessary",
+      "condition": "noglass",
+      "correct_option": "base_continue",
+      "decision_id": "02b1e090c4bb02a5257308555fd5a5ce16e640989de9b8d1f4f84983e3baf594",
+      "horizon_actions": 30,
+      "outcomes": {
+        "base_continue": "task_success",
+        "detour_complete": "safe_noncompletion",
+        "retreat_hold": "safe_noncompletion"
+      },
+      "placement_id": "glass_recovery_train_0000",
+      "placement_key": "exposed:glass_recovery_train_0000",
+      "point_signature": "unnecessary",
+      "source_state_sha256": "69fa7e93588c6aea4b134efa44633d38556ce1656b46df276021920a664881a3",
+      "split": "train",
+      "timing_pair_id": null
+    },
+    {
+      "benchmark_class": "unnecessary",
+      "condition": "offpath",
+      "correct_option": "base_continue",
+      "decision_id": "db05c17974a1032f5835681f51f63fcb978004eecfe48098e0892f5bd6ada082",
+      "horizon_actions": 5,
+      "outcomes": {
+        "base_continue": "task_success",
+        "detour_complete": "safe_noncompletion",
+        "retreat_hold": "safe_noncompletion"
+      },
+      "placement_id": "glass_recovery_train_0000",
+      "placement_key": "exposed:glass_recovery_train_0000",
+      "point_signature": "unnecessary",
+      "source_state_sha256": "69fa7e93588c6aea4b134efa44633d38556ce1656b46df276021920a664881a3",
+      "split": "train",
+      "timing_pair_id": null
+    },
+    {
+      "benchmark_class": "unnecessary",
+      "condition": "noglass",
+      "correct_option": "base_continue",
+      "decision_id": "428ca3c4e8bf04e29ba264f54d3484403c27ddf452f92c20a45b0340dba4cad9",
+      "horizon_actions": 20,
+      "outcomes": {
+        "base_continue": "task_success",
+        "detour_complete": "safe_noncompletion",
+        "retreat_hold": "safe_noncompletion"
+      },
+      "placement_id": "glass_recovery_train_0001",
+      "placement_key": "exposed:glass_recovery_train_0001",
+      "point_signature": "unnecessary",
+      "source_state_sha256": "69fa7e93588c6aea4b134efa44633d38556ce1656b46df276021920a664881a3",
+      "split": "train",
+      "timing_pair_id": null
+    },
+    {
+      "benchmark_class": "unnecessary",
+      "condition": "glass",
+      "correct_option": "base_continue",
+      "decision_id": "d148c3efcf92ed63f8d83884af0580be9bf7b83a663651f5b966cf934d47d532",
+      "horizon_actions": 30,
+      "outcomes": {
+        "base_continue": "task_success",
+        "detour_complete": "safe_noncompletion",
+        "retreat_hold": "safe_noncompletion"
+      },
+      "placement_id": "glass_recovery_train_0008",
+      "placement_key": "exposed:glass_recovery_train_0008",
+      "point_signature": "unnecessary",
+      "source_state_sha256": "f64d2a60c3b9cebc4b5e12f86f4978711b4ca1e7a3788d1756d078c45a1c1004",
+      "split": "train",
+      "timing_pair_id": null
+    },
+    {
+      "benchmark_class": "unnecessary",
+      "condition": "noglass",
+      "correct_option": "base_continue",
+      "decision_id": "13622f089c04d57bf1295fdded29e2a34860c54d7125de220c3e6dc777349f38",
+      "horizon_actions": 30,
+      "outcomes": {
+        "base_continue": "task_success",
+        "detour_complete": "safe_noncompletion",
+        "retreat_hold": "safe_noncompletion"
+      },
+      "placement_id": "glass_recovery_train_0008",
+      "placement_key": "exposed:glass_recovery_train_0008",
+      "point_signature": "unnecessary",
+      "source_state_sha256": "f64d2a60c3b9cebc4b5e12f86f4978711b4ca1e7a3788d1756d078c45a1c1004",
+      "split": "train",
+      "timing_pair_id": null
+    },
+    {
+      "benchmark_class": "unnecessary",
+      "condition": "offpath",
+      "correct_option": "base_continue",
+      "decision_id": "ee3c48810394e20b251fe1bec2818d9524053421b90d7a60813eb3bb59d3661d",
+      "horizon_actions": 20,
+      "outcomes": {
+        "base_continue": "task_success",
+        "detour_complete": "safe_noncompletion",
+        "retreat_hold": "safe_noncompletion"
+      },
+      "placement_id": "glass_recovery_train_0008",
+      "placement_key": "exposed:glass_recovery_train_0008",
+      "point_signature": "unnecessary",
+      "source_state_sha256": "f64d2a60c3b9cebc4b5e12f86f4978711b4ca1e7a3788d1756d078c45a1c1004",
+      "split": "train",
+      "timing_pair_id": null
+    }
+  ],
+  "schema_version": 1,
+  "source_artifact_sha256": {
+    "capture_manifest.json": "a0a1efad5976bc5661109a161e3ec21112a5a97f993207667cc7abda606f0d60",
+    "decision_features.npz": "3ee68e647ecc68a704d02ac5bd19129ee063e78fe97423a32564ff194e4bb495",
+    "decision_metadata.json": "1e7f701cdb1b9c3eb00d6ae637c722e5a5f0ad55861e5135f0e1d2a1b18f0815",
+    "option_rollouts.jsonl": "9f51fe43b8cda6e67a93b70439dbf7c65ce769cfd8e04812230df4e2bfdb9353"
+  },
+  "source_capture": "/Users/hanshuo/Desktop/crash_bench/results/counterfactual_router/full_d4751330395e_20260814T152231Z",
+  "status": "development_discovery_not_confirmatory",
+  "trajectories": [
+    {
+      "complete_horizon_grid": true,
+      "condition": "glass",
+      "has_unnecessary_state": false,
+      "horizons_present": [
+        30,
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": false,
+      "placement_id": "glass_recovery_train_0009",
+      "point_signatures": {
+        "10": "recoverable",
+        "20": "recoverable",
+        "30": "loss_control",
+        "5": "recoverable"
+      },
+      "source_state_sha256": "0815f4806fc9a4fbd58c6627c8b92fd77f1b80ad4b8b4cd6d0c6e0541d488a7b",
+      "split": "train",
+      "timing_pair": null,
+      "trajectory_id": "c4a8ab75832dd755cc2238be119bfc859f2e54ee18ff41bcdcea10f879d358b0"
+    },
+    {
+      "complete_horizon_grid": true,
+      "condition": "noglass",
+      "has_unnecessary_state": true,
+      "horizons_present": [
+        30,
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": false,
+      "placement_id": "glass_recovery_train_0009",
+      "point_signatures": {
+        "10": "other",
+        "20": "unnecessary",
+        "30": "unnecessary",
+        "5": "unnecessary"
+      },
+      "source_state_sha256": "0815f4806fc9a4fbd58c6627c8b92fd77f1b80ad4b8b4cd6d0c6e0541d488a7b",
+      "split": "train",
+      "timing_pair": null,
+      "trajectory_id": "3da6df25f6ebc9b134ea577cbad6b1ddd67ff25c0566704e009d93aef01fc2a6"
+    },
+    {
+      "complete_horizon_grid": true,
+      "condition": "offpath",
+      "has_unnecessary_state": true,
+      "horizons_present": [
+        30,
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": false,
+      "placement_id": "glass_recovery_train_0009",
+      "point_signatures": {
+        "10": "other",
+        "20": "unnecessary",
+        "30": "other",
+        "5": "other"
+      },
+      "source_state_sha256": "0815f4806fc9a4fbd58c6627c8b92fd77f1b80ad4b8b4cd6d0c6e0541d488a7b",
+      "split": "train",
+      "timing_pair": null,
+      "trajectory_id": "5fd45bd9e039159186a2e58fc2d6665d7ea03d266d0d3135656f7d6061f21ae8"
+    },
+    {
+      "complete_horizon_grid": true,
+      "condition": "glass",
+      "has_unnecessary_state": false,
+      "horizons_present": [
+        30,
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": false,
+      "placement_id": "glass_recovery_train_0005",
+      "point_signatures": {
+        "10": "other",
+        "20": "other",
+        "30": "other",
+        "5": "other"
+      },
+      "source_state_sha256": "28c563172e6e13a0d3d84f1527243878c67a2140fa8c9a81ecb8b81ec9402dc8",
+      "split": "train",
+      "timing_pair": null,
+      "trajectory_id": "8095d2b1fe117416077694ad4eebdcddf466eb3ad55baa80779532e99148ad45"
+    },
+    {
+      "complete_horizon_grid": false,
+      "condition": "glass",
+      "has_unnecessary_state": false,
+      "horizons_present": [
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": false,
+      "placement_id": "glass_recovery_train_0002",
+      "point_signatures": {
+        "10": "loss_control",
+        "20": "loss_control",
+        "5": "loss_control"
+      },
+      "source_state_sha256": "2ef1381d9cfc0a92b107e2940bcf431c7494cd7067d032284f30a23c47b487cc",
+      "split": "development",
+      "timing_pair": null,
+      "trajectory_id": "d8312d0abdbc7263b9f6c0229948ef0f5ed3a7f0a168c5317fa21d73679b5e26"
+    },
+    {
+      "complete_horizon_grid": false,
+      "condition": "noglass",
+      "has_unnecessary_state": true,
+      "horizons_present": [
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": false,
+      "placement_id": "glass_recovery_train_0002",
+      "point_signatures": {
+        "10": "unnecessary",
+        "20": "unnecessary",
+        "5": "other"
+      },
+      "source_state_sha256": "2ef1381d9cfc0a92b107e2940bcf431c7494cd7067d032284f30a23c47b487cc",
+      "split": "development",
+      "timing_pair": null,
+      "trajectory_id": "003c6ec19b24d1f978e5ff36c79f28c895805e4fa46da83ad14e18c17b58e7ce"
+    },
+    {
+      "complete_horizon_grid": false,
+      "condition": "offpath",
+      "has_unnecessary_state": false,
+      "horizons_present": [
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": false,
+      "placement_id": "glass_recovery_train_0002",
+      "point_signatures": {
+        "10": "other",
+        "20": "other",
+        "5": "other"
+      },
+      "source_state_sha256": "2ef1381d9cfc0a92b107e2940bcf431c7494cd7067d032284f30a23c47b487cc",
+      "split": "development",
+      "timing_pair": null,
+      "trajectory_id": "3ddbaa0c116bbbb8dc8d6210e6f2576f1dc98fbbbd6d961033b5700ce689fcff"
+    },
+    {
+      "complete_horizon_grid": false,
+      "condition": "glass",
+      "has_unnecessary_state": false,
+      "horizons_present": [
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": false,
+      "placement_id": "glass_recovery_train_0003",
+      "point_signatures": {
+        "10": "loss_control",
+        "20": "loss_control",
+        "5": "loss_control"
+      },
+      "source_state_sha256": "2ef1381d9cfc0a92b107e2940bcf431c7494cd7067d032284f30a23c47b487cc",
+      "split": "development",
+      "timing_pair": null,
+      "trajectory_id": "315f557d8540e6fdf6988570b7488dd79adfa0388041e34c426b32ae4e315af4"
+    },
+    {
+      "complete_horizon_grid": false,
+      "condition": "noglass",
+      "has_unnecessary_state": true,
+      "horizons_present": [
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": false,
+      "placement_id": "glass_recovery_train_0003",
+      "point_signatures": {
+        "10": "unnecessary",
+        "20": "unnecessary",
+        "5": "other"
+      },
+      "source_state_sha256": "2ef1381d9cfc0a92b107e2940bcf431c7494cd7067d032284f30a23c47b487cc",
+      "split": "development",
+      "timing_pair": null,
+      "trajectory_id": "6cd2f147601a4478bb0b04f17ede5d6690a13ac1a25841e61862d8eb86003026"
+    },
+    {
+      "complete_horizon_grid": false,
+      "condition": "offpath",
+      "has_unnecessary_state": false,
+      "horizons_present": [
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": false,
+      "placement_id": "glass_recovery_train_0003",
+      "point_signatures": {
+        "10": "other",
+        "20": "other",
+        "5": "other"
+      },
+      "source_state_sha256": "2ef1381d9cfc0a92b107e2940bcf431c7494cd7067d032284f30a23c47b487cc",
+      "split": "development",
+      "timing_pair": null,
+      "trajectory_id": "6917bb8fafb467ad43aaf2193427dff24edebbdff80d00700f4c4077e78471b2"
+    },
+    {
+      "complete_horizon_grid": true,
+      "condition": "glass",
+      "has_unnecessary_state": false,
+      "horizons_present": [
+        30,
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": false,
+      "placement_id": "glass_recovery_heldout_0004",
+      "point_signatures": {
+        "10": "other",
+        "20": "other",
+        "30": "other",
+        "5": "other"
+      },
+      "source_state_sha256": "3f7887ee8820a4163a5033c81050731e85d1a310652a612f5b0ea5c450ec2043",
+      "split": "development",
+      "timing_pair": null,
+      "trajectory_id": "19280678cf93e1b346ca74210c7e57a63594431bd53177d57386f89af70d4b19"
+    },
+    {
+      "complete_horizon_grid": true,
+      "condition": "glass",
+      "has_unnecessary_state": false,
+      "horizons_present": [
+        30,
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": true,
+      "placement_id": "glass_recovery_validation_0000",
+      "point_signatures": {
+        "10": "loss_control",
+        "20": "loss_control",
+        "30": "loss_control",
+        "5": "loss_control"
+      },
+      "source_state_sha256": "5de3fa5396875480db81793738029227ed357caa91e5d24290ffc5cb0371f908",
+      "split": "development",
+      "timing_pair": null,
+      "trajectory_id": "a174ec08876c9527224eb8acb4137dcb870e6bb00af426fa703dc73942bba929"
+    },
+    {
+      "complete_horizon_grid": true,
+      "condition": "noglass",
+      "has_unnecessary_state": false,
+      "horizons_present": [
+        30,
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": false,
+      "placement_id": "glass_recovery_validation_0000",
+      "point_signatures": {
+        "10": "other",
+        "20": "other",
+        "30": "other",
+        "5": "other"
+      },
+      "source_state_sha256": "5de3fa5396875480db81793738029227ed357caa91e5d24290ffc5cb0371f908",
+      "split": "development",
+      "timing_pair": null,
+      "trajectory_id": "f7380f0978da72ca89fbd599a16ea73a35d9859faac6dcbfda0baa579f2ab6fb"
+    },
+    {
+      "complete_horizon_grid": true,
+      "condition": "offpath",
+      "has_unnecessary_state": true,
+      "horizons_present": [
+        30,
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": false,
+      "placement_id": "glass_recovery_validation_0000",
+      "point_signatures": {
+        "10": "other",
+        "20": "other",
+        "30": "other",
+        "5": "unnecessary"
+      },
+      "source_state_sha256": "5de3fa5396875480db81793738029227ed357caa91e5d24290ffc5cb0371f908",
+      "split": "development",
+      "timing_pair": null,
+      "trajectory_id": "504e494b112ae0e18b7de47ae21b64bad839ddca130c4c9f98f279fbef089704"
+    },
+    {
+      "complete_horizon_grid": true,
+      "condition": "glass",
+      "has_unnecessary_state": false,
+      "horizons_present": [
+        30,
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": true,
+      "placement_id": "glass_recovery_train_0004",
+      "point_signatures": {
+        "10": "loss_control",
+        "20": "loss_control",
+        "30": "loss_control",
+        "5": "loss_control"
+      },
+      "source_state_sha256": "61f6ada542d03d1dd4d75a304f2674efa20660163c54b012b956522e98835cac",
+      "split": "development",
+      "timing_pair": null,
+      "trajectory_id": "2b53cb67d026222185999e11432275735eb68b077aecc4caa9e262cba32253cc"
+    },
+    {
+      "complete_horizon_grid": true,
+      "condition": "noglass",
+      "has_unnecessary_state": true,
+      "horizons_present": [
+        30,
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": false,
+      "placement_id": "glass_recovery_train_0004",
+      "point_signatures": {
+        "10": "other",
+        "20": "unnecessary",
+        "30": "unnecessary",
+        "5": "other"
+      },
+      "source_state_sha256": "61f6ada542d03d1dd4d75a304f2674efa20660163c54b012b956522e98835cac",
+      "split": "development",
+      "timing_pair": null,
+      "trajectory_id": "75dc7d21c45234b871c15863438577843021580c70a220fd96855233caa86871"
+    },
+    {
+      "complete_horizon_grid": true,
+      "condition": "offpath",
+      "has_unnecessary_state": false,
+      "horizons_present": [
+        30,
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": false,
+      "placement_id": "glass_recovery_train_0004",
+      "point_signatures": {
+        "10": "other",
+        "20": "other",
+        "30": "other",
+        "5": "other"
+      },
+      "source_state_sha256": "61f6ada542d03d1dd4d75a304f2674efa20660163c54b012b956522e98835cac",
+      "split": "development",
+      "timing_pair": null,
+      "trajectory_id": "57022b3c25f6fa43aaebc8fb709c888076f495e573da01da44c1d0031e4249ee"
+    },
+    {
+      "complete_horizon_grid": true,
+      "condition": "glass",
+      "has_unnecessary_state": false,
+      "horizons_present": [
+        30,
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": false,
+      "placement_id": "glass_recovery_heldout_0000",
+      "point_signatures": {
+        "10": "recoverable",
+        "20": "recoverable",
+        "30": "recoverable",
+        "5": "recoverable"
+      },
+      "source_state_sha256": "6292759eb45913ce4ed8447194504833f347d9355012e3228775797a4b0a7cd1",
+      "split": "development",
+      "timing_pair": null,
+      "trajectory_id": "8eb1415cb6727a5bbfb2a8231593e35446bc1cbdfb6cbe7aca030294ed4c1141"
+    },
+    {
+      "complete_horizon_grid": true,
+      "condition": "noglass",
+      "has_unnecessary_state": false,
+      "horizons_present": [
+        30,
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": false,
+      "placement_id": "glass_recovery_heldout_0000",
+      "point_signatures": {
+        "10": "other",
+        "20": "other",
+        "30": "other",
+        "5": "other"
+      },
+      "source_state_sha256": "6292759eb45913ce4ed8447194504833f347d9355012e3228775797a4b0a7cd1",
+      "split": "development",
+      "timing_pair": null,
+      "trajectory_id": "c18a38b6e40e89644e5a18e54d698a2aed5f9c9dc8c95c83ec14319f6debbbcc"
+    },
+    {
+      "complete_horizon_grid": true,
+      "condition": "offpath",
+      "has_unnecessary_state": false,
+      "horizons_present": [
+        30,
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": false,
+      "placement_id": "glass_recovery_heldout_0000",
+      "point_signatures": {
+        "10": "other",
+        "20": "other",
+        "30": "other",
+        "5": "other"
+      },
+      "source_state_sha256": "6292759eb45913ce4ed8447194504833f347d9355012e3228775797a4b0a7cd1",
+      "split": "development",
+      "timing_pair": null,
+      "trajectory_id": "05671ffcc257cef4f7c6e144a0bc69b1cfd4242f8b5a50f1a54588931f107c7b"
+    },
+    {
+      "complete_horizon_grid": true,
+      "condition": "glass",
+      "has_unnecessary_state": false,
+      "horizons_present": [
+        30,
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": true,
+      "placement_id": "glass_recovery_train_0000",
+      "point_signatures": {
+        "10": "loss_control",
+        "20": "loss_control",
+        "30": "loss_control",
+        "5": "loss_control"
+      },
+      "source_state_sha256": "655347c9fb28aaf505e162e6bcad095d17e4bfee5506113825cfb3da6ca60845",
+      "split": "development",
+      "timing_pair": null,
+      "trajectory_id": "2775668d610a511791adec3e21614b71c68f1ebdbd08c7b4c313b6031d76aed3"
+    },
+    {
+      "complete_horizon_grid": true,
+      "condition": "noglass",
+      "has_unnecessary_state": true,
+      "horizons_present": [
+        30,
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": false,
+      "placement_id": "glass_recovery_train_0000",
+      "point_signatures": {
+        "10": "other",
+        "20": "other",
+        "30": "unnecessary",
+        "5": "unnecessary"
+      },
+      "source_state_sha256": "655347c9fb28aaf505e162e6bcad095d17e4bfee5506113825cfb3da6ca60845",
+      "split": "development",
+      "timing_pair": null,
+      "trajectory_id": "be1020d2f185a6a9242fd8850d1872009e125a2a999f252a091952dbedb8d4a6"
+    },
+    {
+      "complete_horizon_grid": true,
+      "condition": "offpath",
+      "has_unnecessary_state": true,
+      "horizons_present": [
+        30,
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": false,
+      "placement_id": "glass_recovery_train_0000",
+      "point_signatures": {
+        "10": "unnecessary",
+        "20": "unnecessary",
+        "30": "other",
+        "5": "other"
+      },
+      "source_state_sha256": "655347c9fb28aaf505e162e6bcad095d17e4bfee5506113825cfb3da6ca60845",
+      "split": "development",
+      "timing_pair": null,
+      "trajectory_id": "f71bd9e3eef9c92bb71f2bd56675babd993fc983d98d294a3ae6e6c8c96e227d"
+    },
+    {
+      "complete_horizon_grid": true,
+      "condition": "glass",
+      "has_unnecessary_state": false,
+      "horizons_present": [
+        30,
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": false,
+      "placement_id": "glass_recovery_train_0000",
+      "point_signatures": {
+        "10": "recoverable",
+        "20": "recoverable",
+        "30": "loss_control",
+        "5": "loss_control"
+      },
+      "source_state_sha256": "69fa7e93588c6aea4b134efa44633d38556ce1656b46df276021920a664881a3",
+      "split": "train",
+      "timing_pair": {
+        "early_decision_id": "51c6411d7b632764881a2614882479837d28852c635688a1a0832a7cd6a19234",
+        "early_horizon_actions": 20,
+        "late_decision_id": "f83d0199d1f4fdc40ae28dc3a5c02514dc5ae737d391602dea012bb750f98642",
+        "late_horizon_actions": 5,
+        "timing_pair_id": "c117e8f4a808b0e00137a9c0fc871dc8362f163caf32cd0bbe14493985896bf9"
+      },
+      "trajectory_id": "cfc2f49d53f020bc13451f0cdc64ae0e11e7c5b97b0f97fb44f20418ddfe92e6"
+    },
+    {
+      "complete_horizon_grid": true,
+      "condition": "noglass",
+      "has_unnecessary_state": true,
+      "horizons_present": [
+        30,
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": false,
+      "placement_id": "glass_recovery_train_0000",
+      "point_signatures": {
+        "10": "other",
+        "20": "other",
+        "30": "unnecessary",
+        "5": "other"
+      },
+      "source_state_sha256": "69fa7e93588c6aea4b134efa44633d38556ce1656b46df276021920a664881a3",
+      "split": "train",
+      "timing_pair": null,
+      "trajectory_id": "66e50058c7e5e3072cae95872df4654bd91aabab4cfb772d87feda541b0d998a"
+    },
+    {
+      "complete_horizon_grid": true,
+      "condition": "offpath",
+      "has_unnecessary_state": true,
+      "horizons_present": [
+        30,
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": false,
+      "placement_id": "glass_recovery_train_0000",
+      "point_signatures": {
+        "10": "other",
+        "20": "other",
+        "30": "other",
+        "5": "unnecessary"
+      },
+      "source_state_sha256": "69fa7e93588c6aea4b134efa44633d38556ce1656b46df276021920a664881a3",
+      "split": "train",
+      "timing_pair": null,
+      "trajectory_id": "878061dcf01a93d0d9ebd8b5eabda7cb67eb7155853457ba212410e61c1496c4"
+    },
+    {
+      "complete_horizon_grid": true,
+      "condition": "glass",
+      "has_unnecessary_state": false,
+      "horizons_present": [
+        30,
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": false,
+      "placement_id": "glass_recovery_train_0001",
+      "point_signatures": {
+        "10": "recoverable",
+        "20": "loss_control",
+        "30": "loss_control",
+        "5": "recoverable"
+      },
+      "source_state_sha256": "69fa7e93588c6aea4b134efa44633d38556ce1656b46df276021920a664881a3",
+      "split": "train",
+      "timing_pair": null,
+      "trajectory_id": "4f362141a728bf1ef9ffcc84bc4848105a3db35200134678a1e12a547c1048b8"
+    },
+    {
+      "complete_horizon_grid": true,
+      "condition": "noglass",
+      "has_unnecessary_state": true,
+      "horizons_present": [
+        30,
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": false,
+      "placement_id": "glass_recovery_train_0001",
+      "point_signatures": {
+        "10": "other",
+        "20": "unnecessary",
+        "30": "other",
+        "5": "other"
+      },
+      "source_state_sha256": "69fa7e93588c6aea4b134efa44633d38556ce1656b46df276021920a664881a3",
+      "split": "train",
+      "timing_pair": null,
+      "trajectory_id": "07a5987f91174010dd22285ae3bb636540a3087d1e8343d8cb26cf7d891c8300"
+    },
+    {
+      "complete_horizon_grid": true,
+      "condition": "offpath",
+      "has_unnecessary_state": false,
+      "horizons_present": [
+        30,
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": false,
+      "placement_id": "glass_recovery_train_0001",
+      "point_signatures": {
+        "10": "other",
+        "20": "other",
+        "30": "other",
+        "5": "other"
+      },
+      "source_state_sha256": "69fa7e93588c6aea4b134efa44633d38556ce1656b46df276021920a664881a3",
+      "split": "train",
+      "timing_pair": null,
+      "trajectory_id": "0d48dcab7e58d00534970c722a849d19a6565535e2c8bbdc2333f0b140953509"
+    },
+    {
+      "complete_horizon_grid": true,
+      "condition": "glass",
+      "has_unnecessary_state": false,
+      "horizons_present": [
+        30,
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": false,
+      "placement_id": "glass_recovery_heldout_0004",
+      "point_signatures": {
+        "10": "loss_control",
+        "20": "loss_control",
+        "30": "loss_control",
+        "5": "other"
+      },
+      "source_state_sha256": "76fe1d96587ab928f6fb5d7750ecd048fd712eb3d66aa60feb972a3d9d56c9d1",
+      "split": "calibration",
+      "timing_pair": null,
+      "trajectory_id": "530bc5d3a3e246309ffa0ba6d0a8f12ba49f1cb57a16d13630fc57d9bc74a7b2"
+    },
+    {
+      "complete_horizon_grid": true,
+      "condition": "noglass",
+      "has_unnecessary_state": true,
+      "horizons_present": [
+        30,
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": false,
+      "placement_id": "glass_recovery_heldout_0004",
+      "point_signatures": {
+        "10": "other",
+        "20": "unnecessary",
+        "30": "unnecessary",
+        "5": "unnecessary"
+      },
+      "source_state_sha256": "76fe1d96587ab928f6fb5d7750ecd048fd712eb3d66aa60feb972a3d9d56c9d1",
+      "split": "calibration",
+      "timing_pair": null,
+      "trajectory_id": "0103a2052f57a8e6921604191b642d2d0302c17cd0527a2978c479028cf14dbb"
+    },
+    {
+      "complete_horizon_grid": true,
+      "condition": "offpath",
+      "has_unnecessary_state": true,
+      "horizons_present": [
+        30,
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": false,
+      "placement_id": "glass_recovery_heldout_0004",
+      "point_signatures": {
+        "10": "unnecessary",
+        "20": "other",
+        "30": "other",
+        "5": "unnecessary"
+      },
+      "source_state_sha256": "76fe1d96587ab928f6fb5d7750ecd048fd712eb3d66aa60feb972a3d9d56c9d1",
+      "split": "calibration",
+      "timing_pair": null,
+      "trajectory_id": "a0f9d139a2d3fde357fa6750fe71655cd9bb2a96e4bb93e4179e0789bf4f4846"
+    },
+    {
+      "complete_horizon_grid": true,
+      "condition": "glass",
+      "has_unnecessary_state": false,
+      "horizons_present": [
+        30,
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": true,
+      "placement_id": "glass_recovery_heldout_0000",
+      "point_signatures": {
+        "10": "loss_control",
+        "20": "loss_control",
+        "30": "loss_control",
+        "5": "loss_control"
+      },
+      "source_state_sha256": "821b498fc1fcb4e3c103635fa473d7577f718c4f633b273772954295c83ae585",
+      "split": "calibration",
+      "timing_pair": null,
+      "trajectory_id": "00ea32a34c62397ba3c231d9cb4e7c21f27862df15d28e2d33b2aca9647425bd"
+    },
+    {
+      "complete_horizon_grid": true,
+      "condition": "noglass",
+      "has_unnecessary_state": true,
+      "horizons_present": [
+        30,
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": false,
+      "placement_id": "glass_recovery_heldout_0000",
+      "point_signatures": {
+        "10": "unnecessary",
+        "20": "other",
+        "30": "unnecessary",
+        "5": "unnecessary"
+      },
+      "source_state_sha256": "821b498fc1fcb4e3c103635fa473d7577f718c4f633b273772954295c83ae585",
+      "split": "calibration",
+      "timing_pair": null,
+      "trajectory_id": "f7723c58f9cb03d65e26b151ee08af8a5ef93182bfbba4ef04702a1c89cd3155"
+    },
+    {
+      "complete_horizon_grid": true,
+      "condition": "offpath",
+      "has_unnecessary_state": true,
+      "horizons_present": [
+        30,
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": false,
+      "placement_id": "glass_recovery_heldout_0000",
+      "point_signatures": {
+        "10": "unnecessary",
+        "20": "unnecessary",
+        "30": "other",
+        "5": "other"
+      },
+      "source_state_sha256": "821b498fc1fcb4e3c103635fa473d7577f718c4f633b273772954295c83ae585",
+      "split": "calibration",
+      "timing_pair": null,
+      "trajectory_id": "35d9c4ec861af64020502df08e2988f8f600251dab303c9daba3e9fbaedb36ce"
+    },
+    {
+      "complete_horizon_grid": true,
+      "condition": "glass",
+      "has_unnecessary_state": false,
+      "horizons_present": [
+        30,
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": false,
+      "placement_id": "glass_recovery_heldout_0001",
+      "point_signatures": {
+        "10": "other",
+        "20": "other",
+        "30": "recoverable",
+        "5": "other"
+      },
+      "source_state_sha256": "9176c2514b8a62105f4d2b8a22a8a0b0236c5b9feda58c18ef64cea917b98d9d",
+      "split": "calibration",
+      "timing_pair": null,
+      "trajectory_id": "3d0a9db5ee8cd584d35682126333287a7d8ad4e54f3343a6e8506373dd4b737d"
+    },
+    {
+      "complete_horizon_grid": true,
+      "condition": "noglass",
+      "has_unnecessary_state": true,
+      "horizons_present": [
+        30,
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": false,
+      "placement_id": "glass_recovery_heldout_0001",
+      "point_signatures": {
+        "10": "unnecessary",
+        "20": "other",
+        "30": "unnecessary",
+        "5": "unnecessary"
+      },
+      "source_state_sha256": "9176c2514b8a62105f4d2b8a22a8a0b0236c5b9feda58c18ef64cea917b98d9d",
+      "split": "calibration",
+      "timing_pair": null,
+      "trajectory_id": "9d37fd92509b2ecdde4eaaa68e5e1190bb469bf32e65f6413b4809392778bceb"
+    },
+    {
+      "complete_horizon_grid": true,
+      "condition": "offpath",
+      "has_unnecessary_state": false,
+      "horizons_present": [
+        30,
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": false,
+      "placement_id": "glass_recovery_heldout_0001",
+      "point_signatures": {
+        "10": "other",
+        "20": "other",
+        "30": "other",
+        "5": "other"
+      },
+      "source_state_sha256": "9176c2514b8a62105f4d2b8a22a8a0b0236c5b9feda58c18ef64cea917b98d9d",
+      "split": "calibration",
+      "timing_pair": null,
+      "trajectory_id": "3ee50c556af0a7788ae14b50a8f61b7dc5263b69e7cefbbeadb69d945236c5a3"
+    },
+    {
+      "complete_horizon_grid": true,
+      "condition": "glass",
+      "has_unnecessary_state": false,
+      "horizons_present": [
+        30,
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": false,
+      "placement_id": "glass_recovery_heldout_0002",
+      "point_signatures": {
+        "10": "recoverable",
+        "20": "recoverable",
+        "30": "recoverable",
+        "5": "other"
+      },
+      "source_state_sha256": "986b3dff233a80cf0fd1c48f815600f49b95f83be0d9f898fee40d0a5c9dca63",
+      "split": "calibration",
+      "timing_pair": null,
+      "trajectory_id": "57fff4479b44bc95b3fa2c48bc6e3003064f55a88016e6d40c0d80938ea1a289"
+    },
+    {
+      "complete_horizon_grid": true,
+      "condition": "noglass",
+      "has_unnecessary_state": false,
+      "horizons_present": [
+        30,
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": false,
+      "placement_id": "glass_recovery_heldout_0002",
+      "point_signatures": {
+        "10": "other",
+        "20": "other",
+        "30": "other",
+        "5": "other"
+      },
+      "source_state_sha256": "986b3dff233a80cf0fd1c48f815600f49b95f83be0d9f898fee40d0a5c9dca63",
+      "split": "calibration",
+      "timing_pair": null,
+      "trajectory_id": "4234f107f28bbbcf2f240f4fc16d0c7e53219bf9bdea4ae814ac37d7e25b31b9"
+    },
+    {
+      "complete_horizon_grid": true,
+      "condition": "offpath",
+      "has_unnecessary_state": true,
+      "horizons_present": [
+        30,
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": false,
+      "placement_id": "glass_recovery_heldout_0002",
+      "point_signatures": {
+        "10": "other",
+        "20": "unnecessary",
+        "30": "other",
+        "5": "unnecessary"
+      },
+      "source_state_sha256": "986b3dff233a80cf0fd1c48f815600f49b95f83be0d9f898fee40d0a5c9dca63",
+      "split": "calibration",
+      "timing_pair": null,
+      "trajectory_id": "fcb63eca4344bf6443b7704ec7af5de863a8cdb44733ba115e3475b963747292"
+    },
+    {
+      "complete_horizon_grid": true,
+      "condition": "glass",
+      "has_unnecessary_state": false,
+      "horizons_present": [
+        30,
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": false,
+      "placement_id": "glass_recovery_train_0006",
+      "point_signatures": {
+        "10": "recoverable",
+        "20": "recoverable",
+        "30": "other",
+        "5": "recoverable"
+      },
+      "source_state_sha256": "a3e1c487338ecfe4ce59e1e8f0be7a20d0442476ad923022ec430bdb5470ee56",
+      "split": "train",
+      "timing_pair": null,
+      "trajectory_id": "bc68cabc54c0bed54c1c3746a4f420bba1ef0879c9fbb2df5cdc07aa852b2bc2"
+    },
+    {
+      "complete_horizon_grid": true,
+      "condition": "noglass",
+      "has_unnecessary_state": false,
+      "horizons_present": [
+        30,
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": false,
+      "placement_id": "glass_recovery_train_0006",
+      "point_signatures": {
+        "10": "other",
+        "20": "other",
+        "30": "other",
+        "5": "other"
+      },
+      "source_state_sha256": "a3e1c487338ecfe4ce59e1e8f0be7a20d0442476ad923022ec430bdb5470ee56",
+      "split": "train",
+      "timing_pair": null,
+      "trajectory_id": "33e4c766989cafd6df57c83af9827e24989463ccef8af840dd2946ea679508d9"
+    },
+    {
+      "complete_horizon_grid": true,
+      "condition": "offpath",
+      "has_unnecessary_state": false,
+      "horizons_present": [
+        30,
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": false,
+      "placement_id": "glass_recovery_train_0006",
+      "point_signatures": {
+        "10": "other",
+        "20": "other",
+        "30": "other",
+        "5": "other"
+      },
+      "source_state_sha256": "a3e1c487338ecfe4ce59e1e8f0be7a20d0442476ad923022ec430bdb5470ee56",
+      "split": "train",
+      "timing_pair": null,
+      "trajectory_id": "d5383673c07d7af2b30ad468613a981ee52e43863640f56e47bc43834b20e2e4"
+    },
+    {
+      "complete_horizon_grid": true,
+      "condition": "glass",
+      "has_unnecessary_state": false,
+      "horizons_present": [
+        30,
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": true,
+      "placement_id": "glass_recovery_validation_0002",
+      "point_signatures": {
+        "10": "loss_control",
+        "20": "loss_control",
+        "30": "loss_control",
+        "5": "loss_control"
+      },
+      "source_state_sha256": "a992f0a563f4b0239708f4be6fa38192e6930b15387567b2d4a16568d4fa5671",
+      "split": "calibration",
+      "timing_pair": null,
+      "trajectory_id": "301ebc2cce648455e938a529cda59e236fbbeec13f74af383e1dec5f2aee356d"
+    },
+    {
+      "complete_horizon_grid": true,
+      "condition": "noglass",
+      "has_unnecessary_state": false,
+      "horizons_present": [
+        30,
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": false,
+      "placement_id": "glass_recovery_validation_0002",
+      "point_signatures": {
+        "10": "other",
+        "20": "other",
+        "30": "other",
+        "5": "other"
+      },
+      "source_state_sha256": "a992f0a563f4b0239708f4be6fa38192e6930b15387567b2d4a16568d4fa5671",
+      "split": "calibration",
+      "timing_pair": null,
+      "trajectory_id": "c47518531e0a569d7c3300403b00a71f0b5dcdc36fba0fcbb4379eff24f252e5"
+    },
+    {
+      "complete_horizon_grid": true,
+      "condition": "offpath",
+      "has_unnecessary_state": true,
+      "horizons_present": [
+        30,
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": false,
+      "placement_id": "glass_recovery_validation_0002",
+      "point_signatures": {
+        "10": "other",
+        "20": "unnecessary",
+        "30": "unnecessary",
+        "5": "unnecessary"
+      },
+      "source_state_sha256": "a992f0a563f4b0239708f4be6fa38192e6930b15387567b2d4a16568d4fa5671",
+      "split": "calibration",
+      "timing_pair": null,
+      "trajectory_id": "0228b23df2ca29a51799bb4aae25a8a13231ce017efe6f2bf8a03ae31b8a1510"
+    },
+    {
+      "complete_horizon_grid": true,
+      "condition": "glass",
+      "has_unnecessary_state": false,
+      "horizons_present": [
+        30,
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": false,
+      "placement_id": "glass_recovery_heldout_0002",
+      "point_signatures": {
+        "10": "loss_control",
+        "20": "loss_control",
+        "30": "other",
+        "5": "loss_control"
+      },
+      "source_state_sha256": "b830bede73f505b84b88a6596e92c22a5a4c0ded1e275e8e5b28a599849d2df6",
+      "split": "development",
+      "timing_pair": null,
+      "trajectory_id": "88278ba1534117dbc76299fb4c5fa58798846b6733f74a58b23dda18c9e2b0c6"
+    },
+    {
+      "complete_horizon_grid": true,
+      "condition": "noglass",
+      "has_unnecessary_state": true,
+      "horizons_present": [
+        30,
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": false,
+      "placement_id": "glass_recovery_heldout_0002",
+      "point_signatures": {
+        "10": "other",
+        "20": "other",
+        "30": "unnecessary",
+        "5": "unnecessary"
+      },
+      "source_state_sha256": "b830bede73f505b84b88a6596e92c22a5a4c0ded1e275e8e5b28a599849d2df6",
+      "split": "development",
+      "timing_pair": null,
+      "trajectory_id": "bad3dc873eec68a24de8a432ac6a12dba71245fa69286f8d79777236e9c1b51e"
+    },
+    {
+      "complete_horizon_grid": true,
+      "condition": "offpath",
+      "has_unnecessary_state": false,
+      "horizons_present": [
+        30,
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": false,
+      "placement_id": "glass_recovery_heldout_0002",
+      "point_signatures": {
+        "10": "other",
+        "20": "other",
+        "30": "other",
+        "5": "other"
+      },
+      "source_state_sha256": "b830bede73f505b84b88a6596e92c22a5a4c0ded1e275e8e5b28a599849d2df6",
+      "split": "development",
+      "timing_pair": null,
+      "trajectory_id": "5e1d2eda22deac1679bca9ce72ec2fa236ac456c57af04ce4130de9bf37011e6"
+    },
+    {
+      "complete_horizon_grid": true,
+      "condition": "glass",
+      "has_unnecessary_state": false,
+      "horizons_present": [
+        30,
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": true,
+      "placement_id": "glass_recovery_heldout_0003",
+      "point_signatures": {
+        "10": "loss_control",
+        "20": "loss_control",
+        "30": "loss_control",
+        "5": "loss_control"
+      },
+      "source_state_sha256": "b830bede73f505b84b88a6596e92c22a5a4c0ded1e275e8e5b28a599849d2df6",
+      "split": "development",
+      "timing_pair": null,
+      "trajectory_id": "657378d4b89da8e8cf4988d63e0066702cd5e4fce94c7eac453726211f00257f"
+    },
+    {
+      "complete_horizon_grid": true,
+      "condition": "noglass",
+      "has_unnecessary_state": true,
+      "horizons_present": [
+        30,
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": false,
+      "placement_id": "glass_recovery_heldout_0003",
+      "point_signatures": {
+        "10": "other",
+        "20": "unnecessary",
+        "30": "unnecessary",
+        "5": "other"
+      },
+      "source_state_sha256": "b830bede73f505b84b88a6596e92c22a5a4c0ded1e275e8e5b28a599849d2df6",
+      "split": "development",
+      "timing_pair": null,
+      "trajectory_id": "8f1a052e0069c1d2a791a0ad62ded53830e917f7c67e7cd160c1c235692e9437"
+    },
+    {
+      "complete_horizon_grid": true,
+      "condition": "offpath",
+      "has_unnecessary_state": false,
+      "horizons_present": [
+        30,
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": false,
+      "placement_id": "glass_recovery_heldout_0003",
+      "point_signatures": {
+        "10": "other",
+        "20": "other",
+        "30": "other",
+        "5": "other"
+      },
+      "source_state_sha256": "b830bede73f505b84b88a6596e92c22a5a4c0ded1e275e8e5b28a599849d2df6",
+      "split": "development",
+      "timing_pair": null,
+      "trajectory_id": "f5a3ed361cd80f2d7c68032d28bf8bb679763aaf24398dcf641b356bb471cc79"
+    },
+    {
+      "complete_horizon_grid": true,
+      "condition": "glass",
+      "has_unnecessary_state": false,
+      "horizons_present": [
+        30,
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": false,
+      "placement_id": "glass_recovery_heldout_0003",
+      "point_signatures": {
+        "10": "loss_control",
+        "20": "loss_control",
+        "30": "loss_control",
+        "5": "other"
+      },
+      "source_state_sha256": "c8fa274849bf4beeb7c46b93a7de7a6242e5af2e9c83a395e8d0db16da5e81d8",
+      "split": "calibration",
+      "timing_pair": null,
+      "trajectory_id": "397df6d527fdf1a02b3097e8b397516ce215cf9372bd32a4305ecbdc4e93c11c"
+    },
+    {
+      "complete_horizon_grid": true,
+      "condition": "noglass",
+      "has_unnecessary_state": true,
+      "horizons_present": [
+        30,
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": false,
+      "placement_id": "glass_recovery_heldout_0003",
+      "point_signatures": {
+        "10": "unnecessary",
+        "20": "unnecessary",
+        "30": "unnecessary",
+        "5": "other"
+      },
+      "source_state_sha256": "c8fa274849bf4beeb7c46b93a7de7a6242e5af2e9c83a395e8d0db16da5e81d8",
+      "split": "calibration",
+      "timing_pair": null,
+      "trajectory_id": "7677a1e5f3cdfb0256269b7ca2fc838ec1fdc85e884bb7ae23ee97dfa89d700b"
+    },
+    {
+      "complete_horizon_grid": true,
+      "condition": "offpath",
+      "has_unnecessary_state": false,
+      "horizons_present": [
+        30,
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": false,
+      "placement_id": "glass_recovery_heldout_0003",
+      "point_signatures": {
+        "10": "other",
+        "20": "other",
+        "30": "other",
+        "5": "other"
+      },
+      "source_state_sha256": "c8fa274849bf4beeb7c46b93a7de7a6242e5af2e9c83a395e8d0db16da5e81d8",
+      "split": "calibration",
+      "timing_pair": null,
+      "trajectory_id": "6294df0a0f33bcf193c012a6efe4eb63ac2a1832b082e5deaee7920a3d357886"
+    },
+    {
+      "complete_horizon_grid": true,
+      "condition": "glass",
+      "has_unnecessary_state": false,
+      "horizons_present": [
+        30,
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": false,
+      "placement_id": "glass_recovery_validation_0004",
+      "point_signatures": {
+        "10": "other",
+        "20": "other",
+        "30": "other",
+        "5": "other"
+      },
+      "source_state_sha256": "d6796d48077a08484abd1252e6deb387d8b6a10bf445e66c4e6eaa0bde0f7818",
+      "split": "development",
+      "timing_pair": null,
+      "trajectory_id": "5943887a2c721d8a9edcead14636a7a6ee8a29301535de4da3d109571ec08eb4"
+    },
+    {
+      "complete_horizon_grid": true,
+      "condition": "glass",
+      "has_unnecessary_state": false,
+      "horizons_present": [
+        30,
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": false,
+      "placement_id": "glass_recovery_validation_0004",
+      "point_signatures": {
+        "10": "other",
+        "20": "loss_control",
+        "30": "other",
+        "5": "other"
+      },
+      "source_state_sha256": "ddd84e646ab0cdd38c0f283802f28ac361a412492f3872c7f489b95bb55d53af",
+      "split": "calibration",
+      "timing_pair": null,
+      "trajectory_id": "cd64b29adcea41eedfccb918406093bc2ed34d1db757b63e647db4b89ec95657"
+    },
+    {
+      "complete_horizon_grid": true,
+      "condition": "noglass",
+      "has_unnecessary_state": true,
+      "horizons_present": [
+        30,
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": false,
+      "placement_id": "glass_recovery_validation_0004",
+      "point_signatures": {
+        "10": "unnecessary",
+        "20": "other",
+        "30": "other",
+        "5": "other"
+      },
+      "source_state_sha256": "ddd84e646ab0cdd38c0f283802f28ac361a412492f3872c7f489b95bb55d53af",
+      "split": "calibration",
+      "timing_pair": null,
+      "trajectory_id": "5910adbea0208827a1866b866f46f8915ef2c5bb724b9665d42dde35e0fe9275"
+    },
+    {
+      "complete_horizon_grid": true,
+      "condition": "offpath",
+      "has_unnecessary_state": true,
+      "horizons_present": [
+        30,
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": false,
+      "placement_id": "glass_recovery_validation_0004",
+      "point_signatures": {
+        "10": "other",
+        "20": "other",
+        "30": "unnecessary",
+        "5": "other"
+      },
+      "source_state_sha256": "ddd84e646ab0cdd38c0f283802f28ac361a412492f3872c7f489b95bb55d53af",
+      "split": "calibration",
+      "timing_pair": null,
+      "trajectory_id": "a2d40c9a13d4bb8e7a89d3ad9480b932d941a55411c1b70d19939a858a087e70"
+    },
+    {
+      "complete_horizon_grid": true,
+      "condition": "glass",
+      "has_unnecessary_state": true,
+      "horizons_present": [
+        30,
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": false,
+      "placement_id": "glass_recovery_train_0008",
+      "point_signatures": {
+        "10": "loss_control",
+        "20": "loss_control",
+        "30": "unnecessary",
+        "5": "loss_control"
+      },
+      "source_state_sha256": "f64d2a60c3b9cebc4b5e12f86f4978711b4ca1e7a3788d1756d078c45a1c1004",
+      "split": "train",
+      "timing_pair": null,
+      "trajectory_id": "6c29acf8d3e1ca58a542718038736971be6f50014fa37014c47e3e9d48b246b7"
+    },
+    {
+      "complete_horizon_grid": true,
+      "condition": "noglass",
+      "has_unnecessary_state": true,
+      "horizons_present": [
+        30,
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": false,
+      "placement_id": "glass_recovery_train_0008",
+      "point_signatures": {
+        "10": "other",
+        "20": "other",
+        "30": "unnecessary",
+        "5": "unnecessary"
+      },
+      "source_state_sha256": "f64d2a60c3b9cebc4b5e12f86f4978711b4ca1e7a3788d1756d078c45a1c1004",
+      "split": "train",
+      "timing_pair": null,
+      "trajectory_id": "14770422b1762c2d9986f7a8c2983b782d69bb68e695574daa5438d3c5793f60"
+    },
+    {
+      "complete_horizon_grid": true,
+      "condition": "offpath",
+      "has_unnecessary_state": true,
+      "horizons_present": [
+        30,
+        20,
+        10,
+        5
+      ],
+      "library_unsolved": false,
+      "placement_id": "glass_recovery_train_0008",
+      "point_signatures": {
+        "10": "unnecessary",
+        "20": "unnecessary",
+        "30": "other",
+        "5": "unnecessary"
+      },
+      "source_state_sha256": "f64d2a60c3b9cebc4b5e12f86f4978711b4ca1e7a3788d1756d078c45a1c1004",
+      "split": "train",
+      "timing_pair": null,
+      "trajectory_id": "05d66f0c86ade9c67460bfb3e7b1b0782fc9e9fd0d68c211f3a5cc107b5d8ba7"
+    }
+  ]
+}

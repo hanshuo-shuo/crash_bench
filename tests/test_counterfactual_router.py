@@ -33,6 +33,18 @@ from scripts.train_counterfactual_outcome_router import (
     calibrate_margin_for_rate,
 )
 from scripts.analyze_fresh_counterfactual_router import metric_values, oracle_choice
+from crashbench.recovery import FailSafeHold
+from scripts.p0_counterfactual_router_audit import (
+    calibrate_two_threshold,
+    candidate_thresholds,
+    evaluate_choices as evaluate_p0_choices,
+    two_threshold_choice,
+)
+from scripts.author_timing_choice_benchmark import (
+    build_timing_records,
+    correct_option,
+    point_signature,
+)
 
 
 def test_option_outcomes_are_exhaustive_and_exclusive():
@@ -102,6 +114,80 @@ def test_fresh_metrics_use_realized_base_and_oracle_counterfactuals():
     assert metrics["missed_beneficial_intervention_rate"] == 0.0
     assert metrics["mean_oracle_regret"] == 0.0
     assert metrics["oracle_value_recovered"] == 1.0
+
+
+def test_p0_two_threshold_risk_can_route_detour_and_retreat():
+    scores = np.asarray([0.1, 0.4, 0.8])
+    outcomes = np.asarray([
+        ["task_success", "safe_noncompletion", "safe_noncompletion"],
+        ["catastrophe", "task_success", "safe_noncompletion"],
+        ["catastrophe", "catastrophe", "safe_noncompletion"],
+    ])
+    sources = np.asarray(["a", "b", "c"])
+    calibration = calibrate_two_threshold(
+        scores, outcomes, sources, catastrophe_cost=5.0,
+    )
+    choice = two_threshold_choice(scores, calibration)
+    assert choice.tolist() == [0, 1, 2]
+    metrics = evaluate_p0_choices(choice, outcomes, sources, catastrophe_cost=5.0)
+    assert metrics["catastrophe_rate"] == 0.0
+    assert metrics["task_success_rate"] == pytest.approx(2 / 3)
+
+
+def test_p0_threshold_candidates_include_all_and_none_intervention():
+    thresholds = candidate_thresholds(np.asarray([0.2, 0.8]))
+    assert thresholds == [float("-inf"), 0.5, float("inf")]
+
+
+def test_p1_point_signatures_encode_option_choice_not_hazard_identity():
+    assert point_signature([
+        "catastrophe", "task_success", "safe_noncompletion",
+    ]) == "recoverable"
+    assert point_signature([
+        "catastrophe", "catastrophe", "safe_noncompletion",
+    ]) == "loss_control"
+    assert point_signature([
+        "task_success", "catastrophe", "safe_noncompletion",
+    ]) == "unnecessary"
+    assert correct_option("recoverable") == "detour_complete"
+    assert correct_option("loss_control") == "retreat_hold"
+    assert correct_option("unnecessary") == "base_continue"
+
+
+def test_p1_timing_pair_requires_earlier_recovery_and_later_loss_control():
+    horizons = [30, 20, 10, 5]
+    metadata = [{
+        "decision_id": f"d{horizon}",
+        "source_state_sha256": "source-a",
+        "placement_id": "placement-a",
+        "placement_key": "fresh:placement-a",
+        "split": "development",
+        "condition": "glass",
+        "horizon_actions": horizon,
+    } for horizon in horizons]
+    outcomes = np.asarray([
+        ["catastrophe", "task_success", "safe_noncompletion"],
+        ["catastrophe", "task_success", "safe_noncompletion"],
+        ["catastrophe", "catastrophe", "safe_noncompletion"],
+        ["catastrophe", "catastrophe", "safe_noncompletion"],
+    ])
+    built = build_timing_records(metadata, outcomes)
+    records = built["records"]
+    assert [row["benchmark_class"] for row in records] == [
+        "early_recoverable", "late_loss_control",
+    ]
+    assert records[0]["horizon_actions"] == 30
+    assert records[1]["horizon_actions"] == 5
+    assert records[0]["timing_pair_id"] == records[1]["timing_pair_id"]
+
+
+def test_p1_fail_safe_hold_has_no_directional_motion():
+    controller = FailSafeHold()
+    controller.engage({"robot0_eef_pos": np.asarray([0.1, 0.2, 0.3])})
+    np.testing.assert_array_equal(
+        controller.step({"robot0_eef_pos": np.asarray([0.1, 0.2, 0.3])}),
+        np.asarray([0, 0, 0, 0, 0, 0, -1], dtype=np.float32),
+    )
 
 
 def test_temporal_window_is_causal_and_left_padded():

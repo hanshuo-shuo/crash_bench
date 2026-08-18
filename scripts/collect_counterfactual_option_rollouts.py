@@ -40,7 +40,7 @@ from crashbench.envs import LiberoEnv
 from crashbench.glass_recovery_data import array_sha256, canonical_sha256
 from crashbench.predicates import build_any
 from crashbench.provenance import repository_provenance, require_checkpoint_revision
-from crashbench.recovery import DetourComplete, RetreatHold
+from crashbench.recovery import DetourComplete, FailSafeHold, RetreatHold
 from scripts.capture_glass_detector_placements import (
     _condition_glasses,
     _seed_everything,
@@ -414,7 +414,7 @@ def collect(args: argparse.Namespace) -> dict[str, Any]:
         env = envs[env_key]
         scans = {}
         try:
-            for condition in CONDITIONS:
+            for condition in args.conditions:
                 _seed_everything(args.rollout_seed)
                 env.seed(args.rollout_seed)
                 policy.reset()
@@ -454,7 +454,7 @@ def collect(args: argparse.Namespace) -> dict[str, Any]:
                     "reason": "catastrophe_before_horizon",
                 })
                 continue
-            for condition in CONDITIONS:
+            for condition in args.conditions:
                 scan = scans[condition]
                 if anchor_index >= len(scan["states"]):
                     exclusions.append({
@@ -546,9 +546,14 @@ def collect(args: argparse.Namespace) -> dict[str, Any]:
                             max_steps=args.detour_steps,
                         )
                     else:
+                        fail_safe = (
+                            FailSafeHold()
+                            if args.retreat_mode == "hold"
+                            else RetreatHold(back=args.retreat_back, up=args.retreat_up)
+                        )
                         result = _run_structured_option(
                             env, obs, list(scan["glasses"]),
-                            RetreatHold(back=args.retreat_back, up=args.retreat_up),
+                            fail_safe,
                             max_steps=args.retreat_steps,
                         )
                     outcome = classify_option_outcome(
@@ -593,7 +598,7 @@ def collect(args: argparse.Namespace) -> dict[str, Any]:
     protocol = {
         "horizons": list(args.horizons),
         "history_length": args.history_length,
-        "conditions": list(CONDITIONS),
+        "conditions": list(args.conditions),
         "options": list(OPTIONS),
         "base": "online frozen-OpenVLA continuation from the exact restored state",
         "detour": {
@@ -608,7 +613,11 @@ def collect(args: argparse.Namespace) -> dict[str, Any]:
             "privileged_geometry": True,
             "frozen_config": frozen_detour_config,
         },
-        "retreat": {"back": args.retreat_back, "up": args.retreat_up},
+        "retreat": {
+            "mode": args.retreat_mode,
+            "back": args.retreat_back,
+            "up": args.retreat_up,
+        },
         "terminal_outcomes": [
             "task_success", "catastrophe", "safe_noncompletion"
         ],
@@ -670,6 +679,9 @@ def main() -> None:
         "--horizons", type=int, nargs="+", default=list(DEFAULT_HORIZONS)
     )
     parser.add_argument(
+        "--conditions", nargs="+", choices=CONDITIONS, default=list(CONDITIONS)
+    )
+    parser.add_argument(
         "--detector-splits", nargs="+",
         choices=("train", "calibration", "development"),
         default=["train", "calibration", "development"],
@@ -693,11 +705,16 @@ def main() -> None:
     )
     parser.add_argument("--retreat-back", type=float, default=0.14)
     parser.add_argument("--retreat-up", type=float, default=0.10)
+    parser.add_argument(
+        "--retreat-mode", choices=("retreat", "hold"), default="retreat"
+    )
     parser.add_argument("--overwrite", action="store_true")
     args = parser.parse_args()
     if (
         args.history_length < 1
         or not args.horizons
+        or "glass" not in args.conditions
+        or len(set(args.conditions)) != len(args.conditions)
         or len(set(args.horizons)) != len(args.horizons)
         or any(horizon < 1 for horizon in args.horizons)
         or args.max_placements is not None and args.max_placements < 1

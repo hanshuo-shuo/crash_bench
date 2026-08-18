@@ -292,3 +292,18 @@ class RetreatHold:
             float(np.clip(self.k * d[2], -1, 1)),
             0.0, 0.0, 0.0, float(self.grip),
         ], dtype=np.float32)
+
+
+class FailSafeHold:
+    """Zero-delta fail-safe used when directional retreat is no longer safe."""
+
+    def __init__(self, grip: float = GRIP_OPEN):
+        self.grip = float(grip)
+
+    def engage(self, obs: dict) -> None:
+        pass
+
+    def step(self, obs: dict) -> np.ndarray:
+        return np.asarray(
+            [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, self.grip], dtype=np.float32
+        )

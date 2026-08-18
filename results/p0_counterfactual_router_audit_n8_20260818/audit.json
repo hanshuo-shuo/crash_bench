@@ -1,0 +1,2215 @@
+{
+  "calibration": {
+    "all_option_catastrophe_reliability": {
+      "bins": [
+        {
+          "count": 61,
+          "empirical_frequency": 0.04918032786885246,
+          "lower": 0.0,
+          "mean_probability": 0.04206700448421575,
+          "upper": 0.2
+        },
+        {
+          "count": 5,
+          "empirical_frequency": 0.6,
+          "lower": 0.2,
+          "mean_probability": 0.3008966422248426,
+          "upper": 0.4
+        },
+        {
+          "count": 4,
+          "empirical_frequency": 0.5,
+          "lower": 0.4,
+          "mean_probability": 0.5356656413155907,
+          "upper": 0.6000000000000001
+        },
+        {
+          "count": 1,
+          "empirical_frequency": 1.0,
+          "lower": 0.6000000000000001,
+          "mean_probability": 0.6581844705454758,
+          "upper": 0.8
+        },
+        {
+          "count": 1,
+          "empirical_frequency": 0.0,
+          "lower": 0.8,
+          "mean_probability": 0.8207684391476507,
+          "upper": 1.0
+        }
+      ],
+      "ece": 0.04492605623893284
+    },
+    "per_option": {
+      "base_continue": {
+        "catastrophe_reliability": {
+          "bins": [
+            {
+              "count": 13,
+              "empirical_frequency": 0.15384615384615385,
+              "lower": 0.0,
+              "mean_probability": 0.11597213896317754,
+              "upper": 0.2
+            },
+            {
+              "count": 5,
+              "empirical_frequency": 0.6,
+              "lower": 0.2,
+              "mean_probability": 0.3008966422248426,
+              "upper": 0.4
+            },
+            {
+              "count": 4,
+              "empirical_frequency": 0.5,
+              "lower": 0.4,
+              "mean_probability": 0.5356656413155907,
+              "upper": 0.6000000000000001
+            },
+            {
+              "count": 1,
+              "empirical_frequency": 1.0,
+              "lower": 0.6000000000000001,
+              "mean_probability": 0.6581844705454758,
+              "upper": 0.8
+            },
+            {
+              "count": 1,
+              "empirical_frequency": 0.0,
+              "lower": 0.8,
+              "mean_probability": 0.8207684391476507,
+              "upper": 1.0
+            }
+          ],
+          "ece": 0.13721356317579236
+        },
+        "multiclass_brier": 0.43471788421550156,
+        "n": 24,
+        "nll": 0.6473532371924519
+      },
+      "detour_complete": {
+        "catastrophe_reliability": {
+          "bins": [
+            {
+              "count": 24,
+              "empirical_frequency": 0.041666666666666664,
+              "lower": 0.0,
+              "mean_probability": 0.04059639947683278,
+              "upper": 0.2
+            }
+          ],
+          "ece": 0.0010702671898338845
+        },
+        "multiclass_brier": 0.4378272684961488,
+        "n": 24,
+        "nll": 0.7234454042546233
+      },
+      "retreat_hold": {
+        "catastrophe_reliability": {
+          "bins": [
+            {
+              "count": 24,
+              "empirical_frequency": 0.0,
+              "lower": 0.0,
+              "mean_probability": 0.0035056616488277257,
+              "upper": 0.2
+            }
+          ],
+          "ece": 0.0035056616488277257
+        },
+        "multiclass_brier": 2.767745936227252e-05,
+        "n": 24,
+        "nll": 0.003512885315461182
+      }
+    },
+    "predicted_margin_vs_realized_advantage": {
+      "bins": [
+        {
+          "beneficial_fraction": 0.0,
+          "n": 6,
+          "predicted_margin_mean": -0.4397083959510106,
+          "realized_advantage_mean": -0.6666666666666666
+        },
+        {
+          "beneficial_fraction": 0.5,
+          "n": 6,
+          "predicted_margin_mean": -0.1330015991987975,
+          "realized_advantage_mean": 0.8333333333333334
+        },
+        {
+          "beneficial_fraction": 0.0,
+          "n": 6,
+          "predicted_margin_mean": 0.2538183032600623,
+          "realized_advantage_mean": 0.0
+        },
+        {
+          "beneficial_fraction": 0.6666666666666666,
+          "n": 6,
+          "predicted_margin_mean": 0.8144131046108892,
+          "realized_advantage_mean": 1.1666666666666667
+        }
+      ],
+      "pearson_correlation": 0.4630791113644271
+    },
+    "selected_option": {
+      "catastrophe_reliability": {
+        "bins": [
+          {
+            "count": 23,
+            "empirical_frequency": 0.08695652173913043,
+            "lower": 0.0,
+            "mean_probability": 0.06738428606601096,
+            "upper": 0.2
+          },
+          {
+            "count": 1,
+            "empirical_frequency": 0.0,
+            "lower": 0.2,
+            "mean_probability": 0.27057836922301204,
+            "upper": 0.4
+          }
+        ],
+        "ece": 0.03003082457103166
+      },
+      "multiclass_brier": 0.25503772362715416,
+      "n": 24,
+      "nll": 0.5121305177311565
+    }
+  },
+  "capture": {
+    "artifact_sha256": {
+      "/gpfs/home/shv7753/crash_bench/results/counterfactual_router/fresh_random_9ed5ad656a08_20260817T0845Z/full/capture_manifest.json": "410994b62141bce652145ca43f25cd7f20b4a6755968db6ad767d3ebf742bfbc",
+      "/gpfs/home/shv7753/crash_bench/results/counterfactual_router/fresh_random_9ed5ad656a08_20260817T0845Z/full/fresh_decisions.json": "111032810ef1ad323ebb7254498f15fbc503da4e0cd84a1c3be092e6da188c6c",
+      "/gpfs/home/shv7753/crash_bench/results/counterfactual_router/fresh_random_9ed5ad656a08_20260817T0845Z/full/option_rollouts.jsonl": "e19c603e79df78c573b21663f195716e9d27e3f0ff3572db3eed660ce7d3b0c0"
+    },
+    "n_decisions": 24,
+    "n_source_states": 8,
+    "roots": [
+      "/gpfs/home/shv7753/crash_bench/results/counterfactual_router/fresh_random_9ed5ad656a08_20260817T0845Z/full"
+    ]
+  },
+  "decision": {
+    "geometry_gate_dominates_router": true,
+    "plain_language": "The fixed nominal-path Geometry Gate is at least as good on success, catastrophe, and intervention, and strictly better on at least one metric. Do not enlarge this cohort yet; the present router advantage can be explained by a simpler geometry-triggered Detour policy.",
+    "verdict": "NO-GO for expanding the current cohort"
+  },
+  "geometry_gate": {
+    "mode": "nominal_eef_swept_path_surface_clearance",
+    "placements": "results/counterfactual_router/fresh_random_9ed5ad656a08_20260817T0845Z/placements/placements.json",
+    "rows": [
+      {
+        "centerline_distance_m": 0.009155254132346606,
+        "condition": "glass",
+        "decision_id": "966fc659eac68738a0ac65c8a13fdf4b3dbaf22a0ead01722b9e9a7299575e4e",
+        "glass_radius_m": 0.024,
+        "intersects": true,
+        "surface_clearance_m": -0.014844745867653395
+      },
+      {
+        "centerline_distance_m": 0.2815049328019044,
+        "condition": "offpath",
+        "decision_id": "8bd9f8fbcaa10faeb02f7e9a4a628090fa91e24b9fa7beb5fa9f4aaa23004400",
+        "glass_radius_m": 0.024,
+        "intersects": false,
+        "surface_clearance_m": 0.2575049328019044
+      },
+      {
+        "condition": "noglass",
+        "decision_id": "3df9d2924df7729089e01d121f276730a532e7871139c32f17a812844b4a4ea5",
+        "intersects": false,
+        "surface_clearance_m": null
+      },
+      {
+        "centerline_distance_m": 0.016602476136859137,
+        "condition": "glass",
+        "decision_id": "9baf67a91f049861b1e134996b1ed87e744f81ac84a3e307b9d0162673cd65c7",
+        "glass_radius_m": 0.024,
+        "intersects": true,
+        "surface_clearance_m": -0.007397523863140864
+      },
+      {
+        "centerline_distance_m": 0.29110497868657226,
+        "condition": "offpath",
+        "decision_id": "c436a23255086724f8644b5df930423d3747121122bb4ab97e2ffb399e784e1d",
+        "glass_radius_m": 0.024,
+        "intersects": false,
+        "surface_clearance_m": 0.26710497868657224
+      },
+      {
+        "condition": "noglass",
+        "decision_id": "a3ae140821c2de9759f80728b2b3a9761f2d0226517a31017646236f72985ba6",
+        "intersects": false,
+        "surface_clearance_m": null
+      },
+      {
+        "centerline_distance_m": 0.017566117703967214,
+        "condition": "glass",
+        "decision_id": "209d5a4c10320a931e27af67e735326fc73306dc2501049a060dd3e33e71f7d5",
+        "glass_radius_m": 0.024,
+        "intersects": true,
+        "surface_clearance_m": -0.006433882296032787
+      },
+      {
+        "centerline_distance_m": 0.2829788249436713,
+        "condition": "offpath",
+        "decision_id": "f29f2c10e793637f65c0f1d83bf4b9bf23748ac9f22b4ae15f12790a86be4aa1",
+        "glass_radius_m": 0.024,
+        "intersects": false,
+        "surface_clearance_m": 0.2589788249436713
+      },
+      {
+        "condition": "noglass",
+        "decision_id": "b7765d22332bfdd7e9ecb4c4fe43e2db1dd79632bd00db4d6023ee594b29082c",
+        "intersects": false,
+        "surface_clearance_m": null
+      },
+      {
+        "centerline_distance_m": 0.002213534434701539,
+        "condition": "glass",
+        "decision_id": "2eff0c5a18970f3623b476b5f14442159111f1e9a1abf7c64cf7bb87fa1826c3",
+        "glass_radius_m": 0.024,
+        "intersects": true,
+        "surface_clearance_m": -0.021786465565298462
+      },
+      {
+        "centerline_distance_m": 0.3008155514373831,
+        "condition": "offpath",
+        "decision_id": "00d6434b57727dae08585266bebf21a8d6f817ed71ee95564091f835745bdead",
+        "glass_radius_m": 0.024,
+        "intersects": false,
+        "surface_clearance_m": 0.27681555143738307
+      },
+      {
+        "condition": "noglass",
+        "decision_id": "99186a36c2642a77bb77ed4a59e903a31c6460b870a58bf9cee4ef7e9512046c",
+        "intersects": false,
+        "surface_clearance_m": null
+      },
+      {
+        "centerline_distance_m": 0.009973973231726992,
+        "condition": "glass",
+        "decision_id": "abc8e2e7b769b9830857acf8c155d78786ded2b152e486a632ecaaef03c21412",
+        "glass_radius_m": 0.024,
+        "intersects": true,
+        "surface_clearance_m": -0.014026026768273008
+      },
+      {
+        "centerline_distance_m": 0.2859954118289789,
+        "condition": "offpath",
+        "decision_id": "d9e82009b7a8123c5e532654c8dc955425e0f994035e8e7f09c2304a9e4be2a5",
+        "glass_radius_m": 0.024,
+        "intersects": false,
+        "surface_clearance_m": 0.2619954118289789
+      },
+      {
+        "condition": "noglass",
+        "decision_id": "fbe284dcd7ccbfc113c899b1722b23c2f8edec2d7075d36078729aa8757353a2",
+        "intersects": false,
+        "surface_clearance_m": null
+      },
+      {
+        "centerline_distance_m": 0.002107331246028985,
+        "condition": "glass",
+        "decision_id": "5175507b27a5f7de21f7a8ae9bc6533dd7aa792fe878d2ed1f8d26f652410881",
+        "glass_radius_m": 0.024,
+        "intersects": true,
+        "surface_clearance_m": -0.021892668753971015
+      },
+      {
+        "centerline_distance_m": 0.09910729015688223,
+        "condition": "offpath",
+        "decision_id": "ab0723e6b568123a5f78e6172871098925978fcc260602473670771530a43994",
+        "glass_radius_m": 0.024,
+        "intersects": false,
+        "surface_clearance_m": 0.07510729015688222
+      },
+      {
+        "condition": "noglass",
+        "decision_id": "fd90be9223621f44b68d9ffeb625b5a2ac8ee1fe871fab0353b4f88edc368e3b",
+        "intersects": false,
+        "surface_clearance_m": null
+      },
+      {
+        "centerline_distance_m": 0.01381697056457491,
+        "condition": "glass",
+        "decision_id": "ccbd28f838d67fac3c23bc1f8b91285e80137a68b1209dd6f10b1e7035391c08",
+        "glass_radius_m": 0.024,
+        "intersects": true,
+        "surface_clearance_m": -0.01018302943542509
+      },
+      {
+        "centerline_distance_m": 0.3101764284789175,
+        "condition": "offpath",
+        "decision_id": "4278c9363be9c9e5cce8b111fbcadbbb1af73f8df38bdb40c419d38826786ced",
+        "glass_radius_m": 0.024,
+        "intersects": false,
+        "surface_clearance_m": 0.2861764284789175
+      },
+      {
+        "condition": "noglass",
+        "decision_id": "1be899b0c96b0dff01140fdb6a1a2d5b4d6c43d0375f4a66ea8826f8e883ea40",
+        "intersects": false,
+        "surface_clearance_m": null
+      },
+      {
+        "centerline_distance_m": 0.014900059005026355,
+        "condition": "glass",
+        "decision_id": "ed1bf12796605189be5c55933b50f204e046144485a6a2baff02f3aaf41ea017",
+        "glass_radius_m": 0.024,
+        "intersects": true,
+        "surface_clearance_m": -0.009099940994973646
+      },
+      {
+        "centerline_distance_m": 0.2653474234459675,
+        "condition": "offpath",
+        "decision_id": "d96c27d8ca513b5f1cb16db7c890508cfcafc66ba343b32715f5a036e8bf6d2d",
+        "glass_radius_m": 0.024,
+        "intersects": false,
+        "surface_clearance_m": 0.24134742344596752
+      },
+      {
+        "condition": "noglass",
+        "decision_id": "e12f2d9766a023b830df48804adc84ae100c66004b1644ead01b0809efa7c373",
+        "intersects": false,
+        "surface_clearance_m": null
+      }
+    ],
+    "rule": "Detour iff min nominal EEF-to-glass surface clearance <= margin",
+    "source_traces": "results/glass_recovery_v2/pilot_b_task0_20260811_r2/source_traces_task0/source_traces.json",
+    "surface_margin_m": 0.06
+  },
+  "kind": "p0_counterfactual_router_survival_audit",
+  "limitations": [
+    "fresh raw hidden/robot/action features were not saved, so direct classifier and direct advantage regression cannot be evaluated fresh without recollection",
+    "the dynamic first-crossing intervention time remains outside this exact T-20 branch audit"
+  ],
+  "main_table": {
+    "Always Detour": {
+      "catastrophe_rate": 0.041666666666666664,
+      "choice_counts": {
+        "base_continue": 0,
+        "detour_complete": 24,
+        "retreat_hold": 0
+      },
+      "intervention_rate": 1.0,
+      "mean_oracle_regret": 0.25,
+      "mean_utility": 0.6666666666666666,
+      "n_decisions": 24,
+      "n_source_states": 8,
+      "oracle_value_recovered": 0.5714285714285715,
+      "safe_noncompletion_rate": 0.25,
+      "source_macro_mean_utility": 0.6666666666666666,
+      "task_success_rate": 0.7083333333333334
+    },
+    "Always Retreat": {
+      "catastrophe_rate": 0.0,
+      "choice_counts": {
+        "base_continue": 0,
+        "detour_complete": 0,
+        "retreat_hold": 24
+      },
+      "intervention_rate": 1.0,
+      "mean_oracle_regret": 0.9166666666666666,
+      "mean_utility": 0.0,
+      "n_decisions": 24,
+      "n_source_states": 8,
+      "oracle_value_recovered": -0.5714285714285715,
+      "safe_noncompletion_rate": 1.0,
+      "source_macro_mean_utility": 0.0,
+      "task_success_rate": 0.0
+    },
+    "Base": {
+      "catastrophe_rate": 0.3333333333333333,
+      "choice_counts": {
+        "base_continue": 24,
+        "detour_complete": 0,
+        "retreat_hold": 0
+      },
+      "intervention_rate": 0.0,
+      "mean_oracle_regret": 0.5833333333333334,
+      "mean_utility": 0.3333333333333333,
+      "n_decisions": 24,
+      "n_source_states": 8,
+      "oracle_value_recovered": 0.0,
+      "safe_noncompletion_rate": 0.0,
+      "source_macro_mean_utility": 0.3333333333333333,
+      "task_success_rate": 0.6666666666666666
+    },
+    "Counterfactual Oracle": {
+      "catastrophe_rate": 0.0,
+      "choice_counts": {
+        "base_continue": 16,
+        "detour_complete": 7,
+        "retreat_hold": 1
+      },
+      "intervention_rate": 0.3333333333333333,
+      "mean_oracle_regret": 0.0,
+      "mean_utility": 0.9166666666666666,
+      "n_decisions": 24,
+      "n_source_states": 8,
+      "oracle_value_recovered": 1.0,
+      "safe_noncompletion_rate": 0.08333333333333333,
+      "source_macro_mean_utility": 0.9166666666666666,
+      "task_success_rate": 0.9166666666666666
+    },
+    "Counterfactual Router": {
+      "catastrophe_rate": 0.08333333333333333,
+      "choice_counts": {
+        "base_continue": 10,
+        "detour_complete": 14,
+        "retreat_hold": 0
+      },
+      "intervention_rate": 0.5833333333333334,
+      "mean_oracle_regret": 0.125,
+      "mean_utility": 0.7916666666666666,
+      "n_decisions": 24,
+      "n_source_states": 8,
+      "oracle_value_recovered": 0.7857142857142858,
+      "safe_noncompletion_rate": 0.041666666666666664,
+      "source_macro_mean_utility": 0.7916666666666666,
+      "task_success_rate": 0.875
+    },
+    "Geometry Gate": {
+      "catastrophe_rate": 0.041666666666666664,
+      "choice_counts": {
+        "base_continue": 16,
+        "detour_complete": 8,
+        "retreat_hold": 0
+      },
+      "intervention_rate": 0.3333333333333333,
+      "mean_oracle_regret": 0.041666666666666664,
+      "mean_utility": 0.875,
+      "n_decisions": 24,
+      "n_source_states": 8,
+      "oracle_value_recovered": 0.9285714285714288,
+      "safe_noncompletion_rate": 0.041666666666666664,
+      "source_macro_mean_utility": 0.875,
+      "task_success_rate": 0.9166666666666666
+    },
+    "Risk -> Detour (rate-matched)": {
+      "catastrophe_rate": 0.125,
+      "choice_counts": {
+        "base_continue": 12,
+        "detour_complete": 12,
+        "retreat_hold": 0
+      },
+      "intervention_rate": 0.5,
+      "mean_oracle_regret": 0.20833333333333334,
+      "mean_utility": 0.7083333333333334,
+      "n_decisions": 24,
+      "n_source_states": 8,
+      "oracle_value_recovered": 0.642857142857143,
+      "safe_noncompletion_rate": 0.041666666666666664,
+      "source_macro_mean_utility": 0.7083333333333333,
+      "task_success_rate": 0.8333333333333334
+    },
+    "Risk -> Retreat (rate-matched)": {
+      "catastrophe_rate": 0.08333333333333333,
+      "choice_counts": {
+        "base_continue": 12,
+        "detour_complete": 0,
+        "retreat_hold": 12
+      },
+      "intervention_rate": 0.5,
+      "mean_oracle_regret": 0.5833333333333334,
+      "mean_utility": 0.3333333333333333,
+      "n_decisions": 24,
+      "n_source_states": 8,
+      "oracle_value_recovered": 0.0,
+      "safe_noncompletion_rate": 0.5,
+      "source_macro_mean_utility": 0.3333333333333333,
+      "task_success_rate": 0.4166666666666667
+    },
+    "Risk -> best fixed option": {
+      "catastrophe_rate": 0.3333333333333333,
+      "choice_counts": {
+        "base_continue": 24,
+        "detour_complete": 0,
+        "retreat_hold": 0
+      },
+      "intervention_rate": 0.0,
+      "mean_oracle_regret": 0.5833333333333334,
+      "mean_utility": 0.3333333333333333,
+      "n_decisions": 24,
+      "n_source_states": 8,
+      "oracle_value_recovered": 0.0,
+      "safe_noncompletion_rate": 0.0,
+      "source_macro_mean_utility": 0.3333333333333333,
+      "task_success_rate": 0.6666666666666666
+    },
+    "Two-threshold Risk": {
+      "catastrophe_rate": 0.3333333333333333,
+      "choice_counts": {
+        "base_continue": 24,
+        "detour_complete": 0,
+        "retreat_hold": 0
+      },
+      "intervention_rate": 0.0,
+      "mean_oracle_regret": 0.5833333333333334,
+      "mean_utility": 0.3333333333333333,
+      "n_decisions": 24,
+      "n_source_states": 8,
+      "oracle_value_recovered": 0.0,
+      "safe_noncompletion_rate": 0.0,
+      "source_macro_mean_utility": 0.3333333333333333,
+      "task_success_rate": 0.6666666666666666
+    }
+  },
+  "option_choice": {
+    "by_condition": {
+      "glass": {
+        "base_continue": 1,
+        "detour_complete": 7,
+        "retreat_hold": 0
+      },
+      "noglass": {
+        "base_continue": 4,
+        "detour_complete": 4,
+        "retreat_hold": 0
+      },
+      "offpath": {
+        "base_continue": 5,
+        "detour_complete": 3,
+        "retreat_hold": 0
+      }
+    },
+    "by_realized_outcome_signature": [
+      {
+        "n": 1,
+        "oracle_choice_counts": {
+          "base_continue": 0,
+          "detour_complete": 0,
+          "retreat_hold": 1
+        },
+        "router_choice_counts": {
+          "base_continue": 0,
+          "detour_complete": 1,
+          "retreat_hold": 0
+        },
+        "router_mean_regret": 1.0,
+        "signature": "catastrophe / catastrophe / safe_noncompletion"
+      },
+      {
+        "n": 1,
+        "oracle_choice_counts": {
+          "base_continue": 0,
+          "detour_complete": 1,
+          "retreat_hold": 0
+        },
+        "router_choice_counts": {
+          "base_continue": 1,
+          "detour_complete": 0,
+          "retreat_hold": 0
+        },
+        "router_mean_regret": 1.0,
+        "signature": "catastrophe / safe_noncompletion / safe_noncompletion"
+      },
+      {
+        "n": 6,
+        "oracle_choice_counts": {
+          "base_continue": 0,
+          "detour_complete": 6,
+          "retreat_hold": 0
+        },
+        "router_choice_counts": {
+          "base_continue": 0,
+          "detour_complete": 6,
+          "retreat_hold": 0
+        },
+        "router_mean_regret": 0.0,
+        "signature": "catastrophe / task_success / safe_noncompletion"
+      },
+      {
+        "n": 5,
+        "oracle_choice_counts": {
+          "base_continue": 5,
+          "detour_complete": 0,
+          "retreat_hold": 0
+        },
+        "router_choice_counts": {
+          "base_continue": 4,
+          "detour_complete": 1,
+          "retreat_hold": 0
+        },
+        "router_mean_regret": 0.2,
+        "signature": "task_success / safe_noncompletion / safe_noncompletion"
+      },
+      {
+        "n": 11,
+        "oracle_choice_counts": {
+          "base_continue": 11,
+          "detour_complete": 0,
+          "retreat_hold": 0
+        },
+        "router_choice_counts": {
+          "base_continue": 5,
+          "detour_complete": 6,
+          "retreat_hold": 0
+        },
+        "router_mean_regret": 0.0,
+        "signature": "task_success / task_success / safe_noncompletion"
+      }
+    ],
+    "overall_choice_counts": {
+      "base_continue": 10,
+      "detour_complete": 14,
+      "retreat_hold": 0
+    },
+    "router_choice_vs_realized_oracle_choice": {
+      "base_continue": {
+        "base_continue": 9,
+        "detour_complete": 7,
+        "retreat_hold": 0
+      },
+      "detour_complete": {
+        "base_continue": 1,
+        "detour_complete": 6,
+        "retreat_hold": 0
+      },
+      "retreat_hold": {
+        "base_continue": 0,
+        "detour_complete": 1,
+        "retreat_hold": 0
+      }
+    }
+  },
+  "option_choice_grid_by_lambda_target_condition": [
+    {
+      "choice_counts": {
+        "base_continue": 21,
+        "detour_complete": 3,
+        "retreat_hold": 0
+      },
+      "choice_counts_by_condition": {
+        "glass": {
+          "base_continue": 6,
+          "detour_complete": 2,
+          "retreat_hold": 0
+        },
+        "noglass": {
+          "base_continue": 7,
+          "detour_complete": 1,
+          "retreat_hold": 0
+        },
+        "offpath": {
+          "base_continue": 8,
+          "detour_complete": 0,
+          "retreat_hold": 0
+        }
+      },
+      "delta": 0.8009878821728476,
+      "lambda": 1.0,
+      "target_intervention_rate": 0.1
+    },
+    {
+      "choice_counts": {
+        "base_continue": 18,
+        "detour_complete": 6,
+        "retreat_hold": 0
+      },
+      "choice_counts_by_condition": {
+        "glass": {
+          "base_continue": 4,
+          "detour_complete": 4,
+          "retreat_hold": 0
+        },
+        "noglass": {
+          "base_continue": 7,
+          "detour_complete": 1,
+          "retreat_hold": 0
+        },
+        "offpath": {
+          "base_continue": 7,
+          "detour_complete": 1,
+          "retreat_hold": 0
+        }
+      },
+      "delta": 0.4698377479005436,
+      "lambda": 1.0,
+      "target_intervention_rate": 0.2
+    },
+    {
+      "choice_counts": {
+        "base_continue": 15,
+        "detour_complete": 9,
+        "retreat_hold": 0
+      },
+      "choice_counts_by_condition": {
+        "glass": {
+          "base_continue": 3,
+          "detour_complete": 5,
+          "retreat_hold": 0
+        },
+        "noglass": {
+          "base_continue": 5,
+          "detour_complete": 3,
+          "retreat_hold": 0
+        },
+        "offpath": {
+          "base_continue": 7,
+          "detour_complete": 1,
+          "retreat_hold": 0
+        }
+      },
+      "delta": 0.24535426404301905,
+      "lambda": 1.0,
+      "target_intervention_rate": 0.3
+    },
+    {
+      "choice_counts": {
+        "base_continue": 13,
+        "detour_complete": 11,
+        "retreat_hold": 0
+      },
+      "choice_counts_by_condition": {
+        "glass": {
+          "base_continue": 3,
+          "detour_complete": 5,
+          "retreat_hold": 0
+        },
+        "noglass": {
+          "base_continue": 4,
+          "detour_complete": 4,
+          "retreat_hold": 0
+        },
+        "offpath": {
+          "base_continue": 6,
+          "detour_complete": 2,
+          "retreat_hold": 0
+        }
+      },
+      "delta": 0.10866981926369482,
+      "lambda": 1.0,
+      "target_intervention_rate": 0.4
+    },
+    {
+      "choice_counts": {
+        "base_continue": 10,
+        "detour_complete": 14,
+        "retreat_hold": 0
+      },
+      "choice_counts_by_condition": {
+        "glass": {
+          "base_continue": 1,
+          "detour_complete": 7,
+          "retreat_hold": 0
+        },
+        "noglass": {
+          "base_continue": 4,
+          "detour_complete": 4,
+          "retreat_hold": 0
+        },
+        "offpath": {
+          "base_continue": 5,
+          "detour_complete": 3,
+          "retreat_hold": 0
+        }
+      },
+      "delta": 0.009910028514431096,
+      "lambda": 1.0,
+      "target_intervention_rate": 0.5
+    },
+    {
+      "choice_counts": {
+        "base_continue": 10,
+        "detour_complete": 14,
+        "retreat_hold": 0
+      },
+      "choice_counts_by_condition": {
+        "glass": {
+          "base_continue": 1,
+          "detour_complete": 7,
+          "retreat_hold": 0
+        },
+        "noglass": {
+          "base_continue": 4,
+          "detour_complete": 4,
+          "retreat_hold": 0
+        },
+        "offpath": {
+          "base_continue": 5,
+          "detour_complete": 3,
+          "retreat_hold": 0
+        }
+      },
+      "delta": 0.0,
+      "lambda": 1.0,
+      "target_intervention_rate": 0.6
+    },
+    {
+      "choice_counts": {
+        "base_continue": 10,
+        "detour_complete": 14,
+        "retreat_hold": 0
+      },
+      "choice_counts_by_condition": {
+        "glass": {
+          "base_continue": 1,
+          "detour_complete": 7,
+          "retreat_hold": 0
+        },
+        "noglass": {
+          "base_continue": 4,
+          "detour_complete": 4,
+          "retreat_hold": 0
+        },
+        "offpath": {
+          "base_continue": 5,
+          "detour_complete": 3,
+          "retreat_hold": 0
+        }
+      },
+      "delta": 0.0,
+      "lambda": 1.0,
+      "target_intervention_rate": 0.7
+    },
+    {
+      "choice_counts": {
+        "base_continue": 10,
+        "detour_complete": 14,
+        "retreat_hold": 0
+      },
+      "choice_counts_by_condition": {
+        "glass": {
+          "base_continue": 1,
+          "detour_complete": 7,
+          "retreat_hold": 0
+        },
+        "noglass": {
+          "base_continue": 4,
+          "detour_complete": 4,
+          "retreat_hold": 0
+        },
+        "offpath": {
+          "base_continue": 5,
+          "detour_complete": 3,
+          "retreat_hold": 0
+        }
+      },
+      "delta": 0.0,
+      "lambda": 1.0,
+      "target_intervention_rate": 0.8
+    },
+    {
+      "choice_counts": {
+        "base_continue": 10,
+        "detour_complete": 14,
+        "retreat_hold": 0
+      },
+      "choice_counts_by_condition": {
+        "glass": {
+          "base_continue": 1,
+          "detour_complete": 7,
+          "retreat_hold": 0
+        },
+        "noglass": {
+          "base_continue": 4,
+          "detour_complete": 4,
+          "retreat_hold": 0
+        },
+        "offpath": {
+          "base_continue": 5,
+          "detour_complete": 3,
+          "retreat_hold": 0
+        }
+      },
+      "delta": 0.0,
+      "lambda": 1.0,
+      "target_intervention_rate": 0.9
+    },
+    {
+      "choice_counts": {
+        "base_continue": 22,
+        "detour_complete": 2,
+        "retreat_hold": 0
+      },
+      "choice_counts_by_condition": {
+        "glass": {
+          "base_continue": 7,
+          "detour_complete": 1,
+          "retreat_hold": 0
+        },
+        "noglass": {
+          "base_continue": 7,
+          "detour_complete": 1,
+          "retreat_hold": 0
+        },
+        "offpath": {
+          "base_continue": 8,
+          "detour_complete": 0,
+          "retreat_hold": 0
+        }
+      },
+      "delta": 1.4183428313537565,
+      "lambda": 2.0,
+      "target_intervention_rate": 0.1
+    },
+    {
+      "choice_counts": {
+        "base_continue": 18,
+        "detour_complete": 6,
+        "retreat_hold": 0
+      },
+      "choice_counts_by_condition": {
+        "glass": {
+          "base_continue": 5,
+          "detour_complete": 3,
+          "retreat_hold": 0
+        },
+        "noglass": {
+          "base_continue": 6,
+          "detour_complete": 2,
+          "retreat_hold": 0
+        },
+        "offpath": {
+          "base_continue": 7,
+          "detour_complete": 1,
+          "retreat_hold": 0
+        }
+      },
+      "delta": 0.8364991693607324,
+      "lambda": 2.0,
+      "target_intervention_rate": 0.2
+    },
+    {
+      "choice_counts": {
+        "base_continue": 16,
+        "detour_complete": 8,
+        "retreat_hold": 0
+      },
+      "choice_counts_by_condition": {
+        "glass": {
+          "base_continue": 3,
+          "detour_complete": 5,
+          "retreat_hold": 0
+        },
+        "noglass": {
+          "base_continue": 6,
+          "detour_complete": 2,
+          "retreat_hold": 0
+        },
+        "offpath": {
+          "base_continue": 7,
+          "detour_complete": 1,
+          "retreat_hold": 0
+        }
+      },
+      "delta": 0.5618481864406619,
+      "lambda": 2.0,
+      "target_intervention_rate": 0.3
+    },
+    {
+      "choice_counts": {
+        "base_continue": 14,
+        "detour_complete": 10,
+        "retreat_hold": 0
+      },
+      "choice_counts_by_condition": {
+        "glass": {
+          "base_continue": 3,
+          "detour_complete": 5,
+          "retreat_hold": 0
+        },
+        "noglass": {
+          "base_continue": 4,
+          "detour_complete": 4,
+          "retreat_hold": 0
+        },
+        "offpath": {
+          "base_continue": 7,
+          "detour_complete": 1,
+          "retreat_hold": 0
+        }
+      },
+      "delta": 0.32869298774409705,
+      "lambda": 2.0,
+      "target_intervention_rate": 0.4
+    },
+    {
+      "choice_counts": {
+        "base_continue": 11,
+        "detour_complete": 13,
+        "retreat_hold": 0
+      },
+      "choice_counts_by_condition": {
+        "glass": {
+          "base_continue": 1,
+          "detour_complete": 7,
+          "retreat_hold": 0
+        },
+        "noglass": {
+          "base_continue": 4,
+          "detour_complete": 4,
+          "retreat_hold": 0
+        },
+        "offpath": {
+          "base_continue": 6,
+          "detour_complete": 2,
+          "retreat_hold": 0
+        }
+      },
+      "delta": 0.14916705153422188,
+      "lambda": 2.0,
+      "target_intervention_rate": 0.5
+    },
+    {
+      "choice_counts": {
+        "base_continue": 10,
+        "detour_complete": 14,
+        "retreat_hold": 0
+      },
+      "choice_counts_by_condition": {
+        "glass": {
+          "base_continue": 1,
+          "detour_complete": 7,
+          "retreat_hold": 0
+        },
+        "noglass": {
+          "base_continue": 4,
+          "detour_complete": 4,
+          "retreat_hold": 0
+        },
+        "offpath": {
+          "base_continue": 5,
+          "detour_complete": 3,
+          "retreat_hold": 0
+        }
+      },
+      "delta": 0.05142582967238958,
+      "lambda": 2.0,
+      "target_intervention_rate": 0.6
+    },
+    {
+      "choice_counts": {
+        "base_continue": 10,
+        "detour_complete": 14,
+        "retreat_hold": 0
+      },
+      "choice_counts_by_condition": {
+        "glass": {
+          "base_continue": 1,
+          "detour_complete": 7,
+          "retreat_hold": 0
+        },
+        "noglass": {
+          "base_continue": 4,
+          "detour_complete": 4,
+          "retreat_hold": 0
+        },
+        "offpath": {
+          "base_continue": 5,
+          "detour_complete": 3,
+          "retreat_hold": 0
+        }
+      },
+      "delta": 0.0,
+      "lambda": 2.0,
+      "target_intervention_rate": 0.7
+    },
+    {
+      "choice_counts": {
+        "base_continue": 10,
+        "detour_complete": 14,
+        "retreat_hold": 0
+      },
+      "choice_counts_by_condition": {
+        "glass": {
+          "base_continue": 1,
+          "detour_complete": 7,
+          "retreat_hold": 0
+        },
+        "noglass": {
+          "base_continue": 4,
+          "detour_complete": 4,
+          "retreat_hold": 0
+        },
+        "offpath": {
+          "base_continue": 5,
+          "detour_complete": 3,
+          "retreat_hold": 0
+        }
+      },
+      "delta": 0.0,
+      "lambda": 2.0,
+      "target_intervention_rate": 0.8
+    },
+    {
+      "choice_counts": {
+        "base_continue": 10,
+        "detour_complete": 14,
+        "retreat_hold": 0
+      },
+      "choice_counts_by_condition": {
+        "glass": {
+          "base_continue": 1,
+          "detour_complete": 7,
+          "retreat_hold": 0
+        },
+        "noglass": {
+          "base_continue": 4,
+          "detour_complete": 4,
+          "retreat_hold": 0
+        },
+        "offpath": {
+          "base_continue": 5,
+          "detour_complete": 3,
+          "retreat_hold": 0
+        }
+      },
+      "delta": 0.0,
+      "lambda": 2.0,
+      "target_intervention_rate": 0.9
+    },
+    {
+      "choice_counts": {
+        "base_continue": 23,
+        "detour_complete": 1,
+        "retreat_hold": 0
+      },
+      "choice_counts_by_condition": {
+        "glass": {
+          "base_continue": 8,
+          "detour_complete": 0,
+          "retreat_hold": 0
+        },
+        "noglass": {
+          "base_continue": 7,
+          "detour_complete": 1,
+          "retreat_hold": 0
+        },
+        "offpath": {
+          "base_continue": 8,
+          "detour_complete": 0,
+          "retreat_hold": 0
+        }
+      },
+      "delta": 2.036608720215124,
+      "lambda": 3.0,
+      "target_intervention_rate": 0.1
+    },
+    {
+      "choice_counts": {
+        "base_continue": 18,
+        "detour_complete": 6,
+        "retreat_hold": 0
+      },
+      "choice_counts_by_condition": {
+        "glass": {
+          "base_continue": 5,
+          "detour_complete": 3,
+          "retreat_hold": 0
+        },
+        "noglass": {
+          "base_continue": 6,
+          "detour_complete": 2,
+          "retreat_hold": 0
+        },
+        "offpath": {
+          "base_continue": 7,
+          "detour_complete": 1,
+          "retreat_hold": 0
+        }
+      },
+      "delta": 1.2545855397060237,
+      "lambda": 3.0,
+      "target_intervention_rate": 0.2
+    },
+    {
+      "choice_counts": {
+        "base_continue": 16,
+        "detour_complete": 8,
+        "retreat_hold": 0
+      },
+      "choice_counts_by_condition": {
+        "glass": {
+          "base_continue": 3,
+          "detour_complete": 5,
+          "retreat_hold": 0
+        },
+        "noglass": {
+          "base_continue": 6,
+          "detour_complete": 2,
+          "retreat_hold": 0
+        },
+        "offpath": {
+          "base_continue": 7,
+          "detour_complete": 1,
+          "retreat_hold": 0
+        }
+      },
+      "delta": 0.8898646069159246,
+      "lambda": 3.0,
+      "target_intervention_rate": 0.3
+    },
+    {
+      "choice_counts": {
+        "base_continue": 16,
+        "detour_complete": 8,
+        "retreat_hold": 0
+      },
+      "choice_counts_by_condition": {
+        "glass": {
+          "base_continue": 3,
+          "detour_complete": 5,
+          "retreat_hold": 0
+        },
+        "noglass": {
+          "base_continue": 6,
+          "detour_complete": 2,
+          "retreat_hold": 0
+        },
+        "offpath": {
+          "base_continue": 7,
+          "detour_complete": 1,
+          "retreat_hold": 0
+        }
+      },
+      "delta": 0.6304495952212585,
+      "lambda": 3.0,
+      "target_intervention_rate": 0.4
+    },
+    {
+      "choice_counts": {
+        "base_continue": 12,
+        "detour_complete": 12,
+        "retreat_hold": 0
+      },
+      "choice_counts_by_condition": {
+        "glass": {
+          "base_continue": 2,
+          "detour_complete": 6,
+          "retreat_hold": 0
+        },
+        "noglass": {
+          "base_continue": 4,
+          "detour_complete": 4,
+          "retreat_hold": 0
+        },
+        "offpath": {
+          "base_continue": 6,
+          "detour_complete": 2,
+          "retreat_hold": 0
+        }
+      },
+      "delta": 0.3590231621417835,
+      "lambda": 3.0,
+      "target_intervention_rate": 0.5
+    },
+    {
+      "choice_counts": {
+        "base_continue": 9,
+        "detour_complete": 15,
+        "retreat_hold": 0
+      },
+      "choice_counts_by_condition": {
+        "glass": {
+          "base_continue": 1,
+          "detour_complete": 7,
+          "retreat_hold": 0
+        },
+        "noglass": {
+          "base_continue": 3,
+          "detour_complete": 5,
+          "retreat_hold": 0
+        },
+        "offpath": {
+          "base_continue": 5,
+          "detour_complete": 3,
+          "retreat_hold": 0
+        }
+      },
+      "delta": 0.1630470274333281,
+      "lambda": 3.0,
+      "target_intervention_rate": 0.6
+    },
+    {
+      "choice_counts": {
+        "base_continue": 8,
+        "detour_complete": 16,
+        "retreat_hold": 0
+      },
+      "choice_counts_by_condition": {
+        "glass": {
+          "base_continue": 0,
+          "detour_complete": 8,
+          "retreat_hold": 0
+        },
+        "noglass": {
+          "base_continue": 3,
+          "detour_complete": 5,
+          "retreat_hold": 0
+        },
+        "offpath": {
+          "base_continue": 5,
+          "detour_complete": 3,
+          "retreat_hold": 0
+        }
+      },
+      "delta": 0.0,
+      "lambda": 3.0,
+      "target_intervention_rate": 0.7
+    },
+    {
+      "choice_counts": {
+        "base_continue": 8,
+        "detour_complete": 16,
+        "retreat_hold": 0
+      },
+      "choice_counts_by_condition": {
+        "glass": {
+          "base_continue": 0,
+          "detour_complete": 8,
+          "retreat_hold": 0
+        },
+        "noglass": {
+          "base_continue": 3,
+          "detour_complete": 5,
+          "retreat_hold": 0
+        },
+        "offpath": {
+          "base_continue": 5,
+          "detour_complete": 3,
+          "retreat_hold": 0
+        }
+      },
+      "delta": 0.0,
+      "lambda": 3.0,
+      "target_intervention_rate": 0.8
+    },
+    {
+      "choice_counts": {
+        "base_continue": 8,
+        "detour_complete": 16,
+        "retreat_hold": 0
+      },
+      "choice_counts_by_condition": {
+        "glass": {
+          "base_continue": 0,
+          "detour_complete": 8,
+          "retreat_hold": 0
+        },
+        "noglass": {
+          "base_continue": 3,
+          "detour_complete": 5,
+          "retreat_hold": 0
+        },
+        "offpath": {
+          "base_continue": 5,
+          "detour_complete": 3,
+          "retreat_hold": 0
+        }
+      },
+      "delta": 0.0,
+      "lambda": 3.0,
+      "target_intervention_rate": 0.9
+    },
+    {
+      "choice_counts": {
+        "base_continue": 23,
+        "detour_complete": 1,
+        "retreat_hold": 0
+      },
+      "choice_counts_by_condition": {
+        "glass": {
+          "base_continue": 8,
+          "detour_complete": 0,
+          "retreat_hold": 0
+        },
+        "noglass": {
+          "base_continue": 7,
+          "detour_complete": 1,
+          "retreat_hold": 0
+        },
+        "offpath": {
+          "base_continue": 8,
+          "detour_complete": 0,
+          "retreat_hold": 0
+        }
+      },
+      "delta": 3.323563821264366,
+      "lambda": 5.0,
+      "target_intervention_rate": 0.1
+    },
+    {
+      "choice_counts": {
+        "base_continue": 18,
+        "detour_complete": 5,
+        "retreat_hold": 1
+      },
+      "choice_counts_by_condition": {
+        "glass": {
+          "base_continue": 5,
+          "detour_complete": 2,
+          "retreat_hold": 1
+        },
+        "noglass": {
+          "base_continue": 6,
+          "detour_complete": 2,
+          "retreat_hold": 0
+        },
+        "offpath": {
+          "base_continue": 7,
+          "detour_complete": 1,
+          "retreat_hold": 0
+        }
+      },
+      "delta": 2.1162602145837903,
+      "lambda": 5.0,
+      "target_intervention_rate": 0.2
+    },
+    {
+      "choice_counts": {
+        "base_continue": 16,
+        "detour_complete": 7,
+        "retreat_hold": 1
+      },
+      "choice_counts_by_condition": {
+        "glass": {
+          "base_continue": 3,
+          "detour_complete": 4,
+          "retreat_hold": 1
+        },
+        "noglass": {
+          "base_continue": 6,
+          "detour_complete": 2,
+          "retreat_hold": 0
+        },
+        "offpath": {
+          "base_continue": 7,
+          "detour_complete": 1,
+          "retreat_hold": 0
+        }
+      },
+      "delta": 1.5624489374141943,
+      "lambda": 5.0,
+      "target_intervention_rate": 0.3
+    },
+    {
+      "choice_counts": {
+        "base_continue": 16,
+        "detour_complete": 7,
+        "retreat_hold": 1
+      },
+      "choice_counts_by_condition": {
+        "glass": {
+          "base_continue": 3,
+          "detour_complete": 4,
+          "retreat_hold": 1
+        },
+        "noglass": {
+          "base_continue": 6,
+          "detour_complete": 2,
+          "retreat_hold": 0
+        },
+        "offpath": {
+          "base_continue": 7,
+          "detour_complete": 1,
+          "retreat_hold": 0
+        }
+      },
+      "delta": 1.2183744383734976,
+      "lambda": 5.0,
+      "target_intervention_rate": 0.4
+    },
+    {
+      "choice_counts": {
+        "base_continue": 11,
+        "detour_complete": 11,
+        "retreat_hold": 2
+      },
+      "choice_counts_by_condition": {
+        "glass": {
+          "base_continue": 2,
+          "detour_complete": 5,
+          "retreat_hold": 1
+        },
+        "noglass": {
+          "base_continue": 3,
+          "detour_complete": 4,
+          "retreat_hold": 1
+        },
+        "offpath": {
+          "base_continue": 6,
+          "detour_complete": 2,
+          "retreat_hold": 0
+        }
+      },
+      "delta": 0.6944579352970974,
+      "lambda": 5.0,
+      "target_intervention_rate": 0.5
+    },
+    {
+      "choice_counts": {
+        "base_continue": 10,
+        "detour_complete": 12,
+        "retreat_hold": 2
+      },
+      "choice_counts_by_condition": {
+        "glass": {
+          "base_continue": 1,
+          "detour_complete": 6,
+          "retreat_hold": 1
+        },
+        "noglass": {
+          "base_continue": 3,
+          "detour_complete": 4,
+          "retreat_hold": 1
+        },
+        "offpath": {
+          "base_continue": 6,
+          "detour_complete": 2,
+          "retreat_hold": 0
+        }
+      },
+      "delta": 0.43066700602163216,
+      "lambda": 5.0,
+      "target_intervention_rate": 0.6
+    },
+    {
+      "choice_counts": {
+        "base_continue": 6,
+        "detour_complete": 16,
+        "retreat_hold": 2
+      },
+      "choice_counts_by_condition": {
+        "glass": {
+          "base_continue": 0,
+          "detour_complete": 7,
+          "retreat_hold": 1
+        },
+        "noglass": {
+          "base_continue": 3,
+          "detour_complete": 4,
+          "retreat_hold": 1
+        },
+        "offpath": {
+          "base_continue": 3,
+          "detour_complete": 5,
+          "retreat_hold": 0
+        }
+      },
+      "delta": 0.14225919365990614,
+      "lambda": 5.0,
+      "target_intervention_rate": 0.7
+    },
+    {
+      "choice_counts": {
+        "base_continue": 5,
+        "detour_complete": 17,
+        "retreat_hold": 2
+      },
+      "choice_counts_by_condition": {
+        "glass": {
+          "base_continue": 0,
+          "detour_complete": 7,
+          "retreat_hold": 1
+        },
+        "noglass": {
+          "base_continue": 3,
+          "detour_complete": 4,
+          "retreat_hold": 1
+        },
+        "offpath": {
+          "base_continue": 2,
+          "detour_complete": 6,
+          "retreat_hold": 0
+        }
+      },
+      "delta": 0.0,
+      "lambda": 5.0,
+      "target_intervention_rate": 0.8
+    },
+    {
+      "choice_counts": {
+        "base_continue": 5,
+        "detour_complete": 17,
+        "retreat_hold": 2
+      },
+      "choice_counts_by_condition": {
+        "glass": {
+          "base_continue": 0,
+          "detour_complete": 7,
+          "retreat_hold": 1
+        },
+        "noglass": {
+          "base_continue": 3,
+          "detour_complete": 4,
+          "retreat_hold": 1
+        },
+        "offpath": {
+          "base_continue": 2,
+          "detour_complete": 6,
+          "retreat_hold": 0
+        }
+      },
+      "delta": 0.0,
+      "lambda": 5.0,
+      "target_intervention_rate": 0.9
+    },
+    {
+      "choice_counts": {
+        "base_continue": 23,
+        "detour_complete": 1,
+        "retreat_hold": 0
+      },
+      "choice_counts_by_condition": {
+        "glass": {
+          "base_continue": 8,
+          "detour_complete": 0,
+          "retreat_hold": 0
+        },
+        "noglass": {
+          "base_continue": 7,
+          "detour_complete": 1,
+          "retreat_hold": 0
+        },
+        "offpath": {
+          "base_continue": 8,
+          "detour_complete": 0,
+          "retreat_hold": 0
+        }
+      },
+      "delta": 5.182159123583347,
+      "lambda": 8.0,
+      "target_intervention_rate": 0.1
+    },
+    {
+      "choice_counts": {
+        "base_continue": 18,
+        "detour_complete": 5,
+        "retreat_hold": 1
+      },
+      "choice_counts_by_condition": {
+        "glass": {
+          "base_continue": 5,
+          "detour_complete": 2,
+          "retreat_hold": 1
+        },
+        "noglass": {
+          "base_continue": 6,
+          "detour_complete": 2,
+          "retreat_hold": 0
+        },
+        "offpath": {
+          "base_continue": 7,
+          "detour_complete": 1,
+          "retreat_hold": 0
+        }
+      },
+      "delta": 3.455321487292646,
+      "lambda": 8.0,
+      "target_intervention_rate": 0.2
+    },
+    {
+      "choice_counts": {
+        "base_continue": 16,
+        "detour_complete": 7,
+        "retreat_hold": 1
+      },
+      "choice_counts_by_condition": {
+        "glass": {
+          "base_continue": 3,
+          "detour_complete": 4,
+          "retreat_hold": 1
+        },
+        "noglass": {
+          "base_continue": 6,
+          "detour_complete": 2,
+          "retreat_hold": 0
+        },
+        "offpath": {
+          "base_continue": 7,
+          "detour_complete": 1,
+          "retreat_hold": 0
+        }
+      },
+      "delta": 2.495197386436283,
+      "lambda": 8.0,
+      "target_intervention_rate": 0.3
+    },
+    {
+      "choice_counts": {
+        "base_continue": 16,
+        "detour_complete": 7,
+        "retreat_hold": 1
+      },
+      "choice_counts_by_condition": {
+        "glass": {
+          "base_continue": 3,
+          "detour_complete": 4,
+          "retreat_hold": 1
+        },
+        "noglass": {
+          "base_continue": 6,
+          "detour_complete": 2,
+          "retreat_hold": 0
+        },
+        "offpath": {
+          "base_continue": 7,
+          "detour_complete": 1,
+          "retreat_hold": 0
+        }
+      },
+      "delta": 2.145504704110662,
+      "lambda": 8.0,
+      "target_intervention_rate": 0.4
+    },
+    {
+      "choice_counts": {
+        "base_continue": 11,
+        "detour_complete": 11,
+        "retreat_hold": 2
+      },
+      "choice_counts_by_condition": {
+        "glass": {
+          "base_continue": 2,
+          "detour_complete": 5,
+          "retreat_hold": 1
+        },
+        "noglass": {
+          "base_continue": 3,
+          "detour_complete": 4,
+          "retreat_hold": 1
+        },
+        "offpath": {
+          "base_continue": 6,
+          "detour_complete": 2,
+          "retreat_hold": 0
+        }
+      },
+      "delta": 1.2065584905818236,
+      "lambda": 8.0,
+      "target_intervention_rate": 0.5
+    },
+    {
+      "choice_counts": {
+        "base_continue": 10,
+        "detour_complete": 12,
+        "retreat_hold": 2
+      },
+      "choice_counts_by_condition": {
+        "glass": {
+          "base_continue": 1,
+          "detour_complete": 6,
+          "retreat_hold": 1
+        },
+        "noglass": {
+          "base_continue": 3,
+          "detour_complete": 4,
+          "retreat_hold": 1
+        },
+        "offpath": {
+          "base_continue": 6,
+          "detour_complete": 2,
+          "retreat_hold": 0
+        }
+      },
+      "delta": 0.8023703115893823,
+      "lambda": 8.0,
+      "target_intervention_rate": 0.6
+    },
+    {
+      "choice_counts": {
+        "base_continue": 7,
+        "detour_complete": 15,
+        "retreat_hold": 2
+      },
+      "choice_counts_by_condition": {
+        "glass": {
+          "base_continue": 0,
+          "detour_complete": 7,
+          "retreat_hold": 1
+        },
+        "noglass": {
+          "base_continue": 3,
+          "detour_complete": 4,
+          "retreat_hold": 1
+        },
+        "offpath": {
+          "base_continue": 4,
+          "detour_complete": 4,
+          "retreat_hold": 0
+        }
+      },
+      "delta": 0.4396404178991696,
+      "lambda": 8.0,
+      "target_intervention_rate": 0.7
+    },
+    {
+      "choice_counts": {
+        "base_continue": 4,
+        "detour_complete": 18,
+        "retreat_hold": 2
+      },
+      "choice_counts_by_condition": {
+        "glass": {
+          "base_continue": 0,
+          "detour_complete": 7,
+          "retreat_hold": 1
+        },
+        "noglass": {
+          "base_continue": 3,
+          "detour_complete": 4,
+          "retreat_hold": 1
+        },
+        "offpath": {
+          "base_continue": 1,
+          "detour_complete": 7,
+          "retreat_hold": 0
+        }
+      },
+      "delta": 0.0,
+      "lambda": 8.0,
+      "target_intervention_rate": 0.8
+    },
+    {
+      "choice_counts": {
+        "base_continue": 4,
+        "detour_complete": 18,
+        "retreat_hold": 2
+      },
+      "choice_counts_by_condition": {
+        "glass": {
+          "base_continue": 0,
+          "detour_complete": 7,
+          "retreat_hold": 1
+        },
+        "noglass": {
+          "base_continue": 3,
+          "detour_complete": 4,
+          "retreat_hold": 1
+        },
+        "offpath": {
+          "base_continue": 1,
+          "detour_complete": 7,
+          "retreat_hold": 0
+        }
+      },
+      "delta": 0.0,
+      "lambda": 8.0,
+      "target_intervention_rate": 0.9
+    }
+  ],
+  "prevalence_reweighting": {
+    "Always Detour": {
+      "control": {
+        "catastrophe_rate": 0.0,
+        "choice_counts": {
+          "base_continue": 0,
+          "detour_complete": 16,
+          "retreat_hold": 0
+        },
+        "intervention_rate": 1.0,
+        "mean_oracle_regret": 0.3125,
+        "mean_utility": 0.6875,
+        "n_decisions": 16,
+        "n_source_states": 8,
+        "oracle_value_recovered": 0.0,
+        "safe_noncompletion_rate": 0.3125,
+        "source_macro_mean_utility": 0.6875,
+        "task_success_rate": 0.6875
+      },
+      "hazard": {
+        "catastrophe_rate": 0.125,
+        "choice_counts": {
+          "base_continue": 0,
+          "detour_complete": 8,
+          "retreat_hold": 0
+        },
+        "intervention_rate": 1.0,
+        "mean_oracle_regret": 0.125,
+        "mean_utility": 0.625,
+        "n_decisions": 8,
+        "n_source_states": 8,
+        "oracle_value_recovered": 0.9285714285714286,
+        "safe_noncompletion_rate": 0.125,
+        "source_macro_mean_utility": 0.625,
+        "task_success_rate": 0.75
+      },
+      "reweighted": [
+        {
+          "catastrophe_rate": 0.00125,
+          "hazard_prevalence": 0.01,
+          "intervention_rate": 1.0,
+          "safe_noncompletion_rate": 0.310625,
+          "task_success_rate": 0.688125
+        },
+        {
+          "catastrophe_rate": 0.00625,
+          "hazard_prevalence": 0.05,
+          "intervention_rate": 1.0,
+          "safe_noncompletion_rate": 0.303125,
+          "task_success_rate": 0.6906249999999999
+        },
+        {
+          "catastrophe_rate": 0.0125,
+          "hazard_prevalence": 0.1,
+          "intervention_rate": 1.0,
+          "safe_noncompletion_rate": 0.29375,
+          "task_success_rate": 0.6937500000000001
+        },
+        {
+          "catastrophe_rate": 0.03125,
+          "hazard_prevalence": 0.25,
+          "intervention_rate": 1.0,
+          "safe_noncompletion_rate": 0.265625,
+          "task_success_rate": 0.703125
+        },
+        {
+          "catastrophe_rate": 0.0625,
+          "hazard_prevalence": 0.5,
+          "intervention_rate": 1.0,
+          "safe_noncompletion_rate": 0.21875,
+          "task_success_rate": 0.71875
+        }
+      ]
+    },
+    "Counterfactual Router": {
+      "control": {
+        "catastrophe_rate": 0.0,
+        "choice_counts": {
+          "base_continue": 9,
+          "detour_complete": 7,
+          "retreat_hold": 0
+        },
+        "intervention_rate": 0.4375,
+        "mean_oracle_regret": 0.0625,
+        "mean_utility": 0.9375,
+        "n_decisions": 16,
+        "n_source_states": 8,
+        "oracle_value_recovered": 0.0,
+        "safe_noncompletion_rate": 0.0625,
+        "source_macro_mean_utility": 0.9375,
+        "task_success_rate": 0.9375
+      },
+      "hazard": {
+        "catastrophe_rate": 0.25,
+        "choice_counts": {
+          "base_continue": 1,
+          "detour_complete": 7,
+          "retreat_hold": 0
+        },
+        "intervention_rate": 0.875,
+        "mean_oracle_regret": 0.25,
+        "mean_utility": 0.5,
+        "n_decisions": 8,
+        "n_source_states": 8,
+        "oracle_value_recovered": 0.8571428571428571,
+        "safe_noncompletion_rate": 0.0,
+        "source_macro_mean_utility": 0.5,
+        "task_success_rate": 0.75
+      },
+      "reweighted": [
+        {
+          "catastrophe_rate": 0.0025,
+          "hazard_prevalence": 0.01,
+          "intervention_rate": 0.44187499999999996,
+          "safe_noncompletion_rate": 0.061875,
+          "task_success_rate": 0.9356249999999999
+        },
+        {
+          "catastrophe_rate": 0.0125,
+          "hazard_prevalence": 0.05,
+          "intervention_rate": 0.459375,
+          "safe_noncompletion_rate": 0.059375,
+          "task_success_rate": 0.928125
+        },
+        {
+          "catastrophe_rate": 0.025,
+          "hazard_prevalence": 0.1,
+          "intervention_rate": 0.48125,
+          "safe_noncompletion_rate": 0.05625,
+          "task_success_rate": 0.91875
+        },
+        {
+          "catastrophe_rate": 0.0625,
+          "hazard_prevalence": 0.25,
+          "intervention_rate": 0.546875,
+          "safe_noncompletion_rate": 0.046875,
+          "task_success_rate": 0.890625
+        },
+        {
+          "catastrophe_rate": 0.125,
+          "hazard_prevalence": 0.5,
+          "intervention_rate": 0.65625,
+          "safe_noncompletion_rate": 0.03125,
+          "task_success_rate": 0.84375
+        }
+      ]
+    },
+    "Geometry Gate": {
+      "control": {
+        "catastrophe_rate": 0.0,
+        "choice_counts": {
+          "base_continue": 16,
+          "detour_complete": 0,
+          "retreat_hold": 0
+        },
+        "intervention_rate": 0.0,
+        "mean_oracle_regret": 0.0,
+        "mean_utility": 1.0,
+        "n_decisions": 16,
+        "n_source_states": 8,
+        "oracle_value_recovered": 0.0,
+        "safe_noncompletion_rate": 0.0,
+        "source_macro_mean_utility": 1.0,
+        "task_success_rate": 1.0
+      },
+      "hazard": {
+        "catastrophe_rate": 0.125,
+        "choice_counts": {
+          "base_continue": 0,
+          "detour_complete": 8,
+          "retreat_hold": 0
+        },
+        "intervention_rate": 1.0,
+        "mean_oracle_regret": 0.125,
+        "mean_utility": 0.625,
+        "n_decisions": 8,
+        "n_source_states": 8,
+        "oracle_value_recovered": 0.9285714285714286,
+        "safe_noncompletion_rate": 0.125,
+        "source_macro_mean_utility": 0.625,
+        "task_success_rate": 0.75
+      },
+      "reweighted": [
+        {
+          "catastrophe_rate": 0.00125,
+          "hazard_prevalence": 0.01,
+          "intervention_rate": 0.01,
+          "safe_noncompletion_rate": 0.00125,
+          "task_success_rate": 0.9974999999999999
+        },
+        {
+          "catastrophe_rate": 0.00625,
+          "hazard_prevalence": 0.05,
+          "intervention_rate": 0.05,
+          "safe_noncompletion_rate": 0.00625,
+          "task_success_rate": 0.9874999999999999
+        },
+        {
+          "catastrophe_rate": 0.0125,
+          "hazard_prevalence": 0.1,
+          "intervention_rate": 0.1,
+          "safe_noncompletion_rate": 0.0125,
+          "task_success_rate": 0.9750000000000001
+        },
+        {
+          "catastrophe_rate": 0.03125,
+          "hazard_prevalence": 0.25,
+          "intervention_rate": 0.25,
+          "safe_noncompletion_rate": 0.03125,
+          "task_success_rate": 0.9375
+        },
+        {
+          "catastrophe_rate": 0.0625,
+          "hazard_prevalence": 0.5,
+          "intervention_rate": 0.5,
+          "safe_noncompletion_rate": 0.0625,
+          "task_success_rate": 0.875
+        }
+      ]
+    },
+    "Two-threshold Risk": {
+      "control": {
+        "catastrophe_rate": 0.0,
+        "choice_counts": {
+          "base_continue": 16,
+          "detour_complete": 0,
+          "retreat_hold": 0
+        },
+        "intervention_rate": 0.0,
+        "mean_oracle_regret": 0.0,
+        "mean_utility": 1.0,
+        "n_decisions": 16,
+        "n_source_states": 8,
+        "oracle_value_recovered": 0.0,
+        "safe_noncompletion_rate": 0.0,
+        "source_macro_mean_utility": 1.0,
+        "task_success_rate": 1.0
+      },
+      "hazard": {
+        "catastrophe_rate": 1.0,
+        "choice_counts": {
+          "base_continue": 8,
+          "detour_complete": 0,
+          "retreat_hold": 0
+        },
+        "intervention_rate": 0.0,
+        "mean_oracle_regret": 1.75,
+        "mean_utility": -1.0,
+        "n_decisions": 8,
+        "n_source_states": 8,
+        "oracle_value_recovered": 0.0,
+        "safe_noncompletion_rate": 0.0,
+        "source_macro_mean_utility": -1.0,
+        "task_success_rate": 0.0
+      },
+      "reweighted": [
+        {
+          "catastrophe_rate": 0.01,
+          "hazard_prevalence": 0.01,
+          "intervention_rate": 0.0,
+          "safe_noncompletion_rate": 0.0,
+          "task_success_rate": 0.99
+        },
+        {
+          "catastrophe_rate": 0.05,
+          "hazard_prevalence": 0.05,
+          "intervention_rate": 0.0,
+          "safe_noncompletion_rate": 0.0,
+          "task_success_rate": 0.95
+        },
+        {
+          "catastrophe_rate": 0.1,
+          "hazard_prevalence": 0.1,
+          "intervention_rate": 0.0,
+          "safe_noncompletion_rate": 0.0,
+          "task_success_rate": 0.9
+        },
+        {
+          "catastrophe_rate": 0.25,
+          "hazard_prevalence": 0.25,
+          "intervention_rate": 0.0,
+          "safe_noncompletion_rate": 0.0,
+          "task_success_rate": 0.75
+        },
+        {
+          "catastrophe_rate": 0.5,
+          "hazard_prevalence": 0.5,
+          "intervention_rate": 0.0,
+          "safe_noncompletion_rate": 0.0,
+          "task_success_rate": 0.5
+        }
+      ]
+    }
+  },
+  "protocol": {
+    "catastrophe_cost": 1.0,
+    "geometry_margin_source": "frozen Detour departure_clearance; not tuned on fresh outcomes",
+    "geometry_surface_margin_m": 0.06,
+    "target_intervention_rate": 0.6
+  },
+  "risk_baselines": {
+    "best_fixed_calibration": {
+      "calibration_intervention_rate": 0.05714285714285714,
+      "calibration_source_balanced_utility": 0.34761904761904755,
+      "fallback_option": "retreat_hold",
+      "fallback_option_index": 2,
+      "threshold": 0.9221878316394646
+    },
+    "rate_matched_threshold": 0.151837463788386,
+    "two_threshold_calibration": {
+      "base_to_detour_threshold": 0.9221878316394646,
+      "calibration_intervention_rate": 0.05714285714285714,
+      "calibration_retreat_rate": 0.03333333333333333,
+      "calibration_source_balanced_utility": 0.34761904761904755,
+      "detour_to_retreat_threshold": 0.9304170684333511
+    }
+  },
+  "router": {
+    "delta": 0.0,
+    "manifest": "/gpfs/home/shv7753/crash_bench/results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/router.json",
+    "manifest_sha256": "757e220bc2e561aa8207ae3778a3021554b3031df2ec3eef376e1e56db938052"
+  },
+  "schema_version": 1
+}
