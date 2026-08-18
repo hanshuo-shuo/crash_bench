@@ -43,7 +43,6 @@ from scripts.collect_counterfactual_option_rollouts import (
     _detour_controller,
     _expected_hashes,
     _restore_anchor,
-    _run_base_continue,
     _run_structured_option,
     _scan_condition,
 )
@@ -245,7 +244,6 @@ def _run_dynamic_episode(
 
 def _t20_branches(
     env: LiberoEnv,
-    policy,
     router: FrozenOutcomeRouter,
     scan: Mapping[str, Any],
     placement,
@@ -267,33 +265,39 @@ def _t20_branches(
     )
     rows = []
     for option_index, option in enumerate(OPTIONS):
-        _seed_everything(args.rollout_seed)
-        env.seed(args.rollout_seed)
-        obs = _restore_anchor(
-            env, scan, anchor_index, expected,
-            label=f"{placement.placement_id}:{condition}:t20:{option}",
-        )
         if option_index == 0:
-            policy.reset()
-            option_result = _run_base_continue(
-                env, policy, obs, placement.instruction, list(scan["glasses"]),
-                max_steps=args.base_steps,
-            )
-        elif option_index == 1:
-            controller_glass = (
-                placement.on_path_glass if condition == "noglass"
-                else scan["glasses"][0]
-            )
-            option_result = _run_structured_option(
-                env, obs, list(scan["glasses"]),
-                _detour_controller(obs, controller_glass, args),
-                max_steps=args.detour_steps,
-            )
+            remaining_force = [
+                float(value) for value in scan["force_trace_n"][anchor_index:]
+            ]
+            option_result = {
+                "crashed": bool(scan["crashed"]),
+                "succeeded": bool(scan["succeeded"]),
+                "steps": len(scan["rows"]) - anchor_index,
+                "peak_force_n": float(max(remaining_force or [0.0])),
+                "continuation_mode": "matched_base_reference",
+            }
         else:
-            option_result = _run_structured_option(
-                env, obs, list(scan["glasses"]), _retreat_controller(args),
-                max_steps=args.retreat_steps,
+            _seed_everything(args.rollout_seed)
+            env.seed(args.rollout_seed)
+            obs = _restore_anchor(
+                env, scan, anchor_index, expected,
+                label=f"{placement.placement_id}:{condition}:t20:{option}",
             )
+            if option_index == 1:
+                controller_glass = (
+                    placement.on_path_glass if condition == "noglass"
+                    else scan["glasses"][0]
+                )
+                option_result = _run_structured_option(
+                    env, obs, list(scan["glasses"]),
+                    _detour_controller(obs, controller_glass, args),
+                    max_steps=args.detour_steps,
+                )
+            else:
+                option_result = _run_structured_option(
+                    env, obs, list(scan["glasses"]), _retreat_controller(args),
+                    max_steps=args.retreat_steps,
+                )
         rows.append({
             "option": option,
             "outcome": classify_option_outcome(
@@ -488,7 +492,7 @@ def collect(args: argparse.Namespace) -> dict[str, Any]:
         placement_rows = []
         for condition, scan in scans.items():
             t20 = _t20_branches(
-                env, policy, router, scan, placement, condition, t20_anchor, args,
+                env, router, scan, placement, condition, t20_anchor, args,
                 intervention_margin=intervention_margin,
             )
             episode_id = canonical_sha256({

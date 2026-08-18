@@ -127,7 +127,13 @@ def summarize_reference_base(rows: Iterable[Mapping[str, Any]]) -> dict[str, Any
 def summarize_fixed_t20(rows: Iterable[Mapping[str, Any]]) -> dict[str, Any]:
     rows = [dict(row) for row in rows]
     outcomes = [
-        row["t20_oracle_timing_upper_bound"]["fixed_router_outcome"] for row in rows
+        (
+            row["reference_base_outcome"]
+            if row["t20_oracle_timing_upper_bound"]["fixed_router_option"]
+            == "base_continue"
+            else row["t20_oracle_timing_upper_bound"]["fixed_router_outcome"]
+        )
+        for row in rows
     ]
     options = [
         row["t20_oracle_timing_upper_bound"]["fixed_router_option"] for row in rows
