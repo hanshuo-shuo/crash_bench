@@ -81,6 +81,12 @@ def summarize_dynamic_rows(rows: Iterable[Mapping[str, Any]]) -> dict[str, Any]:
         "unnecessary_early_intervention_given_base_success": _rate(
             bool(row["unnecessary_early_intervention"]) for row in base_success
         ),
+        "task_success_retention_given_base_success": _rate(
+            row["outcome"] == "task_success" for row in base_success
+        ),
+        "safe_noncompletion_given_base_success": _rate(
+            row["outcome"] == "safe_noncompletion" for row in base_success
+        ),
         "n_base_success": len(base_success),
         "intervention_duration_actions": _distribution(
             row["intervention_duration_actions"] for row in interventions
@@ -97,6 +103,24 @@ def summarize_dynamic_rows(rows: Iterable[Mapping[str, Any]]) -> dict[str, Any]:
         "within_episode_contact_force_p95_n": _distribution(
             row["contact_force_p95_n"] for row in rows
         ),
+    }
+
+
+def summarize_reference_base(rows: Iterable[Mapping[str, Any]]) -> dict[str, Any]:
+    rows = [dict(row) for row in rows]
+    outcomes = [str(row["reference_base_outcome"]) for row in rows]
+    return {
+        "role": "matched_from_reset_reference",
+        "n_episodes": len(rows),
+        "task_success_rate": _rate(outcome == "task_success" for outcome in outcomes),
+        "catastrophe_rate": _rate(outcome == "catastrophe" for outcome in outcomes),
+        "safe_noncompletion_rate": _rate(
+            outcome == "safe_noncompletion" for outcome in outcomes
+        ),
+        "intervention_rate": 0.0,
+        "selected_option_counts": {
+            "base_continue": len(rows), "detour_complete": 0, "retreat_hold": 0,
+        },
     }
 
 
@@ -147,6 +171,7 @@ def _pct(value: float | None) -> str:
 
 def _write_report(analysis: Mapping[str, Any], path: Path) -> None:
     dynamic = analysis["dynamic_first_crossing"]
+    base = analysis["reference_base"]
     fixed = analysis["fixed_t20_oracle_timing_upper_bound"]
     lead = dynamic["first_trigger_lead_time_actions"]
     distance = dynamic["first_trigger_to_collision_eef_distance_m"]
@@ -164,6 +189,9 @@ def _write_report(analysis: Mapping[str, Any], path: Path) -> None:
         "",
         "| Method | Task success | Catastrophe | Safe noncompletion | Intervention |",
         "|---|---:|---:|---:|---:|",
+        f"| Base from reset | {_pct(base['task_success_rate'])} | "
+        f"{_pct(base['catastrophe_rate'])} | {_pct(base['safe_noncompletion_rate'])} | "
+        f"{_pct(base['intervention_rate'])} |",
         f"| Dynamic first crossing | {_pct(dynamic['task_success_rate'])} | "
         f"{_pct(dynamic['catastrophe_rate'])} | {_pct(dynamic['safe_noncompletion_rate'])} | "
         f"{_pct(dynamic['intervention_rate'])} |",
@@ -185,6 +213,9 @@ def _write_report(analysis: Mapping[str, Any], path: Path) -> None:
         f"{_pct(dynamic['unnecessary_early_intervention_rate'])} overall; "
         f"{_pct(dynamic['unnecessary_early_intervention_given_base_success'])} among "
         f"{dynamic['n_base_success']} Base-success episodes.",
+        f"- Task-success retention on those Base-success episodes: "
+        f"{_pct(dynamic['task_success_retention_given_base_success'])}; safe "
+        f"noncompletion: {_pct(dynamic['safe_noncompletion_given_base_success'])}.",
         f"- Intervention duration: n={duration['n']}, median={duration['median']}, "
         f"p95={duration['p95']} actions.",
         f"- Episode peak contact force: p95="
@@ -206,11 +237,12 @@ def analyze(capture: Path) -> dict[str, Any]:
         for condition in sorted({str(row["condition"]) for row in rows})
     }
     analysis = {
-        "schema_version": 1,
+        "schema_version": 2,
         "kind": "dynamic_first_crossing_counterfactual_router_analysis",
         "capture": str(capture),
         "capture_repository": manifest["repository"],
         "router_point": manifest["router_point"],
+        "reference_base": summarize_reference_base(rows),
         "dynamic_first_crossing": summarize_dynamic_rows(rows),
         "fixed_t20_oracle_timing_upper_bound": summarize_fixed_t20(rows),
         "dynamic_by_condition": by_condition,

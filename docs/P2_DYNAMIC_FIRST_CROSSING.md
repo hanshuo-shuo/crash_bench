@@ -74,3 +74,11 @@ samples.
 The default submission is a one-source execution smoke. A paper cohort should
 set `CB_P2_MODE=full` and point `CB_P2_PLACEMENTS`/`CB_P2_ROUTER_MODEL` at the
 frozen source-disjoint evaluation assets before submission.
+
+## Development result
+
+The five-source development execution is complete. Dynamic timing improved
+success and catastrophe relative to Base and the fixed T-20 Router, but every
+Base-success control also crossed the pointwise boundary. The compact result,
+raw hashes, and next-method implication are in
+[`results/P2_DYNAMIC_FIRST_CROSSING_DEV_20260818.md`](../results/P2_DYNAMIC_FIRST_CROSSING_DEV_20260818.md).

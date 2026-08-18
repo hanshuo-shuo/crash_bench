@@ -104,6 +104,7 @@ records depend on them. They are not competing current entrypoints.
 - [Simple group-meeting explanation of the router and options](docs/GROUP_MEETING_ROUTER_EXPLAINER.md)
 - [P1 timing-choice benchmark](docs/P1_TIMING_CHOICE_BENCHMARK.md)
 - [P2 dynamic first-crossing protocol](docs/P2_DYNAMIC_FIRST_CROSSING.md)
+- [P2 development result](results/P2_DYNAMIC_FIRST_CROSSING_DEV_20260818.md)
 - [Appendix index](docs/appendix/README.md)
 - [Legacy archive](docs/archive/README.md)
 
