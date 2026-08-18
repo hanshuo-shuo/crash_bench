@@ -35,7 +35,7 @@ from crashbench.glass_recovery_data import array_sha256, canonical_sha256, read_
 from crashbench.predicates import build_any
 from crashbench.provenance import repository_provenance, require_checkpoint_revision
 from crashbench.recovery import FailSafeHold, RetreatHold
-from scripts.capture_glass_detector_placements import _condition_glasses, _seed_everything
+from scripts.capture_glass_detector_placements import _seed_everything
 from scripts.collect_counterfactual_option_rollouts import (
     CONDITIONS,
     _apply_frozen_detour_config,
@@ -148,51 +148,23 @@ def _run_latched_option(
 
 def _run_dynamic_episode(
     env: LiberoEnv,
-    policy,
     router: FrozenOutcomeRouter,
-    source_state: np.ndarray,
+    scan: Mapping[str, Any],
     placement,
     condition: str,
     args: argparse.Namespace,
     *,
     intervention_margin: float,
 ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
-    glasses = _condition_glasses(placement, condition)
-    obs = env.reset_to(source_state, movable_objects=glasses or None)
-    for _ in range(args.settle_steps):
-        obs, _, _, _ = env.step(env.dummy_action())
-    crash = None
-    if glasses:
-        crash = build_any(_glass_predicate_specs(glasses))
-        _prime_glass_predicates(crash, env.sim_view)
-
-    policy.reset()
+    glasses = list(scan["glasses"])
     gate = FirstCrossingRouter(
         catastrophe_cost=args.catastrophe_cost,
         intervention_margin=intervention_margin,
     )
-    force_trace: list[float] = []
     score_trace: list[dict[str, Any]] = []
-    trigger_eef = None
-    result: dict[str, Any] | None = None
-
-    for action_index in range(args.scan_steps):
-        if env.episode_terminated():
-            result = {
-                "crashed": False,
-                "succeeded": False,
-                "steps": action_index,
-                "termination": "robosuite_episode_horizon",
-            }
-            break
-        policy_obs = env.policy_observation(obs, policy.resize_size)
-        nominal_action = np.asarray(
-            policy.act(policy_obs, placement.instruction), dtype=np.float32
-        )
-        if policy.last_hidden is None:
-            raise RuntimeError("OpenVLA hidden hook returned None")
+    for action_index, feature in enumerate(scan["rows"]):
         prediction = router.predict(
-            policy.last_hidden, policy_obs["state"], nominal_action
+            feature["hidden"], feature["robot_state"], feature["nominal_action"]
         )
         score = gate.observe(
             prediction["option_outcome_probabilities"], action_index=action_index
@@ -214,6 +186,11 @@ def _run_dynamic_episode(
         score_trace.append(trace_row)
 
         if score["first_crossing"]:
+            expected = _expected_hashes(scan, action_index)
+            obs = _restore_anchor(
+                env, scan, action_index, expected,
+                label=f"{placement.placement_id}:{condition}:dynamic-trigger",
+            )
             trigger_eef = np.asarray(obs["robot0_eef_pos"], dtype=float).copy()
             selected = int(gate.selected_option_index)
             if selected == 1:
@@ -226,55 +203,43 @@ def _run_dynamic_episode(
                 controller = _retreat_controller(args)
                 option_steps = args.retreat_steps
             option_result = _run_latched_option(
-                env, obs, list(glasses), controller, max_steps=option_steps
+                env, obs, glasses, controller, max_steps=option_steps
             )
+            force_trace = [
+                float(value) for value in scan["force_trace_n"][:action_index]
+            ]
             force_trace.extend(option_result.pop("force_trace_n"))
             result = {
                 **option_result,
                 "steps": action_index + int(option_result["steps"]),
                 "intervention_duration_actions": int(option_result["steps"]),
             }
-            break
+            result.update(_force_summary(force_trace))
+            result.update({
+                "selected_option": OPTIONS[selected],
+                "intervened": True,
+                "trigger_action_index": action_index,
+                "trigger_eef_position_m": trigger_eef.tolist(),
+                "outcome": classify_option_outcome(
+                    crashed=bool(result["crashed"]),
+                    succeeded=bool(result["succeeded"]),
+                ),
+            })
+            return result, score_trace
 
-        obs, _, done, _ = env.step(nominal_action.tolist())
-        force = 0.0 if not glasses else _glass_force(env.sim_view, glasses)
-        force_trace.append(float(force))
-        if crash is not None and crash(env.sim_view):
-            result = {"crashed": True, "succeeded": False, "steps": action_index + 1}
-            break
-        if done:
-            result = {"crashed": False, "succeeded": True, "steps": action_index + 1}
-            break
-        if env.episode_terminated():
-            result = {
-                "crashed": False,
-                "succeeded": False,
-                "steps": action_index + 1,
-                "termination": "robosuite_episode_horizon",
-            }
-            break
-    if result is None:
-        result = {
-            "crashed": False,
-            "succeeded": False,
-            "steps": args.scan_steps,
-            "termination": "dynamic_episode_budget_complete",
-        }
-    result.setdefault("intervention_duration_actions", 0)
-    result.update(_force_summary(force_trace))
-    result.update({
-        "selected_option": (
-            OPTIONS[int(gate.selected_option_index)] if gate.latched else "base_continue"
-        ),
-        "intervened": bool(gate.latched),
-        "trigger_action_index": gate.trigger_action_index,
-        "trigger_eef_position_m": (
-            None if trigger_eef is None else trigger_eef.tolist()
-        ),
-        "outcome": classify_option_outcome(
-            crashed=bool(result["crashed"]), succeeded=bool(result["succeeded"])
-        ),
-    })
+    result = {
+        "crashed": bool(scan["crashed"]),
+        "succeeded": bool(scan["succeeded"]),
+        "steps": len(scan["rows"]),
+        "intervention_duration_actions": 0,
+        "selected_option": "base_continue",
+        "intervened": False,
+        "trigger_action_index": None,
+        "trigger_eef_position_m": None,
+        "outcome": _reference_outcome(scan),
+        "termination": "matched_base_reference_no_crossing",
+        **_force_summary([float(value) for value in scan["force_trace_n"]]),
+    }
     return result, score_trace
 
 
@@ -548,7 +513,7 @@ def collect(args: argparse.Namespace) -> dict[str, Any]:
             _seed_everything(args.rollout_seed)
             env.seed(args.rollout_seed)
             dynamic, trace = _run_dynamic_episode(
-                env, policy, router, source_state, placement, condition, args,
+                env, router, scan, placement, condition, args,
                 intervention_margin=intervention_margin,
             )
             for trace_row in trace:
@@ -666,6 +631,11 @@ def collect(args: argparse.Namespace) -> dict[str, Any]:
         ),
         "first_crossing_rule": "first action t with max non-Base calibrated LCB > 0",
         "latch_rule": "selected Detour/Retreat runs until its fixed option budget or episode termination",
+        "dynamic_prefix_protocol": (
+            "causal Router scores are evaluated on the matched Base reference prefix; "
+            "the first crossing branches from that exact serialized state, and no "
+            "crossing reuses the identical Base outcome"
+        ),
         "oracle_timing_upper_bound": {
             "horizon_actions": int(args.oracle_horizon),
             "description": "same frozen router and options branched at collision-relative T-20; timing is privileged",

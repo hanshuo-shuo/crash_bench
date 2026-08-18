@@ -43,6 +43,12 @@ At `tau`, the highest-scoring non-Base option is selected and latched. Detour or
 FailSafeHold then runs until its fixed option budget completes or the episode
 terminates. The Router is not queried again after the latch.
 
+For causal evaluation, scores are computed in order on the matched Base
+reference prefix. The first crossing branches from that exact serialized
+simulator/controller/observation state. If no crossing occurs, the outcome is
+the identical Base reference outcome rather than a second from-reset replay;
+this prevents numerical replay drift from being misattributed to the Router.
+
 ## Experimental roles
 
 | Role | Timing | Option choice |
