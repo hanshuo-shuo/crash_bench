@@ -101,6 +101,8 @@ records depend on them. They are not competing current entrypoints.
 - [Fresh online protocol](docs/FRESH_COUNTERFACTUAL_ROUTER_PROTOCOL.md)
 - [Experiment index](docs/EXPERIMENT_INDEX.md)
 - [Reproducibility and data availability](docs/REPRODUCIBILITY.md)
+- [Simple group-meeting explanation of the router and options](docs/GROUP_MEETING_ROUTER_EXPLAINER.md)
+- [P1 timing-choice benchmark](docs/P1_TIMING_CHOICE_BENCHMARK.md)
 - [Appendix index](docs/appendix/README.md)
 - [Legacy archive](docs/archive/README.md)
 

@@ -20,6 +20,25 @@ start from the same serialized simulator, controller, observation, and model
 state at each anchor.  Raw hidden state, robot state, and nominal action are
 retained for fresh evaluation.
 
+## Option implementations
+
+The router learns option selection, not the low-level recovery behaviors.
+
+| Option | Low-level implementation |
+|---|---|
+| Base | Frozen OpenVLA continues producing actions. |
+| Detour | A hand-written Cartesian state machine receives the true glass, bowl, and plate geometry; it moves around the glass, grasps the bowl, and places it on the plate. |
+| RetreatHold | A proportional controller moves the end effector by `-0.14 m` in world x and `+0.10 m` in z, then holds. |
+| FailSafeHold | A zero-Cartesian-delta command stops directional motion and keeps the gripper open. |
+
+Detour is a privileged structured controller, not a learned visual recovery
+policy.  The historical directional Retreat remains a comparison option.  P1
+uses FailSafeHold for late timing states because fixed world-`-x` retreat can
+move into the glass.
+
+The concise group-meeting explanation is in
+[GROUP_MEETING_ROUTER_EXPLAINER.md](GROUP_MEETING_ROUTER_EXPLAINER.md).
+
 ## Four primary classes
 
 | Class | Base | Detour | Retreat | Benchmark choice |
