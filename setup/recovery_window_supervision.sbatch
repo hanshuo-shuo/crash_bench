@@ -25,6 +25,7 @@ DETOUR_CONFIG="${CB_CF_DETOUR_CONFIG:-results/counterfactual_router/detour_freez
 CHECKPOINT="${CB_BASE_CHECKPOINT:-openvla/openvla-7b-finetuned-libero-spatial}"
 REVISION="${CB_BASE_CHECKPOINT_REVISION:-962318cec55ac10993ff0f5f43eda9a270b4c873}"
 P3_PLACEMENT_IDS="${CB_P3_PLACEMENT_IDS:-glass_recovery_heldout_0010+glass_recovery_heldout_0019+glass_recovery_heldout_0009+glass_recovery_heldout_0004+glass_recovery_heldout_0003}"
+SKIP_AUTHOR="${CB_P3_SKIP_AUTHOR:-0}"
 
 module purge
 module load mamba/24.3.0 git/2.47.0-gcc-12.4.0
@@ -75,10 +76,12 @@ python scripts/collect_counterfactual_option_rollouts.py \
   --retreat-mode hold \
   --detour-config "$DETOUR_CONFIG"
 
-python scripts/author_recovery_window_supervision.py \
-  --capture "$OUTPUT" \
-  --router-model "$ROUTER" \
-  --hard-control-capture "$HARD_CONTROLS" \
-  --quest-job-id "$SLURM_JOB_ID"
+if [[ "$SKIP_AUTHOR" != "1" ]]; then
+  python scripts/author_recovery_window_supervision.py \
+    --capture "$OUTPUT" \
+    --router-model "$ROUTER" \
+    --hard-control-capture "$HARD_CONTROLS" \
+    --quest-job-id "$SLURM_JOB_ID"
+fi
 
 echo "DONE commit=$COMMIT job=$SLURM_JOB_ID output=$OUTPUT @ $(date)"

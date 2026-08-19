@@ -686,14 +686,17 @@ def _write_report(result: Mapping[str, Any], path: Path) -> None:
     nonmonotonic = [row for row in trajectories if row["nonmonotonic_recovery"]]
     violations = sum(row["fail_safe_contract_violations"] for row in trajectories)
     overlap = result["feature_overlap"]
-    repository = result["provenance"]["capture_repository"]
+    commits = sorted({
+        item["repository"]["git_commit"]
+        for item in result["provenance"]["captures"]
+    })
     lines = [
         "# P3.0 Dense Recovery-Window Supervision",
         "",
         "Status: **development supervision authored; no model training or Router retuning performed**.",
         "",
         f"Quest job: `{result['provenance']['quest_job_id'] or 'not recorded'}`.  "
-        f"Collection commit: `{repository['git_commit']}`.",
+        f"Collection commit(s): `{', '.join(commits)}`.",
         "",
         "The five selected trajectories were scanned once under the glass condition. "
         "Every dense anchor branches from the corresponding exact serialized "
@@ -785,7 +788,7 @@ def _write_report(result: Mapping[str, Any], path: Path) -> None:
         f"- Recovery-open anchors: {result['coverage']['recovery_open_records']}; "
         f"loss-control anchors: {result['coverage']['loss_control_records']}; "
         f"Base-preferred anchors: {result['coverage']['base_preferred_records']}.",
-        f"- Capture root: `{result['provenance']['capture_root']}`.",
+        f"- Capture root(s): `{', '.join(item['root'] for item in result['provenance']['captures'])}`.",
         f"- Hard-control source: `{result['provenance']['hard_control_root']}`.",
         "- Collection command: `python scripts/collect_counterfactual_option_rollouts.py "
         "--conditions glass --history-length 8 --horizons 30 28 ... 4 2 1 "
@@ -801,31 +804,49 @@ def _write_report(result: Mapping[str, Any], path: Path) -> None:
 
 
 def author(args: argparse.Namespace) -> dict[str, Any]:
-    capture = args.capture.resolve()
+    captures = [path.resolve() for path in args.capture]
     hard_root = args.hard_control_capture.resolve()
-    manifest_path = capture / "capture_manifest.json"
-    manifest = json.loads(manifest_path.read_text())
-    protocol = manifest["protocol"]
-    if protocol.get("conditions") != ["glass"]:
-        raise ValueError("P3 dense capture must contain only the glass condition")
-    if protocol.get("retreat", {}).get("mode") != "hold":
-        raise ValueError("P3 requires zero-delta FailSafeHold, not directional RetreatHold")
     horizons = list(map(int, args.horizons))
-    if list(map(int, protocol.get("horizons", []))) != horizons:
-        raise ValueError("capture horizon grid does not match the requested dense grid")
-    if int(protocol.get("history_length", -1)) != 8:
-        raise ValueError("P3 capture must preserve history-length=8")
-
-    data = load_capture(capture, catastrophe_cost=args.catastrophe_cost)
-    if set(data["conditions"].tolist()) != {"glass"}:
-        raise ValueError("non-glass decision rows are not allowed in dense supervision")
     router = FrozenOutcomeRouter.load(args.router_model)
     point = _router_point(router, args.catastrophe_cost, args.target_intervention_rate)
-    dense, dense_vectors = _score_dense_rows(
-        data, router,
-        catastrophe_cost=args.catastrophe_cost,
-        margin=float(point["delta"]),
-    )
+    dense: list[dict[str, Any]] = []
+    dense_vectors: dict[str, np.ndarray] = {}
+    capture_inputs = []
+    for capture in captures:
+        manifest_path = capture / "capture_manifest.json"
+        manifest = json.loads(manifest_path.read_text())
+        protocol = manifest["protocol"]
+        if protocol.get("conditions") != ["glass"]:
+            raise ValueError("P3 dense capture must contain only the glass condition")
+        if protocol.get("retreat", {}).get("mode") != "hold":
+            raise ValueError("P3 requires zero-delta FailSafeHold, not directional RetreatHold")
+        if list(map(int, protocol.get("horizons", []))) != horizons:
+            raise ValueError("capture horizon grid does not match the requested dense grid")
+        if int(protocol.get("history_length", -1)) != 8:
+            raise ValueError("P3 capture must preserve history-length=8")
+        data = load_capture(capture, catastrophe_cost=args.catastrophe_cost)
+        if set(data["conditions"].tolist()) != {"glass"}:
+            raise ValueError("non-glass decision rows are not allowed in dense supervision")
+        capture_rows, capture_vectors = _score_dense_rows(
+            data, router,
+            catastrophe_cost=args.catastrophe_cost,
+            margin=float(point["delta"]),
+        )
+        duplicate = set(dense_vectors) & set(capture_vectors)
+        if duplicate:
+            raise ValueError(f"dense captures duplicate decision IDs: {sorted(duplicate)}")
+        dense.extend(capture_rows)
+        dense_vectors.update(capture_vectors)
+        capture_inputs.append({
+            "root": str(capture),
+            "repository": manifest["repository"],
+            "artifacts": {
+                name: _artifact(capture / name) for name in (
+                    "capture_manifest.json", "decision_metadata.json",
+                    "option_rollouts.jsonl", "decision_features.npz",
+                )
+            },
+        })
     trajectories = _trajectory_summaries(dense, horizons)
 
     hard_manifest_path = hard_root / "capture_manifest.json"
@@ -888,14 +909,7 @@ def author(args: argparse.Namespace) -> dict[str, Any]:
         "feature_overlap": overlap,
         "provenance": {
             "quest_job_id": args.quest_job_id,
-            "capture_root": str(capture),
-            "capture_repository": manifest["repository"],
-            "capture_artifacts": {
-                name: _artifact(capture / name) for name in (
-                    "capture_manifest.json", "decision_metadata.json",
-                    "option_rollouts.jsonl", "decision_features.npz",
-                )
-            },
+            "captures": capture_inputs,
             "router_model": _artifact(args.router_model.resolve()),
             "router_artifact": _artifact(
                 args.router_model.resolve().parent / router.manifest["artifact_npz"]
@@ -935,7 +949,7 @@ def author(args: argparse.Namespace) -> dict[str, Any]:
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--capture", type=Path, required=True)
+    parser.add_argument("--capture", type=Path, action="append", required=True)
     parser.add_argument("--router-model", type=Path, required=True)
     parser.add_argument("--hard-control-capture", type=Path, required=True)
     parser.add_argument("--horizons", type=int, nargs="+", default=list(DENSE_HORIZONS))
