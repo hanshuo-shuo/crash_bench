@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "kind": "p3_2_frozen_dynamic_closeout_posthoc_trace_audit",
+  "status": "descriptive audit only; no retuning or additional cohort permitted",
+  "direct_sequential_boundary": 2.0723795238687988,
+  "fresh_trajectory_crossings": 0,
+  "fresh_global_max_margin": 2.0263423959288125,
+  "fresh_global_max_gap_to_boundary": -0.046037127939986267,
+  "fresh_global_max_condition": "noglass",
+  "fresh_global_max_source_state_sha256": "245d58ac0733deec6e2ae3927433e9fc5f959fbe0701062136ab6685ec0724b6",
+  "known_recovery_t20": {
+    "sources": 2,
+    "trajectory_max_margins": {
+      "207db297165dc796946e7d0297e0e026bc7ce1b43f0bb4073a21dec988ba03f2": 1.5716938317193125,
+      "2a9d837e0cc37be1ce1279e86fec638b7a9583e60089163870fdc3cfee55b4f0": 1.7524223846410087
+    },
+    "versus_base_success_control_trajectory_max_auc": 0.25
+  },
+  "all_glass_vs_base_success_control_trajectory_max_auc": 0.3828125,
+  "base_success_control_trajectory_max_range": [
+    1.6350734455145892,
+    2.0263423959288125
+  ],
+  "interpretation": "The state-level P3.1 ordering improvement did not generalize to source-level trajectory maxima under fresh repeated looks. Known-recovery maxima rank below many controls, so the completed dynamic null does not justify lowering or resweeping the frozen boundary.",
+  "raw_trace": {
+    "quest_path": "results/counterfactual_router/p3_2_closeout_c3874a146632_20260819T113244Z/closeout/router_trace.jsonl",
+    "sha256": "f0db63a3039f448907b475b19b9db9a72f8418f833a12d8be7df7713fc31c0c1"
+  },
+  "no_retuning_audit": {
+    "head_refit": false,
+    "boundary_recalibration": false,
+    "alpha_sweep": false,
+    "threshold_sweep": false,
+    "additional_cohort": false
+  }
+}

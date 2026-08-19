@@ -1,0 +1,141 @@
+{
+  "created_at_utc": "2026-08-19T11:44:03.600539+00:00",
+  "decision_before_sequential_calibration": "linear logits only; no class margin or probability threshold",
+  "input_contract": {
+    "dimension": 10,
+    "feature_router_artifact": "/gpfs/home/shv7753/crash_bench/results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/router.npz",
+    "feature_router_artifact_sha256": "46fd264b5258cb1be20a4c16f259025dc6c5ab9650afc75d65742eed16412e69",
+    "feature_router_model": "/gpfs/home/shv7753/crash_bench/results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/router.json",
+    "feature_router_model_sha256": "757e220bc2e561aa8207ae3778a3021554b3031df2ec3eef376e1e56db938052",
+    "field": "router_output_feature",
+    "order": "row-major 3 options x [task_success, catastrophe, safe_noncompletion] probabilities, then Base catastrophe probability"
+  },
+  "kind": "p3_2_frozen_direct_recovery_window_head",
+  "model": {
+    "array_sha256": {
+      "feature_mean": "84c7c133e233d42358e2f692237dbb408782243f197e5bb0137421bdc288d466",
+      "feature_scale": "42e7e36f73a249706e3900e94fbe01dc149cf74247ab576eadd505941deefc30",
+      "head_bias": "f31108c77bc3650355b7eda8f13ee5acb520636bb8a179b7c1bb22dcb29f5626",
+      "head_weight": "d555b4a3406232e92ded6a904ad4027b339e0a9b264671c64b1ffe63c25c0563"
+    },
+    "candidate_status": "development candidate; not yet dynamically confirmed",
+    "classes": [
+      "Base",
+      "Detour",
+      "FailSafeHold"
+    ],
+    "feature_mean": [
+      0.3497393031530957,
+      0.48870030547025683,
+      0.16156039137664757,
+      0.4995719360262265,
+      0.14891142490056364,
+      0.35151663907321,
+      1.1425083703959478e-06,
+      0.2103849230338691,
+      0.7896139344577605,
+      0.46794783202479634
+    ],
+    "feature_scale": [
+      0.28031730811602557,
+      0.3079523655403053,
+      0.19322618955909635,
+      0.2700029905111561,
+      0.22195200301100956,
+      0.2527343848115936,
+      1.9682466394047928e-06,
+      0.26664130839260825,
+      0.266642135536222,
+      0.34576729170418946
+    ],
+    "head_bias": [
+      1.6000101758505447,
+      -1.1081145873515876,
+      -0.49189558849895715
+    ],
+    "head_weight": [
+      [
+        -0.17636470696229123,
+        0.3144719697157458,
+        -0.13810726275345458
+      ],
+      [
+        -0.01791001077601379,
+        0.07737071823827986,
+        -0.059460707462266074
+      ],
+      [
+        0.2843999056911486,
+        -0.5795199501123812,
+        0.29512004442123263
+      ],
+      [
+        0.03965378212217212,
+        0.16601529797030934,
+        -0.20566908009248144
+      ],
+      [
+        0.1083391741588783,
+        -0.2142181151484951,
+        0.10587894098961681
+      ],
+      [
+        -0.13750695811768235,
+        0.010768272856486816,
+        0.12673868526119553
+      ],
+      [
+        1.003673301076608,
+        -0.40997538014894014,
+        -0.5936979209276678
+      ],
+      [
+        0.8905266817148467,
+        -0.27619570828671364,
+        -0.614330973428133
+      ],
+      [
+        -0.8905313279540544,
+        0.27619787778309457,
+        0.61433345017096
+      ],
+      [
+        0.029092103161966917,
+        0.020464215589083404,
+        -0.04955631875105032
+      ]
+    ],
+    "input_dimension": 10,
+    "input_feature_field": "router_output_feature",
+    "kind": "direct_recovery_window_multinomial_linear_softmax",
+    "l2": 0.01,
+    "optimizer_converged": true,
+    "path": "/gpfs/home/shv7753/crash_bench/results/p3_1_direct_recovery_head_model.npz",
+    "schema_version": 1,
+    "sha256": "b957be866c35338e709a4eebaebf88257cc97772ef04dd44d82ba81fff931789",
+    "training_records": 142,
+    "training_records_sha256": "8d7a852203a06562a726d5635c140ca445b8322376269ce1810498978d7655ec",
+    "training_sources": 9
+  },
+  "option_mapping": {
+    "0": "Base",
+    "1": "Detour",
+    "2": "FailSafeHold"
+  },
+  "repository": {
+    "git_branch": "codex/glass-recovery-d0-fprime-rescue",
+    "git_commit": "c3874a146632e76596c1b21039b9f50186df1dbf",
+    "git_commit_short": "c3874a146632",
+    "git_dirty": false,
+    "git_dirty_entries": []
+  },
+  "schema_version": 1,
+  "status": "frozen before the single P3.2 dynamic closeout",
+  "supervision": {
+    "path": "/gpfs/home/shv7753/crash_bench/results/p3_recovery_window_records_20260819.jsonl",
+    "records": 142,
+    "sha256": "8d7a852203a06562a726d5635c140ca445b8322376269ce1810498978d7655ec",
+    "sources": 9
+  },
+  "tunable_head_parameters_remaining": []
+}

@@ -1,0 +1,177 @@
+{
+  "artifacts": {
+    "boundary": "sequential_boundary.json",
+    "freeze": "direct_head_freeze.json",
+    "trace": "calibration_direct_trace.jsonl",
+    "trajectories": "calibration_trajectories.jsonl"
+  },
+  "checkpoint": "openvla/openvla-7b-finetuned-libero-spatial",
+  "checkpoint_identity": {
+    "generation_config": {
+      "do_sample": false,
+      "num_beams": 1,
+      "temperature": 1.0,
+      "top_k": 50,
+      "top_p": 1.0
+    },
+    "model_config_commit_hash": "962318cec55ac10993ff0f5f43eda9a270b4c873",
+    "requested": "openvla/openvla-7b-finetuned-libero-spatial",
+    "requested_revision": "962318cec55ac10993ff0f5f43eda9a270b4c873",
+    "resolved_path": "/gpfs/projects/p33100/siosio/huggingface_cache/hub/models--openvla--openvla-7b-finetuned-libero-spatial/snapshots/962318cec55ac10993ff0f5f43eda9a270b4c873",
+    "resolved_revision": "962318cec55ac10993ff0f5f43eda9a270b4c873"
+  },
+  "checkpoint_revision": "962318cec55ac10993ff0f5f43eda9a270b4c873",
+  "conditions": [
+    "offpath",
+    "noglass"
+  ],
+  "created_at_utc": "2026-08-19T11:55:01.707277+00:00",
+  "eligible_base_success_controls": 17,
+  "exclusions": [
+    {
+      "condition": "offpath",
+      "placement_id": "glass_recovery_validation_0001",
+      "reason": "invalid_initial_state",
+      "source_state_sha256": "31b4686e193cba48c44c24ee84abf5a4c210f4f0aebee2de7fbff1b1e28bc901"
+    }
+  ],
+  "kind": "p3_2_direct_head_sequential_calibration_capture",
+  "placement_design_metadata": {
+    "accepted_count_targets": {
+      "heldout": 1,
+      "train": 2,
+      "validation": 1
+    },
+    "candidate_counts_are_not_primary_acceptances": true,
+    "candidates_per_accepted_target_floor": 5,
+    "code_commit": "4dbde7ee1ddda82214cffcde11d63488f9d159e1",
+    "created_at_utc": "2026-08-11T09:40:06.804763+00:00",
+    "policy": "source initial states are disjoint across train/validation/heldout; heldout geometry families are clustered and absent from train; candidate order is predeclared and physical scenes are deduplicated",
+    "proposal_accounting": {
+      "heldout": {
+        "duplicate_physical_scene": 0,
+        "fixed_replay_no_catastrophe": 16,
+        "invalid_initial_overlap": 0,
+        "proposed": 21,
+        "screen_retained": 5,
+        "source_states_screened": 6,
+        "source_states_selected": 5,
+        "source_states_skipped": 1
+      },
+      "train": {
+        "duplicate_physical_scene": 0,
+        "fixed_replay_no_catastrophe": 87,
+        "invalid_initial_overlap": 0,
+        "proposed": 97,
+        "screen_retained": 10,
+        "source_states_screened": 12,
+        "source_states_selected": 8,
+        "source_states_skipped": 4
+      },
+      "validation": {
+        "duplicate_physical_scene": 0,
+        "fixed_replay_no_catastrophe": 16,
+        "invalid_initial_overlap": 0,
+        "proposed": 21,
+        "screen_retained": 5,
+        "source_states_screened": 6,
+        "source_states_selected": 5,
+        "source_states_skipped": 1
+      }
+    },
+    "requested_counts": {
+      "heldout": 5,
+      "train": 10,
+      "validation": 5
+    },
+    "settle_steps": 10,
+    "source_state_candidate_indices": {
+      "heldout": [
+        0,
+        5,
+        11,
+        17,
+        22,
+        28,
+        33,
+        39,
+        44
+      ],
+      "train": [
+        2,
+        4,
+        8,
+        15,
+        19,
+        24,
+        26,
+        30,
+        35,
+        38,
+        43,
+        47
+      ],
+      "validation": [
+        1,
+        6,
+        12,
+        18,
+        23,
+        29,
+        34,
+        40,
+        45
+      ]
+    },
+    "source_state_indices": {
+      "heldout": [
+        5,
+        11,
+        17,
+        22,
+        28
+      ],
+      "train": [
+        2,
+        19,
+        24,
+        26,
+        35,
+        38,
+        43,
+        47
+      ],
+      "validation": [
+        1,
+        12,
+        18,
+        23,
+        29
+      ]
+    },
+    "source_state_reserve_per_split": 4,
+    "source_trace_checkpoint_revision": "962318cec55ac10993ff0f5f43eda9a270b4c873",
+    "source_trace_manifest": "/gpfs/home/shv7753/crash_bench/results/glass_recovery_v2/pilot_b_task0_20260811_r2/source_traces_task0/source_traces.json",
+    "source_trace_manifest_sha256": "fa484682aa7bb5745ffe023454d9b43e7a87d90a5eab0e69aa1c4ef1aa21f68f",
+    "source_trace_policy": "successful no-glass task-completing traces only",
+    "source_trace_unnorm_key": "libero_spatial",
+    "suite": "libero_spatial",
+    "task_id": 0
+  },
+  "placements": "/gpfs/home/shv7753/crash_bench/results/glass_recovery_v2/pilot_b_task0_20260811_r5/frontier_placements/placements.json",
+  "placements_sha256": "dfd763e7771d02f8705184411eaf136dd8ec9bdf0850f5e2a9b0141e997fd652",
+  "repository": {
+    "git_branch": "codex/glass-recovery-d0-fprime-rescue",
+    "git_commit": "c3874a146632e76596c1b21039b9f50186df1dbf",
+    "git_commit_short": "c3874a146632",
+    "git_dirty": false,
+    "git_dirty_entries": []
+  },
+  "schema_version": 1,
+  "source_states": 10,
+  "splits": [
+    "validation",
+    "heldout"
+  ],
+  "trajectories": 19
+}

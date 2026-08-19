@@ -1,0 +1,40 @@
+{
+  "alpha": 0.1,
+  "alpha_sweep_performed": false,
+  "calibration_source_false_crossings": 0,
+  "calibration_sources": 10,
+  "created_at_utc": "2026-08-19T11:55:01.681604+00:00",
+  "direct_head_freeze": "/gpfs/home/shv7753/crash_bench/results/counterfactual_router/p3_2_closeout_c3874a146632_20260819T113244Z/calibration/direct_head_freeze.json",
+  "direct_head_freeze_sha256": "1896988ba81c4e7c21fba94b951a0e75e3f29617bd7f757d9492b6143e53230d",
+  "direct_head_model_sha256": "b957be866c35338e709a4eebaebf88257cc97772ef04dd44d82ba81fff931789",
+  "eligible_control_trajectories": 17,
+  "feature_router_model_sha256": "757e220bc2e561aa8207ae3778a3021554b3031df2ec3eef376e1e56db938052",
+  "kind": "p3_2_direct_head_source_level_sequential_boundary",
+  "repository": {
+    "git_branch": "codex/glass-recovery-d0-fprime-rescue",
+    "git_commit": "c3874a146632e76596c1b21039b9f50186df1dbf",
+    "git_commit_short": "c3874a146632",
+    "git_dirty": false,
+    "git_dirty_entries": []
+  },
+  "runtime_rule": "Base until the first strict margin crossing; at crossing choose the larger of Detour/Hold logits and latch",
+  "schema_version": 1,
+  "score": "max(logit_Detour, logit_FailSafeHold) - logit_Base",
+  "sequential_boundary": 2.0723795238687988,
+  "source_conformal_rank": 10,
+  "source_maxima": {
+    "31b4686e193cba48c44c24ee84abf5a4c210f4f0aebee2de7fbff1b1e28bc901": 1.8140278440584312,
+    "37d3edc8cb9ad51b8ebf45a235721c16e2531be26385d150aef2b21d81a04cae": 1.8020738156248872,
+    "76fe1d96587ab928f6fb5d7750ecd048fd712eb3d66aa60feb972a3d9d56c9d1": 1.8066859118629424,
+    "821b498fc1fcb4e3c103635fa473d7577f718c4f633b273772954295c83ae585": 1.8315669492025344,
+    "9176c2514b8a62105f4d2b8a22a8a0b0236c5b9feda58c18ef64cea917b98d9d": 2.0723795238687988,
+    "986b3dff233a80cf0fd1c48f815600f49b95f83be0d9f898fee40d0a5c9dca63": 2.001368880481337,
+    "a992f0a563f4b0239708f4be6fa38192e6930b15387567b2d4a16568d4fa5671": 1.9401856460771745,
+    "c8fa274849bf4beeb7c46b93a7de7a6242e5af2e9c83a395e8d0db16da5e81d8": 1.939521324091596,
+    "ccb84c17d13c744cb5cc7fda299fed0c95f18cefc3d126e96dd232c6f5080ef6": 1.9976210687865603,
+    "ddd84e646ab0cdd38c0f283802f28ac361a412492f3872c7f489b95bb55d53af": 1.874525000418803
+  },
+  "status": "frozen before the single P3.2 dynamic closeout",
+  "strict_crossing": true,
+  "tunable_parameters_remaining": []
+}
