@@ -1,45 +1,71 @@
 # Paper plan
 
-## Working title and contribution
+## Working title and frozen contribution
 
-**Knowing When to Intervene: Counterfactual Outcome Routing for VLA Safety**
+**Risk Is Not Intervention Value: Counterfactual Outcome Routing for VLA Safety**
 
-A safety router should not merely predict whether the current policy may fail.
-It should predict how candidate interventions change task success,
-catastrophe, and safe noncompletion, and should override the Base policy only
-when the expected counterfactual benefit is sufficiently large.
+The paper's central distinction is:
 
-The paper uses the C0–C14 vocabulary in [CLAIMS.md](CLAIMS.md), with C14 as the
-headline result. Historical E14/E15 execution order is not a narrative outline.
+```text
+Risk Detection
+    !=
+Intervention Value
+    !=
+Reliable Sequential Intervention
+```
 
-## Four-act main text
+A failure probability does not say whether Detour or Hold will improve the
+outcome, and a useful statewise intervention-value estimate does not by itself
+produce a reliable repeated-look first-crossing policy. The positive
+contribution is a frozen option-conditioned outcome Router at fresh matched
+decision states. The sequential experiments define its deployment boundary.
 
-### Act I — Risk detection is not intervention selection
+The paper uses the C0–C14 vocabulary in [CLAIMS.md](CLAIMS.md), with E16/C14 as
+the headline positive result. P2–P3.2 is one compact boundary section, not a
+second method-development storyline.
 
-Open with the decision problem rather than a catalog of hazards.
+## Five-minute paper story
 
-- A Base policy may complete the task or catastrophize.
-- Retreat can prevent catastrophe but produce safe noncompletion.
+1. **Risk detection is not intervention selection.** Collision risk can be
+   decoded while the VLA continues an unsafe action, and fixed interventions
+   trade catastrophe against task completion.
+2. **Counterfactual option outcomes support useful matched-state routing.** E16
+   predicts success, catastrophe, and safe noncompletion for Base, Detour, and
+   Retreat, then exposes a fresh safety--success--intervention frontier.
+3. **Statewise routing is not reliable sequential intervention.** P2 gives a
+   modest selective first-crossing benefit, but P2.5–P3.2 show that neither
+   simple temporal aggregation nor direct recovery-window supervision transfers
+   reliably to fresh sequential control.
+4. **The experimental line is closed.** The paper reports the positive
+   matched-state result and the statewise-to-sequential gap without another
+   recovery model, threshold search, or cohort.
+
+## Main text
+
+### 1. Risk detection is not intervention selection
+
+Open with the decision problem rather than a hazard catalog:
+
+- Base may complete the task or catastrophize.
+- Hold can prevent catastrophe while guaranteeing noncompletion.
 - Detour can rescue a Base catastrophe but can also damage a Base success.
-- A prompt can alter behavior everywhere without producing useful selective
-  control.
+- A hazard prompt can change behavior everywhere without routing selectively.
 
-The exact-state development capture makes this concrete: among 273 matched
+The exact-state development capture makes this concrete. Among 273 matched
 decisions, only 21 have identical outcomes under Base, Detour, and Retreat; 91
 have positive Oracle value over Base, while 60 are Base-success/Detour-worse.
+A scalar risk score cannot encode whether intervention is valuable or which
+option should be selected.
 
-Main claim: a scalar Base-risk score cannot encode whether intervention is
-beneficial or which intervention should be chosen.
+Use the wall mechanism chain as motivation: collision imminence is decodable
+from frozen representations, the unsafe action persists, and a scoped
+`risk-readout -> RetreatHold` interface can close a narrow safety loop. This
+supports “decoded but not routed,” not a claim that risk detection solves task
+recovery.
 
-Use the older “decoded but not routed” evidence as motivation: collision risk is
-readable from frozen representations, but unsafe action continues. The scoped
-wall `risk-readout -> RetreatHold` result shows that explicit routing can close a
-safety loop, while its safe-abort behavior also exposes why task completion must
-be modeled explicitly.
+### 2. Counterfactual intervention-value routing
 
-### Act II — Predict option outcomes and route conservatively
-
-Introduce the intentionally small method:
+Introduce the intentionally small E16 method:
 
 ```text
 x = single-frame hidden + robot state + nominal action
@@ -49,87 +75,92 @@ for option in {Base, Detour, Retreat}:
 choose best non-Base option only if advantage over Base > delta
 ```
 
-PCA and option heads use training sources only. `delta` and the rate-matched
-binary-risk thresholds use calibration sources only. The full grid
+PCA and option heads use training sources only. `delta` and rate-matched
+binary-risk thresholds use calibration sources only. The grid
 `lambda in {1,2,3,5,8}` and target intervention rates 0.1 through 0.9 is frozen.
-Development is diagnostic; fresh outcomes fit no parameter.
+Fresh outcomes fit no parameter. The contribution is intervention-value
+routing over structured options, not an end-to-end learned action policy.
 
-The method contribution is **intervention-value routing**, not a deeper sequence
-model, a world model, or an end-to-end action policy.
+### 3. Headline positive result: E16 / C14
 
-### Act III — Fresh matched online evaluation
+Each accepted source contributes glass, matched off-path glass, and no-glass
+conditions. Base, privileged Detour, and Retreat branch from the identical
+actual online T-20 simulator/controller state. Source state—not frame,
+condition, anchor, or branch—is the independent unit.
 
-Every accepted source contributes glass, matched off-path glass, and no-glass
-conditions. At the actual online T-20 anchor, Base, frozen privileged Detour,
-and Retreat are evaluated from the identical simulator/controller state. The
-hazard-specific prompt starts from the same episode reset.
-
-Compare all seven methods together:
-
-1. Base;
-2. Hazard Prompt;
-3. Binary Risk -> Retreat;
-4. Always Detour;
-5. Always Retreat;
-6. frozen Counterfactual Router;
-7. Counterfactual Oracle upper bound.
-
-Use source state—not frame, condition, anchor, or branch—as the independent
-unit. Report 5,000-replicate shared source-cluster bootstrap intervals and
-paired differences.
-
-### Act IV — A new frontier point, not universal dominance
+Compare Base, Hazard Prompt, Binary Risk -> Retreat, Always Detour, Always
+Retreat, the frozen Counterfactual Router, and the Counterfactual Oracle upper
+bound in one table.
 
 In the independent eight-source/24-decision cohort, the
-`lambda=1,target=0.6` display point reaches 87.5% success, 8.33% catastrophe,
-and 58.33% intervention. Binary Risk reaches 41.67%, 8.33%, and 50%; Always
-Detour reaches 70.83%, 4.17%, and 100%.
+`lambda=1,target=0.6` display point reaches 87.5% task success, 8.33%
+catastrophe, and 58.33% intervention. Binary Risk reaches 41.67%, 8.33%, and
+50.0%; Always Detour reaches 70.83%, 4.17%, and 100%.
 
-The result has three complementary readings:
+The positive result has three readings:
 
-- at a similar intervention rate and identical catastrophe point estimate,
-  Router preserves far more task success than Binary Risk;
-- versus Always Detour, Router trades a small catastrophe increase for higher
+- at a similar intervention rate and identical catastrophe point estimate, the
+  Router preserves substantially more task success than Binary Risk;
+- versus Always Detour, it trades a small catastrophe increase for higher task
   success and much less intervention;
-- on off-path/no-glass controls, Router retains 93.75% task success versus
-  56.25% for Hazard Prompt.
+- on off-path/no-glass controls, it retains 93.75% task success versus 56.25%
+  for Hazard Prompt.
 
-Four predeclared frontier points jointly satisfy all four acceptance criteria.
-The combined 13-source frontier has no single all-criteria point, so end with the
-honest boundary: the method supplies a useful and adjustable Pareto frontier,
-not a single universally dominant deployment setting.
+Four predeclared points meet all four frontier criteria. The combined
+13-source frontier has no single all-criteria point. The claim is a useful
+matched-state Pareto frontier, not universal dominance by one deployment point.
 
-Close the act by separating option choice from trigger timing. E16 evaluates
-fresh matched online decision states at T-20; it is not a from-reset timing
-confirmation. In the separate four-source P2 development cohort,
-source-calibrated first crossing improves Base success/catastrophe from
-58.3%/33.3% to 66.7%/25.0% at 16.7% intervention, but misses both known
-T-20-recoverable episodes. P2.5 shows that simple smoothing, accumulation,
-run-length, option-stability, and trend statistics do not repair their ordering
-against benign controls. This is the paper's precise “knowing when” boundary,
-not a second headline result.
+### 4. Boundary: the statewise-to-sequential gap
+
+Keep P2–P3.2 in one concise section. Do not present Direct Recovery Router as a
+second positive method.
+
+| Stage | Frozen evidence | Paper interpretation |
+|---|---|---|
+| P2 | Four stable development sources × three conditions. Source-calibrated first crossing improves Base success/catastrophe from 58.3%/33.3% to 66.7%/25.0% at 16.7% intervention, while missing 2/2 known T-20 recovery opportunities. | Modest but real selective dynamic benefit; secondary positive evidence only. |
+| P2.5 | Complete score trajectories; raw missed-recovery-v-control AUC `0.357`; moving-average and other simple temporal summaries do not improve the ordering (`0.286` for MA-3/5/8). | Smoothing, accumulation, run length, option stability, and trend do not close the gap. |
+| P3.0 | 80 dense exact-state anchors: 28 recovery-open, 35 loss-control, 15 dense Base-preferred; plus 62 hard Base-success controls and zero FailSafeHold contract violations. | Establishes explicit recovery-window supervision without adding a temporal model. |
+| P3.1 | Nine-source strict LOSO direct head. Recovery-open-v-hard-control AUC improves from old scalar `0.351` to `1.000`; intervention-needed-v-hard-control from `0.338` to `0.995`; source-macro accuracy `0.632`, macro-F1 `0.540`, no globally collapsed class, hard-control Base retention `0.984`. | Statewise/offline supervision finds useful separation in the frozen 10-D output representation. |
+| P3.2 | Fixed `alpha=0.1`, rank-10 source boundary `2.0724`; eight fresh sources × three conditions. Direct Router chooses Base 24/24, recovers 0/8 glass episodes, and misses 2/2 known recoveries. Old P2 Router chooses Detour 5/24, recovers 1/8 glass episodes, and retains task success on 16/16 controls. | The P3.1 improvement does not transfer to fresh sequential first crossing; Direct collapses operationally to Base. |
+
+The post-closeout trajectory audit strengthens the boundary rather than opening
+a tuning question: fresh known-recovery-v-control trajectory-max AUC is `0.250`,
+and the known-recovery maxima lie below many controls. Lowering the frozen
+boundary would cross benign trajectories first.
+
+Paper-facing conclusion:
+
+> Statewise counterfactual intervention value can improve matched-state routing,
+> but neither simple temporal aggregation nor directly supervised
+> recovery-window classification reliably transfers to fresh sequential
+> first-crossing control.
+
+The recovery rescue line is **CLOSED**. There is no P3.3, temporal recovery
+model, GRU/Transformer follow-up, threshold/alpha tuning, or new recovery
+cohort.
 
 ## Main figures and tables
 
-1. **Decision-problem figure:** identical state branching to Base, Detour, and
-   Retreat; include one example where intervention helps and one where it hurts.
+1. **Decision-problem figure:** identical-state branching to Base, Detour, and
+   Retreat, with one beneficial and one harmful intervention example.
 2. **Method figure:** option-conditioned outcome heads, `U_lambda`, conservative
    advantage margin, and Base-default handoff.
-3. **Fresh frontier figure:** all five catastrophe costs; catastrophe on x,
-   success on y, marker area as intervention, stars for all-criteria points.
-4. **Control/decision-quality figure or compact table:** unnecessary
-   intervention, missed beneficial intervention, regret, recovered Oracle value,
-   and off-path/no-glass retention.
-5. **Main seven-method table:** Base, Hazard Prompt, Binary Risk, Always Detour,
-   Always Retreat, Router, and Oracle with success, catastrophe, safe
-   noncompletion, and intervention.
+3. **Fresh E16 frontier figure:** catastrophe versus success, marker area as
+   intervention, with all predeclared frontier points.
+4. **Main seven-method table:** success, catastrophe, safe noncompletion, and
+   intervention for Base, prompt, fixed policies, Router, and Oracle.
+5. **Compact boundary figure/table:** P2 modest benefit followed by P2.5, P3.0,
+   P3.1, and the P3.2 dynamic null. One visual is enough; do not give each
+   diagnostic a headline figure.
 
-The canonical numeric tables and current figures are in
+Canonical E16 tables and figures are in
 [COUNTERFACTUAL_ROUTER_MAIN_RESULT.md](COUNTERFACTUAL_ROUTER_MAIN_RESULT.md).
+The final sequential closeout is in
+[`P3_2_FROZEN_DYNAMIC_CLOSEOUT_20260819.md`](../results/P3_2_FROZEN_DYNAMIC_CLOSEOUT_20260819.md).
 
 ## Supporting mechanism section
 
-Keep the earlier wall chain compact:
+Keep the wall chain compact:
 
 - swept-corridor causal localization: 15/15 on-path versus 0/33 clear;
 - representation readout: OpenVLA/OFT T-5 AUC 0.998/0.903;
@@ -137,57 +168,41 @@ Keep the earlier wall chain compact:
 - scoped probe-gated `RetreatHold`: 15/15 crashes to 0/15 and 0/22 benign fires;
 - final-readout activation steering remains at 100% crash.
 
-This section supports the premise that information can be decoded yet fail to
-control behavior. It should not compete with the learned router for the paper
-headline.
+This section motivates the distinction between readable risk and expressed
+control. It does not compete with E16 for the headline.
 
 ## Appendix
 
-- full development router/ablation tables and split audits;
-- original and post-pilot failed fixed-point audits;
+- full development Router and ablation tables, split audits, and negative fixed
+  operating-point audits;
 - combined n=13 frontier and cohort heterogeneity;
-- P2 source-level first crossing and P2.5 score-morphology audit, including the
-  partial dynamic Pareto improvement and failed simple temporal aggregation;
-- complete prompt matrix and whole-episode instructions;
-- full wall, OFT, pi0, probe, confound, shield, and steering diagnostics;
-- broad glass E14/E15 no-go, certification funnel, Oracle upper-bound traces,
-  restore/hash details, and Slurm provenance;
-- negative hazard mechanisms and low-wall existence demonstrations.
+- complete P2–P3.2 provenance, dense labels, OOF probabilities, sequential
+  calibration, paired source differences, and trace audits;
+- prompt matrix, wall/OFT/pi0/probe/shield/steering diagnostics;
+- broad E14/E15 no-go evidence, exact restore hashes, and Slurm provenance.
 
-## Cut from the main narrative
+## Evidence discipline and prohibited interpretations
 
-- chronological E14/E15 Pilot A/B/C/D/E/F storytelling;
-- deeper sequence models, Transformers, ensemble world models, or another
-  outcome-led threshold/simple-accumulator search;
-- claims that Hazard Prompt or Retreat constitutes task recovery;
-- claims that Oracle is a deployable competitor;
-- claims of universal safety, arbitrary-layout coverage, or production-scale
-  robustness;
-- separate headline figures for every historical diagnostic.
+- The E16 confirmation has eight independent source states, not 24 independent
+  samples.
+- The display point is one of four qualifying points in a predeclared frontier,
+  not a prespecified universally dominant deployment point.
+- Detour uses privileged geometry; the learned contribution is option routing.
+- Oracle observes realized branches and is not deployable.
+- P3.1 is an offline statewise result; P3.2 is the final sequential test.
+- Do not claim reliable recovery-window detection, end-to-end learned recovery,
+  arbitrary-layout robustness, or that “Knowing When” has been solved.
 
-## Evidence discipline
+## Frozen experiment policy
 
-- The independent confirmation has eight source states, not 24 independent
-  samples; the three conditions are clustered within source.
-- The display point is one of four all-criteria points in a fully predeclared
-  frontier, not a prespecified single deployment point.
-- The combined n=13 result passes criteria at different frontier locations but
-  has no joint all-criteria point.
-- Detour uses privileged geometry; the claim is learned option routing.
-- Oracle observes realized branches and is excluded from deployable Pareto
-  dominance.
-- Negative fixed-`lambda=5` audits stay visible.
-- E16 supports routing at matched decision states; P2/P2.5 does not support a
-  claim that the current single-frame score reliably finds recovery windows
-  from reset.
+Do not tune this cohort further. Experiment discovery is closed and paper
+consolidation is active. Specifically:
 
-## Next experiment policy
+- no P3.3;
+- no temporal recovery model, GRU, or Transformer;
+- no head refit, threshold tuning, alpha sweep, or additional recovery cohort;
+- no new GO/NO-GO gate for the recovery line.
 
-Do not tune this cohort further. For a stronger dynamic-timing claim, the next
-method experiment is explicit recovery-window supervision, frozen before a new
-source-disjoint evaluation; a temporal value model comes only after that target
-is shown to be adequate. If review instead requires generalization of the
-existing E16 matched-decision result, replicate the frozen router and option
-contract on a new task family. Five-fold held-out wall guard and OFT-specific
-online guard remain useful mechanism extensions, but they do not replace the
-current E16 headline.
+The only optional additional experiment is a matched-state replication of the
+already-frozen E16 method on a second task family. It is not required for the
+current paper and must not be framed as reopening sequential recovery.
