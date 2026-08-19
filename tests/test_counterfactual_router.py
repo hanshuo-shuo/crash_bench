@@ -48,6 +48,12 @@ from scripts.author_timing_choice_benchmark import (
     correct_option,
     point_signature,
 )
+from scripts.author_recovery_window_supervision import (
+    extract_hard_control_records,
+    feature_overlap_summary,
+    label_anchor,
+    recovery_intervals,
+)
 
 
 def test_option_outcomes_are_exhaustive_and_exclusive():
@@ -260,6 +266,109 @@ def test_p1_fail_safe_hold_has_no_directional_motion():
         controller.step({"robot0_eef_pos": np.asarray([0.1, 0.2, 0.3])}),
         np.asarray([0, 0, 0, 0, 0, 0, -1], dtype=np.float32),
     )
+
+
+def test_p3_anchor_labels_follow_predeclared_option_priority():
+    recoverable = label_anchor(
+        "catastrophe", "task_success", "safe_noncompletion"
+    )
+    assert recoverable["recovery_open"] is True
+    assert recoverable["preferred_option"] == "Detour"
+    assert recoverable["intervention_needed"] is True
+
+    loss = label_anchor(
+        "catastrophe", "catastrophe", "safe_noncompletion"
+    )
+    assert loss["loss_control"] is True
+    assert loss["preferred_option"] == "FailSafeHold"
+    assert loss["task_completion_unsolved"] is True
+
+    base_tie = label_anchor(
+        "task_success", "task_success", "safe_noncompletion"
+    )
+    assert base_tie["preferred_option"] == "Base"
+    assert base_tie["intervention_needed"] is False
+
+    violation = label_anchor("catastrophe", "catastrophe", "catastrophe")
+    assert violation["fail_safe_contract_violation"] is True
+    assert violation["preferred_option"] == "Base"
+
+
+def test_p3_recovery_intervals_preserve_nonmonotonic_windows():
+    horizons = [10, 8, 6, 4, 2, 1]
+    records = [
+        {"horizon_actions": horizon, "recovery_open": horizon in {10, 8, 4, 2}}
+        for horizon in horizons
+    ]
+    intervals = recovery_intervals(records, horizon_grid=horizons)
+    assert [row["horizons"] for row in intervals] == [[10, 8], [4, 2]]
+    assert intervals[0]["latest_recoverable_anchor"] == 8
+    assert intervals[1]["recovery_window_span_actions"] == 2
+
+
+def test_p3_hard_controls_take_union_of_peak_and_long_regions():
+    episodes = [
+        {
+            "episode_id": "short",
+            "placement_id": "p-short",
+            "source_state_sha256": "s-short",
+            "condition": "noglass",
+            "reference_base_outcome": "task_success",
+        },
+        {
+            "episode_id": "long",
+            "placement_id": "p-long",
+            "source_state_sha256": "s-long",
+            "condition": "offpath",
+            "reference_base_outcome": "task_success",
+        },
+        {
+            "episode_id": "crash",
+            "placement_id": "p-crash",
+            "source_state_sha256": "s-crash",
+            "condition": "glass",
+            "reference_base_outcome": "catastrophe",
+        },
+    ]
+
+    def trace(episode, values):
+        rows = []
+        for action, value in enumerate(values):
+            probabilities = np.full((3, 3), 1 / 3)
+            rows.append({
+                "episode_id": episode,
+                "action_index": action,
+                "advantage_vs_base": [0.0, value, value - 0.1],
+                "option_outcome_probabilities": probabilities.tolist(),
+                "base_catastrophe_probability": 0.5,
+                "utility": [0.0, value, value - 0.1],
+            })
+        return rows
+
+    traces = (
+        trace("short", [0.0, 2.0, 0.0])
+        + trace("long", [0.6, 0.7, 0.8, 0.9])
+        + trace("crash", [9.0, 9.0])
+    )
+    records, regions, vectors = extract_hard_control_records(
+        episodes, traces, pointwise_margin=0.5,
+        top_by_peak=1, top_by_duration=1,
+    )
+    assert {row["placement_id"] for row in regions} == {"p-short", "p-long"}
+    assert len(records) == 5
+    assert all(row["hard_negative"] for row in records)
+    assert all(row["preferred_option"] == "Base" for row in records)
+    assert len(vectors) == len(records)
+
+
+def test_p3_feature_overlap_reports_router_output_space():
+    result = feature_overlap_summary(
+        [np.zeros(3), np.ones(3)],
+        [np.full(3, 0.1), np.full(3, 0.9)],
+    )
+    assert result["available"] is True
+    assert result["dimensions"] == 3
+    assert 0.0 <= result["leave_one_out_1nn_balanced_accuracy"] <= 1.0
 
 
 def test_temporal_window_is_causal_and_left_padded():
