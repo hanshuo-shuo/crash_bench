@@ -59,6 +59,29 @@ router copies remain under gitignored `results/counterfactual_router/` run
 roots. The promoted analyses permit complete table/frontier inspection without
 those raw assets; re-executing rollouts still requires Quest-side state.
 
+### P2/P2.5 dynamic timing diagnostic
+
+The P2.5 offline closeout is tracked without requiring the ignored Quest trace
+roots:
+
+- `results/P2_SEQUENTIAL_FIRST_CROSSING_DEV_20260819.md`: source-level
+  sequential first-crossing result and raw artifact hashes;
+- `results/P2_TRACE_MORPHOLOGY_AUDIT_20260819.md`: canonical interpretation;
+- `results/p2_trace_morphology_episode_stats_20260819.csv`: all 12 stable
+  episodes plus three separately marked unstable `heldout_0015` diagnostics;
+- `results/p2_trace_morphology_audit_20260819.json`: full reconstructed Detour,
+  Retreat/Hold, max non-Base, candidate, and option-argmax sequences, rankings,
+  input hashes, and definitions;
+- `results/p2_trace_morphology_{trajectories,rankings}_20260819.png`: promoted
+  figures.
+
+The generating script is `scripts/analyze_p2_trace_morphology.py`; its unit
+tests cover moving averages, strict-margin area/run calculations, and episode
+grouping. The original `router_trace.jsonl`, `dynamic_episodes.jsonl`, capture
+manifest, and sequential boundary remain in the Quest run roots recorded in
+the reports. No new model or rollout is needed to inspect the committed JSON,
+CSV, figures, or conclusions.
+
 ### Swept-corridor causal study
 
 - Tall-wall treatment scenarios: `scenarios/`.
@@ -106,6 +129,7 @@ serialization/runtime loading.
 
 | Experiment | Present locally | Missing prerequisite |
 |---|---|---|
+| recovery-window-supervised intervention value | P2/P2.5 trajectories, failure taxonomy, structured options, source-level evaluation contract | action-level recoverability labels from calibration-only branches, a frozen model-selection protocol, and a new source-disjoint evaluation cohort |
 | frozen-router new-task replication | model code, frozen feature/option contract, lambda/rate grid, analysis | a new source-disjoint task-family cohort and task-compatible structured options |
 | five-fold wall online guard | Base/OFT `probe_T5.npz`, scenarios, evaluation code | raw wall/OFT hidden/meta for fold-local refitting, or a new capture |
 | OFT online guard | OFT probe summary/checkpoint and backend | fold-local calibration inputs and online replication protocol |

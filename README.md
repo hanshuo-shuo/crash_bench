@@ -76,6 +76,30 @@ The structured Detour controller uses privileged geometry, and Oracle observes
 realized branches. Accordingly, the paper claims learned routing over structured
 options, not an end-to-end learned recovery policy.
 
+## Dynamic first-crossing closeout
+
+E16 establishes intervention-value routing at matched T-20 decision states; it
+does not by itself establish reliable from-reset trigger timing. P2 evaluates
+that stronger deployment question separately. Source-level sequential
+calibration reduces repeated-look over-triggering to 16.7% and, on four stable
+development sources (12 episodes), changes Base success/catastrophe from
+58.3%/33.3% to 66.7%/25.0%. However, it misses both known T-20-recoverable
+glass episodes.
+
+The P2.5 morphology audit closes the obvious threshold/accumulator follow-up.
+Across the two missed treatments and seven Base-success controls, raw maximum
+has pairwise AUC 0.357; the best simple temporal alternatives (MA-3/5/8) reach
+only 0.286. One missed episode has sustained Detour evidence, the other only a
+short burst, while several controls are also persistently high. The limitation
+is therefore not just one-step spikes or a badly chosen scalar boundary.
+
+This result is a development diagnosis, not a new project-level GO/NO-GO. E16
+remains the headline matched-decision result; the paper must not claim that the
+current single-frame score reliably knows when to intervene from reset. If that
+claim is pursued, the minimum next method change is explicit recovery-window
+supervision, before a temporal value model. Further instantaneous-threshold or
+simple evidence-accumulator tuning on this cohort is closed.
+
 ## Repository map
 
 ```text
@@ -106,6 +130,7 @@ records depend on them. They are not competing current entrypoints.
 - [P2 dynamic first-crossing protocol](docs/P2_DYNAMIC_FIRST_CROSSING.md)
 - [P2 development result](results/P2_DYNAMIC_FIRST_CROSSING_DEV_20260818.md)
 - [P2 sequential first-crossing result](results/P2_SEQUENTIAL_FIRST_CROSSING_DEV_20260819.md)
+- [P2.5 score-trajectory morphology audit](results/P2_TRACE_MORPHOLOGY_AUDIT_20260819.md)
 - [Appendix index](docs/appendix/README.md)
 - [Legacy archive](docs/archive/README.md)
 

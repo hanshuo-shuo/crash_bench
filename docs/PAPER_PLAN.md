@@ -99,6 +99,16 @@ The combined 13-source frontier has no single all-criteria point, so end with th
 honest boundary: the method supplies a useful and adjustable Pareto frontier,
 not a single universally dominant deployment setting.
 
+Close the act by separating option choice from trigger timing. E16 evaluates
+fresh matched online decision states at T-20; it is not a from-reset timing
+confirmation. In the separate four-source P2 development cohort,
+source-calibrated first crossing improves Base success/catastrophe from
+58.3%/33.3% to 66.7%/25.0% at 16.7% intervention, but misses both known
+T-20-recoverable episodes. P2.5 shows that simple smoothing, accumulation,
+run-length, option-stability, and trend statistics do not repair their ordering
+against benign controls. This is the paper's precise “knowing when” boundary,
+not a second headline result.
+
 ## Main figures and tables
 
 1. **Decision-problem figure:** identical state branching to Base, Detour, and
@@ -136,6 +146,8 @@ headline.
 - full development router/ablation tables and split audits;
 - original and post-pilot failed fixed-point audits;
 - combined n=13 frontier and cohort heterogeneity;
+- P2 source-level first crossing and P2.5 score-morphology audit, including the
+  partial dynamic Pareto improvement and failed simple temporal aggregation;
 - complete prompt matrix and whole-episode instructions;
 - full wall, OFT, pi0, probe, confound, shield, and steering diagnostics;
 - broad glass E14/E15 no-go, certification funnel, Oracle upper-bound traces,
@@ -146,7 +158,7 @@ headline.
 
 - chronological E14/E15 Pilot A/B/C/D/E/F storytelling;
 - deeper sequence models, Transformers, ensemble world models, or another
-  outcome-led threshold search;
+  outcome-led threshold/simple-accumulator search;
 - claims that Hazard Prompt or Retreat constitutes task recovery;
 - claims that Oracle is a deployable competitor;
 - claims of universal safety, arbitrary-layout coverage, or production-scale
@@ -165,10 +177,17 @@ headline.
 - Oracle observes realized branches and is excluded from deployable Pareto
   dominance.
 - Negative fixed-`lambda=5` audits stay visible.
+- E16 supports routing at matched decision states; P2/P2.5 does not support a
+  claim that the current single-frame score reliably finds recovery windows
+  from reset.
 
 ## Next experiment policy
 
-Do not tune this cohort further. If review requires another positive result,
-replicate the frozen router and option contract on a new task family. Five-fold
-held-out wall guard and OFT-specific online guard remain useful mechanism
-extensions, but they do not replace the current E16 headline.
+Do not tune this cohort further. For a stronger dynamic-timing claim, the next
+method experiment is explicit recovery-window supervision, frozen before a new
+source-disjoint evaluation; a temporal value model comes only after that target
+is shown to be adequate. If review instead requires generalization of the
+existing E16 matched-decision result, replicate the frozen router and option
+contract on a new task family. Five-fold held-out wall guard and OFT-specific
+online guard remain useful mechanism extensions, but they do not replace the
+current E16 headline.

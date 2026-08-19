@@ -12,9 +12,9 @@ risk alone**: on an independent fresh matched cohort it reaches 87.5% task
 success and 8.33% catastrophe at 58.33% intervention, compared with 41.67%,
 8.33%, and 50.0% for a rate-matched binary-risk-to-Retreat policy.
 
-The supported claim is a new deployable safety--success--intervention tradeoff,
-not universal dominance, end-to-end learned recovery, or production-scale
-generalization.
+The supported claim is a new matched-decision safety--success--intervention
+tradeoff, not reliable from-reset trigger timing, universal dominance,
+end-to-end learned recovery, or production-scale generalization.
 
 ## Plain-language story
 
@@ -41,7 +41,9 @@ takes over only when its predicted counterfactual benefit is large enough.
 Base 是“继续照原计划做”，Binary Risk 是“觉得危险就统一后退”，Always
 Detour 是“不管有没有必要都绕路”，Hazard Prompt 是“从任务开始就一直提醒
 小心”，而 Router 会分别估计继续、绕路和撤退之后最可能发生什么。这个实验
-说明：真正有价值的不是只会报警，而是知道**何时接管、接管后应该做什么**。
+说明：在给定 matched decision state 时，真正有价值的不是只会报警，而是
+估计**是否应该接管、接管后应该做什么**。它还没有证明从 episode reset
+开始就能可靠找到这个时机。
 Router 没有在所有维度击败 Always Detour；它提供的是一个固定策略没有的新
 Pareto 点：高得多的任务成功率、较低的事故率，以及明显少于全程绕路的干预。
 
@@ -151,10 +153,10 @@ artifact or a license to tune another model.
 
 Supported:
 
-> A frozen probabilistic outcome router contributes new deployable
-> safety--success--intervention tradeoffs on fresh matched online rollouts. At a
-> similar intervention rate it can outperform binary risk routing, and it
-> retains controls better than a hazard prompt.
+> A frozen probabilistic outcome router contributes new
+> safety--success--intervention tradeoffs at fresh matched online decision
+> states. At a similar intervention rate it can outperform binary risk routing,
+> and it retains controls better than a hazard prompt.
 
 Not supported:
 
@@ -162,9 +164,26 @@ Not supported:
 - the router is universally safer than Always Detour;
 - the structured privileged options constitute end-to-end learned recovery;
 - eight independent sources establish production-scale robustness.
+- the current single-frame score reliably identifies recovery windows from
+  episode reset.
 
 The original `lambda=5,target=0.4` fixed-point audit and the post-pilot
 `lambda=5,target=0.2` audit remain negative in the sealed artifacts.
+
+## From-reset timing diagnostic
+
+The separate P2 dynamic first-crossing study tests the missing timing contract.
+Source-level sequential calibration produces a selective development Pareto
+point on four stable sources, but misses both known T-20-recoverable episodes.
+P2.5 then shows that MA-3/5/8, top-5 mean, excess area, longest above-margin
+run, option stability, and recent slope do not improve the two-missed-versus-
+control ordering over raw maximum. High controls are not only one-step spikes.
+
+This preserves the E16 result while fixing its scope: the learned result is
+option-value routing at matched decision states, and reliable from-reset timing
+remains open. The next justified method change is recovery-window supervision,
+not more threshold or simple accumulator tuning on the same cohort. See the
+[P2.5 morphology audit](../results/P2_TRACE_MORPHOLOGY_AUDIT_20260819.md).
 
 ## Stable artifacts and reproduction
 
@@ -175,6 +194,7 @@ The original `lambda=5,target=0.4` fixed-point audit and the post-pilot
 - Fixed-`lambda=5` audit figures: [`n8`](../results/counterfactual_router_fresh_online_n8_frontier_lambda5.png), [`n13`](../results/counterfactual_router_fresh_online_n13_frontier_lambda5.png)
 - Frozen protocol: [FRESH_COUNTERFACTUAL_ROUTER_PROTOCOL.md](FRESH_COUNTERFACTUAL_ROUTER_PROTOCOL.md)
 - Development and full-capture provenance: [COUNTERFACTUAL_ROUTER_HANDOFF.md](COUNTERFACTUAL_ROUTER_HANDOFF.md)
+- Dynamic first-crossing closeout: [P2_DYNAMIC_FIRST_CROSSING.md](P2_DYNAMIC_FIRST_CROSSING.md)
 
 The main executable path is
 `train_counterfactual_outcome_router.py -> collect_fresh_counterfactual_router.py

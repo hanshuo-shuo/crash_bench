@@ -84,6 +84,7 @@ samples.
 - online capture: `scripts/collect_dynamic_first_crossing_router.py`;
 - sequential calibration: `scripts/calibrate_dynamic_first_crossing_router.py`;
 - report builder: `scripts/analyze_dynamic_first_crossing_router.py`;
+- trajectory morphology audit: `scripts/analyze_p2_trace_morphology.py`;
 - calibration Quest job: `setup/dynamic_first_crossing_calibration.sbatch`;
 - Quest job: `setup/dynamic_first_crossing_router.sbatch`;
 - submission wrapper: `setup/submit_dynamic_first_crossing_router.sh`.
@@ -105,3 +106,41 @@ to 16.7% and adds a small Pareto improvement over Base, but misses both known
 T-20 recovery windows because benign trajectories outrank them. The exact
 result and paper decision are in
 [`results/P2_SEQUENTIAL_FIRST_CROSSING_DEV_20260819.md`](../results/P2_SEQUENTIAL_FIRST_CROSSING_DEV_20260819.md).
+
+## P2.5 trajectory-morphology closeout
+
+P2.5 tests whether the two missed recoverable episodes were hidden by isolated
+control spikes or whether their complete score trajectories also fail to
+separate. It reconstructs Detour, Retreat/Hold, max non-Base, candidate-option,
+and overall option-argmax sequences from the frozen traces. The primary ranks
+contain the four requested groups (11 episodes); the twelfth stable episode is
+a Base-safe-noncompletion no-glass trajectory and remains in per-episode
+artifacts without entering the treatment/control comparison.
+
+The two missed episodes rank as follows among those 11 episodes:
+
+| Statistic | heldout_0010 | heldout_0019 |
+|---|---:|---:|
+| raw maximum | 9 | 6 |
+| MA-3 maximum | 7 | 9 |
+| MA-5 maximum | 6 | 10 |
+| MA-8 maximum | 6 | 10 |
+| top-5 mean | 8 | 10 |
+| excess area | 9 | 11 |
+| longest above-margin run | 6 | 11 |
+
+Raw maximum gives missed-treatment-versus-control AUC 0.357; MA-3/5/8 each
+give 0.286. Temporal smoothing partially promotes `heldout_0010`, whose T-20
+window has an 11-action Detour-above-margin run, but demotes `heldout_0019`,
+whose corresponding run is five actions. High control scores are a mixture of
+spikes and sustained evidence; several remain above both treatments after
+smoothing or accumulation.
+
+No simple temporal statistic is justified for another freeze on this cohort.
+The minimum next method experiment is recovery-window supervision. A temporal
+value model is deferred until the supervision target, rather than model
+capacity, has been tested. This closes P2 threshold and accumulator tuning
+without converting the diagnostic into a new project-level GO/NO-GO. The full
+report, flat episode table, machine-readable trajectories/rankings, and figures
+are in
+[`results/P2_TRACE_MORPHOLOGY_AUDIT_20260819.md`](../results/P2_TRACE_MORPHOLOGY_AUDIT_20260819.md).

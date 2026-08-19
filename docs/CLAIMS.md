@@ -8,7 +8,7 @@ not imply that ignored raw activations, logs, or videos are present locally.
 
 | ID | Exact supported claim | Evidence and scale | Scope / paper role |
 |---|---|---|---|
-| C14 | A frozen single-frame probabilistic outcome router contributes a new safety--success--intervention tradeoff on fresh matched online rollouts. At the independent-cohort `lambda=1,target=0.6` point it reaches 87.5% task success, 8.33% catastrophe, and 58.33% intervention versus 41.67%, 8.33%, and 50.0% for rate-matched Binary Risk -> Retreat; four predeclared frontier points meet all four acceptance criteria. | E16; 8 independent random-reset source states, 3 matched conditions per source, 24 decisions; 5,000 source-cluster bootstrap replicates; `counterfactual_router_fresh_online_20260817.json` and promoted n8 analysis | Learned routing over Base and privileged structured Detour/Retreat options. The display point is not a prespecified single deployment point; combined n=13 has no joint all-criteria point. |
+| C14 | A frozen single-frame probabilistic outcome router contributes a new safety--success--intervention tradeoff at fresh matched T-20 decision states. At the independent-cohort `lambda=1,target=0.6` point it reaches 87.5% task success, 8.33% catastrophe, and 58.33% intervention versus 41.67%, 8.33%, and 50.0% for rate-matched Binary Risk -> Retreat; four predeclared frontier points meet all four acceptance criteria. | E16; 8 independent random-reset source states, 3 matched conditions per source, 24 decisions; 5,000 source-cluster bootstrap replicates; `counterfactual_router_fresh_online_20260817.json` and promoted n8 analysis | Learned routing over Base and privileged structured Detour/Retreat options. The display point is not a prespecified single deployment point; combined n=13 has no joint all-criteria point; P2/P2.5 does not establish reliable from-reset timing. |
 
 ## Causal and mechanism chain
 
@@ -53,11 +53,21 @@ The separate `glass_recovery_checkpoint_readiness_audit_20260812.json` records
 why D/F are not active claims: the frozen gate has no threshold crossing in the
 six saved episodes, and validation gripper-sign accuracy is below its gate.
 
+P2/P2.5 defines an additional scope boundary for C14. Source-calibrated dynamic
+first crossing produces a selective improvement on four stable development
+sources, but misses both known T-20-recoverable episodes. The trajectory audit
+finds missed-treatment-versus-control AUC 0.357 for raw maximum and 0.286 for
+MA-3/5/8; control highs include sustained evidence rather than only one-step
+spikes. C14 therefore supports learned option-value routing at matched decision
+states, not reliable from-reset recovery-window detection. The diagnostic is
+tracked in
+[`P2_TRACE_MORPHOLOGY_AUDIT_20260819.md`](../results/P2_TRACE_MORPHOLOGY_AUDIT_20260819.md).
+
 Accordingly, the paper may say that a task-completing continuation physically
 exists from exact matched states and that a frozen learned router recovers a
 useful fresh online frontier over those options. It may not claim end-to-end
 learned recovery, universal fixed-policy dominance, or arbitrary glass-layout
-coverage.
+coverage, and it may not claim reliable from-reset timing by the current score.
 
 ## Deprecated wording
 

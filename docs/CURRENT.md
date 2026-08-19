@@ -94,14 +94,41 @@ This is the supporting “decoded but not routed” mechanism. E16 advances the
 question from whether a failure signal exists to whether intervention is
 valuable and which structured option should be selected.
 
+## Dynamic timing boundary: P2/P2.5
+
+E16 evaluates option choice at an actual online T-20 anchor defined relative to
+the matched Base collision. P2 asks the stronger from-reset question. After
+source-level sequential calibration, the dynamic first-crossing Router
+intervenes on 2/12 episodes across four stable development sources, improves
+success from 58.3% to 66.7%, and reduces catastrophe from 33.3% to 25.0%.
+This is a small development Pareto point, not a confirmatory timing claim: both
+known T-20-recoverable glass episodes remain missed.
+
+P2.5 reconstructs the complete score trajectories and tests raw maximum,
+MA-3/5/8 maximum, top-5 mean, excess area, longest above-margin run, option
+stability, and last-10 slope. Raw maximum has missed-treatment-versus-control
+AUC 0.357; the best temporal variants reach 0.286. `heldout_0010` contains an
+11-action Detour-above-margin run in its T-20 window, but `heldout_0019` has only
+a five-action burst, and several benign controls remain high after smoothing.
+Simple accumulation therefore does not repair the ordering.
+
+The paper-facing interpretation is deliberately asymmetric: E16 supports
+learned option-value routing at matched decision states; P2/P2.5 establishes
+the unresolved deployment-timing boundary. Full evidence is in
+[P2_SEQUENTIAL_FIRST_CROSSING_DEV_20260819.md](../results/P2_SEQUENTIAL_FIRST_CROSSING_DEV_20260819.md)
+and [P2_TRACE_MORPHOLOGY_AUDIT_20260819.md](../results/P2_TRACE_MORPHOLOGY_AUDIT_20260819.md).
+
 ## Paper boundaries
 
 The paper may claim:
 
 - fresh online evidence for a learned intervention-value frontier;
-- a new deployable Pareto tradeoff relative to fixed policies and binary risk;
+- a new matched-decision Pareto tradeoff relative to fixed policies and binary
+  risk;
 - better control retention than a whole-episode hazard prompt;
-- learned routing over structured, privileged options.
+- learned routing over structured, privileged options;
+- a selective development Pareto point for source-calibrated dynamic first
+  crossing, reported separately from the E16 confirmation.
 
 It may not claim:
 
@@ -109,7 +136,9 @@ It may not claim:
 - uniformly lower catastrophe than Always Detour;
 - end-to-end learned action recovery;
 - arbitrary glass-layout or task-family coverage;
-- production robustness from eight independent confirmation sources.
+- production robustness from eight independent confirmation sources;
+- reliable from-reset recovery-window detection by the current single-frame
+  score, or full separation of recoverable treatments from benign controls.
 
 The statistical unit is always source state. Frames, conditions, anchors, and
 rollout branches are correlated observations, not independent samples.
@@ -123,11 +152,15 @@ rollout branches are correlated observations, not independent samples.
    and Oracle together in the main comparison.
 4. Show the full multi-`lambda` frontier; do not reduce the paper to one fixed
    `lambda=5` utility.
-5. Do not tune a deeper sequence model, Transformer, ensemble world model, or
-   outcome-selected threshold on these small cohorts.
-6. If another experiment is needed for review, prefer a new task-family
-   replication with the frozen method. Five-fold held-out wall guard and
-   OFT-specific guard remain secondary mechanism upgrades.
+5. Do not tune a deeper sequence model, Transformer, ensemble world model,
+   outcome-selected threshold, or simple evidence accumulator on these small
+   cohorts.
+6. If the dynamic timing claim is pursued, use explicit recovery-window
+   supervision as the next method change; consider a temporal value model only
+   after that target is validated on source-disjoint data.
+7. If another experiment is needed only for E16 generalization, prefer a new
+   task-family replication with the frozen method. Five-fold held-out wall guard
+   and OFT-specific guard remain secondary mechanism upgrades.
 
 ## Navigation
 
@@ -136,6 +169,8 @@ rollout branches are correlated observations, not independent samples.
 - Exact claims: [CLAIMS.md](CLAIMS.md)
 - Frozen fresh protocol: [FRESH_COUNTERFACTUAL_ROUTER_PROTOCOL.md](FRESH_COUNTERFACTUAL_ROUTER_PROTOCOL.md)
 - Development/full-capture provenance: [COUNTERFACTUAL_ROUTER_HANDOFF.md](COUNTERFACTUAL_ROUTER_HANDOFF.md)
+- Dynamic protocol and closeout: [P2_DYNAMIC_FIRST_CROSSING.md](P2_DYNAMIC_FIRST_CROSSING.md)
+- P2.5 morphology audit: [P2_TRACE_MORPHOLOGY_AUDIT_20260819.md](../results/P2_TRACE_MORPHOLOGY_AUDIT_20260819.md)
 - Experiment status: [EXPERIMENT_INDEX.md](EXPERIMENT_INDEX.md)
 - Data availability: [REPRODUCIBILITY.md](REPRODUCIBILITY.md)
 - Historical plans and logs: [archive/README.md](archive/README.md)

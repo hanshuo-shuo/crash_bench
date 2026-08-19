@@ -5,8 +5,10 @@
 > router training, and fresh online evaluation are now complete. The current
 > result is [COUNTERFACTUAL_ROUTER_MAIN_RESULT.md](COUNTERFACTUAL_ROUTER_MAIN_RESULT.md);
 > technical development history is
-> [COUNTERFACTUAL_ROUTER_HANDOFF.md](COUNTERFACTUAL_ROUTER_HANDOFF.md). The steps
-> below are not a current experiment queue.
+> [COUNTERFACTUAL_ROUTER_HANDOFF.md](COUNTERFACTUAL_ROUTER_HANDOFF.md), and the
+> from-reset timing boundary is closed in
+> [P2_DYNAMIC_FIRST_CROSSING.md](P2_DYNAMIC_FIRST_CROSSING.md). The steps below
+> are not a current experiment queue.
 
 This branch preserves the old D/E/F experiment labels as history. New work uses
 new artifacts and names the learned component precisely:
@@ -139,3 +141,14 @@ After the interface is frozen, collect at least 8–12 independent fresh source
 states. Repeated seeds are robustness repetitions, not additional independent
 states. The final result must report learned detector + structured controller,
 not rename `risk_gate_oracle_recovery` as learned recovery.
+
+## Final handoff
+
+The route ultimately became E16 counterfactual outcome routing over Base,
+structured Detour, and Retreat rather than detector-gated F′. E16 is positive
+at matched T-20 decision states. P2 then evaluates causal from-reset first
+crossing: source-level calibration yields a selective development Pareto point
+but misses both known recoverable windows. P2.5 shows that simple temporal
+aggregation does not fix the score ordering, so threshold and accumulator
+tuning are closed. The minimum future method change is recovery-window
+supervision; this document remains provenance, not an active submission plan.

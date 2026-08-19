@@ -8,6 +8,7 @@ remain unchanged so manifests and historical logs stay interpretable.
 | ID | Scientific role | Scenario/model | Canonical implementation | Tracked evidence | Status / limitation |
 |---|---|---|---|---|---|
 | E16 | **headline fresh intervention-value routing frontier** | matched glass/off-path/no-glass; frozen single-frame router | `train_counterfactual_outcome_router.py`, `collect_fresh_counterfactual_router.py`, `analyze_fresh_counterfactual_router.py` | promoted summary, seven-method table, n8/n13 analyses, frontier CSVs, and four figures; Quest jobs `9677761`, `9679137` | frozen positive frontier; 8-source confirmation has four joint points; combined 13-source heterogeneity; structured privileged options |
+| P2/P2.5 | **development deployment-timing diagnostic** | four stable sources × glass/off-path/no-glass; same frozen router | `calibrate_dynamic_first_crossing_router.py`, `collect_dynamic_first_crossing_router.py`, `analyze_p2_trace_morphology.py` | sequential first-crossing report; per-episode morphology CSV; complete JSON; aligned-trajectory and ranking figures | selective 2/12-intervention Pareto improvement, but 2/2 T-20-recoverable misses; simple temporal aggregation does not repair treatment/control ordering; not a new headline claim |
 | E1 | swept-corridor wall causal sweep | `scenarios/`, `scenarios_control/`; OpenVLA | `phase1_ood_control_v5.py`; `run_ood_control_v5.sbatch` | `pilot_final.json`, `pilot_control_final.json`, `ood_control_final.json`; `ANALYSIS_ood_control.md` | frozen; C1; one task/wall family |
 | E2 | cross-action-head behavior | same matched wall/control geometry; Base, OFT, pi0 | `run_pilot_*`; `path3_oft_compare.py` | `*_walls.json`, `*_controls.json`, `path3_oft_summary.json` | frozen; C2; same embodiment/task |
 | E3 | representation risk readout | wall/nowall/off-path captures; Base and OFT | `probe_selfreport.py`, `probe_selfreport_analysis.py` | `selfreport*/probe_summary.json`, `probe_T5.npz` | frozen; C3; raw captures ignored |
@@ -21,9 +22,10 @@ remain unchanged so manifests and historical logs stay interpretable.
 
 | Priority | Experiment | Gate before submission | Intended upgrade |
 |---|---|---|---|
-| N1 | frozen-router replication on a new task family | preserve model/options/grid; freeze a source-disjoint cohort before outcomes | test whether the intervention-value frontier transfers beyond task 0 |
-| N2 | five-fold held-out online wall guard | recover/recapture wall hidden/meta; freeze fold-local calibration | mechanism generalization of the older risk-routing interface |
-| N3 | OFT-specific online `RetreatHold` guard | recover/recapture OFT hidden/meta; fit OFT probe only | cross-action-head mechanism replication |
+| N1 | recovery-window-supervised intervention value | define action-level recoverability labels and freeze supervision/model selection before a new source-disjoint cohort | repair the from-reset timing target exposed by P2/P2.5; do not reuse the four-source outcomes for selection |
+| N2 | frozen-router replication on a new task family | preserve model/options/grid; freeze a source-disjoint cohort before outcomes | test whether the E16 matched-decision frontier transfers beyond task 0 |
+| N3 | five-fold held-out online wall guard | recover/recapture wall hidden/meta; freeze fold-local calibration | mechanism generalization of the older risk-routing interface |
+| N4 | OFT-specific online `RetreatHold` guard | recover/recapture OFT hidden/meta; fit OFT probe only | cross-action-head mechanism replication |
 
 ## Appendix experiments
 
