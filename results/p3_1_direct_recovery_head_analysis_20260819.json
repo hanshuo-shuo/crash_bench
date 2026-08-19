@@ -1,0 +1,1093 @@
+{
+  "candidate_model": {
+    "array_shapes": {
+      "feature_mean": [
+        10
+      ],
+      "feature_scale": [
+        10
+      ],
+      "head_bias": [
+        3
+      ],
+      "head_weight": [
+        10,
+        3
+      ]
+    },
+    "fit": {
+      "converged": true,
+      "iterations": 52,
+      "objective_weighted_cross_entropy_plus_l2": 0.5745335393536749,
+      "optimizer": "L-BFGS-B",
+      "training_class_counts": {
+        "Base": 77,
+        "Detour": 28,
+        "FailSafeHold": 37
+      },
+      "training_records": 142,
+      "training_sources": 9
+    },
+    "status": "development candidate; not yet dynamically confirmed",
+    "training_scope": "all P3.0 records"
+  },
+  "counts": {
+    "dense_anchors": 80,
+    "hard_controls": 62,
+    "intervention_needed": 65,
+    "preferred_options": {
+      "Base": 77,
+      "Detour": 28,
+      "FailSafeHold": 37
+    },
+    "records": 142,
+    "recovery_open": 28,
+    "unique_sources": 9
+  },
+  "created_at_utc": "2026-08-19T11:11:51.709369+00:00",
+  "dynamic_closeout_assessment": {
+    "auc_improvement_over_old_scalar": {
+      "intervention_needed_vs_hard_negative_auc": 0.6568238213399504,
+      "recovery_open_vs_hard_negative_auc": 0.6486175115207373
+    },
+    "basis": "descriptive development gate: no globally collapsed predicted class, both requested OOF ranking AUCs improve over the frozen scalar axis, at least 90% hard-control Base retention, and nonzero direct OOF recall on every pre-specified recovery-open and Hold trajectory",
+    "caveat": "LOSO development evidence only; the all-record candidate has not been tested in a causal dynamic rollout",
+    "collapsed_predicted_classes": [],
+    "direct_hard_control_base_retention": 0.9838709677419355,
+    "suitable_for_one_frozen_dynamic_closeout": true
+  },
+  "fold_integrity": {
+    "all_rows_from_each_source_in_exactly_one_test_fold": true,
+    "each_test_source_absent_from_its_training_sources": true,
+    "oof_records_predicted_exactly_once": true
+  },
+  "folds": [
+    {
+      "fit": {
+        "converged": true,
+        "iterations": 50,
+        "objective_weighted_cross_entropy_plus_l2": 0.5324014259431723,
+        "optimizer": "L-BFGS-B",
+        "training_class_counts": {
+          "Base": 77,
+          "Detour": 20,
+          "FailSafeHold": 29
+        },
+        "training_records": 126,
+        "training_sources": 8
+      },
+      "fold_index": 0,
+      "held_out_records": 16,
+      "held_out_source_state_sha256": "3029be84f0385f771d453631209dc82678009662d798950cda60dd452ba90fbf",
+      "training_records": 126,
+      "training_source_count": 8,
+      "training_sources": [
+        "34aaec9758deb1a521c41b54e447f326a80c8acb13a48fc5756bf867d9a216a9",
+        "aae24500d1a1b10366435161c9c9bd97a9d64a7ecdcc62fd5b07f5ef6485d08c",
+        "c4cebac9c9884848e8cabeb15ed31129bfdee93d3e7ed6667265ade1fdf3317e",
+        "c4f07c7a1f316a0902a181c9b07ebd0d4de2f5425ce654a1a2cf15cd4ae604c6",
+        "dde8da8080909a7223342a27b1e3e687a38d94d7e4a90fec393dd05e5e3eda09",
+        "e973b9b35d54788d7afbfdf1e091717aaf67da6293ef669e25f3ab81c9c35f77",
+        "ee80df3b66355fec71dac4d55ffb5ce7b61aaabc72c65b4cc6679373d62e5f32",
+        "f503237b77431608781a0f18ed0f5abc54c06ad3457d8c1d41142c99ff4f999c"
+      ]
+    },
+    {
+      "fit": {
+        "converged": true,
+        "iterations": 48,
+        "objective_weighted_cross_entropy_plus_l2": 0.47304550796329775,
+        "optimizer": "L-BFGS-B",
+        "training_class_counts": {
+          "Base": 69,
+          "Detour": 28,
+          "FailSafeHold": 29
+        },
+        "training_records": 126,
+        "training_sources": 8
+      },
+      "fold_index": 1,
+      "held_out_records": 16,
+      "held_out_source_state_sha256": "34aaec9758deb1a521c41b54e447f326a80c8acb13a48fc5756bf867d9a216a9",
+      "training_records": 126,
+      "training_source_count": 8,
+      "training_sources": [
+        "3029be84f0385f771d453631209dc82678009662d798950cda60dd452ba90fbf",
+        "aae24500d1a1b10366435161c9c9bd97a9d64a7ecdcc62fd5b07f5ef6485d08c",
+        "c4cebac9c9884848e8cabeb15ed31129bfdee93d3e7ed6667265ade1fdf3317e",
+        "c4f07c7a1f316a0902a181c9b07ebd0d4de2f5425ce654a1a2cf15cd4ae604c6",
+        "dde8da8080909a7223342a27b1e3e687a38d94d7e4a90fec393dd05e5e3eda09",
+        "e973b9b35d54788d7afbfdf1e091717aaf67da6293ef669e25f3ab81c9c35f77",
+        "ee80df3b66355fec71dac4d55ffb5ce7b61aaabc72c65b4cc6679373d62e5f32",
+        "f503237b77431608781a0f18ed0f5abc54c06ad3457d8c1d41142c99ff4f999c"
+      ]
+    },
+    {
+      "fit": {
+        "converged": true,
+        "iterations": 50,
+        "objective_weighted_cross_entropy_plus_l2": 0.635585867362787,
+        "optimizer": "L-BFGS-B",
+        "training_class_counts": {
+          "Base": 58,
+          "Detour": 28,
+          "FailSafeHold": 37
+        },
+        "training_records": 123,
+        "training_sources": 8
+      },
+      "fold_index": 2,
+      "held_out_records": 19,
+      "held_out_source_state_sha256": "aae24500d1a1b10366435161c9c9bd97a9d64a7ecdcc62fd5b07f5ef6485d08c",
+      "training_records": 123,
+      "training_source_count": 8,
+      "training_sources": [
+        "3029be84f0385f771d453631209dc82678009662d798950cda60dd452ba90fbf",
+        "34aaec9758deb1a521c41b54e447f326a80c8acb13a48fc5756bf867d9a216a9",
+        "c4cebac9c9884848e8cabeb15ed31129bfdee93d3e7ed6667265ade1fdf3317e",
+        "c4f07c7a1f316a0902a181c9b07ebd0d4de2f5425ce654a1a2cf15cd4ae604c6",
+        "dde8da8080909a7223342a27b1e3e687a38d94d7e4a90fec393dd05e5e3eda09",
+        "e973b9b35d54788d7afbfdf1e091717aaf67da6293ef669e25f3ab81c9c35f77",
+        "ee80df3b66355fec71dac4d55ffb5ce7b61aaabc72c65b4cc6679373d62e5f32",
+        "f503237b77431608781a0f18ed0f5abc54c06ad3457d8c1d41142c99ff4f999c"
+      ]
+    },
+    {
+      "fit": {
+        "converged": true,
+        "iterations": 49,
+        "objective_weighted_cross_entropy_plus_l2": 0.4880495536376513,
+        "optimizer": "L-BFGS-B",
+        "training_class_counts": {
+          "Base": 72,
+          "Detour": 19,
+          "FailSafeHold": 35
+        },
+        "training_records": 126,
+        "training_sources": 8
+      },
+      "fold_index": 3,
+      "held_out_records": 16,
+      "held_out_source_state_sha256": "c4cebac9c9884848e8cabeb15ed31129bfdee93d3e7ed6667265ade1fdf3317e",
+      "training_records": 126,
+      "training_source_count": 8,
+      "training_sources": [
+        "3029be84f0385f771d453631209dc82678009662d798950cda60dd452ba90fbf",
+        "34aaec9758deb1a521c41b54e447f326a80c8acb13a48fc5756bf867d9a216a9",
+        "aae24500d1a1b10366435161c9c9bd97a9d64a7ecdcc62fd5b07f5ef6485d08c",
+        "c4f07c7a1f316a0902a181c9b07ebd0d4de2f5425ce654a1a2cf15cd4ae604c6",
+        "dde8da8080909a7223342a27b1e3e687a38d94d7e4a90fec393dd05e5e3eda09",
+        "e973b9b35d54788d7afbfdf1e091717aaf67da6293ef669e25f3ab81c9c35f77",
+        "ee80df3b66355fec71dac4d55ffb5ce7b61aaabc72c65b4cc6679373d62e5f32",
+        "f503237b77431608781a0f18ed0f5abc54c06ad3457d8c1d41142c99ff4f999c"
+      ]
+    },
+    {
+      "fit": {
+        "converged": true,
+        "iterations": 43,
+        "objective_weighted_cross_entropy_plus_l2": 0.6377745856916456,
+        "optimizer": "L-BFGS-B",
+        "training_class_counts": {
+          "Base": 57,
+          "Detour": 28,
+          "FailSafeHold": 37
+        },
+        "training_records": 122,
+        "training_sources": 8
+      },
+      "fold_index": 4,
+      "held_out_records": 20,
+      "held_out_source_state_sha256": "c4f07c7a1f316a0902a181c9b07ebd0d4de2f5425ce654a1a2cf15cd4ae604c6",
+      "training_records": 122,
+      "training_source_count": 8,
+      "training_sources": [
+        "3029be84f0385f771d453631209dc82678009662d798950cda60dd452ba90fbf",
+        "34aaec9758deb1a521c41b54e447f326a80c8acb13a48fc5756bf867d9a216a9",
+        "aae24500d1a1b10366435161c9c9bd97a9d64a7ecdcc62fd5b07f5ef6485d08c",
+        "c4cebac9c9884848e8cabeb15ed31129bfdee93d3e7ed6667265ade1fdf3317e",
+        "dde8da8080909a7223342a27b1e3e687a38d94d7e4a90fec393dd05e5e3eda09",
+        "e973b9b35d54788d7afbfdf1e091717aaf67da6293ef669e25f3ab81c9c35f77",
+        "ee80df3b66355fec71dac4d55ffb5ce7b61aaabc72c65b4cc6679373d62e5f32",
+        "f503237b77431608781a0f18ed0f5abc54c06ad3457d8c1d41142c99ff4f999c"
+      ]
+    },
+    {
+      "fit": {
+        "converged": true,
+        "iterations": 48,
+        "objective_weighted_cross_entropy_plus_l2": 0.5230548089135071,
+        "optimizer": "L-BFGS-B",
+        "training_class_counts": {
+          "Base": 77,
+          "Detour": 28,
+          "FailSafeHold": 21
+        },
+        "training_records": 126,
+        "training_sources": 8
+      },
+      "fold_index": 5,
+      "held_out_records": 16,
+      "held_out_source_state_sha256": "dde8da8080909a7223342a27b1e3e687a38d94d7e4a90fec393dd05e5e3eda09",
+      "training_records": 126,
+      "training_source_count": 8,
+      "training_sources": [
+        "3029be84f0385f771d453631209dc82678009662d798950cda60dd452ba90fbf",
+        "34aaec9758deb1a521c41b54e447f326a80c8acb13a48fc5756bf867d9a216a9",
+        "aae24500d1a1b10366435161c9c9bd97a9d64a7ecdcc62fd5b07f5ef6485d08c",
+        "c4cebac9c9884848e8cabeb15ed31129bfdee93d3e7ed6667265ade1fdf3317e",
+        "c4f07c7a1f316a0902a181c9b07ebd0d4de2f5425ce654a1a2cf15cd4ae604c6",
+        "e973b9b35d54788d7afbfdf1e091717aaf67da6293ef669e25f3ab81c9c35f77",
+        "ee80df3b66355fec71dac4d55ffb5ce7b61aaabc72c65b4cc6679373d62e5f32",
+        "f503237b77431608781a0f18ed0f5abc54c06ad3457d8c1d41142c99ff4f999c"
+      ]
+    },
+    {
+      "fit": {
+        "converged": true,
+        "iterations": 50,
+        "objective_weighted_cross_entropy_plus_l2": 0.5012502474153728,
+        "optimizer": "L-BFGS-B",
+        "training_class_counts": {
+          "Base": 75,
+          "Detour": 17,
+          "FailSafeHold": 34
+        },
+        "training_records": 126,
+        "training_sources": 8
+      },
+      "fold_index": 6,
+      "held_out_records": 16,
+      "held_out_source_state_sha256": "e973b9b35d54788d7afbfdf1e091717aaf67da6293ef669e25f3ab81c9c35f77",
+      "training_records": 126,
+      "training_source_count": 8,
+      "training_sources": [
+        "3029be84f0385f771d453631209dc82678009662d798950cda60dd452ba90fbf",
+        "34aaec9758deb1a521c41b54e447f326a80c8acb13a48fc5756bf867d9a216a9",
+        "aae24500d1a1b10366435161c9c9bd97a9d64a7ecdcc62fd5b07f5ef6485d08c",
+        "c4cebac9c9884848e8cabeb15ed31129bfdee93d3e7ed6667265ade1fdf3317e",
+        "c4f07c7a1f316a0902a181c9b07ebd0d4de2f5425ce654a1a2cf15cd4ae604c6",
+        "dde8da8080909a7223342a27b1e3e687a38d94d7e4a90fec393dd05e5e3eda09",
+        "ee80df3b66355fec71dac4d55ffb5ce7b61aaabc72c65b4cc6679373d62e5f32",
+        "f503237b77431608781a0f18ed0f5abc54c06ad3457d8c1d41142c99ff4f999c"
+      ]
+    },
+    {
+      "fit": {
+        "converged": true,
+        "iterations": 46,
+        "objective_weighted_cross_entropy_plus_l2": 0.6396983346967958,
+        "optimizer": "L-BFGS-B",
+        "training_class_counts": {
+          "Base": 70,
+          "Detour": 28,
+          "FailSafeHold": 37
+        },
+        "training_records": 135,
+        "training_sources": 8
+      },
+      "fold_index": 7,
+      "held_out_records": 7,
+      "held_out_source_state_sha256": "ee80df3b66355fec71dac4d55ffb5ce7b61aaabc72c65b4cc6679373d62e5f32",
+      "training_records": 135,
+      "training_source_count": 8,
+      "training_sources": [
+        "3029be84f0385f771d453631209dc82678009662d798950cda60dd452ba90fbf",
+        "34aaec9758deb1a521c41b54e447f326a80c8acb13a48fc5756bf867d9a216a9",
+        "aae24500d1a1b10366435161c9c9bd97a9d64a7ecdcc62fd5b07f5ef6485d08c",
+        "c4cebac9c9884848e8cabeb15ed31129bfdee93d3e7ed6667265ade1fdf3317e",
+        "c4f07c7a1f316a0902a181c9b07ebd0d4de2f5425ce654a1a2cf15cd4ae604c6",
+        "dde8da8080909a7223342a27b1e3e687a38d94d7e4a90fec393dd05e5e3eda09",
+        "e973b9b35d54788d7afbfdf1e091717aaf67da6293ef669e25f3ab81c9c35f77",
+        "f503237b77431608781a0f18ed0f5abc54c06ad3457d8c1d41142c99ff4f999c"
+      ]
+    },
+    {
+      "fit": {
+        "converged": true,
+        "iterations": 49,
+        "objective_weighted_cross_entropy_plus_l2": 0.6326009955652548,
+        "optimizer": "L-BFGS-B",
+        "training_class_counts": {
+          "Base": 61,
+          "Detour": 28,
+          "FailSafeHold": 37
+        },
+        "training_records": 126,
+        "training_sources": 8
+      },
+      "fold_index": 8,
+      "held_out_records": 16,
+      "held_out_source_state_sha256": "f503237b77431608781a0f18ed0f5abc54c06ad3457d8c1d41142c99ff4f999c",
+      "training_records": 126,
+      "training_source_count": 8,
+      "training_sources": [
+        "3029be84f0385f771d453631209dc82678009662d798950cda60dd452ba90fbf",
+        "34aaec9758deb1a521c41b54e447f326a80c8acb13a48fc5756bf867d9a216a9",
+        "aae24500d1a1b10366435161c9c9bd97a9d64a7ecdcc62fd5b07f5ef6485d08c",
+        "c4cebac9c9884848e8cabeb15ed31129bfdee93d3e7ed6667265ade1fdf3317e",
+        "c4f07c7a1f316a0902a181c9b07ebd0d4de2f5425ce654a1a2cf15cd4ae604c6",
+        "dde8da8080909a7223342a27b1e3e687a38d94d7e4a90fec393dd05e5e3eda09",
+        "e973b9b35d54788d7afbfdf1e091717aaf67da6293ef669e25f3ab81c9c35f77",
+        "ee80df3b66355fec71dac4d55ffb5ce7b61aaabc72c65b4cc6679373d62e5f32"
+      ]
+    }
+  ],
+  "input": {
+    "bytes": 314610,
+    "path": "results/p3_recovery_window_records_20260819.jsonl",
+    "sha256": "8d7a852203a06562a726d5635c140ca445b8322376269ce1810498978d7655ec"
+  },
+  "kind": "p3_1_direct_recovery_window_head_development_analysis",
+  "methods": {
+    "direct_recovery_window_head": {
+      "class_metrics": {
+        "Base": {
+          "f1": 0.8299319727891157,
+          "precision": 0.8714285714285714,
+          "predicted_count": 70,
+          "recall": 0.7922077922077922,
+          "support": 77
+        },
+        "Detour": {
+          "f1": 0.3333333333333333,
+          "precision": 0.34615384615384615,
+          "predicted_count": 26,
+          "recall": 0.32142857142857145,
+          "support": 28
+        },
+        "FailSafeHold": {
+          "f1": 0.4578313253012048,
+          "precision": 0.41304347826086957,
+          "predicted_count": 46,
+          "recall": 0.5135135135135135,
+          "support": 37
+        }
+      },
+      "confusion_matrix": [
+        [
+          61,
+          7,
+          9
+        ],
+        [
+          1,
+          9,
+          18
+        ],
+        [
+          8,
+          10,
+          19
+        ]
+      ],
+      "confusion_orientation": "rows=true preferred option; columns=predicted option",
+      "macro_f1_fixed_three_class": 0.5403655438078846,
+      "record_accuracy": 0.6267605633802817,
+      "source_accuracy": {
+        "3029be84f0385f771d453631209dc82678009662d798950cda60dd452ba90fbf": 0.625,
+        "34aaec9758deb1a521c41b54e447f326a80c8acb13a48fc5756bf867d9a216a9": 0.1875,
+        "aae24500d1a1b10366435161c9c9bd97a9d64a7ecdcc62fd5b07f5ef6485d08c": 1.0,
+        "c4cebac9c9884848e8cabeb15ed31129bfdee93d3e7ed6667265ade1fdf3317e": 0.375,
+        "c4f07c7a1f316a0902a181c9b07ebd0d4de2f5425ce654a1a2cf15cd4ae604c6": 1.0,
+        "dde8da8080909a7223342a27b1e3e687a38d94d7e4a90fec393dd05e5e3eda09": 0.25,
+        "e973b9b35d54788d7afbfdf1e091717aaf67da6293ef669e25f3ab81c9c35f77": 0.3125,
+        "ee80df3b66355fec71dac4d55ffb5ce7b61aaabc72c65b4cc6679373d62e5f32": 1.0,
+        "f503237b77431608781a0f18ed0f5abc54c06ad3457d8c1d41142c99ff4f999c": 0.9375
+      },
+      "source_macro_accuracy": 0.6319444444444444
+    },
+    "old_router_operational_decision": {
+      "class_metrics": {
+        "Base": {
+          "f1": 0.02,
+          "precision": 0.043478260869565216,
+          "predicted_count": 23,
+          "recall": 0.012987012987012988,
+          "support": 77
+        },
+        "Detour": {
+          "f1": 0.3157894736842105,
+          "precision": 0.2,
+          "predicted_count": 105,
+          "recall": 0.75,
+          "support": 28
+        },
+        "FailSafeHold": {
+          "f1": 0.0784313725490196,
+          "precision": 0.14285714285714285,
+          "predicted_count": 14,
+          "recall": 0.05405405405405406,
+          "support": 37
+        }
+      },
+      "confusion_matrix": [
+        [
+          1,
+          64,
+          12
+        ],
+        [
+          7,
+          21,
+          0
+        ],
+        [
+          15,
+          20,
+          2
+        ]
+      ],
+      "confusion_orientation": "rows=true preferred option; columns=predicted option",
+      "macro_f1_fixed_three_class": 0.1380736154110767,
+      "record_accuracy": 0.16901408450704225,
+      "source_accuracy": {
+        "3029be84f0385f771d453631209dc82678009662d798950cda60dd452ba90fbf": 0.3125,
+        "34aaec9758deb1a521c41b54e447f326a80c8acb13a48fc5756bf867d9a216a9": 0.0625,
+        "aae24500d1a1b10366435161c9c9bd97a9d64a7ecdcc62fd5b07f5ef6485d08c": 0.0,
+        "c4cebac9c9884848e8cabeb15ed31129bfdee93d3e7ed6667265ade1fdf3317e": 0.4375,
+        "c4f07c7a1f316a0902a181c9b07ebd0d4de2f5425ce654a1a2cf15cd4ae604c6": 0.0,
+        "dde8da8080909a7223342a27b1e3e687a38d94d7e4a90fec393dd05e5e3eda09": 0.125,
+        "e973b9b35d54788d7afbfdf1e091717aaf67da6293ef669e25f3ab81c9c35f77": 0.5625,
+        "ee80df3b66355fec71dac4d55ffb5ce7b61aaabc72c65b4cc6679373d62e5f32": 0.0,
+        "f503237b77431608781a0f18ed0f5abc54c06ad3457d8c1d41142c99ff4f999c": 0.0
+      },
+      "source_macro_accuracy": 0.16666666666666666
+    },
+    "old_router_scalar_advantage": {
+      "class_metrics": {
+        "Base": {
+          "f1": 0.021052631578947368,
+          "precision": 0.05555555555555555,
+          "predicted_count": 18,
+          "recall": 0.012987012987012988,
+          "support": 77
+        },
+        "Detour": {
+          "f1": 0.3333333333333333,
+          "precision": 0.20909090909090908,
+          "predicted_count": 110,
+          "recall": 0.8214285714285714,
+          "support": 28
+        },
+        "FailSafeHold": {
+          "f1": 0.0784313725490196,
+          "precision": 0.14285714285714285,
+          "predicted_count": 14,
+          "recall": 0.05405405405405406,
+          "support": 37
+        }
+      },
+      "confusion_matrix": [
+        [
+          1,
+          64,
+          12
+        ],
+        [
+          5,
+          23,
+          0
+        ],
+        [
+          12,
+          23,
+          2
+        ]
+      ],
+      "confusion_orientation": "rows=true preferred option; columns=predicted option",
+      "macro_f1_fixed_three_class": 0.14427244582043344,
+      "record_accuracy": 0.18309859154929578,
+      "source_accuracy": {
+        "3029be84f0385f771d453631209dc82678009662d798950cda60dd452ba90fbf": 0.3125,
+        "34aaec9758deb1a521c41b54e447f326a80c8acb13a48fc5756bf867d9a216a9": 0.0625,
+        "aae24500d1a1b10366435161c9c9bd97a9d64a7ecdcc62fd5b07f5ef6485d08c": 0.0,
+        "c4cebac9c9884848e8cabeb15ed31129bfdee93d3e7ed6667265ade1fdf3317e": 0.5,
+        "c4f07c7a1f316a0902a181c9b07ebd0d4de2f5425ce654a1a2cf15cd4ae604c6": 0.0,
+        "dde8da8080909a7223342a27b1e3e687a38d94d7e4a90fec393dd05e5e3eda09": 0.125,
+        "e973b9b35d54788d7afbfdf1e091717aaf67da6293ef669e25f3ab81c9c35f77": 0.625,
+        "ee80df3b66355fec71dac4d55ffb5ce7b61aaabc72c65b4cc6679373d62e5f32": 0.0,
+        "f503237b77431608781a0f18ed0f5abc54c06ad3457d8c1d41142c99ff4f999c": 0.0
+      },
+      "source_macro_accuracy": 0.18055555555555555
+    }
+  },
+  "outputs": {
+    "analysis": {
+      "path": "results/p3_1_direct_recovery_head_analysis_20260819.json"
+    },
+    "candidate_model": {
+      "bytes": 4463,
+      "path": "results/p3_1_direct_recovery_head_model.npz",
+      "sha256": "b957be866c35338e709a4eebaebf88257cc97772ef04dd44d82ba81fff931789"
+    },
+    "confusion_figure": {
+      "bytes": 77425,
+      "path": "results/p3_1_direct_recovery_head_confusion_20260819.png",
+      "sha256": "c7afbfb6abe764eef772526a892c6425f45a12cc559c5c17748d3e9ca6b2ab36"
+    },
+    "oof_predictions": {
+      "bytes": 52707,
+      "path": "results/p3_1_direct_recovery_head_oof_predictions_20260819.csv",
+      "sha256": "e379e4bcda82023b7b22f2993e4766bb9b72df68f08c2f40226bf06b78d07fb2"
+    },
+    "report": {
+      "bytes": 5364,
+      "path": "results/P3_1_DIRECT_RECOVERY_HEAD_DEV_20260819.md",
+      "sha256": "930e75688c55e9d601645fb49f46bd4b0991b6a090a3656e4cab4dd33f01c31f"
+    }
+  },
+  "per_source": [
+    {
+      "accuracy": 0.625,
+      "class_recall": {
+        "Base": null,
+        "Detour": 0.375,
+        "FailSafeHold": 0.875
+      },
+      "confusion_matrix": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          3,
+          4
+        ],
+        [
+          1,
+          0,
+          7
+        ]
+      ],
+      "fold_index": 0,
+      "held_out_source_state_sha256": "3029be84f0385f771d453631209dc82678009662d798950cda60dd452ba90fbf",
+      "macro_f1_fixed_three_class": 0.4274322169059011,
+      "placements": [
+        "glass_recovery_heldout_0009"
+      ],
+      "predicted_class_counts": {
+        "Base": 2,
+        "Detour": 3,
+        "FailSafeHold": 11
+      },
+      "record_types": {
+        "dense_glass_anchor": 16
+      },
+      "records": 16,
+      "true_class_counts": {
+        "Base": 0,
+        "Detour": 8,
+        "FailSafeHold": 8
+      }
+    },
+    {
+      "accuracy": 0.1875,
+      "class_recall": {
+        "Base": 0.0,
+        "Detour": null,
+        "FailSafeHold": 0.375
+      },
+      "confusion_matrix": [
+        [
+          0,
+          6,
+          2
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          5,
+          3
+        ]
+      ],
+      "fold_index": 1,
+      "held_out_source_state_sha256": "34aaec9758deb1a521c41b54e447f326a80c8acb13a48fc5756bf867d9a216a9",
+      "macro_f1_fixed_three_class": 0.15384615384615385,
+      "placements": [
+        "glass_recovery_heldout_0003"
+      ],
+      "predicted_class_counts": {
+        "Base": 0,
+        "Detour": 11,
+        "FailSafeHold": 5
+      },
+      "record_types": {
+        "dense_glass_anchor": 16
+      },
+      "records": 16,
+      "true_class_counts": {
+        "Base": 8,
+        "Detour": 0,
+        "FailSafeHold": 8
+      }
+    },
+    {
+      "accuracy": 1.0,
+      "class_recall": {
+        "Base": 1.0,
+        "Detour": null,
+        "FailSafeHold": null
+      },
+      "confusion_matrix": [
+        [
+          19,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "fold_index": 2,
+      "held_out_source_state_sha256": "aae24500d1a1b10366435161c9c9bd97a9d64a7ecdcc62fd5b07f5ef6485d08c",
+      "macro_f1_fixed_three_class": 0.3333333333333333,
+      "placements": [
+        "glass_recovery_heldout_0010"
+      ],
+      "predicted_class_counts": {
+        "Base": 19,
+        "Detour": 0,
+        "FailSafeHold": 0
+      },
+      "record_types": {
+        "hard_control_negative": 19
+      },
+      "records": 19,
+      "true_class_counts": {
+        "Base": 19,
+        "Detour": 0,
+        "FailSafeHold": 0
+      }
+    },
+    {
+      "accuracy": 0.375,
+      "class_recall": {
+        "Base": 0.0,
+        "Detour": 0.4444444444444444,
+        "FailSafeHold": 1.0
+      },
+      "confusion_matrix": [
+        [
+          0,
+          0,
+          5
+        ],
+        [
+          0,
+          4,
+          5
+        ],
+        [
+          0,
+          0,
+          2
+        ]
+      ],
+      "fold_index": 3,
+      "held_out_source_state_sha256": "c4cebac9c9884848e8cabeb15ed31129bfdee93d3e7ed6667265ade1fdf3317e",
+      "macro_f1_fixed_three_class": 0.30036630036630035,
+      "placements": [
+        "glass_recovery_heldout_0010"
+      ],
+      "predicted_class_counts": {
+        "Base": 0,
+        "Detour": 4,
+        "FailSafeHold": 12
+      },
+      "record_types": {
+        "dense_glass_anchor": 16
+      },
+      "records": 16,
+      "true_class_counts": {
+        "Base": 5,
+        "Detour": 9,
+        "FailSafeHold": 2
+      }
+    },
+    {
+      "accuracy": 1.0,
+      "class_recall": {
+        "Base": 1.0,
+        "Detour": null,
+        "FailSafeHold": null
+      },
+      "confusion_matrix": [
+        [
+          20,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "fold_index": 4,
+      "held_out_source_state_sha256": "c4f07c7a1f316a0902a181c9b07ebd0d4de2f5425ce654a1a2cf15cd4ae604c6",
+      "macro_f1_fixed_three_class": 0.3333333333333333,
+      "placements": [
+        "glass_recovery_heldout_0019"
+      ],
+      "predicted_class_counts": {
+        "Base": 20,
+        "Detour": 0,
+        "FailSafeHold": 0
+      },
+      "record_types": {
+        "hard_control_negative": 20
+      },
+      "records": 20,
+      "true_class_counts": {
+        "Base": 20,
+        "Detour": 0,
+        "FailSafeHold": 0
+      }
+    },
+    {
+      "accuracy": 0.25,
+      "class_recall": {
+        "Base": null,
+        "Detour": null,
+        "FailSafeHold": 0.25
+      },
+      "confusion_matrix": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          7,
+          5,
+          4
+        ]
+      ],
+      "fold_index": 5,
+      "held_out_source_state_sha256": "dde8da8080909a7223342a27b1e3e687a38d94d7e4a90fec393dd05e5e3eda09",
+      "macro_f1_fixed_three_class": 0.13333333333333333,
+      "placements": [
+        "glass_recovery_heldout_0019"
+      ],
+      "predicted_class_counts": {
+        "Base": 7,
+        "Detour": 5,
+        "FailSafeHold": 4
+      },
+      "record_types": {
+        "dense_glass_anchor": 16
+      },
+      "records": 16,
+      "true_class_counts": {
+        "Base": 0,
+        "Detour": 0,
+        "FailSafeHold": 16
+      }
+    },
+    {
+      "accuracy": 0.3125,
+      "class_recall": {
+        "Base": 0.0,
+        "Detour": 0.18181818181818182,
+        "FailSafeHold": 1.0
+      },
+      "confusion_matrix": [
+        [
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          2,
+          9
+        ],
+        [
+          0,
+          0,
+          3
+        ]
+      ],
+      "fold_index": 6,
+      "held_out_source_state_sha256": "e973b9b35d54788d7afbfdf1e091717aaf67da6293ef669e25f3ab81c9c35f77",
+      "macro_f1_fixed_three_class": 0.22023809523809523,
+      "placements": [
+        "glass_recovery_heldout_0004"
+      ],
+      "predicted_class_counts": {
+        "Base": 0,
+        "Detour": 3,
+        "FailSafeHold": 13
+      },
+      "record_types": {
+        "dense_glass_anchor": 16
+      },
+      "records": 16,
+      "true_class_counts": {
+        "Base": 2,
+        "Detour": 11,
+        "FailSafeHold": 3
+      }
+    },
+    {
+      "accuracy": 1.0,
+      "class_recall": {
+        "Base": 1.0,
+        "Detour": null,
+        "FailSafeHold": null
+      },
+      "confusion_matrix": [
+        [
+          7,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "fold_index": 7,
+      "held_out_source_state_sha256": "ee80df3b66355fec71dac4d55ffb5ce7b61aaabc72c65b4cc6679373d62e5f32",
+      "macro_f1_fixed_three_class": 0.3333333333333333,
+      "placements": [
+        "glass_recovery_heldout_0008"
+      ],
+      "predicted_class_counts": {
+        "Base": 7,
+        "Detour": 0,
+        "FailSafeHold": 0
+      },
+      "record_types": {
+        "hard_control_negative": 7
+      },
+      "records": 7,
+      "true_class_counts": {
+        "Base": 7,
+        "Detour": 0,
+        "FailSafeHold": 0
+      }
+    },
+    {
+      "accuracy": 0.9375,
+      "class_recall": {
+        "Base": 0.9375,
+        "Detour": null,
+        "FailSafeHold": null
+      },
+      "confusion_matrix": [
+        [
+          15,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "fold_index": 8,
+      "held_out_source_state_sha256": "f503237b77431608781a0f18ed0f5abc54c06ad3457d8c1d41142c99ff4f999c",
+      "macro_f1_fixed_three_class": 0.3225806451612903,
+      "placements": [
+        "glass_recovery_heldout_0009"
+      ],
+      "predicted_class_counts": {
+        "Base": 15,
+        "Detour": 0,
+        "FailSafeHold": 1
+      },
+      "record_types": {
+        "hard_control_negative": 16
+      },
+      "records": 16,
+      "true_class_counts": {
+        "Base": 16,
+        "Detour": 0,
+        "FailSafeHold": 0
+      }
+    }
+  ],
+  "protocol": {
+    "auc": "ordinary record-level ROC AUC with half credit for ties",
+    "classes": [
+      "Base",
+      "Detour",
+      "FailSafeHold"
+    ],
+    "cross_validation": "leave-one-source_state_sha256-out",
+    "decision_rule": "argmax of three OOF probabilities",
+    "fixed_l2": 0.01,
+    "fold_standardization": "fit on training sources only",
+    "forbidden_model_inputs_not_used": [
+      "horizon_actions",
+      "actions_to_window_closure",
+      "window_closure_horizon_actions",
+      "collision-relative timing",
+      "action_index",
+      "trajectory_id",
+      "source_state_sha256",
+      "source ID",
+      "base_outcome",
+      "detour_outcome",
+      "hold_outcome",
+      "true option outcomes"
+    ],
+    "hyperparameter_sweep": false,
+    "input_dimension": 10,
+    "model": "standardized multinomial linear softmax/logistic head",
+    "model_input_fields": [
+      "router_output_feature"
+    ],
+    "old_operational_decision_rule": "old_router_candidate_option iff old_router_pointwise_lcb > 0; else Base",
+    "old_scalar_classification_rule": "old_router_candidate_option iff old_router_advantage > 0; else Base",
+    "random_split": false,
+    "source_weighting": "equal total sample weight per source within each fit",
+    "temporal_encoder": false
+  },
+  "ranking": {
+    "direct_recovery_window_head": {
+      "intervention_needed_vs_hard_negative_auc": 0.9947890818858561,
+      "recovery_open_vs_hard_negative_auc": 1.0,
+      "score": "OOF P(Detour) for recovery; OOF 1-P(Base) for intervention"
+    },
+    "old_router_operational_decision": {
+      "intervention_needed_vs_hard_negative_auc": 0.33076923076923076,
+      "recovery_open_vs_hard_negative_auc": 0.4717741935483871,
+      "score": "discrete original operational choice (diagnostic AUC only)"
+    },
+    "old_router_scalar_advantage": {
+      "intervention_needed_vs_hard_negative_auc": 0.3379652605459057,
+      "recovery_open_vs_hard_negative_auc": 0.3513824884792627,
+      "score": "old Router max non-Base scalar advantage"
+    }
+  },
+  "schema_version": 1,
+  "status": "development candidate; not yet dynamically confirmed",
+  "targeted_diagnostics": {
+    "hard_control_base_retention": {
+      "direct_recovery_window_head": {
+        "retention": 0.9838709677419355,
+        "support": 62
+      },
+      "old_router_operational_decision": {
+        "retention": 0.0,
+        "support": 62
+      },
+      "old_router_scalar_advantage": {
+        "retention": 0.0,
+        "support": 62
+      }
+    },
+    "hold_recall_by_placement": {
+      "glass_recovery_heldout_0003": {
+        "direct_recovery_window_head": {
+          "recall": 0.375,
+          "support": 8
+        },
+        "old_router_operational_decision": {
+          "recall": 0.0,
+          "support": 8
+        },
+        "old_router_scalar_advantage": {
+          "recall": 0.0,
+          "support": 8
+        }
+      },
+      "glass_recovery_heldout_0019": {
+        "direct_recovery_window_head": {
+          "recall": 0.25,
+          "support": 16
+        },
+        "old_router_operational_decision": {
+          "recall": 0.125,
+          "support": 16
+        },
+        "old_router_scalar_advantage": {
+          "recall": 0.125,
+          "support": 16
+        }
+      }
+    },
+    "recovery_open_recall_by_placement": {
+      "glass_recovery_heldout_0004": {
+        "direct_recovery_window_head": {
+          "recall": 0.18181818181818182,
+          "support": 11
+        },
+        "old_router_operational_decision": {
+          "recall": 0.8181818181818182,
+          "support": 11
+        },
+        "old_router_scalar_advantage": {
+          "recall": 0.9090909090909091,
+          "support": 11
+        }
+      },
+      "glass_recovery_heldout_0009": {
+        "direct_recovery_window_head": {
+          "recall": 0.375,
+          "support": 8
+        },
+        "old_router_operational_decision": {
+          "recall": 0.625,
+          "support": 8
+        },
+        "old_router_scalar_advantage": {
+          "recall": 0.625,
+          "support": 8
+        }
+      },
+      "glass_recovery_heldout_0010": {
+        "direct_recovery_window_head": {
+          "recall": 0.4444444444444444,
+          "support": 9
+        },
+        "old_router_operational_decision": {
+          "recall": 0.7777777777777778,
+          "support": 9
+        },
+        "old_router_scalar_advantage": {
+          "recall": 0.8888888888888888,
+          "support": 9
+        }
+      }
+    }
+  }
+}
