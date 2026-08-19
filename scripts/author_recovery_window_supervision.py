@@ -489,6 +489,45 @@ def feature_overlap_summary(
     }
 
 
+def advantage_overlap_summary(
+    recovery_scores: Sequence[float], hard_scores: Sequence[float]
+) -> dict[str, Any]:
+    """Describe overlap on the old Router's actual scalar decision axis."""
+
+    recovery = np.asarray(recovery_scores, dtype=np.float64)
+    hard = np.asarray(hard_scores, dtype=np.float64)
+    if not len(recovery) or not len(hard):
+        return {"available": False, "reason": "one comparison class is empty"}
+    comparisons = [
+        1.0 if positive > negative else 0.5 if positive == negative else 0.0
+        for positive in recovery for negative in hard
+    ]
+    recovery_min, recovery_max = float(recovery.min()), float(recovery.max())
+    hard_min, hard_max = float(hard.min()), float(hard.max())
+    intersection = max(
+        0.0, min(recovery_max, hard_max) - max(recovery_min, hard_min)
+    )
+    union = max(recovery_max, hard_max) - min(recovery_min, hard_min)
+    return {
+        "available": True,
+        "axis": "old Router max non-Base advantage",
+        "recovery_open_range": [recovery_min, recovery_max],
+        "hard_negative_range": [hard_min, hard_max],
+        "range_intersection_over_union": (
+            None if union == 0.0 else float(intersection / union)
+        ),
+        "recovery_open_fraction_inside_hard_negative_range": float(np.mean(
+            (recovery >= hard_min) & (recovery <= hard_max)
+        )),
+        "hard_negative_fraction_inside_recovery_open_range": float(np.mean(
+            (hard >= recovery_min) & (hard <= recovery_max)
+        )),
+        "recovery_open_vs_hard_negative_auc": float(np.mean(comparisons)),
+        "recovery_open_median": float(np.median(recovery)),
+        "hard_negative_median": float(np.median(hard)),
+    }
+
+
 def _trajectory_summaries(
     records: Sequence[dict[str, Any]], horizon_grid: Sequence[int]
 ) -> list[dict[str, Any]]:
@@ -698,8 +737,8 @@ def _write_report(result: Mapping[str, Any], path: Path) -> None:
         f"Quest job: `{result['provenance']['quest_job_id'] or 'not recorded'}`.  "
         f"Collection commit(s): `{', '.join(commits)}`.",
         "",
-        "The five selected trajectories were scanned once under the glass condition. "
-        "Every dense anchor branches from the corresponding exact serialized "
+        "Each authored trajectory uses one accepted Base scan under the glass condition. "
+        "Every dense anchor branches from that scan's corresponding exact serialized "
         "simulator/controller state into BaseContinue, DetourComplete, and the "
         "zero-delta FailSafeHold. Directional RetreatHold was not used.",
         "",
@@ -734,9 +773,16 @@ def _write_report(result: Mapping[str, Any], path: Path) -> None:
     for placement_id in MISSED_RECOVERABLE_PLACEMENTS:
         row = missed.get(placement_id)
         latest = None if row is None else row["latest_recoverable_anchor"]
+        comparison = None if row is None else row.get("prior_p2_t20_comparison")
+        mismatch = (
+            ""
+            if not comparison or comparison["recovery_signature_reproduced"]
+            else " Prior P2 T-20 recoverability did not reproduce on this accepted dense Base scan."
+        )
         lines.append(
-            f"- `{placement_id.removeprefix('glass_recovery_')}` latest recoverable "
-            f"action: **{latest if latest is not None else 'not observed'} actions before collision**."
+            f"- `{placement_id.removeprefix('glass_recovery_')}` latest recoverable anchor: "
+            + (f"**{latest} actions before collision**." if latest is not None else "**not observed**.")
+            + mismatch
         )
     lines.extend([
         f"- Recoverable → loss-control temporal conversion: **{'yes' if transitions else 'no'}**"
@@ -747,6 +793,42 @@ def _write_report(result: Mapping[str, Any], path: Path) -> None:
         f"non-monotonic recovery is {'present on ' + ', '.join(row['placement_id'].removeprefix('glass_recovery_') for row in nonmonotonic) if nonmonotonic else 'not observed'}.",
         f"- FailSafeHold contract violations: **{violations}**. All violating anchors, if any, are retained.",
         "",
+        "## Cross-run stability",
+        "",
+        "The old P2 T-20 outcome is a prior run, not a label copied into P3. Both missed "
+        "episodes changed their T-20 signature on the newly accepted dense Base scan:",
+        "",
+        "| Trajectory | Prior P2 T-20 Base / Detour | Dense T-20 Base / Detour | Prior collision action | Dense collision action |",
+        "|---|---|---|---:|---:|",
+    ])
+    for placement_id in MISSED_RECOVERABLE_PLACEMENTS:
+        row = missed.get(placement_id)
+        comparison = None if row is None else row.get("prior_p2_t20_comparison")
+        if comparison is None:
+            continue
+        lines.append(
+            f"| {placement_id.removeprefix('glass_recovery_')} | "
+            f"{comparison['prior_base_outcome']} / {comparison['prior_detour_outcome']} | "
+            f"{comparison['dense_base_outcome']} / {comparison['dense_detour_outcome']} | "
+            f"{comparison['prior_reference_collision_action_index']} | "
+            f"{comparison['dense_reference_collision_action_index']} |"
+        )
+    exclusions = [
+        {"capture_root": capture["root"], **exclusion}
+        for capture in result["provenance"]["captures"]
+        for exclusion in capture["exclusions"]
+    ]
+    lines.extend(["", f"Excluded scan attempts: **{len(exclusions)}**."])
+    for exclusion in exclusions:
+        lines.append(
+            f"- `{exclusion.get('placement_key', 'unknown')}`: "
+            f"`{exclusion.get('reason', 'unknown')}` in `{exclusion['capture_root']}`."
+        )
+    lines.extend([
+        "",
+        "`heldout_0010` was subsequently accepted as a one-trajectory supplement; its "
+        "failed no-catastrophe scan remains in provenance. No outcome was imputed from P2.",
+        "",
         "## Hard controls and feature overlap",
         "",
         f"The authoring selected {result['coverage']['hard_control_regions']} control regions "
@@ -756,16 +838,27 @@ def _write_report(result: Mapping[str, Any], path: Path) -> None:
         "",
     ])
     if overlap["available"]:
+        advantage = result["advantage_overlap"]
         lines.extend([
             f"Overlap is measured in the {overlap['dimensions']}-D standardized frozen-Router "
-            "prediction-output space. Leave-one-out 1-NN balanced accuracy is "
+            "prediction-output space. State-level leave-one-out 1-NN balanced accuracy is "
             f"`{overlap['leave_one_out_1nn_balanced_accuracy']:.3f}`; "
             f"{_fmt_fraction(overlap['recovery_points_with_hard_neighbor_no_farther_than_recovery_neighbor_fraction'])} "
             "of recovery-open points have a hard-control neighbor no farther than their nearest "
             "other recovery-open point. Median recovery→hard distance is "
             f"`{overlap['median_recovery_to_hard_distance']:.3f}` versus median "
             f"recovery→recovery distance `{_fmt_fraction(overlap['median_recovery_to_recovery_distance'])}`. "
-            "These diagnostics quantify overlap; they are not a newly tuned decision rule.",
+            "This state-level result is descriptive and optimistic because adjacent states "
+            "from the same trajectory are not source-disjoint.",
+            "",
+            "On the old Router's actual scalar decision axis, overlap is substantial: "
+            f"{advantage['recovery_open_fraction_inside_hard_negative_range']:.3f} of recovery-open "
+            "states lie inside the hard-negative score range, and "
+            f"{advantage['hard_negative_fraction_inside_recovery_open_range']:.3f} of hard negatives "
+            "lie inside the recovery-open range. Recovery-open-v-hard-negative score AUC is "
+            f"`{advantage['recovery_open_vs_hard_negative_auc']:.3f}` (higher is presumed more "
+            "recoverable). Thus the current operational score does not separate these labels. "
+            "These diagnostics are not a newly tuned decision rule.",
             "",
         ])
     else:
@@ -790,6 +883,7 @@ def _write_report(result: Mapping[str, Any], path: Path) -> None:
         f"Base-preferred anchors: {result['coverage']['base_preferred_records']}.",
         f"- Capture root(s): `{', '.join(item['root'] for item in result['provenance']['captures'])}`.",
         f"- Hard-control source: `{result['provenance']['hard_control_root']}`.",
+        f"- Excluded scan attempts retained in provenance: {result['coverage']['excluded_scan_attempts']}.",
         "- Collection command: `python scripts/collect_counterfactual_option_rollouts.py "
         "--conditions glass --history-length 8 --horizons 30 28 ... 4 2 1 "
         "--retreat-mode hold ...`",
@@ -840,6 +934,7 @@ def author(args: argparse.Namespace) -> dict[str, Any]:
         capture_inputs.append({
             "root": str(capture),
             "repository": manifest["repository"],
+            "exclusions": list(manifest.get("exclusions", [])),
             "artifacts": {
                 name: _artifact(capture / name) for name in (
                     "capture_manifest.json", "decision_metadata.json",
@@ -854,8 +949,9 @@ def author(args: argparse.Namespace) -> dict[str, Any]:
     hard_margin = float(hard_manifest["router_point"]["pointwise_margin"])
     if not np.isclose(hard_margin, float(point["delta"])):
         raise ValueError("P2.5 hard-control trace and frozen Router point disagree")
+    p2_episodes = _read_jsonl(hard_root / "dynamic_episodes.jsonl")
     hard, hard_regions, hard_vectors = extract_hard_control_records(
-        _read_jsonl(hard_root / "dynamic_episodes.jsonl"),
+        p2_episodes,
         _read_jsonl(hard_root / "router_trace.jsonl"),
         pointwise_margin=hard_margin,
         top_by_peak=args.hard_regions_by_peak,
@@ -869,6 +965,48 @@ def author(args: argparse.Namespace) -> dict[str, Any]:
     ]
     selected_hard_vectors = [hard_vectors[row["decision_id"]] for row in hard]
     overlap = feature_overlap_summary(recovery_vectors, selected_hard_vectors)
+    advantage_overlap = advantage_overlap_summary(
+        [row["old_router_advantage"] for row in dense if row["recovery_open"]],
+        [row["old_router_advantage"] for row in hard],
+    )
+
+    prior_p2 = {
+        str(row["placement_id"]): row for row in p2_episodes
+        if row["condition"] == "glass"
+    }
+    for trajectory in trajectories:
+        prior = prior_p2.get(str(trajectory["placement_id"]))
+        h20 = next(
+            (row for row in trajectory["records"] if row["horizon_actions"] == 20),
+            None,
+        )
+        if prior is None or h20 is None:
+            trajectory["prior_p2_t20_comparison"] = None
+            continue
+        prior_outcomes = prior["t20_oracle_timing_upper_bound"]["option_outcomes"]
+        prior_recovery = bool(
+            prior["reference_base_outcome"] == "catastrophe"
+            and prior_outcomes["detour_complete"] == "task_success"
+        )
+        trajectory["prior_p2_t20_comparison"] = {
+            "prior_base_outcome": prior["reference_base_outcome"],
+            "prior_detour_outcome": prior_outcomes["detour_complete"],
+            "prior_hold_outcome": prior_outcomes["retreat_hold"],
+            "prior_reference_collision_action_index": prior.get(
+                "reference_collision_action_index"
+            ),
+            "prior_recovery_open": prior_recovery,
+            "dense_base_outcome": h20["base_outcome"],
+            "dense_detour_outcome": h20["detour_outcome"],
+            "dense_hold_outcome": h20["hold_outcome"],
+            "dense_reference_collision_action_index": int(
+                h20["action_index"] + h20["horizon_actions"] - 1
+            ),
+            "dense_recovery_open": bool(h20["recovery_open"]),
+            "recovery_signature_reproduced": bool(
+                prior_recovery == bool(h20["recovery_open"])
+            ),
+        }
 
     result = {
         "schema_version": 1,
@@ -904,9 +1042,13 @@ def author(args: argparse.Namespace) -> dict[str, Any]:
             "hard_control_regions": len(hard_regions),
             "hard_negative_records": len(hard),
             "all_records": len(all_records),
+            "excluded_scan_attempts": sum(
+                len(item["exclusions"]) for item in capture_inputs
+            ),
         },
         "hard_control_regions": hard_regions,
         "feature_overlap": overlap,
+        "advantage_overlap": advantage_overlap,
         "provenance": {
             "quest_job_id": args.quest_job_id,
             "captures": capture_inputs,

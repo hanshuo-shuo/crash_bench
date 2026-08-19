@@ -49,6 +49,7 @@ from scripts.author_timing_choice_benchmark import (
     point_signature,
 )
 from scripts.author_recovery_window_supervision import (
+    advantage_overlap_summary,
     extract_hard_control_records,
     feature_overlap_summary,
     label_anchor,
@@ -369,6 +370,15 @@ def test_p3_feature_overlap_reports_router_output_space():
     assert result["available"] is True
     assert result["dimensions"] == 3
     assert 0.0 <= result["leave_one_out_1nn_balanced_accuracy"] <= 1.0
+
+
+def test_p3_advantage_overlap_reports_operational_score_inversion():
+    result = advantage_overlap_summary(
+        recovery_scores=[0.2, 0.4], hard_scores=[0.1, 0.3, 0.5]
+    )
+    assert result["available"] is True
+    assert result["recovery_open_fraction_inside_hard_negative_range"] == 1.0
+    assert result["recovery_open_vs_hard_negative_auc"] == pytest.approx(0.5)
 
 
 def test_temporal_window_is_causal_and_left_padded():
