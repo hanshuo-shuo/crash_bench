@@ -104,13 +104,17 @@ VS Code 和 Codex 都在本地仓库运行，只通过一个持久 SSH 会话增
 完成一次密码/Duo 认证：
 
 ```bash
-ssh -M -S /tmp/crashbench-quest.sock -o ControlPersist=8h \
+ssh -M -S /tmp/quest.sock -o ControlPersist=8h \
   -fN quest.northwestern.edu
 ```
+
+完整的项目隔离、连接核验、tmux 和交接约定见
+[`QUEST_WORKFLOW.md`](QUEST_WORKFLOW.md)。
 
 然后在本地项目根目录使用：
 
 ```bash
+scripts/quest_sync.sh check
 scripts/quest_sync.sh status
 scripts/quest_sync.sh dry-run
 scripts/quest_sync.sh push

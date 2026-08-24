@@ -118,6 +118,7 @@ records depend on them. They are not competing current entrypoints.
 
 ## Start here
 
+- [CrashBench ↔ Quest workflow](QUEST_WORKFLOW.md)
 - [Main result and interpretation](docs/COUNTERFACTUAL_ROUTER_MAIN_RESULT.md)
 - [Current paper state](docs/CURRENT.md)
 - [Paper plan](docs/PAPER_PLAN.md)

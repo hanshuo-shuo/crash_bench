@@ -48,10 +48,10 @@ the glass condition, and all four timing anchors.  The maintained sbatch file
 already passes `--conditions glass` and `--retreat-mode hold`.
 
 ```bash
-ssh -S /tmp/crashbench-quest.sock quest.northwestern.edu \
+ssh -S /tmp/quest.sock quest.northwestern.edu \
   'cd /gpfs/home/shv7753/crash_bench && git pull --ff-only origin codex/glass-recovery-d0-fprime-rescue'
 
-ssh -S /tmp/crashbench-quest.sock quest.northwestern.edu \
+ssh -S /tmp/quest.sock quest.northwestern.edu \
   'cd /gpfs/home/shv7753/crash_bench && sbatch --parsable \
     --export=ALL,CB_P1_OUTPUT=results/counterfactual_router/p1_timing_choice_hold_20260818_r3,CB_P1_PLACEMENT_IDS=glass_recovery_heldout_0004,CB_P1_TARGET_VALID=1 \
     setup/timing_choice_pilot.sbatch'
