@@ -1,0 +1,174 @@
+schema_version: 1
+kind: iclr27_router_baseline_suite
+
+study:
+  stage: 2
+  evidence_level: development-only
+  purpose: strongest-baseline GO/NO-GO audit
+
+capture:
+  default_path: results/counterfactual_router/full_d4751330395e_20260814T152231Z
+  required_files:
+    - capture_manifest.json
+    - decision_metadata.json
+    - option_rollouts.jsonl
+    - decision_features.npz
+
+data_policy:
+  independent_unit: source_state_sha256
+  source_split_field: split
+  allowed_splits:
+    - train
+    - calibration
+    - development
+  fit_split: train
+  selection_split: calibration
+  evaluation_split: development
+  fresh_test:
+    allowed: false
+    rule: Do not load or inspect any fresh-test outcome while fitting or selecting this suite.
+  forbidden_tuning_splits:
+    - development
+    - test
+    - fresh_test
+  metadata_not_used_as_features:
+    - split
+    - source_state_sha256
+    - condition
+    - horizon_actions
+    - placement_id
+
+features:
+  primary_contract: hidden_robot_action
+  temporal_view: single_frame
+  hidden_projection: train_only_pca
+  pca_components: 16
+  robot_state: true
+  nominal_action: true
+  source_weighting: source_balanced
+  ablations:
+    hidden_only: true
+    state_action_only: true
+
+model:
+  seed: 2027
+  logistic_l2: 0.01
+  ridge_alpha: 1.0
+  hyperparameter_search: none
+  report_parameter_count: true
+  report_inference_latency: true
+
+baselines:
+  - id: base
+    family: fixed
+  - id: always_detour
+    family: fixed
+  - id: always_retreat
+    family: fixed
+  - id: risk_retreat
+    family: scalar_risk
+  - id: risk_detour
+    family: scalar_risk
+  - id: risk_best_fixed
+    family: scalar_risk
+    fixed_option_selection_split: calibration
+  - id: risk_two_stage
+    family: scalar_risk_plus_option
+  - id: direct_choice
+    family: direct_decision
+  - id: direct_q
+    family: direct_decision
+  - id: pairwise_advantage
+    family: direct_decision
+  - id: outcome_router
+    family: outcome_decomposition
+  - id: outcome_router_state_action_only
+    family: outcome_decomposition_ablation
+  - id: outcome_router_hidden_only
+    family: outcome_decomposition_ablation
+  - id: oracle_geometry
+    family: geometry
+    role: diagnostic_only
+    deployable: false
+    eligible_for_go_no_go: false
+
+protocol:
+  utility_formula: success - eta * safe_noncompletion - lambda * catastrophe
+  primary_method: OutcomeRouter
+  primary_lambda: 1.0
+  noncompletion_cost: 0.0
+  primary_target_intervention_rate: 0.60
+  lambda_grid:
+    - 1.0
+    - 2.0
+    - 3.0
+    - 5.0
+    - 8.0
+  option_order:
+    - base_continue
+    - detour_complete
+    - retreat_hold
+  option_costs:
+    - 0.0
+    - 1.0
+    - 1.0
+  option_cost_definition: normalized intervention indicator; reported separately from outcome utility
+  tie_break: prefer Base on any utility tie, then lower option cost, then fixed option order
+  rate_calibration: closest source-balanced calibration rate; break ties toward lower intervention rate
+  rate_threshold_semantics: method-specific matched-rate score threshold; may be negative and is not a physical switching cost
+  forbidden_input_splits:
+    - test
+    - fresh_test
+    - confirmatory_test
+  go_thresholds:
+    intervention_rate_absolute: 0.10
+    utility_absolute: 0.02
+    catastrophe_rate_absolute: 0.02
+  go_comparators:
+    risk_reference: Risk->BestFixed
+    pivot_risk_methods:
+      - Risk->Detour
+      - Risk->BestFixed
+    go_a_direct_cover_methods:
+      - DirectChoice
+      - DirectQ
+      - PairwiseAdvantage
+    go_b_value_methods:
+      - DirectQ
+      - PairwiseAdvantage
+  fresh_test_prohibition: Fresh-test outcomes must not be loaded, inspected, fitted, or used for any model or operating-point selection in this development-only audit.
+  comparison_rule: compare source-balanced development metrics at the frozen primary rate and preference
+  oracle_geometry_rule: Oracle or future-path geometry is diagnostic only and cannot support a deployable baseline claim.
+  no_post_selection_rule: Development and fresh-test outcomes cannot select features, models, thresholds, lambda, eta, or the headline point.
+
+statistics:
+  bootstrap:
+    unit: source
+    shared_resamples: true
+    replicates: 5000
+    seed: 2027
+  exact_test:
+    unit: source
+    method: paired_sign_flip
+  report_raw_numerators_and_denominators: true
+  report_groups:
+    - overall
+    - source
+    - condition
+    - horizon
+
+outputs:
+  required:
+    - manifest.json
+    - model_parameters.npz
+    - all_predictions.npz
+    - all_choices.csv
+    - overall_metrics.csv
+    - per_source_metrics.csv
+    - per_condition_metrics.csv
+    - per_horizon_metrics.csv
+    - exact_tests.json
+    - calibration.json
+    - frontier.csv
+    - gate_decision.json
+    - figures

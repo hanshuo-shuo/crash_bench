@@ -75,6 +75,9 @@ results/phase2_task_witness/*.gif
 # Exact-state option rollouts contain raw temporal activations and branch logs.
 # Promote only reviewed aggregate summaries after analysis.
 /results/counterfactual_router/
+# Quest phase-2 audits are immutable run directories pulled for review.  Keep
+# them from dirtying the remote checkout; reviewed artifacts may be force-added.
+/results/iclr27/baseline_audit_*/
 # Rebuilt DOCX reports are disposable outputs; dated frozen copies live in
 # docs/archive/preliminary_reports/ and must never be overwritten by builders.
 /results/generated_reports/
