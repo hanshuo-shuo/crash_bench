@@ -1,10 +1,11 @@
 # CrashBench ICLR 2027 master plan
 
-**Truth-source status:** stage 1 frozen; stage 2 recorded on 2026-08-29
+**Truth-source status:** stage 1 frozen; stage 2 and Phase 2.5A recorded on 2026-08-29
 **Working title:** *CrashBench: Exact-State Potential Outcomes for Selective VLA Intervention*
 **Stage-1 decision:** **CONDITIONAL GO** pending the strongest-baseline gate.
 **Current submission decision:** **NO-GO for the current outcome-decomposition
-headline**; only a scoped option-support / option-ambiguity pivot is authorized.
+headline**; Phase 2.5A passed and authorizes only the Phase 2.5B pooled
+source-cross-fitted support rescue.
 
 This directory implements stages 1 and 2 of the
 [revised ICLR 2027 execution plan](../../CrashBench_ICLR2027_Revised_Plan_After_Baseline_NoGo.md)
@@ -26,6 +27,15 @@ Router does not beat Risk -> Best Fixed in source-macro utility or success and
 uses 12.92 points more intervention; its lower catastrophe rate is a tradeoff,
 not dominance. Full results and the next authorized action are in
 [`BASELINE_AUDIT_RESULT.md`](BASELINE_AUDIT_RESULT.md).
+
+The subsequent 20-source Phase 2.5A audit passes `PASS-SUPPORT` at commit
+`7876232`: strict Base/Detour/Retreat support comes from 16/13/9 sources, 13
+sources meet the predeclared within-source flip rule, and an idealized
+Base-versus-fixed-Detour gate recovers 90/113 = 79.65% of decision-level Oracle
+value. The equal-source sensitivity is higher at 82.90%, and all strict Retreat
+states remain glass-only, so this is a narrow authorization for source-LOSO
+learning rather than evidence that option ambiguity has already been solved.
+See [`OPTION_SUPPORT_AUDIT.md`](OPTION_SUPPORT_AUDIT.md).
 
 The stage-1 rationale below remains the historical reason the project entered
 the gate. It no longer authorizes a confirmatory run by itself.
@@ -131,6 +141,7 @@ sequential intervention.
 |---|---|---|
 | 1. Paper truth source | Every current paper number maps to immutable evidence; unsupported wording and reviewer risks are explicit. | **PASS** — local 186/186 tests and Quest Job 5124071 (`short`, exit `0:0`) passed at commit `cbc965b`. |
 | 2. Strongest-baseline audit | Outcome decomposition/multi-option value survives fair direct, risk, and geometry baselines. | **INCONCLUSIVE / current method NO-GO** — Quest Job 5128781 (`short`, exit `0:0`), commit `eed1fee`. |
+| 2.5A. Existing-corpus option support | Pooled strict support is source-diverse and a fixed non-Base option leaves enough canonical Oracle value. | **PASS-SUPPORT** — local CPU-only audit, commit `7876232`; only Phase 2.5B is authorized. |
 | 3. Problem and method rewrite | Exact-state full-information supervision and general utility are formalized without observational-causal overclaim. | Positive method rewrite blocked; only option-support/ambiguity pivot design is authorized. |
 | 4+. New evidence and paper | Only evidence justified by the gate is collected and written. | No confirmatory cohort authorized. |
 
@@ -156,6 +167,16 @@ sequential intervention.
   and Slurm provenance.
 - `configs/iclr27/baseline_suite.yaml`: frozen development-only comparison and
   GO/NO-GO contract.
+
+## Phase-2.5A artifacts
+
+- `OPTION_SUPPORT_AUDIT.md`: label contract, result, limitations, and the exact
+  downstream authorization.
+- `configs/iclr27/option_support_audit.yaml`: frozen support, diagnostic, and
+  gate definitions.
+- `scripts/iclr27/audit_option_support.py`: CPU-only, tie-preserving audit.
+- `results/iclr27/option_support_audit_787623226de0_20260829T112149Z/`:
+  clean-commit manifest, tables, matched pairs, and machine gate.
 
 ## Change control
 

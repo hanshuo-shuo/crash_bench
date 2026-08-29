@@ -21,6 +21,16 @@
     "frozen_results_modified": false,
     "unsupported_wording_recorded": true
   },
+  "stage_2_5a_decision": {
+    "verdict": "PASS-SUPPORT",
+    "phase_2_5a_complete": true,
+    "protocol_commit": "787623226de03670130330dd7cdd5802694ae551",
+    "execution": "local_cpu_only_no_new_rollout",
+    "result_dir": "results/iclr27/option_support_audit_787623226de0_20260829T112149Z",
+    "next_hard_gate": "Phase 2.5B pooled source-LOSO support rescue",
+    "screen_a_authorized": false,
+    "confirmatory_rollout_authorized": false
+  },
   "verification_attempts": [
     {
       "attempt": 1,
@@ -88,6 +98,8 @@
     {"path":"results/P2_SEQUENTIAL_FIRST_CROSSING_DEV_20260819.md","sha256":"5317535926847946c02d0848201c83270745bd179aba1448047c279e5925d9b1","evidence_level":"development-only","claims":["C14-P2"]},
     {"path":"scripts/analyze_p2_trace_morphology.py","sha256":"ca158058f52d83d9a253a8bfda7120ec7249ac0b8def40a7d25b2978ea573b2d","evidence_level":"analysis-code","claims":["C14-P2.5"]},
     {"path":"results/iclr27/stage1_verify_cbc965bc1355_20260829T091913Z_job5124071/verification.json","sha256":"133248b9071259800738b0bfeb984a531cef56ea4f37d7c66da597ff4513a4d6","evidence_level":"stage-verification","claims":[]},
+    {"path":"results/iclr27/option_support_audit_787623226de0_20260829T112149Z/manifest.json","sha256":"c1abad34fedb51d7c25ee22d0dae2751aed682d998684a902ff7e988189015d7","evidence_level":"exposed-development-only","claims":[]},
+    {"path":"results/iclr27/option_support_audit_787623226de0_20260829T112149Z/gate_decision.json","sha256":"e278453f2a6e1517e97ac9627383db2470fec30fd33bfa5af596f4465d901d13","evidence_level":"development-gate","claims":[]},
     {"path":"results/p2_trace_morphology_audit_20260819.json","sha256":"5ecfd5f7de24ddc4d9a999ecc0fbddbd6c088d92c4017bb9e00fc1d58d7d6a4a","evidence_level":"negative-closeout","claims":["C14-P2.5"]},
     {"path":"results/p3_recovery_window_records_20260819.csv","sha256":"f555612ba933643c208f509754736ce98ba1ce5303c8e8f390168c0448d54c3d","evidence_level":"development-only","claims":["C14-P3.0"]},
     {"path":"results/p3_recovery_window_trajectories_20260819.json","sha256":"c1b33c617f87903fb8bd593d4f20deeb74f4694d2282aa27b6f65594e0402896","evidence_level":"development-only","claims":["C14-P3.0"]},
@@ -127,7 +139,13 @@
     {"claim_id":"C14-P3.2","path":"results/p3_2_frozen_dynamic_closeout_analysis_20260819.json","json_path":"counts.sources","equals":8},
     {"claim_id":"C14-P3.2","path":"results/p3_2_frozen_dynamic_closeout_analysis_20260819.json","json_path":"methods.DirectRecoveryRouter.selected_option_counts.Base","equals":24},
     {"claim_id":"C14-P3.2","path":"results/p3_2_frozen_dynamic_closeout_analysis_20260819.json","json_path":"methods.P2SequentialRouter.selected_option_counts.Detour","equals":5},
-    {"claim_id":"C14-P3.2","path":"results/p3_2_frozen_dynamic_closeout_trace_audit_20260819.json","json_path":"known_recovery_t20.versus_base_success_control_trajectory_max_auc","equals":0.25}
+    {"claim_id":"C14-P3.2","path":"results/p3_2_frozen_dynamic_closeout_trace_audit_20260819.json","json_path":"known_recovery_t20.versus_base_success_control_trajectory_max_auc","equals":0.25},
+    {"claim_id":"PHASE-2.5A","path":"results/iclr27/option_support_audit_787623226de0_20260829T112149Z/gate_decision.json","json_path":"decision","equals":"PASS-SUPPORT"},
+    {"claim_id":"PHASE-2.5A","path":"results/iclr27/option_support_audit_787623226de0_20260829T112149Z/gate_decision.json","json_path":"actual.strict_base_source_support","equals":16},
+    {"claim_id":"PHASE-2.5A","path":"results/iclr27/option_support_audit_787623226de0_20260829T112149Z/gate_decision.json","json_path":"actual.strict_detour_source_support","equals":13},
+    {"claim_id":"PHASE-2.5A","path":"results/iclr27/option_support_audit_787623226de0_20260829T112149Z/gate_decision.json","json_path":"actual.strict_retreat_source_support","equals":9},
+    {"claim_id":"PHASE-2.5A","path":"results/iclr27/option_support_audit_787623226de0_20260829T112149Z/gate_decision.json","json_path":"actual.within_source_flip_sources","equals":13},
+    {"claim_id":"PHASE-2.5A","path":"results/iclr27/option_support_audit_787623226de0_20260829T112149Z/gate_decision.json","json_path":"actual.best_fixed_nonbase_oracle_value_recovered","equals":0.7964601769911505}
   ],
   "claim_index": {
     "supported": ["C1","C3","C5","C7","C9","C11","C14","C14-P2.5","C14-P3.0","C14-P3.1","C14-P3.2"],

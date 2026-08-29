@@ -1,0 +1,67 @@
+{
+  "artifact_sha256": {
+    "advantage_summary.csv": "7866e3ce9569295de876c32af41e3b2f663a4db47d598165cde73bafaf612911",
+    "decision_counts.csv": "929ed2e0870f5c7675c2818c830cbc653425c774b7791b2801a576aa81aaf92c",
+    "decision_labels.csv": "9871346b5aecb2cfe64aec7688ded5331f13465bb970c4219f388d534a9792a9",
+    "diagnostic_predictions.csv": "aef7b32623215ba30c6aa615cf3e70e394cd6bc5339f4e1626b5d9d2e6ae8a68",
+    "diagnostics.csv": "a7b04ed2f582c32aff5a8a0dba8c44429506820a5025345b9e66ac55c3b3ff25",
+    "fixed_option_recovery.csv": "63ffa2db91751ce80cf30d4176f4f52054cc754fed0ca0dd6217b3ac239b3d01",
+    "gate_decision.json": "e278453f2a6e1517e97ac9627383db2470fec30fd33bfa5af596f4465d901d13",
+    "intervention_advantages.csv": "445e7ec8ebc0f2bc88db9bd13005abe846a7d4f8f0b8ea349135cb792053d078",
+    "label_support.csv": "ed5f11ca40cb850d1543ffee413784257cae3cd56dd63874f80e38314499baf3",
+    "matched_risk_pairs.csv": "439bf0594c9bc8efe6b407f1704f681d706fb6bad884cbe2716a088a55257402",
+    "option_support_audit.yaml": "24e53a35d49e6808152c22b70203b02d7b9c425c90ecff2a745db56b5eb8a009",
+    "per_source_support.csv": "93e5fd0567fa03dd1288c8451944205807089b15bb141ac8e91d51c2bb1333a8",
+    "risk_entropy_bins.csv": "d943019224292df8e537db7f1876e5023eb764bf9366f1a0b8708c05579932de",
+    "transition_matrix.csv": "ecd585ec7de8acc4253d2e3e8f1c440fcb96bd911b141331dd11ffc93b59e3c6",
+    "within_source_transitions.csv": "eff836a1e2164473d5208f9f0a6eabe3b27eae6d54cceef7e85b717e6d4841bc"
+  },
+  "baseline_audit_root": "/Users/hanshuo/Desktop/crash_bench/results/iclr27/baseline_audit_eed1feecb3bd_20260829T101548Z_job5128781",
+  "baseline_protocol_commit": "eed1feecb3bd298d870ab049976b7ac006d49633",
+  "capture_root": "/Users/hanshuo/Desktop/crash_bench/results/counterfactual_router/full_d4751330395e_20260814T152231Z",
+  "config_sha256": "4ef9e4356f2c4a912fd5177e4608f8240efd830783346131972b3a76fc78ebd7",
+  "config_snapshot": "option_support_audit.yaml",
+  "config_source": "/Users/hanshuo/Desktop/crash_bench/configs/iclr27/option_support_audit.yaml",
+  "created_at_utc": "2026-08-29T11:21:49.430435+00:00",
+  "decision_count": 273,
+  "evidence_level": "exposed-development-only",
+  "fresh_test_outcomes_loaded": false,
+  "gate_decision": "PASS-SUPPORT",
+  "git_commit": "787623226de03670130330dd7cdd5802694ae551",
+  "git_worktree_dirty": false,
+  "historical_split_source_counts": {
+    "calibration": 7,
+    "development": 8,
+    "train": 5
+  },
+  "input_sha256": {
+    "baseline/all_predictions.npz": "92a9a2d90cf6dd6f9bab5ce91a04c4f2b690d472adbde8abd66e93fbe0268651",
+    "baseline/manifest.json": "7279bb690c90610376626ebd2194787cd29749837c6cd4ef65b9a4536831bb98",
+    "capture/capture_manifest.json": "a0a1efad5976bc5661109a161e3ec21112a5a97f993207667cc7abda606f0d60",
+    "capture/decision_features.npz": "3ee68e647ecc68a704d02ac5bd19129ee063e78fe97423a32564ff194e4bb495",
+    "capture/decision_metadata.json": "1e7f701cdb1b9c3eb00d6ae637c722e5a5f0ad55861e5135f0e1d2a1b18f0815",
+    "capture/option_rollouts.jsonl": "9f51fe43b8cda6e67a93b70439dbf7c65ce769cfd8e04812230df4e2bfdb9353"
+  },
+  "kind": "iclr27_option_support_audit",
+  "new_rollouts": false,
+  "risk_score": {
+    "definition": "1 - choice_probability[base_continue]",
+    "method": "Risk->BestFixed",
+    "target": "Base-option catastrophe"
+  },
+  "schema_version": 1,
+  "source_count": 20,
+  "strict_label_definition": {
+    "labels": [
+      "strict_base",
+      "strict_detour",
+      "strict_retreat",
+      "detour_retreat_tie",
+      "base_tie",
+      "no_good_option"
+    ],
+    "no_good_option": "all three utilities equal catastrophe utility",
+    "support_advantage_gamma": 0.5,
+    "ties_are_never_assigned_to_a_strict_class": true
+  }
+}

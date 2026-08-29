@@ -1,0 +1,118 @@
+schema_version: 1
+kind: iclr27_option_support_audit
+study:
+  stage: 2.5A
+  evidence_level: exposed-development-only
+  purpose: audit pooled source support and fixed-option ambiguity without new rollout
+inputs:
+  capture_path: results/counterfactual_router/full_d4751330395e_20260814T152231Z
+  baseline_audit_path: results/iclr27/baseline_audit_eed1feecb3bd_20260829T101548Z_job5128781
+  required_capture_files:
+  - capture_manifest.json
+  - decision_metadata.json
+  - option_rollouts.jsonl
+  - decision_features.npz
+  required_baseline_files:
+  - manifest.json
+  - all_predictions.npz
+  risk_score_method: Risk->BestFixed
+data_policy:
+  independent_unit: source_state_sha256
+  pooled_role: all historical splits are treated as one exposed development corpus
+  expected_source_count: 20
+  expected_historical_split_source_counts:
+    train: 5
+    calibration: 7
+    development: 8
+  allowed_splits:
+  - train
+  - calibration
+  - development
+  forbidden_splits:
+  - test
+  - fresh_test
+  - confirmatory_test
+  fresh_test_allowed: false
+utility:
+  lambda: 1.0
+  eta: 0.0
+  outcome_values:
+    task_success: 1.0
+    safe_noncompletion: 0.0
+    catastrophe: -1.0
+  option_order:
+  - base_continue
+  - detour_complete
+  - retreat_hold
+strict_labels:
+  support_advantage_gamma: 0.5
+  no_good_option_rule: all options have catastrophe utility
+  tie_policy: detour/retreat ties and every tie containing Base remain separate labels
+  labels:
+  - strict_base
+  - strict_detour
+  - strict_retreat
+  - detour_retreat_tie
+  - base_tie
+  - no_good_option
+diagnostics:
+  evaluation: leave_one_source_out
+  targets: strict labels only
+  metadata_is_deployable: false
+  feature_sets:
+  - condition
+  - horizon
+  - condition+horizon
+  risk_bins:
+    edges:
+    - 0.0
+    - 0.2
+    - 0.4
+    - 0.6
+    - 0.8
+    - 1.000000000001
+    score: one minus frozen Risk->BestFixed Base choice probability
+  matched_pairs:
+    labels:
+    - strict_detour
+    - strict_retreat
+    maximum_absolute_risk_difference: 0.05
+    matching: maximum-cardinality minimum-risk-distance without replacement
+fixed_option_recovery:
+  selector: realized-oracle Base versus one frozen non-Base option
+  formula: sum(selected utility - Base utility) / sum(Oracle utility - Base utility)
+  gate_aggregation: decision_weighted
+  source_macro_sensitivity: true
+gate:
+  pass_support:
+    strict_base_source_support_min: 8
+    strict_detour_source_support_min: 6
+    strict_retreat_source_support_min: 6
+    within_source_flip_sources_min: 4
+    best_fixed_nonbase_oracle_value_recovered_max: 0.8
+  supplement_support:
+    strict_retreat_source_support_min: 3
+    strict_retreat_source_support_max: 5
+    target_strict_retreat_source_support: 8
+    maximum_attempted_sources: 18
+  stop_support:
+    strict_retreat_source_support_below: 3
+    best_fixed_nonbase_oracle_value_recovered_above: 0.9
+outputs:
+  required:
+  - manifest.json
+  - decision_labels.csv
+  - decision_counts.csv
+  - label_support.csv
+  - per_source_support.csv
+  - within_source_transitions.csv
+  - transition_matrix.csv
+  - intervention_advantages.csv
+  - advantage_summary.csv
+  - fixed_option_recovery.csv
+  - diagnostics.csv
+  - diagnostic_predictions.csv
+  - risk_entropy_bins.csv
+  - matched_risk_pairs.csv
+  - gate_decision.json
+  - option_support_audit.yaml

@@ -1,0 +1,52 @@
+{
+  "actual": {
+    "best_fixed_nonbase_oracle_value_recovered": 0.7964601769911505,
+    "strict_base_source_support": 16,
+    "strict_detour_source_support": 13,
+    "strict_retreat_source_support": 9,
+    "within_source_flip_sources": 13
+  },
+  "authorization": {
+    "new_confirmatory_rollout": false,
+    "phase_2_5b_pooled_crossfit": true,
+    "screen_a_mechanical_authoring": false,
+    "training_only_source_supplement": false
+  },
+  "best_fixed_nonbase_method": "OracleGate->Detour",
+  "decision": "PASS-SUPPORT",
+  "interpretation": "Only PASS-SUPPORT authorizes Phase 2.5B. Screen A remains blocked until Phase 2.5B returns GO-SIGNAL or GO-VALUE-ONLY.",
+  "pass_criteria": {
+    "base_support": true,
+    "detour_support": true,
+    "fixed_option_ambiguity": true,
+    "retreat_support": true,
+    "within_source_flips": true
+  },
+  "phase": "2.5A",
+  "schema_version": 1,
+  "sensitivity": {
+    "gate_uses_source_macro_sensitivity": false,
+    "reason": "The frozen gate retains the repository's existing decision-level Oracle value recovered formula; source-macro recovery is reported, not substituted post hoc.",
+    "source_macro_best_fixed_nonbase_oracle_value_recovered": 0.828955797565663
+  },
+  "stop_reasons": [],
+  "thresholds": {
+    "pass_support": {
+      "best_fixed_nonbase_oracle_value_recovered_max": 0.8,
+      "strict_base_source_support_min": 8,
+      "strict_detour_source_support_min": 6,
+      "strict_retreat_source_support_min": 6,
+      "within_source_flip_sources_min": 4
+    },
+    "stop_support": {
+      "best_fixed_nonbase_oracle_value_recovered_above": 0.9,
+      "strict_retreat_source_support_below": 3
+    },
+    "supplement_support": {
+      "maximum_attempted_sources": 18,
+      "strict_retreat_source_support_max": 5,
+      "strict_retreat_source_support_min": 3,
+      "target_strict_retreat_source_support": 8
+    }
+  }
+}
