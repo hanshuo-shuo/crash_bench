@@ -1,0 +1,1582 @@
+{
+  "comparator": "Risk->BestFixed",
+  "comparisons": {
+    "Always Detour": {
+      "catastrophe_rate": {
+        "difference_definition": "Always Detour minus Risk->BestFixed",
+        "negative_sources": 12,
+        "nonnegative_sources": 8,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 12,
+          "n_sources": 20,
+          "observed_mean_difference": 0.06777777777777777,
+          "one_sided_greater_p": 0.00022999770002299976,
+          "patterns_or_replicates": 100000,
+          "seed": 4047,
+          "two_sided_p": 0.0004999950000499995
+        },
+        "positive_sources": 0,
+        "source_bootstrap_95_ci": [
+          -0.09722222222222221,
+          -0.03916666666666667
+        ],
+        "source_macro_difference": -0.06777777777777777
+      },
+      "intervention_rate": {
+        "difference_definition": "Always Detour minus Risk->BestFixed",
+        "negative_sources": 0,
+        "nonnegative_sources": 20,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 17,
+          "n_sources": 20,
+          "observed_mean_difference": -0.5052777777777778,
+          "one_sided_greater_p": 1.0,
+          "patterns_or_replicates": 100000,
+          "seed": 4048,
+          "two_sided_p": 2.999970000299997e-05
+        },
+        "positive_sources": 17,
+        "source_bootstrap_95_ci": [
+          0.3719375000000001,
+          0.6266666666666667
+        ],
+        "source_macro_difference": 0.5052777777777778
+      },
+      "task_success_rate": {
+        "difference_definition": "Always Detour minus Risk->BestFixed",
+        "negative_sources": 10,
+        "nonnegative_sources": 10,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 12,
+          "n_sources": 20,
+          "observed_mean_difference": -0.0675,
+          "one_sided_greater_p": 0.976420235797642,
+          "patterns_or_replicates": 100000,
+          "seed": 4046,
+          "two_sided_p": 0.05764942350576494
+        },
+        "positive_sources": 2,
+        "source_bootstrap_95_ci": [
+          -0.12666666666666665,
+          -0.0008333333333333386
+        ],
+        "source_macro_difference": -0.0675
+      },
+      "utility": {
+        "difference_definition": "Always Detour minus Risk->BestFixed",
+        "negative_sources": 8,
+        "nonnegative_sources": 12,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 14,
+          "n_sources": 20,
+          "observed_mean_difference": 0.00027777777777777957,
+          "one_sided_greater_p": 0.4998150018499815,
+          "patterns_or_replicates": 100000,
+          "seed": 4045,
+          "two_sided_p": 1.0
+        },
+        "positive_sources": 6,
+        "source_bootstrap_95_ci": [
+          -0.061944444444444434,
+          0.0755624999999999
+        ],
+        "source_macro_difference": 0.00027777777777777957
+      }
+    },
+    "Always Retreat": {
+      "catastrophe_rate": {
+        "difference_definition": "Always Retreat minus Risk->BestFixed",
+        "negative_sources": 15,
+        "nonnegative_sources": 5,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 18,
+          "n_sources": 20,
+          "observed_mean_difference": 0.061944444444444434,
+          "one_sided_greater_p": 0.2007479925200748,
+          "patterns_or_replicates": 100000,
+          "seed": 5056,
+          "two_sided_p": 0.4032959670403296
+        },
+        "positive_sources": 3,
+        "source_bootstrap_95_ci": [
+          -0.17750694444444445,
+          0.0886249999999998
+        ],
+        "source_macro_difference": -0.061944444444444434
+      },
+      "intervention_rate": {
+        "difference_definition": "Always Retreat minus Risk->BestFixed",
+        "negative_sources": 0,
+        "nonnegative_sources": 20,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 17,
+          "n_sources": 20,
+          "observed_mean_difference": -0.5052777777777778,
+          "one_sided_greater_p": 1.0,
+          "patterns_or_replicates": 100000,
+          "seed": 5057,
+          "two_sided_p": 2.999970000299997e-05
+        },
+        "positive_sources": 17,
+        "source_bootstrap_95_ci": [
+          0.3719375000000001,
+          0.6266666666666667
+        ],
+        "source_macro_difference": 0.5052777777777778
+      },
+      "task_success_rate": {
+        "difference_definition": "Always Retreat minus Risk->BestFixed",
+        "negative_sources": 18,
+        "nonnegative_sources": 2,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 18,
+          "n_sources": 20,
+          "observed_mean_difference": -0.5022222222222223,
+          "one_sided_greater_p": 1.0,
+          "patterns_or_replicates": 100000,
+          "seed": 5055,
+          "two_sided_p": 2.999970000299997e-05
+        },
+        "positive_sources": 0,
+        "source_bootstrap_95_ci": [
+          -0.5880625,
+          -0.40444444444444444
+        ],
+        "source_macro_difference": -0.5022222222222223
+      },
+      "utility": {
+        "difference_definition": "Always Retreat minus Risk->BestFixed",
+        "negative_sources": 19,
+        "nonnegative_sources": 1,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 19,
+          "n_sources": 20,
+          "observed_mean_difference": -0.44027777777777777,
+          "one_sided_greater_p": 1.0,
+          "patterns_or_replicates": 100000,
+          "seed": 5054,
+          "two_sided_p": 1.999980000199998e-05
+        },
+        "positive_sources": 0,
+        "source_bootstrap_95_ci": [
+          -0.5622291666666669,
+          -0.33944444444444444
+        ],
+        "source_macro_difference": -0.44027777777777777
+      }
+    },
+    "Base": {
+      "catastrophe_rate": {
+        "difference_definition": "Base minus Risk->BestFixed",
+        "negative_sources": 3,
+        "nonnegative_sources": 17,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 16,
+          "n_sources": 20,
+          "observed_mean_difference": -0.14138888888888887,
+          "one_sided_greater_p": 0.997360026399736,
+          "patterns_or_replicates": 100000,
+          "seed": 3038,
+          "two_sided_p": 0.005889941100588994
+        },
+        "positive_sources": 13,
+        "source_bootstrap_95_ci": [
+          0.05305555555555556,
+          0.24638888888888885
+        ],
+        "source_macro_difference": 0.14138888888888887
+      },
+      "intervention_rate": {
+        "difference_definition": "Base minus Risk->BestFixed",
+        "negative_sources": 20,
+        "nonnegative_sources": 0,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 20,
+          "n_sources": 20,
+          "observed_mean_difference": 0.4947222222222222,
+          "one_sided_greater_p": 1.999980000199998e-05,
+          "patterns_or_replicates": 100000,
+          "seed": 3039,
+          "two_sided_p": 1.999980000199998e-05
+        },
+        "positive_sources": 0,
+        "source_bootstrap_95_ci": [
+          -0.6280625000000001,
+          -0.3733333333333334
+        ],
+        "source_macro_difference": -0.4947222222222222
+      },
+      "task_success_rate": {
+        "difference_definition": "Base minus Risk->BestFixed",
+        "negative_sources": 6,
+        "nonnegative_sources": 14,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 15,
+          "n_sources": 20,
+          "observed_mean_difference": 0.017499999999999995,
+          "one_sided_greater_p": 0.3353666463335367,
+          "patterns_or_replicates": 100000,
+          "seed": 3037,
+          "two_sided_p": 0.6729632703672963
+        },
+        "positive_sources": 9,
+        "source_bootstrap_95_ci": [
+          -0.059187500000000004,
+          0.08999999999999998
+        ],
+        "source_macro_difference": 0.017499999999999995
+      },
+      "utility": {
+        "difference_definition": "Base minus Risk->BestFixed",
+        "negative_sources": 12,
+        "nonnegative_sources": 8,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 17,
+          "n_sources": 20,
+          "observed_mean_difference": -0.1238888888888889,
+          "one_sided_greater_p": 0.9373406265937341,
+          "patterns_or_replicates": 100000,
+          "seed": 3036,
+          "two_sided_p": 0.13002869971300288
+        },
+        "positive_sources": 5,
+        "source_bootstrap_95_ci": [
+          -0.28472916666666664,
+          0.010562499999999893
+        ],
+        "source_macro_difference": -0.1238888888888889
+      }
+    },
+    "Condition-only diagnostic": {
+      "catastrophe_rate": {
+        "difference_definition": "Condition-only diagnostic minus Risk->BestFixed",
+        "negative_sources": 14,
+        "nonnegative_sources": 6,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 16,
+          "n_sources": 20,
+          "observed_mean_difference": 0.016944444444444436,
+          "one_sided_greater_p": 0.3909460905390946,
+          "patterns_or_replicates": 100000,
+          "seed": 20191,
+          "two_sided_p": 0.7846021539784602
+        },
+        "positive_sources": 2,
+        "source_bootstrap_95_ci": [
+          -0.12361805555555559,
+          0.12472222222222222
+        ],
+        "source_macro_difference": -0.016944444444444436
+      },
+      "intervention_rate": {
+        "difference_definition": "Condition-only diagnostic minus Risk->BestFixed",
+        "negative_sources": 8,
+        "nonnegative_sources": 12,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 14,
+          "n_sources": 20,
+          "observed_mean_difference": 0.061388888888888916,
+          "one_sided_greater_p": 0.0969890301096989,
+          "patterns_or_replicates": 100000,
+          "seed": 20192,
+          "two_sided_p": 0.1941280587194128
+        },
+        "positive_sources": 6,
+        "source_bootstrap_95_ci": [
+          -0.15249999999999997,
+          0.018611111111111096
+        ],
+        "source_macro_difference": -0.061388888888888916
+      },
+      "task_success_rate": {
+        "difference_definition": "Condition-only diagnostic minus Risk->BestFixed",
+        "negative_sources": 4,
+        "nonnegative_sources": 16,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 15,
+          "n_sources": 20,
+          "observed_mean_difference": 0.05249999999999999,
+          "one_sided_greater_p": 0.10937890621093789,
+          "patterns_or_replicates": 100000,
+          "seed": 20190,
+          "two_sided_p": 0.2192078079219208
+        },
+        "positive_sources": 11,
+        "source_bootstrap_95_ci": [
+          -0.025,
+          0.1308333333333333
+        ],
+        "source_macro_difference": 0.05249999999999999
+      },
+      "utility": {
+        "difference_definition": "Condition-only diagnostic minus Risk->BestFixed",
+        "negative_sources": 3,
+        "nonnegative_sources": 17,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 19,
+          "n_sources": 20,
+          "observed_mean_difference": 0.06944444444444445,
+          "one_sided_greater_p": 0.23675763242367576,
+          "patterns_or_replicates": 100000,
+          "seed": 20189,
+          "two_sided_p": 0.4711752882471175
+        },
+        "positive_sources": 16,
+        "source_bootstrap_95_ci": [
+          -0.12168749999999996,
+          0.21861111111111114
+        ],
+        "source_macro_difference": 0.06944444444444445
+      }
+    },
+    "DirectChoice": {
+      "catastrophe_rate": {
+        "difference_definition": "DirectChoice minus Risk->BestFixed",
+        "negative_sources": 11,
+        "nonnegative_sources": 9,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 14,
+          "n_sources": 20,
+          "observed_mean_difference": 0.0022222222222222088,
+          "one_sided_greater_p": 0.48205517944820553,
+          "patterns_or_replicates": 100000,
+          "seed": 11110,
+          "two_sided_p": 0.967450325496745
+        },
+        "positive_sources": 3,
+        "source_bootstrap_95_ci": [
+          -0.08361111111111111,
+          0.10085416666666636
+        ],
+        "source_macro_difference": -0.0022222222222222088
+      },
+      "intervention_rate": {
+        "difference_definition": "DirectChoice minus Risk->BestFixed",
+        "negative_sources": 9,
+        "nonnegative_sources": 11,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 18,
+          "n_sources": 20,
+          "observed_mean_difference": 0.059444444444444446,
+          "one_sided_greater_p": 0.24954750452495475,
+          "patterns_or_replicates": 100000,
+          "seed": 11111,
+          "two_sided_p": 0.5014749852501476
+        },
+        "positive_sources": 9,
+        "source_bootstrap_95_ci": [
+          -0.2350069444444444,
+          0.09916666666666667
+        ],
+        "source_macro_difference": -0.059444444444444446
+      },
+      "task_success_rate": {
+        "difference_definition": "DirectChoice minus Risk->BestFixed",
+        "negative_sources": 8,
+        "nonnegative_sources": 12,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 16,
+          "n_sources": 20,
+          "observed_mean_difference": -0.015000000000000003,
+          "one_sided_greater_p": 0.6901830981690183,
+          "patterns_or_replicates": 100000,
+          "seed": 11109,
+          "two_sided_p": 0.6566234337656623
+        },
+        "positive_sources": 8,
+        "source_bootstrap_95_ci": [
+          -0.07583333333333334,
+          0.044166666666666646
+        ],
+        "source_macro_difference": -0.015000000000000003
+      },
+      "utility": {
+        "difference_definition": "DirectChoice minus Risk->BestFixed",
+        "negative_sources": 7,
+        "nonnegative_sources": 13,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 17,
+          "n_sources": 20,
+          "observed_mean_difference": -0.012777777777777787,
+          "one_sided_greater_p": 0.5768442315576844,
+          "patterns_or_replicates": 100000,
+          "seed": 11108,
+          "two_sided_p": 0.8535314646853531
+        },
+        "positive_sources": 10,
+        "source_bootstrap_95_ci": [
+          -0.14695833333333339,
+          0.10333333333333332
+        ],
+        "source_macro_difference": -0.012777777777777787
+      }
+    },
+    "DirectQ": {
+      "catastrophe_rate": {
+        "difference_definition": "DirectQ minus Risk->BestFixed",
+        "negative_sources": 9,
+        "nonnegative_sources": 11,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 15,
+          "n_sources": 20,
+          "observed_mean_difference": -0.023888888888888897,
+          "one_sided_greater_p": 0.6680133198668013,
+          "patterns_or_replicates": 100000,
+          "seed": 12119,
+          "two_sided_p": 0.6720332796672033
+        },
+        "positive_sources": 6,
+        "source_bootstrap_95_ci": [
+          -0.06749999999999999,
+          0.13999999999999999
+        ],
+        "source_macro_difference": 0.023888888888888897
+      },
+      "intervention_rate": {
+        "difference_definition": "DirectQ minus Risk->BestFixed",
+        "negative_sources": 8,
+        "nonnegative_sources": 12,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 15,
+          "n_sources": 20,
+          "observed_mean_difference": 0.08166666666666667,
+          "one_sided_greater_p": 0.18381816181838181,
+          "patterns_or_replicates": 100000,
+          "seed": 12120,
+          "two_sided_p": 0.3657363426365736
+        },
+        "positive_sources": 7,
+        "source_bootstrap_95_ci": [
+          -0.2558333333333333,
+          0.06499999999999999
+        ],
+        "source_macro_difference": -0.08166666666666667
+      },
+      "task_success_rate": {
+        "difference_definition": "DirectQ minus Risk->BestFixed",
+        "negative_sources": 8,
+        "nonnegative_sources": 12,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 15,
+          "n_sources": 20,
+          "observed_mean_difference": -0.03361111111111111,
+          "one_sided_greater_p": 0.8569314306856931,
+          "patterns_or_replicates": 100000,
+          "seed": 12118,
+          "two_sided_p": 0.3026269737302627
+        },
+        "positive_sources": 7,
+        "source_bootstrap_95_ci": [
+          -0.09527777777777777,
+          0.02249999999999999
+        ],
+        "source_macro_difference": -0.03361111111111111
+      },
+      "utility": {
+        "difference_definition": "DirectQ minus Risk->BestFixed",
+        "negative_sources": 8,
+        "nonnegative_sources": 12,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 16,
+          "n_sources": 20,
+          "observed_mean_difference": -0.057499999999999996,
+          "one_sided_greater_p": 0.7438325616743833,
+          "patterns_or_replicates": 100000,
+          "seed": 12117,
+          "two_sided_p": 0.5269247307526925
+        },
+        "positive_sources": 8,
+        "source_bootstrap_95_ci": [
+          -0.2141666666666667,
+          0.06333333333333332
+        ],
+        "source_macro_difference": -0.057499999999999996
+      }
+    },
+    "Horizon-only diagnostic": {
+      "catastrophe_rate": {
+        "difference_definition": "Horizon-only diagnostic minus Risk->BestFixed",
+        "negative_sources": 5,
+        "nonnegative_sources": 15,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 14,
+          "n_sources": 20,
+          "observed_mean_difference": -0.04666666666666666,
+          "one_sided_greater_p": 0.9481205187948121,
+          "patterns_or_replicates": 100000,
+          "seed": 21200,
+          "two_sided_p": 0.12146878531214687
+        },
+        "positive_sources": 9,
+        "source_bootstrap_95_ci": [
+          -0.0033333333333333366,
+          0.10335416666666637
+        ],
+        "source_macro_difference": 0.04666666666666666
+      },
+      "intervention_rate": {
+        "difference_definition": "Horizon-only diagnostic minus Risk->BestFixed",
+        "negative_sources": 11,
+        "nonnegative_sources": 9,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 19,
+          "n_sources": 20,
+          "observed_mean_difference": 0.030555555555555558,
+          "one_sided_greater_p": 0.3264767352326477,
+          "patterns_or_replicates": 100000,
+          "seed": 21201,
+          "two_sided_p": 0.6524834751652483
+        },
+        "positive_sources": 8,
+        "source_bootstrap_95_ci": [
+          -0.15916666666666665,
+          0.09500694444444434
+        ],
+        "source_macro_difference": -0.030555555555555558
+      },
+      "task_success_rate": {
+        "difference_definition": "Horizon-only diagnostic minus Risk->BestFixed",
+        "negative_sources": 9,
+        "nonnegative_sources": 11,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 16,
+          "n_sources": 20,
+          "observed_mean_difference": -0.021111111111111112,
+          "one_sided_greater_p": 0.8296917030829691,
+          "patterns_or_replicates": 100000,
+          "seed": 21199,
+          "two_sided_p": 0.3616363836361636
+        },
+        "positive_sources": 7,
+        "source_bootstrap_95_ci": [
+          -0.065,
+          0.022784722222222113
+        ],
+        "source_macro_difference": -0.021111111111111112
+      },
+      "utility": {
+        "difference_definition": "Horizon-only diagnostic minus Risk->BestFixed",
+        "negative_sources": 9,
+        "nonnegative_sources": 11,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 13,
+          "n_sources": 20,
+          "observed_mean_difference": -0.0677777777777778,
+          "one_sided_greater_p": 0.943820561794382,
+          "patterns_or_replicates": 100000,
+          "seed": 21198,
+          "two_sided_p": 0.11739882601173988
+        },
+        "positive_sources": 4,
+        "source_bootstrap_95_ci": [
+          -0.15222916666666667,
+          0.006944444444444438
+        ],
+        "source_macro_difference": -0.0677777777777778
+      }
+    },
+    "OutcomeRouter": {
+      "catastrophe_rate": {
+        "difference_definition": "OutcomeRouter minus Risk->BestFixed",
+        "negative_sources": 11,
+        "nonnegative_sources": 9,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 14,
+          "n_sources": 20,
+          "observed_mean_difference": 0.019166666666666665,
+          "one_sided_greater_p": 0.36914630853691466,
+          "patterns_or_replicates": 100000,
+          "seed": 15146,
+          "two_sided_p": 0.7409025909740903
+        },
+        "positive_sources": 3,
+        "source_bootstrap_95_ci": [
+          -0.07416666666666667,
+          0.060833333333333336
+        ],
+        "source_macro_difference": -0.019166666666666665
+      },
+      "intervention_rate": {
+        "difference_definition": "OutcomeRouter minus Risk->BestFixed",
+        "negative_sources": 6,
+        "nonnegative_sources": 14,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 15,
+          "n_sources": 20,
+          "observed_mean_difference": 0.011666666666666662,
+          "one_sided_greater_p": 0.44710552894471056,
+          "patterns_or_replicates": 100000,
+          "seed": 15147,
+          "two_sided_p": 0.8950010499895001
+        },
+        "positive_sources": 9,
+        "source_bootstrap_95_ci": [
+          -0.16166666666666665,
+          0.11752083333333307
+        ],
+        "source_macro_difference": -0.011666666666666662
+      },
+      "task_success_rate": {
+        "difference_definition": "OutcomeRouter minus Risk->BestFixed",
+        "negative_sources": 8,
+        "nonnegative_sources": 12,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 15,
+          "n_sources": 20,
+          "observed_mean_difference": -0.0013888888888888922,
+          "one_sided_greater_p": 0.5218747812521874,
+          "patterns_or_replicates": 100000,
+          "seed": 15145,
+          "two_sided_p": 0.975880241197588
+        },
+        "positive_sources": 7,
+        "source_bootstrap_95_ci": [
+          -0.05111111111111112,
+          0.050277777777777775
+        ],
+        "source_macro_difference": -0.0013888888888888922
+      },
+      "utility": {
+        "difference_definition": "OutcomeRouter minus Risk->BestFixed",
+        "negative_sources": 7,
+        "nonnegative_sources": 13,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 17,
+          "n_sources": 20,
+          "observed_mean_difference": 0.017777777777777774,
+          "one_sided_greater_p": 0.35662643373566266,
+          "patterns_or_replicates": 100000,
+          "seed": 15144,
+          "two_sided_p": 0.7130628693713063
+        },
+        "positive_sources": 10,
+        "source_bootstrap_95_ci": [
+          -0.07472916666666668,
+          0.1
+        ],
+        "source_macro_difference": 0.017777777777777774
+      }
+    },
+    "OutcomeRouter-hidden-only": {
+      "catastrophe_rate": {
+        "difference_definition": "OutcomeRouter-hidden-only minus Risk->BestFixed",
+        "negative_sources": 11,
+        "nonnegative_sources": 9,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 14,
+          "n_sources": 20,
+          "observed_mean_difference": 0.028888888888888898,
+          "one_sided_greater_p": 0.22995770042299576,
+          "patterns_or_replicates": 100000,
+          "seed": 18173,
+          "two_sided_p": 0.45759542404575954
+        },
+        "positive_sources": 3,
+        "source_bootstrap_95_ci": [
+          -0.09361111111111112,
+          0.048895833333333215
+        ],
+        "source_macro_difference": -0.028888888888888898
+      },
+      "intervention_rate": {
+        "difference_definition": "OutcomeRouter-hidden-only minus Risk->BestFixed",
+        "negative_sources": 7,
+        "nonnegative_sources": 13,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 17,
+          "n_sources": 20,
+          "observed_mean_difference": -0.027499999999999997,
+          "one_sided_greater_p": 0.6630233697663024,
+          "patterns_or_replicates": 100000,
+          "seed": 18174,
+          "two_sided_p": 0.6911130888691113
+        },
+        "positive_sources": 10,
+        "source_bootstrap_95_ci": [
+          -0.10166666666666668,
+          0.15250000000000002
+        ],
+        "source_macro_difference": 0.027499999999999997
+      },
+      "task_success_rate": {
+        "difference_definition": "OutcomeRouter-hidden-only minus Risk->BestFixed",
+        "negative_sources": 9,
+        "nonnegative_sources": 11,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 16,
+          "n_sources": 20,
+          "observed_mean_difference": -0.018888888888888893,
+          "one_sided_greater_p": 0.8074919250807492,
+          "patterns_or_replicates": 100000,
+          "seed": 18172,
+          "two_sided_p": 0.4103758962410376
+        },
+        "positive_sources": 7,
+        "source_bootstrap_95_ci": [
+          -0.06277777777777777,
+          0.023895833333333227
+        ],
+        "source_macro_difference": -0.018888888888888893
+      },
+      "utility": {
+        "difference_definition": "OutcomeRouter-hidden-only minus Risk->BestFixed",
+        "negative_sources": 6,
+        "nonnegative_sources": 14,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 15,
+          "n_sources": 20,
+          "observed_mean_difference": 0.009999999999999998,
+          "one_sided_greater_p": 0.42720572794272055,
+          "patterns_or_replicates": 100000,
+          "seed": 18171,
+          "two_sided_p": 0.8546714532854671
+        },
+        "positive_sources": 9,
+        "source_bootstrap_95_ci": [
+          -0.08666666666666667,
+          0.09333333333333334
+        ],
+        "source_macro_difference": 0.009999999999999998
+      }
+    },
+    "OutcomeRouter-state-action-only": {
+      "catastrophe_rate": {
+        "difference_definition": "OutcomeRouter-state-action-only minus Risk->BestFixed",
+        "negative_sources": 3,
+        "nonnegative_sources": 17,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 12,
+          "n_sources": 20,
+          "observed_mean_difference": -0.06944444444444445,
+          "one_sided_greater_p": 0.988180118198818,
+          "patterns_or_replicates": 100000,
+          "seed": 19182,
+          "two_sided_p": 0.03026969730302697
+        },
+        "positive_sources": 9,
+        "source_bootstrap_95_ci": [
+          0.013881944444444443,
+          0.14195138888888884
+        ],
+        "source_macro_difference": 0.06944444444444445
+      },
+      "intervention_rate": {
+        "difference_definition": "OutcomeRouter-state-action-only minus Risk->BestFixed",
+        "negative_sources": 10,
+        "nonnegative_sources": 10,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 15,
+          "n_sources": 20,
+          "observed_mean_difference": 0.09083333333333331,
+          "one_sided_greater_p": 0.13463865361346386,
+          "patterns_or_replicates": 100000,
+          "seed": 19183,
+          "two_sided_p": 0.27017729822701775
+        },
+        "positive_sources": 5,
+        "source_bootstrap_95_ci": [
+          -0.24668749999999998,
+          0.05166666666666667
+        ],
+        "source_macro_difference": -0.09083333333333331
+      },
+      "task_success_rate": {
+        "difference_definition": "OutcomeRouter-state-action-only minus Risk->BestFixed",
+        "negative_sources": 10,
+        "nonnegative_sources": 10,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 15,
+          "n_sources": 20,
+          "observed_mean_difference": -0.012222222222222226,
+          "one_sided_greater_p": 0.6598534014659854,
+          "patterns_or_replicates": 100000,
+          "seed": 19181,
+          "two_sided_p": 0.7071429285707143
+        },
+        "positive_sources": 5,
+        "source_bootstrap_95_ci": [
+          -0.0686111111111111,
+          0.04916666666666665
+        ],
+        "source_macro_difference": -0.012222222222222226
+      },
+      "utility": {
+        "difference_definition": "OutcomeRouter-state-action-only minus Risk->BestFixed",
+        "negative_sources": 10,
+        "nonnegative_sources": 10,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 15,
+          "n_sources": 20,
+          "observed_mean_difference": -0.08166666666666668,
+          "one_sided_greater_p": 0.941270587294127,
+          "patterns_or_replicates": 100000,
+          "seed": 19180,
+          "two_sided_p": 0.12418875811241888
+        },
+        "positive_sources": 5,
+        "source_bootstrap_95_ci": [
+          -0.17750000000000002,
+          0.013333333333333336
+        ],
+        "source_macro_difference": -0.08166666666666668
+      }
+    },
+    "PairwiseAdvantage": {
+      "catastrophe_rate": {
+        "difference_definition": "PairwiseAdvantage minus Risk->BestFixed",
+        "negative_sources": 9,
+        "nonnegative_sources": 11,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 15,
+          "n_sources": 20,
+          "observed_mean_difference": -0.023888888888888897,
+          "one_sided_greater_p": 0.6687733122668773,
+          "patterns_or_replicates": 100000,
+          "seed": 14137,
+          "two_sided_p": 0.6731232687673123
+        },
+        "positive_sources": 6,
+        "source_bootstrap_95_ci": [
+          -0.06749999999999999,
+          0.13999999999999999
+        ],
+        "source_macro_difference": 0.023888888888888897
+      },
+      "intervention_rate": {
+        "difference_definition": "PairwiseAdvantage minus Risk->BestFixed",
+        "negative_sources": 8,
+        "nonnegative_sources": 12,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 15,
+          "n_sources": 20,
+          "observed_mean_difference": 0.08166666666666667,
+          "one_sided_greater_p": 0.18620813791862081,
+          "patterns_or_replicates": 100000,
+          "seed": 14138,
+          "two_sided_p": 0.3705462945370546
+        },
+        "positive_sources": 7,
+        "source_bootstrap_95_ci": [
+          -0.2558333333333333,
+          0.06499999999999999
+        ],
+        "source_macro_difference": -0.08166666666666667
+      },
+      "task_success_rate": {
+        "difference_definition": "PairwiseAdvantage minus Risk->BestFixed",
+        "negative_sources": 8,
+        "nonnegative_sources": 12,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 15,
+          "n_sources": 20,
+          "observed_mean_difference": -0.03361111111111111,
+          "one_sided_greater_p": 0.8572714272857271,
+          "patterns_or_replicates": 100000,
+          "seed": 14136,
+          "two_sided_p": 0.30344696553034467
+        },
+        "positive_sources": 7,
+        "source_bootstrap_95_ci": [
+          -0.09527777777777777,
+          0.02249999999999999
+        ],
+        "source_macro_difference": -0.03361111111111111
+      },
+      "utility": {
+        "difference_definition": "PairwiseAdvantage minus Risk->BestFixed",
+        "negative_sources": 8,
+        "nonnegative_sources": 12,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 16,
+          "n_sources": 20,
+          "observed_mean_difference": -0.057499999999999996,
+          "one_sided_greater_p": 0.7424925750742493,
+          "patterns_or_replicates": 100000,
+          "seed": 14135,
+          "two_sided_p": 0.5280147198528015
+        },
+        "positive_sources": 8,
+        "source_bootstrap_95_ci": [
+          -0.2141666666666667,
+          0.06333333333333332
+        ],
+        "source_macro_difference": -0.057499999999999996
+      }
+    },
+    "Risk+TwoStage": {
+      "catastrophe_rate": {
+        "difference_definition": "Risk+TwoStage minus Risk->BestFixed",
+        "negative_sources": 5,
+        "nonnegative_sources": 15,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 9,
+          "n_sources": 20,
+          "observed_mean_difference": -0.020833333333333336,
+          "one_sided_greater_p": 0.5793542064579355,
+          "patterns_or_replicates": 100000,
+          "seed": 9092,
+          "two_sided_p": 0.8610413895861041
+        },
+        "positive_sources": 4,
+        "source_bootstrap_95_ci": [
+          -0.04666666666666667,
+          0.12
+        ],
+        "source_macro_difference": 0.020833333333333336
+      },
+      "intervention_rate": {
+        "difference_definition": "Risk+TwoStage minus Risk->BestFixed",
+        "negative_sources": 4,
+        "nonnegative_sources": 16,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 5,
+          "n_sources": 20,
+          "observed_mean_difference": 0.02833333333333334,
+          "one_sided_greater_p": 0.06204937950620494,
+          "patterns_or_replicates": 100000,
+          "seed": 9093,
+          "two_sided_p": 0.12491875081249187
+        },
+        "positive_sources": 1,
+        "source_bootstrap_95_ci": [
+          -0.06583333333333333,
+          3.469446951903127e-20
+        ],
+        "source_macro_difference": -0.02833333333333334
+      },
+      "task_success_rate": {
+        "difference_definition": "Risk+TwoStage minus Risk->BestFixed",
+        "negative_sources": 6,
+        "nonnegative_sources": 14,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 8,
+          "n_sources": 20,
+          "observed_mean_difference": -0.025833333333333337,
+          "one_sided_greater_p": 0.933560664393356,
+          "patterns_or_replicates": 100000,
+          "seed": 9091,
+          "two_sided_p": 0.1804381956180438
+        },
+        "positive_sources": 2,
+        "source_bootstrap_95_ci": [
+          -0.05916666666666666,
+          0.0024999999999999966
+        ],
+        "source_macro_difference": -0.025833333333333337
+      },
+      "utility": {
+        "difference_definition": "Risk+TwoStage minus Risk->BestFixed",
+        "negative_sources": 8,
+        "nonnegative_sources": 12,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 14,
+          "n_sources": 20,
+          "observed_mean_difference": -0.046666666666666655,
+          "one_sided_greater_p": 0.7986920130798693,
+          "patterns_or_replicates": 100000,
+          "seed": 9090,
+          "two_sided_p": 0.4264557354426456
+        },
+        "positive_sources": 6,
+        "source_bootstrap_95_ci": [
+          -0.14916666666666667,
+          0.03500000000000002
+        ],
+        "source_macro_difference": -0.046666666666666655
+      }
+    },
+    "Risk->Detour": {
+      "catastrophe_rate": {
+        "difference_definition": "Risk->Detour minus Risk->BestFixed",
+        "negative_sources": 0,
+        "nonnegative_sources": 20,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 1,
+          "n_sources": 20,
+          "observed_mean_difference": -0.0033333333333333327,
+          "one_sided_greater_p": 1.0,
+          "patterns_or_replicates": 100000,
+          "seed": 7074,
+          "two_sided_p": 1.0
+        },
+        "positive_sources": 1,
+        "source_bootstrap_95_ci": [
+          0.0,
+          0.009999999999999998
+        ],
+        "source_macro_difference": 0.0033333333333333327
+      },
+      "intervention_rate": {
+        "difference_definition": "Risk->Detour minus Risk->BestFixed",
+        "negative_sources": 0,
+        "nonnegative_sources": 20,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 1,
+          "n_sources": 20,
+          "observed_mean_difference": -0.003333333333333334,
+          "one_sided_greater_p": 1.0,
+          "patterns_or_replicates": 100000,
+          "seed": 7075,
+          "two_sided_p": 1.0
+        },
+        "positive_sources": 1,
+        "source_bootstrap_95_ci": [
+          0.0,
+          0.010000000000000002
+        ],
+        "source_macro_difference": 0.003333333333333334
+      },
+      "task_success_rate": {
+        "difference_definition": "Risk->Detour minus Risk->BestFixed",
+        "negative_sources": 1,
+        "nonnegative_sources": 19,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 1,
+          "n_sources": 20,
+          "observed_mean_difference": -0.0033333333333333327,
+          "one_sided_greater_p": 1.0,
+          "patterns_or_replicates": 100000,
+          "seed": 7073,
+          "two_sided_p": 1.0
+        },
+        "positive_sources": 0,
+        "source_bootstrap_95_ci": [
+          -0.009999999999999998,
+          0.0
+        ],
+        "source_macro_difference": -0.0033333333333333327
+      },
+      "utility": {
+        "difference_definition": "Risk->Detour minus Risk->BestFixed",
+        "negative_sources": 1,
+        "nonnegative_sources": 19,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 1,
+          "n_sources": 20,
+          "observed_mean_difference": -0.006666666666666666,
+          "one_sided_greater_p": 1.0,
+          "patterns_or_replicates": 100000,
+          "seed": 7072,
+          "two_sided_p": 1.0
+        },
+        "positive_sources": 0,
+        "source_bootstrap_95_ci": [
+          -0.02,
+          0.0
+        ],
+        "source_macro_difference": -0.006666666666666666
+      }
+    },
+    "Risk->Retreat": {
+      "catastrophe_rate": {
+        "difference_definition": "Risk->Retreat minus Risk->BestFixed",
+        "negative_sources": 7,
+        "nonnegative_sources": 13,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 12,
+          "n_sources": 20,
+          "observed_mean_difference": -0.061944444444444434,
+          "one_sided_greater_p": 0.7925820741792582,
+          "patterns_or_replicates": 100000,
+          "seed": 6065,
+          "two_sided_p": 0.4221457785422146
+        },
+        "positive_sources": 5,
+        "source_bootstrap_95_ci": [
+          -0.034722222222222224,
+          0.18749999999999997
+        ],
+        "source_macro_difference": 0.061944444444444434
+      },
+      "intervention_rate": {
+        "difference_definition": "Risk->Retreat minus Risk->BestFixed",
+        "negative_sources": 12,
+        "nonnegative_sources": 8,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 12,
+          "n_sources": 20,
+          "observed_mean_difference": 0.14416666666666667,
+          "one_sided_greater_p": 0.0002099979000209998,
+          "patterns_or_replicates": 100000,
+          "seed": 6066,
+          "two_sided_p": 0.0005399946000539995
+        },
+        "positive_sources": 0,
+        "source_bootstrap_95_ci": [
+          -0.21502083333333336,
+          -0.07750000000000001
+        ],
+        "source_macro_difference": -0.14416666666666667
+      },
+      "task_success_rate": {
+        "difference_definition": "Risk->Retreat minus Risk->BestFixed",
+        "negative_sources": 11,
+        "nonnegative_sources": 9,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 15,
+          "n_sources": 20,
+          "observed_mean_difference": -0.06277777777777778,
+          "one_sided_greater_p": 0.951060489395106,
+          "patterns_or_replicates": 100000,
+          "seed": 6064,
+          "two_sided_p": 0.1047989520104799
+        },
+        "positive_sources": 4,
+        "source_bootstrap_95_ci": [
+          -0.13277777777777774,
+          0.00638888888888888
+        ],
+        "source_macro_difference": -0.06277777777777778
+      },
+      "utility": {
+        "difference_definition": "Risk->Retreat minus Risk->BestFixed",
+        "negative_sources": 11,
+        "nonnegative_sources": 9,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 17,
+          "n_sources": 20,
+          "observed_mean_difference": -0.12472222222222222,
+          "one_sided_greater_p": 0.9282607173928261,
+          "patterns_or_replicates": 100000,
+          "seed": 6063,
+          "two_sided_p": 0.14627853721462786
+        },
+        "positive_sources": 6,
+        "source_bootstrap_95_ci": [
+          -0.2930625,
+          0.015569444444444245
+        ],
+        "source_macro_difference": -0.12472222222222222
+      }
+    },
+    "SB-COR": {
+      "catastrophe_rate": {
+        "difference_definition": "SB-COR minus Risk->BestFixed",
+        "negative_sources": 11,
+        "nonnegative_sources": 9,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 15,
+          "n_sources": 20,
+          "observed_mean_difference": 0.003055555555555553,
+          "one_sided_greater_p": 0.47611523884761153,
+          "patterns_or_replicates": 100000,
+          "seed": 17164,
+          "two_sided_p": 0.952480475195248
+        },
+        "positive_sources": 4,
+        "source_bootstrap_95_ci": [
+          -0.07333333333333333,
+          0.08752083333333303
+        ],
+        "source_macro_difference": -0.003055555555555553
+      },
+      "intervention_rate": {
+        "difference_definition": "SB-COR minus Risk->BestFixed",
+        "negative_sources": 9,
+        "nonnegative_sources": 11,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 16,
+          "n_sources": 20,
+          "observed_mean_difference": 0.0711111111111111,
+          "one_sided_greater_p": 0.19282807171928282,
+          "patterns_or_replicates": 100000,
+          "seed": 17165,
+          "two_sided_p": 0.3842361576384236
+        },
+        "positive_sources": 7,
+        "source_bootstrap_95_ci": [
+          -0.22667361111111117,
+          0.0755624999999999
+        ],
+        "source_macro_difference": -0.0711111111111111
+      },
+      "task_success_rate": {
+        "difference_definition": "SB-COR minus Risk->BestFixed",
+        "negative_sources": 7,
+        "nonnegative_sources": 13,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 15,
+          "n_sources": 20,
+          "observed_mean_difference": -0.01472222222222222,
+          "one_sided_greater_p": 0.7166528334716653,
+          "patterns_or_replicates": 100000,
+          "seed": 17163,
+          "two_sided_p": 0.5835341646583534
+        },
+        "positive_sources": 8,
+        "source_bootstrap_95_ci": [
+          -0.06555555555555555,
+          0.03111805555555547
+        ],
+        "source_macro_difference": -0.01472222222222222
+      },
+      "utility": {
+        "difference_definition": "SB-COR minus Risk->BestFixed",
+        "negative_sources": 6,
+        "nonnegative_sources": 14,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 16,
+          "n_sources": 20,
+          "observed_mean_difference": -0.011666666666666681,
+          "one_sided_greater_p": 0.5888541114588854,
+          "patterns_or_replicates": 100000,
+          "seed": 17162,
+          "two_sided_p": 0.8424615753842462
+        },
+        "positive_sources": 10,
+        "source_bootstrap_95_ci": [
+          -0.12166666666666667,
+          0.08333333333333331
+        ],
+        "source_macro_difference": -0.011666666666666681
+      }
+    },
+    "SB-DirectQ": {
+      "catastrophe_rate": {
+        "difference_definition": "SB-DirectQ minus Risk->BestFixed",
+        "negative_sources": 10,
+        "nonnegative_sources": 10,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 15,
+          "n_sources": 20,
+          "observed_mean_difference": -0.02305555555555556,
+          "one_sided_greater_p": 0.6676733232667673,
+          "patterns_or_replicates": 100000,
+          "seed": 13128,
+          "two_sided_p": 0.6687633123668764
+        },
+        "positive_sources": 5,
+        "source_bootstrap_95_ci": [
+          -0.0663888888888889,
+          0.13920138888888842
+        ],
+        "source_macro_difference": 0.02305555555555556
+      },
+      "intervention_rate": {
+        "difference_definition": "SB-DirectQ minus Risk->BestFixed",
+        "negative_sources": 9,
+        "nonnegative_sources": 11,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 16,
+          "n_sources": 20,
+          "observed_mean_difference": 0.10999999999999999,
+          "one_sided_greater_p": 0.11764882351176488,
+          "patterns_or_replicates": 100000,
+          "seed": 13129,
+          "two_sided_p": 0.23587764122358776
+        },
+        "positive_sources": 7,
+        "source_bootstrap_95_ci": [
+          -0.285,
+          0.04416666666666665
+        ],
+        "source_macro_difference": -0.10999999999999999
+      },
+      "task_success_rate": {
+        "difference_definition": "SB-DirectQ minus Risk->BestFixed",
+        "negative_sources": 7,
+        "nonnegative_sources": 13,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 13,
+          "n_sources": 20,
+          "observed_mean_difference": -0.03861111111111111,
+          "one_sided_greater_p": 0.8866811331886681,
+          "patterns_or_replicates": 100000,
+          "seed": 13127,
+          "two_sided_p": 0.24213757862421376
+        },
+        "positive_sources": 6,
+        "source_bootstrap_95_ci": [
+          -0.10194444444444443,
+          0.018055555555555554
+        ],
+        "source_macro_difference": -0.03861111111111111
+      },
+      "utility": {
+        "difference_definition": "SB-DirectQ minus Risk->BestFixed",
+        "negative_sources": 9,
+        "nonnegative_sources": 11,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 17,
+          "n_sources": 20,
+          "observed_mean_difference": -0.06166666666666666,
+          "one_sided_greater_p": 0.7548924510754892,
+          "patterns_or_replicates": 100000,
+          "seed": 13126,
+          "two_sided_p": 0.4976350236497635
+        },
+        "positive_sources": 8,
+        "source_bootstrap_95_ci": [
+          -0.2166666666666667,
+          0.05668749999999973
+        ],
+        "source_macro_difference": -0.06166666666666666
+      }
+    },
+    "SB-OutcomeRouter": {
+      "catastrophe_rate": {
+        "difference_definition": "SB-OutcomeRouter minus Risk->BestFixed",
+        "negative_sources": 12,
+        "nonnegative_sources": 8,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 17,
+          "n_sources": 20,
+          "observed_mean_difference": 0.008333333333333331,
+          "one_sided_greater_p": 0.4371456285437146,
+          "patterns_or_replicates": 100000,
+          "seed": 16155,
+          "two_sided_p": 0.8758412415875841
+        },
+        "positive_sources": 5,
+        "source_bootstrap_95_ci": [
+          -0.08166666666666667,
+          0.08499999999999999
+        ],
+        "source_macro_difference": -0.008333333333333331
+      },
+      "intervention_rate": {
+        "difference_definition": "SB-OutcomeRouter minus Risk->BestFixed",
+        "negative_sources": 9,
+        "nonnegative_sources": 11,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 17,
+          "n_sources": 20,
+          "observed_mean_difference": 0.04333333333333332,
+          "one_sided_greater_p": 0.2996470035299647,
+          "patterns_or_replicates": 100000,
+          "seed": 16156,
+          "two_sided_p": 0.6002039979600204
+        },
+        "positive_sources": 8,
+        "source_bootstrap_95_ci": [
+          -0.19,
+          0.08916666666666669
+        ],
+        "source_macro_difference": -0.04333333333333332
+      },
+      "task_success_rate": {
+        "difference_definition": "SB-OutcomeRouter minus Risk->BestFixed",
+        "negative_sources": 7,
+        "nonnegative_sources": 13,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 15,
+          "n_sources": 20,
+          "observed_mean_difference": 0.004444444444444443,
+          "one_sided_greater_p": 0.43861561384386155,
+          "patterns_or_replicates": 100000,
+          "seed": 16154,
+          "two_sided_p": 0.8792712072879271
+        },
+        "positive_sources": 8,
+        "source_bootstrap_95_ci": [
+          -0.048333333333333325,
+          0.05500694444444435
+        ],
+        "source_macro_difference": 0.004444444444444443
+      },
+      "utility": {
+        "difference_definition": "SB-OutcomeRouter minus Risk->BestFixed",
+        "negative_sources": 5,
+        "nonnegative_sources": 15,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 16,
+          "n_sources": 20,
+          "observed_mean_difference": 0.012777777777777766,
+          "one_sided_greater_p": 0.4145358546414536,
+          "patterns_or_replicates": 100000,
+          "seed": 16153,
+          "two_sided_p": 0.8283917160828391
+        },
+        "positive_sources": 11,
+        "source_bootstrap_95_ci": [
+          -0.10389583333333337,
+          0.11305555555555553
+        ],
+        "source_macro_difference": 0.012777777777777766
+      }
+    },
+    "SB-Risk+TwoStage": {
+      "catastrophe_rate": {
+        "difference_definition": "SB-Risk+TwoStage minus Risk->BestFixed",
+        "negative_sources": 5,
+        "nonnegative_sources": 15,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 9,
+          "n_sources": 20,
+          "observed_mean_difference": -0.020833333333333336,
+          "one_sided_greater_p": 0.5723642763572364,
+          "patterns_or_replicates": 100000,
+          "seed": 10101,
+          "two_sided_p": 0.8633413665863341
+        },
+        "positive_sources": 4,
+        "source_bootstrap_95_ci": [
+          -0.04666666666666667,
+          0.12
+        ],
+        "source_macro_difference": 0.020833333333333336
+      },
+      "intervention_rate": {
+        "difference_definition": "SB-Risk+TwoStage minus Risk->BestFixed",
+        "negative_sources": 4,
+        "nonnegative_sources": 16,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 5,
+          "n_sources": 20,
+          "observed_mean_difference": 0.02833333333333334,
+          "one_sided_greater_p": 0.062359376406235935,
+          "patterns_or_replicates": 100000,
+          "seed": 10102,
+          "two_sided_p": 0.12395876041239588
+        },
+        "positive_sources": 1,
+        "source_bootstrap_95_ci": [
+          -0.06583333333333333,
+          3.469446951903127e-20
+        ],
+        "source_macro_difference": -0.02833333333333334
+      },
+      "task_success_rate": {
+        "difference_definition": "SB-Risk+TwoStage minus Risk->BestFixed",
+        "negative_sources": 6,
+        "nonnegative_sources": 14,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 8,
+          "n_sources": 20,
+          "observed_mean_difference": -0.025833333333333337,
+          "one_sided_greater_p": 0.932670673293267,
+          "patterns_or_replicates": 100000,
+          "seed": 10100,
+          "two_sided_p": 0.17969820301796982
+        },
+        "positive_sources": 2,
+        "source_bootstrap_95_ci": [
+          -0.05916666666666666,
+          0.0024999999999999966
+        ],
+        "source_macro_difference": -0.025833333333333337
+      },
+      "utility": {
+        "difference_definition": "SB-Risk+TwoStage minus Risk->BestFixed",
+        "negative_sources": 8,
+        "nonnegative_sources": 12,
+        "oriented_paired_sign_flip": {
+          "mode": "fixed_seed_monte_carlo",
+          "n_nonzero_sources": 14,
+          "n_sources": 20,
+          "observed_mean_difference": -0.046666666666666655,
+          "one_sided_greater_p": 0.7982020179798202,
+          "patterns_or_replicates": 100000,
+          "seed": 10099,
+          "two_sided_p": 0.4241157588424116
+        },
+        "positive_sources": 6,
+        "source_bootstrap_95_ci": [
+          -0.14916666666666667,
+          0.03500000000000002
+        ],
+        "source_macro_difference": -0.046666666666666655
+      }
+    }
+  },
+  "independent_unit": "source",
+  "schema_version": 1,
+  "shared_source_bootstrap": {
+    "replicates": 5000,
+    "seed": 2027,
+    "shared_draw_indices": true
+  },
+  "sources": [
+    "0815f4806fc9a4fbd58c6627c8b92fd77f1b80ad4b8b4cd6d0c6e0541d488a7b",
+    "28c563172e6e13a0d3d84f1527243878c67a2140fa8c9a81ecb8b81ec9402dc8",
+    "2ef1381d9cfc0a92b107e2940bcf431c7494cd7067d032284f30a23c47b487cc",
+    "3f7887ee8820a4163a5033c81050731e85d1a310652a612f5b0ea5c450ec2043",
+    "5de3fa5396875480db81793738029227ed357caa91e5d24290ffc5cb0371f908",
+    "61f6ada542d03d1dd4d75a304f2674efa20660163c54b012b956522e98835cac",
+    "6292759eb45913ce4ed8447194504833f347d9355012e3228775797a4b0a7cd1",
+    "655347c9fb28aaf505e162e6bcad095d17e4bfee5506113825cfb3da6ca60845",
+    "69fa7e93588c6aea4b134efa44633d38556ce1656b46df276021920a664881a3",
+    "76fe1d96587ab928f6fb5d7750ecd048fd712eb3d66aa60feb972a3d9d56c9d1",
+    "821b498fc1fcb4e3c103635fa473d7577f718c4f633b273772954295c83ae585",
+    "9176c2514b8a62105f4d2b8a22a8a0b0236c5b9feda58c18ef64cea917b98d9d",
+    "986b3dff233a80cf0fd1c48f815600f49b95f83be0d9f898fee40d0a5c9dca63",
+    "a3e1c487338ecfe4ce59e1e8f0be7a20d0442476ad923022ec430bdb5470ee56",
+    "a992f0a563f4b0239708f4be6fa38192e6930b15387567b2d4a16568d4fa5671",
+    "b830bede73f505b84b88a6596e92c22a5a4c0ded1e275e8e5b28a599849d2df6",
+    "c8fa274849bf4beeb7c46b93a7de7a6242e5af2e9c83a395e8d0db16da5e81d8",
+    "d6796d48077a08484abd1252e6deb387d8b6a10bf445e66c4e6eaa0bde0f7818",
+    "ddd84e646ab0cdd38c0f283802f28ac361a412492f3872c7f489b95bb55d53af",
+    "f64d2a60c3b9cebc4b5e12f86f4978711b4ca1e7a3788d1756d078c45a1c1004"
+  ]
+}

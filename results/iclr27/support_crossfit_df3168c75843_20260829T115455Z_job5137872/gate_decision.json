@@ -1,0 +1,256 @@
+{
+  "authorization": {
+    "freeze_candidate_architecture": false,
+    "fresh_test_outcomes": false,
+    "new_confirmatory_rollout": false,
+    "screen_a_mechanical_authoring": false,
+    "screen_a_scope": "none"
+  },
+  "best_learned_strict_retreat_recall": 0.5185185185185184,
+  "decision": "INCONCLUSIVE",
+  "interpretation": "INCONCLUSIVE is fail-closed and does not authorize Screen A. No Phase 2.5B branch authorizes confirmatory rollout.",
+  "outcome_candidate_checks": [
+    {
+      "actual": {
+        "catastrophe_rate_increase_over_risk": -0.019166666666666665,
+        "intervention_rate_increase_over_risk": -0.011666666666666659,
+        "nonnegative_paired_sources": 13,
+        "strict_base_recall": 0.5925595238095239,
+        "strict_detour_recall": 0.326923076923077,
+        "strict_retreat_recall": 0.3703703703703703,
+        "utility_gain_over_risk": 0.01777777777777778
+      },
+      "criteria": {
+        "catastrophe_rate_vs_risk": true,
+        "intervention_rate_vs_risk": true,
+        "nonnegative_paired_sources": true,
+        "strict_base_recall": false,
+        "strict_detour_recall": false,
+        "strict_retreat_recall": false,
+        "utility_gain_over_risk": false
+      },
+      "method": "OutcomeRouter",
+      "passes": false,
+      "passes_core": false,
+      "support_comparator_checks": [
+        {
+          "comparator": "SB-Risk+TwoStage",
+          "passes": true,
+          "strict_choice_macro_f1_gain": -1.1142950071929558e-05,
+          "utility_gain": 0.06444444444444444
+        },
+        {
+          "comparator": "SB-DirectQ",
+          "passes": true,
+          "strict_choice_macro_f1_gain": 0.016732577954810035,
+          "utility_gain": 0.07944444444444446
+        }
+      ]
+    },
+    {
+      "actual": {
+        "catastrophe_rate_increase_over_risk": -0.00833333333333336,
+        "intervention_rate_increase_over_risk": -0.043333333333333335,
+        "nonnegative_paired_sources": 15,
+        "strict_base_recall": 0.653422619047619,
+        "strict_detour_recall": 0.3012820512820513,
+        "strict_retreat_recall": 0.48148148148148134,
+        "utility_gain_over_risk": 0.012777777777777777
+      },
+      "criteria": {
+        "catastrophe_rate_vs_risk": true,
+        "intervention_rate_vs_risk": true,
+        "nonnegative_paired_sources": true,
+        "strict_base_recall": false,
+        "strict_detour_recall": false,
+        "strict_retreat_recall": false,
+        "utility_gain_over_risk": false
+      },
+      "method": "SB-OutcomeRouter",
+      "passes": false,
+      "passes_core": false,
+      "support_comparator_checks": [
+        {
+          "comparator": "SB-Risk+TwoStage",
+          "passes": true,
+          "strict_choice_macro_f1_gain": 0.04564185415296751,
+          "utility_gain": 0.05944444444444444
+        },
+        {
+          "comparator": "SB-DirectQ",
+          "passes": true,
+          "strict_choice_macro_f1_gain": 0.062385575057849474,
+          "utility_gain": 0.07444444444444445
+        }
+      ]
+    },
+    {
+      "actual": {
+        "catastrophe_rate_increase_over_risk": -0.003055555555555589,
+        "intervention_rate_increase_over_risk": -0.07111111111111107,
+        "nonnegative_paired_sources": 14,
+        "strict_base_recall": 0.6061011904761905,
+        "strict_detour_recall": 0.25,
+        "strict_retreat_recall": 0.48148148148148134,
+        "utility_gain_over_risk": -0.011666666666666686
+      },
+      "criteria": {
+        "catastrophe_rate_vs_risk": true,
+        "intervention_rate_vs_risk": true,
+        "nonnegative_paired_sources": true,
+        "strict_base_recall": false,
+        "strict_detour_recall": false,
+        "strict_retreat_recall": false,
+        "utility_gain_over_risk": false
+      },
+      "method": "SB-COR",
+      "passes": false,
+      "passes_core": false,
+      "support_comparator_checks": [
+        {
+          "comparator": "SB-Risk+TwoStage",
+          "passes": true,
+          "strict_choice_macro_f1_gain": 0.01967731354245994,
+          "utility_gain": 0.034999999999999976
+        },
+        {
+          "comparator": "SB-DirectQ",
+          "passes": true,
+          "strict_choice_macro_f1_gain": 0.036421034447341905,
+          "utility_gain": 0.04999999999999999
+        }
+      ]
+    }
+  ],
+  "phase": "2.5B",
+  "risk_reference": "Risk->BestFixed",
+  "risk_reference_oracle_value_recovered": 0.2857142857142857,
+  "schema_version": 1,
+  "selected_method": null,
+  "stop_reasons": [],
+  "thresholds": {
+    "benchmark_pivot": {
+      "diagnostic_detour_retreat_recall_min": 0.55,
+      "learned_detour_retreat_recall_min": 0.55
+    },
+    "diagnostics": [
+      "Condition-only diagnostic",
+      "Horizon-only diagnostic"
+    ],
+    "go_signal": {
+      "catastrophe_rate_increase_over_risk_max": 0.02,
+      "intervention_rate_increase_over_risk_max": 0.05,
+      "nonnegative_paired_sources_min": 12,
+      "strict_base_recall_min": 0.8,
+      "strict_detour_recall_min": 0.55,
+      "strict_retreat_recall_min": 0.55,
+      "support_comparator_macro_f1_gain_min": 0.08,
+      "support_comparator_utility_drop_max": 0.01,
+      "support_comparator_utility_gain_min": 0.02,
+      "utility_gain_over_risk_min": 0.03
+    },
+    "learned_selectors": [
+      "Risk+TwoStage",
+      "SB-Risk+TwoStage",
+      "DirectChoice",
+      "DirectQ",
+      "SB-DirectQ",
+      "PairwiseAdvantage",
+      "OutcomeRouter",
+      "SB-OutcomeRouter",
+      "SB-COR",
+      "OutcomeRouter-hidden-only",
+      "OutcomeRouter-state-action-only"
+    ],
+    "outcome_candidates": [
+      "OutcomeRouter",
+      "SB-OutcomeRouter",
+      "SB-COR"
+    ],
+    "risk_reference": "Risk->BestFixed",
+    "stop_rescue": {
+      "risk_best_fixed_oracle_value_recovered_min": 0.85,
+      "strict_retreat_random_level": 0.3333333333333333
+    },
+    "support_balanced_comparators": [
+      "SB-Risk+TwoStage",
+      "SB-DirectQ"
+    ],
+    "value_candidates": [
+      "DirectQ",
+      "SB-DirectQ",
+      "PairwiseAdvantage"
+    ]
+  },
+  "value_candidate_checks": [
+    {
+      "actual": {
+        "catastrophe_rate_increase_over_risk": 0.02388888888888885,
+        "intervention_rate_increase_over_risk": -0.08166666666666667,
+        "nonnegative_paired_sources": 12,
+        "strict_base_recall": 0.6260416666666666,
+        "strict_detour_recall": 0.31410256410256415,
+        "strict_retreat_recall": 0.3703703703703703,
+        "utility_gain_over_risk": -0.05750000000000002
+      },
+      "criteria": {
+        "catastrophe_rate_vs_risk": false,
+        "intervention_rate_vs_risk": true,
+        "nonnegative_paired_sources": true,
+        "strict_base_recall": false,
+        "strict_detour_recall": false,
+        "strict_retreat_recall": false,
+        "utility_gain_over_risk": false
+      },
+      "method": "DirectQ",
+      "passes": false,
+      "passes_core": false
+    },
+    {
+      "actual": {
+        "catastrophe_rate_increase_over_risk": 0.02305555555555555,
+        "intervention_rate_increase_over_risk": -0.10999999999999993,
+        "nonnegative_paired_sources": 11,
+        "strict_base_recall": 0.603125,
+        "strict_detour_recall": 0.2243589743589744,
+        "strict_retreat_recall": 0.5185185185185184,
+        "utility_gain_over_risk": -0.061666666666666675
+      },
+      "criteria": {
+        "catastrophe_rate_vs_risk": false,
+        "intervention_rate_vs_risk": true,
+        "nonnegative_paired_sources": false,
+        "strict_base_recall": false,
+        "strict_detour_recall": false,
+        "strict_retreat_recall": false,
+        "utility_gain_over_risk": false
+      },
+      "method": "SB-DirectQ",
+      "passes": false,
+      "passes_core": false
+    },
+    {
+      "actual": {
+        "catastrophe_rate_increase_over_risk": 0.02388888888888885,
+        "intervention_rate_increase_over_risk": -0.08166666666666667,
+        "nonnegative_paired_sources": 12,
+        "strict_base_recall": 0.6260416666666666,
+        "strict_detour_recall": 0.31410256410256415,
+        "strict_retreat_recall": 0.3703703703703703,
+        "utility_gain_over_risk": -0.05750000000000002
+      },
+      "criteria": {
+        "catastrophe_rate_vs_risk": false,
+        "intervention_rate_vs_risk": true,
+        "nonnegative_paired_sources": true,
+        "strict_base_recall": false,
+        "strict_detour_recall": false,
+        "strict_retreat_recall": false,
+        "utility_gain_over_risk": false
+      },
+      "method": "PairwiseAdvantage",
+      "passes": false,
+      "passes_core": false
+    }
+  ]
+}

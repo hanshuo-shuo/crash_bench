@@ -31,6 +31,22 @@
     "screen_a_authorized": false,
     "confirmatory_rollout_authorized": false
   },
+  "stage_2_5b_decision": {
+    "verdict": "INCONCLUSIVE",
+    "phase_2_5b_complete": true,
+    "protocol_commit": "df3168c75843f33484209b9908ac939814de31e9",
+    "slurm_job_id": "5137872",
+    "slurm_account": "p33100",
+    "slurm_partition": "short",
+    "status": "COMPLETED",
+    "exit_code": "0:0",
+    "result_dir": "results/iclr27/support_crossfit_df3168c75843_20260829T115455Z_job5137872",
+    "next_hard_gate": "explicit scientific-plan revision; no automatic downstream authorization",
+    "screen_a_authorized": false,
+    "candidate_architecture_frozen": false,
+    "confirmatory_rollout_authorized": false,
+    "full_fold_model_archive": "sealed on Quest under the result manifest hash"
+  },
   "verification_attempts": [
     {
       "attempt": 1,
@@ -100,6 +116,10 @@
     {"path":"results/iclr27/stage1_verify_cbc965bc1355_20260829T091913Z_job5124071/verification.json","sha256":"133248b9071259800738b0bfeb984a531cef56ea4f37d7c66da597ff4513a4d6","evidence_level":"stage-verification","claims":[]},
     {"path":"results/iclr27/option_support_audit_787623226de0_20260829T112149Z/manifest.json","sha256":"c1abad34fedb51d7c25ee22d0dae2751aed682d998684a902ff7e988189015d7","evidence_level":"exposed-development-only","claims":[]},
     {"path":"results/iclr27/option_support_audit_787623226de0_20260829T112149Z/gate_decision.json","sha256":"e278453f2a6e1517e97ac9627383db2470fec30fd33bfa5af596f4465d901d13","evidence_level":"development-gate","claims":[]},
+    {"path":"results/iclr27/support_crossfit_df3168c75843_20260829T115455Z_job5137872/manifest.json","sha256":"5d5fe3a3a9d1bae926b6115a971fe38a4d44ade2687efff1b9f2834e53e58307","evidence_level":"exposed-development-only","claims":[]},
+    {"path":"results/iclr27/support_crossfit_df3168c75843_20260829T115455Z_job5137872/gate_decision.json","sha256":"b152a143dcabc17f5dd12593af3d96f68b0db363f0925f3a3305c3ed40e09e96","evidence_level":"development-gate","claims":[]},
+    {"path":"results/iclr27/support_crossfit_df3168c75843_20260829T115455Z_job5137872/overall_metrics.csv","sha256":"45d9b4a4428bf4bdcf8fd45a0c723b1be997edca834e6b4eb0dfd6920bbc9705","evidence_level":"exposed-development-only","claims":[]},
+    {"path":"results/iclr27/support_crossfit_df3168c75843_20260829T115455Z_job5137872/inference.json","sha256":"65152b902792233c28c21fdb01bfa30e6ffcdc2961bee46ac8815441c2c1d7d8","evidence_level":"exposed-development-only","claims":[]},
     {"path":"results/p2_trace_morphology_audit_20260819.json","sha256":"5ecfd5f7de24ddc4d9a999ecc0fbddbd6c088d92c4017bb9e00fc1d58d7d6a4a","evidence_level":"negative-closeout","claims":["C14-P2.5"]},
     {"path":"results/p3_recovery_window_records_20260819.csv","sha256":"f555612ba933643c208f509754736ce98ba1ce5303c8e8f390168c0448d54c3d","evidence_level":"development-only","claims":["C14-P3.0"]},
     {"path":"results/p3_recovery_window_trajectories_20260819.json","sha256":"c1b33c617f87903fb8bd593d4f20deeb74f4694d2282aa27b6f65594e0402896","evidence_level":"development-only","claims":["C14-P3.0"]},
@@ -145,7 +165,11 @@
     {"claim_id":"PHASE-2.5A","path":"results/iclr27/option_support_audit_787623226de0_20260829T112149Z/gate_decision.json","json_path":"actual.strict_detour_source_support","equals":13},
     {"claim_id":"PHASE-2.5A","path":"results/iclr27/option_support_audit_787623226de0_20260829T112149Z/gate_decision.json","json_path":"actual.strict_retreat_source_support","equals":9},
     {"claim_id":"PHASE-2.5A","path":"results/iclr27/option_support_audit_787623226de0_20260829T112149Z/gate_decision.json","json_path":"actual.within_source_flip_sources","equals":13},
-    {"claim_id":"PHASE-2.5A","path":"results/iclr27/option_support_audit_787623226de0_20260829T112149Z/gate_decision.json","json_path":"actual.best_fixed_nonbase_oracle_value_recovered","equals":0.7964601769911505}
+    {"claim_id":"PHASE-2.5A","path":"results/iclr27/option_support_audit_787623226de0_20260829T112149Z/gate_decision.json","json_path":"actual.best_fixed_nonbase_oracle_value_recovered","equals":0.7964601769911505},
+    {"claim_id":"PHASE-2.5B","path":"results/iclr27/support_crossfit_df3168c75843_20260829T115455Z_job5137872/gate_decision.json","json_path":"decision","equals":"INCONCLUSIVE"},
+    {"claim_id":"PHASE-2.5B","path":"results/iclr27/support_crossfit_df3168c75843_20260829T115455Z_job5137872/gate_decision.json","json_path":"risk_reference_oracle_value_recovered","equals":0.2857142857142857},
+    {"claim_id":"PHASE-2.5B","path":"results/iclr27/support_crossfit_df3168c75843_20260829T115455Z_job5137872/gate_decision.json","json_path":"best_learned_strict_retreat_recall","equals":0.5185185185185184},
+    {"claim_id":"PHASE-2.5B","path":"results/iclr27/support_crossfit_df3168c75843_20260829T115455Z_job5137872/gate_decision.json","json_path":"authorization.screen_a_mechanical_authoring","equals":false}
   ],
   "claim_index": {
     "supported": ["C1","C3","C5","C7","C9","C11","C14","C14-P2.5","C14-P3.0","C14-P3.1","C14-P3.2"],

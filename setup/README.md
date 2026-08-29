@@ -161,7 +161,7 @@ pin、sanity 记录和踩坑列表在归档 setup 文档中。
 | 论文部分 | 入口 |
 |---|---|
 | **P2 动态 first-crossing Router** | 先运行 `submit_dynamic_first_crossing_calibration.sh` 冻结 trajectory-level boundary，再运行 `submit_dynamic_first_crossing_router.sh`；协议和指标见 `docs/P2_DYNAMIC_FIRST_CROSSING.md` |
-| **ICLR Phase 2.5B source-cross-fit** | `iclr27_support_crossfit.sbatch`；只读现有 20-source exposed-development corpus，CPU-only，结果未冻结前不得解释为 Screen A 授权 |
+| **ICLR Phase 2.5B source-cross-fit** | `iclr27_support_crossfit.sbatch`；Quest Job 5137872 已完成并记录为 `INCONCLUSIVE`，不得重跑覆盖，未授权 Screen A |
 | **fresh counterfactual router 主结果** | `submit_fresh_counterfactual_router.sh`, `submit_fresh_counterfactual_router_supplement.sh`；结果已冻结，不要覆盖重跑 |
 | wall causal sweep | `run_ood_control_v5.sbatch` |
 | Base/OFT/pi0 matched behavior | `run_pilot_base_matched.sbatch`, `run_pilot_oft.sbatch`, `run_pilot_openpi.sbatch` |
@@ -178,11 +178,11 @@ pin、sanity 记录和踩坑列表在归档 setup 文档中。
 
 ## 下一轮实验
 
-当前 Phase 2.5A 只授权一次现有 20-source corpus 上的 CPU-only Phase 2.5B
-source-cross-fitted support rescue。不得在现有 8/13-source cohort 上搜索更深 sequence
-model、Transformer、ensemble world model 或 outcome-led threshold；Phase 2.5B 的
-GO-SIGNAL / GO-VALUE-ONLY / BENCHMARK-PIVOT 门未正式记录前，也不得启动 Screen A 或新
-outcome-bearing rollout。
+现有 20-source corpus 上的 CPU-only Phase 2.5B source-cross-fitted support rescue 已完成，
+正式门为 `INCONCLUSIVE` 且 fail closed。不得在现有 8/13-source cohort 上搜索更深
+sequence model、Transformer、ensemble world model 或 outcome-led threshold；当前也不得
+启动 Screen A 或任何新 outcome-bearing rollout。后续动作需要先明确修订科学计划，不能把
+`INCONCLUSIVE` 自动解释为 GO。
 
 Phase 2.5B 以后只有对应 gate 明确授权，才考虑新实验；原有后备顺序为：
 

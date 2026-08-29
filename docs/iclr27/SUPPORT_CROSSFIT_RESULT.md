@@ -6,7 +6,7 @@
 - **Fresh test outcomes:** prohibited
 - **Primary preference:** `lambda=1`, `eta=0`
 - **Maximum source-macro intervention rate:** `rho=0.60`
-- **Reviewed result:** pending a clean, tested, published protocol run
+- **Reviewed result:** complete; formal gate **INCONCLUSIVE** (fail-closed)
 
 ## Leakage contract
 
@@ -75,6 +75,64 @@ those rules is `INCONCLUSIVE`, which is fail-closed. Screen A is authorized for
 a method/value GO, or for benchmark-only authoring after `BENCHMARK-PIVOT`;
 confirmatory rollout remains unauthorized in every Phase 2.5B branch.
 
+## Reviewed result
+
+- Protocol and execution commit:
+  `df3168c75843f33484209b9908ac939814de31e9`
+- Quest Slurm job: `5137872`, account `p33100`, partition `short`,
+  `COMPLETED`, elapsed `00:02:03`, exit `0:0`
+- Result root:
+  [`support_crossfit_df3168c75843_20260829T115455Z_job5137872`](../../results/iclr27/support_crossfit_df3168c75843_20260829T115455Z_job5137872/)
+- Machine decision:
+  [`gate_decision.json`](../../results/iclr27/support_crossfit_df3168c75843_20260829T115455Z_job5137872/gate_decision.json)
+- New rollout: none; fresh test outcomes loaded: false
+
+All 20 outer folds were support-valid. Across the 14-source fitting sets, the
+minimum Base/Detour/Retreat strict source supports were respectively `10/8/5`.
+All 100 inner folds used for `beta` selection were support-valid. Thirteen
+outer folds selected `beta=1.0` and seven selected `beta=0.25`. Every one of
+the 320 method-fold calibration records obeyed the frozen source-macro
+intervention cap; the largest floating-point value was `0.6000000000000002`.
+
+Primary OOF source-macro results are:
+
+| Method | Utility | Catastrophe | Intervention | Base recall | Detour recall | Retreat recall | Strict macro-F1 |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Risk -> Best Fixed | 0.2544 | 0.2478 | 0.4947 | 0.5595 | 0.5705 | 0.0556 | 0.3805 |
+| Direct-Q | 0.1969 | 0.2717 | 0.4131 | 0.6260 | 0.3141 | 0.3704 | 0.3836 |
+| Support-balanced Direct-Q | 0.1928 | 0.2708 | 0.3847 | 0.6031 | 0.2244 | **0.5185** | 0.4088 |
+| Current Outcome Router | **0.2722** | **0.2286** | 0.4831 | 0.5926 | 0.3269 | 0.3704 | 0.4255 |
+| Support-balanced Outcome Router | 0.2672 | 0.2394 | 0.4514 | **0.6534** | 0.3013 | 0.4815 | 0.4711 |
+| SB-COR | 0.2428 | 0.2447 | **0.4236** | 0.6061 | 0.2500 | 0.4815 | 0.4452 |
+| Hidden-only Outcome Router | 0.2644 | 0.2189 | 0.5222 | 0.4881 | **0.4359** | **0.5185** | **0.4780** |
+
+The current Outcome Router is the strongest deployable learned method in OOF
+utility, but it gains only `+0.0178` over Risk -> Best Fixed, below the frozen
+`+0.03` requirement. Its paired source bootstrap interval for that difference
+is `[-0.0747, 0.1000]`, with sign-flip `p=0.7131`; 13/20 source differences
+are nonnegative. It also misses all three strict-recall requirements. Support
+balancing improves Retreat recall but does not recover Detour or Base recall.
+The ranking auxiliary does not rescue the selector and reduces utility below
+the risk reference.
+
+No branch in the frozen gate fires:
+
+- **GO-SIGNAL fails:** every outcome candidate misses the Base, Detour, and
+  Retreat recall floors and the required utility gain.
+- **GO-VALUE-ONLY fails:** Direct-Q, support-balanced Direct-Q, and Pairwise
+  Advantage all lose utility to Risk -> Best Fixed and miss strict recalls.
+- **BENCHMARK-PIVOT fails:** no learned selector reaches both intervention
+  recalls at `0.55`, but neither condition-only nor horizon-only reaches both
+  diagnostic recalls at `0.55` either.
+- **STOP-RESCUE does not fire:** cross-fitted Risk -> Best Fixed recovers only
+  `0.2857` of source-macro Oracle value, below `0.85`, and the best learned
+  Retreat recall is `0.5185`, above the frozen one-of-three random level.
+
+The resulting **INCONCLUSIVE** is not promoted to a positive branch. It does
+not freeze a candidate architecture and does not authorize Screen A, fresh
+outcomes, or confirmatory rollout. Continuing requires an explicit revision of
+the scientific plan rather than post-hoc threshold, utility, or model changes.
+
 ## Reproduction
 
 After publishing a clean protocol commit, submit the CPU-only job from the
@@ -84,7 +142,10 @@ repository root:
 scripts/quest_sync.sh submit setup/iclr27_support_crossfit.sbatch
 ```
 
-The non-overwriting result root records the exact commit, Slurm job, frozen
+The non-overwriting Quest result root records the exact commit, Slurm job, frozen
 config, capture/support-audit hashes, all fold assignments and class support,
 inner `beta` selection, calibration records, OOF predictions, source-paired
-inference, plots, and the machine gate.
+inference, plots, fold-model archive, and the machine gate. The reviewed Git
+copy promotes the manifest, predictions, analysis tables, inference, plots,
+and provenance; the 11 MB `model_parameters.npz` remains sealed on Quest under
+the manifest-recorded SHA-256 rather than being duplicated into Git history.

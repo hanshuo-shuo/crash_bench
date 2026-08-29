@@ -1,11 +1,11 @@
 # CrashBench ICLR 2027 master plan
 
-**Truth-source status:** stage 1 frozen; stage 2 and Phase 2.5A recorded on 2026-08-29
+**Truth-source status:** stage 1 frozen; stage 2 and Phase 2.5A/2.5B recorded on 2026-08-29
 **Working title:** *CrashBench: Exact-State Potential Outcomes for Selective VLA Intervention*
 **Stage-1 decision:** **CONDITIONAL GO** pending the strongest-baseline gate.
 **Current submission decision:** **NO-GO for the current outcome-decomposition
-headline**; Phase 2.5A passed and authorizes only the Phase 2.5B pooled
-source-cross-fitted support rescue.
+headline**; Phase 2.5B is formally **INCONCLUSIVE** and fail-closed. It does
+not authorize Screen A or any new outcome-bearing rollout.
 
 This directory implements stages 1 and 2 of the
 [revised ICLR 2027 execution plan](../../CrashBench_ICLR2027_Revised_Plan_After_Baseline_NoGo.md)
@@ -36,6 +36,16 @@ value. The equal-source sensitivity is higher at 82.90%, and all strict Retreat
 states remain glass-only, so this is a narrow authorization for source-LOSO
 learning rather than evidence that option ambiguity has already been solved.
 See [`OPTION_SUPPORT_AUDIT.md`](OPTION_SUPPORT_AUDIT.md).
+
+The authorized Phase 2.5B source-cross-fitted rescue is now complete at commit
+`df3168c`, Quest Job `5137872`. Its formal result is **INCONCLUSIVE**: no
+outcome or direct-value method clears the strict Base/Detour/Retreat recall and
+utility gates, neither condition-only nor horizon-only clears the diagnostic
+gate, and neither STOP criterion fires. The current Outcome Router has the
+best learned OOF utility (`0.2722`) but gains only `+0.0178` over Risk -> Best
+Fixed and recalls strict Base/Detour/Retreat at only `0.5926/0.3269/0.3704`.
+The result is fail-closed: no candidate is frozen and Screen A remains blocked.
+See [`SUPPORT_CROSSFIT_RESULT.md`](SUPPORT_CROSSFIT_RESULT.md).
 
 The stage-1 rationale below remains the historical reason the project entered
 the gate. It no longer authorizes a confirmatory run by itself.
@@ -142,7 +152,7 @@ sequential intervention.
 | 1. Paper truth source | Every current paper number maps to immutable evidence; unsupported wording and reviewer risks are explicit. | **PASS** — local 186/186 tests and Quest Job 5124071 (`short`, exit `0:0`) passed at commit `cbc965b`. |
 | 2. Strongest-baseline audit | Outcome decomposition/multi-option value survives fair direct, risk, and geometry baselines. | **INCONCLUSIVE / current method NO-GO** — Quest Job 5128781 (`short`, exit `0:0`), commit `eed1fee`. |
 | 2.5A. Existing-corpus option support | Pooled strict support is source-diverse and a fixed non-Base option leaves enough canonical Oracle value. | **PASS-SUPPORT** — local CPU-only audit, commit `7876232`; only Phase 2.5B is authorized. |
-| 2.5B. Source-cross-fitted support rescue | Strict 20-fold source-OOF test of current, support-balanced, ranking, risk, and value selectors under one constrained calibration rule. | **PROTOCOL READY / RESULT PENDING** — Screen A and every new outcome-bearing rollout remain blocked. |
+| 2.5B. Source-cross-fitted support rescue | Strict 20-fold source-OOF test of current, support-balanced, ranking, risk, and value selectors under one constrained calibration rule. | **INCONCLUSIVE / FAIL-CLOSED** — Quest Job 5137872, commit `df3168c`; Screen A and every new outcome-bearing rollout remain blocked. |
 | 3. Problem and method rewrite | Exact-state full-information supervision and general utility are formalized without observational-causal overclaim. | Positive method rewrite blocked; only option-support/ambiguity pivot design is authorized. |
 | 4+. New evidence and paper | Only evidence justified by the gate is collected and written. | No confirmatory cohort authorized. |
 
@@ -189,7 +199,11 @@ sequential intervention.
   `plot_support_crossfit_suite.py`: source-paired analysis, shared bootstrap,
   exact sign-flip tests, gate, and compact figures.
 - `setup/iclr27_support_crossfit.sbatch`: CPU-only Quest entry point.
-- `SUPPORT_CROSSFIT_RESULT.md`: protocol contract; reviewed result pending.
+- `SUPPORT_CROSSFIT_RESULT.md`: protocol, reviewed result, gate interpretation,
+  and the exact downstream prohibition.
+- `results/iclr27/support_crossfit_df3168c75843_20260829T115455Z_job5137872/`:
+  sealed OOF predictions, metrics, inference, figures, and Slurm provenance;
+  the large fold-model archive remains on Quest under its manifest hash.
 
 ## Change control
 
