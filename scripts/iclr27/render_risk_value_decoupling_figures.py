@@ -257,8 +257,9 @@ def render_source_support(spec: Mapping[str, Any], path: Path) -> None:
             value = int(row[key])
             x = start + series_index * (bar_w + gap)
             height = value / max_y * chart_h
-            canvas.setFillColor(color)
-            canvas.roundRect(x, chart_y, bar_w, height, 3, fill=1, stroke=0)
+            if value > 0:
+                canvas.setFillColor(color)
+                canvas.roundRect(x, chart_y, bar_w, height, 3, fill=1, stroke=0)
             _text(canvas, x + bar_w / 2, chart_y + height + 8, str(value), size=9, bold=True, align="center")
         _text(
             canvas, chart_x + group_index * group_w + group_w / 2, 126,
