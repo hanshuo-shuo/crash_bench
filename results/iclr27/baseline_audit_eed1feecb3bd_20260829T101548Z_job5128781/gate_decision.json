@@ -1,0 +1,90 @@
+{
+  "candidate_methods": {
+    "deployable_simple_or_robot_only": [
+      "OutcomeRouter-state-action-only"
+    ],
+    "direct_choice_q_pairwise": [
+      "DirectChoice",
+      "DirectQ",
+      "PairwiseAdvantage"
+    ],
+    "go_b_value_methods": [
+      "DirectQ",
+      "PairwiseAdvantage"
+    ],
+    "manifest_primary_methods": [
+      "Base",
+      "Always Detour",
+      "Always Retreat",
+      "Risk->Retreat",
+      "Risk->Detour",
+      "Risk->BestFixed",
+      "Risk+TwoStage",
+      "DirectChoice",
+      "DirectQ",
+      "PairwiseAdvantage",
+      "OutcomeRouter",
+      "OutcomeRouter-hidden-only",
+      "OutcomeRouter-state-action-only",
+      "GeometryOracle-condition"
+    ],
+    "oracle_geometry_diagnostic_only": [
+      "GeometryOracle-condition"
+    ],
+    "risk_reference": "Risk->BestFixed",
+    "risk_to_best_fixed_or_detour": [
+      "Risk->Detour",
+      "Risk->BestFixed"
+    ]
+  },
+  "decision": "INCONCLUSIVE",
+  "evaluation_split": "development",
+  "go_a": {
+    "all_met": false,
+    "criteria": {
+      "calibration_or_preference_reweighting_value_available": false,
+      "improvement_not_explained_by_higher_intervention_rate": false,
+      "not_fully_covered_by_direct_methods": true,
+      "outcome_router_beats_risk_best_fixed": false,
+      "same_rate_source_direction_stable": false
+    }
+  },
+  "go_b": {
+    "all_met": false,
+    "criteria": {
+      "both_clearly_beat_scalar_risk": false,
+      "matched_rate_safe_improvement_over_risk": {
+        "DirectQ": false,
+        "OutcomeRouter": false,
+        "PairwiseAdvantage": false
+      },
+      "outcome_and_direct_value_methods_similar": false,
+      "similarity_by_predeclared_direct_method": {
+        "DirectQ": false,
+        "PairwiseAdvantage": false
+      }
+    }
+  },
+  "oracle_geometry": {
+    "can_trigger_stop_d_alone": false,
+    "matching_methods_excluded_from_stop_d": [
+      "GeometryOracle-condition"
+    ]
+  },
+  "pivot_c": {
+    "matching_methods": [],
+    "triggered": false
+  },
+  "primary_method": "OutcomeRouter",
+  "reason": "No frozen GO/NO-GO branch is fully supported by the development evidence.",
+  "schema_version": 1,
+  "stop_d": {
+    "matching_methods": [],
+    "triggered": false
+  },
+  "thresholds_from_manifest": {
+    "catastrophe_rate_absolute": 0.02,
+    "intervention_rate_absolute": 0.1,
+    "utility_absolute": 0.02
+  }
+}

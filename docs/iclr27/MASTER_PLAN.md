@@ -1,21 +1,34 @@
 # CrashBench ICLR 2027 master plan
 
-**Truth-source status:** stage 1 frozen on 2026-08-29
+**Truth-source status:** stage 1 frozen; stage 2 recorded on 2026-08-29
 **Working title:** *CrashBench: Exact-State Potential Outcomes for Selective VLA Intervention*
-**Submission decision:** **CONDITIONAL GO**—continue through the strongest-baseline gate; the
-current evidence is not yet sufficient for an ICLR main-track claim.
+**Stage-1 decision:** **CONDITIONAL GO** pending the strongest-baseline gate.
+**Current submission decision:** **NO-GO for the current outcome-decomposition
+headline**; only a scoped option-support / option-ambiguity pivot is authorized.
 
-This directory implements stage 1 of the
+This directory implements stages 1 and 2 of the
 [ICLR 2027 execution plan](../../CrashBench_ICLR2027_Codex_Execution_Plan.md)
 and is the paper-decision truth source for the ICLR 2027 effort.
 Existing `docs/CURRENT.md`, `docs/PAPER_PLAN.md`, and `docs/CLAIMS.md` remain the
 record of the frozen pre-audit paper story. When the wording or submission
-decision differs, this file, `CLAIM_LEDGER.md`, and `REVIEWER_RISK_AUDIT.md`
-control the ICLR 2027 claim.
+decision differs, this file, `BASELINE_AUDIT_RESULT.md`, `CLAIM_LEDGER.md`, and
+`REVIEWER_RISK_AUDIT.md` control the ICLR 2027 claim.
 
 ## One-page viability judgment
 
 ### Verdict
+
+The frozen strongest-baseline audit is complete at commit `eed1fee`, Quest Job
+`5128781`. Its formal branch is **INCONCLUSIVE**: GO-A, GO-B, PIVOT-C, and
+STOP-D each fail at least one frozen tolerance. Operationally this is a no-go
+for the current method headline because no positive gate cleared. Outcome
+Router does not beat Risk -> Best Fixed in source-macro utility or success and
+uses 12.92 points more intervention; its lower catastrophe rate is a tradeoff,
+not dominance. Full results and the next authorized action are in
+[`BASELINE_AUDIT_RESULT.md`](BASELINE_AUDIT_RESULT.md).
+
+The stage-1 rationale below remains the historical reason the project entered
+the gate. It no longer authorizes a confirmatory run by itself.
 
 The project is worth continuing, but only behind a hard baseline gate. The
 scientifically defensible asset is not generic VLA failure detection. It is the
@@ -117,9 +130,9 @@ sequential intervention.
 | Stage | Gate | Status |
 |---|---|---|
 | 1. Paper truth source | Every current paper number maps to immutable evidence; unsupported wording and reviewer risks are explicit. | **PASS** — local 186/186 tests and Quest Job 5124071 (`short`, exit `0:0`) passed at commit `cbc965b`. |
-| 2. Strongest-baseline audit | Outcome decomposition/multi-option value survives fair direct, risk, and geometry baselines. | **NEXT / hard gate** |
-| 3. Problem and method rewrite | Exact-state full-information supervision and general utility are formalized without observational-causal overclaim. | Blocked on stage 2 positioning. |
-| 4+. New evidence and paper | Only evidence justified by the gate is collected and written. | Not authorized by stage 1. |
+| 2. Strongest-baseline audit | Outcome decomposition/multi-option value survives fair direct, risk, and geometry baselines. | **INCONCLUSIVE / current method NO-GO** — Quest Job 5128781 (`short`, exit `0:0`), commit `eed1fee`. |
+| 3. Problem and method rewrite | Exact-state full-information supervision and general utility are formalized without observational-causal overclaim. | Positive method rewrite blocked; only option-support/ambiguity pivot design is authorized. |
+| 4+. New evidence and paper | Only evidence justified by the gate is collected and written. | No confirmatory cohort authorized. |
 
 ## Stage-1 artifacts
 
@@ -133,6 +146,16 @@ sequential intervention.
   required risks, or key frozen values drift.
 - `results/iclr27/stage1_verify_cbc965bc1355_20260829T091913Z_job5124071/verification.json`:
   pulled Slurm provenance for the successful Quest verification.
+
+## Stage-2 artifacts
+
+- `BASELINE_AUDIT_RESULT.md`: paper decision, scoped interpretation, and next
+  authorized experiment.
+- `results/iclr27/baseline_audit_eed1feecb3bd_20260829T101548Z_job5128781/`:
+  sealed predictions, choices, metrics, source inference, calibration, figures,
+  and Slurm provenance.
+- `configs/iclr27/baseline_suite.yaml`: frozen development-only comparison and
+  GO/NO-GO contract.
 
 ## Change control
 

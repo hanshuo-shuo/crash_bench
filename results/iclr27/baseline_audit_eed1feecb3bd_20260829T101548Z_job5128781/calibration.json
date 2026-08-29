@@ -1,0 +1,3202 @@
+{
+  "choice_probability_axis": [
+    "base_continue",
+    "detour_complete",
+    "retreat_hold"
+  ],
+  "evaluation_split": "development",
+  "methods": {
+    "Always Detour": {
+      "base_catastrophe_binary": {
+        "available": false,
+        "brier": null,
+        "ece": null,
+        "n_missing_or_invalid": 106,
+        "n_valid": 0,
+        "nll": null,
+        "reason": "not a scalar_risk method",
+        "reliability_bins": [],
+        "target": "base_option_catastrophe"
+      },
+      "choice_probabilities": {
+        "available": false,
+        "ece": null,
+        "multiclass_brier": null,
+        "n_missing_or_invalid": 106,
+        "n_valid": 0,
+        "nll": null,
+        "reliability_bins": [],
+        "target": "realized_oracle_choice_with_frozen_tie_break"
+      },
+      "outcome_probabilities": {
+        "available": false,
+        "ece": null,
+        "multiclass_brier": null,
+        "n_missing_or_invalid": 318,
+        "n_valid": 0,
+        "nll": null,
+        "per_option": {
+          "base_continue": {
+            "available": false,
+            "ece": null,
+            "multiclass_brier": null,
+            "n_missing_or_invalid": 106,
+            "n_valid": 0,
+            "nll": null,
+            "reliability_bins": []
+          },
+          "detour_complete": {
+            "available": false,
+            "ece": null,
+            "multiclass_brier": null,
+            "n_missing_or_invalid": 106,
+            "n_valid": 0,
+            "nll": null,
+            "reliability_bins": []
+          },
+          "retreat_hold": {
+            "available": false,
+            "ece": null,
+            "multiclass_brier": null,
+            "n_missing_or_invalid": 106,
+            "n_valid": 0,
+            "nll": null,
+            "reliability_bins": []
+          }
+        },
+        "reliability_bins": []
+      },
+      "predicted_advantage": {
+        "available": false,
+        "bins": [],
+        "calibration_error": null,
+        "mae": null,
+        "n_missing_or_invalid": 106,
+        "n_valid": 0,
+        "pearson_correlation": null,
+        "rmse": null
+      }
+    },
+    "Always Retreat": {
+      "base_catastrophe_binary": {
+        "available": false,
+        "brier": null,
+        "ece": null,
+        "n_missing_or_invalid": 106,
+        "n_valid": 0,
+        "nll": null,
+        "reason": "not a scalar_risk method",
+        "reliability_bins": [],
+        "target": "base_option_catastrophe"
+      },
+      "choice_probabilities": {
+        "available": false,
+        "ece": null,
+        "multiclass_brier": null,
+        "n_missing_or_invalid": 106,
+        "n_valid": 0,
+        "nll": null,
+        "reliability_bins": [],
+        "target": "realized_oracle_choice_with_frozen_tie_break"
+      },
+      "outcome_probabilities": {
+        "available": false,
+        "ece": null,
+        "multiclass_brier": null,
+        "n_missing_or_invalid": 318,
+        "n_valid": 0,
+        "nll": null,
+        "per_option": {
+          "base_continue": {
+            "available": false,
+            "ece": null,
+            "multiclass_brier": null,
+            "n_missing_or_invalid": 106,
+            "n_valid": 0,
+            "nll": null,
+            "reliability_bins": []
+          },
+          "detour_complete": {
+            "available": false,
+            "ece": null,
+            "multiclass_brier": null,
+            "n_missing_or_invalid": 106,
+            "n_valid": 0,
+            "nll": null,
+            "reliability_bins": []
+          },
+          "retreat_hold": {
+            "available": false,
+            "ece": null,
+            "multiclass_brier": null,
+            "n_missing_or_invalid": 106,
+            "n_valid": 0,
+            "nll": null,
+            "reliability_bins": []
+          }
+        },
+        "reliability_bins": []
+      },
+      "predicted_advantage": {
+        "available": false,
+        "bins": [],
+        "calibration_error": null,
+        "mae": null,
+        "n_missing_or_invalid": 106,
+        "n_valid": 0,
+        "pearson_correlation": null,
+        "rmse": null
+      }
+    },
+    "Base": {
+      "base_catastrophe_binary": {
+        "available": false,
+        "brier": null,
+        "ece": null,
+        "n_missing_or_invalid": 106,
+        "n_valid": 0,
+        "nll": null,
+        "reason": "not a scalar_risk method",
+        "reliability_bins": [],
+        "target": "base_option_catastrophe"
+      },
+      "choice_probabilities": {
+        "available": false,
+        "ece": null,
+        "multiclass_brier": null,
+        "n_missing_or_invalid": 106,
+        "n_valid": 0,
+        "nll": null,
+        "reliability_bins": [],
+        "target": "realized_oracle_choice_with_frozen_tie_break"
+      },
+      "outcome_probabilities": {
+        "available": false,
+        "ece": null,
+        "multiclass_brier": null,
+        "n_missing_or_invalid": 318,
+        "n_valid": 0,
+        "nll": null,
+        "per_option": {
+          "base_continue": {
+            "available": false,
+            "ece": null,
+            "multiclass_brier": null,
+            "n_missing_or_invalid": 106,
+            "n_valid": 0,
+            "nll": null,
+            "reliability_bins": []
+          },
+          "detour_complete": {
+            "available": false,
+            "ece": null,
+            "multiclass_brier": null,
+            "n_missing_or_invalid": 106,
+            "n_valid": 0,
+            "nll": null,
+            "reliability_bins": []
+          },
+          "retreat_hold": {
+            "available": false,
+            "ece": null,
+            "multiclass_brier": null,
+            "n_missing_or_invalid": 106,
+            "n_valid": 0,
+            "nll": null,
+            "reliability_bins": []
+          }
+        },
+        "reliability_bins": []
+      },
+      "predicted_advantage": {
+        "available": false,
+        "bins": [],
+        "calibration_error": null,
+        "mae": null,
+        "n_missing_or_invalid": 106,
+        "n_valid": 0,
+        "pearson_correlation": null,
+        "rmse": null
+      }
+    },
+    "DirectChoice": {
+      "base_catastrophe_binary": {
+        "available": false,
+        "brier": null,
+        "ece": null,
+        "n_missing_or_invalid": 106,
+        "n_valid": 0,
+        "nll": null,
+        "reason": "not a scalar_risk method",
+        "reliability_bins": [],
+        "target": "base_option_catastrophe"
+      },
+      "choice_probabilities": {
+        "available": true,
+        "ece": 0.15926968118700774,
+        "multiclass_brier": 0.5488482103389088,
+        "n_missing_or_invalid": 0,
+        "n_valid": 106,
+        "nll": 0.9603389523329684,
+        "reliability_bins": [
+          {
+            "count": 1,
+            "empirical_frequency": 0.0,
+            "lower": 0.30000000000000004,
+            "mean_confidence": 0.3497624139291333,
+            "upper": 0.4
+          },
+          {
+            "count": 9,
+            "empirical_frequency": 0.2222222222222222,
+            "lower": 0.4,
+            "mean_confidence": 0.45192116286810524,
+            "upper": 0.5
+          },
+          {
+            "count": 12,
+            "empirical_frequency": 0.5,
+            "lower": 0.5,
+            "mean_confidence": 0.5634418435735026,
+            "upper": 0.6000000000000001
+          },
+          {
+            "count": 13,
+            "empirical_frequency": 0.6153846153846154,
+            "lower": 0.6000000000000001,
+            "mean_confidence": 0.648128094627495,
+            "upper": 0.7000000000000001
+          },
+          {
+            "count": 16,
+            "empirical_frequency": 0.75,
+            "lower": 0.7000000000000001,
+            "mean_confidence": 0.7571635881886811,
+            "upper": 0.8
+          },
+          {
+            "count": 29,
+            "empirical_frequency": 0.5517241379310345,
+            "lower": 0.8,
+            "mean_confidence": 0.8566326962724026,
+            "upper": 0.9
+          },
+          {
+            "count": 26,
+            "empirical_frequency": 0.7692307692307693,
+            "lower": 0.9,
+            "mean_confidence": 0.9354461680816424,
+            "upper": 1.0
+          }
+        ],
+        "target": "realized_oracle_choice_with_frozen_tie_break"
+      },
+      "outcome_probabilities": {
+        "available": false,
+        "ece": null,
+        "multiclass_brier": null,
+        "n_missing_or_invalid": 318,
+        "n_valid": 0,
+        "nll": null,
+        "per_option": {
+          "base_continue": {
+            "available": false,
+            "ece": null,
+            "multiclass_brier": null,
+            "n_missing_or_invalid": 106,
+            "n_valid": 0,
+            "nll": null,
+            "reliability_bins": []
+          },
+          "detour_complete": {
+            "available": false,
+            "ece": null,
+            "multiclass_brier": null,
+            "n_missing_or_invalid": 106,
+            "n_valid": 0,
+            "nll": null,
+            "reliability_bins": []
+          },
+          "retreat_hold": {
+            "available": false,
+            "ece": null,
+            "multiclass_brier": null,
+            "n_missing_or_invalid": 106,
+            "n_valid": 0,
+            "nll": null,
+            "reliability_bins": []
+          }
+        },
+        "reliability_bins": []
+      },
+      "predicted_advantage": {
+        "available": false,
+        "bins": [],
+        "calibration_error": null,
+        "mae": null,
+        "n_missing_or_invalid": 106,
+        "n_valid": 0,
+        "pearson_correlation": null,
+        "rmse": null
+      }
+    },
+    "DirectQ": {
+      "base_catastrophe_binary": {
+        "available": false,
+        "brier": null,
+        "ece": null,
+        "n_missing_or_invalid": 106,
+        "n_valid": 0,
+        "nll": null,
+        "reason": "not a scalar_risk method",
+        "reliability_bins": [],
+        "target": "base_option_catastrophe"
+      },
+      "choice_probabilities": {
+        "available": false,
+        "ece": null,
+        "multiclass_brier": null,
+        "n_missing_or_invalid": 106,
+        "n_valid": 0,
+        "nll": null,
+        "reliability_bins": [],
+        "target": "realized_oracle_choice_with_frozen_tie_break"
+      },
+      "outcome_probabilities": {
+        "available": false,
+        "ece": null,
+        "multiclass_brier": null,
+        "n_missing_or_invalid": 318,
+        "n_valid": 0,
+        "nll": null,
+        "per_option": {
+          "base_continue": {
+            "available": false,
+            "ece": null,
+            "multiclass_brier": null,
+            "n_missing_or_invalid": 106,
+            "n_valid": 0,
+            "nll": null,
+            "reliability_bins": []
+          },
+          "detour_complete": {
+            "available": false,
+            "ece": null,
+            "multiclass_brier": null,
+            "n_missing_or_invalid": 106,
+            "n_valid": 0,
+            "nll": null,
+            "reliability_bins": []
+          },
+          "retreat_hold": {
+            "available": false,
+            "ece": null,
+            "multiclass_brier": null,
+            "n_missing_or_invalid": 106,
+            "n_valid": 0,
+            "nll": null,
+            "reliability_bins": []
+          }
+        },
+        "reliability_bins": []
+      },
+      "predicted_advantage": {
+        "available": true,
+        "bins": [
+          {
+            "beneficial_fraction": 0.36363636363636365,
+            "count": 11,
+            "predicted_advantage_max": -0.9343854121534259,
+            "predicted_advantage_mean": -1.0943590558608494,
+            "predicted_advantage_min": -1.4451940135358505,
+            "realized_advantage_mean": -0.18181818181818182
+          },
+          {
+            "beneficial_fraction": 0.2727272727272727,
+            "count": 11,
+            "predicted_advantage_max": -0.7320709450963432,
+            "predicted_advantage_mean": -0.8174276480519367,
+            "predicted_advantage_min": -0.9253363070069084,
+            "realized_advantage_mean": 0.0
+          },
+          {
+            "beneficial_fraction": 0.0,
+            "count": 11,
+            "predicted_advantage_max": -0.4166694608903424,
+            "predicted_advantage_mean": -0.5526141892367327,
+            "predicted_advantage_min": -0.7294702364708103,
+            "realized_advantage_mean": -0.6363636363636364
+          },
+          {
+            "beneficial_fraction": 0.09090909090909091,
+            "count": 11,
+            "predicted_advantage_max": -0.15040350407473246,
+            "predicted_advantage_mean": -0.2900896048816283,
+            "predicted_advantage_min": -0.38466644648745274,
+            "realized_advantage_mean": -0.09090909090909091
+          },
+          {
+            "beneficial_fraction": 0.18181818181818182,
+            "count": 11,
+            "predicted_advantage_max": 0.026768717632830952,
+            "predicted_advantage_mean": -0.06681945748978757,
+            "predicted_advantage_min": -0.14603601647980763,
+            "realized_advantage_mean": -0.36363636363636365
+          },
+          {
+            "beneficial_fraction": 0.2727272727272727,
+            "count": 11,
+            "predicted_advantage_max": 0.3487751921405111,
+            "predicted_advantage_mean": 0.17859879301158701,
+            "predicted_advantage_min": 0.031971579481727755,
+            "realized_advantage_mean": 0.0
+          },
+          {
+            "beneficial_fraction": 0.1,
+            "count": 10,
+            "predicted_advantage_max": 0.5720082836348603,
+            "predicted_advantage_mean": 0.4572235359997647,
+            "predicted_advantage_min": 0.37292471832188306,
+            "realized_advantage_mean": -0.2
+          },
+          {
+            "beneficial_fraction": 0.5,
+            "count": 10,
+            "predicted_advantage_max": 0.7708068366763698,
+            "predicted_advantage_mean": 0.6760671151859183,
+            "predicted_advantage_min": 0.5757633040200297,
+            "realized_advantage_mean": 0.5
+          },
+          {
+            "beneficial_fraction": 0.2,
+            "count": 10,
+            "predicted_advantage_max": 1.050352005217051,
+            "predicted_advantage_mean": 0.9069292158878305,
+            "predicted_advantage_min": 0.7714750874293579,
+            "realized_advantage_mean": 0.2
+          },
+          {
+            "beneficial_fraction": 0.4,
+            "count": 10,
+            "predicted_advantage_max": 3.301742018253075,
+            "predicted_advantage_mean": 2.2111941411325287,
+            "predicted_advantage_min": 1.321154963525125,
+            "realized_advantage_mean": 0.5
+          }
+        ],
+        "calibration_error": 0.5649584536597614,
+        "mae": 0.8387007480803018,
+        "n_missing_or_invalid": 0,
+        "n_valid": 106,
+        "pearson_correlation": 0.3083353826661018,
+        "rmse": 1.0458542655723377
+      }
+    },
+    "DirectQ-lambda2": {
+      "base_catastrophe_binary": {
+        "available": false,
+        "brier": null,
+        "ece": null,
+        "n_missing_or_invalid": 106,
+        "n_valid": 0,
+        "nll": null,
+        "reason": "not a scalar_risk method",
+        "reliability_bins": [],
+        "target": "base_option_catastrophe"
+      },
+      "choice_probabilities": {
+        "available": false,
+        "ece": null,
+        "multiclass_brier": null,
+        "n_missing_or_invalid": 106,
+        "n_valid": 0,
+        "nll": null,
+        "reliability_bins": [],
+        "target": "realized_oracle_choice_with_frozen_tie_break"
+      },
+      "outcome_probabilities": {
+        "available": false,
+        "ece": null,
+        "multiclass_brier": null,
+        "n_missing_or_invalid": 318,
+        "n_valid": 0,
+        "nll": null,
+        "per_option": {
+          "base_continue": {
+            "available": false,
+            "ece": null,
+            "multiclass_brier": null,
+            "n_missing_or_invalid": 106,
+            "n_valid": 0,
+            "nll": null,
+            "reliability_bins": []
+          },
+          "detour_complete": {
+            "available": false,
+            "ece": null,
+            "multiclass_brier": null,
+            "n_missing_or_invalid": 106,
+            "n_valid": 0,
+            "nll": null,
+            "reliability_bins": []
+          },
+          "retreat_hold": {
+            "available": false,
+            "ece": null,
+            "multiclass_brier": null,
+            "n_missing_or_invalid": 106,
+            "n_valid": 0,
+            "nll": null,
+            "reliability_bins": []
+          }
+        },
+        "reliability_bins": []
+      },
+      "predicted_advantage": {
+        "available": true,
+        "bins": [
+          {
+            "beneficial_fraction": 0.45454545454545453,
+            "count": 11,
+            "predicted_advantage_max": -1.1802068820913996,
+            "predicted_advantage_mean": -1.443953631081408,
+            "predicted_advantage_min": -1.7560409783460154,
+            "realized_advantage_mean": 0.0
+          },
+          {
+            "beneficial_fraction": 0.09090909090909091,
+            "count": 11,
+            "predicted_advantage_max": -0.8014069970493243,
+            "predicted_advantage_mean": -0.9416254211953938,
+            "predicted_advantage_min": -1.0781853348899917,
+            "realized_advantage_mean": -0.5454545454545454
+          },
+          {
+            "beneficial_fraction": 0.09090909090909091,
+            "count": 11,
+            "predicted_advantage_max": -0.42979201316015186,
+            "predicted_advantage_mean": -0.5960857909541004,
+            "predicted_advantage_min": -0.753811410482991,
+            "realized_advantage_mean": -0.36363636363636365
+          },
+          {
+            "beneficial_fraction": 0.18181818181818182,
+            "count": 11,
+            "predicted_advantage_max": -0.07264172317479711,
+            "predicted_advantage_mean": -0.19134379909423013,
+            "predicted_advantage_min": -0.4071597121886958,
+            "realized_advantage_mean": -0.45454545454545453
+          },
+          {
+            "beneficial_fraction": 0.18181818181818182,
+            "count": 11,
+            "predicted_advantage_max": 0.30026085878125514,
+            "predicted_advantage_mean": 0.10287901738420015,
+            "predicted_advantage_min": -0.06789359957715091,
+            "realized_advantage_mean": -0.2727272727272727
+          },
+          {
+            "beneficial_fraction": 0.2727272727272727,
+            "count": 11,
+            "predicted_advantage_max": 0.7255070682779995,
+            "predicted_advantage_mean": 0.49258113754536104,
+            "predicted_advantage_min": 0.34868117779703567,
+            "realized_advantage_mean": -0.09090909090909091
+          },
+          {
+            "beneficial_fraction": 0.2,
+            "count": 10,
+            "predicted_advantage_max": 0.9839768989752256,
+            "predicted_advantage_mean": 0.8696366794964139,
+            "predicted_advantage_min": 0.7442901803695471,
+            "realized_advantage_mean": -0.2
+          },
+          {
+            "beneficial_fraction": 0.5,
+            "count": 10,
+            "predicted_advantage_max": 1.25580418724556,
+            "predicted_advantage_mean": 1.1339950945139263,
+            "predicted_advantage_min": 0.9943072409999691,
+            "realized_advantage_mean": 0.4
+          },
+          {
+            "beneficial_fraction": 0.3,
+            "count": 10,
+            "predicted_advantage_max": 1.6181071482807814,
+            "predicted_advantage_mean": 1.4202728366898112,
+            "predicted_advantage_min": 1.2888225898815173,
+            "realized_advantage_mean": 0.3
+          },
+          {
+            "beneficial_fraction": 0.4,
+            "count": 10,
+            "predicted_advantage_max": 5.109518216953557,
+            "predicted_advantage_mean": 3.4504329954405732,
+            "predicted_advantage_min": 2.06578728320169,
+            "realized_advantage_mean": 0.5
+          }
+        ],
+        "calibration_error": 0.8961034835012813,
+        "mae": 1.075870633535365,
+        "n_missing_or_invalid": 0,
+        "n_valid": 106,
+        "pearson_correlation": 0.34590893985985455,
+        "rmse": 1.4020369707101583
+      }
+    },
+    "DirectQ-lambda3": {
+      "base_catastrophe_binary": {
+        "available": false,
+        "brier": null,
+        "ece": null,
+        "n_missing_or_invalid": 106,
+        "n_valid": 0,
+        "nll": null,
+        "reason": "not a scalar_risk method",
+        "reliability_bins": [],
+        "target": "base_option_catastrophe"
+      },
+      "choice_probabilities": {
+        "available": false,
+        "ece": null,
+        "multiclass_brier": null,
+        "n_missing_or_invalid": 106,
+        "n_valid": 0,
+        "nll": null,
+        "reliability_bins": [],
+        "target": "realized_oracle_choice_with_frozen_tie_break"
+      },
+      "outcome_probabilities": {
+        "available": false,
+        "ece": null,
+        "multiclass_brier": null,
+        "n_missing_or_invalid": 318,
+        "n_valid": 0,
+        "nll": null,
+        "per_option": {
+          "base_continue": {
+            "available": false,
+            "ece": null,
+            "multiclass_brier": null,
+            "n_missing_or_invalid": 106,
+            "n_valid": 0,
+            "nll": null,
+            "reliability_bins": []
+          },
+          "detour_complete": {
+            "available": false,
+            "ece": null,
+            "multiclass_brier": null,
+            "n_missing_or_invalid": 106,
+            "n_valid": 0,
+            "nll": null,
+            "reliability_bins": []
+          },
+          "retreat_hold": {
+            "available": false,
+            "ece": null,
+            "multiclass_brier": null,
+            "n_missing_or_invalid": 106,
+            "n_valid": 0,
+            "nll": null,
+            "reliability_bins": []
+          }
+        },
+        "reliability_bins": []
+      },
+      "predicted_advantage": {
+        "available": true,
+        "bins": [
+          {
+            "beneficial_fraction": 0.45454545454545453,
+            "count": 11,
+            "predicted_advantage_max": -1.4686861112466767,
+            "predicted_advantage_mean": -1.763546726912554,
+            "predicted_advantage_min": -2.2031886029873804,
+            "realized_advantage_mean": 0.0
+          },
+          {
+            "beneficial_fraction": 0.09090909090909091,
+            "count": 11,
+            "predicted_advantage_max": -0.898971873479457,
+            "predicted_advantage_mean": -1.052927331767802,
+            "predicted_advantage_min": -1.2858528104904654,
+            "realized_advantage_mean": -0.5454545454545454
+          },
+          {
+            "beneficial_fraction": 0.09090909090909091,
+            "count": 11,
+            "predicted_advantage_max": -0.31243609276239837,
+            "predicted_advantage_mean": -0.5793525658887728,
+            "predicted_advantage_min": -0.7650975775438711,
+            "realized_advantage_mean": -0.45454545454545453
+          },
+          {
+            "beneficial_fraction": 0.18181818181818182,
+            "count": 11,
+            "predicted_advantage_max": 0.09938444753360265,
+            "predicted_advantage_mean": -0.05835937092781615,
+            "predicted_advantage_min": -0.23408409899302168,
+            "realized_advantage_mean": -0.45454545454545453
+          },
+          {
+            "beneficial_fraction": 0.18181818181818182,
+            "count": 11,
+            "predicted_advantage_max": 0.6306766076259653,
+            "predicted_advantage_mean": 0.33113113586040027,
+            "predicted_advantage_min": 0.11004896209505632,
+            "realized_advantage_mean": -0.5454545454545454
+          },
+          {
+            "beneficial_fraction": 0.2727272727272727,
+            "count": 11,
+            "predicted_advantage_max": 1.0748417388906377,
+            "predicted_advantage_mean": 0.8377119975024944,
+            "predicted_advantage_min": 0.6787530636846932,
+            "realized_advantage_mean": -0.09090909090909091
+          },
+          {
+            "beneficial_fraction": 0.2,
+            "count": 10,
+            "predicted_advantage_max": 1.4307364319021691,
+            "predicted_advantage_mean": 1.320776229773434,
+            "predicted_advantage_min": 1.1501759170850399,
+            "realized_advantage_mean": -0.2
+          },
+          {
+            "beneficial_fraction": 0.5,
+            "count": 10,
+            "predicted_advantage_max": 1.8017124075644209,
+            "predicted_advantage_mean": 1.6623785535072226,
+            "predicted_advantage_min": 1.4388093509265325,
+            "realized_advantage_mean": 0.4
+          },
+          {
+            "beneficial_fraction": 0.5,
+            "count": 10,
+            "predicted_advantage_max": 2.46540745988519,
+            "predicted_advantage_mean": 2.008435229786825,
+            "predicted_advantage_min": 1.825473957563493,
+            "realized_advantage_mean": 0.4
+          },
+          {
+            "beneficial_fraction": 0.4,
+            "count": 10,
+            "predicted_advantage_max": 6.917294415654061,
+            "predicted_advantage_mean": 4.68967184974864,
+            "predicted_advantage_min": 2.810419602878271,
+            "realized_advantage_mean": 0.5
+          }
+        ],
+        "calibration_error": 1.2866229517472407,
+        "mae": 1.413502432773193,
+        "n_missing_or_invalid": 0,
+        "n_valid": 106,
+        "pearson_correlation": 0.35031637129887805,
+        "rmse": 1.8490030897799468
+      }
+    },
+    "DirectQ-lambda5": {
+      "base_catastrophe_binary": {
+        "available": false,
+        "brier": null,
+        "ece": null,
+        "n_missing_or_invalid": 106,
+        "n_valid": 0,
+        "nll": null,
+        "reason": "not a scalar_risk method",
+        "reliability_bins": [],
+        "target": "base_option_catastrophe"
+      },
+      "choice_probabilities": {
+        "available": false,
+        "ece": null,
+        "multiclass_brier": null,
+        "n_missing_or_invalid": 106,
+        "n_valid": 0,
+        "nll": null,
+        "reliability_bins": [],
+        "target": "realized_oracle_choice_with_frozen_tie_break"
+      },
+      "outcome_probabilities": {
+        "available": false,
+        "ece": null,
+        "multiclass_brier": null,
+        "n_missing_or_invalid": 318,
+        "n_valid": 0,
+        "nll": null,
+        "per_option": {
+          "base_continue": {
+            "available": false,
+            "ece": null,
+            "multiclass_brier": null,
+            "n_missing_or_invalid": 106,
+            "n_valid": 0,
+            "nll": null,
+            "reliability_bins": []
+          },
+          "detour_complete": {
+            "available": false,
+            "ece": null,
+            "multiclass_brier": null,
+            "n_missing_or_invalid": 106,
+            "n_valid": 0,
+            "nll": null,
+            "reliability_bins": []
+          },
+          "retreat_hold": {
+            "available": false,
+            "ece": null,
+            "multiclass_brier": null,
+            "n_missing_or_invalid": 106,
+            "n_valid": 0,
+            "nll": null,
+            "reliability_bins": []
+          }
+        },
+        "reliability_bins": []
+      },
+      "predicted_advantage": {
+        "available": true,
+        "bins": [
+          {
+            "beneficial_fraction": 0.45454545454545453,
+            "count": 11,
+            "predicted_advantage_max": -2.0456445695572407,
+            "predicted_advantage_mean": -2.381508176086529,
+            "predicted_advantage_min": -3.097483852270111,
+            "realized_advantage_mean": 0.0
+          },
+          {
+            "beneficial_fraction": 0.09090909090909091,
+            "count": 11,
+            "predicted_advantage_max": -0.8983870389165571,
+            "predicted_advantage_mean": -1.26015101520078,
+            "predicted_advantage_min": -1.7011877616913997,
+            "realized_advantage_mean": -0.6363636363636364
+          },
+          {
+            "beneficial_fraction": 0.09090909090909091,
+            "count": 11,
+            "predicted_advantage_max": -0.07772425196689603,
+            "predicted_advantage_mean": -0.5078652443914251,
+            "predicted_advantage_min": -0.8750551359748445,
+            "realized_advantage_mean": -0.45454545454545453
+          },
+          {
+            "beneficial_fraction": 0.09090909090909091,
+            "count": 11,
+            "predicted_advantage_max": 0.4785153380500893,
+            "predicted_advantage_mean": 0.2122967477648021,
+            "predicted_advantage_min": -0.05149873709570307,
+            "realized_advantage_mean": -0.6363636363636364
+          },
+          {
+            "beneficial_fraction": 0.2727272727272727,
+            "count": 11,
+            "predicted_advantage_max": 1.1204428002592643,
+            "predicted_advantage_mean": 0.8318409899312518,
+            "predicted_advantage_min": 0.5154386883508968,
+            "realized_advantage_mean": -0.45454545454545453
+          },
+          {
+            "beneficial_fraction": 0.45454545454545453,
+            "count": 11,
+            "predicted_advantage_max": 1.774740622104804,
+            "predicted_advantage_mean": 1.5616256123103616,
+            "predicted_advantage_min": 1.2689418728843722,
+            "realized_advantage_mean": 0.18181818181818182
+          },
+          {
+            "beneficial_fraction": 0.1,
+            "count": 10,
+            "predicted_advantage_max": 2.47092097393727,
+            "predicted_advantage_mean": 2.248163982703671,
+            "predicted_advantage_min": 1.9033827155813743,
+            "realized_advantage_mean": -0.4
+          },
+          {
+            "beneficial_fraction": 0.7,
+            "count": 10,
+            "predicted_advantage_max": 2.964813498199361,
+            "predicted_advantage_mean": 2.690700385548726,
+            "predicted_advantage_min": 2.481798947237956,
+            "realized_advantage_mean": 0.7
+          },
+          {
+            "beneficial_fraction": 0.7,
+            "count": 10,
+            "predicted_advantage_max": 4.16000808309404,
+            "predicted_advantage_mean": 3.3487281210046795,
+            "predicted_advantage_min": 2.9816558280921956,
+            "realized_advantage_mean": 0.5
+          },
+          {
+            "beneficial_fraction": 0.4,
+            "count": 10,
+            "predicted_advantage_max": 10.532846813055112,
+            "predicted_advantage_mean": 7.16814955836478,
+            "predicted_advantage_min": 4.299684242231445,
+            "realized_advantage_mean": 0.5
+          }
+        ],
+        "calibration_error": 2.0175998690448607,
+        "mae": 2.114139243280352,
+        "n_missing_or_invalid": 0,
+        "n_valid": 106,
+        "pearson_correlation": 0.36742054806568175,
+        "rmse": 2.7936894862101447
+      }
+    },
+    "DirectQ-lambda8": {
+      "base_catastrophe_binary": {
+        "available": false,
+        "brier": null,
+        "ece": null,
+        "n_missing_or_invalid": 106,
+        "n_valid": 0,
+        "nll": null,
+        "reason": "not a scalar_risk method",
+        "reliability_bins": [],
+        "target": "base_option_catastrophe"
+      },
+      "choice_probabilities": {
+        "available": false,
+        "ece": null,
+        "multiclass_brier": null,
+        "n_missing_or_invalid": 106,
+        "n_valid": 0,
+        "nll": null,
+        "reliability_bins": [],
+        "target": "realized_oracle_choice_with_frozen_tie_break"
+      },
+      "outcome_probabilities": {
+        "available": false,
+        "ece": null,
+        "multiclass_brier": null,
+        "n_missing_or_invalid": 318,
+        "n_valid": 0,
+        "nll": null,
+        "per_option": {
+          "base_continue": {
+            "available": false,
+            "ece": null,
+            "multiclass_brier": null,
+            "n_missing_or_invalid": 106,
+            "n_valid": 0,
+            "nll": null,
+            "reliability_bins": []
+          },
+          "detour_complete": {
+            "available": false,
+            "ece": null,
+            "multiclass_brier": null,
+            "n_missing_or_invalid": 106,
+            "n_valid": 0,
+            "nll": null,
+            "reliability_bins": []
+          },
+          "retreat_hold": {
+            "available": false,
+            "ece": null,
+            "multiclass_brier": null,
+            "n_missing_or_invalid": 106,
+            "n_valid": 0,
+            "nll": null,
+            "reliability_bins": []
+          }
+        },
+        "reliability_bins": []
+      },
+      "predicted_advantage": {
+        "available": true,
+        "bins": [
+          {
+            "beneficial_fraction": 0.45454545454545453,
+            "count": 11,
+            "predicted_advantage_max": -2.8392278537345557,
+            "predicted_advantage_mean": -3.308450349847511,
+            "predicted_advantage_min": -4.438926726194219,
+            "realized_advantage_mean": 0.0
+          },
+          {
+            "beneficial_fraction": 0.0,
+            "count": 11,
+            "predicted_advantage_max": -0.9414855394800823,
+            "predicted_advantage_mean": -1.5643894249308374,
+            "predicted_advantage_min": -2.3241901884928353,
+            "realized_advantage_mean": -0.8181818181818182
+          },
+          {
+            "beneficial_fraction": 0.18181818181818182,
+            "count": 11,
+            "predicted_advantage_max": 0.2223793057502621,
+            "predicted_advantage_mean": -0.37714016889598073,
+            "predicted_advantage_min": -0.8709207121878374,
+            "realized_advantage_mean": -0.36363636363636365
+          },
+          {
+            "beneficial_fraction": 0.09090909090909091,
+            "count": 11,
+            "predicted_advantage_max": 1.063282638828954,
+            "predicted_advantage_mean": 0.6711237517647032,
+            "predicted_advantage_min": 0.27434350922635625,
+            "realized_advantage_mean": -0.6363636363636364
+          },
+          {
+            "beneficial_fraction": 0.2727272727272727,
+            "count": 11,
+            "predicted_advantage_max": 2.038682793389783,
+            "predicted_advantage_mean": 1.6003108975174614,
+            "predicted_advantage_min": 1.1235232777346607,
+            "realized_advantage_mean": -0.2727272727272727
+          },
+          {
+            "beneficial_fraction": 0.45454545454545453,
+            "count": 11,
+            "predicted_advantage_max": 3.1234766470877697,
+            "predicted_advantage_mean": 2.7021971612694955,
+            "predicted_advantage_min": 2.219392699168407,
+            "realized_advantage_mean": 0.0
+          },
+          {
+            "beneficial_fraction": 0.1,
+            "count": 10,
+            "predicted_advantage_max": 3.752534166600687,
+            "predicted_advantage_mean": 3.547776010513361,
+            "predicted_advantage_min": 3.306941067656089,
+            "realized_advantage_mean": -0.3
+          },
+          {
+            "beneficial_fraction": 0.7,
+            "count": 10,
+            "predicted_advantage_max": 4.697302444583271,
+            "predicted_advantage_mean": 4.377364098153469,
+            "predicted_advantage_min": 3.8912628062887076,
+            "realized_advantage_mean": 0.6
+          },
+          {
+            "beneficial_fraction": 0.6,
+            "count": 10,
+            "predicted_advantage_max": 6.533581201261249,
+            "predicted_advantage_mean": 5.406391941720352,
+            "predicted_advantage_min": 4.800108248591206,
+            "realized_advantage_mean": 0.4
+          },
+          {
+            "beneficial_fraction": 0.5,
+            "count": 10,
+            "predicted_advantage_max": 15.956175409156653,
+            "predicted_advantage_mean": 10.902698902953583,
+            "predicted_advantage_min": 6.701909017907263,
+            "realized_advantage_mean": 0.6
+          }
+        ],
+        "calibration_error": 3.1962456493386187,
+        "mae": 3.3048071882242613,
+        "n_missing_or_invalid": 0,
+        "n_valid": 106,
+        "pearson_correlation": 0.3742236948478793,
+        "rmse": 4.335191904702977
+      }
+    },
+    "GeometryOracle-condition": {
+      "base_catastrophe_binary": {
+        "available": false,
+        "brier": null,
+        "ece": null,
+        "n_missing_or_invalid": 106,
+        "n_valid": 0,
+        "nll": null,
+        "reason": "not a scalar_risk method",
+        "reliability_bins": [],
+        "target": "base_option_catastrophe"
+      },
+      "choice_probabilities": {
+        "available": false,
+        "ece": null,
+        "multiclass_brier": null,
+        "n_missing_or_invalid": 106,
+        "n_valid": 0,
+        "nll": null,
+        "reliability_bins": [],
+        "target": "realized_oracle_choice_with_frozen_tie_break"
+      },
+      "outcome_probabilities": {
+        "available": false,
+        "ece": null,
+        "multiclass_brier": null,
+        "n_missing_or_invalid": 318,
+        "n_valid": 0,
+        "nll": null,
+        "per_option": {
+          "base_continue": {
+            "available": false,
+            "ece": null,
+            "multiclass_brier": null,
+            "n_missing_or_invalid": 106,
+            "n_valid": 0,
+            "nll": null,
+            "reliability_bins": []
+          },
+          "detour_complete": {
+            "available": false,
+            "ece": null,
+            "multiclass_brier": null,
+            "n_missing_or_invalid": 106,
+            "n_valid": 0,
+            "nll": null,
+            "reliability_bins": []
+          },
+          "retreat_hold": {
+            "available": false,
+            "ece": null,
+            "multiclass_brier": null,
+            "n_missing_or_invalid": 106,
+            "n_valid": 0,
+            "nll": null,
+            "reliability_bins": []
+          }
+        },
+        "reliability_bins": []
+      },
+      "predicted_advantage": {
+        "available": false,
+        "bins": [],
+        "calibration_error": null,
+        "mae": null,
+        "n_missing_or_invalid": 106,
+        "n_valid": 0,
+        "pearson_correlation": null,
+        "rmse": null
+      }
+    },
+    "OutcomeRouter": {
+      "base_catastrophe_binary": {
+        "available": false,
+        "brier": null,
+        "ece": null,
+        "n_missing_or_invalid": 106,
+        "n_valid": 0,
+        "nll": null,
+        "reason": "not a scalar_risk method",
+        "reliability_bins": [],
+        "target": "base_option_catastrophe"
+      },
+      "choice_probabilities": {
+        "available": false,
+        "ece": null,
+        "multiclass_brier": null,
+        "n_missing_or_invalid": 106,
+        "n_valid": 0,
+        "nll": null,
+        "reliability_bins": [],
+        "target": "realized_oracle_choice_with_frozen_tie_break"
+      },
+      "outcome_probabilities": {
+        "available": true,
+        "ece": 0.162576899230293,
+        "multiclass_brier": 0.44115334149903174,
+        "n_missing_or_invalid": 0,
+        "n_valid": 318,
+        "nll": 0.8799020712073183,
+        "per_option": {
+          "base_continue": {
+            "available": true,
+            "ece": 0.13672252958916817,
+            "multiclass_brier": 0.48521199653556824,
+            "n_missing_or_invalid": 0,
+            "n_valid": 106,
+            "nll": 1.1710052340635992,
+            "reliability_bins": [
+              {
+                "count": 1,
+                "empirical_frequency": 0.0,
+                "lower": 0.30000000000000004,
+                "mean_confidence": 0.3761090119003048,
+                "upper": 0.4
+              },
+              {
+                "count": 4,
+                "empirical_frequency": 0.25,
+                "lower": 0.4,
+                "mean_confidence": 0.470340404368355,
+                "upper": 0.5
+              },
+              {
+                "count": 13,
+                "empirical_frequency": 0.46153846153846156,
+                "lower": 0.5,
+                "mean_confidence": 0.5579667923490229,
+                "upper": 0.6000000000000001
+              },
+              {
+                "count": 11,
+                "empirical_frequency": 0.45454545454545453,
+                "lower": 0.6000000000000001,
+                "mean_confidence": 0.6672930666785105,
+                "upper": 0.7000000000000001
+              },
+              {
+                "count": 16,
+                "empirical_frequency": 0.625,
+                "lower": 0.7000000000000001,
+                "mean_confidence": 0.7578371948341114,
+                "upper": 0.8
+              },
+              {
+                "count": 21,
+                "empirical_frequency": 0.7142857142857143,
+                "lower": 0.8,
+                "mean_confidence": 0.8518404353305351,
+                "upper": 0.9
+              },
+              {
+                "count": 40,
+                "empirical_frequency": 0.85,
+                "lower": 0.9,
+                "mean_confidence": 0.9656820303447542,
+                "upper": 1.0
+              }
+            ]
+          },
+          "detour_complete": {
+            "available": true,
+            "ece": 0.3625272580335782,
+            "multiclass_brier": 0.824434778423531,
+            "n_missing_or_invalid": 0,
+            "n_valid": 106,
+            "nll": 1.430617047916207,
+            "reliability_bins": [
+              {
+                "count": 3,
+                "empirical_frequency": 0.3333333333333333,
+                "lower": 0.30000000000000004,
+                "mean_confidence": 0.3807272709482125,
+                "upper": 0.4
+              },
+              {
+                "count": 17,
+                "empirical_frequency": 0.17647058823529413,
+                "lower": 0.4,
+                "mean_confidence": 0.45840639425922064,
+                "upper": 0.5
+              },
+              {
+                "count": 20,
+                "empirical_frequency": 0.3,
+                "lower": 0.5,
+                "mean_confidence": 0.5488921070045993,
+                "upper": 0.6000000000000001
+              },
+              {
+                "count": 21,
+                "empirical_frequency": 0.3333333333333333,
+                "lower": 0.6000000000000001,
+                "mean_confidence": 0.655474638262078,
+                "upper": 0.7000000000000001
+              },
+              {
+                "count": 11,
+                "empirical_frequency": 0.2727272727272727,
+                "lower": 0.7000000000000001,
+                "mean_confidence": 0.7414471359040605,
+                "upper": 0.8
+              },
+              {
+                "count": 18,
+                "empirical_frequency": 0.3888888888888889,
+                "lower": 0.8,
+                "mean_confidence": 0.8583442372752681,
+                "upper": 0.9
+              },
+              {
+                "count": 16,
+                "empirical_frequency": 0.4375,
+                "lower": 0.9,
+                "mean_confidence": 0.9464921579257993,
+                "upper": 1.0
+              }
+            ]
+          },
+          "retreat_hold": {
+            "available": true,
+            "ece": 0.02635843396967774,
+            "multiclass_brier": 0.013813249537995804,
+            "n_missing_or_invalid": 0,
+            "n_valid": 106,
+            "nll": 0.03808393164214856,
+            "reliability_bins": [
+              {
+                "count": 1,
+                "empirical_frequency": 0.0,
+                "lower": 0.7000000000000001,
+                "mean_confidence": 0.7864852340039488,
+                "upper": 0.8
+              },
+              {
+                "count": 1,
+                "empirical_frequency": 1.0,
+                "lower": 0.8,
+                "mean_confidence": 0.8938174216634225,
+                "upper": 0.9
+              },
+              {
+                "count": 104,
+                "empirical_frequency": 1.0,
+                "lower": 0.9,
+                "mean_confidence": 0.981718017418795,
+                "upper": 1.0
+              }
+            ]
+          }
+        },
+        "reliability_bins": [
+          {
+            "count": 4,
+            "empirical_frequency": 0.25,
+            "lower": 0.30000000000000004,
+            "mean_confidence": 0.37957270618623556,
+            "upper": 0.4
+          },
+          {
+            "count": 21,
+            "empirical_frequency": 0.19047619047619047,
+            "lower": 0.4,
+            "mean_confidence": 0.4606795390419129,
+            "upper": 0.5
+          },
+          {
+            "count": 33,
+            "empirical_frequency": 0.36363636363636365,
+            "lower": 0.5,
+            "mean_confidence": 0.5524669830493723,
+            "upper": 0.6000000000000001
+          },
+          {
+            "count": 32,
+            "empirical_frequency": 0.375,
+            "lower": 0.6000000000000001,
+            "mean_confidence": 0.6595372230302268,
+            "upper": 0.7000000000000001
+          },
+          {
+            "count": 28,
+            "empirical_frequency": 0.4642857142857143,
+            "lower": 0.7000000000000001,
+            "mean_confidence": 0.7524213873676571,
+            "upper": 0.8
+          },
+          {
+            "count": 40,
+            "empirical_frequency": 0.575,
+            "lower": 0.8,
+            "mean_confidence": 0.8558165708639873,
+            "upper": 0.9
+          },
+          {
+            "count": 160,
+            "empirical_frequency": 0.90625,
+            "lower": 0.9,
+            "mean_confidence": 0.9741864347009852,
+            "upper": 1.0
+          }
+        ]
+      },
+      "predicted_advantage": {
+        "available": true,
+        "bins": [
+          {
+            "beneficial_fraction": 0.09090909090909091,
+            "count": 11,
+            "predicted_advantage_max": -0.6170978027951526,
+            "predicted_advantage_mean": -0.7133698429790141,
+            "predicted_advantage_min": -0.8159269541994377,
+            "realized_advantage_mean": -0.18181818181818182
+          },
+          {
+            "beneficial_fraction": 0.09090909090909091,
+            "count": 11,
+            "predicted_advantage_max": -0.4966182202671451,
+            "predicted_advantage_mean": -0.5546760134483509,
+            "predicted_advantage_min": -0.6011753355641505,
+            "realized_advantage_mean": -0.45454545454545453
+          },
+          {
+            "beneficial_fraction": 0.2727272727272727,
+            "count": 11,
+            "predicted_advantage_max": -0.3474056542322859,
+            "predicted_advantage_mean": -0.41008219367595156,
+            "predicted_advantage_min": -0.48374534479713854,
+            "realized_advantage_mean": -0.09090909090909091
+          },
+          {
+            "beneficial_fraction": 0.18181818181818182,
+            "count": 11,
+            "predicted_advantage_max": -0.16910760224852978,
+            "predicted_advantage_mean": -0.25885951826430065,
+            "predicted_advantage_min": -0.3469934345774971,
+            "realized_advantage_mean": -0.09090909090909091
+          },
+          {
+            "beneficial_fraction": 0.2727272727272727,
+            "count": 11,
+            "predicted_advantage_max": -0.0973172349778384,
+            "predicted_advantage_mean": -0.12861506902307196,
+            "predicted_advantage_min": -0.16519153568579606,
+            "realized_advantage_mean": 0.18181818181818182
+          },
+          {
+            "beneficial_fraction": 0.2727272727272727,
+            "count": 11,
+            "predicted_advantage_max": 0.07073189309043493,
+            "predicted_advantage_mean": -0.006794095443962922,
+            "predicted_advantage_min": -0.07098168807829164,
+            "realized_advantage_mean": 0.18181818181818182
+          },
+          {
+            "beneficial_fraction": 0.1,
+            "count": 10,
+            "predicted_advantage_max": 0.3272585422535865,
+            "predicted_advantage_mean": 0.18452441011157752,
+            "predicted_advantage_min": 0.07484759946995467,
+            "realized_advantage_mean": -0.1
+          },
+          {
+            "beneficial_fraction": 0.4,
+            "count": 10,
+            "predicted_advantage_max": 0.8215817608259918,
+            "predicted_advantage_mean": 0.5019106925837005,
+            "predicted_advantage_min": 0.32956382864124906,
+            "realized_advantage_mean": 0.3
+          },
+          {
+            "beneficial_fraction": 0.4,
+            "count": 10,
+            "predicted_advantage_max": 1.0984781607810665,
+            "predicted_advantage_mean": 0.9821708567728813,
+            "predicted_advantage_min": 0.8625681220873964,
+            "realized_advantage_mean": 0.5
+          },
+          {
+            "beneficial_fraction": 0.3,
+            "count": 10,
+            "predicted_advantage_max": 1.6502266046045384,
+            "predicted_advantage_mean": 1.3848787744443416,
+            "predicted_advantage_min": 1.10231943496682,
+            "realized_advantage_mean": 0.3
+          }
+        ],
+        "calibration_error": 0.361615201889681,
+        "mae": 0.672471046607078,
+        "n_missing_or_invalid": 0,
+        "n_valid": 106,
+        "pearson_correlation": 0.28002877559724115,
+        "rmse": 0.8455873205840254
+      }
+    },
+    "OutcomeRouter-hidden-only": {
+      "base_catastrophe_binary": {
+        "available": false,
+        "brier": null,
+        "ece": null,
+        "n_missing_or_invalid": 106,
+        "n_valid": 0,
+        "nll": null,
+        "reason": "not a scalar_risk method",
+        "reliability_bins": [],
+        "target": "base_option_catastrophe"
+      },
+      "choice_probabilities": {
+        "available": false,
+        "ece": null,
+        "multiclass_brier": null,
+        "n_missing_or_invalid": 106,
+        "n_valid": 0,
+        "nll": null,
+        "reliability_bins": [],
+        "target": "realized_oracle_choice_with_frozen_tie_break"
+      },
+      "outcome_probabilities": {
+        "available": true,
+        "ece": 0.12375262900227352,
+        "multiclass_brier": 0.4392776781830939,
+        "n_missing_or_invalid": 0,
+        "n_valid": 318,
+        "nll": 0.8416606923387538,
+        "per_option": {
+          "base_continue": {
+            "available": true,
+            "ece": 0.16557034085121314,
+            "multiclass_brier": 0.5532724155321662,
+            "n_missing_or_invalid": 0,
+            "n_valid": 106,
+            "nll": 1.2397930510753825,
+            "reliability_bins": [
+              {
+                "count": 2,
+                "empirical_frequency": 0.5,
+                "lower": 0.4,
+                "mean_confidence": 0.4751207777191756,
+                "upper": 0.5
+              },
+              {
+                "count": 15,
+                "empirical_frequency": 0.4666666666666667,
+                "lower": 0.5,
+                "mean_confidence": 0.5654186473455796,
+                "upper": 0.6000000000000001
+              },
+              {
+                "count": 15,
+                "empirical_frequency": 0.6,
+                "lower": 0.6000000000000001,
+                "mean_confidence": 0.6507558922153412,
+                "upper": 0.7000000000000001
+              },
+              {
+                "count": 22,
+                "empirical_frequency": 0.5454545454545454,
+                "lower": 0.7000000000000001,
+                "mean_confidence": 0.7544580020472934,
+                "upper": 0.8
+              },
+              {
+                "count": 22,
+                "empirical_frequency": 0.5909090909090909,
+                "lower": 0.8,
+                "mean_confidence": 0.8565202014880373,
+                "upper": 0.9
+              },
+              {
+                "count": 30,
+                "empirical_frequency": 0.8,
+                "lower": 0.9,
+                "mean_confidence": 0.9605519704825285,
+                "upper": 1.0
+              }
+            ]
+          },
+          "detour_complete": {
+            "available": true,
+            "ece": 0.19608744602881717,
+            "multiclass_brier": 0.6602722465398243,
+            "n_missing_or_invalid": 0,
+            "n_valid": 106,
+            "nll": 1.091747868862842,
+            "reliability_bins": [
+              {
+                "count": 4,
+                "empirical_frequency": 0.25,
+                "lower": 0.30000000000000004,
+                "mean_confidence": 0.387594599534393,
+                "upper": 0.4
+              },
+              {
+                "count": 25,
+                "empirical_frequency": 0.56,
+                "lower": 0.4,
+                "mean_confidence": 0.4667738820129643,
+                "upper": 0.5
+              },
+              {
+                "count": 31,
+                "empirical_frequency": 0.2903225806451613,
+                "lower": 0.5,
+                "mean_confidence": 0.5514974274213468,
+                "upper": 0.6000000000000001
+              },
+              {
+                "count": 30,
+                "empirical_frequency": 0.4666666666666667,
+                "lower": 0.6000000000000001,
+                "mean_confidence": 0.6422652846091886,
+                "upper": 0.7000000000000001
+              },
+              {
+                "count": 11,
+                "empirical_frequency": 0.5454545454545454,
+                "lower": 0.7000000000000001,
+                "mean_confidence": 0.752385033340426,
+                "upper": 0.8
+              },
+              {
+                "count": 5,
+                "empirical_frequency": 0.4,
+                "lower": 0.8,
+                "mean_confidence": 0.8527247552318122,
+                "upper": 0.9
+              }
+            ]
+          },
+          "retreat_hold": {
+            "available": true,
+            "ece": 0.04348859777486744,
+            "multiclass_brier": 0.10428837247729117,
+            "n_missing_or_invalid": 0,
+            "n_valid": 106,
+            "nll": 0.19344115707803766,
+            "reliability_bins": [
+              {
+                "count": 1,
+                "empirical_frequency": 0.0,
+                "lower": 0.4,
+                "mean_confidence": 0.47257978266764267,
+                "upper": 0.5
+              },
+              {
+                "count": 1,
+                "empirical_frequency": 0.0,
+                "lower": 0.6000000000000001,
+                "mean_confidence": 0.6047375877592677,
+                "upper": 0.7000000000000001
+              },
+              {
+                "count": 2,
+                "empirical_frequency": 0.5,
+                "lower": 0.7000000000000001,
+                "mean_confidence": 0.7428482112353628,
+                "upper": 0.8
+              },
+              {
+                "count": 9,
+                "empirical_frequency": 0.6666666666666666,
+                "lower": 0.8,
+                "mean_confidence": 0.8581407753953179,
+                "upper": 0.9
+              },
+              {
+                "count": 93,
+                "empirical_frequency": 0.978494623655914,
+                "lower": 0.9,
+                "mean_confidence": 0.9642633269604253,
+                "upper": 1.0
+              }
+            ]
+          }
+        },
+        "reliability_bins": [
+          {
+            "count": 4,
+            "empirical_frequency": 0.25,
+            "lower": 0.30000000000000004,
+            "mean_confidence": 0.387594599534393,
+            "upper": 0.4
+          },
+          {
+            "count": 28,
+            "empirical_frequency": 0.5357142857142857,
+            "lower": 0.4,
+            "mean_confidence": 0.4675774424439321,
+            "upper": 0.5
+          },
+          {
+            "count": 46,
+            "empirical_frequency": 0.34782608695652173,
+            "lower": 0.5,
+            "mean_confidence": 0.5560369556575097,
+            "upper": 0.6000000000000001
+          },
+          {
+            "count": 46,
+            "empirical_frequency": 0.5,
+            "lower": 0.6000000000000001,
+            "mean_confidence": 0.644218141505762,
+            "upper": 0.7000000000000001
+          },
+          {
+            "count": 35,
+            "empirical_frequency": 0.5428571428571428,
+            "lower": 0.7000000000000001,
+            "mean_confidence": 0.753143080978739,
+            "upper": 0.8
+          },
+          {
+            "count": 36,
+            "empirical_frequency": 0.5833333333333334,
+            "lower": 0.8,
+            "mean_confidence": 0.8563981996514927,
+            "upper": 0.9
+          },
+          {
+            "count": 123,
+            "empirical_frequency": 0.9349593495934959,
+            "lower": 0.9,
+            "mean_confidence": 0.9633581180633773,
+            "upper": 1.0
+          }
+        ]
+      },
+      "predicted_advantage": {
+        "available": true,
+        "bins": [
+          {
+            "beneficial_fraction": 0.18181818181818182,
+            "count": 11,
+            "predicted_advantage_max": -0.4972895280762216,
+            "predicted_advantage_mean": -0.6145427445912937,
+            "predicted_advantage_min": -0.763930461146903,
+            "realized_advantage_mean": -0.18181818181818182
+          },
+          {
+            "beneficial_fraction": 0.0,
+            "count": 11,
+            "predicted_advantage_max": -0.3672458183378544,
+            "predicted_advantage_mean": -0.4252312179500326,
+            "predicted_advantage_min": -0.4893433135812293,
+            "realized_advantage_mean": -0.36363636363636365
+          },
+          {
+            "beneficial_fraction": 0.45454545454545453,
+            "count": 11,
+            "predicted_advantage_max": -0.275927375517369,
+            "predicted_advantage_mean": -0.3167244309676448,
+            "predicted_advantage_min": -0.3647971921481701,
+            "realized_advantage_mean": 0.45454545454545453
+          },
+          {
+            "beneficial_fraction": 0.18181818181818182,
+            "count": 11,
+            "predicted_advantage_max": -0.18648071472572914,
+            "predicted_advantage_mean": -0.23276112205880456,
+            "predicted_advantage_min": -0.26401092670790594,
+            "realized_advantage_mean": 0.0
+          },
+          {
+            "beneficial_fraction": 0.18181818181818182,
+            "count": 11,
+            "predicted_advantage_max": -0.03027762486204591,
+            "predicted_advantage_mean": -0.11791738034243551,
+            "predicted_advantage_min": -0.16217119370703703,
+            "realized_advantage_mean": 0.0
+          },
+          {
+            "beneficial_fraction": 0.2727272727272727,
+            "count": 11,
+            "predicted_advantage_max": 0.06363732729314442,
+            "predicted_advantage_mean": 0.0323496030312069,
+            "predicted_advantage_min": -0.0024675182166161713,
+            "realized_advantage_mean": 0.18181818181818182
+          },
+          {
+            "beneficial_fraction": 0.5,
+            "count": 10,
+            "predicted_advantage_max": 0.39154212121390725,
+            "predicted_advantage_mean": 0.19033322555438872,
+            "predicted_advantage_min": 0.06834047679763167,
+            "realized_advantage_mean": 0.6
+          },
+          {
+            "beneficial_fraction": 0.2,
+            "count": 10,
+            "predicted_advantage_max": 0.6246946982491624,
+            "predicted_advantage_mean": 0.5222393976611739,
+            "predicted_advantage_min": 0.391794792961806,
+            "realized_advantage_mean": 0.3
+          },
+          {
+            "beneficial_fraction": 0.0,
+            "count": 10,
+            "predicted_advantage_max": 0.892228448771364,
+            "predicted_advantage_mean": 0.8068073160301488,
+            "predicted_advantage_min": 0.7179382410962988,
+            "realized_advantage_mean": -0.2
+          },
+          {
+            "beneficial_fraction": 0.4,
+            "count": 10,
+            "predicted_advantage_max": 1.4111687593424829,
+            "predicted_advantage_mean": 1.2093266732756764,
+            "predicted_advantage_min": 0.8939137807843532,
+            "realized_advantage_mean": 0.4
+          }
+        ],
+        "calibration_error": 0.41418397958297315,
+        "mae": 0.6938179633178007,
+        "n_missing_or_invalid": 0,
+        "n_valid": 106,
+        "pearson_correlation": 0.16045778366241475,
+        "rmse": 0.8614533694867683
+      }
+    },
+    "OutcomeRouter-state-action-only": {
+      "base_catastrophe_binary": {
+        "available": false,
+        "brier": null,
+        "ece": null,
+        "n_missing_or_invalid": 106,
+        "n_valid": 0,
+        "nll": null,
+        "reason": "not a scalar_risk method",
+        "reliability_bins": [],
+        "target": "base_option_catastrophe"
+      },
+      "choice_probabilities": {
+        "available": false,
+        "ece": null,
+        "multiclass_brier": null,
+        "n_missing_or_invalid": 106,
+        "n_valid": 0,
+        "nll": null,
+        "reliability_bins": [],
+        "target": "realized_oracle_choice_with_frozen_tie_break"
+      },
+      "outcome_probabilities": {
+        "available": true,
+        "ece": 0.10963020034401709,
+        "multiclass_brier": 0.44556871294892103,
+        "n_missing_or_invalid": 0,
+        "n_valid": 318,
+        "nll": 0.7458886462296225,
+        "per_option": {
+          "base_continue": {
+            "available": true,
+            "ece": 0.10715204140368981,
+            "multiclass_brier": 0.5365210434245813,
+            "n_missing_or_invalid": 0,
+            "n_valid": 106,
+            "nll": 0.8966633209587189,
+            "reliability_bins": [
+              {
+                "count": 3,
+                "empirical_frequency": 0.6666666666666666,
+                "lower": 0.30000000000000004,
+                "mean_confidence": 0.37246727286417797,
+                "upper": 0.4
+              },
+              {
+                "count": 7,
+                "empirical_frequency": 0.42857142857142855,
+                "lower": 0.4,
+                "mean_confidence": 0.4433085986908056,
+                "upper": 0.5
+              },
+              {
+                "count": 25,
+                "empirical_frequency": 0.52,
+                "lower": 0.5,
+                "mean_confidence": 0.5559000142129346,
+                "upper": 0.6000000000000001
+              },
+              {
+                "count": 25,
+                "empirical_frequency": 0.72,
+                "lower": 0.6000000000000001,
+                "mean_confidence": 0.6521081643844415,
+                "upper": 0.7000000000000001
+              },
+              {
+                "count": 28,
+                "empirical_frequency": 0.5357142857142857,
+                "lower": 0.7000000000000001,
+                "mean_confidence": 0.749001537818789,
+                "upper": 0.8
+              },
+              {
+                "count": 13,
+                "empirical_frequency": 0.7692307692307693,
+                "lower": 0.8,
+                "mean_confidence": 0.8460938419780367,
+                "upper": 0.9
+              },
+              {
+                "count": 5,
+                "empirical_frequency": 0.8,
+                "lower": 0.9,
+                "mean_confidence": 0.9612597532390244,
+                "upper": 1.0
+              }
+            ]
+          },
+          "detour_complete": {
+            "available": true,
+            "ece": 0.26391916557785355,
+            "multiclass_brier": 0.7860766962975677,
+            "n_missing_or_invalid": 0,
+            "n_valid": 106,
+            "nll": 1.303693001874937,
+            "reliability_bins": [
+              {
+                "count": 2,
+                "empirical_frequency": 1.0,
+                "lower": 0.30000000000000004,
+                "mean_confidence": 0.39277619862420365,
+                "upper": 0.4
+              },
+              {
+                "count": 22,
+                "empirical_frequency": 0.3181818181818182,
+                "lower": 0.4,
+                "mean_confidence": 0.4694438699532851,
+                "upper": 0.5
+              },
+              {
+                "count": 28,
+                "empirical_frequency": 0.5,
+                "lower": 0.5,
+                "mean_confidence": 0.5356646207883878,
+                "upper": 0.6000000000000001
+              },
+              {
+                "count": 18,
+                "empirical_frequency": 0.5,
+                "lower": 0.6000000000000001,
+                "mean_confidence": 0.6424776901694935,
+                "upper": 0.7000000000000001
+              },
+              {
+                "count": 10,
+                "empirical_frequency": 0.2,
+                "lower": 0.7000000000000001,
+                "mean_confidence": 0.743810573771978,
+                "upper": 0.8
+              },
+              {
+                "count": 21,
+                "empirical_frequency": 0.2857142857142857,
+                "lower": 0.8,
+                "mean_confidence": 0.8409917188667415,
+                "upper": 0.9
+              },
+              {
+                "count": 5,
+                "empirical_frequency": 0.4,
+                "lower": 0.9,
+                "mean_confidence": 0.9542158340963031,
+                "upper": 1.0
+              }
+            ]
+          },
+          "retreat_hold": {
+            "available": true,
+            "ece": 0.025454976231985466,
+            "multiclass_brier": 0.014108399124614155,
+            "n_missing_or_invalid": 0,
+            "n_valid": 106,
+            "nll": 0.03730961585521143,
+            "reliability_bins": [
+              {
+                "count": 1,
+                "empirical_frequency": 0.0,
+                "lower": 0.8,
+                "mean_confidence": 0.8108375153611158,
+                "upper": 0.9
+              },
+              {
+                "count": 105,
+                "empirical_frequency": 1.0,
+                "lower": 0.9,
+                "mean_confidence": 0.9820248574740063,
+                "upper": 1.0
+              }
+            ]
+          }
+        },
+        "reliability_bins": [
+          {
+            "count": 5,
+            "empirical_frequency": 0.8,
+            "lower": 0.30000000000000004,
+            "mean_confidence": 0.38059084316818825,
+            "upper": 0.4
+          },
+          {
+            "count": 29,
+            "empirical_frequency": 0.3448275862068966,
+            "lower": 0.4,
+            "mean_confidence": 0.4631353562002728,
+            "upper": 0.5
+          },
+          {
+            "count": 53,
+            "empirical_frequency": 0.5094339622641509,
+            "lower": 0.5,
+            "mean_confidence": 0.5452096176867589,
+            "upper": 0.6000000000000001
+          },
+          {
+            "count": 43,
+            "empirical_frequency": 0.627906976744186,
+            "lower": 0.6000000000000001,
+            "mean_confidence": 0.6480768030851609,
+            "upper": 0.7000000000000001
+          },
+          {
+            "count": 38,
+            "empirical_frequency": 0.4473684210526316,
+            "lower": 0.7000000000000001,
+            "mean_confidence": 0.7476354946485755,
+            "upper": 0.8
+          },
+          {
+            "count": 35,
+            "empirical_frequency": 0.45714285714285713,
+            "lower": 0.8,
+            "mean_confidence": 0.8420252444936333,
+            "upper": 0.9
+          },
+          {
+            "count": 115,
+            "empirical_frequency": 0.9652173913043478,
+            "lower": 0.9,
+            "mean_confidence": 0.9799129388821504,
+            "upper": 1.0
+          }
+        ]
+      },
+      "predicted_advantage": {
+        "available": true,
+        "bins": [
+          {
+            "beneficial_fraction": 0.18181818181818182,
+            "count": 11,
+            "predicted_advantage_max": -0.39149926504090404,
+            "predicted_advantage_mean": -0.5043784365181588,
+            "predicted_advantage_min": -0.6520633512134946,
+            "realized_advantage_mean": -0.18181818181818182
+          },
+          {
+            "beneficial_fraction": 0.18181818181818182,
+            "count": 11,
+            "predicted_advantage_max": -0.2555958240458903,
+            "predicted_advantage_mean": -0.3129766224855178,
+            "predicted_advantage_min": -0.3804047132080054,
+            "realized_advantage_mean": 0.0
+          },
+          {
+            "beneficial_fraction": 0.18181818181818182,
+            "count": 11,
+            "predicted_advantage_max": -0.10189110513183913,
+            "predicted_advantage_mean": -0.19809914452508723,
+            "predicted_advantage_min": -0.25485916623566923,
+            "realized_advantage_mean": 0.0
+          },
+          {
+            "beneficial_fraction": 0.36363636363636365,
+            "count": 11,
+            "predicted_advantage_max": -0.01723596769788238,
+            "predicted_advantage_mean": -0.05148967337077771,
+            "predicted_advantage_min": -0.09760093887457727,
+            "realized_advantage_mean": 0.2727272727272727
+          },
+          {
+            "beneficial_fraction": 0.2727272727272727,
+            "count": 11,
+            "predicted_advantage_max": 0.06594794671447923,
+            "predicted_advantage_mean": 0.024373036084741184,
+            "predicted_advantage_min": -0.013083076419408535,
+            "realized_advantage_mean": -0.09090909090909091
+          },
+          {
+            "beneficial_fraction": 0.09090909090909091,
+            "count": 11,
+            "predicted_advantage_max": 0.12564924199387062,
+            "predicted_advantage_mean": 0.1025264455615809,
+            "predicted_advantage_min": 0.0703069262995849,
+            "realized_advantage_mean": -0.2727272727272727
+          },
+          {
+            "beneficial_fraction": 0.2,
+            "count": 10,
+            "predicted_advantage_max": 0.23997342946518968,
+            "predicted_advantage_mean": 0.1822357409754931,
+            "predicted_advantage_min": 0.1338477396112709,
+            "realized_advantage_mean": -0.1
+          },
+          {
+            "beneficial_fraction": 0.4,
+            "count": 10,
+            "predicted_advantage_max": 0.4487285834882751,
+            "predicted_advantage_mean": 0.36955793288520283,
+            "predicted_advantage_min": 0.24600984821706184,
+            "realized_advantage_mean": 0.5
+          },
+          {
+            "beneficial_fraction": 0.2,
+            "count": 10,
+            "predicted_advantage_max": 0.7240486527695481,
+            "predicted_advantage_mean": 0.5703276749829915,
+            "predicted_advantage_min": 0.4658445084303378,
+            "realized_advantage_mean": 0.1
+          },
+          {
+            "beneficial_fraction": 0.3,
+            "count": 10,
+            "predicted_advantage_max": 1.1935259106870206,
+            "predicted_advantage_mean": 0.995013601046326,
+            "predicted_advantage_min": 0.8471070180171053,
+            "realized_advantage_mean": 0.4
+          }
+        ],
+        "calibration_error": 0.3104949791056658,
+        "mae": 0.6569718355129409,
+        "n_missing_or_invalid": 0,
+        "n_valid": 106,
+        "pearson_correlation": 0.1698688131482403,
+        "rmse": 0.8172111226989051
+      }
+    },
+    "PairwiseAdvantage": {
+      "base_catastrophe_binary": {
+        "available": false,
+        "brier": null,
+        "ece": null,
+        "n_missing_or_invalid": 106,
+        "n_valid": 0,
+        "nll": null,
+        "reason": "not a scalar_risk method",
+        "reliability_bins": [],
+        "target": "base_option_catastrophe"
+      },
+      "choice_probabilities": {
+        "available": false,
+        "ece": null,
+        "multiclass_brier": null,
+        "n_missing_or_invalid": 106,
+        "n_valid": 0,
+        "nll": null,
+        "reliability_bins": [],
+        "target": "realized_oracle_choice_with_frozen_tie_break"
+      },
+      "outcome_probabilities": {
+        "available": false,
+        "ece": null,
+        "multiclass_brier": null,
+        "n_missing_or_invalid": 318,
+        "n_valid": 0,
+        "nll": null,
+        "per_option": {
+          "base_continue": {
+            "available": false,
+            "ece": null,
+            "multiclass_brier": null,
+            "n_missing_or_invalid": 106,
+            "n_valid": 0,
+            "nll": null,
+            "reliability_bins": []
+          },
+          "detour_complete": {
+            "available": false,
+            "ece": null,
+            "multiclass_brier": null,
+            "n_missing_or_invalid": 106,
+            "n_valid": 0,
+            "nll": null,
+            "reliability_bins": []
+          },
+          "retreat_hold": {
+            "available": false,
+            "ece": null,
+            "multiclass_brier": null,
+            "n_missing_or_invalid": 106,
+            "n_valid": 0,
+            "nll": null,
+            "reliability_bins": []
+          }
+        },
+        "reliability_bins": []
+      },
+      "predicted_advantage": {
+        "available": true,
+        "bins": [
+          {
+            "beneficial_fraction": 0.36363636363636365,
+            "count": 11,
+            "predicted_advantage_max": -0.9343854121534252,
+            "predicted_advantage_mean": -1.0943590558608487,
+            "predicted_advantage_min": -1.4451940135358496,
+            "realized_advantage_mean": -0.18181818181818182
+          },
+          {
+            "beneficial_fraction": 0.2727272727272727,
+            "count": 11,
+            "predicted_advantage_max": -0.7320709450963414,
+            "predicted_advantage_mean": -0.8174276480519367,
+            "predicted_advantage_min": -0.9253363070069095,
+            "realized_advantage_mean": 0.0
+          },
+          {
+            "beneficial_fraction": 0.0,
+            "count": 11,
+            "predicted_advantage_max": -0.4166694608903434,
+            "predicted_advantage_mean": -0.5526141892367323,
+            "predicted_advantage_min": -0.7294702364708112,
+            "realized_advantage_mean": -0.6363636363636364
+          },
+          {
+            "beneficial_fraction": 0.09090909090909091,
+            "count": 11,
+            "predicted_advantage_max": -0.15040350407473302,
+            "predicted_advantage_mean": -0.2900896048816278,
+            "predicted_advantage_min": -0.38466644648745196,
+            "realized_advantage_mean": -0.09090909090909091
+          },
+          {
+            "beneficial_fraction": 0.18181818181818182,
+            "count": 11,
+            "predicted_advantage_max": 0.026768717632831035,
+            "predicted_advantage_mean": -0.06681945748978707,
+            "predicted_advantage_min": -0.1460360164798071,
+            "realized_advantage_mean": -0.36363636363636365
+          },
+          {
+            "beneficial_fraction": 0.2727272727272727,
+            "count": 11,
+            "predicted_advantage_max": 0.34877519214051284,
+            "predicted_advantage_mean": 0.17859879301158818,
+            "predicted_advantage_min": 0.0319715794817286,
+            "realized_advantage_mean": 0.0
+          },
+          {
+            "beneficial_fraction": 0.1,
+            "count": 10,
+            "predicted_advantage_max": 0.5720082836348627,
+            "predicted_advantage_mean": 0.4572235359997655,
+            "predicted_advantage_min": 0.3729247183218827,
+            "realized_advantage_mean": -0.2
+          },
+          {
+            "beneficial_fraction": 0.5,
+            "count": 10,
+            "predicted_advantage_max": 0.7708068366763705,
+            "predicted_advantage_mean": 0.6760671151859202,
+            "predicted_advantage_min": 0.5757633040200325,
+            "realized_advantage_mean": 0.5
+          },
+          {
+            "beneficial_fraction": 0.2,
+            "count": 10,
+            "predicted_advantage_max": 1.0503520052170572,
+            "predicted_advantage_mean": 0.906929215887833,
+            "predicted_advantage_min": 0.7714750874293592,
+            "realized_advantage_mean": 0.2
+          },
+          {
+            "beneficial_fraction": 0.4,
+            "count": 10,
+            "predicted_advantage_max": 3.3017420182530666,
+            "predicted_advantage_mean": 2.2111941411325233,
+            "predicted_advantage_min": 1.321154963525124,
+            "realized_advantage_mean": 0.5
+          }
+        ],
+        "calibration_error": 0.5649584536597616,
+        "mae": 0.8387007480803016,
+        "n_missing_or_invalid": 0,
+        "n_valid": 106,
+        "pearson_correlation": 0.3083353826661014,
+        "rmse": 1.0458542655723373
+      }
+    },
+    "Risk+TwoStage": {
+      "base_catastrophe_binary": {
+        "available": true,
+        "brier": 0.19882677890274766,
+        "ece": 0.15278999319479372,
+        "n_missing_or_invalid": 0,
+        "n_valid": 106,
+        "nll": 0.905346634873391,
+        "probability_definition": "1 - choice_probability[Base]",
+        "reliability_bins": [
+          {
+            "count": 58,
+            "empirical_frequency": 0.20689655172413793,
+            "lower": 0.0,
+            "mean_confidence": 0.018415051545634723,
+            "upper": 0.1
+          },
+          {
+            "count": 8,
+            "empirical_frequency": 0.25,
+            "lower": 0.1,
+            "mean_confidence": 0.14690695558267666,
+            "upper": 0.2
+          },
+          {
+            "count": 6,
+            "empirical_frequency": 0.3333333333333333,
+            "lower": 0.2,
+            "mean_confidence": 0.23554642775874393,
+            "upper": 0.30000000000000004
+          },
+          {
+            "count": 6,
+            "empirical_frequency": 0.5,
+            "lower": 0.30000000000000004,
+            "mean_confidence": 0.3585188167034104,
+            "upper": 0.4
+          },
+          {
+            "count": 2,
+            "empirical_frequency": 0.5,
+            "lower": 0.4,
+            "mean_confidence": 0.4627663791095834,
+            "upper": 0.5
+          },
+          {
+            "count": 1,
+            "empirical_frequency": 0.0,
+            "lower": 0.5,
+            "mean_confidence": 0.5458258657740449,
+            "upper": 0.6000000000000001
+          },
+          {
+            "count": 3,
+            "empirical_frequency": 0.6666666666666666,
+            "lower": 0.6000000000000001,
+            "mean_confidence": 0.6261095627109597,
+            "upper": 0.7000000000000001
+          },
+          {
+            "count": 3,
+            "empirical_frequency": 0.6666666666666666,
+            "lower": 0.7000000000000001,
+            "mean_confidence": 0.7475804310850184,
+            "upper": 0.8
+          },
+          {
+            "count": 3,
+            "empirical_frequency": 0.6666666666666666,
+            "lower": 0.8,
+            "mean_confidence": 0.87001468281087,
+            "upper": 0.9
+          },
+          {
+            "count": 16,
+            "empirical_frequency": 0.875,
+            "lower": 0.9,
+            "mean_confidence": 0.9630443511637266,
+            "upper": 1.0
+          }
+        ],
+        "target": "base_option_catastrophe"
+      },
+      "choice_probabilities": {
+        "available": true,
+        "ece": 0.26134906581711026,
+        "multiclass_brier": 0.6293310135357072,
+        "n_missing_or_invalid": 0,
+        "n_valid": 106,
+        "nll": 1.5612265924183337,
+        "reliability_bins": [
+          {
+            "count": 1,
+            "empirical_frequency": 1.0,
+            "lower": 0.30000000000000004,
+            "mean_confidence": 0.3933711405506479,
+            "upper": 0.4
+          },
+          {
+            "count": 2,
+            "empirical_frequency": 0.0,
+            "lower": 0.4,
+            "mean_confidence": 0.4846457149832975,
+            "upper": 0.5
+          },
+          {
+            "count": 6,
+            "empirical_frequency": 0.5,
+            "lower": 0.5,
+            "mean_confidence": 0.5448910011600365,
+            "upper": 0.6000000000000001
+          },
+          {
+            "count": 6,
+            "empirical_frequency": 0.3333333333333333,
+            "lower": 0.6000000000000001,
+            "mean_confidence": 0.6414811832965895,
+            "upper": 0.7000000000000001
+          },
+          {
+            "count": 10,
+            "empirical_frequency": 0.7,
+            "lower": 0.7000000000000001,
+            "mean_confidence": 0.7600618409092165,
+            "upper": 0.8
+          },
+          {
+            "count": 13,
+            "empirical_frequency": 0.6153846153846154,
+            "lower": 0.8,
+            "mean_confidence": 0.8441154593361037,
+            "upper": 0.9
+          },
+          {
+            "count": 68,
+            "empirical_frequency": 0.6764705882352942,
+            "lower": 0.9,
+            "mean_confidence": 0.9769812970587717,
+            "upper": 1.0
+          }
+        ],
+        "target": "realized_oracle_choice_with_frozen_tie_break"
+      },
+      "outcome_probabilities": {
+        "available": false,
+        "ece": null,
+        "multiclass_brier": null,
+        "n_missing_or_invalid": 318,
+        "n_valid": 0,
+        "nll": null,
+        "per_option": {
+          "base_continue": {
+            "available": false,
+            "ece": null,
+            "multiclass_brier": null,
+            "n_missing_or_invalid": 106,
+            "n_valid": 0,
+            "nll": null,
+            "reliability_bins": []
+          },
+          "detour_complete": {
+            "available": false,
+            "ece": null,
+            "multiclass_brier": null,
+            "n_missing_or_invalid": 106,
+            "n_valid": 0,
+            "nll": null,
+            "reliability_bins": []
+          },
+          "retreat_hold": {
+            "available": false,
+            "ece": null,
+            "multiclass_brier": null,
+            "n_missing_or_invalid": 106,
+            "n_valid": 0,
+            "nll": null,
+            "reliability_bins": []
+          }
+        },
+        "reliability_bins": []
+      },
+      "predicted_advantage": {
+        "available": false,
+        "bins": [],
+        "calibration_error": null,
+        "mae": null,
+        "n_missing_or_invalid": 106,
+        "n_valid": 0,
+        "pearson_correlation": null,
+        "rmse": null
+      }
+    },
+    "Risk->BestFixed": {
+      "base_catastrophe_binary": {
+        "available": true,
+        "brier": 0.19882677890274766,
+        "ece": 0.15278999319479372,
+        "n_missing_or_invalid": 0,
+        "n_valid": 106,
+        "nll": 0.905346634873391,
+        "probability_definition": "1 - choice_probability[Base]",
+        "reliability_bins": [
+          {
+            "count": 58,
+            "empirical_frequency": 0.20689655172413793,
+            "lower": 0.0,
+            "mean_confidence": 0.018415051545634723,
+            "upper": 0.1
+          },
+          {
+            "count": 8,
+            "empirical_frequency": 0.25,
+            "lower": 0.1,
+            "mean_confidence": 0.14690695558267666,
+            "upper": 0.2
+          },
+          {
+            "count": 6,
+            "empirical_frequency": 0.3333333333333333,
+            "lower": 0.2,
+            "mean_confidence": 0.23554642775874393,
+            "upper": 0.30000000000000004
+          },
+          {
+            "count": 6,
+            "empirical_frequency": 0.5,
+            "lower": 0.30000000000000004,
+            "mean_confidence": 0.3585188167034104,
+            "upper": 0.4
+          },
+          {
+            "count": 2,
+            "empirical_frequency": 0.5,
+            "lower": 0.4,
+            "mean_confidence": 0.4627663791095834,
+            "upper": 0.5
+          },
+          {
+            "count": 1,
+            "empirical_frequency": 0.0,
+            "lower": 0.5,
+            "mean_confidence": 0.5458258657740449,
+            "upper": 0.6000000000000001
+          },
+          {
+            "count": 3,
+            "empirical_frequency": 0.6666666666666666,
+            "lower": 0.6000000000000001,
+            "mean_confidence": 0.6261095627109597,
+            "upper": 0.7000000000000001
+          },
+          {
+            "count": 3,
+            "empirical_frequency": 0.6666666666666666,
+            "lower": 0.7000000000000001,
+            "mean_confidence": 0.7475804310850184,
+            "upper": 0.8
+          },
+          {
+            "count": 3,
+            "empirical_frequency": 0.6666666666666666,
+            "lower": 0.8,
+            "mean_confidence": 0.87001468281087,
+            "upper": 0.9
+          },
+          {
+            "count": 16,
+            "empirical_frequency": 0.875,
+            "lower": 0.9,
+            "mean_confidence": 0.9630443511637266,
+            "upper": 1.0
+          }
+        ],
+        "target": "base_option_catastrophe"
+      },
+      "choice_probabilities": {
+        "available": true,
+        "ece": 0.2920037420274896,
+        "multiclass_brier": 0.6810334467782819,
+        "n_missing_or_invalid": 0,
+        "n_valid": 106,
+        "nll": 4.490376314151259,
+        "reliability_bins": [
+          {
+            "count": 3,
+            "empirical_frequency": 0.3333333333333333,
+            "lower": 0.5,
+            "mean_confidence": 0.5400977025182927,
+            "upper": 0.6000000000000001
+          },
+          {
+            "count": 9,
+            "empirical_frequency": 0.4444444444444444,
+            "lower": 0.6000000000000001,
+            "mean_confidence": 0.6363573097680464,
+            "upper": 0.7000000000000001
+          },
+          {
+            "count": 9,
+            "empirical_frequency": 0.6666666666666666,
+            "lower": 0.7000000000000001,
+            "mean_confidence": 0.7588291918558434,
+            "upper": 0.8
+          },
+          {
+            "count": 11,
+            "empirical_frequency": 0.5454545454545454,
+            "lower": 0.8,
+            "mean_confidence": 0.8577080367064723,
+            "upper": 0.9
+          },
+          {
+            "count": 74,
+            "empirical_frequency": 0.6486486486486487,
+            "lower": 0.9,
+            "mean_confidence": 0.9775761706617948,
+            "upper": 1.0
+          }
+        ],
+        "target": "realized_oracle_choice_with_frozen_tie_break"
+      },
+      "outcome_probabilities": {
+        "available": false,
+        "ece": null,
+        "multiclass_brier": null,
+        "n_missing_or_invalid": 318,
+        "n_valid": 0,
+        "nll": null,
+        "per_option": {
+          "base_continue": {
+            "available": false,
+            "ece": null,
+            "multiclass_brier": null,
+            "n_missing_or_invalid": 106,
+            "n_valid": 0,
+            "nll": null,
+            "reliability_bins": []
+          },
+          "detour_complete": {
+            "available": false,
+            "ece": null,
+            "multiclass_brier": null,
+            "n_missing_or_invalid": 106,
+            "n_valid": 0,
+            "nll": null,
+            "reliability_bins": []
+          },
+          "retreat_hold": {
+            "available": false,
+            "ece": null,
+            "multiclass_brier": null,
+            "n_missing_or_invalid": 106,
+            "n_valid": 0,
+            "nll": null,
+            "reliability_bins": []
+          }
+        },
+        "reliability_bins": []
+      },
+      "predicted_advantage": {
+        "available": false,
+        "bins": [],
+        "calibration_error": null,
+        "mae": null,
+        "n_missing_or_invalid": 106,
+        "n_valid": 0,
+        "pearson_correlation": null,
+        "rmse": null
+      }
+    },
+    "Risk->Detour": {
+      "base_catastrophe_binary": {
+        "available": true,
+        "brier": 0.19882677890274766,
+        "ece": 0.15278999319479372,
+        "n_missing_or_invalid": 0,
+        "n_valid": 106,
+        "nll": 0.905346634873391,
+        "probability_definition": "1 - choice_probability[Base]",
+        "reliability_bins": [
+          {
+            "count": 58,
+            "empirical_frequency": 0.20689655172413793,
+            "lower": 0.0,
+            "mean_confidence": 0.018415051545634723,
+            "upper": 0.1
+          },
+          {
+            "count": 8,
+            "empirical_frequency": 0.25,
+            "lower": 0.1,
+            "mean_confidence": 0.14690695558267666,
+            "upper": 0.2
+          },
+          {
+            "count": 6,
+            "empirical_frequency": 0.3333333333333333,
+            "lower": 0.2,
+            "mean_confidence": 0.23554642775874393,
+            "upper": 0.30000000000000004
+          },
+          {
+            "count": 6,
+            "empirical_frequency": 0.5,
+            "lower": 0.30000000000000004,
+            "mean_confidence": 0.3585188167034104,
+            "upper": 0.4
+          },
+          {
+            "count": 2,
+            "empirical_frequency": 0.5,
+            "lower": 0.4,
+            "mean_confidence": 0.4627663791095834,
+            "upper": 0.5
+          },
+          {
+            "count": 1,
+            "empirical_frequency": 0.0,
+            "lower": 0.5,
+            "mean_confidence": 0.5458258657740449,
+            "upper": 0.6000000000000001
+          },
+          {
+            "count": 3,
+            "empirical_frequency": 0.6666666666666666,
+            "lower": 0.6000000000000001,
+            "mean_confidence": 0.6261095627109597,
+            "upper": 0.7000000000000001
+          },
+          {
+            "count": 3,
+            "empirical_frequency": 0.6666666666666666,
+            "lower": 0.7000000000000001,
+            "mean_confidence": 0.7475804310850184,
+            "upper": 0.8
+          },
+          {
+            "count": 3,
+            "empirical_frequency": 0.6666666666666666,
+            "lower": 0.8,
+            "mean_confidence": 0.87001468281087,
+            "upper": 0.9
+          },
+          {
+            "count": 16,
+            "empirical_frequency": 0.875,
+            "lower": 0.9,
+            "mean_confidence": 0.9630443511637266,
+            "upper": 1.0
+          }
+        ],
+        "target": "base_option_catastrophe"
+      },
+      "choice_probabilities": {
+        "available": true,
+        "ece": 0.2920037420274896,
+        "multiclass_brier": 0.6810334467782819,
+        "n_missing_or_invalid": 0,
+        "n_valid": 106,
+        "nll": 4.490376314151259,
+        "reliability_bins": [
+          {
+            "count": 3,
+            "empirical_frequency": 0.3333333333333333,
+            "lower": 0.5,
+            "mean_confidence": 0.5400977025182927,
+            "upper": 0.6000000000000001
+          },
+          {
+            "count": 9,
+            "empirical_frequency": 0.4444444444444444,
+            "lower": 0.6000000000000001,
+            "mean_confidence": 0.6363573097680464,
+            "upper": 0.7000000000000001
+          },
+          {
+            "count": 9,
+            "empirical_frequency": 0.6666666666666666,
+            "lower": 0.7000000000000001,
+            "mean_confidence": 0.7588291918558434,
+            "upper": 0.8
+          },
+          {
+            "count": 11,
+            "empirical_frequency": 0.5454545454545454,
+            "lower": 0.8,
+            "mean_confidence": 0.8577080367064723,
+            "upper": 0.9
+          },
+          {
+            "count": 74,
+            "empirical_frequency": 0.6486486486486487,
+            "lower": 0.9,
+            "mean_confidence": 0.9775761706617948,
+            "upper": 1.0
+          }
+        ],
+        "target": "realized_oracle_choice_with_frozen_tie_break"
+      },
+      "outcome_probabilities": {
+        "available": false,
+        "ece": null,
+        "multiclass_brier": null,
+        "n_missing_or_invalid": 318,
+        "n_valid": 0,
+        "nll": null,
+        "per_option": {
+          "base_continue": {
+            "available": false,
+            "ece": null,
+            "multiclass_brier": null,
+            "n_missing_or_invalid": 106,
+            "n_valid": 0,
+            "nll": null,
+            "reliability_bins": []
+          },
+          "detour_complete": {
+            "available": false,
+            "ece": null,
+            "multiclass_brier": null,
+            "n_missing_or_invalid": 106,
+            "n_valid": 0,
+            "nll": null,
+            "reliability_bins": []
+          },
+          "retreat_hold": {
+            "available": false,
+            "ece": null,
+            "multiclass_brier": null,
+            "n_missing_or_invalid": 106,
+            "n_valid": 0,
+            "nll": null,
+            "reliability_bins": []
+          }
+        },
+        "reliability_bins": []
+      },
+      "predicted_advantage": {
+        "available": false,
+        "bins": [],
+        "calibration_error": null,
+        "mae": null,
+        "n_missing_or_invalid": 106,
+        "n_valid": 0,
+        "pearson_correlation": null,
+        "rmse": null
+      }
+    },
+    "Risk->Retreat": {
+      "base_catastrophe_binary": {
+        "available": true,
+        "brier": 0.19882677890274766,
+        "ece": 0.15278999319479372,
+        "n_missing_or_invalid": 0,
+        "n_valid": 106,
+        "nll": 0.905346634873391,
+        "probability_definition": "1 - choice_probability[Base]",
+        "reliability_bins": [
+          {
+            "count": 58,
+            "empirical_frequency": 0.20689655172413793,
+            "lower": 0.0,
+            "mean_confidence": 0.018415051545634723,
+            "upper": 0.1
+          },
+          {
+            "count": 8,
+            "empirical_frequency": 0.25,
+            "lower": 0.1,
+            "mean_confidence": 0.14690695558267666,
+            "upper": 0.2
+          },
+          {
+            "count": 6,
+            "empirical_frequency": 0.3333333333333333,
+            "lower": 0.2,
+            "mean_confidence": 0.23554642775874393,
+            "upper": 0.30000000000000004
+          },
+          {
+            "count": 6,
+            "empirical_frequency": 0.5,
+            "lower": 0.30000000000000004,
+            "mean_confidence": 0.3585188167034104,
+            "upper": 0.4
+          },
+          {
+            "count": 2,
+            "empirical_frequency": 0.5,
+            "lower": 0.4,
+            "mean_confidence": 0.4627663791095834,
+            "upper": 0.5
+          },
+          {
+            "count": 1,
+            "empirical_frequency": 0.0,
+            "lower": 0.5,
+            "mean_confidence": 0.5458258657740449,
+            "upper": 0.6000000000000001
+          },
+          {
+            "count": 3,
+            "empirical_frequency": 0.6666666666666666,
+            "lower": 0.6000000000000001,
+            "mean_confidence": 0.6261095627109597,
+            "upper": 0.7000000000000001
+          },
+          {
+            "count": 3,
+            "empirical_frequency": 0.6666666666666666,
+            "lower": 0.7000000000000001,
+            "mean_confidence": 0.7475804310850184,
+            "upper": 0.8
+          },
+          {
+            "count": 3,
+            "empirical_frequency": 0.6666666666666666,
+            "lower": 0.8,
+            "mean_confidence": 0.87001468281087,
+            "upper": 0.9
+          },
+          {
+            "count": 16,
+            "empirical_frequency": 0.875,
+            "lower": 0.9,
+            "mean_confidence": 0.9630443511637266,
+            "upper": 1.0
+          }
+        ],
+        "target": "base_option_catastrophe"
+      },
+      "choice_probabilities": {
+        "available": true,
+        "ece": 0.3014377042916405,
+        "multiclass_brier": 0.6837269240787922,
+        "n_missing_or_invalid": 0,
+        "n_valid": 106,
+        "nll": 7.0836722846145115,
+        "reliability_bins": [
+          {
+            "count": 3,
+            "empirical_frequency": 0.3333333333333333,
+            "lower": 0.5,
+            "mean_confidence": 0.5400977025182927,
+            "upper": 0.6000000000000001
+          },
+          {
+            "count": 9,
+            "empirical_frequency": 0.2222222222222222,
+            "lower": 0.6000000000000001,
+            "mean_confidence": 0.6363573097680464,
+            "upper": 0.7000000000000001
+          },
+          {
+            "count": 9,
+            "empirical_frequency": 0.4444444444444444,
+            "lower": 0.7000000000000001,
+            "mean_confidence": 0.7588291918558434,
+            "upper": 0.8
+          },
+          {
+            "count": 11,
+            "empirical_frequency": 0.7272727272727273,
+            "lower": 0.8,
+            "mean_confidence": 0.8577080367064723,
+            "upper": 0.9
+          },
+          {
+            "count": 74,
+            "empirical_frequency": 0.6621621621621622,
+            "lower": 0.9,
+            "mean_confidence": 0.9775761706617948,
+            "upper": 1.0
+          }
+        ],
+        "target": "realized_oracle_choice_with_frozen_tie_break"
+      },
+      "outcome_probabilities": {
+        "available": false,
+        "ece": null,
+        "multiclass_brier": null,
+        "n_missing_or_invalid": 318,
+        "n_valid": 0,
+        "nll": null,
+        "per_option": {
+          "base_continue": {
+            "available": false,
+            "ece": null,
+            "multiclass_brier": null,
+            "n_missing_or_invalid": 106,
+            "n_valid": 0,
+            "nll": null,
+            "reliability_bins": []
+          },
+          "detour_complete": {
+            "available": false,
+            "ece": null,
+            "multiclass_brier": null,
+            "n_missing_or_invalid": 106,
+            "n_valid": 0,
+            "nll": null,
+            "reliability_bins": []
+          },
+          "retreat_hold": {
+            "available": false,
+            "ece": null,
+            "multiclass_brier": null,
+            "n_missing_or_invalid": 106,
+            "n_valid": 0,
+            "nll": null,
+            "reliability_bins": []
+          }
+        },
+        "reliability_bins": []
+      },
+      "predicted_advantage": {
+        "available": false,
+        "bins": [],
+        "calibration_error": null,
+        "mae": null,
+        "n_missing_or_invalid": 106,
+        "n_valid": 0,
+        "pearson_correlation": null,
+        "rmse": null
+      }
+    }
+  },
+  "missing_predictions_are_reported_as_unavailable": true,
+  "outcome_probability_axis": [
+    "task_success",
+    "catastrophe",
+    "safe_noncompletion"
+  ],
+  "preference_transfer": {
+    "available": true,
+    "comparison": "one frozen outcome distribution reweighted versus a separately trained Direct-Q at each lambda",
+    "explicit_manifest_evidence": false,
+    "measured_reweighting_value": false,
+    "minimum_noninferior_lambdas_required": 3,
+    "outcome_method": "OutcomeRouter",
+    "outcome_model_refit_across_lambdas": false,
+    "passing_lambdas": [
+      1.0,
+      2.0
+    ],
+    "per_lambda": [
+      {
+        "absolute_catastrophe_difference_within_tolerance": true,
+        "absolute_intervention_difference_within_tolerance": true,
+        "absolute_utility_difference_within_tolerance": false,
+        "available": true,
+        "calibration": {
+          "source_balanced_rate": 0.6047619047619046,
+          "target_rate": 0.6,
+          "threshold": -0.21906472958571888
+        },
+        "development_direct_q_separately_trained": {
+          "source_balanced_catastrophe_rate": 0.3111111111111111,
+          "source_balanced_intervention_rate": 0.6027777777777779,
+          "source_balanced_mean_utility": 0.14513888888888887,
+          "source_balanced_task_success_rate": 0.45625
+        },
+        "development_outcome_reweighted": {
+          "source_balanced_catastrophe_rate": 0.2972222222222222,
+          "source_balanced_intervention_rate": 0.6576388888888889,
+          "source_balanced_mean_utility": 0.19444444444444445,
+          "source_balanced_task_success_rate": 0.49166666666666664
+        },
+        "lambda": 1.0,
+        "noninferior_within_frozen_tolerances": true,
+        "outcome_method": "OutcomeRouter",
+        "outcome_minus_direct_q_catastrophe_rate": -0.013888888888888895,
+        "outcome_minus_direct_q_intervention_rate": 0.05486111111111103,
+        "outcome_minus_direct_q_utility": 0.049305555555555575,
+        "passes": true,
+        "separately_trained_direct_q_comparator": "DirectQ"
+      },
+      {
+        "absolute_catastrophe_difference_within_tolerance": true,
+        "absolute_intervention_difference_within_tolerance": true,
+        "absolute_utility_difference_within_tolerance": true,
+        "available": true,
+        "calibration": {
+          "source_balanced_rate": 0.6023809523809524,
+          "target_rate": 0.6,
+          "threshold": -0.2100352941102888
+        },
+        "development_direct_q_separately_trained": {
+          "source_balanced_catastrophe_rate": 0.2861111111111111,
+          "source_balanced_intervention_rate": 0.5840277777777778,
+          "source_balanced_mean_utility": -0.12222222222222226,
+          "source_balanced_task_success_rate": 0.44999999999999996
+        },
+        "development_outcome_reweighted": {
+          "source_balanced_catastrophe_rate": 0.3041666666666667,
+          "source_balanced_intervention_rate": 0.6194444444444445,
+          "source_balanced_mean_utility": -0.12013888888888892,
+          "source_balanced_task_success_rate": 0.48819444444444443
+        },
+        "lambda": 2.0,
+        "noninferior_within_frozen_tolerances": true,
+        "outcome_method": "OutcomeRouter",
+        "outcome_minus_direct_q_catastrophe_rate": 0.018055555555555602,
+        "outcome_minus_direct_q_intervention_rate": 0.03541666666666665,
+        "outcome_minus_direct_q_utility": 0.00208333333333334,
+        "passes": true,
+        "separately_trained_direct_q_comparator": "DirectQ-lambda2"
+      },
+      {
+        "absolute_catastrophe_difference_within_tolerance": false,
+        "absolute_intervention_difference_within_tolerance": true,
+        "absolute_utility_difference_within_tolerance": false,
+        "available": true,
+        "calibration": {
+          "source_balanced_rate": 0.6023809523809524,
+          "target_rate": 0.6,
+          "threshold": -0.16788081379392567
+        },
+        "development_direct_q_separately_trained": {
+          "source_balanced_catastrophe_rate": 0.27569444444444446,
+          "source_balanced_intervention_rate": 0.5631944444444446,
+          "source_balanced_mean_utility": -0.38125000000000003,
+          "source_balanced_task_success_rate": 0.4458333333333333
+        },
+        "development_outcome_reweighted": {
+          "source_balanced_catastrophe_rate": 0.30069444444444443,
+          "source_balanced_intervention_rate": 0.5875,
+          "source_balanced_mean_utility": -0.42430555555555555,
+          "source_balanced_task_success_rate": 0.47777777777777775
+        },
+        "lambda": 3.0,
+        "noninferior_within_frozen_tolerances": false,
+        "outcome_method": "OutcomeRouter",
+        "outcome_minus_direct_q_catastrophe_rate": 0.024999999999999967,
+        "outcome_minus_direct_q_intervention_rate": 0.02430555555555547,
+        "outcome_minus_direct_q_utility": -0.043055555555555514,
+        "passes": false,
+        "separately_trained_direct_q_comparator": "DirectQ-lambda3"
+      },
+      {
+        "absolute_catastrophe_difference_within_tolerance": false,
+        "absolute_intervention_difference_within_tolerance": true,
+        "absolute_utility_difference_within_tolerance": false,
+        "available": true,
+        "calibration": {
+          "source_balanced_rate": 0.6,
+          "target_rate": 0.6,
+          "threshold": -0.09489833916026025
+        },
+        "development_direct_q_separately_trained": {
+          "source_balanced_catastrophe_rate": 0.25277777777777777,
+          "source_balanced_intervention_rate": 0.5673611111111112,
+          "source_balanced_mean_utility": -0.8222222222222222,
+          "source_balanced_task_success_rate": 0.44166666666666665
+        },
+        "development_outcome_reweighted": {
+          "source_balanced_catastrophe_rate": 0.29027777777777775,
+          "source_balanced_intervention_rate": 0.5972222222222222,
+          "source_balanced_mean_utility": -0.9916666666666667,
+          "source_balanced_task_success_rate": 0.4597222222222222
+        },
+        "lambda": 5.0,
+        "noninferior_within_frozen_tolerances": false,
+        "outcome_method": "OutcomeRouter",
+        "outcome_minus_direct_q_catastrophe_rate": 0.03749999999999998,
+        "outcome_minus_direct_q_intervention_rate": 0.029861111111111005,
+        "outcome_minus_direct_q_utility": -0.1694444444444445,
+        "passes": false,
+        "separately_trained_direct_q_comparator": "DirectQ-lambda5"
+      },
+      {
+        "absolute_catastrophe_difference_within_tolerance": false,
+        "absolute_intervention_difference_within_tolerance": true,
+        "absolute_utility_difference_within_tolerance": false,
+        "available": true,
+        "calibration": {
+          "source_balanced_rate": 0.5999999999999999,
+          "target_rate": 0.6,
+          "threshold": -0.02682031955124964
+        },
+        "development_direct_q_separately_trained": {
+          "source_balanced_catastrophe_rate": 0.25277777777777777,
+          "source_balanced_intervention_rate": 0.5569444444444445,
+          "source_balanced_mean_utility": -1.570138888888889,
+          "source_balanced_task_success_rate": 0.4520833333333333
+        },
+        "development_outcome_reweighted": {
+          "source_balanced_catastrophe_rate": 0.27569444444444446,
+          "source_balanced_intervention_rate": 0.5555555555555556,
+          "source_balanced_mean_utility": -1.7708333333333333,
+          "source_balanced_task_success_rate": 0.43472222222222223
+        },
+        "lambda": 8.0,
+        "noninferior_within_frozen_tolerances": false,
+        "outcome_method": "OutcomeRouter",
+        "outcome_minus_direct_q_catastrophe_rate": 0.022916666666666696,
+        "outcome_minus_direct_q_intervention_rate": -0.001388888888888884,
+        "outcome_minus_direct_q_utility": -0.2006944444444443,
+        "passes": false,
+        "separately_trained_direct_q_comparator": "DirectQ-lambda8"
+      }
+    ],
+    "reweighting_value": false,
+    "target_intervention_rate": 0.6,
+    "tolerances_from_manifest": {
+      "catastrophe_rate_absolute": 0.02,
+      "intervention_rate_absolute": 0.1,
+      "utility_absolute": 0.02
+    }
+  },
+  "schema_version": 1
+}

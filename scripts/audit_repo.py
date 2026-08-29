@@ -43,6 +43,7 @@ APPENDIX_DOCS = (
 )
 ICLR27_DOCS = (
     ROOT / "docs/iclr27/MASTER_PLAN.md",
+    ROOT / "docs/iclr27/BASELINE_AUDIT_RESULT.md",
     ROOT / "docs/iclr27/CLAIM_LEDGER.md",
     ROOT / "docs/iclr27/RELATED_WORK_MATRIX.md",
     ROOT / "docs/iclr27/REVIEWER_RISK_AUDIT.md",

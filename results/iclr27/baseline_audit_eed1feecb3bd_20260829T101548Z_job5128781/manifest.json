@@ -1,0 +1,410 @@
+{
+  "artifact_sha256": {
+    "all_predictions.npz": "92a9a2d90cf6dd6f9bab5ce91a04c4f2b690d472adbde8abd66e93fbe0268651",
+    "model_parameters.npz": "2d91cb6356026ce2a9b3dc1f924bec6a50c28aa4ef9291c6dc67218596d08613"
+  },
+  "calibration": {
+    "DirectQ": {
+      "source_balanced_rate": 0.6023809523809524,
+      "target_rate": 0.6,
+      "threshold": -0.11988044375020634
+    },
+    "DirectQ-lambda2": {
+      "source_balanced_rate": 0.6023809523809524,
+      "target_rate": 0.6,
+      "threshold": 0.1365819573295306
+    },
+    "DirectQ-lambda3": {
+      "source_balanced_rate": 0.6,
+      "target_rate": 0.6,
+      "threshold": 0.4394206658341847
+    },
+    "DirectQ-lambda5": {
+      "source_balanced_rate": 0.6023809523809524,
+      "target_rate": 0.6,
+      "threshold": 0.9486706457398655
+    },
+    "DirectQ-lambda8": {
+      "source_balanced_rate": 0.6023809523809524,
+      "target_rate": 0.6,
+      "threshold": 1.7661196070059604
+    },
+    "OutcomeRouter": {
+      "source_balanced_rate": 0.6047619047619047,
+      "target_rate": 0.6,
+      "threshold": -0.2190647295857189
+    },
+    "OutcomeRouter-hidden-only": {
+      "source_balanced_rate": 0.5952380952380952,
+      "target_rate": 0.6,
+      "threshold": -0.12275234797029032
+    },
+    "OutcomeRouter-state-action-only": {
+      "source_balanced_rate": 0.6047619047619047,
+      "target_rate": 0.6,
+      "threshold": -0.24223176950748668
+    },
+    "PairwiseAdvantage": {
+      "source_balanced_rate": 0.6023809523809524,
+      "target_rate": 0.6,
+      "threshold": -0.11988044375020761
+    },
+    "best_fixed": {
+      "option": "detour_complete",
+      "option_index": 1,
+      "source_balanced_utility": 0.20952380952380953,
+      "threshold": 0.10341393077999145
+    },
+    "direct_choice": {
+      "source_balanced_rate": 0.5952380952380952,
+      "target_rate": 0.6,
+      "threshold": -0.747794193676237
+    },
+    "shared_risk_rate": {
+      "source_balanced_rate": 0.5952380952380952,
+      "target_rate": 0.6,
+      "threshold": 0.10341393077999145
+    }
+  },
+  "capture_root": "/gpfs/home/shv7753/crash_bench/results/counterfactual_router/full_d4751330395e_20260814T152231Z",
+  "capture_sha256": {
+    "capture_manifest.json": "a0a1efad5976bc5661109a161e3ec21112a5a97f993207667cc7abda606f0d60",
+    "decision_features.npz": "3ee68e647ecc68a704d02ac5bd19129ee063e78fe97423a32564ff194e4bb495",
+    "decision_metadata.json": "1e7f701cdb1b9c3eb00d6ae637c722e5a5f0ad55861e5135f0e1d2a1b18f0815",
+    "option_rollouts.jsonl": "9f51fe43b8cda6e67a93b70439dbf7c65ce769cfd8e04812230df4e2bfdb9353"
+  },
+  "config_sha256": "ac488ecd9079affab96661ce2cf38ccfac67f7d8278b7567a3a237d6924bc866",
+  "config_snapshot": "baseline_suite.yaml",
+  "created_at_utc": "2026-08-29T10:15:58.489306+00:00",
+  "decision_counts": {
+    "calibration": 96,
+    "development": 106,
+    "train": 71
+  },
+  "fit_summaries": {
+    "OutcomeRouter": {
+      "converged": true,
+      "per_option": {
+        "base_continue": {
+          "converged": true,
+          "iterations": 38,
+          "weighted_cross_entropy_with_l2": 0.2680595853647306
+        },
+        "detour_complete": {
+          "converged": true,
+          "iterations": 44,
+          "weighted_cross_entropy_with_l2": 0.43079214415277306
+        },
+        "retreat_hold": {
+          "converged": true,
+          "iterations": 14,
+          "weighted_cross_entropy_with_l2": 0.04368770636618664
+        }
+      },
+      "regularization": "l2 including intercept"
+    },
+    "OutcomeRouter-hidden-only": {
+      "converged": true,
+      "per_option": {
+        "base_continue": {
+          "converged": true,
+          "iterations": 24,
+          "weighted_cross_entropy_with_l2": 0.3107967690884696
+        },
+        "detour_complete": {
+          "converged": true,
+          "iterations": 26,
+          "weighted_cross_entropy_with_l2": 0.6165227694155273
+        },
+        "retreat_hold": {
+          "converged": true,
+          "iterations": 12,
+          "weighted_cross_entropy_with_l2": 0.07476746939912238
+        }
+      },
+      "regularization": "l2 including intercept"
+    },
+    "OutcomeRouter-state-action-only": {
+      "converged": true,
+      "per_option": {
+        "base_continue": {
+          "converged": true,
+          "iterations": 49,
+          "weighted_cross_entropy_with_l2": 0.6407792475232998
+        },
+        "detour_complete": {
+          "converged": true,
+          "iterations": 38,
+          "weighted_cross_entropy_with_l2": 0.5358741014499532
+        },
+        "retreat_hold": {
+          "converged": true,
+          "iterations": 15,
+          "weighted_cross_entropy_with_l2": 0.051180259170731365
+        }
+      },
+      "regularization": "l2 including intercept"
+    },
+    "direct_choice": {
+      "converged": true,
+      "iterations": 48,
+      "weighted_cross_entropy_with_l2": 0.4111811809616287
+    },
+    "risk": {
+      "converged": true,
+      "iterations": 34,
+      "weighted_cross_entropy_with_l2": 0.17014527036838514
+    },
+    "two_stage_option": {
+      "converged": true,
+      "iterations": 23,
+      "weighted_cross_entropy_with_l2": 0.07128441688916831
+    }
+  },
+  "geometry_availability": {
+    "deployable_geometry_features_in_capture": false,
+    "oracle_geometry_method": "GeometryOracle-condition",
+    "reason": "capture has no current hazard pose/distance/clearance feature",
+    "stop_d_eligible": [
+      "OutcomeRouter-state-action-only"
+    ]
+  },
+  "git_commit": "eed1feecb3bd298d870ab049976b7ac006d49633",
+  "kind": "iclr27_router_baseline_suite",
+  "method_metadata": {
+    "Always Detour": {
+      "family": "fixed"
+    },
+    "Always Retreat": {
+      "family": "fixed"
+    },
+    "Base": {
+      "family": "fixed"
+    },
+    "DirectChoice": {
+      "family": "direct_choice",
+      "threshold": -0.747794193676237
+    },
+    "DirectQ": {
+      "family": "direct_q",
+      "primary_gate_method": true,
+      "threshold": -0.11988044375020634,
+      "training_lambda": 1.0
+    },
+    "DirectQ-lambda2": {
+      "family": "direct_q",
+      "primary_gate_method": false,
+      "threshold": 0.1365819573295306,
+      "training_lambda": 2.0
+    },
+    "DirectQ-lambda3": {
+      "family": "direct_q",
+      "primary_gate_method": false,
+      "threshold": 0.4394206658341847,
+      "training_lambda": 3.0
+    },
+    "DirectQ-lambda5": {
+      "family": "direct_q",
+      "primary_gate_method": false,
+      "threshold": 0.9486706457398655,
+      "training_lambda": 5.0
+    },
+    "DirectQ-lambda8": {
+      "family": "direct_q",
+      "primary_gate_method": false,
+      "threshold": 1.7661196070059604,
+      "training_lambda": 8.0
+    },
+    "GeometryOracle-condition": {
+      "deployable": false,
+      "family": "geometry",
+      "oracle_diagnostic_only": true,
+      "rule": "Detour iff capture condition is glass"
+    },
+    "OutcomeRouter": {
+      "deployable": true,
+      "family": "outcome_router",
+      "features": "hidden_robot_action",
+      "threshold": -0.2190647295857189
+    },
+    "OutcomeRouter-hidden-only": {
+      "deployable": true,
+      "family": "outcome_router",
+      "features": "hidden_only",
+      "threshold": -0.12275234797029032
+    },
+    "OutcomeRouter-state-action-only": {
+      "deployable": true,
+      "family": "outcome_router",
+      "features": "state_action_only",
+      "threshold": -0.24223176950748668
+    },
+    "PairwiseAdvantage": {
+      "family": "pairwise_advantage",
+      "rate_matched_advantage_threshold": -0.11988044375020761,
+      "threshold_is_not_a_physical_cost": true
+    },
+    "Risk+TwoStage": {
+      "family": "two_stage",
+      "option_training_decisions": 28,
+      "option_training_rule": "train-only beneficial intervention"
+    },
+    "Risk->BestFixed": {
+      "family": "scalar_risk",
+      "fixed_option": "detour_complete",
+      "selected_on": "calibration"
+    },
+    "Risk->Detour": {
+      "family": "scalar_risk",
+      "fixed_option": "detour_complete"
+    },
+    "Risk->Retreat": {
+      "family": "scalar_risk",
+      "fixed_option": "retreat_hold"
+    }
+  },
+  "method_order": [
+    "Base",
+    "Always Detour",
+    "Always Retreat",
+    "Risk->Retreat",
+    "Risk->Detour",
+    "Risk->BestFixed",
+    "Risk+TwoStage",
+    "DirectChoice",
+    "DirectQ",
+    "DirectQ-lambda2",
+    "DirectQ-lambda3",
+    "DirectQ-lambda5",
+    "DirectQ-lambda8",
+    "PairwiseAdvantage",
+    "OutcomeRouter",
+    "OutcomeRouter-hidden-only",
+    "OutcomeRouter-state-action-only",
+    "GeometryOracle-condition"
+  ],
+  "model_parameters": "model_parameters.npz",
+  "multi_lambda_direct_q": {
+    "DirectQ": {
+      "parameter_count": 96,
+      "training_lambda": 1.0
+    },
+    "DirectQ-lambda2": {
+      "parameter_count": 96,
+      "training_lambda": 2.0
+    },
+    "DirectQ-lambda3": {
+      "parameter_count": 96,
+      "training_lambda": 3.0
+    },
+    "DirectQ-lambda5": {
+      "parameter_count": 96,
+      "training_lambda": 5.0
+    },
+    "DirectQ-lambda8": {
+      "parameter_count": 96,
+      "training_lambda": 8.0
+    }
+  },
+  "predictions": "all_predictions.npz",
+  "protocol": {
+    "data_role": "development-only baseline audit; no fresh test outcomes",
+    "feature_contract": {
+      "pca_components": 16,
+      "pca_fit_split": "train",
+      "primary": "single-frame train-PCA hidden + robot state + nominal action",
+      "source_weighting": "equal total weight per source"
+    },
+    "fresh_test_prohibition": "Fresh-test outcomes must not be loaded, inspected, fitted, or used for any model or operating-point selection in this development-only audit.",
+    "go_comparators": {
+      "go_a_direct_cover_methods": [
+        "DirectChoice",
+        "DirectQ",
+        "PairwiseAdvantage"
+      ],
+      "go_b_value_methods": [
+        "DirectQ",
+        "PairwiseAdvantage"
+      ],
+      "pivot_risk_methods": [
+        "Risk->Detour",
+        "Risk->BestFixed"
+      ],
+      "risk_reference": "Risk->BestFixed"
+    },
+    "go_thresholds": {
+      "catastrophe_rate_absolute": 0.02,
+      "intervention_rate_absolute": 0.1,
+      "utility_absolute": 0.02
+    },
+    "lambda_grid": [
+      1.0,
+      2.0,
+      3.0,
+      5.0,
+      8.0
+    ],
+    "latency_scope": "batched CPU projected-feature-to-choice head inference; excludes the frozen VLA forward pass and PCA projection",
+    "noncompletion_cost": 0.0,
+    "option_costs": [
+      0.0,
+      1.0,
+      1.0
+    ],
+    "options": [
+      "base_continue",
+      "detour_complete",
+      "retreat_hold"
+    ],
+    "outcomes": [
+      "task_success",
+      "catastrophe",
+      "safe_noncompletion"
+    ],
+    "primary_lambda": 1.0,
+    "primary_method": "OutcomeRouter",
+    "primary_methods": [
+      "Base",
+      "Always Detour",
+      "Always Retreat",
+      "Risk->Retreat",
+      "Risk->Detour",
+      "Risk->BestFixed",
+      "Risk+TwoStage",
+      "DirectChoice",
+      "DirectQ",
+      "PairwiseAdvantage",
+      "OutcomeRouter",
+      "OutcomeRouter-hidden-only",
+      "OutcomeRouter-state-action-only",
+      "GeometryOracle-condition"
+    ],
+    "primary_target_intervention_rate": 0.6,
+    "tie_break": "Base, then lower intervention cost, then option order"
+  },
+  "schema_version": 1,
+  "source_counts": {
+    "calibration": 7,
+    "development": 8,
+    "train": 5
+  },
+  "statistics": {
+    "bootstrap": {
+      "replicates": 5000,
+      "seed": 2027,
+      "shared_resamples": true,
+      "unit": "source"
+    },
+    "exact_test": {
+      "method": "paired_sign_flip",
+      "unit": "source"
+    },
+    "report_groups": [
+      "overall",
+      "source",
+      "condition",
+      "horizon"
+    ],
+    "report_raw_numerators_and_denominators": true
+  }
+}
