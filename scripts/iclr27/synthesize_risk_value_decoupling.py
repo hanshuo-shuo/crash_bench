@@ -16,6 +16,7 @@ import itertools
 import json
 import math
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -1452,6 +1453,75 @@ def _plot_source_support(path: Path, analysis: Mapping[str, Any]) -> None:
     plt.close(fig)
 
 
+def _reportlab_python() -> Path:
+    """Find a Python runtime that can import the bundled ReportLab fallback."""
+
+    candidates: list[Path] = []
+    configured = os.environ.get("CRASHBENCH_PDF_PYTHON")
+    if configured:
+        candidates.append(Path(configured).expanduser())
+    candidates.append(
+        Path.home()
+        / ".cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python"
+    )
+    candidates.append(Path(sys.executable))
+    for name in ("python3", "python"):
+        resolved = shutil.which(name)
+        if resolved:
+            candidates.append(Path(resolved))
+    seen: set[Path] = set()
+    for candidate in candidates:
+        candidate = candidate.resolve()
+        if candidate in seen or not candidate.is_file():
+            continue
+        seen.add(candidate)
+        probe = subprocess.run(
+            [str(candidate), "-c", "import reportlab"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=False,
+        )
+        if probe.returncode == 0:
+            return candidate
+    raise ModuleNotFoundError(
+        "neither matplotlib nor a ReportLab-capable Python runtime is available"
+    )
+
+
+def _render_figures(output_dir: Path, analysis: Mapping[str, Any]) -> None:
+    """Render with matplotlib when available, otherwise bundled ReportLab."""
+
+    try:
+        import matplotlib  # noqa: F401
+    except (ImportError, ModuleNotFoundError):
+        renderer = ROOT / "scripts/iclr27/render_risk_value_decoupling_figures.py"
+        if not renderer.is_file():
+            raise FileNotFoundError(renderer)
+        spec_path = output_dir / ".figure_spec.json"
+        spec_path.write_text(json.dumps(_native({
+            "risk_benefit_crosstab": analysis["risk_benefit_crosstab"],
+            "oracle_hybrid_waterfall": analysis["oracle_hybrid_waterfall"],
+            "family_support": analysis["family_support"],
+            "story_decision": analysis["story_decision"],
+        }), sort_keys=True))
+        try:
+            subprocess.run(
+                [
+                    str(_reportlab_python()), str(renderer),
+                    "--spec", str(spec_path),
+                    "--output-dir", str(output_dir),
+                ],
+                cwd=ROOT,
+                check=True,
+            )
+        finally:
+            spec_path.unlink(missing_ok=True)
+        return
+    _plot_risk_benefit(output_dir / "figure_risk_benefit_flow.pdf", analysis)
+    _plot_waterfall(output_dir / "figure_oracle_gap_waterfall.pdf", analysis)
+    _plot_source_support(output_dir / "figure_source_support.pdf", analysis)
+
+
 def run_synthesis(config_path: Path, output_dir: Path | None = None) -> dict[str, Any]:
     analysis = analyze_frozen_inputs(config_path)
     config = analysis["config"]
@@ -1483,9 +1553,7 @@ def run_synthesis(config_path: Path, output_dir: Path | None = None) -> dict[str
             json.dumps(_native(analysis["story_decision"]), indent=2, sort_keys=True) + "\n"
         )
         (staging / "config_resolved.yaml").write_text(yaml.safe_dump(config, sort_keys=False))
-        _plot_risk_benefit(staging / "figure_risk_benefit_flow.pdf", analysis)
-        _plot_waterfall(staging / "figure_oracle_gap_waterfall.pdf", analysis)
-        _plot_source_support(staging / "figure_source_support.pdf", analysis)
+        _render_figures(staging, analysis)
         artifact_names = [name for name in REQUIRED_OUTPUTS if name != "manifest.json"]
         artifact_names.append("config_resolved.yaml")
         if set(path.name for path in staging.iterdir()) != set(artifact_names):
