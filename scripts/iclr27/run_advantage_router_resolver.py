@@ -297,7 +297,17 @@ def fit_tiny_mlp(
         jac=True,
         options={"maxiter": int(maximum_iterations), "ftol": 1e-12, "gtol": 1e-8},
     )
-    if not fitted.success:
+    reached_iteration_limit = (
+        not fitted.success
+        and int(fitted.status) == 1
+        and "ITERATIONS REACHED LIMIT" in str(fitted.message)
+    )
+    if (
+        (not fitted.success and not reached_iteration_limit)
+        or not np.isfinite(float(fitted.fun))
+        or not np.all(np.isfinite(fitted.x))
+        or not np.all(np.isfinite(fitted.jac))
+    ):
         raise RuntimeError(f"tiny MLP fit failed: {fitted.message}")
     left, hidden_bias, output_weight, output_bias = unpack(fitted.x)
     model = {
@@ -309,7 +319,8 @@ def fit_tiny_mlp(
         "b2": np.asarray(output_bias),
     }
     summary = {
-        "converged": True,
+        "converged": bool(fitted.success),
+        "stopped_at_iteration_limit": bool(reached_iteration_limit),
         "iterations": int(fitted.nit),
         "objective": float(fitted.fun),
         "seed": int(seed),

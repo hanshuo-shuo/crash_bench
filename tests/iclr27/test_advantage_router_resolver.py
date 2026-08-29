@@ -148,6 +148,23 @@ def test_same_seed_tiny_mlp_is_bitwise_deterministic() -> None:
     )
 
 
+def test_tiny_mlp_iteration_cap_returns_finite_deterministic_endpoint() -> None:
+    rng = np.random.default_rng(52)
+    x = rng.normal(size=(20, 5))
+    y = rng.normal(size=20)
+    weights = np.ones(len(x))
+
+    model, summary = resolver.fit_tiny_mlp(
+        x, y, weights, hidden_units=8, l2=0.01,
+        maximum_iterations=1, seed=2027,
+    )
+
+    assert summary["converged"] is False
+    assert summary["stopped_at_iteration_limit"] is True
+    assert summary["iterations"] == 1
+    assert np.all(np.isfinite(resolver.predict_tiny_mlp(model, x)))
+
+
 @pytest.mark.parametrize(
     ("method_pass", "choice_pass", "upper_pass", "expected"),
     [
