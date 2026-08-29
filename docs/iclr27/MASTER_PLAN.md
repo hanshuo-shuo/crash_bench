@@ -1,11 +1,12 @@
 # CrashBench ICLR 2027 master plan
 
-**Truth-source status:** stage 1 frozen; stage 2 and Phase 2.5A/2.5B recorded on 2026-08-29
+**Truth-source status:** stage 1 frozen; stage 2 and Phase 2.5A/2.5B/2.5B-R recorded on 2026-08-29
 **Working title:** *CrashBench: Exact-State Potential Outcomes for Selective VLA Intervention*
 **Stage-1 decision:** **CONDITIONAL GO** pending the strongest-baseline gate.
-**Current submission decision:** **NO-GO for the current outcome-decomposition
-headline**; Phase 2.5B is formally **INCONCLUSIVE** and fail-closed. It does
-not authorize Screen A or any new outcome-bearing rollout.
+**Current submission decision:** **NO-GO for a deployable advantage-router
+claim**; Phase 2.5B remains frozen as **INCONCLUSIVE**, and the exhaustive
+Phase 2.5B-R resolver records **CHOICE_CAPACITY_BOTTLENECK**. It authorizes no
+Screen A or new outcome-bearing rollout.
 
 This directory implements stages 1 and 2 of the
 [revised ICLR 2027 execution plan](../../CrashBench_ICLR2027_Revised_Plan_After_Baseline_NoGo.md)
@@ -46,6 +47,16 @@ best learned OOF utility (`0.2722`) but gains only `+0.0178` over Risk -> Best
 Fixed and recalls strict Base/Detour/Retreat at only `0.5926/0.3269/0.3704`.
 The result is fail-closed: no candidate is frozen and Screen A remains blocked.
 See [`SUPPORT_CROSSFIT_RESULT.md`](SUPPORT_CROSSFIT_RESULT.md).
+
+The existing-data-only Phase 2.5B-R post-hoc resolver is complete at commit
+`bf032cb`, Quest Job `5148751`. The fixed 32-unit nonlinear choice head passes
+the strict conditional D/R point-estimate gate (`0.7253` balanced accuracy,
+`0.8559/0.5947` Detour/Retreat recall), while both linear choice heads fail.
+Every complete deployable ADR loses utility to Risk -> Best Fixed and fails the
+unchanged method gate. The exhaustive decision is
+**CHOICE_CAPACITY_BOTTLENECK**, with benefit-gate failure retained as a
+secondary flag. See
+[`ADVANTAGE_ROUTER_RESOLUTION.md`](ADVANTAGE_ROUTER_RESOLUTION.md).
 
 The stage-1 rationale below remains the historical reason the project entered
 the gate. It no longer authorizes a confirmatory run by itself.
@@ -153,6 +164,7 @@ sequential intervention.
 | 2. Strongest-baseline audit | Outcome decomposition/multi-option value survives fair direct, risk, and geometry baselines. | **INCONCLUSIVE / current method NO-GO** — Quest Job 5128781 (`short`, exit `0:0`), commit `eed1fee`. |
 | 2.5A. Existing-corpus option support | Pooled strict support is source-diverse and a fixed non-Base option leaves enough canonical Oracle value. | **PASS-SUPPORT** — local CPU-only audit, commit `7876232`; only Phase 2.5B is authorized. |
 | 2.5B. Source-cross-fitted support rescue | Strict 20-fold source-OOF test of current, support-balanced, ranking, risk, and value selectors under one constrained calibration rule. | **INCONCLUSIVE / FAIL-CLOSED** — Quest Job 5137872, commit `df3168c`; Screen A and every new outcome-bearing rollout remain blocked. |
+| 2.5B-R. Advantage-decomposed resolver | Exhaustively distinguish method readiness, choice capacity, gate/calibration, margin, and insufficient-signal explanations on the same frozen corpus. | **CHOICE_CAPACITY_BOTTLENECK** — Quest Job 5148751, commit `bf032cb`; nonlinear conditional choice passes, but no deployable ADR passes. |
 | 3. Problem and method rewrite | Exact-state full-information supervision and general utility are formalized without observational-causal overclaim. | Positive method rewrite blocked; only option-support/ambiguity pivot design is authorized. |
 | 4+. New evidence and paper | Only evidence justified by the gate is collected and written. | No confirmatory cohort authorized. |
 
@@ -204,6 +216,19 @@ sequential intervention.
 - `results/iclr27/support_crossfit_df3168c75843_20260829T115455Z_job5137872/`:
   sealed OOF predictions, metrics, inference, figures, and Slurm provenance;
   the large fold-model archive remains on Quest under its manifest hash.
+
+## Phase-2.5B-R resolver artifacts
+
+- `configs/iclr27/advantage_router_resolver.yaml`: frozen post-hoc amendment,
+  fixed three-model suite, metrics, and exhaustive five-way decision rule.
+- `scripts/iclr27/run_advantage_router_resolver.py`: leakage-safe OOF training,
+  oracle-hybrid decomposition, source bootstrap, and machine decision.
+- `ADVANTAGE_ROUTER_RESOLUTION.md`: reviewed result, limitations, primary
+  decision, and the single authorized next action.
+- `results/iclr27/advantage_router_resolver_d4751330395e_20260829T135723Z_job5148751/`:
+  frozen OOF predictions, conditional-choice/gate/composed metrics,
+  oracle-hybrid attribution, source/family/margin diagnostics, bootstrap
+  intervals, calibration records, configuration, and Slurm provenance.
 
 ## Change control
 

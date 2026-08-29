@@ -47,6 +47,24 @@
     "confirmatory_rollout_authorized": false,
     "full_fold_model_archive": "sealed on Quest under the result manifest hash"
   },
+  "stage_2_5br_decision": {
+    "verdict": "CHOICE_CAPACITY_BOTTLENECK",
+    "phase_2_5br_complete": true,
+    "post_hoc_protocol_amendment": true,
+    "implementation_commit": "bf032cb1d6d482423b229e304997ea29134bb4bb",
+    "slurm_job_id": "5148751",
+    "slurm_account": "p33100",
+    "slurm_partition": "short",
+    "status": "COMPLETED",
+    "exit_code": "0:0",
+    "result_dir": "results/iclr27/advantage_router_resolver_d4751330395e_20260829T135723Z_job5148751",
+    "method_ready": false,
+    "nonlinear_choice_diagnosis_frozen": true,
+    "deployable_candidate_frozen": false,
+    "screen_a_authorized": false,
+    "confirmatory_rollout_authorized": false,
+    "authorized_next_action": "freeze the nonlinear conditional-choice diagnosis and make nonlinear option selection the sole method story without expanding the benchmark or model set"
+  },
   "verification_attempts": [
     {
       "attempt": 1,
@@ -120,6 +138,13 @@
     {"path":"results/iclr27/support_crossfit_df3168c75843_20260829T115455Z_job5137872/gate_decision.json","sha256":"b152a143dcabc17f5dd12593af3d96f68b0db363f0925f3a3305c3ed40e09e96","evidence_level":"development-gate","claims":[]},
     {"path":"results/iclr27/support_crossfit_df3168c75843_20260829T115455Z_job5137872/overall_metrics.csv","sha256":"45d9b4a4428bf4bdcf8fd45a0c723b1be997edca834e6b4eb0dfd6920bbc9705","evidence_level":"exposed-development-only","claims":[]},
     {"path":"results/iclr27/support_crossfit_df3168c75843_20260829T115455Z_job5137872/inference.json","sha256":"65152b902792233c28c21fdb01bfa30e6ffcdc2961bee46ac8815441c2c1d7d8","evidence_level":"exposed-development-only","claims":[]},
+    {"path":"results/iclr27/advantage_router_resolver_d4751330395e_20260829T135723Z_job5148751/manifest.json","sha256":"0950c0cbfb6db4598e0ca19c5eb28ce4506073c709dc19daab640f0f8487527d","evidence_level":"exposed-development-only","claims":[]},
+    {"path":"results/iclr27/advantage_router_resolver_d4751330395e_20260829T135723Z_job5148751/decision.json","sha256":"18082442ecaf7fe9da363bce4a6b7e298c234aaf215989e1299ed86ea606871d","evidence_level":"development-gate","claims":[]},
+    {"path":"results/iclr27/advantage_router_resolver_d4751330395e_20260829T135723Z_job5148751/overall_metrics.csv","sha256":"a461daef7af23ccd64fc8874ca8c58b7c93fd5e26ee1c944b872817011edb29b","evidence_level":"exposed-development-only","claims":[]},
+    {"path":"results/iclr27/advantage_router_resolver_d4751330395e_20260829T135723Z_job5148751/conditional_choice_metrics.csv","sha256":"8c962f5710fc5721b86ed011232af8e0c7dacb45fbb72f25261d61089e1905aa","evidence_level":"exposed-development-only","claims":[]},
+    {"path":"results/iclr27/advantage_router_resolver_d4751330395e_20260829T135723Z_job5148751/gate_metrics.csv","sha256":"0df2b623701618b0aabd6fae9dcb28703484e3ac58d577c220f73c7cd1c1a828","evidence_level":"exposed-development-only","claims":[]},
+    {"path":"results/iclr27/advantage_router_resolver_d4751330395e_20260829T135723Z_job5148751/oracle_hybrid_metrics.csv","sha256":"c718f0e2cc1233d270c25cb6652a57ab05c1a750a3446c70c407bea89601fe50","evidence_level":"diagnostic-only","claims":[]},
+    {"path":"results/iclr27/advantage_router_resolver_d4751330395e_20260829T135723Z_job5148751/bootstrap_intervals.csv","sha256":"3ddcda026002d3cea30b96dab4cd8bd6174be0df81c546c28ba9782e57de6896","evidence_level":"exposed-development-only","claims":[]},
     {"path":"results/p2_trace_morphology_audit_20260819.json","sha256":"5ecfd5f7de24ddc4d9a999ecc0fbddbd6c088d92c4017bb9e00fc1d58d7d6a4a","evidence_level":"negative-closeout","claims":["C14-P2.5"]},
     {"path":"results/p3_recovery_window_records_20260819.csv","sha256":"f555612ba933643c208f509754736ce98ba1ce5303c8e8f390168c0448d54c3d","evidence_level":"development-only","claims":["C14-P3.0"]},
     {"path":"results/p3_recovery_window_trajectories_20260819.json","sha256":"c1b33c617f87903fb8bd593d4f20deeb74f4694d2282aa27b6f65594e0402896","evidence_level":"development-only","claims":["C14-P3.0"]},
@@ -169,7 +194,14 @@
     {"claim_id":"PHASE-2.5B","path":"results/iclr27/support_crossfit_df3168c75843_20260829T115455Z_job5137872/gate_decision.json","json_path":"decision","equals":"INCONCLUSIVE"},
     {"claim_id":"PHASE-2.5B","path":"results/iclr27/support_crossfit_df3168c75843_20260829T115455Z_job5137872/gate_decision.json","json_path":"risk_reference_oracle_value_recovered","equals":0.2857142857142857},
     {"claim_id":"PHASE-2.5B","path":"results/iclr27/support_crossfit_df3168c75843_20260829T115455Z_job5137872/gate_decision.json","json_path":"best_learned_strict_retreat_recall","equals":0.5185185185185184},
-    {"claim_id":"PHASE-2.5B","path":"results/iclr27/support_crossfit_df3168c75843_20260829T115455Z_job5137872/gate_decision.json","json_path":"authorization.screen_a_mechanical_authoring","equals":false}
+    {"claim_id":"PHASE-2.5B","path":"results/iclr27/support_crossfit_df3168c75843_20260829T115455Z_job5137872/gate_decision.json","json_path":"authorization.screen_a_mechanical_authoring","equals":false},
+    {"claim_id":"PHASE-2.5B-R","path":"results/iclr27/advantage_router_resolver_d4751330395e_20260829T135723Z_job5148751/decision.json","json_path":"primary_decision","equals":"CHOICE_CAPACITY_BOTTLENECK"},
+    {"claim_id":"PHASE-2.5B-R","path":"results/iclr27/advantage_router_resolver_d4751330395e_20260829T135723Z_job5148751/decision.json","json_path":"method_pass.ADR-linear-full","equals":false},
+    {"claim_id":"PHASE-2.5B-R","path":"results/iclr27/advantage_router_resolver_d4751330395e_20260829T135723Z_job5148751/decision.json","json_path":"method_pass.ADR-linear-split","equals":false},
+    {"claim_id":"PHASE-2.5B-R","path":"results/iclr27/advantage_router_resolver_d4751330395e_20260829T135723Z_job5148751/decision.json","json_path":"method_pass.ADR-tiny-nonlinear-choice","equals":false},
+    {"claim_id":"PHASE-2.5B-R","path":"results/iclr27/advantage_router_resolver_d4751330395e_20260829T135723Z_job5148751/decision.json","json_path":"choice_pass.ADR-linear-full","equals":false},
+    {"claim_id":"PHASE-2.5B-R","path":"results/iclr27/advantage_router_resolver_d4751330395e_20260829T135723Z_job5148751/decision.json","json_path":"choice_pass.ADR-linear-split","equals":false},
+    {"claim_id":"PHASE-2.5B-R","path":"results/iclr27/advantage_router_resolver_d4751330395e_20260829T135723Z_job5148751/decision.json","json_path":"choice_pass.ADR-tiny-nonlinear-choice","equals":true}
   ],
   "claim_index": {
     "supported": ["C1","C3","C5","C7","C9","C11","C14","C14-P2.5","C14-P3.0","C14-P3.1","C14-P3.2"],

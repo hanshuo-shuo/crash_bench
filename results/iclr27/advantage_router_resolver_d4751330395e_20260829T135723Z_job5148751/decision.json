@@ -1,0 +1,493 @@
+{
+  "authorized_next_action": "freeze the nonlinear conditional-choice diagnosis and make nonlinear option selection the sole method story without expanding the benchmark or model set",
+  "choice_checks": {
+    "ADR-linear-full": {
+      "actual": {
+        "balanced_accuracy": 0.5579424517146236,
+        "detour_recall": 0.742130750605327,
+        "macro_f1": 0.553901219925449,
+        "raw_decisions": 60,
+        "raw_target_detour_pred_detour": 26,
+        "raw_target_detour_pred_retreat": 11,
+        "raw_target_retreat_pred_detour": 15,
+        "raw_target_retreat_pred_retreat": 8,
+        "retreat_recall": 0.37375415282392027,
+        "weighted_confusion_matrix": "[[7.2976190476190474, 2.5357142857142856], [4.488095238095237, 2.6785714285714284]]"
+      },
+      "criteria": {
+        "conditional_dr_balanced_accuracy": false,
+        "strict_detour_recall": true,
+        "strict_retreat_recall": false
+      },
+      "passes": false
+    },
+    "ADR-linear-split": {
+      "actual": {
+        "balanced_accuracy": 0.6369446477842221,
+        "detour_recall": 0.8353510895883778,
+        "macro_f1": 0.6356413386818596,
+        "raw_decisions": 60,
+        "raw_target_detour_pred_detour": 30,
+        "raw_target_detour_pred_retreat": 7,
+        "raw_target_retreat_pred_detour": 15,
+        "raw_target_retreat_pred_retreat": 8,
+        "retreat_recall": 0.4385382059800665,
+        "weighted_confusion_matrix": "[[8.214285714285714, 1.6190476190476188], [4.023809523809524, 3.142857142857143]]"
+      },
+      "criteria": {
+        "conditional_dr_balanced_accuracy": true,
+        "strict_detour_recall": true,
+        "strict_retreat_recall": false
+      },
+      "passes": false
+    },
+    "ADR-tiny-nonlinear-choice": {
+      "actual": {
+        "balanced_accuracy": 0.7253082943859451,
+        "detour_recall": 0.8559322033898306,
+        "macro_f1": 0.7296502576689163,
+        "raw_decisions": 60,
+        "raw_target_detour_pred_detour": 32,
+        "raw_target_detour_pred_retreat": 5,
+        "raw_target_retreat_pred_detour": 10,
+        "raw_target_retreat_pred_retreat": 13,
+        "retreat_recall": 0.5946843853820597,
+        "weighted_confusion_matrix": "[[8.416666666666666, 1.4166666666666665], [2.9047619047619047, 4.261904761904761]]"
+      },
+      "criteria": {
+        "conditional_dr_balanced_accuracy": true,
+        "strict_detour_recall": true,
+        "strict_retreat_recall": true
+      },
+      "passes": true
+    }
+  },
+  "choice_pass": {
+    "ADR-linear-full": false,
+    "ADR-linear-split": false,
+    "ADR-tiny-nonlinear-choice": true
+  },
+  "data_fingerprint": "d4751330395e",
+  "data_fingerprint_sha256": "8798814981598b7b02bbb0f311f45f15bbd6f873fcea85c44467a77487299d1b",
+  "exact_thresholds": {
+    "choice_pass": {
+      "conditional_dr_balanced_accuracy_min": 0.6,
+      "strict_detour_recall_min": 0.55,
+      "strict_retreat_recall_min": 0.55
+    },
+    "gate_diagnostic": {
+      "auroc_min": 0.6,
+      "balanced_accuracy_min": 0.6,
+      "base_recall_min": 0.55,
+      "intervention_recall_min": 0.55
+    },
+    "intervention_rate_cap": 0.6,
+    "margin_quartile_boundaries": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "method_pass": {
+      "catastrophe_rate_increase_over_risk_max": 0.02,
+      "intervention_rate_cap": 0.6,
+      "intervention_rate_increase_over_risk_max": 0.05,
+      "nonnegative_paired_sources_min": 12,
+      "risk_reference": "Risk->BestFixed",
+      "strict_base_recall_min": 0.8,
+      "strict_detour_recall_min": 0.55,
+      "strict_retreat_recall_min": 0.55,
+      "support_balanced_comparators": [
+        "SB-Risk+TwoStage",
+        "SB-DirectQ"
+      ],
+      "support_comparator_macro_f1_gain_min": 0.08,
+      "support_comparator_utility_drop_max": 0.01,
+      "support_comparator_utility_gain_min": 0.02,
+      "utility_gain_over_risk_min": 0.03
+    },
+    "outer_fold_tau": {
+      "ADR-linear-full": {
+        "0815f4806fc9a4fbd58c6627c8b92fd77f1b80ad4b8b4cd6d0c6e0541d488a7b": -0.2007887080154926,
+        "28c563172e6e13a0d3d84f1527243878c67a2140fa8c9a81ecb8b81ec9402dc8": 0.08123328608205785,
+        "2ef1381d9cfc0a92b107e2940bcf431c7494cd7067d032284f30a23c47b487cc": 0.1642161870208515,
+        "3f7887ee8820a4163a5033c81050731e85d1a310652a612f5b0ea5c450ec2043": 0.3343538611090594,
+        "5de3fa5396875480db81793738029227ed357caa91e5d24290ffc5cb0371f908": 0.041771644354295534,
+        "61f6ada542d03d1dd4d75a304f2674efa20660163c54b012b956522e98835cac": 0.2308293097992609,
+        "6292759eb45913ce4ed8447194504833f347d9355012e3228775797a4b0a7cd1": 0.17764674579393028,
+        "655347c9fb28aaf505e162e6bcad095d17e4bfee5506113825cfb3da6ca60845": 0.015350121379961335,
+        "69fa7e93588c6aea4b134efa44633d38556ce1656b46df276021920a664881a3": 0.30436494162484745,
+        "76fe1d96587ab928f6fb5d7750ecd048fd712eb3d66aa60feb972a3d9d56c9d1": 0.2930638347314359,
+        "821b498fc1fcb4e3c103635fa473d7577f718c4f633b273772954295c83ae585": 0.04176161016323568,
+        "9176c2514b8a62105f4d2b8a22a8a0b0236c5b9feda58c18ef64cea917b98d9d": 0.05195579572063502,
+        "986b3dff233a80cf0fd1c48f815600f49b95f83be0d9f898fee40d0a5c9dca63": -0.020382308074756078,
+        "a3e1c487338ecfe4ce59e1e8f0be7a20d0442476ad923022ec430bdb5470ee56": 0.2801920901048234,
+        "a992f0a563f4b0239708f4be6fa38192e6930b15387567b2d4a16568d4fa5671": -0.09532524173938217,
+        "b830bede73f505b84b88a6596e92c22a5a4c0ded1e275e8e5b28a599849d2df6": 0.32092991902865026,
+        "c8fa274849bf4beeb7c46b93a7de7a6242e5af2e9c83a395e8d0db16da5e81d8": 0.6149558441874476,
+        "d6796d48077a08484abd1252e6deb387d8b6a10bf445e66c4e6eaa0bde0f7818": 0.14404890796627356,
+        "ddd84e646ab0cdd38c0f283802f28ac361a412492f3872c7f489b95bb55d53af": -0.08344029028839883,
+        "f64d2a60c3b9cebc4b5e12f86f4978711b4ca1e7a3788d1756d078c45a1c1004": 0.3435614383074844
+      },
+      "ADR-linear-split": {
+        "0815f4806fc9a4fbd58c6627c8b92fd77f1b80ad4b8b4cd6d0c6e0541d488a7b": -0.2007887080154926,
+        "28c563172e6e13a0d3d84f1527243878c67a2140fa8c9a81ecb8b81ec9402dc8": 0.08123328608205785,
+        "2ef1381d9cfc0a92b107e2940bcf431c7494cd7067d032284f30a23c47b487cc": 0.1642161870208515,
+        "3f7887ee8820a4163a5033c81050731e85d1a310652a612f5b0ea5c450ec2043": 0.3343538611090594,
+        "5de3fa5396875480db81793738029227ed357caa91e5d24290ffc5cb0371f908": 0.041771644354295534,
+        "61f6ada542d03d1dd4d75a304f2674efa20660163c54b012b956522e98835cac": 0.2308293097992609,
+        "6292759eb45913ce4ed8447194504833f347d9355012e3228775797a4b0a7cd1": 0.17764674579393028,
+        "655347c9fb28aaf505e162e6bcad095d17e4bfee5506113825cfb3da6ca60845": 0.015350121379961335,
+        "69fa7e93588c6aea4b134efa44633d38556ce1656b46df276021920a664881a3": 0.3719147635376764,
+        "76fe1d96587ab928f6fb5d7750ecd048fd712eb3d66aa60feb972a3d9d56c9d1": -0.10333876037405477,
+        "821b498fc1fcb4e3c103635fa473d7577f718c4f633b273772954295c83ae585": -0.12602591878883274,
+        "9176c2514b8a62105f4d2b8a22a8a0b0236c5b9feda58c18ef64cea917b98d9d": 0.05195579572063502,
+        "986b3dff233a80cf0fd1c48f815600f49b95f83be0d9f898fee40d0a5c9dca63": -0.020382308074756078,
+        "a3e1c487338ecfe4ce59e1e8f0be7a20d0442476ad923022ec430bdb5470ee56": 0.2801920901048234,
+        "a992f0a563f4b0239708f4be6fa38192e6930b15387567b2d4a16568d4fa5671": -0.09532524173938217,
+        "b830bede73f505b84b88a6596e92c22a5a4c0ded1e275e8e5b28a599849d2df6": 0.32092991902865026,
+        "c8fa274849bf4beeb7c46b93a7de7a6242e5af2e9c83a395e8d0db16da5e81d8": 0.02030567103118594,
+        "d6796d48077a08484abd1252e6deb387d8b6a10bf445e66c4e6eaa0bde0f7818": 0.14404890796627356,
+        "ddd84e646ab0cdd38c0f283802f28ac361a412492f3872c7f489b95bb55d53af": -0.08344029028839883,
+        "f64d2a60c3b9cebc4b5e12f86f4978711b4ca1e7a3788d1756d078c45a1c1004": 0.3435614383074844
+      },
+      "ADR-tiny-nonlinear-choice": {
+        "0815f4806fc9a4fbd58c6627c8b92fd77f1b80ad4b8b4cd6d0c6e0541d488a7b": -0.2007887080154926,
+        "28c563172e6e13a0d3d84f1527243878c67a2140fa8c9a81ecb8b81ec9402dc8": 0.08123328608205785,
+        "2ef1381d9cfc0a92b107e2940bcf431c7494cd7067d032284f30a23c47b487cc": 0.1642161870208515,
+        "3f7887ee8820a4163a5033c81050731e85d1a310652a612f5b0ea5c450ec2043": 0.3343538611090594,
+        "5de3fa5396875480db81793738029227ed357caa91e5d24290ffc5cb0371f908": 0.041771644354295534,
+        "61f6ada542d03d1dd4d75a304f2674efa20660163c54b012b956522e98835cac": 0.2308293097992609,
+        "6292759eb45913ce4ed8447194504833f347d9355012e3228775797a4b0a7cd1": 0.17764674579393028,
+        "655347c9fb28aaf505e162e6bcad095d17e4bfee5506113825cfb3da6ca60845": 0.015350121379961335,
+        "69fa7e93588c6aea4b134efa44633d38556ce1656b46df276021920a664881a3": 0.30436494162484745,
+        "76fe1d96587ab928f6fb5d7750ecd048fd712eb3d66aa60feb972a3d9d56c9d1": -0.10333876037405477,
+        "821b498fc1fcb4e3c103635fa473d7577f718c4f633b273772954295c83ae585": 0.04176161016323568,
+        "9176c2514b8a62105f4d2b8a22a8a0b0236c5b9feda58c18ef64cea917b98d9d": 0.05195579572063502,
+        "986b3dff233a80cf0fd1c48f815600f49b95f83be0d9f898fee40d0a5c9dca63": 0.45177079877256865,
+        "a3e1c487338ecfe4ce59e1e8f0be7a20d0442476ad923022ec430bdb5470ee56": 0.2801920901048234,
+        "a992f0a563f4b0239708f4be6fa38192e6930b15387567b2d4a16568d4fa5671": -0.09532524173938217,
+        "b830bede73f505b84b88a6596e92c22a5a4c0ded1e275e8e5b28a599849d2df6": 0.32092991902865026,
+        "c8fa274849bf4beeb7c46b93a7de7a6242e5af2e9c83a395e8d0db16da5e81d8": 0.6149558441874476,
+        "d6796d48077a08484abd1252e6deb387d8b6a10bf445e66c4e6eaa0bde0f7818": 0.14404890796627356,
+        "ddd84e646ab0cdd38c0f283802f28ac361a412492f3872c7f489b95bb55d53af": -0.08344029028839883,
+        "f64d2a60c3b9cebc4b5e12f86f4978711b4ca1e7a3788d1756d078c45a1c1004": 0.3435614383074844
+      }
+    },
+    "upper_half_margin_rule": "abs_choice_advantage >= pooled_strict_DR_median"
+  },
+  "git_commit": "bf032cb1d6d482423b229e304997ea29134bb4bb",
+  "learned_gate_oracle_choice_method_checks": {
+    "ADR-linear-full": {
+      "actual": {
+        "catastrophe_rate_increase_over_risk": -0.031388888888888855,
+        "intervention_rate": 0.4608333333333333,
+        "intervention_rate_increase_over_risk": -0.03388888888888886,
+        "nonnegative_paired_sources": 16,
+        "strict_base_recall": 0.5873511904761904,
+        "strict_detour_recall": 0.532051282051282,
+        "strict_retreat_recall": 0.722222222222222,
+        "utility_gain_over_risk": 0.025277777777777732
+      },
+      "criteria": {
+        "catastrophe_rate_vs_risk": true,
+        "intervention_rate_cap": true,
+        "intervention_rate_vs_risk": true,
+        "nonnegative_paired_sources": true,
+        "strict_base_recall": false,
+        "strict_detour_recall": false,
+        "strict_retreat_recall": true,
+        "support_balanced_comparator": true,
+        "utility_gain_over_risk": false
+      },
+      "passes": false,
+      "support_comparator_checks": [
+        {
+          "comparator": "SB-Risk+TwoStage",
+          "passes": true,
+          "strict_choice_macro_f1_gain": 0.20562923886292145,
+          "utility_gain": 0.0719444444444444
+        },
+        {
+          "comparator": "SB-DirectQ",
+          "passes": true,
+          "strict_choice_macro_f1_gain": 0.2223729597678034,
+          "utility_gain": 0.08694444444444438
+        }
+      ]
+    },
+    "ADR-linear-split": {
+      "actual": {
+        "catastrophe_rate_increase_over_risk": -0.055555555555555525,
+        "intervention_rate": 0.5225,
+        "intervention_rate_increase_over_risk": 0.02777777777777779,
+        "nonnegative_paired_sources": 16,
+        "strict_base_recall": 0.4998511904761904,
+        "strict_detour_recall": 0.6089743589743589,
+        "strict_retreat_recall": 0.8518518518518516,
+        "utility_gain_over_risk": 0.028611111111111087
+      },
+      "criteria": {
+        "catastrophe_rate_vs_risk": true,
+        "intervention_rate_cap": true,
+        "intervention_rate_vs_risk": true,
+        "nonnegative_paired_sources": true,
+        "strict_base_recall": false,
+        "strict_detour_recall": true,
+        "strict_retreat_recall": true,
+        "support_balanced_comparator": true,
+        "utility_gain_over_risk": false
+      },
+      "passes": false,
+      "support_comparator_checks": [
+        {
+          "comparator": "SB-Risk+TwoStage",
+          "passes": true,
+          "strict_choice_macro_f1_gain": 0.2103042088398867,
+          "utility_gain": 0.07527777777777775
+        },
+        {
+          "comparator": "SB-DirectQ",
+          "passes": true,
+          "strict_choice_macro_f1_gain": 0.22704792974476867,
+          "utility_gain": 0.09027777777777773
+        }
+      ]
+    },
+    "ADR-tiny-nonlinear-choice": {
+      "actual": {
+        "catastrophe_rate_increase_over_risk": -0.031388888888888855,
+        "intervention_rate": 0.45666666666666667,
+        "intervention_rate_increase_over_risk": -0.03805555555555551,
+        "nonnegative_paired_sources": 15,
+        "strict_base_recall": 0.5748511904761904,
+        "strict_detour_recall": 0.5064102564102564,
+        "strict_retreat_recall": 0.7777777777777776,
+        "utility_gain_over_risk": 0.01694444444444443
+      },
+      "criteria": {
+        "catastrophe_rate_vs_risk": true,
+        "intervention_rate_cap": true,
+        "intervention_rate_vs_risk": true,
+        "nonnegative_paired_sources": true,
+        "strict_base_recall": false,
+        "strict_detour_recall": false,
+        "strict_retreat_recall": true,
+        "support_balanced_comparator": true,
+        "utility_gain_over_risk": false
+      },
+      "passes": false,
+      "support_comparator_checks": [
+        {
+          "comparator": "SB-Risk+TwoStage",
+          "passes": true,
+          "strict_choice_macro_f1_gain": 0.20211754537661214,
+          "utility_gain": 0.06361111111111109
+        },
+        {
+          "comparator": "SB-DirectQ",
+          "passes": true,
+          "strict_choice_macro_f1_gain": 0.2188612662814941,
+          "utility_gain": 0.07861111111111108
+        }
+      ]
+    }
+  },
+  "method_checks": {
+    "ADR-linear-full": {
+      "actual": {
+        "catastrophe_rate_increase_over_risk": 0.006111111111111206,
+        "intervention_rate": 0.4608333333333333,
+        "intervention_rate_increase_over_risk": -0.03388888888888886,
+        "nonnegative_paired_sources": 10,
+        "strict_base_recall": 0.5873511904761904,
+        "strict_detour_recall": 0.391025641025641,
+        "strict_retreat_recall": 0.25925925925925924,
+        "utility_gain_over_risk": -0.04472222222222222
+      },
+      "criteria": {
+        "catastrophe_rate_vs_risk": true,
+        "intervention_rate_cap": true,
+        "intervention_rate_vs_risk": true,
+        "nonnegative_paired_sources": false,
+        "strict_base_recall": false,
+        "strict_detour_recall": false,
+        "strict_retreat_recall": false,
+        "support_balanced_comparator": false,
+        "utility_gain_over_risk": false
+      },
+      "passes": false,
+      "support_comparator_checks": [
+        {
+          "comparator": "SB-Risk+TwoStage",
+          "passes": false,
+          "strict_choice_macro_f1_gain": -0.03763320967733186,
+          "utility_gain": 0.001944444444444443
+        },
+        {
+          "comparator": "SB-DirectQ",
+          "passes": false,
+          "strict_choice_macro_f1_gain": -0.020889488772449893,
+          "utility_gain": 0.01694444444444443
+        }
+      ]
+    },
+    "ADR-linear-split": {
+      "actual": {
+        "catastrophe_rate_increase_over_risk": -0.017222222222222194,
+        "intervention_rate": 0.5225,
+        "intervention_rate_increase_over_risk": 0.02777777777777779,
+        "nonnegative_paired_sources": 12,
+        "strict_base_recall": 0.4998511904761904,
+        "strict_detour_recall": 0.4487179487179486,
+        "strict_retreat_recall": 0.3703703703703703,
+        "utility_gain_over_risk": -0.032222222222222235
+      },
+      "criteria": {
+        "catastrophe_rate_vs_risk": true,
+        "intervention_rate_cap": true,
+        "intervention_rate_vs_risk": true,
+        "nonnegative_paired_sources": true,
+        "strict_base_recall": false,
+        "strict_detour_recall": false,
+        "strict_retreat_recall": false,
+        "support_balanced_comparator": true,
+        "utility_gain_over_risk": false
+      },
+      "passes": false,
+      "support_comparator_checks": [
+        {
+          "comparator": "SB-Risk+TwoStage",
+          "passes": false,
+          "strict_choice_macro_f1_gain": -0.00023336175952592964,
+          "utility_gain": 0.014444444444444426
+        },
+        {
+          "comparator": "SB-DirectQ",
+          "passes": true,
+          "strict_choice_macro_f1_gain": 0.016510359145356035,
+          "utility_gain": 0.029444444444444412
+        }
+      ]
+    },
+    "ADR-tiny-nonlinear-choice": {
+      "actual": {
+        "catastrophe_rate_increase_over_risk": -0.00555555555555548,
+        "intervention_rate": 0.45666666666666667,
+        "intervention_rate_increase_over_risk": -0.03805555555555551,
+        "nonnegative_paired_sources": 14,
+        "strict_base_recall": 0.5748511904761904,
+        "strict_detour_recall": 0.45512820512820507,
+        "strict_retreat_recall": 0.44444444444444436,
+        "utility_gain_over_risk": -0.023333333333333317
+      },
+      "criteria": {
+        "catastrophe_rate_vs_risk": true,
+        "intervention_rate_cap": true,
+        "intervention_rate_vs_risk": true,
+        "nonnegative_paired_sources": true,
+        "strict_base_recall": false,
+        "strict_detour_recall": false,
+        "strict_retreat_recall": false,
+        "support_balanced_comparator": true,
+        "utility_gain_over_risk": false
+      },
+      "passes": false,
+      "support_comparator_checks": [
+        {
+          "comparator": "SB-Risk+TwoStage",
+          "passes": true,
+          "strict_choice_macro_f1_gain": 0.07560097636464153,
+          "utility_gain": 0.023333333333333345
+        },
+        {
+          "comparator": "SB-DirectQ",
+          "passes": true,
+          "strict_choice_macro_f1_gain": 0.09234469726952349,
+          "utility_gain": 0.03833333333333333
+        }
+      ]
+    }
+  },
+  "method_pass": {
+    "ADR-linear-full": false,
+    "ADR-linear-split": false,
+    "ADR-tiny-nonlinear-choice": false
+  },
+  "oracle_diagnostics_deployable": false,
+  "phase": "2.5B-R",
+  "post_hoc_protocol_amendment": true,
+  "primary_decision": "CHOICE_CAPACITY_BOTTLENECK",
+  "schema_version": 1,
+  "secondary_flags": [
+    "tiny_nonlinear_choice_only",
+    "ADR-tiny-nonlinear-choice:benefit_gate_failure"
+  ],
+  "selected_method": null,
+  "upper_half_choice_checks": {
+    "ADR-linear-full": {
+      "actual": {
+        "balanced_accuracy": 0.5579424517146236,
+        "detour_recall": 0.742130750605327,
+        "macro_f1": 0.553901219925449,
+        "raw_decisions": 60,
+        "raw_target_detour_pred_detour": 26,
+        "raw_target_detour_pred_retreat": 11,
+        "raw_target_retreat_pred_detour": 15,
+        "raw_target_retreat_pred_retreat": 8,
+        "retreat_recall": 0.37375415282392027,
+        "weighted_confusion_matrix": "[[7.2976190476190474, 2.5357142857142856], [4.488095238095237, 2.6785714285714284]]"
+      },
+      "criteria": {
+        "conditional_dr_balanced_accuracy": false,
+        "strict_detour_recall": true,
+        "strict_retreat_recall": false
+      },
+      "passes": false
+    },
+    "ADR-linear-split": {
+      "actual": {
+        "balanced_accuracy": 0.6369446477842221,
+        "detour_recall": 0.8353510895883778,
+        "macro_f1": 0.6356413386818596,
+        "raw_decisions": 60,
+        "raw_target_detour_pred_detour": 30,
+        "raw_target_detour_pred_retreat": 7,
+        "raw_target_retreat_pred_detour": 15,
+        "raw_target_retreat_pred_retreat": 8,
+        "retreat_recall": 0.4385382059800665,
+        "weighted_confusion_matrix": "[[8.214285714285714, 1.6190476190476188], [4.023809523809524, 3.142857142857143]]"
+      },
+      "criteria": {
+        "conditional_dr_balanced_accuracy": true,
+        "strict_detour_recall": true,
+        "strict_retreat_recall": false
+      },
+      "passes": false
+    },
+    "ADR-tiny-nonlinear-choice": {
+      "actual": {
+        "balanced_accuracy": 0.7253082943859451,
+        "detour_recall": 0.8559322033898306,
+        "macro_f1": 0.7296502576689163,
+        "raw_decisions": 60,
+        "raw_target_detour_pred_detour": 32,
+        "raw_target_detour_pred_retreat": 5,
+        "raw_target_retreat_pred_detour": 10,
+        "raw_target_retreat_pred_retreat": 13,
+        "retreat_recall": 0.5946843853820597,
+        "weighted_confusion_matrix": "[[8.416666666666666, 1.4166666666666665], [2.9047619047619047, 4.261904761904761]]"
+      },
+      "criteria": {
+        "conditional_dr_balanced_accuracy": true,
+        "strict_detour_recall": true,
+        "strict_retreat_recall": true
+      },
+      "passes": true
+    }
+  },
+  "upper_half_choice_pass": {
+    "ADR-linear-full": false,
+    "ADR-linear-split": false,
+    "ADR-tiny-nonlinear-choice": true
+  }
+}

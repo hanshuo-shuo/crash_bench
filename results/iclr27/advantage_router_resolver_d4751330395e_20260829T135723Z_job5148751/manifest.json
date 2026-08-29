@@ -1,0 +1,74 @@
+{
+  "artifact_sha256": {
+    "all_oof_predictions.csv": "58c132f93d029448a18f22bd951821e7d973f7536a414bcc6f256b279adb7034",
+    "bootstrap_intervals.csv": "3ddcda026002d3cea30b96dab4cd8bd6174be0df81c546c28ba9782e57de6896",
+    "calibration.json": "5a9957b759df87c5e6d49e6140f0a9312eb4ff45eae2580c34935d6bb3d8849c",
+    "conditional_choice_metrics.csv": "8c962f5710fc5721b86ed011232af8e0c7dacb45fbb72f25261d61089e1905aa",
+    "config_resolved.yaml": "8b0f388a443ccd4037d518242094c6e28a4a0d1d480ebadca41de57a8ed88fcd",
+    "decision.json": "18082442ecaf7fe9da363bce4a6b7e298c234aaf215989e1299ed86ea606871d",
+    "family_metrics.csv": "410c49159cb8b8e51355a20957ae56fbbb5d8ef6b8d8ff31c2dc0cade9b73253",
+    "fit_summaries.json": "25cf3cb9e7fee0b20820f11d7dab03cd268815a1bfb0e93c007607cbf954919d",
+    "fold_assignments.csv": "7022bbde1dcd2b7d2020072a989b5e894612fda7802dce3af091b94c77f4673b",
+    "gate_metrics.csv": "0df2b623701618b0aabd6fae9dcb28703484e3ac58d577c220f73c7cd1c1a828",
+    "margin_metrics.csv": "99353a6ea7731b499fe9377da8578f1b7f4130da212a8597d6eb96eb543436b2",
+    "oracle_hybrid_metrics.csv": "c718f0e2cc1233d270c25cb6652a57ab05c1a750a3446c70c407bea89601fe50",
+    "overall_metrics.csv": "a461daef7af23ccd64fc8874ca8c58b7c93fd5e26ee1c944b872817011edb29b",
+    "source_metrics.csv": "bb2a37cf3af733b795a6880d931eee8c094a1adfb2740d657ebdb65b1b33621d"
+  },
+  "authorized_next_action": "freeze the nonlinear conditional-choice diagnosis and make nonlinear option selection the sole method story without expanding the benchmark or model set",
+  "created_at_utc": "2026-08-29T14:02:52.872552+00:00",
+  "data_fingerprint": "d4751330395e",
+  "decision_count": 273,
+  "evidence_level": "exposed-development-only",
+  "fresh_test_outcomes_loaded": false,
+  "frozen_phase_2_5b_git_commit": "df3168c75843f33484209b9908ac939814de31e9",
+  "git_commit": "bf032cb1d6d482423b229e304997ea29134bb4bb",
+  "git_worktree_dirty": false,
+  "input_sha256": {
+    "capture/capture_manifest.json": "a0a1efad5976bc5661109a161e3ec21112a5a97f993207667cc7abda606f0d60",
+    "capture/decision_features.npz": "3ee68e647ecc68a704d02ac5bd19129ee063e78fe97423a32564ff194e4bb495",
+    "capture/decision_metadata.json": "1e7f701cdb1b9c3eb00d6ae637c722e5a5f0ad55861e5135f0e1d2a1b18f0815",
+    "capture/option_rollouts.jsonl": "9f51fe43b8cda6e67a93b70439dbf7c65ce769cfd8e04812230df4e2bfdb9353",
+    "phase_2_5b/all_predictions.npz": "b5fcc71b23c9ac267fd6682a0582f89b19acc104e0b3a77c4fdf178a45d56685",
+    "phase_2_5b/gate_decision.json": "b152a143dcabc17f5dd12593af3d96f68b0db363f0925f3a3305c3ed40e09e96",
+    "phase_2_5b/manifest.json": "5d5fe3a3a9d1bae926b6115a971fe38a4d44ade2687efff1b9f2834e53e58307",
+    "support/gate_decision.json": "e278453f2a6e1517e97ac9627383db2470fec30fd33bfa5af596f4465d901d13",
+    "support/manifest.json": "c1abad34fedb51d7c25ee22d0dae2751aed682d998684a902ff7e988189015d7"
+  },
+  "kind": "iclr27_advantage_router_resolver",
+  "models": [
+    "ADR-linear-full",
+    "ADR-linear-split",
+    "ADR-tiny-nonlinear-choice"
+  ],
+  "new_rollouts": false,
+  "oracle_diagnostics_deployable": false,
+  "outer_calibration_sources": 5,
+  "outer_fit_sources": 14,
+  "outer_folds": 20,
+  "post_hoc_protocol_amendment": true,
+  "primary_decision": "CHOICE_CAPACITY_BOTTLENECK",
+  "protocol": {
+    "margin_diagnostics_used_for_threshold_selection": false,
+    "maximum_source_macro_intervention_rate": 0.6,
+    "outer_crossfit": {
+      "assignment": "sha256(seed|outer_source|candidate_source), ascending",
+      "calibration_sources": 5,
+      "fit_sources": 14,
+      "folds": 20,
+      "method": "leave_one_source_out",
+      "seed": 2027
+    },
+    "outer_test_used_for_selection": false,
+    "pca_scaler_model_fit_role": "outer fit sources only",
+    "threshold_selection_role": "five outer-training calibration sources only"
+  },
+  "schema_version": 1,
+  "selected_method": null,
+  "slurm": {
+    "account": "p33100",
+    "job_id": "5148751",
+    "partition": "short"
+  },
+  "source_count": 20
+}

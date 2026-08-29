@@ -1,0 +1,225 @@
+schema_version: 1
+kind: iclr27_advantage_router_resolver
+study:
+  stage: 2.5B-R
+  evidence_level: exposed-development-only
+  purpose: post-hoc resolver for the non-exhaustive Phase 2.5B gate
+  protocol_status: post-hoc amendment frozen before resolver outcomes
+inputs:
+  capture_path: results/counterfactual_router/full_d4751330395e_20260814T152231Z
+  option_support_audit_path: results/iclr27/option_support_audit_787623226de0_20260829T112149Z
+  support_crossfit_path: results/iclr27/support_crossfit_df3168c75843_20260829T115455Z_job5137872
+  data_fingerprint: d4751330395e
+  required_capture_files:
+  - capture_manifest.json
+  - decision_metadata.json
+  - option_rollouts.jsonl
+  - decision_features.npz
+  required_support_files:
+  - manifest.json
+  - gate_decision.json
+  required_support_gate: PASS-SUPPORT
+  required_crossfit_files:
+  - manifest.json
+  - all_predictions.npz
+  - gate_decision.json
+  required_crossfit_gate: INCONCLUSIVE
+data_policy:
+  independent_unit: source_state_sha256
+  exact_state_aggregation: one frozen option outcome per decision-option pair
+  largest_horizon_selection: preserve the frozen capture decision grid without reselection
+  trajectory_weighting: equal total weight per source trajectory
+  expected_decision_count: 273
+  expected_source_count: 20
+  expected_historical_split_source_counts:
+    train: 5
+    calibration: 7
+    development: 8
+  allowed_splits:
+  - train
+  - calibration
+  - development
+  forbidden_splits:
+  - test
+  - fresh_test
+  - confirmatory_test
+  fresh_test_allowed: false
+  outer_crossfit:
+    method: leave_one_source_out
+    folds: 20
+    fit_sources: 14
+    calibration_sources: 5
+    assignment: sha256(seed|outer_source|candidate_source), ascending
+    seed: 2027
+utility:
+  lambda: 1.0
+  eta: 0.0
+  outcome_values:
+    task_success: 1.0
+    safe_noncompletion: 0.0
+    catastrophe: -1.0
+  option_order:
+  - base_continue
+  - detour_complete
+  - retreat_hold
+  option_costs:
+  - 0.0
+  - 1.0
+  - 1.0
+  tie_break: prefer Base, then Detour, then Retreat
+targets:
+  intervention_advantage: max(U_D, U_R) - U_B
+  choice_advantage: U_D - U_R
+  oracle_gate: intervention_advantage > 0
+  oracle_choice: Detour iff choice_advantage >= 0, otherwise Retreat
+features:
+  temporal_view: single_frame
+  hidden_projection: outer_fit_only_pca
+  pca_components: 16
+  full_future_free:
+  - hidden_pca
+  - robot_state
+  - nominal_action
+  hidden_only:
+  - hidden_pca
+  forbidden_deployable_metadata:
+  - historical_split
+  - source_state_sha256
+  - condition
+  - horizon_actions
+  - placement_id
+  - U_B
+  - U_D
+  - U_R
+  - intervention_advantage
+  - choice_advantage
+  - oracle_gate
+  - oracle_choice
+models:
+  seed: 2027
+  ridge_alpha: 1.0
+  candidates:
+    ADR-linear-full:
+      intervention_head: ridge_full_future_free
+      choice_head: ridge_full_future_free
+    ADR-linear-split:
+      role: primary_candidate
+      intervention_head: ridge_full_future_free
+      choice_head: ridge_hidden_only
+    ADR-tiny-nonlinear-choice:
+      role: capacity_diagnostic
+      intervention_head: ridge_full_future_free
+      choice_head: mlp_hidden_only
+  tiny_mlp:
+    hidden_units: 32
+    activation: tanh
+    optimizer: L-BFGS-B
+    l2: 0.01
+    maximum_iterations: 1000
+    initialization: seeded_normal_fan_in
+    architecture_sweep: false
+calibration:
+  selection_rows: outer calibration sources only
+  objective: maximize source-macro realized utility
+  maximum_intervention_rate: 0.6
+  threshold_rule: intervene iff predicted_A_int > tau
+  tie_break:
+  - lower catastrophe rate
+  - lower intervention rate
+  - higher threshold
+reused_phase_2_5b_methods:
+- Base
+- Always Detour
+- Always Retreat
+- Risk->Retreat
+- Risk->Detour
+- Risk->BestFixed
+- Risk+TwoStage
+- SB-Risk+TwoStage
+- DirectChoice
+- DirectQ
+- SB-DirectQ
+- PairwiseAdvantage
+- OutcomeRouter
+- SB-OutcomeRouter
+- SB-COR
+- OutcomeRouter-hidden-only
+- OutcomeRouter-state-action-only
+- Condition-only diagnostic
+- Horizon-only diagnostic
+conditional_choice_comparators:
+- Fixed-Detour diagnostic
+- Condition-only choice diagnostic
+- Horizon-only choice diagnostic
+statistics:
+  bootstrap:
+    unit: source
+    shared_resamples: true
+    replicates: 5000
+    seed: 2027
+    interval: percentile_95
+  margin:
+    quartiles:
+    - 0.25
+    - 0.5
+    - 0.75
+    upper_half_rule: abs_choice_advantage >= pooled_strict_DR_median
+    threshold_selection_from_margin_results: prohibited
+decision:
+  choice_pass:
+    conditional_dr_balanced_accuracy_min: 0.6
+    strict_detour_recall_min: 0.55
+    strict_retreat_recall_min: 0.55
+  method_pass:
+    risk_reference: Risk->BestFixed
+    support_balanced_comparators:
+    - SB-Risk+TwoStage
+    - SB-DirectQ
+    strict_detour_recall_min: 0.55
+    strict_retreat_recall_min: 0.55
+    strict_base_recall_min: 0.8
+    utility_gain_over_risk_min: 0.03
+    intervention_rate_cap: 0.6
+    intervention_rate_increase_over_risk_max: 0.05
+    catastrophe_rate_increase_over_risk_max: 0.02
+    nonnegative_paired_sources_min: 12
+    support_comparator_utility_gain_min: 0.02
+    support_comparator_macro_f1_gain_min: 0.08
+    support_comparator_utility_drop_max: 0.01
+  gate_diagnostic:
+    balanced_accuracy_min: 0.6
+    intervention_recall_min: 0.55
+    base_recall_min: 0.55
+    auroc_min: 0.6
+  primary_decisions:
+  - METHOD_READY
+  - CHOICE_CAPACITY_BOTTLENECK
+  - GATE_OR_CALIBRATION_BOTTLENECK
+  - LABEL_MARGIN_BOTTLENECK
+  - CURRENT_BENCHMARK_SIGNAL_INSUFFICIENT
+  authorized_next_action:
+    METHOD_READY: freeze the selected deployable advantage router and run one independent
+      seed replication
+    CHOICE_CAPACITY_BOTTLENECK: freeze the nonlinear conditional-choice diagnosis
+      and make nonlinear option selection the sole method story without expanding
+      the benchmark or model set
+    GATE_OR_CALIBRATION_BOTTLENECK: repair only the counterfactual-benefit gate or
+      its inner-source calibration without changing the choice head
+    LABEL_MARGIN_BOTTLENECK: run one separately preregistered mechanics-aware benchmark-authoring
+      experiment
+    CURRENT_BENCHMARK_SIGNAL_INSUFFICIENT: contract the paper to a benchmark and diagnostic
+      contribution
+outputs:
+  required:
+  - manifest.json
+  - decision.json
+  - overall_metrics.csv
+  - conditional_choice_metrics.csv
+  - gate_metrics.csv
+  - oracle_hybrid_metrics.csv
+  - source_metrics.csv
+  - family_metrics.csv
+  - margin_metrics.csv
+  - all_oof_predictions.csv
+  - bootstrap_intervals.csv
+  - config_resolved.yaml
