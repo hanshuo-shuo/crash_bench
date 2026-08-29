@@ -142,6 +142,7 @@ sequential intervention.
 | 1. Paper truth source | Every current paper number maps to immutable evidence; unsupported wording and reviewer risks are explicit. | **PASS** — local 186/186 tests and Quest Job 5124071 (`short`, exit `0:0`) passed at commit `cbc965b`. |
 | 2. Strongest-baseline audit | Outcome decomposition/multi-option value survives fair direct, risk, and geometry baselines. | **INCONCLUSIVE / current method NO-GO** — Quest Job 5128781 (`short`, exit `0:0`), commit `eed1fee`. |
 | 2.5A. Existing-corpus option support | Pooled strict support is source-diverse and a fixed non-Base option leaves enough canonical Oracle value. | **PASS-SUPPORT** — local CPU-only audit, commit `7876232`; only Phase 2.5B is authorized. |
+| 2.5B. Source-cross-fitted support rescue | Strict 20-fold source-OOF test of current, support-balanced, ranking, risk, and value selectors under one constrained calibration rule. | **PROTOCOL READY / RESULT PENDING** — Screen A and every new outcome-bearing rollout remain blocked. |
 | 3. Problem and method rewrite | Exact-state full-information supervision and general utility are formalized without observational-causal overclaim. | Positive method rewrite blocked; only option-support/ambiguity pivot design is authorized. |
 | 4+. New evidence and paper | Only evidence justified by the gate is collected and written. | No confirmatory cohort authorized. |
 
@@ -177,6 +178,18 @@ sequential intervention.
 - `scripts/iclr27/audit_option_support.py`: CPU-only, tie-preserving audit.
 - `results/iclr27/option_support_audit_787623226de0_20260829T112149Z/`:
   clean-commit manifest, tables, matched pairs, and machine gate.
+
+## Phase-2.5B protocol artifacts
+
+- `configs/iclr27/support_crossfit.yaml`: frozen 20-fold source-OOF,
+  support-weighting, constrained-calibration, metrics, and fail-closed gate.
+- `scripts/iclr27/train_support_crossfit_suite.py`: outer/inner cross-fit and
+  OOF prediction producer; fresh/test outcomes are rejected before loading.
+- `scripts/iclr27/analyze_support_crossfit_suite.py` and
+  `plot_support_crossfit_suite.py`: source-paired analysis, shared bootstrap,
+  exact sign-flip tests, gate, and compact figures.
+- `setup/iclr27_support_crossfit.sbatch`: CPU-only Quest entry point.
+- `SUPPORT_CROSSFIT_RESULT.md`: protocol contract; reviewed result pending.
 
 ## Change control
 

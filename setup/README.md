@@ -161,6 +161,7 @@ pin、sanity 记录和踩坑列表在归档 setup 文档中。
 | 论文部分 | 入口 |
 |---|---|
 | **P2 动态 first-crossing Router** | 先运行 `submit_dynamic_first_crossing_calibration.sh` 冻结 trajectory-level boundary，再运行 `submit_dynamic_first_crossing_router.sh`；协议和指标见 `docs/P2_DYNAMIC_FIRST_CROSSING.md` |
+| **ICLR Phase 2.5B source-cross-fit** | `iclr27_support_crossfit.sbatch`；只读现有 20-source exposed-development corpus，CPU-only，结果未冻结前不得解释为 Screen A 授权 |
 | **fresh counterfactual router 主结果** | `submit_fresh_counterfactual_router.sh`, `submit_fresh_counterfactual_router_supplement.sh`；结果已冻结，不要覆盖重跑 |
 | wall causal sweep | `run_ood_control_v5.sbatch` |
 | Base/OFT/pi0 matched behavior | `run_pilot_base_matched.sbatch`, `run_pilot_oft.sbatch`, `run_pilot_openpi.sbatch` |
@@ -177,9 +178,13 @@ pin、sanity 记录和踩坑列表在归档 setup 文档中。
 
 ## 下一轮实验
 
-当前主结果已经完成。不要在现有 8/13-source cohort 上继续搜索更深 sequence model、
-Transformer、ensemble world model 或 outcome-led threshold。只有评审明确需要额外外推证据时，
-才按以下顺序考虑新实验：
+当前 Phase 2.5A 只授权一次现有 20-source corpus 上的 CPU-only Phase 2.5B
+source-cross-fitted support rescue。不得在现有 8/13-source cohort 上搜索更深 sequence
+model、Transformer、ensemble world model 或 outcome-led threshold；Phase 2.5B 的
+GO-SIGNAL / GO-VALUE-ONLY / BENCHMARK-PIVOT 门未正式记录前，也不得启动 Screen A 或新
+outcome-bearing rollout。
+
+Phase 2.5B 以后只有对应 gate 明确授权，才考虑新实验；原有后备顺序为：
 
 1. 在新 task family 上原样复制冻结的 counterfactual-router 方法和 frontier；
 2. 五折 held-out wall online guard；

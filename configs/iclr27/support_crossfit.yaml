@@ -1,0 +1,250 @@
+schema_version: 1
+kind: iclr27_support_crossfit_suite
+
+study:
+  stage: 2.5B
+  evidence_level: exposed-development-only
+  purpose: source-cross-fitted support rescue on the existing 20-source corpus
+
+inputs:
+  capture_path: results/counterfactual_router/full_d4751330395e_20260814T152231Z
+  option_support_audit_path: results/iclr27/option_support_audit_787623226de0_20260829T112149Z
+  required_capture_files:
+    - capture_manifest.json
+    - decision_metadata.json
+    - option_rollouts.jsonl
+    - decision_features.npz
+  required_support_files:
+    - manifest.json
+    - gate_decision.json
+  required_support_gate: PASS-SUPPORT
+
+data_policy:
+  independent_unit: source_state_sha256
+  pooled_role: all historical splits are exposed development only
+  expected_source_count: 20
+  expected_historical_split_source_counts:
+    train: 5
+    calibration: 7
+    development: 8
+  allowed_splits:
+    - train
+    - calibration
+    - development
+  forbidden_splits:
+    - test
+    - fresh_test
+    - confirmatory_test
+  fresh_test_allowed: false
+  outer_crossfit:
+    method: leave_one_source_out
+    folds: 20
+    fit_sources: 14
+    calibration_sources: 5
+    assignment: sha256(seed|outer_source|candidate_source), ascending
+    seed: 2027
+  support_validity:
+    labels:
+      - strict_base
+      - strict_detour
+      - strict_retreat
+    minimum_fit_sources_per_label: 1
+    support_advantage_gamma: 0.5
+
+utility:
+  lambda: 1.0
+  eta: 0.0
+  outcome_values:
+    task_success: 1.0
+    safe_noncompletion: 0.0
+    catastrophe: -1.0
+  option_order:
+    - base_continue
+    - detour_complete
+    - retreat_hold
+  option_costs:
+    - 0.0
+    - 1.0
+    - 1.0
+  tie_break: prefer Base, then lower option cost, then fixed option order
+
+features:
+  primary_contract: hidden_robot_action
+  temporal_view: single_frame
+  hidden_projection: outer_fit_only_pca
+  pca_components: 16
+  robot_state: true
+  nominal_action: true
+  forbidden_deployable_metadata:
+    - historical_split
+    - source_state_sha256
+    - condition
+    - horizon_actions
+    - placement_id
+
+model:
+  seed: 2027
+  logistic_l2: 0.01
+  ridge_alpha: 1.0
+  optimizer_max_iterations: 500
+  source_weighting: equal total weight per source
+  support_balance:
+    strict_strata:
+      - strict_base
+      - strict_detour
+      - strict_retreat
+    equal_strict_stratum_total_weight: true
+    auxiliary_stratum: auxiliary_tie_or_no_good
+    auxiliary_equalized_with_strict: false
+    maximum_decision_weight_multiple: 12.0
+    equality_tolerance: 1.0e-7
+  two_stage_support_balance:
+    rule: inverse source frequency times inverse strict-intervention-stratum frequency
+    auxiliary_rule: retain source-frequency weight without strict-class upweighting
+    exact_source_and_class_margins_claimed: false
+    maximum_decision_weight_multiple: 12.0
+  ranking:
+    beta_grid:
+      - 0.25
+      - 1.0
+    tau: 1.0
+    inner_source_folds: 5
+    selection_metric: source_macro_utility
+    threshold_calibration_role: inner_training_sources_only
+    tie_break: higher strict-choice macro-F1, then smaller beta
+    unequal_utility_pairs_only: true
+
+calibration:
+  aggregation: source_macro
+  maximum_intervention_rate: 0.60
+  objective: maximize source-macro realized utility
+  constraint: source-macro intervention rate <= 0.60
+  tie_break:
+    - lower catastrophe rate
+    - lower intervention rate
+    - higher threshold
+  threshold_rule: intervene iff score > threshold
+  selection_rows: outer calibration sources only
+
+methods:
+  fixed:
+    - Base
+    - Always Detour
+    - Always Retreat
+  scalar_risk:
+    - Risk->Retreat
+    - Risk->Detour
+    - Risk->BestFixed
+  learned:
+    - Risk+TwoStage
+    - SB-Risk+TwoStage
+    - DirectChoice
+    - DirectQ
+    - SB-DirectQ
+    - PairwiseAdvantage
+    - OutcomeRouter
+    - SB-OutcomeRouter
+    - SB-COR
+    - OutcomeRouter-hidden-only
+    - OutcomeRouter-state-action-only
+  diagnostic_only:
+    - Condition-only diagnostic
+    - Horizon-only diagnostic
+
+metrics:
+  natural:
+    - source_macro_utility
+    - task_success_rate
+    - catastrophe_rate
+    - intervention_rate
+    - harmful_intervention_rate
+    - oracle_value_recovered
+  strict_choice:
+    - strict_base_recall
+    - strict_detour_recall
+    - strict_retreat_recall
+    - detour_retreat_balanced_accuracy
+    - strict_choice_macro_f1
+    - wrong_intervention_catastrophe_rate
+    - intervention_choice_regret
+  base_preservation:
+    - control_task_success_rate
+    - unnecessary_intervention_rate
+    - base_success_overridden_rate
+
+statistics:
+  bootstrap:
+    unit: source
+    shared_resamples: true
+    replicates: 5000
+    seed: 2027
+  exact_test:
+    unit: source
+    method: paired_sign_flip
+    maximum_exact_sources: 16
+    monte_carlo_replicates: 100000
+
+gate:
+  risk_reference: Risk->BestFixed
+  outcome_candidates:
+    - OutcomeRouter
+    - SB-OutcomeRouter
+    - SB-COR
+  value_candidates:
+    - DirectQ
+    - SB-DirectQ
+    - PairwiseAdvantage
+  learned_selectors:
+    - Risk+TwoStage
+    - SB-Risk+TwoStage
+    - DirectChoice
+    - DirectQ
+    - SB-DirectQ
+    - PairwiseAdvantage
+    - OutcomeRouter
+    - SB-OutcomeRouter
+    - SB-COR
+    - OutcomeRouter-hidden-only
+    - OutcomeRouter-state-action-only
+  support_balanced_comparators:
+    - SB-Risk+TwoStage
+    - SB-DirectQ
+  diagnostics:
+    - Condition-only diagnostic
+    - Horizon-only diagnostic
+  go_signal:
+    strict_detour_recall_min: 0.55
+    strict_retreat_recall_min: 0.55
+    strict_base_recall_min: 0.80
+    utility_gain_over_risk_min: 0.03
+    intervention_rate_increase_over_risk_max: 0.05
+    catastrophe_rate_increase_over_risk_max: 0.02
+    nonnegative_paired_sources_min: 12
+    support_comparator_utility_gain_min: 0.02
+    support_comparator_macro_f1_gain_min: 0.08
+    support_comparator_utility_drop_max: 0.01
+  benchmark_pivot:
+    learned_detour_retreat_recall_min: 0.55
+    diagnostic_detour_retreat_recall_min: 0.55
+  stop_rescue:
+    risk_best_fixed_oracle_value_recovered_min: 0.85
+    strict_retreat_random_level: 0.3333333333333333
+
+outputs:
+  required:
+    - manifest.json
+    - support_crossfit.yaml
+    - fold_assignments.csv
+    - fold_support.csv
+    - calibration.json
+    - beta_selection.json
+    - fit_summaries.json
+    - model_parameters.npz
+    - all_predictions.npz
+    - all_choices.csv
+    - overall_metrics.csv
+    - per_source_metrics.csv
+    - paired_differences.csv
+    - inference.json
+    - gate_decision.json
+    - figures
