@@ -7,7 +7,7 @@
 headline**; only a scoped option-support / option-ambiguity pivot is authorized.
 
 This directory implements stages 1 and 2 of the
-[ICLR 2027 execution plan](../../CrashBench_ICLR2027_Codex_Execution_Plan.md)
+[revised ICLR 2027 execution plan](../../CrashBench_ICLR2027_Revised_Plan_After_Baseline_NoGo.md)
 and is the paper-decision truth source for the ICLR 2027 effort.
 Existing `docs/CURRENT.md`, `docs/PAPER_PLAN.md`, and `docs/CLAIMS.md` remain the
 record of the frozen pre-audit paper story. When the wording or submission
