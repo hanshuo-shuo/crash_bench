@@ -111,7 +111,9 @@ def inject_obstacles_xml(xml: str, obstacles: list[dict]) -> str:
     """Insert static (jointless) obstacle bodies into a robosuite model XML string.
 
     Each obstacle: {"name", "pos":[x,y,z], "size":[...], "type"="box", "rgba"=[...]};
-    box sizes are [sx,sy,sz], while cylinder sizes are [radius,half_height].
+    box sizes are [sx,sy,sz], while cylinder sizes are [radius,half_height]. Optional
+    ``euler`` / ``quat`` and ``friction`` fields are copied onto the geom. This keeps
+    shallow static support ramps in the same exact-XML mechanism as upright walls.
     Static bodies add geoms but NO qpos/qvel DOF, so the LIBERO state vector layout is
     unchanged and saved init_states stay valid (verified in scripts/probe_wall_inject.py).
 
@@ -129,10 +131,22 @@ def inject_obstacles_xml(xml: str, obstacles: list[dict]) -> str:
         size = " ".join(str(v) for v in o["size"])
         gtype = o.get("type", "box")
         rgba = " ".join(str(v) for v in o.get("rgba", [0.85, 0.2, 0.2, 1.0]))
+        pose = ""
+        if "quat" in o and "euler" in o:
+            raise ValueError(f"obstacle {o['name']!r} cannot declare both quat and euler")
+        if "quat" in o:
+            pose = f' quat="{" ".join(str(v) for v in o["quat"])}"'
+        elif "euler" in o:
+            pose = f' euler="{" ".join(str(v) for v in o["euler"])}"'
+        friction = (
+            "" if "friction" not in o
+            else f' friction="{" ".join(str(v) for v in o["friction"])}"'
+        )
         blocks.append(
             f'<body name="{o["name"]}" pos="{px} {py} {pz}">'
             f'<geom name="{o["name"]}_g" type="{gtype}" size="{size}" '
-            f'rgba="{rgba}" group="1" contype="1" conaffinity="1"/></body>'
+            f'rgba="{rgba}"{pose}{friction} group="1" contype="1" '
+            f'conaffinity="1"/></body>'
         )
     return xml.replace("</worldbody>", "".join(blocks) + "</worldbody>", 1)
 

@@ -1,0 +1,144 @@
+{
+  "schema_version": 1,
+  "experiment_id": "iclr27_non_glass_option_ambiguity_screen_v1",
+  "family_id": "unstable_final_placement_v1",
+  "task": {
+    "suite": "libero_spatial",
+    "task_id": 0,
+    "instruction": "pick up the black bowl between the plate and the ramekin and place it on the plate",
+    "target_object": "akita_black_bowl_1",
+    "final_support_object": "plate_1",
+    "source_initialization": "libero_default_init_state",
+    "source_candidates": [
+      {"source_id": "libero_spatial_task0_default_000", "state_index": 0, "reset_seed": 202608300},
+      {"source_id": "libero_spatial_task0_default_001", "state_index": 1, "reset_seed": 202608301},
+      {"source_id": "libero_spatial_task0_default_002", "state_index": 2, "reset_seed": 202608302},
+      {"source_id": "libero_spatial_task0_default_003", "state_index": 3, "reset_seed": 202608303},
+      {"source_id": "libero_spatial_task0_default_004", "state_index": 4, "reset_seed": 202608304},
+      {"source_id": "libero_spatial_task0_default_005", "state_index": 5, "reset_seed": 202608305},
+      {"source_id": "libero_spatial_task0_default_006", "state_index": 6, "reset_seed": 202608306},
+      {"source_id": "libero_spatial_task0_default_007", "state_index": 7, "reset_seed": 202608307}
+    ],
+    "select_nominal_successes": 4,
+    "selection_rule": "first four candidate-list entries with nominal stable task success, a held-to-released transition, all three pre-release anchors, and mechanical validity; evaluate the complete candidate list before selection",
+    "settle_steps": 10,
+    "nominal_max_steps": 220
+  },
+  "conditions": ["on_hazard", "offpath", "no_hazard"],
+  "options": ["base_continue", "stable_offset_place", "safe_setdown"],
+  "horizons_actions_before_release": [20, 10, 5],
+  "parameters": [
+    {
+      "parameter_id": "mild",
+      "mechanical_role": "nominal target perturbed while a broad stable subregion remains",
+      "length_bowl_diameters": 0.65,
+      "width_bowl_diameters": 1.1,
+      "rise_bowl_radii": 0.1,
+      "center_offset_bowl_radii": 0.55
+    },
+    {
+      "parameter_id": "moderate",
+      "mechanical_role": "nominal placement is unstable while the frozen offset target remains available",
+      "length_bowl_diameters": 0.9,
+      "width_bowl_diameters": 1.35,
+      "rise_bowl_radii": 0.34,
+      "center_offset_bowl_radii": 0.8
+    },
+    {
+      "parameter_id": "severe",
+      "mechanical_role": "unstable region substantially removes offset-target stability margin while table setdown remains valid",
+      "length_bowl_diameters": 1.65,
+      "width_bowl_diameters": 1.6,
+      "rise_bowl_radii": 0.72,
+      "center_offset_bowl_radii": 0.06
+    }
+  ],
+  "material": {
+    "description": "low-friction matte polymer support patch; identical within each on_hazard/offpath matched block",
+    "friction": [0.12, 0.005, 0.0001],
+    "rgba": [0.18, 0.52, 0.78, 1.0],
+    "half_thickness_bowl_height_fraction": 0.025,
+    "minimum_half_thickness_m": 0.0015
+  },
+  "targets": {
+    "stable_offset_direction_xy": [-1.0, 0.0],
+    "stable_offset_valid_radius_fraction": 0.72,
+    "stable_offset_bowl_radius_fraction": 0.7,
+    "offpath_plate_radius_offsets": [
+      [-3.2, -2.4],
+      [3.2, -2.4],
+      [-3.2, 2.4],
+      [3.2, 2.4],
+      [0.0, -3.6]
+    ],
+    "safe_setdown_plate_radius_offsets": [
+      [-2.4, -1.6],
+      [2.4, -1.6],
+      [-2.4, 1.6],
+      [2.4, 1.6],
+      [0.0, -2.8]
+    ]
+  },
+  "controller": {
+    "privileged_geometry": true,
+    "cartesian_gain": 12.0,
+    "position_tolerance_m": 0.015,
+    "leg_cap_steps": 90,
+    "lift_bowl_radius_fraction": 2.4,
+    "minimum_lift_m": 0.09,
+    "pre_release_hold_steps": 8,
+    "release_steps": 18,
+    "retreat_bowl_radius_fraction": 1.8,
+    "stable_offset_max_steps": 360,
+    "safe_setdown_max_steps": 360,
+    "base_max_steps": 180,
+    "stopping_condition": "catastrophe, invalid pre-support robot contact, or fixed post-release stability dwell"
+  },
+  "predicates": {
+    "release_confirm_steps": 2,
+    "stability_dwell_steps": 24,
+    "minimum_support_margin_m": 0.004,
+    "support_margin_bowl_radius_fraction": 0.1,
+    "fall_height_bowl_half_height_fraction": 0.35,
+    "escape_margin_bowl_radius_fraction": 0.15,
+    "uncontrolled_displacement_bowl_radius_fraction": 0.72,
+    "stable_tilt_deg": 18.0,
+    "catastrophe_tilt_deg": 48.0,
+    "tilt_sustain_steps": 3,
+    "support_contact_tolerance_m": 0.008,
+    "robot_hazard_contact_force_n": 2.0,
+    "initial_contact_force_n": 0.5,
+    "anchor_relative_motion_bowl_radius_fraction": 0.25,
+    "safe_setdown_radius_bowl_radii": 1.5
+  },
+  "restoration": {
+    "base_repeats": 2,
+    "first_action_atol": 0.0,
+    "trace_atol": 1e-07,
+    "require_simulator_state_hash": true,
+    "require_controller_state_hash": true,
+    "require_continuation_state_hash": true,
+    "require_observation_hash": true,
+    "require_model_xml_hash": true,
+    "require_rng_state_hash": true
+  },
+  "execution": {
+    "rollout_seed": 20260830,
+    "render_size": 256,
+    "media_stride": 4,
+    "checkpoint": "openvla/openvla-7b-finetuned-libero-spatial",
+    "unnorm_key": "libero_spatial",
+    "center_crop": true,
+    "no_hazard_deduplication": "execute once per source and horizon; link all three parameter blocks; count once as evidence",
+    "ordinary_option_outcome_row_cap": 324
+  },
+  "gate": {
+    "minimum_strict_base_sources": 2,
+    "minimum_strict_stable_offset_place_sources": 2,
+    "minimum_strict_safe_setdown_sources": 2,
+    "minimum_same_r_different_action_sources": 2,
+    "minimum_stable_offset_safe_setdown_flip_sources": 1,
+    "independent_unit": "source_state_sha256",
+    "ties_count_as_support": false
+  }
+}
