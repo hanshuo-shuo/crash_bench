@@ -346,7 +346,7 @@ def _write_csv(path: Path, rows: Sequence[Mapping[str, Any]]) -> None:
             if name not in fieldnames:
                 fieldnames.append(str(name))
     with path.open("w", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        writer = csv.DictWriter(handle, fieldnames=fieldnames, lineterminator="\n")
         writer.writeheader()
         for row in rows:
             writer.writerow({name: _native(row.get(name)) for name in fieldnames})

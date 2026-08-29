@@ -64,6 +64,15 @@ def test_source_support_uses_gamma_and_excludes_ties() -> None:
     assert source_c["qualifies_gate_flip"] is True
 
 
+def test_csv_outputs_use_repository_safe_lf(tmp_path: Path) -> None:
+    path = tmp_path / "table.csv"
+    audit._write_csv(path, [{"label": "strict_retreat", "count": 1}])
+    payload = path.read_bytes()
+
+    assert b"\r\n" not in payload
+    assert payload == b"label,count\nstrict_retreat,1\n"
+
+
 @pytest.mark.parametrize(
     ("retreat", "fixed", "expected"),
     [
