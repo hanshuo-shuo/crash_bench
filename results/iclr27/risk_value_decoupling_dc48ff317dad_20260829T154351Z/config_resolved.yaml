@@ -1,0 +1,177 @@
+schema_version: 1
+kind: iclr27_risk_value_decoupling
+study:
+  task: PIVOT-0
+  evidence_level: frozen-evidence-synthesis
+  purpose: Risk Is Not Regret paper-scope decision
+  new_training: false
+  new_rollouts: false
+  new_fresh_test_outcomes_collected: false
+  exact_state_fresh_test_outcomes_loaded: false
+  frozen_sequential_closeout_summaries_read: true
+inputs:
+  capture_data_fingerprint: d4751330395e
+  capture:
+    path: results/counterfactual_router/full_d4751330395e_20260814T152231Z
+    expected_kind: counterfactual_option_rollout_capture
+    files:
+      capture_manifest.json: a0a1efad5976bc5661109a161e3ec21112a5a97f993207667cc7abda606f0d60
+      decision_metadata.json: 1e7f701cdb1b9c3eb00d6ae637c722e5a5f0ad55861e5135f0e1d2a1b18f0815
+      option_rollouts.jsonl: 9f51fe43b8cda6e67a93b70439dbf7c65ce769cfd8e04812230df4e2bfdb9353
+      decision_features.npz: 3ee68e647ecc68a704d02ac5bd19129ee063e78fe97423a32564ff194e4bb495
+  phase_2_5a:
+    path: results/iclr27/option_support_audit_787623226de0_20260829T112149Z
+    expected_kind: iclr27_option_support_audit
+    expected_gate: PASS-SUPPORT
+    files:
+      manifest.json: c1abad34fedb51d7c25ee22d0dae2751aed682d998684a902ff7e988189015d7
+      gate_decision.json: e278453f2a6e1517e97ac9627383db2470fec30fd33bfa5af596f4465d901d13
+      decision_labels.csv: 9871346b5aecb2cfe64aec7688ded5331f13465bb970c4219f388d534a9792a9
+  phase_2_5b:
+    path: results/iclr27/support_crossfit_df3168c75843_20260829T115455Z_job5137872
+    expected_kind: iclr27_support_crossfit_suite
+    expected_gate: INCONCLUSIVE
+    files:
+      manifest.json: 5d5fe3a3a9d1bae926b6115a971fe38a4d44ade2687efff1b9f2834e53e58307
+      gate_decision.json: b152a143dcabc17f5dd12593af3d96f68b0db363f0925f3a3305c3ed40e09e96
+      all_choices.csv: 625165d0b87afddf4585f131ada7469340135d150eabefb25f2ee27aebd15156
+      calibration.json: 77c05dc61796c844aa062d77195551f3e2adbdcf91419ca94cb827754d39e399
+      fold_assignments.csv: a853031469ace2b551b1444f019cfe9d55358a3a6b2f60f6054ed3b0a84f0180
+  phase_2_5b_r:
+    path: results/iclr27/advantage_router_resolver_d4751330395e_20260829T135723Z_job5148751
+    expected_kind: iclr27_advantage_router_resolver
+    expected_decision: CHOICE_CAPACITY_BOTTLENECK
+    files:
+      manifest.json: 0950c0cbfb6db4598e0ca19c5eb28ce4506073c709dc19daab640f0f8487527d
+      decision.json: 18082442ecaf7fe9da363bce4a6b7e298c234aaf215989e1299ed86ea606871d
+      all_oof_predictions.csv: 58c132f93d029448a18f22bd951821e7d973f7536a414bcc6f256b279adb7034
+      oracle_hybrid_metrics.csv: c718f0e2cc1233d270c25cb6652a57ab05c1a750a3446c70c407bea89601fe50
+      fold_assignments.csv: 7022bbde1dcd2b7d2020072a989b5e894612fda7802dce3af091b94c77f4673b
+  sequential:
+    p2_report:
+      path: results/P2_SEQUENTIAL_FIRST_CROSSING_DEV_20260819.md
+      sha256: 5317535926847946c02d0848201c83270745bd179aba1448047c279e5925d9b1
+      canonical:
+        sources: 4
+        episodes: 12
+        base_success: 7
+        base_catastrophe: 4
+        base_safe_noncompletion: 1
+        learned_success: 8
+        learned_catastrophe: 3
+        learned_safe_noncompletion: 1
+        learned_interventions: 2
+        base_success_controls: 7
+        false_interventions: 1
+        known_recovery_support: 2
+        missed_known_recovery: 2
+        oracle_timing_success: 7
+        oracle_timing_catastrophe: 4
+        oracle_timing_safe_noncompletion: 1
+        oracle_timing_interventions: 0
+    p2_5_morphology:
+      path: results/p2_trace_morphology_audit_20260819.json
+      sha256: 5ecfd5f7de24ddc4d9a999ecc0fbddbd6c088d92c4017bb9e00fc1d58d7d6a4a
+    p3_1_analysis:
+      path: results/p3_1_direct_recovery_head_analysis_20260819.json
+      sha256: 37af9140ab001b3bc3ad7c112dc91573bbd53a76b677393a0f83e6d9d1ce1f5f
+    p3_2_analysis:
+      path: results/p3_2_frozen_dynamic_closeout_analysis_20260819.json
+      sha256: 01d1a76707d34aecbe24999d5abd613b8f0456d7e60467f888531bd417ceaad1
+    p3_2_known_recovery:
+      path: results/p3_2_known_recovery_t20_diagnostics_20260819.jsonl
+      sha256: 6c577d9f452c333ba49faf101ce4e970ca84758547ded3020aa169a3134c1b05
+    p3_2_trace_audit:
+      path: results/p3_2_frozen_dynamic_closeout_trace_audit_20260819.json
+      sha256: 6297dc63f1dc8fe1a483430bc642d26f0b5b46c3b382ce1bdb92c5049e4cf982
+data_contract:
+  independent_unit: source_state_sha256
+  expected_decisions: 273
+  expected_sources: 20
+  allowed_splits:
+  - train
+  - calibration
+  - development
+  expected_split_source_counts:
+    train: 5
+    calibration: 7
+    development: 8
+  expected_condition_labels:
+  - glass
+  - offpath
+  - noglass
+  condition_family_count: 3
+  independent_mechanical_family_label: glass_recovery
+  independent_mechanical_family_count: 1
+  condition_labels_are_mechanical_families: false
+canonical_labels:
+  risk: Base outcome is catastrophe
+  benefit: max(U_D, U_R) > U_B + epsilon
+  epsilon: 0.0
+  equality_tolerance: 1.0e-12
+  option_order:
+  - base_continue
+  - detour_complete
+  - retreat_hold
+  tie_break: Base then Detour then Retreat
+  intervention_advantage: max(U_D, U_R) - U_B
+  detour_retreat_advantage: U_D - U_R
+  utility:
+    task_success: 1.0
+    safe_noncompletion: 0.0
+    catastrophe: -1.0
+policies:
+  frozen_phase_2_5b:
+  - Base
+  - Always Detour
+  - Always Retreat
+  - Risk->Detour
+  - Risk->Retreat
+  - Risk->BestFixed
+  oracle_benefit_best_fixed_option: detour_complete
+  primary_linear_method: ADR-linear-split
+  capacity_diagnostic_method: ADR-tiny-nonlinear-choice
+  learned_gate_oracle_choice_method: ADR-tiny-nonlinear-choice
+  full_learned_adr_method: ADR-tiny-nonlinear-choice
+witnesses:
+  match_fields:
+  - source
+  - family
+  - horizon
+  - risk
+  require_distinct_strict_options: true
+  selection: minimum global-z-scored final robot_state plus nominal_action Euclidean
+    distance per family and unordered option contrast
+  tie_break: lexical ordered decision-id pair
+story_rule:
+  broad:
+    disagreement_sources_min: 2
+    exact_same_risk_flip_sources_min: 2
+    independent_mechanical_families_min: 2
+  glass_scoped:
+    glass_disagreement_sources_min: 2
+    glass_source_profile_option_flip_sources_min: 2
+    glass_exact_same_risk_option_flip_sources_min: 1
+  exactly_one_next_action:
+    BROAD_BENCHMARK_PIVOT: authorize one frozen balanced benchmark collection
+    GLASS_SCOPED_BENCHMARK_PIVOT: authorize only a small non-glass option-ambiguity
+      authoring screen
+    INSUFFICIENT_FOR_PIVOT: close the current ICLR line and preserve CrashBench as
+      an internal diagnostic artifact
+outputs:
+  root: results/iclr27
+  directory_prefix: risk_value_decoupling
+  required:
+  - manifest.json
+  - risk_benefit_crosstab.csv
+  - source_support.csv
+  - family_support.csv
+  - risk_only_policy_regret.csv
+  - oracle_hybrid_waterfall.csv
+  - same_risk_different_decision_witnesses.csv
+  - sequential_realization_gap.csv
+  - story_decision.json
+  - figure_risk_benefit_flow.pdf
+  - figure_oracle_gap_waterfall.pdf
+  - figure_source_support.pdf
+  optional_config_snapshot: config_resolved.yaml
