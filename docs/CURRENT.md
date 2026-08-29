@@ -1,5 +1,12 @@
 # Current paper state
 
+> **ICLR 2027 gate notice (2026-08-29):** This file records the frozen
+> pre-audit paper story. Submission decisions and new paper wording are governed
+> by the [ICLR 2027 truth source](iclr27/MASTER_PLAN.md). The current decision is
+> conditional GO pending the strongest-baseline audit; E16 remains a valid
+> descriptive frontier, but outcome-decomposition superiority is not yet
+> established.
+
 **Experiment discovery closed.**
 
 **Paper consolidation active.**

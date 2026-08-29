@@ -1,5 +1,12 @@
 # Paper plan
 
+> **ICLR 2027 gate notice (2026-08-29):** This is the frozen pre-audit writing
+> plan. Use the [ICLR 2027 master plan](iclr27/MASTER_PLAN.md),
+> [claim ledger](iclr27/CLAIM_LEDGER.md), and
+> [reviewer-risk audit](iclr27/REVIEWER_RISK_AUDIT.md) for submission decisions.
+> The method headline is conditional until the strongest direct, value, risk,
+> and geometry baselines are audited without selecting on fresh test outcomes.
+
 ## Working title and frozen contribution
 
 **Risk Is Not Intervention Value: Counterfactual Outcome Routing for VLA Safety**

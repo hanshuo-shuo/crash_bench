@@ -41,6 +41,27 @@ APPENDIX_DOCS = (
     ROOT / "docs/appendix/P0_EXPERIMENT.md",
     ROOT / "docs/appendix/NEGATIVE_RESULTS.md",
 )
+ICLR27_DOCS = (
+    ROOT / "docs/iclr27/MASTER_PLAN.md",
+    ROOT / "docs/iclr27/CLAIM_LEDGER.md",
+    ROOT / "docs/iclr27/RELATED_WORK_MATRIX.md",
+    ROOT / "docs/iclr27/REVIEWER_RISK_AUDIT.md",
+)
+ICLR27_CLAIM_FIELDS = {
+    "claim_id",
+    "paper_wording",
+    "status",
+    "independent_unit",
+    "n_sources",
+    "cohort",
+    "method_hash",
+    "protocol_hash",
+    "result_files",
+    "statistical_test",
+    "limitations",
+    "forbidden_stronger_wording",
+}
+ICLR27_CLAIM_STATUSES = {"supported", "conditional", "unsupported"}
 BANNED_CURRENT_TEXT = (
     "98.3%",
     "98.3 %",
@@ -160,6 +181,152 @@ def markdown_local_link_errors(paths: tuple[Path, ...]) -> list[str]:
                 errors.append(
                     f"broken local link in {source.relative_to(ROOT)}: {raw_target}"
                 )
+    return errors
+
+
+def iclr27_truth_source_errors() -> list[str]:
+    """Validate the ICLR truth source and the frozen bytes behind its claims."""
+
+    errors: list[str] = []
+    for path in ICLR27_DOCS:
+        if not path.is_file():
+            errors.append(f"ICLR27 truth-source document missing: {path.relative_to(ROOT)}")
+    manifest_path = ROOT / "results/iclr27/manifest.json"
+    if not manifest_path.is_file():
+        return [*errors, "ICLR27 truth-source manifest missing: results/iclr27/manifest.json"]
+    if errors:
+        return errors
+
+    manifest = read_json(manifest_path)
+    if manifest.get("schema_version") != 1:
+        errors.append("ICLR27 manifest schema_version must be 1")
+    if manifest.get("kind") != "iclr27_paper_truth_source_manifest":
+        errors.append("ICLR27 manifest kind mismatch")
+    decision = manifest.get("stage_1_decision", {})
+    if decision.get("verdict") != "conditional_go" or decision.get("method_paper_ready") is not False:
+        errors.append("ICLR27 stage-1 decision must remain conditional_go and not method-paper-ready")
+
+    master_text = (ROOT / "docs/iclr27/MASTER_PLAN.md").read_text()
+    for token in (
+        "CONDITIONAL GO",
+        "One-page viability judgment",
+        "strongest-baseline gate",
+        "source state",
+    ):
+        if token not in master_text:
+            errors.append(f"ICLR27 master plan lacks required token {token!r}")
+
+    risk_text = (ROOT / "docs/iclr27/REVIEWER_RISK_AUDIT.md").read_text()
+    hardcoded_risk_ids = {f"R{i:02d}" for i in range(1, 16)}
+    declared_risk_ids = set(manifest.get("required_reviewer_risks", []))
+    if declared_risk_ids != hardcoded_risk_ids:
+        errors.append("ICLR27 manifest must declare reviewer risks R01--R15")
+    missing_risks = sorted(risk_id for risk_id in hardcoded_risk_ids if risk_id not in risk_text)
+    if missing_risks:
+        errors.append(f"ICLR27 reviewer audit lacks {missing_risks}")
+    for token in (
+        "Risk -> Detour",
+        "Direct Choice",
+        "45 frontier points",
+        "privileged geometry",
+        "source-block exact",
+        "CoWAM",
+        "CheckVLA",
+        "SAFE",
+    ):
+        if token not in risk_text:
+            errors.append(f"ICLR27 reviewer audit lacks required risk text {token!r}")
+
+    related_text = (ROOT / "docs/iclr27/RELATED_WORK_MATRIX.md").read_text()
+    for url in (
+        "https://arxiv.org/abs/2506.09937",
+        "https://arxiv.org/abs/2607.26789",
+        "https://arxiv.org/abs/2608.02578",
+    ):
+        if url not in related_text:
+            errors.append(f"ICLR27 related-work matrix lacks primary source {url}")
+
+    claim_index = manifest.get("claim_index", {})
+    indexed_claims: dict[str, str] = {}
+    for status in ICLR27_CLAIM_STATUSES:
+        for claim_id in claim_index.get(status, []):
+            if claim_id in indexed_claims:
+                errors.append(f"ICLR27 claim indexed more than once: {claim_id}")
+            indexed_claims[claim_id] = status
+
+    ledger_text = (ROOT / "docs/iclr27/CLAIM_LEDGER.md").read_text()
+    ledger_claims: dict[str, str] = {}
+    for block in re.split(r"(?m)^### ", ledger_text)[1:]:
+        claim_match = re.search(r"(?m)^claim_id:\s*([^\s]+)\s*$", block)
+        if not claim_match:
+            continue
+        claim_id = claim_match.group(1)
+        if claim_id in ledger_claims:
+            errors.append(f"ICLR27 ledger duplicates claim {claim_id}")
+        present_fields = set(re.findall(r"(?m)^([a-z_]+):(?:\s|$)", block))
+        missing_fields = ICLR27_CLAIM_FIELDS - present_fields
+        if missing_fields:
+            errors.append(f"ICLR27 claim {claim_id} lacks fields {sorted(missing_fields)}")
+        status_match = re.search(r"(?m)^status:\s*([^\s]+)\s*$", block)
+        status = status_match.group(1) if status_match else ""
+        if status not in ICLR27_CLAIM_STATUSES:
+            errors.append(f"ICLR27 claim {claim_id} has invalid status {status!r}")
+        ledger_claims[claim_id] = status
+    if ledger_claims != indexed_claims:
+        errors.append(
+            "ICLR27 ledger/index mismatch: "
+            f"ledger={sorted(ledger_claims.items())}, index={sorted(indexed_claims.items())}"
+        )
+
+    artifact_paths: set[str] = set()
+    for artifact in manifest.get("artifacts", []):
+        relative = artifact.get("path")
+        expected_sha = artifact.get("sha256")
+        if not isinstance(relative, str) or not relative:
+            errors.append("ICLR27 manifest artifact lacks path")
+            continue
+        if relative in artifact_paths:
+            errors.append(f"ICLR27 manifest duplicates artifact {relative}")
+        artifact_paths.add(relative)
+        path = ROOT / relative
+        if not path.is_file():
+            errors.append(f"ICLR27 pinned artifact missing: {relative}")
+            continue
+        actual_sha = hashlib.sha256(path.read_bytes()).hexdigest()
+        if actual_sha != expected_sha:
+            errors.append(f"ICLR27 frozen artifact hash drift: {relative}")
+        for claim_id in artifact.get("claims", []):
+            if claim_id not in indexed_claims:
+                errors.append(f"ICLR27 artifact {relative} names unknown claim {claim_id}")
+
+    for check in manifest.get("value_checks", []):
+        relative = check.get("path")
+        if relative not in artifact_paths:
+            errors.append(f"ICLR27 value check uses unpinned artifact: {relative}")
+            continue
+        path = ROOT / relative
+        if not path.is_file():
+            continue
+        data = read_json(path)
+        if "array_length" in check:
+            actual = len(data)
+            expected = check["array_length"]
+        else:
+            try:
+                actual = dotted_get(data, check["json_path"])
+            except (KeyError, IndexError, TypeError, ValueError) as exc:
+                errors.append(
+                    f"ICLR27 value check path missing for {check.get('claim_id')}: "
+                    f"{relative}:{check.get('json_path')} ({exc})"
+                )
+                continue
+            expected = check.get("equals")
+        if actual != expected:
+            errors.append(
+                f"ICLR27 value drift for {check.get('claim_id')}: "
+                f"{relative}:{check.get('json_path', 'array_length')} "
+                f"expected {expected!r}, got {actual!r}"
+            )
     return errors
 
 
@@ -294,7 +461,7 @@ def audit() -> list[str]:
         if not (ROOT / "docs" / name).exists():
             errors.append(f"missing current document docs/{name}")
 
-    maintained_link_docs = CURRENT_DOCS + APPENDIX_DOCS + (
+    maintained_link_docs = CURRENT_DOCS + APPENDIX_DOCS + ICLR27_DOCS + (
         ROOT / "setup/README.md",
         ROOT / "crashbench/README.md",
         ROOT / "docs/archive/README.md",
@@ -303,6 +470,7 @@ def audit() -> list[str]:
         ROOT / "legacy/README.md",
     )
     errors.extend(markdown_local_link_errors(maintained_link_docs))
+    errors.extend(iclr27_truth_source_errors())
 
     smoke = (ROOT / "setup/glass_recovery_smoke.sbatch").read_text()
     wrapper = (ROOT / "setup/submit_glass_recovery_smoke.sh").read_text()
@@ -841,7 +1009,7 @@ def main() -> None:
     print(
         "Repository audit passed: intervention-value routing framing, maintained links, "
         "legacy glass guards, frozen E14/E15 semantics, scenario fingerprints, "
-        "manifest paths, and claim checks are consistent."
+        "manifest paths, claim checks, and the ICLR27 truth source are consistent."
     )
 
 

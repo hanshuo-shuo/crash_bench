@@ -1,5 +1,10 @@
 # Claim ledger
 
+> **ICLR 2027 note (2026-08-29):** This C0--C14 document records the frozen
+> pre-audit wording. The stricter [ICLR 2027 claim ledger](iclr27/CLAIM_LEDGER.md)
+> adds evidence status, hashes, independent units, statistical limits, and
+> forbidden stronger wording and is authoritative for the ICLR submission.
+
 This is the paper-facing wording for the C0–C14 machine-readable ledger in
 `results/claims_ledger.json`. “Frozen” means that a tracked summary exists; it
 does not imply that ignored raw activations, logs, or videos are local.
