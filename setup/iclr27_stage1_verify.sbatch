@@ -14,14 +14,16 @@ set -euo pipefail
 
 cd "${SLURM_SUBMIT_DIR:-$HOME/crash_bench}"
 module purge
+module load git/2.47.0-gcc-12.4.0
 module load mamba/24.3.0
 source activate "$HOME/crash_bench/envs/openvla"
 export PYTHONNOUSERSITE=1
 export PYTHONDONTWRITEBYTECODE=1
 
-commit="$(git rev-parse HEAD)"
-commit_short="$(git rev-parse --short=12 HEAD)"
-branch="$(git branch --show-current)"
+git_executable="$(command -v git)"
+commit="$("$git_executable" rev-parse HEAD)"
+commit_short="$("$git_executable" rev-parse --short=12 HEAD)"
+branch="$("$git_executable" branch --show-current)"
 created_at_utc="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 path_stamp="$(date -u +%Y%m%dT%H%M%SZ)"
 result_dir="results/iclr27/stage1_verify_${commit_short}_${path_stamp}_job${SLURM_JOB_ID}"
@@ -32,7 +34,7 @@ printf 'commit=%s\nbranch=%s\nhost=%s\njob=%s\nstarted=%s\n' \
 
 python -m pytest -p no:cacheprovider tests -q
 python scripts/audit_repo.py
-git diff --check
+"$git_executable" diff --check
 
 printf '{\n  "schema_version": 1,\n  "kind": "iclr27_stage1_verification",\n  "status": "passed",\n  "git_commit": "%s",\n  "git_branch": "%s",\n  "created_at_utc": "%s",\n  "slurm_job_id": "%s",\n  "slurm_account": "p33100",\n  "slurm_partition": "short",\n  "host": "%s",\n  "commands": {\n    "pytest": "passed",\n    "audit_repo": "passed",\n    "git_diff_check": "passed"\n  }\n}\n' \
   "$commit" "$branch" "$created_at_utc" "$SLURM_JOB_ID" "$(hostname)" \

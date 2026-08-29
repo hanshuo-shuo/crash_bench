@@ -205,6 +205,21 @@ def iclr27_truth_source_errors() -> list[str]:
     decision = manifest.get("stage_1_decision", {})
     if decision.get("verdict") != "conditional_go" or decision.get("method_paper_ready") is not False:
         errors.append("ICLR27 stage-1 decision must remain conditional_go and not method-paper-ready")
+    attempt_fields = {
+        "attempt", "git_commit", "slurm_job_id", "slurm_account", "slurm_partition",
+        "status", "exit_code", "failure", "slurm_log", "result_dir",
+    }
+    seen_attempts: set[int] = set()
+    for attempt in manifest.get("verification_attempts", []):
+        missing = attempt_fields - set(attempt)
+        if missing:
+            errors.append(f"ICLR27 verification attempt lacks {sorted(missing)}")
+        attempt_number = attempt.get("attempt")
+        if attempt_number in seen_attempts:
+            errors.append(f"ICLR27 verification attempt duplicated: {attempt_number}")
+        seen_attempts.add(attempt_number)
+        if attempt.get("slurm_account") != "p33100" or attempt.get("slurm_partition") != "short":
+            errors.append(f"ICLR27 verification attempt {attempt_number} has invalid Slurm provenance")
 
     master_text = (ROOT / "docs/iclr27/MASTER_PLAN.md").read_text()
     for token in (
