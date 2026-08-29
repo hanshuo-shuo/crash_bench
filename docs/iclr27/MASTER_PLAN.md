@@ -116,7 +116,7 @@ sequential intervention.
 
 | Stage | Gate | Status |
 |---|---|---|
-| 1. Paper truth source | Every current paper number maps to immutable evidence; unsupported wording and reviewer risks are explicit. | **PASS locally; Quest verification pending the required SSH socket.** |
+| 1. Paper truth source | Every current paper number maps to immutable evidence; unsupported wording and reviewer risks are explicit. | **PASS** — local 186/186 tests and Quest Job 5124071 (`short`, exit `0:0`) passed at commit `cbc965b`. |
 | 2. Strongest-baseline audit | Outcome decomposition/multi-option value survives fair direct, risk, and geometry baselines. | **NEXT / hard gate** |
 | 3. Problem and method rewrite | Exact-state full-information supervision and general utility are formalized without observational-causal overclaim. | Blocked on stage 2 positioning. |
 | 4+. New evidence and paper | Only evidence justified by the gate is collected and written. | Not authorized by stage 1. |
@@ -131,6 +131,8 @@ sequential intervention.
   by the ledger plus machine-readable key-value checks.
 - `scripts/audit_repo.py`: fails closed if the truth-source schema, hashes,
   required risks, or key frozen values drift.
+- `results/iclr27/stage1_verify_cbc965bc1355_20260829T091913Z_job5124071/verification.json`:
+  pulled Slurm provenance for the successful Quest verification.
 
 ## Change control
 

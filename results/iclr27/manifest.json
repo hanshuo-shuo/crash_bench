@@ -14,6 +14,7 @@
   },
   "stage_1_decision": {
     "verdict": "conditional_go",
+    "stage_1_complete": true,
     "method_paper_ready": false,
     "next_hard_gate": "strongest baseline audit on non-test data",
     "one_page_judgment": "docs/iclr27/MASTER_PLAN.md#one-page-viability-judgment",
@@ -32,6 +33,18 @@
       "failure": "git was unavailable after module purge before the verification commands began",
       "slurm_log": "cb_iclr27_s1_verify_5124022.log",
       "result_dir": null
+    },
+    {
+      "attempt": 2,
+      "git_commit": "cbc965bc1355386a96211dced057d6668ed109a0",
+      "slurm_job_id": "5124071",
+      "slurm_account": "p33100",
+      "slurm_partition": "short",
+      "status": "passed",
+      "exit_code": "0:0",
+      "failure": null,
+      "slurm_log": "cb_iclr27_s1_verify_5124071.log",
+      "result_dir": "results/iclr27/stage1_verify_cbc965bc1355_20260829T091913Z_job5124071"
     }
   ],
   "required_reviewer_risks": [
@@ -74,6 +87,7 @@
     {"path":"results/counterfactual_router_fresh_online_n13_frontier.csv","sha256":"1d8f48f9fa2882a6efc4c7906df56a29e934774b367ceed9c039b34aae34391b","evidence_level":"exploratory-test","claims":["C14"]},
     {"path":"results/P2_SEQUENTIAL_FIRST_CROSSING_DEV_20260819.md","sha256":"5317535926847946c02d0848201c83270745bd179aba1448047c279e5925d9b1","evidence_level":"development-only","claims":["C14-P2"]},
     {"path":"scripts/analyze_p2_trace_morphology.py","sha256":"ca158058f52d83d9a253a8bfda7120ec7249ac0b8def40a7d25b2978ea573b2d","evidence_level":"analysis-code","claims":["C14-P2.5"]},
+    {"path":"results/iclr27/stage1_verify_cbc965bc1355_20260829T091913Z_job5124071/verification.json","sha256":"133248b9071259800738b0bfeb984a531cef56ea4f37d7c66da597ff4513a4d6","evidence_level":"stage-verification","claims":[]},
     {"path":"results/p2_trace_morphology_audit_20260819.json","sha256":"5ecfd5f7de24ddc4d9a999ecc0fbddbd6c088d92c4017bb9e00fc1d58d7d6a4a","evidence_level":"negative-closeout","claims":["C14-P2.5"]},
     {"path":"results/p3_recovery_window_records_20260819.csv","sha256":"f555612ba933643c208f509754736ce98ba1ce5303c8e8f390168c0448d54c3d","evidence_level":"development-only","claims":["C14-P3.0"]},
     {"path":"results/p3_recovery_window_trajectories_20260819.json","sha256":"c1b33c617f87903fb8bd593d4f20deeb74f4694d2282aa27b6f65594e0402896","evidence_level":"development-only","claims":["C14-P3.0"]},
