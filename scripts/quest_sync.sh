@@ -33,6 +33,8 @@ Commands:
   pull-packed-result PATH
                          Pull one precompressed .tar.gz/.tar.xz/.tar.zst under results/
                          without redundant transport compression (no delete).
+  push-d8-freeze PATH    Push one new D8 execution-freeze result directory, checksum
+                         verify it, and refuse any existing remote destination.
 
 Environment overrides:
   QUEST_HOST, QUEST_REMOTE_DIR, QUEST_SOCKET
@@ -241,6 +243,29 @@ case "$command" in
     # must carry an independently pulled SHA-256 sidecar, verified by the caller.
     rsync -a --partial --append --itemize-changes -e "$SSH_TRANSPORT" \
       "$QUEST_HOST:$QUEST_REMOTE_DIR/$path" "$ROOT/$path"
+    ;;
+  push-d8-freeze)
+    path="${2:-}"
+    [[ "$path" =~ ^results/expansion/d8_benchmark/[A-Za-z0-9._-]+$ && "$path" != *..* ]] \
+      || die "push-d8-freeze only accepts one exact D8 run directory"
+    [[ -d "$ROOT/$path" ]] || die "local D8 freeze directory not found: $path"
+    [[ -f "$ROOT/$path/execution_freeze.json" ]] \
+      || die "D8 freeze directory lacks execution_freeze.json"
+    [[ -f "$ROOT/$path/authorization/test_authorization.json" ]] \
+      || die "D8 freeze directory lacks test_authorization.json"
+    [[ -f "$ROOT/$path/authorization/test_open.lock" ]] \
+      || die "D8 freeze directory lacks test_open.lock"
+    check_connection
+    check_project_identity
+    quoted_path="$(printf '%q' "$path")"
+    remote_in_project "test ! -e $quoted_path && mkdir -p $(printf '%q' "$(dirname "$path")")" \
+      || die "remote D8 freeze destination already exists"
+    rsync -az --itemize-changes -e "$SSH_TRANSPORT" \
+      "$ROOT/$path/" "$QUEST_HOST:$QUEST_REMOTE_DIR/$path/"
+    verification="$(rsync -azcn --itemize-changes -e "$SSH_TRANSPORT" \
+      "$ROOT/$path/" "$QUEST_HOST:$QUEST_REMOTE_DIR/$path/")"
+    [[ -z "$verification" ]] || die "remote D8 freeze checksum verification failed"
+    printf 'D8 freeze result uploaded and checksum-verified: %s\n' "$path"
     ;;
   -h|--help|help|'')
     usage
