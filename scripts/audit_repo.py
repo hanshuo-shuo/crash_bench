@@ -479,6 +479,9 @@ def expansion_governance_errors() -> list[str]:
         "scripts/expansion/verify_exact_branching.py",
         "setup/expansion_verify.sbatch",
         "setup/submit_expansion_verify.sh",
+        "scripts/expansion/run_nominal_preflight.py",
+        "setup/expansion_author_sources.sbatch",
+        "setup/submit_expansion_preflight.sh",
     )
     for relative in required:
         if not (ROOT / relative).is_file():
