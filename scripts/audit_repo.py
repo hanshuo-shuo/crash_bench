@@ -476,6 +476,7 @@ def expansion_governance_errors() -> list[str]:
         "results/expansion/governance/d1_backend_capability_report.json",
         "results/expansion/governance/exposure_attempts.jsonl",
         "results/expansion/d2_sources/screen_plan_256ce74521254ec9f692b77cb5197b5aa29be73f58d91ce29a6c945841cba7de.json",
+        "results/expansion/d3_sources/formal_nominal_plan_a42e34a64bf2e0f8200e3171f80bd646e59ffc442edbcd09fa62fe376029e667.json",
         "results/expansion/d2_preflight/77ea231ebf97_a1464cf4ddf0_20260830T084407Z/nominal_preflight_analysis.json",
         "results/expansion/d2_mechanical/d79973fd46e3_f2a8d011f62d_20260830T090458Z/mechanical_preflight_analysis.json",
         "results/expansion/d2_fragile_screen/0f270c3d9c8c_64cc00fdccbb_20260830T091340Z/fragile_screen_analysis.json",
@@ -616,10 +617,13 @@ def expansion_governance_errors() -> list[str]:
     ]
     if declared_plan_hash != actual_plan_hash:
         errors.append("D2 screen source plan self hash mismatch")
-    if len(attempts) != 80 or len(ledger_rows) != 80:
+    screen_ledger_rows = [
+        row for row in ledger_rows if row.get("artifact_role") == "ENGINEERING_SCREEN"
+    ]
+    if len(attempts) != 80 or len(screen_ledger_rows) != 80:
         errors.append("D2 screen source plan/ledger must each contain exactly 80 attempts")
-    if len({row.get("attempt_id") for row in ledger_rows}) != 80:
-        errors.append("D2 exposure ledger attempt IDs are not unique")
+    if len({row.get("attempt_id") for row in screen_ledger_rows}) != 80:
+        errors.append("D2 screen exposure ledger attempt IDs are not unique")
     if screen_plan.get("outcomes_opened") != 0 or screen_plan.get("router_scores_read") != 0:
         errors.append("D2 source authoring opened outcomes or router scores")
     frozen_reset_seeds = {
@@ -629,6 +633,22 @@ def expansion_governance_errors() -> list[str]:
     }
     if not {str(row["reset_seed"]) for row in attempts} <= frozen_reset_seeds:
         errors.append("D2 planned reset seeds are not all frozen in exposure registry")
+    formal_plan = read_json(
+        ROOT
+        / "results/expansion/d3_sources/formal_nominal_plan_a42e34a64bf2e0f8200e3171f80bd646e59ffc442edbcd09fa62fe376029e667.json"
+    )
+    formal_attempts = formal_plan.get("attempts", [])
+    formal_ledger_rows = [
+        row for row in ledger_rows if row.get("artifact_role") == "EXPOSED_NOMINAL_AUTHORING"
+    ]
+    if len(formal_attempts) != 126 or len(formal_ledger_rows) != 126:
+        errors.append("D3 formal plan/ledger must each contain exactly 126 attempts")
+    if len({row.get("attempt_id") for row in formal_ledger_rows}) != 126:
+        errors.append("D3 formal exposure ledger attempt IDs are not unique")
+    if formal_plan.get("outcomes_opened") != 0 or formal_plan.get("router_scores_read") != 0:
+        errors.append("D3 source authoring opened outcomes or router scores")
+    if not {str(row["reset_seed"]) for row in formal_attempts} <= frozen_reset_seeds:
+        errors.append("D3 formal reset seeds are not all frozen in exposure registry")
     mechanism_config = read_json(ROOT / "configs/expansion/mechanism_screens_v1.yaml")
     if mechanism_config.get("unstable_final_placement_v2", {}).get(
         "requires_separate_pre_run_user_authorization"
