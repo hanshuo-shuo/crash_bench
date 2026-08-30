@@ -1,10 +1,19 @@
 # Balanced Intervention Benchmark specification
 
+> **Post-v1 status (2026-08-30):** This remains the prospective specification
+> for an optional broad benchmark, not the completion gate for the active
+> glass-scoped paper. The one v1 non-glass action was consumed by job `5165648`
+> but produced zero option outcomes because geometry preflight was invalid.
+> Current work is governed by
+> [`PUBLICATION_FIRST_RESOLUTION.md`](PUBLICATION_FIRST_RESOLUTION.md); the v1
+> failure chain is recorded in
+> [`NON_GLASS_UNSTABLE_PLACEMENT_V1_AUDIT.md`](NON_GLASS_UNSTABLE_PLACEMENT_V1_AUDIT.md).
+
 **Document role:** prospective specification only; nothing here has been
 executed  
 **Current story status:** `GLASS_SCOPED_BENCHMARK_PIVOT`  
-**Current authorization:** only one small, disposable non-glass
-option-ambiguity authoring screen  
+**Historical pre-v1 authorization:** only one small, disposable non-glass
+option-ambiguity authoring screen; consumed by job `5165648`
 **Not authorized:** the frozen benchmark collection, backbone expansion,
 router training, or confirmatory claims
 
@@ -228,7 +237,8 @@ frozen grid with fixed seeds and retains every eligible state.
 
 ## 11. The one disposable authoring screen
 
-The only action currently authorized is one bounded non-glass screen:
+The only action authorized when this prospective section was frozen was one
+bounded non-glass screen:
 
 - one candidate non-glass mechanical family;
 - at most four disposable source states;
@@ -318,7 +328,21 @@ sequential-success still requires a separately frozen first-crossing test.
 
 ## 15. Current decision
 
-Current evidence authorizes only the small non-glass option-ambiguity authoring
-screen in Section 11. It does not authorize the 72-source minimum collection,
-additional VLA backbone execution, model training, or a confirmatory test. The
-screen is the exactly one next action under `GLASS_SCOPED_BENCHMARK_PIVOT`.
+At the time this specification was written, evidence authorized only the small
+non-glass option-ambiguity authoring screen in Section 11. It did not authorize
+the 72-source minimum collection, additional VLA backbone execution, model
+training, or a confirmatory test. That historical screen action was consumed by
+job `5165648`; Section 16 records the current resolution.
+
+## 16. Post-v1 publication-first resolution
+
+Section 15 records the prospective decision before v1 execution. It is no
+longer the active next action. The v1 screen stopped before physical-block
+freeze, restoration audit, or any option outcome, so it neither passes nor
+scientifically fails the candidate family.
+
+The current scoped paper proceeds without this broad benchmark. If the user
+later authorizes an additive v2 after a complete manuscript snapshot, its
+engineering corrections and source-aware evidence classifications are defined
+in `PUBLICATION_FIRST_RESOLUTION.md`. A v2 result cannot overwrite v1 and does
+not automatically authorize the 72-source collection.

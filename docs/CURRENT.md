@@ -1,5 +1,14 @@
 # Current paper state
 
+> **Superseded forward action (2026-08-30):** The material below is the frozen
+> pre-PIVOT paper state and is not the current headline or experiment queue.
+> The canonical active plan is
+> [`iclr27/PUBLICATION_FIRST_RESOLUTION.md`](iclr27/PUBLICATION_FIRST_RESOLUTION.md):
+> write the glass-scoped exact-state diagnostic from existing evidence, retain
+> the learned-router and sequential nulls, and run no new experiment by default.
+> The non-glass v1 preflight produced zero option outcomes and is audited in
+> [`iclr27/NON_GLASS_UNSTABLE_PLACEMENT_V1_AUDIT.md`](iclr27/NON_GLASS_UNSTABLE_PLACEMENT_V1_AUDIT.md).
+
 > **ICLR 2027 gate notice (2026-08-29):** This file records the frozen
 > pre-audit paper story. The [strongest-baseline audit](iclr27/BASELINE_AUDIT_RESULT.md)
 > is now complete: its formal branch is INCONCLUSIVE and the current
@@ -173,7 +182,7 @@ It may not claim:
 The independent statistical unit is always source state. Conditions, anchors,
 frames, and option branches are correlated observations.
 
-## Current decisions and next action
+## Historical decisions and next action
 
 1. Use E16/C14 as the abstract and main-result headline.
 2. Present P2–P3.2 as one compact statewise-to-sequential boundary section.

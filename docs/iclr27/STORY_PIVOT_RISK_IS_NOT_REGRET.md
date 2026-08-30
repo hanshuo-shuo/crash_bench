@@ -1,8 +1,16 @@
 # PIVOT-0 story decision: risk is not regret
 
+> **Historical-action notice (2026-08-30):** The frozen PIVOT-0 evidence and
+> story status below are unchanged. Its exactly-one non-glass next action was
+> consumed by Quest job `5165648`, which stopped before any option outcome.
+> Current writing and optional-extension rules are additive in
+> [`PUBLICATION_FIRST_RESOLUTION.md`](PUBLICATION_FIRST_RESOLUTION.md); see
+> [`NON_GLASS_UNSTABLE_PLACEMENT_V1_AUDIT.md`](NON_GLASS_UNSTABLE_PLACEMENT_V1_AUDIT.md)
+> for the implementation block.
+
 **Story status:** `GLASS_SCOPED_BENCHMARK_PIVOT`  
 **Evidence role:** model-free synthesis of the frozen, exposed-development exact-state corpus  
-**Current authorization:** one small, disposable non-glass option-ambiguity authoring screen; no benchmark collection
+**PIVOT-0 authorization at decision time:** one small, disposable non-glass option-ambiguity authoring screen; consumed by job `5165648`; no benchmark collection
 
 This document is an additive paper-story decision. It does not rewrite the
 frozen Phase 2.5A, Phase 2.5B, or Phase 2.5B-R records. Its quantitative source
@@ -29,9 +37,10 @@ ordered machine decision; it explains why that machine decision cannot be
 promoted into a nonlinear-router method story.
 
 The resolver's historical authorized-action sentence remains frozen in its
-own record. PIVOT-0 closes that candidate method storyline after the broader
-evidence synthesis; the current paper-facing action is the non-glass screen
-stated at the end of this document.
+own record. PIVOT-0 closed that candidate method storyline after the broader
+evidence synthesis; at decision time its paper-facing action was the non-glass
+screen stated at the end of this document. The top notice records that this
+action has since been consumed.
 
 No deployable ADR passes the unchanged method gate. The strongest Phase 2.5B
 learned method gains only `+0.0178` source-macro utility over source-cross-
@@ -376,7 +385,9 @@ The main text should lead with diagnostics rather than a router architecture.
 | Table 3: source support | Both-benefit-label, strict flip, disagreement, family, and effective-source counts | Separates decision volume from independent support. |
 | Table 4: sequential realization gap | Matched-state Oracle opportunity and learned result; P2/P2.5 offline timing diagnostics; P3.1 separability; P3.2 fresh first-crossing null and missed opportunities | Keeps sequential failure as a deployment boundary, not a second method arc. |
 
-Exactly one next action follows from this story decision: run a small,
-disposable non-glass option-ambiguity authoring screen under the separate
-benchmark specification. Nothing in this document authorizes the subsequent
-frozen collection.
+The historical next action from this story decision was one small, disposable
+non-glass option-ambiguity authoring screen under the separate benchmark
+specification. Job `5165648` consumed that action but stopped before option
+outcomes. Nothing in this document authorizes the subsequent frozen collection;
+the active publication action is defined in the additive resolution linked at
+the top.

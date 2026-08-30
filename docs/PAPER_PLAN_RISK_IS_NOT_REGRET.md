@@ -1,5 +1,12 @@
 # Candidate paper plan: Risk Is Not Regret
 
+> **Canonical publication resolution (2026-08-30):** The active objective is
+> now the publication-first glass-scoped diagnostic in
+> [`PUBLICATION_FIRST_RESOLUTION.md`](iclr27/PUBLICATION_FIRST_RESOLUTION.md).
+> The non-glass v1 screen consumed the former next action but produced zero
+> option outcomes; it is audited as an invalid engineering preflight, not a
+> scientific family failure. No new experiment is required before writing.
+
 > This is a new candidate plan. It does not modify or supersede the historical
 > record in [`PAPER_PLAN.md`](PAPER_PLAN.md). Frozen gate interpretations remain
 > in [`MASTER_PLAN.md`](iclr27/MASTER_PLAN.md),
@@ -7,8 +14,9 @@
 > [`ADVANTAGE_ROUTER_RESOLUTION.md`](iclr27/ADVANTAGE_ROUTER_RESOLUTION.md).
 
 **Paper type:** benchmark/diagnostic paper, not a successful-router paper  
-**Current story status:** `GLASS_SCOPED_BENCHMARK_PIVOT`  
-**Evidence status:** exposed-development synthesis; no confirmatory claim  
+**Current story status:** `PUBLICATION_FIRST_GLASS_SCOPED_DIAGNOSTIC`
+**Evidence status:** exposed-development synthesis; no confirmatory claim
+**Current action:** complete the manuscript and publication package from frozen evidence
 **Proposed title:** *Risk Is Not Regret: Exact-State Intervention Diagnostics
 for Vision-Language-Action Policies*
 
@@ -279,9 +287,9 @@ P3 sequential rescue. If later balanced authoring fails to produce independent
 non-glass option ambiguity, retain the scoped negative diagnosis rather than
 relabeling offpath/noglass controls as hazard diversity.
 
-## 11. Path to a claim-ready benchmark paper
+## 11. Optional path to a broad claim-ready benchmark paper
 
-The target paper becomes broadly claim-ready only if a later, separately
+An optional later paper becomes broadly claim-ready only if a separately
 authorized frozen benchmark satisfies all of the following without adaptive
 top-up: at least two VLA backbones; at least three mechanically distinct hazard
 families; matched offpath and no-hazard controls; Base plus two semantically
@@ -294,9 +302,18 @@ diagnosis, not maximizing a learned router's accuracy. A failure of the frozen
 support gate is itself reportable benchmark evidence; it is not permission to
 collect until a preferred method wins.
 
-## 12. Exactly one next action
+## 12. Current next action
 
-Run one small, disposable non-glass option-ambiguity authoring screen, as
-bounded in the companion benchmark specification. PIVOT-0 does not authorize
-the subsequent frozen collection, multi-backbone expansion, or any learned
-model training.
+Complete the scoped diagnostic manuscript and supporting package under the
+stages and Definition of Done in
+[`PUBLICATION_FIRST_RESOLUTION.md`](iclr27/PUBLICATION_FIRST_RESOLUTION.md).
+This includes the evidence ledger, full manuscript, existing-data figures and
+tables, appendix, artifact map, limitations, and adversarial consistency
+review. It authorizes no new outcome rollout, learned model, threshold tuning,
+or Quest submission.
+
+The former non-glass-screen action was consumed by job `5165648`. Its zero-
+outcome implementation block is preserved in
+[`NON_GLASS_UNSTABLE_PLACEMENT_V1_AUDIT.md`](iclr27/NON_GLASS_UNSTABLE_PLACEMENT_V1_AUDIT.md).
+An additive v2 is optional only after a complete manuscript snapshot and a new
+explicit user decision; it is not part of current paper completion.

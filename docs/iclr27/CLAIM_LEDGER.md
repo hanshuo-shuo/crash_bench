@@ -1,5 +1,13 @@
 # ICLR 2027 claim ledger
 
+> **Current narrative notice (2026-08-30):** Frozen claim entries and statuses
+> below remain unchanged. They are now assembled under the scoped diagnostic
+> claim and writing plan in
+> [`PUBLICATION_FIRST_RESOLUTION.md`](PUBLICATION_FIRST_RESOLUTION.md). A
+> historically supported router-frontier entry is not a current method-success
+> headline; Phase 2.5B/2.5B-R and the sequential closeout remain controlling
+> null/boundary evidence.
+
 This is the paper-facing ledger for the ICLR 2027 submission decision. A
 `supported` status means the exact scoped wording is backed by the listed
 frozen artifact; it does not remove the stated limitations. `conditional`

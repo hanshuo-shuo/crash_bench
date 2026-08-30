@@ -1,5 +1,12 @@
 # CrashBench
 
+> **Current direction (2026-08-30):** The router-centered headline and recovery
+> queues below are historical context. Current work is the publication-first,
+> glass-scoped exact-state diagnostic defined in
+> [`docs/iclr27/PUBLICATION_FIRST_RESOLUTION.md`](docs/iclr27/PUBLICATION_FIRST_RESOLUTION.md).
+> No new outcome experiment, router rescue, or sequential rescue is required or
+> authorized by default.
+
 Working paper title: **Knowing When to Intervene: Counterfactual Outcome
 Routing for VLA Safety**.
 

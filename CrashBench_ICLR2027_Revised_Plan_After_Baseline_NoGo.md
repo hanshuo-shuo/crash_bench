@@ -1,12 +1,19 @@
 # CrashBench ICLR 2027 修订执行计划
 
+> **前向路线已于 2026-08-30 取代：** 本文保留为历史上的 method-rescue
+> 与 benchmark-expansion 执行计划；其中 Screen A/B、confirmatory 授权链、
+> 日程和可复制给 Codex 的旧任务均已停用。当前唯一权威计划是
+> [`docs/iclr27/PUBLICATION_FIRST_RESOLUTION.md`](docs/iclr27/PUBLICATION_FIRST_RESOLUTION.md)：
+> 使用现有冻结证据完成 glass-scoped diagnostic paper，不把未来 broad
+> benchmark 当作当前论文的完成门槛。
+
 ## Phase 2 最强基线审计后的 Option-Support / Option-Ambiguity Pivot
 
 **基线分支：** `codex/iclr27-exact-state-intervention-routing`
 **审计记录提交：** `ac88aeffc990b8edfeab46b73d4aac9a332760e6`
 **冻结审计协议提交：** `eed1feecb3bd298d870ab049976b7ac006d49633`
 **当前决定：** 旧的 outcome-decomposition headline 已停止；不得直接启动 confirmatory cohort。
-**新的唯一授权方向：** 先验证“训练 option support 不足 + benchmark option ambiguity 不足”是否确实解释失败，再决定是否恢复方法论文路线。
+**历史上的唯一授权方向（现已停用）：** 先验证“训练 option support 不足 + benchmark option ambiguity 不足”是否确实解释失败，再决定是否恢复方法论文路线。
 
 ---
 

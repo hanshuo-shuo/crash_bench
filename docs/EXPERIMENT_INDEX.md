@@ -1,5 +1,13 @@
 # Experiment index
 
+> **Current-use notice (2026-08-30):** Stable experiment identifiers and frozen
+> evidence roles below remain historical provenance. The `Next experiment
+> queue` is inactive. Current work is manuscript construction under
+> [`iclr27/PUBLICATION_FIRST_RESOLUTION.md`](iclr27/PUBLICATION_FIRST_RESOLUTION.md),
+> with no new outcome experiment required. Non-glass v1 is an invalid zero-
+> outcome preflight documented in
+> [`iclr27/NON_GLASS_UNSTABLE_PLACEMENT_V1_AUDIT.md`](iclr27/NON_GLASS_UNSTABLE_PLACEMENT_V1_AUDIT.md).
+
 This index is organized by paper role, not execution date. Stable E identifiers
 remain unchanged so manifests and historical logs stay interpretable.
 
@@ -18,7 +26,7 @@ remain unchanged so manifests and historical logs stay interpretable.
 | E11 | representation/observable confound | strict held-out-scenario frozen-capture analysis | `task_phase_confound_analysis.py` | `task_phase_confound/*.json`; analysis figure | frozen; C13 |
 | E6 | glass causal extension and transfer limit | f30–f70 matched glass; OpenVLA | `phase2_glass_prototype.py`, `probe_glass_*` | `glass_prototype.json`, glass probe summary; `ANALYSIS_glass.md` | frozen; C9/C10; closing evidence |
 
-## Next experiment queue — not yet evidence
+## Historical next experiment queue — inactive
 
 | Priority | Experiment | Gate before submission | Intended upgrade |
 |---|---|---|---|

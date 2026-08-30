@@ -1,12 +1,29 @@
 # CrashBench ICLR 2027 master plan
 
-**Truth-source status:** stage 1 frozen; stage 2 and Phase 2.5A/2.5B/2.5B-R recorded on 2026-08-29
-**Working title:** *CrashBench: Exact-State Potential Outcomes for Selective VLA Intervention*
+> **Forward-plan resolution (2026-08-30):** Frozen machine decisions below are
+> unchanged. The active publication action is now controlled by
+> [`PUBLICATION_FIRST_RESOLUTION.md`](PUBLICATION_FIRST_RESOLUTION.md): write the
+> glass-scoped exact-state diagnostic from existing evidence. The former
+> non-glass next action was consumed by job `5165648` and produced zero option
+> outcomes; see
+> [`NON_GLASS_UNSTABLE_PLACEMENT_V1_AUDIT.md`](NON_GLASS_UNSTABLE_PLACEMENT_V1_AUDIT.md).
+> No router rescue, new outcome collection, or broad benchmark is currently
+> authorized.
+
+**Truth-source status:** frozen method gates, PIVOT-0, non-glass-v1 audit, and publication-first resolution recorded through 2026-08-30
+**Current scoped title:** *Risk Does Not Specify Intervention: Exact-State Diagnostics for an OpenVLA--LIBERO Safety Case Study*
+**Historical working title:** *CrashBench: Exact-State Potential Outcomes for Selective VLA Intervention*
 **Stage-1 decision:** **CONDITIONAL GO** pending the strongest-baseline gate.
 **Current submission decision:** **NO-GO for a deployable advantage-router
 claim**; Phase 2.5B remains frozen as **INCONCLUSIVE**, and the exhaustive
 Phase 2.5B-R resolver records **CHOICE_CAPACITY_BOTTLENECK**. It authorizes no
-Screen A or new outcome-bearing rollout.
+method-success or outcome-bearing method rescue. Later PIVOT-0 separately
+authorized one non-glass authoring screen; that historical action is now
+consumed and does not alter the frozen resolver decision.
+
+**Current publication decision:** **GO-WRITE for a glass-scoped diagnostic and
+negative-result paper; NO-GO for a deployable method claim.** Manuscript
+completion, not another experimental gate, is the active terminal objective.
 
 This directory implements stages 1 and 2 of the
 [revised ICLR 2027 execution plan](../../CrashBench_ICLR2027_Revised_Plan_After_Baseline_NoGo.md)
@@ -165,8 +182,10 @@ sequential intervention.
 | 2.5A. Existing-corpus option support | Pooled strict support is source-diverse and a fixed non-Base option leaves enough canonical Oracle value. | **PASS-SUPPORT** — local CPU-only audit, commit `7876232`; only Phase 2.5B is authorized. |
 | 2.5B. Source-cross-fitted support rescue | Strict 20-fold source-OOF test of current, support-balanced, ranking, risk, and value selectors under one constrained calibration rule. | **INCONCLUSIVE / FAIL-CLOSED** — Quest Job 5137872, commit `df3168c`; Screen A and every new outcome-bearing rollout remain blocked. |
 | 2.5B-R. Advantage-decomposed resolver | Exhaustively distinguish method readiness, choice capacity, gate/calibration, margin, and insufficient-signal explanations on the same frozen corpus. | **CHOICE_CAPACITY_BOTTLENECK** — Quest Job 5148751, commit `bf032cb`; nonlinear conditional choice passes, but no deployable ADR passes. |
-| 3. Problem and method rewrite | Exact-state full-information supervision and general utility are formalized without observational-causal overclaim. | Positive method rewrite blocked; only option-support/ambiguity pivot design is authorized. |
-| 4+. New evidence and paper | Only evidence justified by the gate is collected and written. | No confirmatory cohort authorized. |
+| PIVOT-0. Risk-is-not-regret synthesis | Determine the strongest paper story supported by the complete frozen corpus. | **GLASS_SCOPED_BENCHMARK_PIVOT** — diagnostic claim supported; method and broad claims remain closed. |
+| Non-glass v1. Unstable-placement authoring preflight | Test whether the optional broadening mechanism can freeze a valid exact-state grid. | **SCREEN_BLOCKED_ENVIRONMENT / INVALID PREFLIGHT** — Quest Job 5165648, commit `53f62a6`; zero option rows, no scientific family result. |
+| Publication. Scoped diagnostic writeup | Convert existing exact-state, baseline, support, attribution, scope, and sequential-boundary evidence into a complete paper. | **ACTIVE / GO-WRITE** — no new experiment required; Definition of Done is in `PUBLICATION_FIRST_RESOLUTION.md`. |
+| Optional future expansion | Broaden mechanism/backbone coverage only after a complete scoped manuscript and explicit user authorization. | **INACTIVE** — not a current paper gate. |
 
 ## Stage-1 artifacts
 

@@ -1,5 +1,11 @@
 # Paper plan
 
+> **Superseded forward plan (2026-08-30):** This file preserves the historical
+> router-centered paper plan. The canonical active plan is the publication-
+> first glass-scoped diagnostic in
+> [`iclr27/PUBLICATION_FIRST_RESOLUTION.md`](iclr27/PUBLICATION_FIRST_RESOLUTION.md).
+> Do not use experiment queues or headline wording below as current authority.
+
 > **ICLR 2027 gate notice (2026-08-29):** This is the frozen pre-audit writing
 > plan. Use the [ICLR 2027 master plan](iclr27/MASTER_PLAN.md),
 > [claim ledger](iclr27/CLAIM_LEDGER.md), and
