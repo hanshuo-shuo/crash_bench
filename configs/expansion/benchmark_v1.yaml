@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "protocol_id": "crashbench_expansion_mcv_v1",
+  "status": "D0_GOVERNANCE_FROZEN__NO_TEST_AUTHORIZATION",
+  "research_question": "Can exact-state realized outcomes support conservative option-specific utility and stopping decisions that improve fresh-source task-safety utility without harmful intervention?",
+  "primary_policy": {
+    "backend": "openvla",
+    "checkpoint": "openvla/openvla-7b-finetuned-libero-spatial",
+    "revision": "962318cec55ac10993ff0f5f43eda9a270b4c873",
+    "unnorm_key": "libero_spatial",
+    "center_crop": true,
+    "do_sample": false,
+    "num_beams": 1
+  },
+  "transfer_policy": {
+    "backend": "pi0",
+    "status": "BLOCKED_UNTIL_CODE_AND_CHECKPOINT_TREE_HASH_PINNED",
+    "config_name": "pi0_libero",
+    "num_open_loop_steps": 5
+  },
+  "tasks": [
+    {"suite": "libero_spatial", "task_id": 0, "nominal_success_gate": 0.70},
+    {"suite": "libero_spatial", "task_id": 2, "nominal_success_gate": 0.70}
+  ],
+  "mcv": {
+    "mechanism_count": 3,
+    "primary_physical_sources": 300,
+    "per_mechanism_task": {"train": 12, "calibration": 6, "development": 6, "confirmatory_id_test": 16, "fresh_sequential_test": 10},
+    "transfer_sources": {"calibration": 12, "cross_policy_test": 24},
+    "statewise_test_total": 96,
+    "fresh_sequential_total": 60
+  },
+  "test_policy": {
+    "one_time_lock_required": true,
+    "max_operational_retries_per_logical_shard": 2,
+    "test_authorized": false,
+    "test_outcomes_may_be_read": false
+  },
+  "gate_interpretation": {
+    "mechanical_validity_exactness_leakage_and_complete_accounting": "HARD_FAIL_CLOSED",
+    "headline_effect_and_support_thresholds": "FROZEN_AT_D4_AFTER_LABEL_FREE_ENGINEERING_ONLY",
+    "pilot_stage": "Report achieved margins and uncertainty; do not manufacture a pass, but permit scoped continuation when scientific validity holds and the next stage is explicitly labeled exploratory.",
+    "principle": "Gates control claim scope, not whether valid null or partial evidence is preserved and released."
+  }
+}

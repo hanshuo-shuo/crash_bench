@@ -142,6 +142,37 @@ class OpenVLAOFTPolicy:
         """Clear the open-loop action buffer. Called by eval.run_episode per episode."""
         self._queue.clear()
 
+    @property
+    def supports_exact_branching(self) -> bool:
+        return True
+
+    def snapshot_continuation(self):
+        from crashbench.branching.policy_state import PolicyContinuation
+
+        return PolicyContinuation(
+            backend="openvla_oft",
+            contract_version=1,
+            payload={
+                "queue": tuple(np.asarray(action).copy() for action in self._queue),
+                "maxlen": self._queue.maxlen,
+                "capture_hidden": bool(self.capture_hidden),
+            },
+        )
+
+    def restore_continuation(self, snapshot) -> None:
+        if snapshot.backend != "openvla_oft" or snapshot.contract_version != 1:
+            raise ValueError("incompatible OpenVLA-OFT continuation snapshot")
+        payload = snapshot.payload
+        if payload["maxlen"] != self._queue.maxlen:
+            raise ValueError("OpenVLA-OFT action-chunk length drift")
+        if bool(payload["capture_hidden"]) != bool(self.capture_hidden):
+            raise ValueError("OpenVLA-OFT capture_hidden configuration drift")
+        self._queue.clear()
+        self._queue.extend(np.asarray(action).copy() for action in payload["queue"])
+        self.last_hidden = None
+        self._cap_seq = -1
+        self._cap_vec = None
+
     def act(self, observation: dict, instruction: str) -> np.ndarray:
         from experiments.robot.robot_utils import (
             get_action, normalize_gripper_action, invert_gripper_action,

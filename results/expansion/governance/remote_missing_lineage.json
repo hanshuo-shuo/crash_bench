@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "kind": "crashbench_expansion_remote_missing_lineage_ledger",
+  "status": "CONSERVATIVELY_BLACKLISTED",
+  "entries": [
+    {"name": "default_calibration_upstream_pool", "manifest_sha256": "fa484682aa7bb5745ffe023454d9b43e7a87d90a5eab0e69aa1c4ef1aa21f68f", "candidate_range": [0, 49], "resolution": "whole_pool_blacklist"},
+    {"name": "e16_random_source_trace", "display_hash": "932e6e...817d", "generation_seed_range": [2026081700, 2026081729], "resolution": "whole_seed_range_blacklist_until_full_manifest_migrated"},
+    {"name": "p3_2_source_trace", "display_hash": "9ac9124...adfd", "generator_seed": 2026081901, "candidate_range": [0, 29], "resolution": "whole_pool_blacklist_until_full_manifest_migrated"},
+    {"name": "legacy_core_reset_seeds", "resolution": "exact_source_hashes_blacklisted; unknown reset seeds must never be inferred"}
+  ],
+  "unblacklisted_missing_pool_count": 0
+}

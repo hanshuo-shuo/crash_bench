@@ -445,6 +445,73 @@ def learned_recovery_semantic_errors(payload: dict) -> list[str]:
     return errors
 
 
+def expansion_governance_errors() -> list[str]:
+    """Validate the D0 exposure firewall without reading any test outcome."""
+
+    errors: list[str] = []
+    required = (
+        "configs/expansion/exposed_sources_v1.yaml",
+        "configs/expansion/benchmark_v1.yaml",
+        "configs/expansion/utility_v1.yaml",
+        "configs/expansion/mechanism_screens_v1.yaml",
+        "configs/expansion/compute_budget_v1.yaml",
+        "schemas/source_registry.schema.json",
+        "schemas/exact_state.schema.json",
+        "results/expansion/governance/exposure_registry.json",
+        "results/expansion/governance/power_planning.json",
+        "results/expansion/governance/remote_missing_lineage.json",
+        "results/expansion/governance/d1_backend_capability_report.json",
+    )
+    for relative in required:
+        if not (ROOT / relative).is_file():
+            errors.append(f"D0 governance artifact missing: {relative}")
+    if errors:
+        return errors
+
+    registry = read_json(ROOT / "results/expansion/governance/exposure_registry.json")
+    expected_digest = registry.get("registry_sha256")
+    digest_payload = dict(registry)
+    digest_payload.pop("registry_sha256", None)
+    actual_digest = hashlib.sha256(
+        json.dumps(digest_payload, sort_keys=True, separators=(",", ":")).encode()
+    ).hexdigest()
+    if expected_digest != actual_digest:
+        errors.append("D0 exposure registry self hash mismatch")
+    if registry.get("gate", {}).get("status") != "GO":
+        errors.append("D0 exposure registry gate is not GO")
+    if registry.get("gate", {}).get("unresolved_unblacklisted_count") != 0:
+        errors.append("D0 exposure registry has unresolved unblacklisted lineage")
+    if registry.get("gate", {}).get("missing_required_root_count") != 0:
+        errors.append("D0 exposure registry has missing required roots")
+    if registry.get("counts", {}).get("source_union_count", 0) < 74:
+        errors.append("D0 exposure registry fell below the audited 74-source lower bound")
+    if any(row.get("test_eligible") is not False for row in registry.get("sources", [])):
+        errors.append("D0 exposure registry contains a test-eligible historical source")
+
+    benchmark = read_json(ROOT / "configs/expansion/benchmark_v1.yaml")
+    test_policy = benchmark.get("test_policy", {})
+    if test_policy.get("test_authorized") is not False:
+        errors.append("D0 benchmark config prematurely authorizes test")
+    if test_policy.get("test_outcomes_may_be_read") is not False:
+        errors.append("D0 benchmark config permits test-outcome access")
+    if benchmark.get("mcv", {}).get("statewise_test_total") != 96:
+        errors.append("D0 benchmark statewise test size drifted from 96")
+    if benchmark.get("mcv", {}).get("fresh_sequential_total") != 60:
+        errors.append("D0 benchmark sequential size drifted from 60")
+
+    remote = read_json(ROOT / "results/expansion/governance/remote_missing_lineage.json")
+    if remote.get("unblacklisted_missing_pool_count") != 0:
+        errors.append("D0 remote lineage ledger has an unblacklisted pool")
+    d1 = read_json(ROOT / "results/expansion/governance/d1_backend_capability_report.json")
+    if d1.get("d1_gate", {}).get("status") != "NOT_EVALUATED":
+        errors.append("D1 live gate changed without an audited conformance result")
+    if d1.get("claim_boundary") != (
+        "Synthetic tests establish software contracts only and are not benchmark evidence."
+    ):
+        errors.append("D1 capability report does not preserve the synthetic-evidence boundary")
+    return errors
+
+
 def audit() -> list[str]:
     errors: list[str] = []
     # Keep one obvious documentation entrypoint. Historical narratives belong
@@ -495,6 +562,7 @@ def audit() -> list[str]:
     )
     errors.extend(markdown_local_link_errors(maintained_link_docs))
     errors.extend(iclr27_truth_source_errors())
+    errors.extend(expansion_governance_errors())
 
     smoke = (ROOT / "setup/glass_recovery_smoke.sbatch").read_text()
     wrapper = (ROOT / "setup/submit_glass_recovery_smoke.sh").read_text()

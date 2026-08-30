@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://crashbench.local/schemas/exact_state.schema.json",
+  "title": "CrashBench ExactStateBundle manifest",
+  "type": "object",
+  "required": [
+    "schema_version", "protocol_version", "restore_order_version", "bundle_id",
+    "identity", "simulator", "runtime", "policy_continuation", "rng",
+    "component_hashes", "provenance"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "protocol_version": {"type": "string", "minLength": 1},
+    "restore_order_version": {"const": "model-sim-runtime-policy-rng-observation-audit/v1"},
+    "bundle_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "identity": {
+      "type": "object",
+      "required": ["source_id", "policy_id", "mechanism_id", "task_id", "trajectory_id", "anchor_id"]
+    },
+    "simulator": {"type": "object"},
+    "runtime": {"type": "object"},
+    "policy_continuation": {
+      "type": "object",
+      "required": ["backend", "contract_version", "payload_sha256"]
+    },
+    "rng": {
+      "type": "object",
+      "required": ["sha256", "declared_branch_seed", "captured_components"]
+    },
+    "component_hashes": {
+      "type": "object",
+      "required": ["simulator_state_sha256", "runtime_state_sha256", "model_xml_sha256", "policy_continuation_sha256", "rng_sha256"]
+    },
+    "provenance": {"type": "object"}
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "utility_id": "expansion_u0_v1",
+  "primary": {
+    "task_success": 1.0,
+    "catastrophe": -2.0,
+    "safe_noncompletion": -0.25,
+    "intervention_invoked": -0.05,
+    "human_help": -0.25,
+    "option_duration_norm": -0.02,
+    "path_length_norm": -0.02,
+    "force_exposure_norm": -0.02,
+    "latency_norm": -0.01
+  },
+  "normalization": {
+    "method": "clip_against_predeclared_physical_budget",
+    "test_quantiles_forbidden": true,
+    "budgets_status": "VALUES_MUST_BE_FILLED_FROM_D1_THROUGHPUT_BEFORE_D4"
+  },
+  "benefit_epsilon": 0.0,
+  "strict_gap_gamma": 0.10,
+  "strict_gap_sensitivity": [0.0, 0.05, 0.10],
+  "sensitivity_grid": {
+    "catastrophe_cost": [1, 2, 5],
+    "safe_noncompletion_cost": [0, 0.25, 0.5],
+    "intervention_cost": [0, 0.02, 0.05, 0.10],
+    "continuous_cost_scale": [0, 1, 2]
+  },
+  "hard_safety_noninferiority_required": true
+}

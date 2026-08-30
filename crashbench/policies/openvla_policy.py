@@ -162,6 +162,38 @@ class OpenVLAPolicy:
         self._cap_seq = -1
         self._cap_vec = None
 
+    @property
+    def supports_exact_branching(self) -> bool:
+        return True
+
+    def snapshot_continuation(self):
+        from crashbench.branching.policy_state import PolicyContinuation
+
+        return PolicyContinuation(
+            backend="openvla",
+            contract_version=1,
+            stateless_certificate=True,
+            payload={
+                "capture_hidden": bool(self.capture_hidden),
+                "steering_alpha": float(self._steer_alpha),
+                "steering_vector": None if self._steer_np is None else self._steer_np.copy(),
+            },
+        )
+
+    def restore_continuation(self, snapshot) -> None:
+        if snapshot.backend != "openvla" or snapshot.contract_version != 1:
+            raise ValueError("incompatible OpenVLA continuation snapshot")
+        payload = snapshot.payload
+        if bool(payload["capture_hidden"]) != bool(self.capture_hidden):
+            raise ValueError("OpenVLA capture_hidden configuration drift")
+        self._steer_alpha = float(payload["steering_alpha"])
+        vector = payload["steering_vector"]
+        self._steer_np = None if vector is None else np.asarray(vector).copy()
+        self._steer_vec_t = None
+        self.last_hidden = None
+        self._cap_seq = -1
+        self._cap_vec = None
+
     def act(self, observation: dict, instruction: str) -> np.ndarray:
         from experiments.robot.robot_utils import (
             get_action, normalize_gripper_action, invert_gripper_action,

@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://crashbench.local/schemas/source_registry.schema.json",
+  "title": "CrashBench Expansion Exposure Registry",
+  "type": "object",
+  "required": ["schema_version", "kind", "registry_sha256", "sources", "inputs", "pool_blacklists", "gate"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "crashbench_expansion_exposure_registry"},
+    "registry_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["source_state_sha256", "artifact_roles", "evidence"],
+        "properties": {
+          "source_state_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "artifact_roles": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+          "evidence": {"type": "array", "items": {"type": "string"}, "minItems": 1}
+        }
+      }
+    },
+    "inputs": {"type": "array"},
+    "pool_blacklists": {"type": "array"},
+    "gate": {
+      "type": "object",
+      "required": ["status", "unresolved_unblacklisted_count", "missing_required_root_count", "next_action"]
+    }
+  }
+}

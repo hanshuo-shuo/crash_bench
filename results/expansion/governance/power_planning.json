@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "kind": "crashbench_expansion_power_planning",
+  "planning_only": true,
+  "pilot_input": {
+    "path": "results/iclr27/support_crossfit_df3168c75843_20260829T115455Z_job5137872/paired_differences.csv",
+    "estimand": "OutcomeRouter minus RiskToBestFixed source utility",
+    "independent_sources": 20,
+    "sample_sd": 0.2038,
+    "scope_warning": "Legacy glass-only +1/0/-1 utility may be anti-conservative for the new multi-mechanism U0."
+  },
+  "design": {
+    "confirmatory_sources": 96,
+    "two_sided_alpha": 0.05,
+    "target_power": 0.80,
+    "target_gain": 0.06,
+    "normal_approx_required_n": 91,
+    "approx_standard_error_at_n96": 0.0208,
+    "approx_standardized_effect": 0.2944
+  },
+  "decision": "KEEP_N96_FIXED_AND_REPORT_D7_BLINDED_VARIANCE_SENSITIVITY_WITHOUT_ADAPTIVE_TOPUP"
+}

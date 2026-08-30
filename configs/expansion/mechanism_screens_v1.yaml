@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "ordered_shortlist": [
+    "fragile_path_collision_v2",
+    "unstable_final_placement_v2",
+    "observation_staleness_v1",
+    "action_drift_v1",
+    "narrow_clearance_v1"
+  ],
+  "disposable_sources_per_task": 8,
+  "minimum_mechanisms": 3,
+  "common_mechanical_gates": {
+    "nominal_base_success_min": 0.70,
+    "eligible_anchor_sources_min_per_8": 6,
+    "exact_restore_rate_min": 0.95,
+    "admissible_execution_rate_min": 0.90,
+    "matched_control_catastrophe_max": 0.05
+  },
+  "support_readout": {
+    "benefit_zero_sources_min": 3,
+    "benefit_one_sources_min": 3,
+    "benefit_bearing_sources_each_task_min": 1,
+    "two_distinct_strict_winners_sources_min": 2,
+    "classification": "Support thresholds determine broad-headline eligibility; mechanically valid partial/null screens remain publishable diagnostics and may proceed only as explicitly exploratory, never as confirmatory evidence."
+  },
+  "unstable_final_placement_v2": {
+    "requires_separate_pre_run_user_authorization": true,
+    "frozen_v1_sources_excluded": true,
+    "minimum_selected_sources_per_task": 4,
+    "minimum_physical_blocks_per_task": 12,
+    "minimum_linked_decisions_per_task": 108
+  }
+}

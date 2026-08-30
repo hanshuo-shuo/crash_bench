@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "kind": "crashbench_expansion_exposure_ledger",
+  "scan_roots": [
+    "results",
+    "scenarios",
+    "scenarios_control",
+    "scenarios_glass",
+    "scenarios_p0",
+    "configs"
+  ],
+  "artifact_roots": [
+    {"path": "results/counterfactual_router/full_d4751330395e_20260814T152231Z", "artifact_role": "EXPOSED_DEVELOPMENT"},
+    {"path": "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z", "artifact_role": "EXPOSED_HISTORICAL_TEST"},
+    {"path": "results/counterfactual_router/fresh_random_9ed5ad656a08_20260817T0845Z", "artifact_role": "EXPOSED_HISTORICAL_TEST"},
+    {"path": "results/iclr27/baseline_audit_eed1feecb3bd_20260829T101548Z_job5128781", "artifact_role": "EXPOSED_DEVELOPMENT_NULL"},
+    {"path": "results/iclr27/option_support_audit_787623226de0_20260829T112149Z", "artifact_role": "EXPOSED_DEVELOPMENT_SUPPORT"},
+    {"path": "results/iclr27/option_support_audit_5addca8af6d7_20260829T111709Z", "artifact_role": "EXPOSED_DEVELOPMENT_SUPPORT_SUPERSEDED"},
+    {"path": "results/iclr27/support_crossfit_df3168c75843_20260829T115455Z_job5137872", "artifact_role": "EXPOSED_DEVELOPMENT_NULL"},
+    {"path": "results/iclr27/advantage_router_resolver_d4751330395e_20260829T135723Z_job5148751", "artifact_role": "EXPOSED_POSTHOC_DIAGNOSTIC"},
+    {"path": "results/iclr27/risk_value_decoupling_dc48ff317dad_20260829T154351Z", "artifact_role": "EXPOSED_SYNTHESIS"},
+    {"path": "results/iclr27/non_glass_option_ambiguity_screen_c0bb9015a0a3_20260829T170210Z", "artifact_role": "ENGINEERING_ONLY_INVALID_PREFLIGHT"}
+  ],
+  "pool_blacklists": [
+    {
+      "name": "default_calibration_upstream_pool",
+      "manifest_sha256": "fa484682aa7bb5745ffe023454d9b43e7a87d90a5eab0e69aa1c4ef1aa21f68f",
+      "candidate_index_start": 0,
+      "candidate_index_end": 49,
+      "reason": "complete 50-state mapping unavailable locally"
+    },
+    {
+      "name": "e16_random_generation_pool",
+      "manifest_sha256": "932e6e0000000000000000000000000000000000000000000000000000817d",
+      "generator_seed_start": 2026081700,
+      "generator_seed_end": 2026081729,
+      "reason": "displayed plan hash is abbreviated; seed range is conservatively excluded",
+      "identifier_quality": "ABBREVIATED_REMOTE_HASH"
+    },
+    {
+      "name": "p3_2_source_trace_pool",
+      "manifest_sha256": "9ac9124000000000000000000000000000000000000000000000000000adfd",
+      "generator_seed": 2026081901,
+      "candidate_index_start": 0,
+      "candidate_index_end": 29,
+      "reason": "remote source-trace manifest unavailable; full candidate range excluded",
+      "identifier_quality": "ABBREVIATED_REMOTE_HASH"
+    }
+  ]
+}

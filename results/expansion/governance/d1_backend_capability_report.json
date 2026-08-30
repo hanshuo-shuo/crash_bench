@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "kind": "crashbench_expansion_d1_backend_capability_report",
+  "status": "IMPLEMENTED_SYNTHETICALLY__LIVE_CONFORMANCE_REQUIRED",
+  "implementation": {
+    "restore_order_version": "model-sim-runtime-policy-rng-observation-audit/v1",
+    "simulator_runtime_adapter": "existing LiberoEnv flat_state/controller_state/model_xml/reset_to_exact/restore_controller_state",
+    "rng_components": ["python", "numpy_global", "numpy_named_generators", "torch_cpu", "torch_all_cuda_devices", "jax_explicit_keys"],
+    "integrity": ["dtype-shape-byte component hashes", "complete bundle hash", "post-restore recapture equality"],
+    "synthetic_test_evidence": "tests/branching"
+  },
+  "backends": [
+    {
+      "backend": "openvla",
+      "continuation_contract": "STATELESS_SINGLE_FRAME_WITH_STEERING_CONFIGURATION",
+      "queue_snapshot": "NOT_APPLICABLE",
+      "live_classification": "UNVERIFIED",
+      "gate": "BLOCKED_PENDING_3_OF_3_LIVE_SAME_SEED_REPEATS"
+    },
+    {
+      "backend": "openvla_oft",
+      "continuation_contract": "MID_CHUNK_QUEUE_AND_CONFIGURATION_V1",
+      "queue_snapshot": "IMPLEMENTED_AND_SYNTHETICALLY_TESTED",
+      "live_classification": "UNVERIFIED",
+      "gate": "ENGINEERING_ABLATION_ONLY_UNTIL_LIVE_CONFORMANCE"
+    },
+    {
+      "backend": "pi0",
+      "continuation_contract": "MID_CHUNK_QUEUE_AND_EXPLICIT_JAX_KEY_V1",
+      "queue_snapshot": "IMPLEMENTED_AND_SYNTHETICALLY_TESTED",
+      "checkpoint_identity": "UNPINNED",
+      "live_classification": "UNVERIFIED",
+      "gate": "CROSS_POLICY_BLOCKED_UNTIL_CHECKPOINT_TREE_HASH_AND_LIVE_CONFORMANCE"
+    }
+  ],
+  "d1_gate": {
+    "status": "NOT_EVALUATED",
+    "branch_start_hash_pass_rate": null,
+    "same_seed_repeat_count": 0,
+    "throughput": null,
+    "next_action": "RUN_LIVE_OPENVLA_CONFORMANCE_ON_ENGINEERING_ANCHORS_AFTER_CLEAN_PUBLISHED_COMMIT"
+  },
+  "claim_boundary": "Synthetic tests establish software contracts only and are not benchmark evidence."
+}

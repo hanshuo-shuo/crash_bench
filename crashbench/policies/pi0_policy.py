@@ -152,6 +152,36 @@ class Pi0Policy:
         """Clear the open-loop action buffer. Called by eval.run_episode per episode."""
         self._queue.clear()
 
+    @property
+    def supports_exact_branching(self) -> bool:
+        return True
+
+    def snapshot_continuation(self):
+        from crashbench.branching.policy_state import PolicyContinuation
+
+        return PolicyContinuation(
+            backend="pi0",
+            contract_version=1,
+            payload={
+                "queue": tuple(np.asarray(action).copy() for action in self._queue),
+                "num_open_loop_steps": self._n_open_loop,
+                "capture_hidden": bool(self.capture_hidden),
+                "tap": self.pi0_tap,
+            },
+        )
+
+    def restore_continuation(self, snapshot) -> None:
+        if snapshot.backend != "pi0" or snapshot.contract_version != 1:
+            raise ValueError("incompatible pi0 continuation snapshot")
+        payload = snapshot.payload
+        if int(payload["num_open_loop_steps"]) != self._n_open_loop:
+            raise ValueError("pi0 action-chunk length drift")
+        if bool(payload["capture_hidden"]) != bool(self.capture_hidden) or payload["tap"] != self.pi0_tap:
+            raise ValueError("pi0 continuation configuration drift")
+        self._queue.clear()
+        self._queue.extend(np.asarray(action).copy() for action in payload["queue"])
+        self.last_hidden = None
+
     def _prep_image(self, img: np.ndarray) -> np.ndarray:
         # openpi client pipeline: resize_with_pad (aspect-preserving) -> uint8. The 180° rotate
         # already happened in LiberoEnv.policy_observation's pi0 branch (matches train preprocessing).
