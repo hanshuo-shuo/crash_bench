@@ -37,6 +37,7 @@ def records(count=4, *, fingerprint_collision=False):
                     policy_id=policy,
                     source_state_sha256=f"{index + 1:064x}",
                     scene_fingerprint=fingerprint,
+                    formal_attempt_id=f"formal-{index}",
                 )
             )
     return rows
@@ -69,6 +70,33 @@ def test_exposed_source_is_rejected_from_any_test_allocation():
             counts_by_cell={"confirmatory_id_test": 1},
             protocol_sha256="a" * 64,
             exposure_registry=empty_registry(exposed),
+        )
+
+
+def test_exact_predeclared_formal_attempt_can_enter_future_test_split():
+    candidate_rows = records(1)
+    exposed = candidate_rows[0].source_state_sha256
+    manifest = freeze_split_manifest(
+        candidate_rows,
+        counts_by_cell={"confirmatory_id_test": 1},
+        protocol_sha256="a" * 64,
+        exposure_registry=empty_registry(exposed),
+        prospective_formal_attempt_ids=frozenset({"formal-0"}),
+    )
+    assert {row["role"] for row in manifest["assignments"]} == {"confirmatory_id_test"}
+    assert manifest["test_outcomes_read"] == 0
+
+
+def test_fake_formal_attempt_does_not_bypass_exposure_firewall():
+    candidate_rows = records(1)
+    exposed = candidate_rows[0].source_state_sha256
+    with pytest.raises(ExposureViolation):
+        freeze_split_manifest(
+            candidate_rows,
+            counts_by_cell={"confirmatory_id_test": 1},
+            protocol_sha256="a" * 64,
+            exposure_registry=empty_registry(exposed),
+            prospective_formal_attempt_ids=frozenset({"different-attempt"}),
         )
 
 

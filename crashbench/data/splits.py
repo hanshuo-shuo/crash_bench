@@ -25,6 +25,7 @@ class SourceRecord:
     source_manifest_sha256: str | None = None
     candidate_index: int | None = None
     scene_fingerprint: str | None = None
+    formal_attempt_id: str | None = None
 
     def identity(self) -> SourceIdentity:
         return SourceIdentity(
@@ -49,6 +50,7 @@ def freeze_split_manifest(
     counts_by_cell: Mapping[str, int],
     protocol_sha256: str,
     exposure_registry: ExposureRegistry,
+    prospective_formal_attempt_ids: frozenset[str] = frozenset(),
 ) -> dict[str, Any]:
     """Assign exact cell quotas while keeping every policy on its physical parent split."""
 
@@ -62,10 +64,18 @@ def freeze_split_manifest(
     by_cell: dict[tuple[str, str], dict[str, list[SourceRecord]]] = {}
     physical_cells: dict[str, set[tuple[str, str]]] = {}
     seen_policy_ids: set[str] = set()
+    seen_formal_attempts: dict[str, str] = {}
     for row in rows:
         if row.policy_source_id in seen_policy_ids:
             raise ValueError(f"duplicate policy_source_id: {row.policy_source_id}")
         seen_policy_ids.add(row.policy_source_id)
+        if row.formal_attempt_id:
+            prior = seen_formal_attempts.get(row.formal_attempt_id)
+            if prior is not None and prior != row.physical_source_id:
+                raise ValueError(
+                    f"formal attempt ID maps to multiple physical sources: {row.formal_attempt_id}"
+                )
+            seen_formal_attempts[row.formal_attempt_id] = row.physical_source_id
         cell = (row.mechanism_id, row.task_id)
         by_cell.setdefault(cell, {}).setdefault(row.physical_source_id, []).append(row)
         physical_cells.setdefault(row.physical_source_id, set()).add(cell)
@@ -96,7 +106,18 @@ def freeze_split_manifest(
                 for record in sorted(
                     physical_groups[physical_id], key=lambda item: item.policy_source_id
                 ):
-                    exposure_registry.assert_role_allowed(record.identity(), role)
+                    if role in {
+                        SplitRole.CONFIRMATORY_ID_TEST,
+                        SplitRole.OOD_TASK_TEST,
+                        SplitRole.OOD_SEVERITY_TEST,
+                        SplitRole.CROSS_POLICY_TEST,
+                        SplitRole.FRESH_SEQUENTIAL_TEST,
+                    } and record.formal_attempt_id in prospective_formal_attempt_ids:
+                        # Narrow exception: this exact attempt was frozen before
+                        # nominal-only authoring and has not opened an option outcome.
+                        pass
+                    else:
+                        exposure_registry.assert_role_allowed(record.identity(), role)
                     assignments.append({**asdict(record), "role": role.value})
             cursor += count
 
@@ -123,6 +144,7 @@ def freeze_split_manifest(
         "physical_source_count": len(physical_roles),
         "policy_source_count": len(assignments),
         "test_outcomes_read": 0,
+        "prospective_formal_attempt_allowlist_count": len(prospective_formal_attempt_ids),
     }
     payload["manifest_sha256"] = canonical_json_sha256(payload)
     return payload
