@@ -463,6 +463,7 @@ def expansion_governance_errors() -> list[str]:
         "results/expansion/governance/d1_backend_capability_report.json",
         "scripts/expansion/verify_exact_branching.py",
         "setup/expansion_verify.sbatch",
+        "setup/submit_expansion_verify.sh",
     )
     for relative in required:
         if not (ROOT / relative).is_file():
