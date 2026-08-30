@@ -46,6 +46,7 @@ def main() -> None:
     parser.add_argument("--gate-b", type=Path, required=True)
     parser.add_argument("--benchmark-freeze", type=Path, required=True)
     parser.add_argument("--d8-run-root", type=Path, required=True)
+    parser.add_argument("--figure-manifest", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
     args = parser.parse_args()
     if args.output_dir.exists():
@@ -59,6 +60,7 @@ def main() -> None:
     d8_post = args.d8_run_root / "postprocess"
     d8_manifest = load(d8_post / "run_manifest.json")
     d8_analysis = load(d8_post / "benchmark_test_analysis.json")
+    figure_manifest = load(args.figure_manifest)
     test_seal = args.d8_run_root / "authorization" / "test_complete.seal"
     if not test_seal.is_file() or d8_manifest.get("test_complete_sealed") is not True:
         raise ValueError("D10 release requires a sealed one-time D8 test")
@@ -72,6 +74,8 @@ def main() -> None:
         raise ValueError("D6/D7 reports pre-test leakage")
     if benchmark["method_claim_authorized"] or d8_analysis["method_superiority_evaluated"]:
         raise ValueError("benchmark-only release cannot contain a method superiority result")
+    if figure_manifest.get("method_superiority_depicted") is not False:
+        raise ValueError("release figure crosses the method claim boundary")
     confirmatory_status = d8_analysis["gate"]["status"]
     release_mode = (
         "SCOPED_SINGLE_MECHANISM_BENCHMARK_DATA"
@@ -173,6 +177,7 @@ def main() -> None:
         "d8_postprocess_manifest": d8_post / "run_manifest.json",
         "d8_analysis": d8_post / "benchmark_test_analysis.json",
         "d8_test_complete_seal": test_seal,
+        "figure_manifest": args.figure_manifest,
         "dataset_coverage_table": tables / "dataset_coverage.csv",
         "heterogeneity_table": tables / "heterogeneity_support.csv",
         "gate_table": tables / "gate_decisions.csv",

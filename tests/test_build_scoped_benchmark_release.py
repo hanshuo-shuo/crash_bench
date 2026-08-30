@@ -12,3 +12,4 @@ def test_release_builder_enforces_sealed_test_and_claim_boundaries():
     assert '"multi_mechanism_claim_authorized": False' in source
     assert "SCOPED_TEST_SCOPE_FAILURE_RELEASE" in source
     assert "gate_a_correction_disclosed" in source
+    assert "release figure crosses the method claim boundary" in source
