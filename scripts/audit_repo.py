@@ -479,6 +479,7 @@ def expansion_governance_errors() -> list[str]:
         "results/expansion/d2_preflight/77ea231ebf97_a1464cf4ddf0_20260830T084407Z/nominal_preflight_analysis.json",
         "results/expansion/d2_mechanical/d79973fd46e3_f2a8d011f62d_20260830T090458Z/mechanical_preflight_analysis.json",
         "results/expansion/d2_fragile_screen/0f270c3d9c8c_64cc00fdccbb_20260830T091340Z/fragile_screen_analysis.json",
+        "results/expansion/d2_staleness_screen/1f39d658a829_0100901d1cc6_20260830T093356Z/staleness_screen_analysis.json",
         "scripts/expansion/verify_exact_branching.py",
         "setup/expansion_verify.sbatch",
         "setup/submit_expansion_verify.sh",
@@ -696,6 +697,31 @@ def expansion_governance_errors() -> list[str]:
         "benefit_zero_sources"
     ]:
         errors.append("D2 fragile screen failure scope drift")
+    staleness_root = ROOT / (
+        "results/expansion/d2_staleness_screen/"
+        "1f39d658a829_0100901d1cc6_20260830T093356Z"
+    )
+    staleness_shards = sorted(staleness_root.glob("task*_source*.json"))
+    if len(staleness_shards) != 16:
+        errors.append("D2 staleness screen must contain exactly sixteen source shards")
+    staleness = read_json(staleness_root / "staleness_screen_analysis.json")
+    if staleness.get("gate", {}).get("status") != "GO":
+        errors.append("D2 staleness screen gate is not GO")
+    expected_staleness = {
+        "task0_eligible_sources": 8,
+        "task2_eligible_sources": 8,
+        "exact_restore_rate": 1.0,
+        "admissible_execution_rate": 1.0,
+        "benefit_zero_sources": 6,
+        "benefit_one_sources": 10,
+        "two_distinct_strict_winner_sources": 2,
+        "stale_base_catastrophe": 0.25,
+        "stale_base_success": 0.25,
+        "control_base_success": 0.8958333333333334,
+    }
+    for key, value in expected_staleness.items():
+        if staleness.get("summary", {}).get(key) != value:
+            errors.append(f"D2 staleness screen summary drift: {key}")
     return errors
 
 
