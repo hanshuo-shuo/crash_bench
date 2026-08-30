@@ -1,0 +1,360 @@
+{
+  "analysis_sha256": "1b31b0bb424d03652f8c0ba6c5249778c308d30b1172427871eef750ada83c41",
+  "complete_block_count": 125,
+  "duplicate_keys": [],
+  "gate": {
+    "claim_scope_failures": [
+      "benefit_zero_sources"
+    ],
+    "criteria": [
+      {
+        "actual": 0.875,
+        "criterion_class": "hard_validity",
+        "criterion_id": "task0_nominal_success",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": ">=",
+        "pass": true,
+        "threshold": 0.7
+      },
+      {
+        "actual": 1.0,
+        "criterion_class": "hard_validity",
+        "criterion_id": "task2_nominal_success",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": ">=",
+        "pass": true,
+        "threshold": 0.7
+      },
+      {
+        "actual": 8,
+        "criterion_class": "hard_validity",
+        "criterion_id": "task0_eligible_sources",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": ">=",
+        "pass": true,
+        "threshold": 6
+      },
+      {
+        "actual": 8,
+        "criterion_class": "hard_validity",
+        "criterion_id": "task2_eligible_sources",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": ">=",
+        "pass": true,
+        "threshold": 6
+      },
+      {
+        "actual": 1.0,
+        "criterion_class": "hard_validity",
+        "criterion_id": "exact_restore_rate",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": ">=",
+        "pass": true,
+        "threshold": 0.95
+      },
+      {
+        "actual": 1.0,
+        "criterion_class": "hard_validity",
+        "criterion_id": "admissible_execution_rate",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": ">=",
+        "pass": true,
+        "threshold": 0.9
+      },
+      {
+        "actual": 0.11363636363636363,
+        "criterion_class": "hard_validity",
+        "criterion_id": "matched_control_catastrophe",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": "<=",
+        "pass": false,
+        "threshold": 0.05
+      },
+      {
+        "actual": true,
+        "criterion_class": "hard_validity",
+        "criterion_id": "mechanism_attribution_valid",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": "==",
+        "pass": true,
+        "threshold": true
+      },
+      {
+        "actual": 2,
+        "criterion_class": "claim_scope",
+        "criterion_id": "benefit_zero_sources",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": ">=",
+        "pass": false,
+        "threshold": 3
+      },
+      {
+        "actual": 14,
+        "criterion_class": "claim_scope",
+        "criterion_id": "benefit_one_sources",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": ">=",
+        "pass": true,
+        "threshold": 3
+      },
+      {
+        "actual": 6,
+        "criterion_class": "claim_scope",
+        "criterion_id": "task0_benefit_sources",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": ">=",
+        "pass": true,
+        "threshold": 1
+      },
+      {
+        "actual": 8,
+        "criterion_class": "claim_scope",
+        "criterion_id": "task2_benefit_sources",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": ">=",
+        "pass": true,
+        "threshold": 1
+      },
+      {
+        "actual": 2,
+        "criterion_class": "claim_scope",
+        "criterion_id": "two_distinct_strict_winner_sources",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": ">=",
+        "pass": true,
+        "threshold": 2
+      }
+    ],
+    "decision_sha256": "ad6b3afcc48d6bd1a56575ddfaa584dd10ece650feb279204f727519c1de2821",
+    "hard_failures": [
+      "matched_control_catastrophe"
+    ],
+    "kind": "crashbench_machine_gate_decision",
+    "missing_evidence": [],
+    "next_action": "STOP_MECHANISM_VERSION",
+    "non_compensatory": true,
+    "policy": {
+      "allow_scoped_continuation": true,
+      "confirmatory": false,
+      "fail_next_action": "STOP_MECHANISM_VERSION",
+      "go_next_action": "ELIGIBLE_FOR_FORMAL_MECHANISM_SHORTLIST",
+      "scoped_next_action": "MECHANICALLY_VALID_EXPLORATORY_ONLY__NO_BROAD_SUPPORT_CLAIM",
+      "stage_id": "D2_SCREEN:narrow_clearance_v1",
+      "test_outcomes_opened": false
+    },
+    "schema_version": 1,
+    "stage_id": "D2_SCREEN:narrow_clearance_v1",
+    "status": "NO_GO"
+  },
+  "kind": "crashbench_expansion_narrow_screen_analysis",
+  "mechanism_id": "narrow_clearance_v1",
+  "missing_keys": [],
+  "observed_sources": 16,
+  "schema_version": 1,
+  "sources": [
+    {
+      "benefit": true,
+      "complete_blocks": 9,
+      "eligible": true,
+      "source_index": 0,
+      "strict_intervention_winners": [
+        "backtrack_requery",
+        "safe_stop"
+      ],
+      "task_id": 0,
+      "two_distinct_strict_interventions": true
+    },
+    {
+      "benefit": false,
+      "complete_blocks": 2,
+      "eligible": true,
+      "source_index": 1,
+      "strict_intervention_winners": [],
+      "task_id": 0,
+      "two_distinct_strict_interventions": false
+    },
+    {
+      "benefit": false,
+      "complete_blocks": 3,
+      "eligible": true,
+      "source_index": 2,
+      "strict_intervention_winners": [],
+      "task_id": 0,
+      "two_distinct_strict_interventions": false
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 6,
+      "eligible": true,
+      "source_index": 3,
+      "strict_intervention_winners": [
+        "safe_stop"
+      ],
+      "task_id": 0,
+      "two_distinct_strict_interventions": false
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 8,
+      "eligible": true,
+      "source_index": 4,
+      "strict_intervention_winners": [
+        "backtrack_requery",
+        "safe_stop"
+      ],
+      "task_id": 0,
+      "two_distinct_strict_interventions": true
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 9,
+      "eligible": true,
+      "source_index": 5,
+      "strict_intervention_winners": [
+        "safe_stop"
+      ],
+      "task_id": 0,
+      "two_distinct_strict_interventions": false
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 9,
+      "eligible": true,
+      "source_index": 6,
+      "strict_intervention_winners": [
+        "safe_stop"
+      ],
+      "task_id": 0,
+      "two_distinct_strict_interventions": false
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 8,
+      "eligible": true,
+      "source_index": 7,
+      "strict_intervention_winners": [
+        "safe_stop"
+      ],
+      "task_id": 0,
+      "two_distinct_strict_interventions": false
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 9,
+      "eligible": true,
+      "source_index": 0,
+      "strict_intervention_winners": [],
+      "task_id": 2,
+      "two_distinct_strict_interventions": false
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 9,
+      "eligible": true,
+      "source_index": 1,
+      "strict_intervention_winners": [
+        "safe_stop"
+      ],
+      "task_id": 2,
+      "two_distinct_strict_interventions": false
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 9,
+      "eligible": true,
+      "source_index": 2,
+      "strict_intervention_winners": [
+        "safe_stop"
+      ],
+      "task_id": 2,
+      "two_distinct_strict_interventions": false
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 9,
+      "eligible": true,
+      "source_index": 3,
+      "strict_intervention_winners": [
+        "safe_stop"
+      ],
+      "task_id": 2,
+      "two_distinct_strict_interventions": false
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 8,
+      "eligible": true,
+      "source_index": 4,
+      "strict_intervention_winners": [
+        "backtrack_requery"
+      ],
+      "task_id": 2,
+      "two_distinct_strict_interventions": false
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 9,
+      "eligible": true,
+      "source_index": 5,
+      "strict_intervention_winners": [
+        "safe_stop"
+      ],
+      "task_id": 2,
+      "two_distinct_strict_interventions": false
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 9,
+      "eligible": true,
+      "source_index": 6,
+      "strict_intervention_winners": [
+        "safe_stop"
+      ],
+      "task_id": 2,
+      "two_distinct_strict_interventions": false
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 9,
+      "eligible": true,
+      "source_index": 7,
+      "strict_intervention_winners": [
+        "safe_stop"
+      ],
+      "task_id": 2,
+      "two_distinct_strict_interventions": false
+    }
+  ],
+  "summary": {
+    "admissible_execution_rate": 1.0,
+    "benefit_one_sources": 14,
+    "benefit_zero_sources": 2,
+    "control_base_success": 0.6704545454545454,
+    "exact_restore_rate": 1.0,
+    "matched_control_catastrophe": 0.11363636363636363,
+    "mechanism_attribution_valid": true,
+    "narrow_base_catastrophe": 0.7027027027027027,
+    "narrow_base_success": 0.13513513513513514,
+    "task0_benefit_sources": 6,
+    "task0_eligible_sources": 8,
+    "task0_nominal_success": 0.875,
+    "task2_benefit_sources": 8,
+    "task2_eligible_sources": 8,
+    "task2_nominal_success": 1.0,
+    "two_distinct_strict_winner_sources": 2
+  },
+  "unexpected_keys": []
+}

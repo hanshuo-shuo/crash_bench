@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "protocol_id": "crashbench_expansion_mcv_v1_1_pi0_primary",
-  "status": "D2_ACTION_DRIFT_SCOPED_CONTINUE__NARROW_SCREEN_NEXT__NO_TEST_AUTHORIZATION",
+  "status": "D2_SINGLE_FORMAL_STALENESS_METHOD_PILOT__NO_BROAD_BENCHMARK_OR_TEST_AUTHORIZATION",
   "research_question": "Can exact-state realized outcomes support conservative option-specific utility and stopping decisions that improve fresh-source task-safety utility without harmful intervention?",
   "primary_policy": {
     "backend": "pi0",
@@ -40,6 +40,16 @@
     "transfer_sources": {"status": "INACTIVE_UNTIL_A_SECOND_TWO_TASK_EXACT_BACKEND_EXISTS", "calibration": 0, "cross_policy_test": 0},
     "statewise_test_total": 96,
     "fresh_sequential_total": 60
+  },
+  "active_scoped_pilot": {
+    "status": "LABELLED_METHOD_PILOT__NOT_BROAD_BENCHMARK",
+    "formal_mechanisms": ["observation_staleness_v1"],
+    "exploratory_mechanisms": ["fragile_path_collision_v2", "action_drift_v1"],
+    "stopped_mechanisms": ["narrow_clearance_v1"],
+    "primary_physical_sources": 100,
+    "per_task": {"train": 12, "calibration": 6, "development": 6, "future_test": 16, "future_sequential": 10},
+    "test_authorized": false,
+    "selection_decision": "results/expansion/governance/d2_selection_decision.json"
   },
   "test_policy": {
     "one_time_lock_required": true,

@@ -69,6 +69,26 @@
       "drift_base_success": 0.6041666666666666,
       "control_base_success": 0.8020833333333334,
       "next_action": "retain exploratory; do not count as broad shortlist pass"
+    },
+    "narrow_clearance_v1": {
+      "status": "NO_GO",
+      "analysis": "results/expansion/d2_narrow_screen/a1d7e8ab026a_384b032a68fc_20260830T100829Z/narrow_screen_analysis.json",
+      "eligible_sources": 16,
+      "benefit_zero_sources": 2,
+      "benefit_one_sources": 14,
+      "two_distinct_strict_winner_sources": 2,
+      "exact_restore_rate": 1.0,
+      "matched_control_catastrophe": 0.11363636363636363,
+      "narrow_base_catastrophe": 0.7027027027027027,
+      "next_action": "stop mechanism version; control catastrophe hard gate failed"
     }
+  },
+  "overall_selection": {
+    "status": "SINGLE_FORMAL_PLUS_EXPLORATORY_METHOD_PILOT",
+    "decision": "results/expansion/governance/d2_selection_decision.json",
+    "strict_broad_gate_pass": false,
+    "formal_mechanisms": ["observation_staleness_v1"],
+    "scoped_mechanisms": ["fragile_path_collision_v2", "action_drift_v1"],
+    "stopped_mechanisms": ["narrow_clearance_v1"]
   }
 }

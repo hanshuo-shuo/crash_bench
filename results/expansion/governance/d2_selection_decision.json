@@ -1,0 +1,61 @@
+{
+  "claim_boundary": "Scoped continuation changes claim breadth, never a mechanism's frozen gate result.",
+  "decision_sha256": "161d2cfec2dfe593a2dfdb19ebc9592cb42e408820e56be5fe706b9c4723a727",
+  "duplicate_mechanisms": [],
+  "formal_go_count": 1,
+  "kind": "crashbench_expansion_d2_selection_decision",
+  "next_action": "CONTINUE_LABELLED_METHOD_PILOT__NO_BROAD_BENCHMARK_CLAIM",
+  "ordered_mechanisms": [
+    {
+      "analysis_sha256": "7aa21e7bfa816a4b96556906aa7e26018eed2a4a774184456d5780ab99b5ab5e",
+      "claim_scope_failures": [
+        "benefit_zero_sources"
+      ],
+      "formal_shortlist_eligible": false,
+      "hard_validity_pass": true,
+      "mechanism_id": "fragile_path_collision_v2",
+      "status": "SCOPED_CONTINUE"
+    },
+    {
+      "formal_shortlist_eligible": false,
+      "hard_validity_pass": null,
+      "mechanism_id": "unstable_final_placement_v2",
+      "status": "NOT_RUN_REQUIRES_EXPLICIT_AUTHORIZATION"
+    },
+    {
+      "analysis_sha256": "b719c447f2afaa8a283c4276fde17911888cbb7b3fbea1749fa571215a6aa9fc",
+      "claim_scope_failures": [],
+      "formal_shortlist_eligible": true,
+      "hard_validity_pass": true,
+      "mechanism_id": "observation_staleness_v1",
+      "status": "GO"
+    },
+    {
+      "analysis_sha256": "92ad738236bc5003c43fc3e16f0189abc1af325edc138ade35fc9bd0f3735577",
+      "claim_scope_failures": [
+        "benefit_zero_sources",
+        "two_distinct_strict_winner_sources"
+      ],
+      "formal_shortlist_eligible": false,
+      "hard_validity_pass": true,
+      "mechanism_id": "action_drift_v1",
+      "status": "SCOPED_CONTINUE"
+    },
+    {
+      "analysis_sha256": "1b31b0bb424d03652f8c0ba6c5249778c308d30b1172427871eef750ada83c41",
+      "claim_scope_failures": [
+        "benefit_zero_sources"
+      ],
+      "formal_shortlist_eligible": false,
+      "hard_validity_pass": false,
+      "mechanism_id": "narrow_clearance_v1",
+      "status": "NO_GO"
+    }
+  ],
+  "schema_version": 1,
+  "scoped_continue_count": 2,
+  "status": "SINGLE_FORMAL_PLUS_EXPLORATORY_METHOD_PILOT",
+  "strict_broad_gate_pass": false,
+  "strict_broad_threshold": 3,
+  "unstable_v2_authorized": false
+}

@@ -481,6 +481,8 @@ def expansion_governance_errors() -> list[str]:
         "results/expansion/d2_fragile_screen/0f270c3d9c8c_64cc00fdccbb_20260830T091340Z/fragile_screen_analysis.json",
         "results/expansion/d2_staleness_screen/1f39d658a829_0100901d1cc6_20260830T093356Z/staleness_screen_analysis.json",
         "results/expansion/d2_action_drift_screen/117904fb3d5c_cb828fc5e0e0_20260830T095028Z/action_drift_screen_analysis.json",
+        "results/expansion/d2_narrow_screen/a1d7e8ab026a_384b032a68fc_20260830T100829Z/narrow_screen_analysis.json",
+        "results/expansion/governance/d2_selection_decision.json",
         "scripts/expansion/verify_exact_branching.py",
         "setup/expansion_verify.sbatch",
         "setup/submit_expansion_verify.sh",
@@ -758,6 +760,27 @@ def expansion_governance_errors() -> list[str]:
         "two_distinct_strict_winner_sources",
     ]:
         errors.append("D2 action-drift failure scope drift")
+    narrow_root = ROOT / (
+        "results/expansion/d2_narrow_screen/"
+        "a1d7e8ab026a_384b032a68fc_20260830T100829Z"
+    )
+    narrow_shards = sorted(narrow_root.glob("task*_source*.json"))
+    if len(narrow_shards) != 16:
+        errors.append("D2 narrow screen must contain exactly sixteen shards")
+    narrow = read_json(narrow_root / "narrow_screen_analysis.json")
+    if narrow.get("gate", {}).get("status") != "NO_GO":
+        errors.append("D2 narrow screen must remain NO_GO")
+    if narrow.get("gate", {}).get("hard_failures") != ["matched_control_catastrophe"]:
+        errors.append("D2 narrow hard-failure scope drift")
+    if narrow.get("summary", {}).get("matched_control_catastrophe") != 0.11363636363636363:
+        errors.append("D2 narrow control catastrophe drift")
+    selection = read_json(ROOT / "results/expansion/governance/d2_selection_decision.json")
+    if selection.get("status") != "SINGLE_FORMAL_PLUS_EXPLORATORY_METHOD_PILOT":
+        errors.append("D2 overall selection status drift")
+    if selection.get("strict_broad_gate_pass") is not False:
+        errors.append("D2 strict broad gate was incorrectly promoted")
+    if selection.get("formal_go_count") != 1 or selection.get("scoped_continue_count") != 2:
+        errors.append("D2 overall mechanism counts drift")
     return errors
 
 
