@@ -490,6 +490,7 @@ def expansion_governance_errors() -> list[str]:
         "setup/expansion_mechanical_preflight.sbatch",
         "setup/submit_expansion_mechanical_preflight.sh",
         "scripts/expansion/run_fragile_screen.py",
+        "scripts/expansion/analyze_fragile_screen.py",
         "setup/expansion_fragile_screen.sbatch",
         "setup/submit_expansion_fragile_screen.sh",
     )
