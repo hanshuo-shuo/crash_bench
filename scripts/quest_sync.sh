@@ -31,7 +31,7 @@ Commands:
   exec 'COMMAND'         Run a shell command from the remote project root.
   pull-result PATH       Pull one file or directory under results/ (no delete).
   pull-packed-result PATH
-                         Pull one precompressed .tar.gz/.tar.zst under results/
+                         Pull one precompressed .tar.gz/.tar.xz/.tar.zst under results/
                          without redundant transport compression (no delete).
 
 Environment overrides:
@@ -229,8 +229,8 @@ case "$command" in
     ;;
   pull-packed-result)
     path="${2:-}"
-    [[ "$path" =~ ^results/[A-Za-z0-9._/-]+\.(tar\.gz|tar\.zst)$ && "$path" != */ ]] \
-      || die "pull-packed-result only accepts a .tar.gz/.tar.zst file below results/"
+    [[ "$path" =~ ^results/[A-Za-z0-9._/-]+\.(tar\.gz|tar\.xz|tar\.zst)$ && "$path" != */ ]] \
+      || die "pull-packed-result only accepts a .tar.gz/.tar.xz/.tar.zst file below results/"
     check_connection
     check_project_identity
     quoted_path="$(printf '%q' "$path")"
