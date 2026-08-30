@@ -509,6 +509,24 @@ def expansion_governance_errors() -> list[str]:
         "Synthetic tests establish software contracts only and are not benchmark evidence."
     ):
         errors.append("D1 capability report does not preserve the synthetic-evidence boundary")
+    pi0 = benchmark.get("transfer_policy", {})
+    identity_path = pi0.get("identity_manifest")
+    if not identity_path or not (ROOT / identity_path).is_file():
+        errors.append("D0 pi0 identity manifest is missing")
+    else:
+        identity = read_json(ROOT / identity_path)
+        canonical_files = json.dumps(
+            identity.get("files", []), sort_keys=True, separators=(",", ":")
+        ).encode()
+        tree_hash = hashlib.sha256(canonical_files).hexdigest()
+        if tree_hash != identity.get("tree_manifest_sha256") or tree_hash != pi0.get(
+            "checkpoint_tree_manifest_sha256"
+        ):
+            errors.append("D0 pi0 checkpoint tree manifest hash mismatch")
+        if identity.get("file_count") != 19 or identity.get("total_size_bytes") != 12014131888:
+            errors.append("D0 pi0 checkpoint tree inventory drift")
+        if identity.get("slurm", {}).get("job_id") != "5203988":
+            errors.append("D0 pi0 checkpoint identity lacks Slurm provenance")
     return errors
 
 
