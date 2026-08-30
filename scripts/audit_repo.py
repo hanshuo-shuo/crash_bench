@@ -478,6 +478,7 @@ def expansion_governance_errors() -> list[str]:
         "results/expansion/d2_sources/screen_plan_256ce74521254ec9f692b77cb5197b5aa29be73f58d91ce29a6c945841cba7de.json",
         "results/expansion/d2_preflight/77ea231ebf97_a1464cf4ddf0_20260830T084407Z/nominal_preflight_analysis.json",
         "results/expansion/d2_mechanical/d79973fd46e3_f2a8d011f62d_20260830T090458Z/mechanical_preflight_analysis.json",
+        "results/expansion/d2_fragile_screen/0f270c3d9c8c_64cc00fdccbb_20260830T091340Z/fragile_screen_analysis.json",
         "scripts/expansion/verify_exact_branching.py",
         "setup/expansion_verify.sbatch",
         "setup/submit_expansion_verify.sh",
@@ -660,6 +661,33 @@ def expansion_governance_errors() -> list[str]:
         errors.append("D2 mechanical preflight gate is not GO")
     if mechanical_analysis.get("unstable_v2_authorized") is not False:
         errors.append("D2 mechanical preflight unexpectedly authorizes unstable v2")
+    fragile_root = ROOT / (
+        "results/expansion/d2_fragile_screen/"
+        "0f270c3d9c8c_64cc00fdccbb_20260830T091340Z"
+    )
+    fragile_shards = sorted(fragile_root.glob("task*_source*.json"))
+    if len(fragile_shards) != 16:
+        errors.append("D2 fragile screen must contain exactly sixteen source shards")
+    fragile_analysis = read_json(fragile_root / "fragile_screen_analysis.json")
+    fragile_summary = fragile_analysis.get("summary", {})
+    if fragile_analysis.get("gate", {}).get("status") != "SCOPED_CONTINUE":
+        errors.append("D2 fragile screen decision must remain SCOPED_CONTINUE")
+    expected_fragile = {
+        "task0_eligible_sources": 8,
+        "task2_eligible_sources": 8,
+        "exact_restore_rate": 1.0,
+        "admissible_execution_rate": 1.0,
+        "benefit_zero_sources": 2,
+        "benefit_one_sources": 14,
+        "two_distinct_strict_winner_sources": 3,
+    }
+    for key, value in expected_fragile.items():
+        if fragile_summary.get(key) != value:
+            errors.append(f"D2 fragile screen summary drift: {key}")
+    if fragile_analysis.get("gate", {}).get("claim_scope_failures") != [
+        "benefit_zero_sources"
+    ]:
+        errors.append("D2 fragile screen failure scope drift")
     return errors
 
 
