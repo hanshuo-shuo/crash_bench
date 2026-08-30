@@ -461,6 +461,7 @@ def expansion_governance_errors() -> list[str]:
         "schemas/option_catalog.schema.json",
         "schemas/utility.schema.json",
         "schemas/branch_row.schema.json",
+        "schemas/gate_decision.schema.json",
         "configs/expansion/deployable_options_v1.yaml",
         "configs/expansion/diagnostic_oracle_options_v1.yaml",
         "results/expansion/governance/exposure_registry.json",
