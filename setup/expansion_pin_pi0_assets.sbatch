@@ -12,6 +12,11 @@
 set -euo pipefail
 cd "${SLURM_SUBMIT_DIR:-$HOME/crash_bench}"
 
+module purge
+module load mamba/24.3.0
+source activate "$HOME/crash_bench/envs/openvla"
+export PYTHONNOUSERSITE=1
+
 commit="$(git rev-parse HEAD)"
 protocol_sha="$(sha256sum configs/expansion/benchmark_v1.yaml | awk '{print $1}')"
 utc="$(date -u +%Y%m%dT%H%M%SZ)"
@@ -27,11 +32,6 @@ test -z "$(git -C /projects/p33100/siosio/third_party/openpi status --porcelain)
 
 result_root="results/expansion/governance/pi0_identity_${run_id}"
 test ! -e "$result_root"
-
-module purge
-module load mamba/24.3.0
-source activate "$HOME/crash_bench/envs/openvla"
-export PYTHONNOUSERSITE=1
 
 python scripts/expansion/hash_tree_manifest.py \
   --root /projects/p33100/siosio/openpi_assets/openpi-assets/checkpoints/pi0_libero \

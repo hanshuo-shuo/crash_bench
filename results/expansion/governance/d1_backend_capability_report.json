@@ -41,5 +41,19 @@
     "throughput": null,
     "next_action": "RUN_LIVE_OPENVLA_CONFORMANCE_ON_ENGINEERING_ANCHORS_AFTER_CLEAN_PUBLISHED_COMMIT"
   },
+  "operational_attempts": [
+    {
+      "slurm_job_id": "5203960",
+      "partition": "short",
+      "execution_commit": "65770da49403bbd4d88aed1133b2d45ce6a1cf8c",
+      "state": "FAILED",
+      "exit_code": "127:0",
+      "elapsed": "00:00:02",
+      "failure": "git was invoked before the compute-node module environment was loaded",
+      "checkpoint_bytes_read": 0,
+      "scientific_outcomes_opened": 0,
+      "retry_eligible": true
+    }
+  ],
   "claim_boundary": "Synthetic tests establish software contracts only and are not benchmark evidence."
 }
