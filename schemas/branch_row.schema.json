@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://crashbench.local/schemas/branch_row.schema.json",
+  "title": "CrashBench realized option branch row",
+  "type": "object",
+  "required": ["decision_id", "option_id", "branch_seed", "admissible", "status", "logical_attempt_key"],
+  "properties": {
+    "decision_id": {"type": "string", "minLength": 1},
+    "option_id": {"type": "string", "minLength": 1},
+    "admissible": {"type": "boolean"},
+    "status": {"enum": ["accepted", "execution_failure", "max_duration", "safety_stop", "inadmissible"]},
+    "logical_attempt_key": {"type": "string", "minLength": 1},
+    "outcome": {"type": ["object", "null"]}
+  }
+}
