@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import random
 import sys
@@ -31,6 +32,14 @@ OPTION_IDS = ("base_continue", "observation_refresh", "safe_stop")
 ALLOWED_ROLES = {"train", "development"}
 
 
+def sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
 def read_jsonl(path: Path) -> list[dict[str, Any]]:
     return [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
 
@@ -42,13 +51,29 @@ def build_training_arrays(
     artifact_store: Path,
     budgets: PhysicalBudgets,
     allowed_roles: set[str] | None = None,
+    feature_cache: Path | None = None,
 ) -> dict[str, Any]:
     allowed_roles = ALLOWED_ROLES if allowed_roles is None else set(allowed_roles)
     if not allowed_roles or allowed_roles - {"train", "development", "calibration"}:
         raise ValueError("feature loader role request is empty or forbidden")
     anchor_by_block = {row["block_id"]: row for row in anchors}
     store = ContentAddressedStore(artifact_store)
-    feature_cache = {}
+    cached_features: dict[str, np.ndarray] = {}
+    if feature_cache is not None:
+        cache_manifest = json.loads((feature_cache.parent / "manifest.json").read_text())
+        if cache_manifest.get("features_npz_sha256") != sha256_file(feature_cache):
+            raise ValueError("materialized feature cache SHA-256 mismatch")
+        if cache_manifest.get("test_rows_read") != 0:
+            raise ValueError("materialized feature cache reports test access")
+        with np.load(feature_cache, allow_pickle=False) as payload:
+            hashes = payload["sha256"]
+            features_array = payload["features"]
+        if len(hashes) != len(features_array) or len(set(map(str, hashes))) != len(hashes):
+            raise ValueError("materialized feature cache identity mismatch")
+        cached_features = {
+            str(key): np.asarray(value, dtype=np.float32)
+            for key, value in zip(hashes, features_array)
+        }
     features, options, outcomes, costs, sources, roles, row_ids, actual_u0 = (
         [], [], [], [], [], [], [], [],
     )
@@ -63,11 +88,13 @@ def build_training_arrays(
             continue
         ref = anchor["anchor_feature_blob"]
         key = ref["sha256"]
-        if key not in feature_cache:
+        if key not in cached_features:
+            if feature_cache is not None:
+                raise ValueError(f"materialized feature cache lacks blob: {key}")
             blob_ref = BlobRef(**ref)
             store.validate(blob_ref)
             payload = (store.root / blob_ref.relative_path).read_bytes()
-            feature_cache[key] = pooled_anchor_features(unpack_numeric_mapping(payload))
+            cached_features[key] = pooled_anchor_features(unpack_numeric_mapping(payload))
         outcome = branch["outcome"]
         terminal = [
             int(outcome["task_success"]),
@@ -88,7 +115,7 @@ def build_training_arrays(
             latency_ms=float(outcome["latency_ms"]),
         )
         normalized = normalized_costs(vector, budgets)
-        features.append(feature_cache[key])
+        features.append(cached_features[key])
         options.append(branch["option_id"])
         outcomes.append(int(np.argmax(terminal)))
         costs.append([normalized[name] for name in COST_TARGETS])
@@ -124,6 +151,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--merged-dir", type=Path, required=True)
     parser.add_argument("--artifact-store", type=Path, required=True)
+    parser.add_argument("--feature-cache", type=Path)
     parser.add_argument("--utility-config", type=Path, required=True)
     parser.add_argument("--seed", type=int, required=True)
     parser.add_argument("--epochs", type=int, default=100)
@@ -153,6 +181,7 @@ def main() -> None:
         read_jsonl(args.merged_dir / "branches.jsonl"),
         artifact_store=args.artifact_store,
         budgets=budgets,
+        feature_cache=args.feature_cache,
     )
     train = data["roles"] == "train"
     development = data["roles"] == "development"
@@ -231,6 +260,7 @@ def main() -> None:
         "test_rows_read": 0,
         "history": history,
         "prediction_rows": len(predictions),
+        "feature_cache_sha256": None if args.feature_cache is None else sha256_file(args.feature_cache),
     }
     (args.output_dir / "manifest.json").write_text(
         json.dumps(manifest, indent=2, sort_keys=True) + "\n"

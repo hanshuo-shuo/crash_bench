@@ -199,6 +199,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--merged-dir", type=Path, required=True)
     parser.add_argument("--artifact-store", type=Path, required=True)
+    parser.add_argument("--feature-cache", type=Path)
     parser.add_argument("--utility-config", type=Path, required=True)
     parser.add_argument("--refit-seed-dir", type=Path, action="append", required=True)
     parser.add_argument("--calibration-freeze", type=Path, required=True)
@@ -228,6 +229,7 @@ def main() -> None:
     data = build_training_arrays(
         anchors, branches, artifact_store=args.artifact_store, budgets=budgets,
         allowed_roles={"development"},
+        feature_cache=args.feature_cache,
     )
     utility_predictions, catastrophe_predictions = [], []
     for expected_seed, directory in enumerate(args.refit_seed_dir):

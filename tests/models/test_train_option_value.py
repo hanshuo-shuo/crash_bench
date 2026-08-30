@@ -37,3 +37,5 @@ def test_feature_loader_revalidates_content_address_and_split_identity():
     source = SCRIPT.read_text()
     assert "store.validate(blob_ref)" in source
     assert "anchor/branch split role mismatch" in source
+    assert "materialized feature cache lacks blob" in source
+    assert "materialized feature cache SHA-256 mismatch" in source

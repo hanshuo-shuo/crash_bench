@@ -32,6 +32,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--merged-dir", type=Path, required=True)
     parser.add_argument("--artifact-store", type=Path, required=True)
+    parser.add_argument("--feature-cache", type=Path)
     parser.add_argument("--gate-a", type=Path, required=True)
     parser.add_argument("--utility-config", type=Path, default=ROOT / "configs/expansion/utility_v1.yaml")
     parser.add_argument("--epochs", type=int, default=100)
@@ -52,6 +53,8 @@ def main() -> None:
         "--artifact-store", str(args.artifact_store),
         "--utility-config", str(args.utility_config),
     ]
+    if args.feature_cache is not None:
+        common.extend(["--feature-cache", str(args.feature_cache)])
     run([python, "scripts/expansion/train_baselines.py", *common, "--output-dir", str(baseline_dir)])
     selection_dirs = []
     for seed in SEEDS:
@@ -115,6 +118,7 @@ def main() -> None:
         "calibration_freeze_sha256": sha256_file(calibration_dir / "statewise_calibration_freeze.json"),
         "gate_b_sha256": sha256_file(gate_b),
         "gate_b_status": json.loads(gate_b.read_text())["gate"]["status"],
+        "feature_cache_sha256": None if args.feature_cache is None else sha256_file(args.feature_cache),
         "calibration_rows_read": json.loads(
             (calibration_dir / "statewise_calibration_freeze.json").read_text()
         )["calibration_row_count"],

@@ -138,6 +138,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--merged-dir", type=Path, required=True)
     parser.add_argument("--artifact-store", type=Path, required=True)
+    parser.add_argument("--feature-cache", type=Path)
     parser.add_argument("--utility-config", type=Path, required=True)
     parser.add_argument("--seed-dir", type=Path, action="append", required=True)
     parser.add_argument("--development-selection", type=Path, required=True)
@@ -166,6 +167,7 @@ def main() -> None:
         artifact_store=args.artifact_store,
         budgets=budgets,
         allowed_roles={"calibration"},
+        feature_cache=args.feature_cache,
     )
     if set(data["roles"]) != {"calibration"}:
         raise ValueError("calibration loader accessed a non-calibration role")

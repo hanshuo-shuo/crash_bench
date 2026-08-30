@@ -73,6 +73,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--merged-dir", type=Path, required=True)
     parser.add_argument("--artifact-store", type=Path, required=True)
+    parser.add_argument("--feature-cache", type=Path)
     parser.add_argument("--utility-config", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
     args = parser.parse_args()
@@ -91,6 +92,7 @@ def main() -> None:
         branches,
         artifact_store=args.artifact_store,
         budgets=budgets,
+        feature_cache=args.feature_cache,
     )
     train = data["roles"] == "train"
     development = data["roles"] == "development"
