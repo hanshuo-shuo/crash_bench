@@ -481,6 +481,7 @@ def expansion_governance_errors() -> list[str]:
         "setup/submit_expansion_verify.sh",
         "scripts/expansion/run_nominal_preflight.py",
         "scripts/expansion/analyze_nominal_preflight.py",
+        "scripts/expansion/derive_mechanical_preflight.py",
         "setup/expansion_author_sources.sbatch",
         "setup/submit_expansion_preflight.sh",
     )

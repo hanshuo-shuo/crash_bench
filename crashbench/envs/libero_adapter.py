@@ -392,6 +392,51 @@ class LiberoSimView:
             )
         return max(candidates, key=lambda row: float(row["top_z"]))
 
+    def distal_robot_envelope_width(
+        self,
+        axis_xy: tuple[float, float] | list[float] | np.ndarray,
+    ) -> dict[str, float | int | list[str]]:
+        """Conservative distal-robot width projected onto a world XY axis."""
+
+        import mujoco
+
+        model, data = self._live_mj()
+        axis = np.asarray(axis_xy, dtype=np.float64)
+        if axis.shape != (2,) or not np.all(np.isfinite(axis)) or np.linalg.norm(axis) <= 0:
+            raise ValueError("robot envelope axis must be a finite nonzero 2-vector")
+        axis = axis / np.linalg.norm(axis)
+        intervals = []
+        body_names = []
+        allowed_prefixes = (
+            "gripper0_",
+            "robot0_right_hand",
+            "robot0_link7",
+        )
+        for geom_id in range(int(model.ngeom)):
+            body_id = int(model.geom_bodyid[geom_id])
+            body_name = (
+                mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_BODY, body_id) or ""
+            )
+            if not body_name.startswith(allowed_prefixes):
+                continue
+            center = float(np.dot(np.asarray(data.geom_xpos[geom_id])[:2], axis))
+            radius = float(model.geom_rbound[geom_id])
+            if not np.isfinite(radius) or radius <= 0:
+                continue
+            intervals.append((center - radius, center + radius))
+            body_names.append(body_name)
+        if not intervals:
+            raise RuntimeError("no distal robot geoms found for envelope query")
+        lower = min(row[0] for row in intervals)
+        upper = max(row[1] for row in intervals)
+        return {
+            "width_m": float(upper - lower),
+            "lower_projection_m": float(lower),
+            "upper_projection_m": float(upper),
+            "geom_count": len(intervals),
+            "body_names": sorted(set(body_names)),
+        }
+
     def robot_geom_aabbs(self, bodies: list[str]) -> list[dict]:
         """World AABBs of collision geoms attached to the requested robot bodies.
 

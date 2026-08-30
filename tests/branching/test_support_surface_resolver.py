@@ -35,6 +35,7 @@ def fake_view(monkeypatch):
             [[1, 1, 0], [0.5, 0.5, 0.05], [0.1, 0.1, 0.1], [0.1, 0.1, 0.1]],
             dtype=float,
         ),
+        geom_rbound=np.array([1.0, 0.8, 0.1, 0.06], dtype=float),
     )
     identity = np.eye(3).reshape(-1)
     data = SimpleNamespace(
@@ -61,3 +62,10 @@ def test_resolver_falls_back_to_plane_outside_table_footprint(monkeypatch):
 def test_resolver_fails_closed_when_no_support_is_below_query(monkeypatch):
     with pytest.raises(RuntimeError, match="no static horizontal support"):
         fake_view(monkeypatch).static_support_surface_at((2, 2), below_z=-1)
+
+
+def test_distal_robot_envelope_uses_only_distal_robot_geoms(monkeypatch):
+    result = fake_view(monkeypatch).distal_robot_envelope_width((1, 0))
+    assert result["geom_count"] == 1
+    assert result["body_names"] == ["robot0_link7"]
+    assert result["width_m"] == pytest.approx(0.12)
