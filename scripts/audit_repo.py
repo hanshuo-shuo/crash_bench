@@ -531,6 +531,7 @@ def expansion_governance_errors() -> list[str]:
         "scripts/expansion/calibrate_selector.py",
         "scripts/expansion/run_scoped_training.py",
         "scripts/expansion/analyze_scoped_gate_b.py",
+        "crashbench/runtime/option_router.py",
         "setup/expansion_fragile_screen.sbatch",
         "setup/submit_expansion_fragile_screen.sh",
     )
