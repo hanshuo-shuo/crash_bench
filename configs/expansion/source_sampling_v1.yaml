@@ -1,11 +1,14 @@
 {
   "schema_version": 1,
-  "status": "DRAFT_D1_READY__NO_SOURCE_EXECUTION_YET",
+  "status": "D2_SCREEN_SOURCE_PLAN_FROZEN__NO_SIMULATOR_OR_OUTCOMES_OPENED",
   "tasks": [
     {"suite": "libero_spatial", "task_id": 0},
     {"suite": "libero_spatial", "task_id": 2}
   ],
   "screen": {
+    "protocol_sha256": "256ce74521254ec9f692b77cb5197b5aa29be73f58d91ce29a6c945841cba7de",
+    "plan": "results/expansion/d2_sources/screen_plan_256ce74521254ec9f692b77cb5197b5aa29be73f58d91ce29a6c945841cba7de.json",
+    "exposure_ledger": "results/expansion/governance/exposure_attempts.jsonl",
     "ordered_mechanisms": ["fragile_path_collision_v2", "unstable_final_placement_v2", "observation_staleness_v1", "action_drift_v1", "narrow_clearance_v1"],
     "sources_per_mechanism_task": 8,
     "base_reset_seed": 2026090100

@@ -474,6 +474,8 @@ def expansion_governance_errors() -> list[str]:
         "results/expansion/governance/power_planning.json",
         "results/expansion/governance/remote_missing_lineage.json",
         "results/expansion/governance/d1_backend_capability_report.json",
+        "results/expansion/governance/exposure_attempts.jsonl",
+        "results/expansion/d2_sources/screen_plan_256ce74521254ec9f692b77cb5197b5aa29be73f58d91ce29a6c945841cba7de.json",
         "scripts/expansion/verify_exact_branching.py",
         "setup/expansion_verify.sbatch",
         "setup/submit_expansion_verify.sh",
@@ -562,6 +564,44 @@ def expansion_governance_errors() -> list[str]:
             errors.append("D0 pi0 checkpoint tree inventory drift")
         if identity.get("slurm", {}).get("job_id") != "5203988":
             errors.append("D0 pi0 checkpoint identity lacks Slurm provenance")
+    screen_plan_path = ROOT / (
+        "results/expansion/d2_sources/"
+        "screen_plan_256ce74521254ec9f692b77cb5197b5aa29be73f58d91ce29a6c945841cba7de.json"
+    )
+    screen_plan = read_json(screen_plan_path)
+    plan_without_hash = dict(screen_plan)
+    declared_plan_hash = plan_without_hash.pop("plan_sha256", None)
+    actual_plan_hash = hashlib.sha256(
+        json.dumps(plan_without_hash, sort_keys=True, separators=(",", ":")).encode()
+    ).hexdigest()
+    attempts = screen_plan.get("attempts", [])
+    ledger_rows = [
+        json.loads(line)
+        for line in (ROOT / "results/expansion/governance/exposure_attempts.jsonl")
+        .read_text()
+        .splitlines()
+        if line.strip()
+    ]
+    if declared_plan_hash != actual_plan_hash:
+        errors.append("D2 screen source plan self hash mismatch")
+    if len(attempts) != 80 or len(ledger_rows) != 80:
+        errors.append("D2 screen source plan/ledger must each contain exactly 80 attempts")
+    if len({row.get("attempt_id") for row in ledger_rows}) != 80:
+        errors.append("D2 exposure ledger attempt IDs are not unique")
+    if screen_plan.get("outcomes_opened") != 0 or screen_plan.get("router_scores_read") != 0:
+        errors.append("D2 source authoring opened outcomes or router scores")
+    frozen_reset_seeds = {
+        str(row["value"])
+        for row in registry.get("identifiers", [])
+        if row.get("identifier_type") == "reset_seed"
+    }
+    if not {str(row["reset_seed"]) for row in attempts} <= frozen_reset_seeds:
+        errors.append("D2 planned reset seeds are not all frozen in exposure registry")
+    mechanism_config = read_json(ROOT / "configs/expansion/mechanism_screens_v1.yaml")
+    if mechanism_config.get("unstable_final_placement_v2", {}).get(
+        "requires_separate_pre_run_user_authorization"
+    ) is not True:
+        errors.append("D2 source freeze removed unstable-placement explicit authorization")
     return errors
 
 
