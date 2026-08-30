@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import random
 import sys
 from pathlib import Path
@@ -25,7 +24,6 @@ from crashbench.models.option_outcome import (
     pooled_anchor_features,
     source_balanced_weights,
 )
-from scripts.expansion.hash_tree_manifest import resolve_git_head
 from scripts.expansion.hash_tree_manifest import resolve_git_head
 
 
@@ -120,6 +118,12 @@ def main() -> None:
     parser.add_argument("--utility-config", type=Path, required=True)
     parser.add_argument("--seed", type=int, required=True)
     parser.add_argument("--epochs", type=int, default=100)
+    parser.add_argument(
+        "--fit-on",
+        choices=("train", "train_development"),
+        default="train",
+        help="Frozen two-stage recipe: select on train, then refit on train+development.",
+    )
     parser.add_argument("--output-dir", type=Path, required=True)
     args = parser.parse_args()
     if args.output_dir.exists():
@@ -145,15 +149,16 @@ def main() -> None:
     development = data["roles"] == "development"
     if not np.any(train) or not np.any(development):
         raise ValueError("ODUR requires both train and development rows")
+    fit = train if args.fit_on == "train" else (train | development)
     model = OptionOutcomeModel(
         input_dim=data["features"].shape[1], option_ids=OPTION_IDS
     )
     optimizer = torch.optim.AdamW(model.parameters(), lr=1e-3, weight_decay=1e-4)
-    x = torch.from_numpy(data["features"][train])
-    option_index = model.option_indices(data["options"][train])
-    y = torch.from_numpy(data["outcomes"][train])
-    cost = torch.from_numpy(data["costs"][train])
-    weights = torch.from_numpy(source_balanced_weights(data["sources"][train]))
+    x = torch.from_numpy(data["features"][fit])
+    option_index = model.option_indices(data["options"][fit])
+    y = torch.from_numpy(data["outcomes"][fit])
+    cost = torch.from_numpy(data["costs"][fit])
+    weights = torch.from_numpy(source_balanced_weights(data["sources"][fit]))
     model.train()
     history = []
     for epoch in range(args.epochs):
@@ -208,6 +213,8 @@ def main() -> None:
         "schema_version": 1,
         "kind": "crashbench_expansion_odur_seed",
         "seed": args.seed,
+        "fit_on": args.fit_on,
+        "fit_rows": int(np.sum(fit)),
         "git_commit": resolve_git_head(Path.cwd()),
         "train_rows": int(np.sum(train)),
         "development_rows": int(np.sum(development)),
@@ -219,7 +226,7 @@ def main() -> None:
     (args.output_dir / "manifest.json").write_text(
         json.dumps(manifest, indent=2, sort_keys=True) + "\n"
     )
-    print(json.dumps({"output": str(args.output_dir), "seed": args.seed, "train": int(np.sum(train)), "development": int(np.sum(development))}, sort_keys=True))
+    print(json.dumps({"output": str(args.output_dir), "seed": args.seed, "fit_on": args.fit_on, "fit_rows": int(np.sum(fit)), "train": int(np.sum(train)), "development": int(np.sum(development))}, sort_keys=True))
 
 
 if __name__ == "__main__":

@@ -25,3 +25,9 @@ def test_expected_u0_penalizes_catastrophe_intervention_and_costs():
 
 def test_training_script_explicitly_excludes_calibration_and_test_roles():
     assert MODULE.ALLOWED_ROLES == {"train", "development"}
+
+
+def test_two_stage_fit_modes_are_explicit_in_cli_source():
+    source = SCRIPT.read_text()
+    assert 'choices=("train", "train_development")' in source
+    assert 'args.fit_on == "train"' in source
