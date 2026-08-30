@@ -501,6 +501,10 @@ def expansion_governance_errors() -> list[str]:
         "scripts/expansion/analyze_action_drift_screen.py",
         "setup/expansion_action_drift_screen.sbatch",
         "setup/submit_expansion_action_drift_screen.sh",
+        "scripts/expansion/run_narrow_clearance_screen.py",
+        "scripts/expansion/analyze_narrow_clearance_screen.py",
+        "setup/expansion_narrow_screen.sbatch",
+        "setup/submit_expansion_narrow_screen.sh",
         "setup/expansion_fragile_screen.sbatch",
         "setup/submit_expansion_fragile_screen.sh",
     )
