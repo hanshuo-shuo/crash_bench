@@ -174,6 +174,7 @@ def main() -> None:
         "best_fixed_intervention": best_intervention,
         "intervention_train_values": intervention_values,
         "development_source_macro_u0": metrics,
+        "development_choices": choices,
         "frozen_strongest_deployable_comparator": comparator,
         "risk_threshold": 0.5,
     }

@@ -29,3 +29,7 @@ def test_choices_group_by_block_and_pick_max_prediction():
         np.array([0.1, 0.2, 0.4, 0.3]),
     )
     assert choices == {"block": "b", "other": "a"}
+
+
+def test_baseline_output_source_persists_development_choices_for_paired_audit():
+    assert '"development_choices": choices' in SCRIPT.read_text()
