@@ -30,3 +30,4 @@ def test_gate_b_source_declares_scoped_test_and_zero_test_access():
     source = SCRIPT.read_text()
     assert "AUTHORIZE_SCOPED_32_SOURCE_STATEWISE_METHOD_TEST" in source
     assert '"test_rows_read": 0' in source
+    assert 'model_value - comparator_value > 0.0, "==", True' in source

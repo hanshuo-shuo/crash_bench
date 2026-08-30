@@ -25,6 +25,7 @@ from crashbench.models.advantage import source_macro_policy_value
 from crashbench.models.selective import PairwiseSourceConformalSelector
 from scripts.expansion.calibrate_selector import MECHANISM_ID, predict_seed, sha256_file
 from scripts.expansion.train_option_value import OPTION_IDS, build_training_arrays, read_jsonl
+from scripts.expansion.hash_tree_manifest import resolve_git_head
 
 
 def source_macro_metric(
@@ -137,7 +138,10 @@ def analyze(
         Criterion("development_sources", hard, len(set(map(str, data["sources"]))), "==", 12),
         Criterion("seeds_beating_comparator", claim, development_selection["seeds_beating_comparator"], ">=", 4),
         Criterion("median_delta_u0", claim, development_selection["median_delta_u0"], ">=", 0.06),
-        Criterion("calibrated_delta_u0", claim, model_value - comparator_value, ">", 0.0),
+        Criterion(
+            "calibrated_delta_u0_positive", claim,
+            model_value - comparator_value > 0.0, "==", True,
+        ),
         Criterion("catastrophe_point_increase", claim, model_cat - comparator_cat, "<=", 0.02),
         Criterion("oracle_gap_recovered", claim, development_selection["oracle_gap_recovered"], ">=", 0.35),
         Criterion(
@@ -171,6 +175,7 @@ def analyze(
         "schema_version": 1,
         "kind": "crashbench_expansion_scoped_gate_b_analysis",
         "scope": "single_primary_policy_single_staleness_mechanism_pilot",
+        "analysis_git_commit": resolve_git_head(ROOT),
         "prospective_adaptation": (
             "The original three-mechanism diversity clause is structurally inapplicable after D2; "
             "all model, safety, recall, coverage, and no-test-access criteria remain non-compensatory."
