@@ -527,6 +527,8 @@ def expansion_governance_errors() -> list[str]:
         "scripts/expansion/analyze_statewise_gate_a.py",
         "scripts/expansion/train_option_value.py",
         "scripts/expansion/train_baselines.py",
+        "scripts/expansion/analyze_development_models.py",
+        "scripts/expansion/calibrate_selector.py",
         "setup/expansion_fragile_screen.sbatch",
         "setup/submit_expansion_fragile_screen.sh",
     )

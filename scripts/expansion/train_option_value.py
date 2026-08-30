@@ -41,7 +41,11 @@ def build_training_arrays(
     *,
     artifact_store: Path,
     budgets: PhysicalBudgets,
+    allowed_roles: set[str] | None = None,
 ) -> dict[str, Any]:
+    allowed_roles = ALLOWED_ROLES if allowed_roles is None else set(allowed_roles)
+    if not allowed_roles or allowed_roles - {"train", "development", "calibration"}:
+        raise ValueError("feature loader role request is empty or forbidden")
     anchor_by_block = {row["block_id"]: row for row in anchors}
     feature_cache = {}
     features, options, outcomes, costs, sources, roles, row_ids, actual_u0 = (
@@ -52,7 +56,7 @@ def build_training_arrays(
         if anchor is None:
             raise ValueError(f"branch lacks anchor: {branch['block_id']}")
         role = str(anchor["split_role"])
-        if role not in ALLOWED_ROLES:
+        if role not in allowed_roles:
             continue
         ref = anchor["anchor_feature_blob"]
         key = ref["sha256"]

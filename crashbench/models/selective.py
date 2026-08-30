@@ -24,8 +24,126 @@ def source_conformal_quantile(values: Sequence[float], *, alpha: float) -> float
         raise ValueError("conformal residuals must be finite and non-empty")
     if not 0 < alpha < 1:
         raise ValueError("conformal alpha must lie in (0,1)")
-    rank = min(len(residuals), math.ceil((len(residuals) + 1) * (1 - alpha)))
+    rank = math.ceil((len(residuals) + 1) * (1 - alpha))
+    if rank > len(residuals):
+        return float("inf")
     return float(residuals[rank - 1])
+
+
+@dataclass(frozen=True)
+class PairwiseSelection:
+    option_id: str
+    action: str
+    minimum_pairwise_lcb: float
+    catastrophe_difference_ucb: float
+    catastrophe_absolute_ucb: float
+    reason: str
+
+
+class PairwiseSourceConformalSelector:
+    """Frozen simultaneous pairwise selector with explicit safety UCBs.
+
+    Quantiles are source-max residual quantiles computed by the calibration-only
+    script.  A mechanism-specific quantile is always combined with the global
+    quantile using max; missing or infinite strata therefore fail closed.
+    """
+
+    GLOBAL = "__global__"
+
+    def __init__(
+        self,
+        option_ids: Sequence[str],
+        *,
+        utility_quantiles: Mapping[str, float],
+        catastrophe_difference_quantiles: Mapping[str, float],
+        catastrophe_absolute_quantiles: Mapping[str, float],
+        catastrophe_delta: float = 0.02,
+        catastrophe_absolute: float = 0.10,
+    ):
+        self.option_ids = tuple(map(str, option_ids))
+        if "base_continue" not in self.option_ids or len(set(self.option_ids)) != len(self.option_ids):
+            raise ValueError("pairwise selector requires unique options including base_continue")
+        self.utility_quantiles = dict(utility_quantiles)
+        self.catastrophe_difference_quantiles = dict(catastrophe_difference_quantiles)
+        self.catastrophe_absolute_quantiles = dict(catastrophe_absolute_quantiles)
+        for values in (
+            self.utility_quantiles,
+            self.catastrophe_difference_quantiles,
+            self.catastrophe_absolute_quantiles,
+        ):
+            if self.GLOBAL not in values:
+                raise ValueError("pairwise selector requires a global calibration quantile")
+            if any(float(value) < 0 or math.isnan(float(value)) for value in values.values()):
+                raise ValueError("calibration quantiles must be nonnegative or infinity")
+        self.catastrophe_delta = float(catastrophe_delta)
+        self.catastrophe_absolute = float(catastrophe_absolute)
+
+    @staticmethod
+    def _combined(mapping: Mapping[str, float], mechanism_id: str) -> float:
+        return max(float(mapping[PairwiseSourceConformalSelector.GLOBAL]), float(mapping.get(mechanism_id, math.inf)))
+
+    def select(
+        self,
+        *,
+        mechanism_id: str,
+        predicted_utility: Mapping[str, float],
+        pairwise_scale: Mapping[tuple[str, str], float],
+        predicted_catastrophe: Mapping[str, float],
+        admissible_options: Sequence[str] | None = None,
+    ) -> PairwiseSelection:
+        options = tuple(self.option_ids if admissible_options is None else map(str, admissible_options))
+        if "base_continue" not in options or set(options) - set(self.option_ids):
+            raise ValueError("admissible options must be a frozen-catalog subset containing Base")
+        if set(predicted_utility) != set(self.option_ids) or set(predicted_catastrophe) != set(self.option_ids):
+            raise ValueError("prediction options differ from frozen catalog")
+        q_utility = self._combined(self.utility_quantiles, mechanism_id)
+        q_difference = self._combined(self.catastrophe_difference_quantiles, mechanism_id)
+        q_absolute = self._combined(self.catastrophe_absolute_quantiles, mechanism_id)
+        candidates = []
+        base_catastrophe = float(predicted_catastrophe["base_continue"])
+        for option in options:
+            if option == "base_continue":
+                continue
+            pair_lcbs = []
+            for other in options:
+                if other == option:
+                    continue
+                scale = float(pairwise_scale.get((option, other), math.nan))
+                if not math.isfinite(scale) or scale < 0.05:
+                    raise ValueError("pairwise scale must be finite and at least 0.05")
+                pair_lcbs.append(
+                    float(predicted_utility[option]) - float(predicted_utility[other])
+                    - q_utility * scale
+                )
+            minimum_lcb = min(pair_lcbs)
+            difference_ucb = (
+                float(predicted_catastrophe[option]) - base_catastrophe + q_difference
+            )
+            absolute_ucb = float(predicted_catastrophe[option]) + q_absolute
+            if (
+                minimum_lcb > 0
+                and difference_ucb <= self.catastrophe_delta
+                and absolute_ucb <= self.catastrophe_absolute
+            ):
+                candidates.append(
+                    (minimum_lcb, -absolute_ucb, option, difference_ucb, absolute_ucb)
+                )
+        if candidates:
+            minimum_lcb, _, option, difference_ucb, absolute_ucb = max(candidates)
+            return PairwiseSelection(
+                option, "INTERVENE", float(minimum_lcb), float(difference_ucb),
+                float(absolute_ucb), "strict simultaneous utility and safety contracts pass"
+            )
+        base_absolute_ucb = base_catastrophe + q_absolute
+        if base_absolute_ucb > self.catastrophe_absolute and "safe_stop" in options:
+            return PairwiseSelection(
+                "safe_stop", "ABSTAIN_TO_SAFE_STOP", float("-inf"), float("inf"),
+                float(base_absolute_ucb), "Base violates absolute safety and no recovery is certified"
+            )
+        return PairwiseSelection(
+            "base_continue", "PRESERVE_BASE", float("-inf"), 0.0,
+            float(base_absolute_ucb), "no non-Base option satisfies all simultaneous contracts"
+        )
 
 
 class SourceConformalSelector:
