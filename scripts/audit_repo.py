@@ -476,6 +476,7 @@ def expansion_governance_errors() -> list[str]:
         "results/expansion/governance/d1_backend_capability_report.json",
         "results/expansion/governance/exposure_attempts.jsonl",
         "results/expansion/d2_sources/screen_plan_256ce74521254ec9f692b77cb5197b5aa29be73f58d91ce29a6c945841cba7de.json",
+        "results/expansion/d2_preflight/77ea231ebf97_a1464cf4ddf0_20260830T084407Z/nominal_preflight_analysis.json",
         "scripts/expansion/verify_exact_branching.py",
         "setup/expansion_verify.sbatch",
         "setup/submit_expansion_verify.sh",
@@ -607,6 +608,31 @@ def expansion_governance_errors() -> list[str]:
         "requires_separate_pre_run_user_authorization"
     ) is not True:
         errors.append("D2 source freeze removed unstable-placement explicit authorization")
+    nominal_root = ROOT / (
+        "results/expansion/d2_preflight/77ea231ebf97_a1464cf4ddf0_20260830T084407Z"
+    )
+    nominal_cells = sorted(nominal_root.glob("cell_*.json"))
+    if len(nominal_cells) != 8:
+        errors.append("D2 nominal preflight must contain exactly eight cell artifacts")
+    else:
+        cell_payloads = [read_json(path) for path in nominal_cells]
+        if sum(row.get("attempted_sources", 0) for row in cell_payloads) != 64:
+            errors.append("D2 nominal preflight does not account for 64 planned attempts")
+        if any(row.get("complete_sources") != 8 for row in cell_payloads):
+            errors.append("D2 nominal preflight has an incomplete cell")
+        if any(row.get("option_outcomes_opened") != 0 for row in cell_payloads):
+            errors.append("D2 nominal preflight opened option outcomes")
+    nominal_analysis = read_json(nominal_root / "nominal_preflight_analysis.json")
+    if nominal_analysis.get("gate", {}).get("status") != "GO":
+        errors.append("D2 nominal preflight Gate A0 is not GO")
+    if nominal_analysis.get("task_summary", {}).get("0", {}).get(
+        "nominal_success_rate"
+    ) != 0.84375:
+        errors.append("D2 nominal task0 success rate drift")
+    if nominal_analysis.get("task_summary", {}).get("2", {}).get(
+        "nominal_success_rate"
+    ) != 1.0:
+        errors.append("D2 nominal task2 success rate drift")
     return errors
 
 

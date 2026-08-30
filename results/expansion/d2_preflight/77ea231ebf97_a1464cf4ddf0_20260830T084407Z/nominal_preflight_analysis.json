@@ -1,0 +1,736 @@
+{
+  "analysis_sha256": "ddcfd0baff22444fb9f25115e13a820a267b42977edaeac287e509e0cb0aecb3",
+  "cells": [
+    {
+      "all_attempts_accounted": true,
+      "attempted_sources": 8,
+      "cell_sha256": "80d7e7ee82b61b802e6183a3a551d8f999bc97965466b0f04392ce98d257c6ab",
+      "complete_sources": 8,
+      "mechanism_id": "fragile_path_collision_v2",
+      "nominal_success_rate": 0.75,
+      "nominal_successes": 6,
+      "observed": true,
+      "option_outcomes_opened": 0,
+      "path_ready_sources": 8,
+      "slurm_array_task_id": "0",
+      "slurm_job_id": "5204823",
+      "task_id": 0
+    },
+    {
+      "all_attempts_accounted": true,
+      "attempted_sources": 8,
+      "cell_sha256": "c9294e20d9cf9eb62fd0d05cda82ecb60efe656e32d666aac3953fd23a13e305",
+      "complete_sources": 8,
+      "mechanism_id": "fragile_path_collision_v2",
+      "nominal_success_rate": 1.0,
+      "nominal_successes": 8,
+      "observed": true,
+      "option_outcomes_opened": 0,
+      "path_ready_sources": 8,
+      "slurm_array_task_id": "1",
+      "slurm_job_id": "5204824",
+      "task_id": 2
+    },
+    {
+      "all_attempts_accounted": true,
+      "attempted_sources": 8,
+      "cell_sha256": "f123d1663883e2873bc900e3fbebff30d0fc25be346cb47c052e7228ffbb2493",
+      "complete_sources": 8,
+      "mechanism_id": "observation_staleness_v1",
+      "nominal_success_rate": 0.875,
+      "nominal_successes": 7,
+      "observed": true,
+      "option_outcomes_opened": 0,
+      "path_ready_sources": 8,
+      "slurm_array_task_id": "2",
+      "slurm_job_id": "5204857",
+      "task_id": 0
+    },
+    {
+      "all_attempts_accounted": true,
+      "attempted_sources": 8,
+      "cell_sha256": "8d346008fb1f12c4088c880dc996e43dcd37c0a8a69d9e4ea048d97df7390a65",
+      "complete_sources": 8,
+      "mechanism_id": "observation_staleness_v1",
+      "nominal_success_rate": 1.0,
+      "nominal_successes": 8,
+      "observed": true,
+      "option_outcomes_opened": 0,
+      "path_ready_sources": 8,
+      "slurm_array_task_id": "3",
+      "slurm_job_id": "5204858",
+      "task_id": 2
+    },
+    {
+      "all_attempts_accounted": true,
+      "attempted_sources": 8,
+      "cell_sha256": "1995ae206c2db9df4b8b77f859df862c5807c8ea3933eb41a3c94a3cac307ac6",
+      "complete_sources": 8,
+      "mechanism_id": "action_drift_v1",
+      "nominal_success_rate": 0.875,
+      "nominal_successes": 7,
+      "observed": true,
+      "option_outcomes_opened": 0,
+      "path_ready_sources": 8,
+      "slurm_array_task_id": "4",
+      "slurm_job_id": "5204859",
+      "task_id": 0
+    },
+    {
+      "all_attempts_accounted": true,
+      "attempted_sources": 8,
+      "cell_sha256": "52e8ad1fb53f7d0bd61b36a76c3009e9398ea2e4c214f527300cfe90656b9e6a",
+      "complete_sources": 8,
+      "mechanism_id": "action_drift_v1",
+      "nominal_success_rate": 1.0,
+      "nominal_successes": 8,
+      "observed": true,
+      "option_outcomes_opened": 0,
+      "path_ready_sources": 8,
+      "slurm_array_task_id": "5",
+      "slurm_job_id": "5204890",
+      "task_id": 2
+    },
+    {
+      "all_attempts_accounted": true,
+      "attempted_sources": 8,
+      "cell_sha256": "70055af4aab6f1571090a63dd5679b801237e7da51f9a5be6515a72897b71925",
+      "complete_sources": 8,
+      "mechanism_id": "narrow_clearance_v1",
+      "nominal_success_rate": 0.875,
+      "nominal_successes": 7,
+      "observed": true,
+      "option_outcomes_opened": 0,
+      "path_ready_sources": 8,
+      "slurm_array_task_id": "6",
+      "slurm_job_id": "5204891",
+      "task_id": 0
+    },
+    {
+      "all_attempts_accounted": true,
+      "attempted_sources": 8,
+      "cell_sha256": "678bcf48cc60f620106dfabff4d522fe414e5947568cfa7085e898e21d3cac54",
+      "complete_sources": 8,
+      "mechanism_id": "narrow_clearance_v1",
+      "nominal_success_rate": 1.0,
+      "nominal_successes": 8,
+      "observed": true,
+      "option_outcomes_opened": 0,
+      "path_ready_sources": 8,
+      "slurm_array_task_id": "7",
+      "slurm_job_id": "5204803",
+      "task_id": 2
+    }
+  ],
+  "duplicate_cells": [],
+  "expected_cells": 8,
+  "gate": {
+    "claim_scope_failures": [],
+    "criteria": [
+      {
+        "actual": 0,
+        "criterion_class": "hard_validity",
+        "criterion_id": "duplicate_cell_count",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": "==",
+        "pass": true,
+        "threshold": 0
+      },
+      {
+        "actual": true,
+        "criterion_class": "hard_validity",
+        "criterion_id": "fragile_path_collision_v2:task0:observed",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": "==",
+        "pass": true,
+        "threshold": true
+      },
+      {
+        "actual": 8,
+        "criterion_class": "hard_validity",
+        "criterion_id": "fragile_path_collision_v2:task0:attempted",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": "==",
+        "pass": true,
+        "threshold": 8
+      },
+      {
+        "actual": 8,
+        "criterion_class": "hard_validity",
+        "criterion_id": "fragile_path_collision_v2:task0:complete",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": "==",
+        "pass": true,
+        "threshold": 8
+      },
+      {
+        "actual": true,
+        "criterion_class": "hard_validity",
+        "criterion_id": "fragile_path_collision_v2:task0:accounted",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": "==",
+        "pass": true,
+        "threshold": true
+      },
+      {
+        "actual": 0,
+        "criterion_class": "hard_validity",
+        "criterion_id": "fragile_path_collision_v2:task0:no_option_outcomes",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": "==",
+        "pass": true,
+        "threshold": 0
+      },
+      {
+        "actual": 0.75,
+        "criterion_class": "claim_scope",
+        "criterion_id": "fragile_path_collision_v2:task0:nominal_success",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": ">=",
+        "pass": true,
+        "threshold": 0.7
+      },
+      {
+        "actual": 8,
+        "criterion_class": "claim_scope",
+        "criterion_id": "fragile_path_collision_v2:task0:path_ready",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": ">=",
+        "pass": true,
+        "threshold": 6
+      },
+      {
+        "actual": true,
+        "criterion_class": "hard_validity",
+        "criterion_id": "fragile_path_collision_v2:task2:observed",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": "==",
+        "pass": true,
+        "threshold": true
+      },
+      {
+        "actual": 8,
+        "criterion_class": "hard_validity",
+        "criterion_id": "fragile_path_collision_v2:task2:attempted",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": "==",
+        "pass": true,
+        "threshold": 8
+      },
+      {
+        "actual": 8,
+        "criterion_class": "hard_validity",
+        "criterion_id": "fragile_path_collision_v2:task2:complete",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": "==",
+        "pass": true,
+        "threshold": 8
+      },
+      {
+        "actual": true,
+        "criterion_class": "hard_validity",
+        "criterion_id": "fragile_path_collision_v2:task2:accounted",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": "==",
+        "pass": true,
+        "threshold": true
+      },
+      {
+        "actual": 0,
+        "criterion_class": "hard_validity",
+        "criterion_id": "fragile_path_collision_v2:task2:no_option_outcomes",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": "==",
+        "pass": true,
+        "threshold": 0
+      },
+      {
+        "actual": 1.0,
+        "criterion_class": "claim_scope",
+        "criterion_id": "fragile_path_collision_v2:task2:nominal_success",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": ">=",
+        "pass": true,
+        "threshold": 0.7
+      },
+      {
+        "actual": 8,
+        "criterion_class": "claim_scope",
+        "criterion_id": "fragile_path_collision_v2:task2:path_ready",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": ">=",
+        "pass": true,
+        "threshold": 6
+      },
+      {
+        "actual": true,
+        "criterion_class": "hard_validity",
+        "criterion_id": "observation_staleness_v1:task0:observed",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": "==",
+        "pass": true,
+        "threshold": true
+      },
+      {
+        "actual": 8,
+        "criterion_class": "hard_validity",
+        "criterion_id": "observation_staleness_v1:task0:attempted",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": "==",
+        "pass": true,
+        "threshold": 8
+      },
+      {
+        "actual": 8,
+        "criterion_class": "hard_validity",
+        "criterion_id": "observation_staleness_v1:task0:complete",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": "==",
+        "pass": true,
+        "threshold": 8
+      },
+      {
+        "actual": true,
+        "criterion_class": "hard_validity",
+        "criterion_id": "observation_staleness_v1:task0:accounted",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": "==",
+        "pass": true,
+        "threshold": true
+      },
+      {
+        "actual": 0,
+        "criterion_class": "hard_validity",
+        "criterion_id": "observation_staleness_v1:task0:no_option_outcomes",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": "==",
+        "pass": true,
+        "threshold": 0
+      },
+      {
+        "actual": 0.875,
+        "criterion_class": "claim_scope",
+        "criterion_id": "observation_staleness_v1:task0:nominal_success",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": ">=",
+        "pass": true,
+        "threshold": 0.7
+      },
+      {
+        "actual": 8,
+        "criterion_class": "claim_scope",
+        "criterion_id": "observation_staleness_v1:task0:path_ready",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": ">=",
+        "pass": true,
+        "threshold": 6
+      },
+      {
+        "actual": true,
+        "criterion_class": "hard_validity",
+        "criterion_id": "observation_staleness_v1:task2:observed",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": "==",
+        "pass": true,
+        "threshold": true
+      },
+      {
+        "actual": 8,
+        "criterion_class": "hard_validity",
+        "criterion_id": "observation_staleness_v1:task2:attempted",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": "==",
+        "pass": true,
+        "threshold": 8
+      },
+      {
+        "actual": 8,
+        "criterion_class": "hard_validity",
+        "criterion_id": "observation_staleness_v1:task2:complete",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": "==",
+        "pass": true,
+        "threshold": 8
+      },
+      {
+        "actual": true,
+        "criterion_class": "hard_validity",
+        "criterion_id": "observation_staleness_v1:task2:accounted",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": "==",
+        "pass": true,
+        "threshold": true
+      },
+      {
+        "actual": 0,
+        "criterion_class": "hard_validity",
+        "criterion_id": "observation_staleness_v1:task2:no_option_outcomes",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": "==",
+        "pass": true,
+        "threshold": 0
+      },
+      {
+        "actual": 1.0,
+        "criterion_class": "claim_scope",
+        "criterion_id": "observation_staleness_v1:task2:nominal_success",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": ">=",
+        "pass": true,
+        "threshold": 0.7
+      },
+      {
+        "actual": 8,
+        "criterion_class": "claim_scope",
+        "criterion_id": "observation_staleness_v1:task2:path_ready",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": ">=",
+        "pass": true,
+        "threshold": 6
+      },
+      {
+        "actual": true,
+        "criterion_class": "hard_validity",
+        "criterion_id": "action_drift_v1:task0:observed",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": "==",
+        "pass": true,
+        "threshold": true
+      },
+      {
+        "actual": 8,
+        "criterion_class": "hard_validity",
+        "criterion_id": "action_drift_v1:task0:attempted",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": "==",
+        "pass": true,
+        "threshold": 8
+      },
+      {
+        "actual": 8,
+        "criterion_class": "hard_validity",
+        "criterion_id": "action_drift_v1:task0:complete",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": "==",
+        "pass": true,
+        "threshold": 8
+      },
+      {
+        "actual": true,
+        "criterion_class": "hard_validity",
+        "criterion_id": "action_drift_v1:task0:accounted",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": "==",
+        "pass": true,
+        "threshold": true
+      },
+      {
+        "actual": 0,
+        "criterion_class": "hard_validity",
+        "criterion_id": "action_drift_v1:task0:no_option_outcomes",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": "==",
+        "pass": true,
+        "threshold": 0
+      },
+      {
+        "actual": 0.875,
+        "criterion_class": "claim_scope",
+        "criterion_id": "action_drift_v1:task0:nominal_success",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": ">=",
+        "pass": true,
+        "threshold": 0.7
+      },
+      {
+        "actual": 8,
+        "criterion_class": "claim_scope",
+        "criterion_id": "action_drift_v1:task0:path_ready",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": ">=",
+        "pass": true,
+        "threshold": 6
+      },
+      {
+        "actual": true,
+        "criterion_class": "hard_validity",
+        "criterion_id": "action_drift_v1:task2:observed",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": "==",
+        "pass": true,
+        "threshold": true
+      },
+      {
+        "actual": 8,
+        "criterion_class": "hard_validity",
+        "criterion_id": "action_drift_v1:task2:attempted",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": "==",
+        "pass": true,
+        "threshold": 8
+      },
+      {
+        "actual": 8,
+        "criterion_class": "hard_validity",
+        "criterion_id": "action_drift_v1:task2:complete",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": "==",
+        "pass": true,
+        "threshold": 8
+      },
+      {
+        "actual": true,
+        "criterion_class": "hard_validity",
+        "criterion_id": "action_drift_v1:task2:accounted",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": "==",
+        "pass": true,
+        "threshold": true
+      },
+      {
+        "actual": 0,
+        "criterion_class": "hard_validity",
+        "criterion_id": "action_drift_v1:task2:no_option_outcomes",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": "==",
+        "pass": true,
+        "threshold": 0
+      },
+      {
+        "actual": 1.0,
+        "criterion_class": "claim_scope",
+        "criterion_id": "action_drift_v1:task2:nominal_success",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": ">=",
+        "pass": true,
+        "threshold": 0.7
+      },
+      {
+        "actual": 8,
+        "criterion_class": "claim_scope",
+        "criterion_id": "action_drift_v1:task2:path_ready",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": ">=",
+        "pass": true,
+        "threshold": 6
+      },
+      {
+        "actual": true,
+        "criterion_class": "hard_validity",
+        "criterion_id": "narrow_clearance_v1:task0:observed",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": "==",
+        "pass": true,
+        "threshold": true
+      },
+      {
+        "actual": 8,
+        "criterion_class": "hard_validity",
+        "criterion_id": "narrow_clearance_v1:task0:attempted",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": "==",
+        "pass": true,
+        "threshold": 8
+      },
+      {
+        "actual": 8,
+        "criterion_class": "hard_validity",
+        "criterion_id": "narrow_clearance_v1:task0:complete",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": "==",
+        "pass": true,
+        "threshold": 8
+      },
+      {
+        "actual": true,
+        "criterion_class": "hard_validity",
+        "criterion_id": "narrow_clearance_v1:task0:accounted",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": "==",
+        "pass": true,
+        "threshold": true
+      },
+      {
+        "actual": 0,
+        "criterion_class": "hard_validity",
+        "criterion_id": "narrow_clearance_v1:task0:no_option_outcomes",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": "==",
+        "pass": true,
+        "threshold": 0
+      },
+      {
+        "actual": 0.875,
+        "criterion_class": "claim_scope",
+        "criterion_id": "narrow_clearance_v1:task0:nominal_success",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": ">=",
+        "pass": true,
+        "threshold": 0.7
+      },
+      {
+        "actual": 8,
+        "criterion_class": "claim_scope",
+        "criterion_id": "narrow_clearance_v1:task0:path_ready",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": ">=",
+        "pass": true,
+        "threshold": 6
+      },
+      {
+        "actual": true,
+        "criterion_class": "hard_validity",
+        "criterion_id": "narrow_clearance_v1:task2:observed",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": "==",
+        "pass": true,
+        "threshold": true
+      },
+      {
+        "actual": 8,
+        "criterion_class": "hard_validity",
+        "criterion_id": "narrow_clearance_v1:task2:attempted",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": "==",
+        "pass": true,
+        "threshold": 8
+      },
+      {
+        "actual": 8,
+        "criterion_class": "hard_validity",
+        "criterion_id": "narrow_clearance_v1:task2:complete",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": "==",
+        "pass": true,
+        "threshold": 8
+      },
+      {
+        "actual": true,
+        "criterion_class": "hard_validity",
+        "criterion_id": "narrow_clearance_v1:task2:accounted",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": "==",
+        "pass": true,
+        "threshold": true
+      },
+      {
+        "actual": 0,
+        "criterion_class": "hard_validity",
+        "criterion_id": "narrow_clearance_v1:task2:no_option_outcomes",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": "==",
+        "pass": true,
+        "threshold": 0
+      },
+      {
+        "actual": 1.0,
+        "criterion_class": "claim_scope",
+        "criterion_id": "narrow_clearance_v1:task2:nominal_success",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": ">=",
+        "pass": true,
+        "threshold": 0.7
+      },
+      {
+        "actual": 8,
+        "criterion_class": "claim_scope",
+        "criterion_id": "narrow_clearance_v1:task2:path_ready",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": ">=",
+        "pass": true,
+        "threshold": 6
+      }
+    ],
+    "decision_sha256": "4a3d3cca7e5e1098bf36507adc0cb6ba2c13ca94e48a8d99f4d0ff4c76dba007",
+    "hard_failures": [],
+    "kind": "crashbench_machine_gate_decision",
+    "missing_evidence": [],
+    "next_action": "DERIVE_MECHANICAL_INJECTIONS_AND_OPEN_NON_UNSTABLE_D2_SCREENS",
+    "non_compensatory": true,
+    "policy": {
+      "allow_scoped_continuation": true,
+      "confirmatory": false,
+      "fail_next_action": "STOP_PREFLIGHT_AND_RESOLVE_ACCOUNTING_OR_OPERATIONAL_FAILURES",
+      "go_next_action": "DERIVE_MECHANICAL_INJECTIONS_AND_OPEN_NON_UNSTABLE_D2_SCREENS",
+      "scoped_next_action": "CONTINUE_ONLY_PASSING_CELLS_OR_REPLACE_TASK_BEFORE_MECHANISM_OUTCOMES",
+      "stage_id": "D2_D3_NOMINAL_PREFLIGHT_A0",
+      "test_outcomes_opened": false
+    },
+    "schema_version": 1,
+    "stage_id": "D2_D3_NOMINAL_PREFLIGHT_A0",
+    "status": "GO"
+  },
+  "kind": "crashbench_expansion_nominal_preflight_analysis",
+  "observed_cells": 8,
+  "option_outcomes_opened": 0,
+  "schema_version": 1,
+  "task_summary": {
+    "0": {
+      "attempted_sources": 32,
+      "nominal_success_rate": 0.84375,
+      "nominal_successes": 27
+    },
+    "2": {
+      "attempted_sources": 32,
+      "nominal_success_rate": 1.0,
+      "nominal_successes": 32
+    }
+  }
+}
