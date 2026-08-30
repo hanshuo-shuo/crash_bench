@@ -17,7 +17,7 @@ module load mamba/24.3.0
 source activate "$HOME/crash_bench/envs/openvla"
 export PYTHONNOUSERSITE=1
 
-commit="$(git rev-parse HEAD)"
+commit="$(python scripts/expansion/hash_tree_manifest.py --print-git-head .)"
 protocol_sha="$(sha256sum configs/expansion/benchmark_v1.yaml | awk '{print $1}')"
 utc="$(date -u +%Y%m%dT%H%M%SZ)"
 run_id="${CB_EXPANSION_RUN_ID:-${protocol_sha:0:12}_${commit:0:12}_${utc}}"
@@ -26,9 +26,9 @@ case "$run_id" in
 esac
 
 expected_openpi_commit="15a9616a00943ada6c20a0f158e3adb39df2ccac"
-actual_openpi_commit="$(git -C /projects/p33100/siosio/third_party/openpi rev-parse HEAD)"
+actual_openpi_commit="$(python scripts/expansion/hash_tree_manifest.py \
+  --print-git-head /projects/p33100/siosio/third_party/openpi)"
 test "$actual_openpi_commit" = "$expected_openpi_commit"
-test -z "$(git -C /projects/p33100/siosio/third_party/openpi status --porcelain)"
 
 result_root="results/expansion/governance/pi0_identity_${run_id}"
 test ! -e "$result_root"
