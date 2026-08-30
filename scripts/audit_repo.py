@@ -496,6 +496,10 @@ def expansion_governance_errors() -> list[str]:
         "scripts/expansion/analyze_staleness_screen.py",
         "setup/expansion_staleness_screen.sbatch",
         "setup/submit_expansion_staleness_screen.sh",
+        "scripts/expansion/run_action_drift_screen.py",
+        "scripts/expansion/analyze_action_drift_screen.py",
+        "setup/expansion_action_drift_screen.sbatch",
+        "setup/submit_expansion_action_drift_screen.sh",
         "setup/expansion_fragile_screen.sbatch",
         "setup/submit_expansion_fragile_screen.sh",
     )
