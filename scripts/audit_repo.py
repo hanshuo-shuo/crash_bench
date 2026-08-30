@@ -485,6 +485,8 @@ def expansion_governance_errors() -> list[str]:
         "scripts/expansion/derive_mechanical_preflight.py",
         "setup/expansion_author_sources.sbatch",
         "setup/submit_expansion_preflight.sh",
+        "setup/expansion_mechanical_preflight.sbatch",
+        "setup/submit_expansion_mechanical_preflight.sh",
     )
     for relative in required:
         if not (ROOT / relative).is_file():
