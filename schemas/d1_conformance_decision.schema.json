@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://crashbench.local/schemas/d1_conformance_decision.schema.json",
+  "title": "CrashBench D1 conformance decision",
+  "type": "object",
+  "required": ["schema_version", "kind", "cells", "status", "next_action", "decision_sha256", "scientific_outcomes_opened"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "crashbench_expansion_d1_conformance_decision"},
+    "status": {"enum": ["INVALID_DUPLICATE_CELL", "INCOMPLETE_PRIMARY_FAIL_CLOSED", "PRIMARY_OPENVLA_NO_GO", "PRIMARY_GO_TRANSFER_PENDING", "PRIMARY_GO_SINGLE_POLICY_SCOPE", "PRIMARY_AND_TRANSFER_GO"]},
+    "scientific_outcomes_opened": {"const": 0},
+    "decision_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  }
+}
