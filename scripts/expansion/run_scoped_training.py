@@ -91,6 +91,17 @@ def main() -> None:
     for directory in refit_dirs:
         command.extend(["--seed-dir", str(directory)])
     run(command)
+    gate_b = args.output_dir / "scoped_gate_b_analysis.json"
+    command = [
+        python, "scripts/expansion/analyze_scoped_gate_b.py", *common,
+        "--calibration-freeze", str(calibration_dir / "statewise_calibration_freeze.json"),
+        "--development-selection", str(development_selection),
+        "--baseline-selection", str(baseline_dir / "baseline_selection.json"),
+        "--output", str(gate_b),
+    ]
+    for directory in refit_dirs:
+        command.extend(["--refit-seed-dir", str(directory)])
+    run(command)
     manifest = {
         "schema_version": 1,
         "kind": "crashbench_expansion_scoped_d6_d7_training_run",
@@ -102,6 +113,8 @@ def main() -> None:
         "gate_a_sha256": sha256_file(args.gate_a),
         "development_selection_sha256": sha256_file(development_selection),
         "calibration_freeze_sha256": sha256_file(calibration_dir / "statewise_calibration_freeze.json"),
+        "gate_b_sha256": sha256_file(gate_b),
+        "gate_b_status": json.loads(gate_b.read_text())["gate"]["status"],
         "calibration_rows_read": json.loads(
             (calibration_dir / "statewise_calibration_freeze.json").read_text()
         )["calibration_row_count"],
