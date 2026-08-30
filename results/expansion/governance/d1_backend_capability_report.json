@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "kind": "crashbench_expansion_d1_backend_capability_report",
-  "status": "IMPLEMENTED_SYNTHETICALLY__LIVE_CONFORMANCE_REQUIRED",
+  "status": "D1_PRIMARY_PI0_GO__OPENVLA_TASK2_RESIDUAL__SINGLE_POLICY_SCOPE",
   "implementation": {
     "restore_order_version": "model-sim-runtime-policy-rng-observation-audit/v1",
     "simulator_runtime_adapter": "existing LiberoEnv flat_state/controller_state/model_xml/reset_to_exact/restore_controller_state",
@@ -17,7 +17,7 @@
       "backend": "openvla",
       "continuation_contract": "STATELESS_SINGLE_FRAME_WITH_STEERING_CONFIGURATION",
       "queue_snapshot": "NOT_APPLICABLE",
-      "live_classification": "TASK0_DETERMINISTIC_EXACT__TASK2_FAIL_CLOSED",
+      "live_classification": "TASK0_DETERMINISTIC_EXACT__TASK2_RESIDUAL_STOCHASTIC_SENSOR_RENDER",
       "live_cells": [
         {
           "suite": "libero_spatial",
@@ -36,15 +36,23 @@
           "suite": "libero_spatial",
           "task_id": 2,
           "source_state_sha256": "56975ab26705ae980f07ef9db427ec165750581793fd8d5babf8f845fcdc19d4",
-          "classification": "UNCLASSIFIED_FAIL_CLOSED",
-          "repeat_gate": "2_OF_3_IDENTICAL__SECOND_QUERY_DIVERGED_IN_REPEAT2",
+          "classification": "RESIDUAL_STOCHASTIC_SENSOR_RENDER",
+          "repeat_gate": "INITIAL_RUN_2_OF_3_ACTION_TRACES_IDENTICAL__DIAGNOSTIC_RUN_5_OF_5_ACTION_TRACES_IDENTICAL_BUT_POST_STEP_OBSERVATION_HASHES_VARIED",
           "branch_start_hash_pass_rate": 1.0,
           "slurm_job_id": "5204570",
           "execution_commit": "3bbe156c7e784665af6668efdaad32e54fecf411",
           "result": "results/expansion/d1_exactness/openvla_task2_47f043c30659_3bbe156c7e78_20260830T081112Z/conformance.json"
         }
       ],
-      "gate": "TASK0_PASS__TASK2_LIVE_FAIL__RESIDUAL_DIAGNOSTIC_PENDING"
+      "residual_diagnostic": {
+        "slurm_job_id": "5204689",
+        "execution_commit": "1c2c814f60e186bbd0cb37b9c4264ad220470518",
+        "result": "results/expansion/d1_exactness/openvla_task2_47f043c30659_1c2c814f60e1_20260830T082211Z/conformance.json",
+        "combined_trace_count": 8,
+        "divergent_action_trace_count": 1,
+        "diagnosis": "simulator state, policy continuation, and Torch/CUDA RNG were stable; rendered policy-observation hashes varied after identical transitions"
+      },
+      "gate": "NOT_ELIGIBLE_AS_TWO_TASK_PRIMARY"
     },
     {
       "backend": "openvla_oft",
@@ -99,11 +107,13 @@
     }
   ],
   "d1_gate": {
-    "status": "NO_GO",
+    "status": "GO",
+    "selected_primary_backend": "pi0",
+    "multipolicy_claim_active": false,
     "branch_start_hash_pass_rate": 1.0,
     "same_seed_repeat_count": 3,
     "throughput": {"openvla_task0_restore_and_three_step_trace_median_seconds": 1.8877599444240332},
-    "next_action": "RUN_FIXED_TASK2_RESIDUAL_DIAGNOSTIC_THEN_SELECT_PREOUTCOME_TASK_REPLACEMENT_OR_SCOPE_TASK0"
+    "next_action": "CONTINUE_D2_D3_WITH_PI0_PRIMARY__OPENVLA_DIAGNOSTIC_ONLY"
   },
   "operational_attempts": [
     {

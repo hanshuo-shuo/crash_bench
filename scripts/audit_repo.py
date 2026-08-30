@@ -540,7 +540,11 @@ def expansion_governance_errors() -> list[str]:
                 )
             if result.get("source", {}).get("role") != "EXPOSED_ENGINEERING_ONLY":
                 errors.append(f"D1 live source is not engineering-only: {cell['result']}")
-    pi0 = benchmark.get("transfer_policy", {})
+    pi0 = benchmark.get("primary_policy", {})
+    if pi0.get("backend") != "pi0":
+        errors.append("D1 resolved benchmark primary policy must be pi0")
+    if benchmark.get("d1_primary_resolution", {}).get("multipolicy_claim_active") is not False:
+        errors.append("D1 resolved benchmark must keep multipolicy claim inactive")
     identity_path = pi0.get("identity_manifest")
     if not identity_path or not (ROOT / identity_path).is_file():
         errors.append("D0 pi0 identity manifest is missing")

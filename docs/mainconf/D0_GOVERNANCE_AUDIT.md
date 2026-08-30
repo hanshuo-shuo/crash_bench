@@ -37,3 +37,13 @@ Known D0 limitations:
 
 Next action: implement D1 exact-state conformance primitives and synthetic
 round-trip tests; do not create or open any test split.
+
+## D1 prospective primary-policy resolution
+
+Live conformance later showed that π0 is deterministic-exact on both frozen
+tasks, including JAX RNG and mid-chunk queue restoration. OpenVLA passed task 0
+but showed intermittent task-2 policy-observation divergence after identical
+simulator states and actions. Before any D2 mechanism outcome or formal source
+enumeration, protocol v1.1 therefore promotes π0 to primary and restricts
+OpenVLA to diagnostic use. This preserves the hard exactness gate while dropping
+the multipolicy claim; it does not lower a threshold or reinterpret a test.

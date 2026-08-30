@@ -7,7 +7,7 @@
   "properties": {
     "schema_version": {"const": 1},
     "kind": {"const": "crashbench_expansion_d1_conformance_decision"},
-    "status": {"enum": ["INVALID_DUPLICATE_CELL", "INCOMPLETE_PRIMARY_FAIL_CLOSED", "PRIMARY_OPENVLA_NO_GO", "PRIMARY_GO_TRANSFER_PENDING", "PRIMARY_GO_SINGLE_POLICY_SCOPE", "PRIMARY_AND_TRANSFER_GO"]},
+    "status": {"enum": ["INVALID_DUPLICATE_CELL", "INCOMPLETE_PRIMARY_FAIL_CLOSED", "PRIMARY_BACKEND_NO_GO", "PRIMARY_GO_TRANSFER_PENDING", "PRIMARY_GO_SINGLE_POLICY_SCOPE", "PRIMARY_AND_TRANSFER_GO"]},
     "scientific_outcomes_opened": {"const": 0},
     "decision_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
   }

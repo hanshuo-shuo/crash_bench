@@ -56,7 +56,7 @@ def test_transfer_failure_drops_scope_without_overriding_primary_pass():
 def test_primary_failure_is_hard_no_go():
     rows = [result("openvla", 0), result("openvla", 2, passed=False)]
     decision = MODULE.audit_cells(rows)
-    assert decision["status"] == "PRIMARY_OPENVLA_NO_GO"
+    assert decision["status"] == "PRIMARY_BACKEND_NO_GO"
 
 
 def test_all_four_pass_is_full_d1_go_and_deterministic():
@@ -70,3 +70,15 @@ def test_all_four_pass_is_full_d1_go_and_deterministic():
 def test_duplicate_cell_is_invalid():
     decision = MODULE.audit_cells([result("openvla", 0), result("openvla", 0)])
     assert decision["status"] == "INVALID_DUPLICATE_CELL"
+
+
+def test_pi0_can_be_prospectively_selected_as_primary_before_outcomes():
+    rows = [
+        result("openvla", 0),
+        result("openvla", 2, passed=False),
+        result("pi0", 0),
+        result("pi0", 2),
+    ]
+    decision = MODULE.audit_cells(rows, primary_backend="pi0")
+    assert decision["status"] == "PRIMARY_GO_SINGLE_POLICY_SCOPE"
+    assert decision["primary_backend"] == "pi0"

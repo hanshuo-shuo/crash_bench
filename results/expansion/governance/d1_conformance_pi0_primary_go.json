@@ -1,0 +1,86 @@
+{
+  "cells": [
+    {
+      "backend": "openvla",
+      "capture_seconds": 0.019512467086315155,
+      "classification": "DETERMINISTIC_EXACT",
+      "execution_commit": null,
+      "hard_failures": [],
+      "observed": true,
+      "pass": true,
+      "restore_trace_seconds": [
+        1.9838448958471417,
+        1.8877599444240332,
+        1.8587298123165965
+      ],
+      "result_sha256": "263f896afbdcee9de61b65795769e4f4d95541fb98bcca504f36df758179de08",
+      "slurm_job_id": null,
+      "task_id": 0
+    },
+    {
+      "backend": "openvla",
+      "capture_seconds": 0.019393126480281353,
+      "classification": "UNCLASSIFIED_FAIL_CLOSED",
+      "execution_commit": "3bbe156c7e784665af6668efdaad32e54fecf411",
+      "hard_failures": [
+        "gate_status",
+        "classification",
+        "repeat_criteria"
+      ],
+      "observed": true,
+      "pass": false,
+      "restore_trace_seconds": [
+        1.978142916224897,
+        1.9442763337865472,
+        1.8887711931020021
+      ],
+      "result_sha256": "e434fcb7dfce532bdb934f6941c911d35c590b924db4a5fda2acef134d8c0990",
+      "slurm_job_id": "5204570",
+      "task_id": 2
+    },
+    {
+      "backend": "pi0",
+      "capture_seconds": 0.0510573647916317,
+      "classification": "DETERMINISTIC_EXACT",
+      "execution_commit": "3bbe156c7e784665af6668efdaad32e54fecf411",
+      "hard_failures": [],
+      "observed": true,
+      "pass": true,
+      "restore_trace_seconds": [
+        1.3762503378093243,
+        1.2400835575535893,
+        1.2008183170109987
+      ],
+      "result_sha256": "c03b69574043030241b3ca9f344eccaf17af5fe2c4c18d6a79aeff2f26ad8e88",
+      "slurm_job_id": "5204569",
+      "task_id": 0
+    },
+    {
+      "backend": "pi0",
+      "capture_seconds": 0.05096928682178259,
+      "classification": "DETERMINISTIC_EXACT",
+      "execution_commit": "3bbe156c7e784665af6668efdaad32e54fecf411",
+      "hard_failures": [],
+      "observed": true,
+      "pass": true,
+      "restore_trace_seconds": [
+        1.3936743093654513,
+        1.2654838990420103,
+        1.245172324590385
+      ],
+      "result_sha256": "e13e25a40f58a17e555d7f4bd678211e986359f8eb101389692c2e6f774dceba",
+      "slurm_job_id": "5204571",
+      "task_id": 2
+    }
+  ],
+  "decision_sha256": "64bd4d9cf04d30230f2b149815046d1790d5b240d79246382631f71d2732e86f",
+  "duplicate_cells": [],
+  "kind": "crashbench_expansion_d1_conformance_decision",
+  "next_action": "CONTINUE_PRIMARY_D2_D3__DROP_MULTIPOLICY_CLAIM",
+  "primary_backend": "pi0",
+  "primary_policy_gate_is_hard": true,
+  "schema_version": 1,
+  "scientific_outcomes_opened": 0,
+  "status": "PRIMARY_GO_SINGLE_POLICY_SCOPE",
+  "transfer_failure_changes_scope_not_primary_validity": true
+}

@@ -19,7 +19,11 @@ EXPECTED_CELLS = (
 )
 
 
-def audit_cells(payloads: Iterable[dict[str, Any]]) -> dict[str, Any]:
+def audit_cells(
+    payloads: Iterable[dict[str, Any]], *, primary_backend: str = "openvla"
+) -> dict[str, Any]:
+    if primary_backend not in {"openvla", "pi0"}:
+        raise ValueError(f"unsupported primary backend: {primary_backend}")
     by_cell: dict[tuple[str, int], dict[str, Any]] = {}
     duplicates = []
     for payload in payloads:
@@ -83,8 +87,9 @@ def audit_cells(payloads: Iterable[dict[str, Any]]) -> dict[str, Any]:
         status = "INVALID_DUPLICATE_CELL"
         next_action = "RESOLVE_DUPLICATE_D1_ARTIFACTS"
     else:
-        primary = [row for row in cell_rows if row["backend"] == "openvla"]
-        transfer = [row for row in cell_rows if row["backend"] == "pi0"]
+        transfer_backend = "pi0" if primary_backend == "openvla" else "openvla"
+        primary = [row for row in cell_rows if row["backend"] == primary_backend]
+        transfer = [row for row in cell_rows if row["backend"] == transfer_backend]
         primary_missing = any(row["pass"] is None for row in primary)
         transfer_missing = any(row["pass"] is None for row in transfer)
         primary_failed = any(row["pass"] is False for row in primary)
@@ -93,7 +98,7 @@ def audit_cells(payloads: Iterable[dict[str, Any]]) -> dict[str, Any]:
             status = "INCOMPLETE_PRIMARY_FAIL_CLOSED"
             next_action = "COMPLETE_OPENVLA_D1_CELLS"
         elif primary_failed:
-            status = "PRIMARY_OPENVLA_NO_GO"
+            status = "PRIMARY_BACKEND_NO_GO"
             next_action = "STOP_MCV_METHOD_AND_AUDIT_EXACTNESS_FAILURE"
         elif transfer_missing:
             status = "PRIMARY_GO_TRANSFER_PENDING"
@@ -108,6 +113,7 @@ def audit_cells(payloads: Iterable[dict[str, Any]]) -> dict[str, Any]:
         "schema_version": 1,
         "kind": "crashbench_expansion_d1_conformance_decision",
         "cells": cell_rows,
+        "primary_backend": primary_backend,
         "duplicate_cells": [list(cell) for cell in duplicates],
         "status": status,
         "next_action": next_action,
@@ -125,11 +131,12 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--result", type=Path, action="append", required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--primary-backend", choices=("openvla", "pi0"), default="openvla")
     args = parser.parse_args()
     if args.output.exists():
         raise FileExistsError(f"refusing to overwrite D1 audit: {args.output}")
     payloads = [json.loads(path.read_text()) for path in args.result]
-    decision = audit_cells(payloads)
+    decision = audit_cells(payloads, primary_backend=args.primary_backend)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     temporary = args.output.with_suffix(args.output.suffix + f".tmp.{os.getpid()}")
     temporary.write_text(json.dumps(decision, indent=2, sort_keys=True) + "\n")

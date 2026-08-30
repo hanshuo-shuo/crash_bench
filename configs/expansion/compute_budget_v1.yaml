@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "budget_status": "PLANNING_RANGE__D1_THROUGHPUT_UPDATE_REQUIRED",
+  "budget_status": "D1_PRIMARY_PI0_DETERMINISTIC_EXACT__RANGE_RETAINED_PENDING_D2_SCREEN_THROUGHPUT",
   "mcv": {
     "a100_hours": [275, 450],
     "cpu_core_hours": [4300, 7900],
@@ -13,6 +13,12 @@
     "RESIDUAL_STOCHASTIC": 15
   },
   "budget_overrun_gate": 1.20,
+  "d1_measured_seconds": {
+    "pi0_task0_capture": 0.0510573647916317,
+    "pi0_task0_restore_plus_three_steps_median": 1.2400835575535893,
+    "pi0_task2_capture": 0.05096928682178259,
+    "pi0_task2_restore_plus_three_steps_median": 1.2654838990420103
+  },
   "videos": "retain all failures, fixed random 10% of accepted, and preselected audit samples",
   "authorization": "Any D1-derived mechanical budget increase must occur before formal option labels and requires user approval."
 }

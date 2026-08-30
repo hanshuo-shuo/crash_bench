@@ -1,27 +1,33 @@
 {
   "schema_version": 1,
-  "protocol_id": "crashbench_expansion_mcv_v1",
-  "status": "D0_GOVERNANCE_FROZEN__NO_TEST_AUTHORIZATION",
+  "protocol_id": "crashbench_expansion_mcv_v1_1_pi0_primary",
+  "status": "D1_PRIMARY_PI0_GO__SINGLE_POLICY_SCOPE__NO_TEST_AUTHORIZATION",
   "research_question": "Can exact-state realized outcomes support conservative option-specific utility and stopping decisions that improve fresh-source task-safety utility without harmful intervention?",
   "primary_policy": {
-    "backend": "openvla",
-    "checkpoint": "openvla/openvla-7b-finetuned-libero-spatial",
-    "revision": "962318cec55ac10993ff0f5f43eda9a270b4c873",
-    "unnorm_key": "libero_spatial",
-    "center_crop": true,
-    "do_sample": false,
-    "num_beams": 1
-  },
-  "transfer_policy": {
     "backend": "pi0",
-    "status": "IDENTITY_PINNED__LIVE_EXACTNESS_PENDING",
+    "status": "TASK0_TASK2_DETERMINISTIC_EXACT",
+    "config_name": "pi0_libero",
+    "checkpoint": "gs://openpi-assets/checkpoints/pi0_libero",
     "openpi_code_commit": "15a9616a00943ada6c20a0f158e3adb39df2ccac",
     "checkpoint_tree_manifest_sha256": "ea876fed5d324aa6a61e8a6a31b65ab233de3c1d02b42791613c60ea84daeb8b",
     "checkpoint_tree_bytes": 12014131888,
     "checkpoint_tree_file_count": 19,
     "identity_manifest": "results/expansion/governance/pi0_identity_222c3451cd2b_26bf314df54b_20260830T065649Z/checkpoint_tree_manifest.json",
-    "config_name": "pi0_libero",
     "num_open_loop_steps": 5
+  },
+  "diagnostic_secondary_policy": {
+    "backend": "openvla",
+    "checkpoint": "openvla/openvla-7b-finetuned-libero-spatial",
+    "revision": "962318cec55ac10993ff0f5f43eda9a270b4c873",
+    "status": "TASK0_DETERMINISTIC_EXACT__TASK2_RESIDUAL_SENSOR_RENDER",
+    "eligible_for_multipolicy_claim": false
+  },
+  "d1_primary_resolution": {
+    "timing": "before D2 mechanism outcomes and before formal source enumeration",
+    "original_openvla_decision": "results/expansion/governance/d1_conformance_openvla_primary_no_go.json",
+    "resolved_pi0_decision": "results/expansion/governance/d1_conformance_pi0_primary_go.json",
+    "reason": "pi0 passed exact live conformance on both frozen tasks; OpenVLA showed intermittent task2 sensor/render continuation divergence",
+    "multipolicy_claim_active": false
   },
   "tasks": [
     {"suite": "libero_spatial", "task_id": 0, "nominal_success_gate": 0.70},
@@ -31,7 +37,7 @@
     "mechanism_count": 3,
     "primary_physical_sources": 300,
     "per_mechanism_task": {"train": 12, "calibration": 6, "development": 6, "confirmatory_id_test": 16, "fresh_sequential_test": 10},
-    "transfer_sources": {"calibration": 12, "cross_policy_test": 24},
+    "transfer_sources": {"status": "INACTIVE_UNTIL_A_SECOND_TWO_TASK_EXACT_BACKEND_EXISTS", "calibration": 0, "cross_policy_test": 0},
     "statewise_test_total": 96,
     "fresh_sequential_total": 60
   },
