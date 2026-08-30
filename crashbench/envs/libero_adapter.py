@@ -321,6 +321,77 @@ class LiberoSimView:
             qvel.append(float(data.qvel[dadr]) if dadr >= 0 else 0.0)
         return {"names": names, "qpos": qpos, "qvel": qvel}
 
+    def static_support_surface_at(
+        self,
+        xy: tuple[float, float] | list[float] | np.ndarray,
+        *,
+        below_z: float,
+        horizontal_cosine_min: float = 0.98,
+        xy_margin_m: float = 0.002,
+    ) -> dict[str, float | int | str]:
+        """Resolve the highest static horizontal support under a world XY point.
+
+        This uses geom-local half sizes and world rotation, not a pose-dependent
+        whole-object AABB. Dynamic bodies and robot bodies are excluded so a
+        held object or gripper cannot be mistaken for the support surface.
+        """
+
+        import mujoco
+
+        model, data = self._live_mj()
+        point_xy = np.asarray(xy, dtype=np.float64)
+        if point_xy.shape != (2,) or not np.all(np.isfinite(point_xy)):
+            raise ValueError("support query xy must be a finite 2-vector")
+        if not np.isfinite(below_z):
+            raise ValueError("support query below_z must be finite")
+        candidates = []
+        for geom_id in range(int(model.ngeom)):
+            body_id = int(model.geom_bodyid[geom_id])
+            body_name = (
+                mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_BODY, body_id) or ""
+            )
+            if body_name.startswith(("robot0_", "gripper0_")):
+                continue
+            if int(model.body_jntnum[body_id]) != 0:
+                continue
+            geom_type = int(model.geom_type[geom_id])
+            position = np.asarray(data.geom_xpos[geom_id], dtype=np.float64)
+            rotation = np.asarray(data.geom_xmat[geom_id], dtype=np.float64).reshape(3, 3)
+            local_z_world = rotation[:, 2]
+            if abs(float(local_z_world[2])) < horizontal_cosine_min:
+                continue
+            if geom_type == int(mujoco.mjtGeom.mjGEOM_BOX):
+                size = np.asarray(model.geom_size[geom_id], dtype=np.float64)
+                top = float(position[2] + np.sum(np.abs(rotation[2, :]) * size))
+                world = np.array([point_xy[0], point_xy[1], top], dtype=np.float64)
+                local = rotation.T @ (world - position)
+                if abs(local[0]) > size[0] + xy_margin_m or abs(local[1]) > size[1] + xy_margin_m:
+                    continue
+            elif geom_type == int(mujoco.mjtGeom.mjGEOM_PLANE):
+                top = float(position[2])
+            else:
+                continue
+            if top >= float(below_z) - 1e-6:
+                continue
+            geom_name = (
+                mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_GEOM, geom_id)
+                or f"geom_{geom_id}"
+            )
+            candidates.append(
+                {
+                    "geom_id": geom_id,
+                    "geom_name": geom_name,
+                    "body_id": body_id,
+                    "body_name": body_name,
+                    "top_z": top,
+                }
+            )
+        if not candidates:
+            raise RuntimeError(
+                f"no static horizontal support below xy={point_xy.tolist()} z={below_z}"
+            )
+        return max(candidates, key=lambda row: float(row["top_z"]))
+
     def robot_geom_aabbs(self, bodies: list[str]) -> list[dict]:
         """World AABBs of collision geoms attached to the requested robot bodies.
 
