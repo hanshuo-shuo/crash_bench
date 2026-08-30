@@ -611,6 +611,16 @@ class LiberoEnv:
             values = torch.load(path)
         return np.asarray(values)
 
+    def reset_fresh(self, seed: int):
+        """Generate one fresh seeded task reset without applying a saved init state."""
+
+        self.seed(int(seed))
+        obs = self.env.reset()
+        self._continuation_model_xml = str(self.env.sim.model.get_xml())
+        self.sim_view.peak_force = 0.0
+        self.sim_view.update(obs, done=False)
+        return obs
+
     # ---- rollout API (mirrors run_libero_eval.py) --------------------------
     def reset_to(self, init_state: np.ndarray, obstacles: list[dict] | None = None,
                  movable_objects: list[dict] | None = None):

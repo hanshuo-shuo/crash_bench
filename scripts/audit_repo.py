@@ -510,6 +510,10 @@ def expansion_governance_errors() -> list[str]:
         "setup/expansion_narrow_screen.sbatch",
         "setup/submit_expansion_narrow_screen.sh",
         "scripts/expansion/analyze_d2_selection.py",
+        "scripts/expansion/run_formal_nominal.py",
+        "scripts/expansion/analyze_formal_nominal.py",
+        "setup/expansion_formal_nominal.sbatch",
+        "setup/submit_expansion_formal_nominal.sh",
         "setup/expansion_fragile_screen.sbatch",
         "setup/submit_expansion_fragile_screen.sh",
     )
