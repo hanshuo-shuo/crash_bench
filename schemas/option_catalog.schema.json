@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://crashbench.local/schemas/option_catalog.schema.json",
+  "title": "CrashBench option catalog",
+  "type": "object",
+  "required": ["schema_version", "catalog_kind", "status", "options"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "catalog_kind": {"enum": ["deployable", "diagnostic_oracle"]},
+    "options": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["option_id", "version", "mechanical_family", "max_duration_steps", "information_fields", "intervention_cost", "allows_return_to_base", "snapshot_contract_version"]
+      }
+    }
+  }
+}
