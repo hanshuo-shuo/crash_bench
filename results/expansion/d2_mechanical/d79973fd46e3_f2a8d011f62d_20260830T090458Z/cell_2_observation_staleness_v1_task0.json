@@ -1,0 +1,740 @@
+{
+  "all_attempts_accounted": true,
+  "attempted_sources": 8,
+  "cell_sha256": "5d865f931806d7084cc33816ba66836791b0688d1126269505b2f5adbf4508f6",
+  "execution": {
+    "git_commit": "f2a8d011f62d411e602e81577e54e70fe42b3808",
+    "slurm_array_task_id": "2",
+    "slurm_job_id": "5205046"
+  },
+  "kind": "crashbench_expansion_mechanical_preflight_cell",
+  "mechanically_valid_sources": 8,
+  "mechanism_id": "observation_staleness_v1",
+  "nominal_cell": "results/expansion/d2_preflight/77ea231ebf97_a1464cf4ddf0_20260830T084407Z/cell_2_observation_staleness_v1_task0.json",
+  "nominal_cell_sha256": "fe5cf62252340fef91df7de826a2a53e358d85dbc3efed3977d42445ce1be8d6",
+  "option_outcomes_opened": 0,
+  "rows": [
+    {
+      "attempt_id": "15ac3e2c6f11a3ee8f80120393fe50a2d4d87c07e857d622e45a42ae13027a4a",
+      "candidate_index": 0,
+      "mechanism_id": "observation_staleness_v1",
+      "option_outcomes_opened": 0,
+      "reason": "all_severities_preoutcome_valid",
+      "reset_seed": 2026090132,
+      "robot_envelope_width_m": null,
+      "severities": {
+        "delay_1": {
+          "conditions": {
+            "fresh_control": {
+              "delay_steps": 0
+            },
+            "matched_buffer_control": {
+              "delay_steps": 1,
+              "release_mode": "fresh_each_step"
+            },
+            "stale": {
+              "delay_steps": 1
+            }
+          },
+          "validity": {
+            "decided_before_option_outcome": true,
+            "metrics": {
+              "delay_ms": 50.0,
+              "delay_steps": 1,
+              "opportunity_slack_ms": 500.0,
+              "policy_action_period_ms": 50.0
+            },
+            "reason": "staleness_window_mechanically_resolved",
+            "valid": true
+          }
+        },
+        "delay_3": {
+          "conditions": {
+            "fresh_control": {
+              "delay_steps": 0
+            },
+            "matched_buffer_control": {
+              "delay_steps": 3,
+              "release_mode": "fresh_each_step"
+            },
+            "stale": {
+              "delay_steps": 3
+            }
+          },
+          "validity": {
+            "decided_before_option_outcome": true,
+            "metrics": {
+              "delay_ms": 150.0,
+              "delay_steps": 3,
+              "opportunity_slack_ms": 500.0,
+              "policy_action_period_ms": 50.0
+            },
+            "reason": "staleness_window_mechanically_resolved",
+            "valid": true
+          }
+        },
+        "delay_5": {
+          "conditions": {
+            "fresh_control": {
+              "delay_steps": 0
+            },
+            "matched_buffer_control": {
+              "delay_steps": 5,
+              "release_mode": "fresh_each_step"
+            },
+            "stale": {
+              "delay_steps": 5
+            }
+          },
+          "validity": {
+            "decided_before_option_outcome": true,
+            "metrics": {
+              "delay_ms": 250.0,
+              "delay_steps": 5,
+              "opportunity_slack_ms": 500.0,
+              "policy_action_period_ms": 50.0
+            },
+            "reason": "staleness_window_mechanically_resolved",
+            "valid": true
+          }
+        }
+      },
+      "source_state_sha256": "9ec04c0eaab52f9d52c2501085449f0e1940466fbf10e313e8ddcb657a347f2e",
+      "status": "MECHANICAL_VALID",
+      "support_top_z": null,
+      "task_id": 0
+    },
+    {
+      "attempt_id": "8dab79da23709e540684aa1304e8598c519bb01660a94cdc9fd1c23ca9c8443b",
+      "candidate_index": 1,
+      "mechanism_id": "observation_staleness_v1",
+      "option_outcomes_opened": 0,
+      "reason": "all_severities_preoutcome_valid",
+      "reset_seed": 2026090133,
+      "robot_envelope_width_m": null,
+      "severities": {
+        "delay_1": {
+          "conditions": {
+            "fresh_control": {
+              "delay_steps": 0
+            },
+            "matched_buffer_control": {
+              "delay_steps": 1,
+              "release_mode": "fresh_each_step"
+            },
+            "stale": {
+              "delay_steps": 1
+            }
+          },
+          "validity": {
+            "decided_before_option_outcome": true,
+            "metrics": {
+              "delay_ms": 50.0,
+              "delay_steps": 1,
+              "opportunity_slack_ms": 500.0,
+              "policy_action_period_ms": 50.0
+            },
+            "reason": "staleness_window_mechanically_resolved",
+            "valid": true
+          }
+        },
+        "delay_3": {
+          "conditions": {
+            "fresh_control": {
+              "delay_steps": 0
+            },
+            "matched_buffer_control": {
+              "delay_steps": 3,
+              "release_mode": "fresh_each_step"
+            },
+            "stale": {
+              "delay_steps": 3
+            }
+          },
+          "validity": {
+            "decided_before_option_outcome": true,
+            "metrics": {
+              "delay_ms": 150.0,
+              "delay_steps": 3,
+              "opportunity_slack_ms": 500.0,
+              "policy_action_period_ms": 50.0
+            },
+            "reason": "staleness_window_mechanically_resolved",
+            "valid": true
+          }
+        },
+        "delay_5": {
+          "conditions": {
+            "fresh_control": {
+              "delay_steps": 0
+            },
+            "matched_buffer_control": {
+              "delay_steps": 5,
+              "release_mode": "fresh_each_step"
+            },
+            "stale": {
+              "delay_steps": 5
+            }
+          },
+          "validity": {
+            "decided_before_option_outcome": true,
+            "metrics": {
+              "delay_ms": 250.0,
+              "delay_steps": 5,
+              "opportunity_slack_ms": 500.0,
+              "policy_action_period_ms": 50.0
+            },
+            "reason": "staleness_window_mechanically_resolved",
+            "valid": true
+          }
+        }
+      },
+      "source_state_sha256": "37d3edc8cb9ad51b8ebf45a235721c16e2531be26385d150aef2b21d81a04cae",
+      "status": "MECHANICAL_VALID",
+      "support_top_z": null,
+      "task_id": 0
+    },
+    {
+      "attempt_id": "a5e17e88e5cddd26e087cc2f1afebc5e8b31e2c1bd5aec937534a9b15158ae9b",
+      "candidate_index": 2,
+      "mechanism_id": "observation_staleness_v1",
+      "option_outcomes_opened": 0,
+      "reason": "all_severities_preoutcome_valid",
+      "reset_seed": 2026090134,
+      "robot_envelope_width_m": null,
+      "severities": {
+        "delay_1": {
+          "conditions": {
+            "fresh_control": {
+              "delay_steps": 0
+            },
+            "matched_buffer_control": {
+              "delay_steps": 1,
+              "release_mode": "fresh_each_step"
+            },
+            "stale": {
+              "delay_steps": 1
+            }
+          },
+          "validity": {
+            "decided_before_option_outcome": true,
+            "metrics": {
+              "delay_ms": 50.0,
+              "delay_steps": 1,
+              "opportunity_slack_ms": 500.0,
+              "policy_action_period_ms": 50.0
+            },
+            "reason": "staleness_window_mechanically_resolved",
+            "valid": true
+          }
+        },
+        "delay_3": {
+          "conditions": {
+            "fresh_control": {
+              "delay_steps": 0
+            },
+            "matched_buffer_control": {
+              "delay_steps": 3,
+              "release_mode": "fresh_each_step"
+            },
+            "stale": {
+              "delay_steps": 3
+            }
+          },
+          "validity": {
+            "decided_before_option_outcome": true,
+            "metrics": {
+              "delay_ms": 150.0,
+              "delay_steps": 3,
+              "opportunity_slack_ms": 500.0,
+              "policy_action_period_ms": 50.0
+            },
+            "reason": "staleness_window_mechanically_resolved",
+            "valid": true
+          }
+        },
+        "delay_5": {
+          "conditions": {
+            "fresh_control": {
+              "delay_steps": 0
+            },
+            "matched_buffer_control": {
+              "delay_steps": 5,
+              "release_mode": "fresh_each_step"
+            },
+            "stale": {
+              "delay_steps": 5
+            }
+          },
+          "validity": {
+            "decided_before_option_outcome": true,
+            "metrics": {
+              "delay_ms": 250.0,
+              "delay_steps": 5,
+              "opportunity_slack_ms": 500.0,
+              "policy_action_period_ms": 50.0
+            },
+            "reason": "staleness_window_mechanically_resolved",
+            "valid": true
+          }
+        }
+      },
+      "source_state_sha256": "69fa7e93588c6aea4b134efa44633d38556ce1656b46df276021920a664881a3",
+      "status": "MECHANICAL_VALID",
+      "support_top_z": null,
+      "task_id": 0
+    },
+    {
+      "attempt_id": "5644c69ccae74a366e375aa6ab82c7488226ee8cece84467ee277e5d74a7ac0b",
+      "candidate_index": 3,
+      "mechanism_id": "observation_staleness_v1",
+      "option_outcomes_opened": 0,
+      "reason": "all_severities_preoutcome_valid",
+      "reset_seed": 2026090135,
+      "robot_envelope_width_m": null,
+      "severities": {
+        "delay_1": {
+          "conditions": {
+            "fresh_control": {
+              "delay_steps": 0
+            },
+            "matched_buffer_control": {
+              "delay_steps": 1,
+              "release_mode": "fresh_each_step"
+            },
+            "stale": {
+              "delay_steps": 1
+            }
+          },
+          "validity": {
+            "decided_before_option_outcome": true,
+            "metrics": {
+              "delay_ms": 50.0,
+              "delay_steps": 1,
+              "opportunity_slack_ms": 500.0,
+              "policy_action_period_ms": 50.0
+            },
+            "reason": "staleness_window_mechanically_resolved",
+            "valid": true
+          }
+        },
+        "delay_3": {
+          "conditions": {
+            "fresh_control": {
+              "delay_steps": 0
+            },
+            "matched_buffer_control": {
+              "delay_steps": 3,
+              "release_mode": "fresh_each_step"
+            },
+            "stale": {
+              "delay_steps": 3
+            }
+          },
+          "validity": {
+            "decided_before_option_outcome": true,
+            "metrics": {
+              "delay_ms": 150.0,
+              "delay_steps": 3,
+              "opportunity_slack_ms": 500.0,
+              "policy_action_period_ms": 50.0
+            },
+            "reason": "staleness_window_mechanically_resolved",
+            "valid": true
+          }
+        },
+        "delay_5": {
+          "conditions": {
+            "fresh_control": {
+              "delay_steps": 0
+            },
+            "matched_buffer_control": {
+              "delay_steps": 5,
+              "release_mode": "fresh_each_step"
+            },
+            "stale": {
+              "delay_steps": 5
+            }
+          },
+          "validity": {
+            "decided_before_option_outcome": true,
+            "metrics": {
+              "delay_ms": 250.0,
+              "delay_steps": 5,
+              "opportunity_slack_ms": 500.0,
+              "policy_action_period_ms": 50.0
+            },
+            "reason": "staleness_window_mechanically_resolved",
+            "valid": true
+          }
+        }
+      },
+      "source_state_sha256": "5de3fa5396875480db81793738029227ed357caa91e5d24290ffc5cb0371f908",
+      "status": "MECHANICAL_VALID",
+      "support_top_z": null,
+      "task_id": 0
+    },
+    {
+      "attempt_id": "e6d49843e2fc621b6076c50c7148a859e18fb882556d62dde0b6d9954e1b18e1",
+      "candidate_index": 4,
+      "mechanism_id": "observation_staleness_v1",
+      "option_outcomes_opened": 0,
+      "reason": "all_severities_preoutcome_valid",
+      "reset_seed": 2026090136,
+      "robot_envelope_width_m": null,
+      "severities": {
+        "delay_1": {
+          "conditions": {
+            "fresh_control": {
+              "delay_steps": 0
+            },
+            "matched_buffer_control": {
+              "delay_steps": 1,
+              "release_mode": "fresh_each_step"
+            },
+            "stale": {
+              "delay_steps": 1
+            }
+          },
+          "validity": {
+            "decided_before_option_outcome": true,
+            "metrics": {
+              "delay_ms": 50.0,
+              "delay_steps": 1,
+              "opportunity_slack_ms": 500.0,
+              "policy_action_period_ms": 50.0
+            },
+            "reason": "staleness_window_mechanically_resolved",
+            "valid": true
+          }
+        },
+        "delay_3": {
+          "conditions": {
+            "fresh_control": {
+              "delay_steps": 0
+            },
+            "matched_buffer_control": {
+              "delay_steps": 3,
+              "release_mode": "fresh_each_step"
+            },
+            "stale": {
+              "delay_steps": 3
+            }
+          },
+          "validity": {
+            "decided_before_option_outcome": true,
+            "metrics": {
+              "delay_ms": 150.0,
+              "delay_steps": 3,
+              "opportunity_slack_ms": 500.0,
+              "policy_action_period_ms": 50.0
+            },
+            "reason": "staleness_window_mechanically_resolved",
+            "valid": true
+          }
+        },
+        "delay_5": {
+          "conditions": {
+            "fresh_control": {
+              "delay_steps": 0
+            },
+            "matched_buffer_control": {
+              "delay_steps": 5,
+              "release_mode": "fresh_each_step"
+            },
+            "stale": {
+              "delay_steps": 5
+            }
+          },
+          "validity": {
+            "decided_before_option_outcome": true,
+            "metrics": {
+              "delay_ms": 250.0,
+              "delay_steps": 5,
+              "opportunity_slack_ms": 500.0,
+              "policy_action_period_ms": 50.0
+            },
+            "reason": "staleness_window_mechanically_resolved",
+            "valid": true
+          }
+        }
+      },
+      "source_state_sha256": "fcbfd6e4ce24df4be91c04f6d94e55d6d6c8774092ea4c754fb26b3d1eadbbef",
+      "status": "MECHANICAL_VALID",
+      "support_top_z": null,
+      "task_id": 0
+    },
+    {
+      "attempt_id": "609c5cef8c9bab9e943ff59f19b9aafc30099433145dab9ea1646ddf54b6cbbf",
+      "candidate_index": 5,
+      "mechanism_id": "observation_staleness_v1",
+      "option_outcomes_opened": 0,
+      "reason": "all_severities_preoutcome_valid",
+      "reset_seed": 2026090137,
+      "robot_envelope_width_m": null,
+      "severities": {
+        "delay_1": {
+          "conditions": {
+            "fresh_control": {
+              "delay_steps": 0
+            },
+            "matched_buffer_control": {
+              "delay_steps": 1,
+              "release_mode": "fresh_each_step"
+            },
+            "stale": {
+              "delay_steps": 1
+            }
+          },
+          "validity": {
+            "decided_before_option_outcome": true,
+            "metrics": {
+              "delay_ms": 50.0,
+              "delay_steps": 1,
+              "opportunity_slack_ms": 500.0,
+              "policy_action_period_ms": 50.0
+            },
+            "reason": "staleness_window_mechanically_resolved",
+            "valid": true
+          }
+        },
+        "delay_3": {
+          "conditions": {
+            "fresh_control": {
+              "delay_steps": 0
+            },
+            "matched_buffer_control": {
+              "delay_steps": 3,
+              "release_mode": "fresh_each_step"
+            },
+            "stale": {
+              "delay_steps": 3
+            }
+          },
+          "validity": {
+            "decided_before_option_outcome": true,
+            "metrics": {
+              "delay_ms": 150.0,
+              "delay_steps": 3,
+              "opportunity_slack_ms": 500.0,
+              "policy_action_period_ms": 50.0
+            },
+            "reason": "staleness_window_mechanically_resolved",
+            "valid": true
+          }
+        },
+        "delay_5": {
+          "conditions": {
+            "fresh_control": {
+              "delay_steps": 0
+            },
+            "matched_buffer_control": {
+              "delay_steps": 5,
+              "release_mode": "fresh_each_step"
+            },
+            "stale": {
+              "delay_steps": 5
+            }
+          },
+          "validity": {
+            "decided_before_option_outcome": true,
+            "metrics": {
+              "delay_ms": 250.0,
+              "delay_steps": 5,
+              "opportunity_slack_ms": 500.0,
+              "policy_action_period_ms": 50.0
+            },
+            "reason": "staleness_window_mechanically_resolved",
+            "valid": true
+          }
+        }
+      },
+      "source_state_sha256": "821b498fc1fcb4e3c103635fa473d7577f718c4f633b273772954295c83ae585",
+      "status": "MECHANICAL_VALID",
+      "support_top_z": null,
+      "task_id": 0
+    },
+    {
+      "attempt_id": "3d0c5d4deda725d03977b4c3ee3d9dcb7df0f0801788e5a4929474993758af00",
+      "candidate_index": 6,
+      "mechanism_id": "observation_staleness_v1",
+      "option_outcomes_opened": 0,
+      "reason": "all_severities_preoutcome_valid",
+      "reset_seed": 2026090138,
+      "robot_envelope_width_m": null,
+      "severities": {
+        "delay_1": {
+          "conditions": {
+            "fresh_control": {
+              "delay_steps": 0
+            },
+            "matched_buffer_control": {
+              "delay_steps": 1,
+              "release_mode": "fresh_each_step"
+            },
+            "stale": {
+              "delay_steps": 1
+            }
+          },
+          "validity": {
+            "decided_before_option_outcome": true,
+            "metrics": {
+              "delay_ms": 50.0,
+              "delay_steps": 1,
+              "opportunity_slack_ms": 500.0,
+              "policy_action_period_ms": 50.0
+            },
+            "reason": "staleness_window_mechanically_resolved",
+            "valid": true
+          }
+        },
+        "delay_3": {
+          "conditions": {
+            "fresh_control": {
+              "delay_steps": 0
+            },
+            "matched_buffer_control": {
+              "delay_steps": 3,
+              "release_mode": "fresh_each_step"
+            },
+            "stale": {
+              "delay_steps": 3
+            }
+          },
+          "validity": {
+            "decided_before_option_outcome": true,
+            "metrics": {
+              "delay_ms": 150.0,
+              "delay_steps": 3,
+              "opportunity_slack_ms": 500.0,
+              "policy_action_period_ms": 50.0
+            },
+            "reason": "staleness_window_mechanically_resolved",
+            "valid": true
+          }
+        },
+        "delay_5": {
+          "conditions": {
+            "fresh_control": {
+              "delay_steps": 0
+            },
+            "matched_buffer_control": {
+              "delay_steps": 5,
+              "release_mode": "fresh_each_step"
+            },
+            "stale": {
+              "delay_steps": 5
+            }
+          },
+          "validity": {
+            "decided_before_option_outcome": true,
+            "metrics": {
+              "delay_ms": 250.0,
+              "delay_steps": 5,
+              "opportunity_slack_ms": 500.0,
+              "policy_action_period_ms": 50.0
+            },
+            "reason": "staleness_window_mechanically_resolved",
+            "valid": true
+          }
+        }
+      },
+      "source_state_sha256": "6292759eb45913ce4ed8447194504833f347d9355012e3228775797a4b0a7cd1",
+      "status": "MECHANICAL_VALID",
+      "support_top_z": null,
+      "task_id": 0
+    },
+    {
+      "attempt_id": "c59c55308ad0fa83ac1cc6ef978f4f4ee9fb7cbc68d69b153651dee6a0353ba3",
+      "candidate_index": 7,
+      "mechanism_id": "observation_staleness_v1",
+      "option_outcomes_opened": 0,
+      "reason": "all_severities_preoutcome_valid",
+      "reset_seed": 2026090139,
+      "robot_envelope_width_m": null,
+      "severities": {
+        "delay_1": {
+          "conditions": {
+            "fresh_control": {
+              "delay_steps": 0
+            },
+            "matched_buffer_control": {
+              "delay_steps": 1,
+              "release_mode": "fresh_each_step"
+            },
+            "stale": {
+              "delay_steps": 1
+            }
+          },
+          "validity": {
+            "decided_before_option_outcome": true,
+            "metrics": {
+              "delay_ms": 50.0,
+              "delay_steps": 1,
+              "opportunity_slack_ms": 500.0,
+              "policy_action_period_ms": 50.0
+            },
+            "reason": "staleness_window_mechanically_resolved",
+            "valid": true
+          }
+        },
+        "delay_3": {
+          "conditions": {
+            "fresh_control": {
+              "delay_steps": 0
+            },
+            "matched_buffer_control": {
+              "delay_steps": 3,
+              "release_mode": "fresh_each_step"
+            },
+            "stale": {
+              "delay_steps": 3
+            }
+          },
+          "validity": {
+            "decided_before_option_outcome": true,
+            "metrics": {
+              "delay_ms": 150.0,
+              "delay_steps": 3,
+              "opportunity_slack_ms": 500.0,
+              "policy_action_period_ms": 50.0
+            },
+            "reason": "staleness_window_mechanically_resolved",
+            "valid": true
+          }
+        },
+        "delay_5": {
+          "conditions": {
+            "fresh_control": {
+              "delay_steps": 0
+            },
+            "matched_buffer_control": {
+              "delay_steps": 5,
+              "release_mode": "fresh_each_step"
+            },
+            "stale": {
+              "delay_steps": 5
+            }
+          },
+          "validity": {
+            "decided_before_option_outcome": true,
+            "metrics": {
+              "delay_ms": 250.0,
+              "delay_steps": 5,
+              "opportunity_slack_ms": 500.0,
+              "policy_action_period_ms": 50.0
+            },
+            "reason": "staleness_window_mechanically_resolved",
+            "valid": true
+          }
+        }
+      },
+      "source_state_sha256": "1734d58d8a61049a4d127d430797a1f24a9448a355f7a270e80353215c225f7f",
+      "status": "MECHANICAL_VALID",
+      "support_top_z": null,
+      "task_id": 0
+    }
+  ],
+  "schema_version": 1,
+  "task_id": 0
+}

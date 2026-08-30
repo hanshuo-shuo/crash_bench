@@ -477,16 +477,21 @@ def expansion_governance_errors() -> list[str]:
         "results/expansion/governance/exposure_attempts.jsonl",
         "results/expansion/d2_sources/screen_plan_256ce74521254ec9f692b77cb5197b5aa29be73f58d91ce29a6c945841cba7de.json",
         "results/expansion/d2_preflight/77ea231ebf97_a1464cf4ddf0_20260830T084407Z/nominal_preflight_analysis.json",
+        "results/expansion/d2_mechanical/d79973fd46e3_f2a8d011f62d_20260830T090458Z/mechanical_preflight_analysis.json",
         "scripts/expansion/verify_exact_branching.py",
         "setup/expansion_verify.sbatch",
         "setup/submit_expansion_verify.sh",
         "scripts/expansion/run_nominal_preflight.py",
         "scripts/expansion/analyze_nominal_preflight.py",
         "scripts/expansion/derive_mechanical_preflight.py",
+        "scripts/expansion/analyze_mechanical_preflight.py",
         "setup/expansion_author_sources.sbatch",
         "setup/submit_expansion_preflight.sh",
         "setup/expansion_mechanical_preflight.sbatch",
         "setup/submit_expansion_mechanical_preflight.sh",
+        "scripts/expansion/run_fragile_screen.py",
+        "setup/expansion_fragile_screen.sbatch",
+        "setup/submit_expansion_fragile_screen.sh",
     )
     for relative in required:
         if not (ROOT / relative).is_file():
@@ -635,6 +640,25 @@ def expansion_governance_errors() -> list[str]:
         "nominal_success_rate"
     ) != 1.0:
         errors.append("D2 nominal task2 success rate drift")
+    mechanical_root = ROOT / (
+        "results/expansion/d2_mechanical/d79973fd46e3_f2a8d011f62d_20260830T090458Z"
+    )
+    mechanical_cells = sorted(mechanical_root.glob("cell_*.json"))
+    if len(mechanical_cells) != 8:
+        errors.append("D2 mechanical preflight must contain exactly eight cell artifacts")
+    else:
+        mechanical_payloads = [read_json(path) for path in mechanical_cells]
+        if sum(row.get("attempted_sources", 0) for row in mechanical_payloads) != 64:
+            errors.append("D2 mechanical preflight does not account for 64 attempts")
+        if any(row.get("mechanically_valid_sources") != 8 for row in mechanical_payloads):
+            errors.append("D2 mechanical preflight has a non-valid source")
+        if any(row.get("option_outcomes_opened") != 0 for row in mechanical_payloads):
+            errors.append("D2 mechanical preflight opened option outcomes")
+    mechanical_analysis = read_json(mechanical_root / "mechanical_preflight_analysis.json")
+    if mechanical_analysis.get("gate", {}).get("status") != "GO":
+        errors.append("D2 mechanical preflight gate is not GO")
+    if mechanical_analysis.get("unstable_v2_authorized") is not False:
+        errors.append("D2 mechanical preflight unexpectedly authorizes unstable v2")
     return errors
 
 

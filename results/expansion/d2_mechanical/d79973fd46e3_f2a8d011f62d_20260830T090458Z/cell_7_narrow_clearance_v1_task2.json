@@ -1,0 +1,1124 @@
+{
+  "all_attempts_accounted": true,
+  "attempted_sources": 8,
+  "cell_sha256": "ecdc8e4e9a86e208b4af900c61784d1a44bec9ecd01281f90b9f6c63828cb302",
+  "execution": {
+    "git_commit": "f2a8d011f62d411e602e81577e54e70fe42b3808",
+    "slurm_array_task_id": "7",
+    "slurm_job_id": "5204996"
+  },
+  "kind": "crashbench_expansion_mechanical_preflight_cell",
+  "mechanically_valid_sources": 8,
+  "mechanism_id": "narrow_clearance_v1",
+  "nominal_cell": "results/expansion/d2_preflight/77ea231ebf97_a1464cf4ddf0_20260830T084407Z/cell_7_narrow_clearance_v1_task2.json",
+  "nominal_cell_sha256": "111999b3a95885e0dfe2ca14bbd64769cd52a94e49a666667eeef2b46896c315",
+  "option_outcomes_opened": 0,
+  "rows": [
+    {
+      "attempt_id": "f08af317137bec532a9cc0a99f7750c66aa75d3ea0c3d01731466a418dd7aca0",
+      "candidate_index": 0,
+      "mechanism_id": "narrow_clearance_v1",
+      "option_outcomes_opened": 0,
+      "reason": "all_severities_preoutcome_valid",
+      "reset_seed": 2026090172,
+      "robot_envelope_width_m": 0.23912686315987383,
+      "severities": {
+        "clearance_005": {
+          "conditions": {
+            "narrow": {
+              "center_xy": [
+                -0.08224170785551581,
+                0.05143872847190138
+              ],
+              "gap_m": 0.24412686315987384,
+              "length_m": 0.2,
+              "table_z": 0.9,
+              "wall_height_m": 0.18,
+              "wall_thickness_m": 0.02,
+              "yaw_rad": 1.7087445664501468
+            },
+            "no_wall_control": null,
+            "wide_control": {
+              "center_xy": [
+                -0.08224170785551581,
+                0.05143872847190138
+              ],
+              "gap_m": 0.3191268631598738,
+              "length_m": 0.2,
+              "table_z": 0.9,
+              "wall_height_m": 0.18,
+              "wall_thickness_m": 0.02,
+              "yaw_rad": 1.7087445664501468
+            }
+          },
+          "validity": {
+            "decided_before_option_outcome": true,
+            "metrics": {
+              "extra_clearance_m": 0.0050000000000000044,
+              "gap_m": 0.24412686315987384,
+              "maximum_extra_clearance_m": 0.02,
+              "robot_envelope_width_m": 0.23912686315987383,
+              "wide_control_gap_m": 0.3191268631598738
+            },
+            "reason": "narrow_corridor_geometry_resolved",
+            "valid": true
+          }
+        },
+        "clearance_010": {
+          "conditions": {
+            "narrow": {
+              "center_xy": [
+                -0.08224170785551581,
+                0.05143872847190138
+              ],
+              "gap_m": 0.24912686315987384,
+              "length_m": 0.2,
+              "table_z": 0.9,
+              "wall_height_m": 0.18,
+              "wall_thickness_m": 0.02,
+              "yaw_rad": 1.7087445664501468
+            },
+            "no_wall_control": null,
+            "wide_control": {
+              "center_xy": [
+                -0.08224170785551581,
+                0.05143872847190138
+              ],
+              "gap_m": 0.3191268631598738,
+              "length_m": 0.2,
+              "table_z": 0.9,
+              "wall_height_m": 0.18,
+              "wall_thickness_m": 0.02,
+              "yaw_rad": 1.7087445664501468
+            }
+          },
+          "validity": {
+            "decided_before_option_outcome": true,
+            "metrics": {
+              "extra_clearance_m": 0.010000000000000009,
+              "gap_m": 0.24912686315987384,
+              "maximum_extra_clearance_m": 0.02,
+              "robot_envelope_width_m": 0.23912686315987383,
+              "wide_control_gap_m": 0.3191268631598738
+            },
+            "reason": "narrow_corridor_geometry_resolved",
+            "valid": true
+          }
+        },
+        "clearance_015": {
+          "conditions": {
+            "narrow": {
+              "center_xy": [
+                -0.08224170785551581,
+                0.05143872847190138
+              ],
+              "gap_m": 0.2541268631598738,
+              "length_m": 0.2,
+              "table_z": 0.9,
+              "wall_height_m": 0.18,
+              "wall_thickness_m": 0.02,
+              "yaw_rad": 1.7087445664501468
+            },
+            "no_wall_control": null,
+            "wide_control": {
+              "center_xy": [
+                -0.08224170785551581,
+                0.05143872847190138
+              ],
+              "gap_m": 0.3191268631598738,
+              "length_m": 0.2,
+              "table_z": 0.9,
+              "wall_height_m": 0.18,
+              "wall_thickness_m": 0.02,
+              "yaw_rad": 1.7087445664501468
+            }
+          },
+          "validity": {
+            "decided_before_option_outcome": true,
+            "metrics": {
+              "extra_clearance_m": 0.014999999999999986,
+              "gap_m": 0.2541268631598738,
+              "maximum_extra_clearance_m": 0.02,
+              "robot_envelope_width_m": 0.23912686315987383,
+              "wide_control_gap_m": 0.3191268631598738
+            },
+            "reason": "narrow_corridor_geometry_resolved",
+            "valid": true
+          }
+        }
+      },
+      "source_state_sha256": "56975ab26705ae980f07ef9db427ec165750581793fd8d5babf8f845fcdc19d4",
+      "status": "MECHANICAL_VALID",
+      "support_top_z": 0.9,
+      "task_id": 2
+    },
+    {
+      "attempt_id": "ec4c7cd0c35d4807d3f4f6cf7ae8d341833db39f2f8e09460c2027c0f99391e3",
+      "candidate_index": 1,
+      "mechanism_id": "narrow_clearance_v1",
+      "option_outcomes_opened": 0,
+      "reason": "all_severities_preoutcome_valid",
+      "reset_seed": 2026090173,
+      "robot_envelope_width_m": 0.23912686315987386,
+      "severities": {
+        "clearance_005": {
+          "conditions": {
+            "narrow": {
+              "center_xy": [
+                -0.08265993008421654,
+                0.03098084414249746
+              ],
+              "gap_m": 0.24412686315987386,
+              "length_m": 0.2,
+              "table_z": 0.9,
+              "wall_height_m": 0.18,
+              "wall_thickness_m": 0.02,
+              "yaw_rad": 2.8419433911590746
+            },
+            "no_wall_control": null,
+            "wide_control": {
+              "center_xy": [
+                -0.08265993008421654,
+                0.03098084414249746
+              ],
+              "gap_m": 0.3191268631598739,
+              "length_m": 0.2,
+              "table_z": 0.9,
+              "wall_height_m": 0.18,
+              "wall_thickness_m": 0.02,
+              "yaw_rad": 2.8419433911590746
+            }
+          },
+          "validity": {
+            "decided_before_option_outcome": true,
+            "metrics": {
+              "extra_clearance_m": 0.0050000000000000044,
+              "gap_m": 0.24412686315987386,
+              "maximum_extra_clearance_m": 0.02,
+              "robot_envelope_width_m": 0.23912686315987386,
+              "wide_control_gap_m": 0.3191268631598739
+            },
+            "reason": "narrow_corridor_geometry_resolved",
+            "valid": true
+          }
+        },
+        "clearance_010": {
+          "conditions": {
+            "narrow": {
+              "center_xy": [
+                -0.08265993008421654,
+                0.03098084414249746
+              ],
+              "gap_m": 0.24912686315987387,
+              "length_m": 0.2,
+              "table_z": 0.9,
+              "wall_height_m": 0.18,
+              "wall_thickness_m": 0.02,
+              "yaw_rad": 2.8419433911590746
+            },
+            "no_wall_control": null,
+            "wide_control": {
+              "center_xy": [
+                -0.08265993008421654,
+                0.03098084414249746
+              ],
+              "gap_m": 0.3191268631598739,
+              "length_m": 0.2,
+              "table_z": 0.9,
+              "wall_height_m": 0.18,
+              "wall_thickness_m": 0.02,
+              "yaw_rad": 2.8419433911590746
+            }
+          },
+          "validity": {
+            "decided_before_option_outcome": true,
+            "metrics": {
+              "extra_clearance_m": 0.010000000000000009,
+              "gap_m": 0.24912686315987387,
+              "maximum_extra_clearance_m": 0.02,
+              "robot_envelope_width_m": 0.23912686315987386,
+              "wide_control_gap_m": 0.3191268631598739
+            },
+            "reason": "narrow_corridor_geometry_resolved",
+            "valid": true
+          }
+        },
+        "clearance_015": {
+          "conditions": {
+            "narrow": {
+              "center_xy": [
+                -0.08265993008421654,
+                0.03098084414249746
+              ],
+              "gap_m": 0.2541268631598739,
+              "length_m": 0.2,
+              "table_z": 0.9,
+              "wall_height_m": 0.18,
+              "wall_thickness_m": 0.02,
+              "yaw_rad": 2.8419433911590746
+            },
+            "no_wall_control": null,
+            "wide_control": {
+              "center_xy": [
+                -0.08265993008421654,
+                0.03098084414249746
+              ],
+              "gap_m": 0.3191268631598739,
+              "length_m": 0.2,
+              "table_z": 0.9,
+              "wall_height_m": 0.18,
+              "wall_thickness_m": 0.02,
+              "yaw_rad": 2.8419433911590746
+            }
+          },
+          "validity": {
+            "decided_before_option_outcome": true,
+            "metrics": {
+              "extra_clearance_m": 0.015000000000000013,
+              "gap_m": 0.2541268631598739,
+              "maximum_extra_clearance_m": 0.02,
+              "robot_envelope_width_m": 0.23912686315987386,
+              "wide_control_gap_m": 0.3191268631598739
+            },
+            "reason": "narrow_corridor_geometry_resolved",
+            "valid": true
+          }
+        }
+      },
+      "source_state_sha256": "fd779191421a0192beef7c1236ce2c8236a2b18077f5d61ffead4a381d6b849c",
+      "status": "MECHANICAL_VALID",
+      "support_top_z": 0.9,
+      "task_id": 2
+    },
+    {
+      "attempt_id": "37aca7bc37907131e2bc7acaefc7a8ea91bd75de3561121487968e7df842bcb8",
+      "candidate_index": 2,
+      "mechanism_id": "narrow_clearance_v1",
+      "option_outcomes_opened": 0,
+      "reason": "all_severities_preoutcome_valid",
+      "reset_seed": 2026090174,
+      "robot_envelope_width_m": 0.23912686315987386,
+      "severities": {
+        "clearance_005": {
+          "conditions": {
+            "narrow": {
+              "center_xy": [
+                -0.086230358123634,
+                0.047414668259686044
+              ],
+              "gap_m": 0.24412686315987386,
+              "length_m": 0.2,
+              "table_z": 0.9,
+              "wall_height_m": 0.18,
+              "wall_thickness_m": 0.02,
+              "yaw_rad": 2.579861665555697
+            },
+            "no_wall_control": null,
+            "wide_control": {
+              "center_xy": [
+                -0.086230358123634,
+                0.047414668259686044
+              ],
+              "gap_m": 0.3191268631598739,
+              "length_m": 0.2,
+              "table_z": 0.9,
+              "wall_height_m": 0.18,
+              "wall_thickness_m": 0.02,
+              "yaw_rad": 2.579861665555697
+            }
+          },
+          "validity": {
+            "decided_before_option_outcome": true,
+            "metrics": {
+              "extra_clearance_m": 0.0050000000000000044,
+              "gap_m": 0.24412686315987386,
+              "maximum_extra_clearance_m": 0.02,
+              "robot_envelope_width_m": 0.23912686315987386,
+              "wide_control_gap_m": 0.3191268631598739
+            },
+            "reason": "narrow_corridor_geometry_resolved",
+            "valid": true
+          }
+        },
+        "clearance_010": {
+          "conditions": {
+            "narrow": {
+              "center_xy": [
+                -0.086230358123634,
+                0.047414668259686044
+              ],
+              "gap_m": 0.24912686315987387,
+              "length_m": 0.2,
+              "table_z": 0.9,
+              "wall_height_m": 0.18,
+              "wall_thickness_m": 0.02,
+              "yaw_rad": 2.579861665555697
+            },
+            "no_wall_control": null,
+            "wide_control": {
+              "center_xy": [
+                -0.086230358123634,
+                0.047414668259686044
+              ],
+              "gap_m": 0.3191268631598739,
+              "length_m": 0.2,
+              "table_z": 0.9,
+              "wall_height_m": 0.18,
+              "wall_thickness_m": 0.02,
+              "yaw_rad": 2.579861665555697
+            }
+          },
+          "validity": {
+            "decided_before_option_outcome": true,
+            "metrics": {
+              "extra_clearance_m": 0.010000000000000009,
+              "gap_m": 0.24912686315987387,
+              "maximum_extra_clearance_m": 0.02,
+              "robot_envelope_width_m": 0.23912686315987386,
+              "wide_control_gap_m": 0.3191268631598739
+            },
+            "reason": "narrow_corridor_geometry_resolved",
+            "valid": true
+          }
+        },
+        "clearance_015": {
+          "conditions": {
+            "narrow": {
+              "center_xy": [
+                -0.086230358123634,
+                0.047414668259686044
+              ],
+              "gap_m": 0.2541268631598739,
+              "length_m": 0.2,
+              "table_z": 0.9,
+              "wall_height_m": 0.18,
+              "wall_thickness_m": 0.02,
+              "yaw_rad": 2.579861665555697
+            },
+            "no_wall_control": null,
+            "wide_control": {
+              "center_xy": [
+                -0.086230358123634,
+                0.047414668259686044
+              ],
+              "gap_m": 0.3191268631598739,
+              "length_m": 0.2,
+              "table_z": 0.9,
+              "wall_height_m": 0.18,
+              "wall_thickness_m": 0.02,
+              "yaw_rad": 2.579861665555697
+            }
+          },
+          "validity": {
+            "decided_before_option_outcome": true,
+            "metrics": {
+              "extra_clearance_m": 0.015000000000000013,
+              "gap_m": 0.2541268631598739,
+              "maximum_extra_clearance_m": 0.02,
+              "robot_envelope_width_m": 0.23912686315987386,
+              "wide_control_gap_m": 0.3191268631598739
+            },
+            "reason": "narrow_corridor_geometry_resolved",
+            "valid": true
+          }
+        }
+      },
+      "source_state_sha256": "7414d343c325318fdaf9707cff9fc73da532a28f1ca81f6f5578ee12f5927210",
+      "status": "MECHANICAL_VALID",
+      "support_top_z": 0.9,
+      "task_id": 2
+    },
+    {
+      "attempt_id": "a2e3ea8f8aabb8ea906fa2801c13502032c88c64ef4f1a26e37e61d1e4dc8d60",
+      "candidate_index": 3,
+      "mechanism_id": "narrow_clearance_v1",
+      "option_outcomes_opened": 0,
+      "reason": "all_severities_preoutcome_valid",
+      "reset_seed": 2026090175,
+      "robot_envelope_width_m": 0.23912686315987386,
+      "severities": {
+        "clearance_005": {
+          "conditions": {
+            "narrow": {
+              "center_xy": [
+                -0.08422147712423697,
+                0.0617415035684663
+              ],
+              "gap_m": 0.24412686315987386,
+              "length_m": 0.2,
+              "table_z": 0.9,
+              "wall_height_m": 0.18,
+              "wall_thickness_m": 0.02,
+              "yaw_rad": -0.4674945974786078
+            },
+            "no_wall_control": null,
+            "wide_control": {
+              "center_xy": [
+                -0.08422147712423697,
+                0.0617415035684663
+              ],
+              "gap_m": 0.3191268631598739,
+              "length_m": 0.2,
+              "table_z": 0.9,
+              "wall_height_m": 0.18,
+              "wall_thickness_m": 0.02,
+              "yaw_rad": -0.4674945974786078
+            }
+          },
+          "validity": {
+            "decided_before_option_outcome": true,
+            "metrics": {
+              "extra_clearance_m": 0.0050000000000000044,
+              "gap_m": 0.24412686315987386,
+              "maximum_extra_clearance_m": 0.02,
+              "robot_envelope_width_m": 0.23912686315987386,
+              "wide_control_gap_m": 0.3191268631598739
+            },
+            "reason": "narrow_corridor_geometry_resolved",
+            "valid": true
+          }
+        },
+        "clearance_010": {
+          "conditions": {
+            "narrow": {
+              "center_xy": [
+                -0.08422147712423697,
+                0.0617415035684663
+              ],
+              "gap_m": 0.24912686315987387,
+              "length_m": 0.2,
+              "table_z": 0.9,
+              "wall_height_m": 0.18,
+              "wall_thickness_m": 0.02,
+              "yaw_rad": -0.4674945974786078
+            },
+            "no_wall_control": null,
+            "wide_control": {
+              "center_xy": [
+                -0.08422147712423697,
+                0.0617415035684663
+              ],
+              "gap_m": 0.3191268631598739,
+              "length_m": 0.2,
+              "table_z": 0.9,
+              "wall_height_m": 0.18,
+              "wall_thickness_m": 0.02,
+              "yaw_rad": -0.4674945974786078
+            }
+          },
+          "validity": {
+            "decided_before_option_outcome": true,
+            "metrics": {
+              "extra_clearance_m": 0.010000000000000009,
+              "gap_m": 0.24912686315987387,
+              "maximum_extra_clearance_m": 0.02,
+              "robot_envelope_width_m": 0.23912686315987386,
+              "wide_control_gap_m": 0.3191268631598739
+            },
+            "reason": "narrow_corridor_geometry_resolved",
+            "valid": true
+          }
+        },
+        "clearance_015": {
+          "conditions": {
+            "narrow": {
+              "center_xy": [
+                -0.08422147712423697,
+                0.0617415035684663
+              ],
+              "gap_m": 0.2541268631598739,
+              "length_m": 0.2,
+              "table_z": 0.9,
+              "wall_height_m": 0.18,
+              "wall_thickness_m": 0.02,
+              "yaw_rad": -0.4674945974786078
+            },
+            "no_wall_control": null,
+            "wide_control": {
+              "center_xy": [
+                -0.08422147712423697,
+                0.0617415035684663
+              ],
+              "gap_m": 0.3191268631598739,
+              "length_m": 0.2,
+              "table_z": 0.9,
+              "wall_height_m": 0.18,
+              "wall_thickness_m": 0.02,
+              "yaw_rad": -0.4674945974786078
+            }
+          },
+          "validity": {
+            "decided_before_option_outcome": true,
+            "metrics": {
+              "extra_clearance_m": 0.015000000000000013,
+              "gap_m": 0.2541268631598739,
+              "maximum_extra_clearance_m": 0.02,
+              "robot_envelope_width_m": 0.23912686315987386,
+              "wide_control_gap_m": 0.3191268631598739
+            },
+            "reason": "narrow_corridor_geometry_resolved",
+            "valid": true
+          }
+        }
+      },
+      "source_state_sha256": "1e5f49ede53a433d7c208bc883219936a8c6ff3f67e7d029415e942565570fc0",
+      "status": "MECHANICAL_VALID",
+      "support_top_z": 0.9,
+      "task_id": 2
+    },
+    {
+      "attempt_id": "283fb64fd7461736b256c47a7b86d04cdbfed83a73b470a99233ac194ebc8d9a",
+      "candidate_index": 4,
+      "mechanism_id": "narrow_clearance_v1",
+      "option_outcomes_opened": 0,
+      "reason": "all_severities_preoutcome_valid",
+      "reset_seed": 2026090176,
+      "robot_envelope_width_m": 0.2399019559421749,
+      "severities": {
+        "clearance_005": {
+          "conditions": {
+            "narrow": {
+              "center_xy": [
+                -0.09510565108122535,
+                0.03120550650387135
+              ],
+              "gap_m": 0.2449019559421749,
+              "length_m": 0.2,
+              "table_z": 0.9,
+              "wall_height_m": 0.18,
+              "wall_thickness_m": 0.02,
+              "yaw_rad": 0.47962079485029147
+            },
+            "no_wall_control": null,
+            "wide_control": {
+              "center_xy": [
+                -0.09510565108122535,
+                0.03120550650387135
+              ],
+              "gap_m": 0.3199019559421749,
+              "length_m": 0.2,
+              "table_z": 0.9,
+              "wall_height_m": 0.18,
+              "wall_thickness_m": 0.02,
+              "yaw_rad": 0.47962079485029147
+            }
+          },
+          "validity": {
+            "decided_before_option_outcome": true,
+            "metrics": {
+              "extra_clearance_m": 0.0050000000000000044,
+              "gap_m": 0.2449019559421749,
+              "maximum_extra_clearance_m": 0.02,
+              "robot_envelope_width_m": 0.2399019559421749,
+              "wide_control_gap_m": 0.3199019559421749
+            },
+            "reason": "narrow_corridor_geometry_resolved",
+            "valid": true
+          }
+        },
+        "clearance_010": {
+          "conditions": {
+            "narrow": {
+              "center_xy": [
+                -0.09510565108122535,
+                0.03120550650387135
+              ],
+              "gap_m": 0.2499019559421749,
+              "length_m": 0.2,
+              "table_z": 0.9,
+              "wall_height_m": 0.18,
+              "wall_thickness_m": 0.02,
+              "yaw_rad": 0.47962079485029147
+            },
+            "no_wall_control": null,
+            "wide_control": {
+              "center_xy": [
+                -0.09510565108122535,
+                0.03120550650387135
+              ],
+              "gap_m": 0.3199019559421749,
+              "length_m": 0.2,
+              "table_z": 0.9,
+              "wall_height_m": 0.18,
+              "wall_thickness_m": 0.02,
+              "yaw_rad": 0.47962079485029147
+            }
+          },
+          "validity": {
+            "decided_before_option_outcome": true,
+            "metrics": {
+              "extra_clearance_m": 0.010000000000000009,
+              "gap_m": 0.2499019559421749,
+              "maximum_extra_clearance_m": 0.02,
+              "robot_envelope_width_m": 0.2399019559421749,
+              "wide_control_gap_m": 0.3199019559421749
+            },
+            "reason": "narrow_corridor_geometry_resolved",
+            "valid": true
+          }
+        },
+        "clearance_015": {
+          "conditions": {
+            "narrow": {
+              "center_xy": [
+                -0.09510565108122535,
+                0.03120550650387135
+              ],
+              "gap_m": 0.2549019559421749,
+              "length_m": 0.2,
+              "table_z": 0.9,
+              "wall_height_m": 0.18,
+              "wall_thickness_m": 0.02,
+              "yaw_rad": 0.47962079485029147
+            },
+            "no_wall_control": null,
+            "wide_control": {
+              "center_xy": [
+                -0.09510565108122535,
+                0.03120550650387135
+              ],
+              "gap_m": 0.3199019559421749,
+              "length_m": 0.2,
+              "table_z": 0.9,
+              "wall_height_m": 0.18,
+              "wall_thickness_m": 0.02,
+              "yaw_rad": 0.47962079485029147
+            }
+          },
+          "validity": {
+            "decided_before_option_outcome": true,
+            "metrics": {
+              "extra_clearance_m": 0.015000000000000013,
+              "gap_m": 0.2549019559421749,
+              "maximum_extra_clearance_m": 0.02,
+              "robot_envelope_width_m": 0.2399019559421749,
+              "wide_control_gap_m": 0.3199019559421749
+            },
+            "reason": "narrow_corridor_geometry_resolved",
+            "valid": true
+          }
+        }
+      },
+      "source_state_sha256": "f8ae5f9ca87e26356391d68b8c5c507d70f78de84abf9e279206b37e826556bb",
+      "status": "MECHANICAL_VALID",
+      "support_top_z": 0.9,
+      "task_id": 2
+    },
+    {
+      "attempt_id": "c400cc5a024ec555fcf3ed3c8ea094dced015e5834b9094cfac790246934b881",
+      "candidate_index": 5,
+      "mechanism_id": "narrow_clearance_v1",
+      "option_outcomes_opened": 0,
+      "reason": "all_severities_preoutcome_valid",
+      "reset_seed": 2026090177,
+      "robot_envelope_width_m": 0.23912686315987386,
+      "severities": {
+        "clearance_005": {
+          "conditions": {
+            "narrow": {
+              "center_xy": [
+                -0.08496668326231097,
+                0.03113838188996896
+              ],
+              "gap_m": 0.24412686315987386,
+              "length_m": 0.2,
+              "table_z": 0.9,
+              "wall_height_m": 0.18,
+              "wall_thickness_m": 0.02,
+              "yaw_rad": 2.591197190957933
+            },
+            "no_wall_control": null,
+            "wide_control": {
+              "center_xy": [
+                -0.08496668326231097,
+                0.03113838188996896
+              ],
+              "gap_m": 0.3191268631598739,
+              "length_m": 0.2,
+              "table_z": 0.9,
+              "wall_height_m": 0.18,
+              "wall_thickness_m": 0.02,
+              "yaw_rad": 2.591197190957933
+            }
+          },
+          "validity": {
+            "decided_before_option_outcome": true,
+            "metrics": {
+              "extra_clearance_m": 0.0050000000000000044,
+              "gap_m": 0.24412686315987386,
+              "maximum_extra_clearance_m": 0.02,
+              "robot_envelope_width_m": 0.23912686315987386,
+              "wide_control_gap_m": 0.3191268631598739
+            },
+            "reason": "narrow_corridor_geometry_resolved",
+            "valid": true
+          }
+        },
+        "clearance_010": {
+          "conditions": {
+            "narrow": {
+              "center_xy": [
+                -0.08496668326231097,
+                0.03113838188996896
+              ],
+              "gap_m": 0.24912686315987387,
+              "length_m": 0.2,
+              "table_z": 0.9,
+              "wall_height_m": 0.18,
+              "wall_thickness_m": 0.02,
+              "yaw_rad": 2.591197190957933
+            },
+            "no_wall_control": null,
+            "wide_control": {
+              "center_xy": [
+                -0.08496668326231097,
+                0.03113838188996896
+              ],
+              "gap_m": 0.3191268631598739,
+              "length_m": 0.2,
+              "table_z": 0.9,
+              "wall_height_m": 0.18,
+              "wall_thickness_m": 0.02,
+              "yaw_rad": 2.591197190957933
+            }
+          },
+          "validity": {
+            "decided_before_option_outcome": true,
+            "metrics": {
+              "extra_clearance_m": 0.010000000000000009,
+              "gap_m": 0.24912686315987387,
+              "maximum_extra_clearance_m": 0.02,
+              "robot_envelope_width_m": 0.23912686315987386,
+              "wide_control_gap_m": 0.3191268631598739
+            },
+            "reason": "narrow_corridor_geometry_resolved",
+            "valid": true
+          }
+        },
+        "clearance_015": {
+          "conditions": {
+            "narrow": {
+              "center_xy": [
+                -0.08496668326231097,
+                0.03113838188996896
+              ],
+              "gap_m": 0.2541268631598739,
+              "length_m": 0.2,
+              "table_z": 0.9,
+              "wall_height_m": 0.18,
+              "wall_thickness_m": 0.02,
+              "yaw_rad": 2.591197190957933
+            },
+            "no_wall_control": null,
+            "wide_control": {
+              "center_xy": [
+                -0.08496668326231097,
+                0.03113838188996896
+              ],
+              "gap_m": 0.3191268631598739,
+              "length_m": 0.2,
+              "table_z": 0.9,
+              "wall_height_m": 0.18,
+              "wall_thickness_m": 0.02,
+              "yaw_rad": 2.591197190957933
+            }
+          },
+          "validity": {
+            "decided_before_option_outcome": true,
+            "metrics": {
+              "extra_clearance_m": 0.015000000000000013,
+              "gap_m": 0.2541268631598739,
+              "maximum_extra_clearance_m": 0.02,
+              "robot_envelope_width_m": 0.23912686315987386,
+              "wide_control_gap_m": 0.3191268631598739
+            },
+            "reason": "narrow_corridor_geometry_resolved",
+            "valid": true
+          }
+        }
+      },
+      "source_state_sha256": "354b54284ebac9fe581aab6effef6747eecb50c7f9373c6053b901edb44b4734",
+      "status": "MECHANICAL_VALID",
+      "support_top_z": 0.9,
+      "task_id": 2
+    },
+    {
+      "attempt_id": "799c07e0649eed75949d7233fda5f2e7d6123fbee99e923f744135d2cee00cb5",
+      "candidate_index": 6,
+      "mechanism_id": "narrow_clearance_v1",
+      "option_outcomes_opened": 0,
+      "reason": "all_severities_preoutcome_valid",
+      "reset_seed": 2026090178,
+      "robot_envelope_width_m": 0.23912686315987386,
+      "severities": {
+        "clearance_005": {
+          "conditions": {
+            "narrow": {
+              "center_xy": [
+                -0.08948521908144039,
+                0.04438317257458958
+              ],
+              "gap_m": 0.24412686315987386,
+              "length_m": 0.2,
+              "table_z": 0.9,
+              "wall_height_m": 0.18,
+              "wall_thickness_m": 0.02,
+              "yaw_rad": 2.695198581585782
+            },
+            "no_wall_control": null,
+            "wide_control": {
+              "center_xy": [
+                -0.08948521908144039,
+                0.04438317257458958
+              ],
+              "gap_m": 0.3191268631598739,
+              "length_m": 0.2,
+              "table_z": 0.9,
+              "wall_height_m": 0.18,
+              "wall_thickness_m": 0.02,
+              "yaw_rad": 2.695198581585782
+            }
+          },
+          "validity": {
+            "decided_before_option_outcome": true,
+            "metrics": {
+              "extra_clearance_m": 0.0050000000000000044,
+              "gap_m": 0.24412686315987386,
+              "maximum_extra_clearance_m": 0.02,
+              "robot_envelope_width_m": 0.23912686315987386,
+              "wide_control_gap_m": 0.3191268631598739
+            },
+            "reason": "narrow_corridor_geometry_resolved",
+            "valid": true
+          }
+        },
+        "clearance_010": {
+          "conditions": {
+            "narrow": {
+              "center_xy": [
+                -0.08948521908144039,
+                0.04438317257458958
+              ],
+              "gap_m": 0.24912686315987387,
+              "length_m": 0.2,
+              "table_z": 0.9,
+              "wall_height_m": 0.18,
+              "wall_thickness_m": 0.02,
+              "yaw_rad": 2.695198581585782
+            },
+            "no_wall_control": null,
+            "wide_control": {
+              "center_xy": [
+                -0.08948521908144039,
+                0.04438317257458958
+              ],
+              "gap_m": 0.3191268631598739,
+              "length_m": 0.2,
+              "table_z": 0.9,
+              "wall_height_m": 0.18,
+              "wall_thickness_m": 0.02,
+              "yaw_rad": 2.695198581585782
+            }
+          },
+          "validity": {
+            "decided_before_option_outcome": true,
+            "metrics": {
+              "extra_clearance_m": 0.010000000000000009,
+              "gap_m": 0.24912686315987387,
+              "maximum_extra_clearance_m": 0.02,
+              "robot_envelope_width_m": 0.23912686315987386,
+              "wide_control_gap_m": 0.3191268631598739
+            },
+            "reason": "narrow_corridor_geometry_resolved",
+            "valid": true
+          }
+        },
+        "clearance_015": {
+          "conditions": {
+            "narrow": {
+              "center_xy": [
+                -0.08948521908144039,
+                0.04438317257458958
+              ],
+              "gap_m": 0.2541268631598739,
+              "length_m": 0.2,
+              "table_z": 0.9,
+              "wall_height_m": 0.18,
+              "wall_thickness_m": 0.02,
+              "yaw_rad": 2.695198581585782
+            },
+            "no_wall_control": null,
+            "wide_control": {
+              "center_xy": [
+                -0.08948521908144039,
+                0.04438317257458958
+              ],
+              "gap_m": 0.3191268631598739,
+              "length_m": 0.2,
+              "table_z": 0.9,
+              "wall_height_m": 0.18,
+              "wall_thickness_m": 0.02,
+              "yaw_rad": 2.695198581585782
+            }
+          },
+          "validity": {
+            "decided_before_option_outcome": true,
+            "metrics": {
+              "extra_clearance_m": 0.015000000000000013,
+              "gap_m": 0.2541268631598739,
+              "maximum_extra_clearance_m": 0.02,
+              "robot_envelope_width_m": 0.23912686315987386,
+              "wide_control_gap_m": 0.3191268631598739
+            },
+            "reason": "narrow_corridor_geometry_resolved",
+            "valid": true
+          }
+        }
+      },
+      "source_state_sha256": "17986ab13159d04680421bf3da25fd892603463717ea73918d19ea23aab45243",
+      "status": "MECHANICAL_VALID",
+      "support_top_z": 0.9,
+      "task_id": 2
+    },
+    {
+      "attempt_id": "a5b97ceadd2f521e79d9113dc64b3187bc192f3173a9b1624a190948eb83fa58",
+      "candidate_index": 7,
+      "mechanism_id": "narrow_clearance_v1",
+      "option_outcomes_opened": 0,
+      "reason": "all_severities_preoutcome_valid",
+      "reset_seed": 2026090179,
+      "robot_envelope_width_m": 0.24123526018897218,
+      "severities": {
+        "clearance_005": {
+          "conditions": {
+            "narrow": {
+              "center_xy": [
+                -0.08253330500098896,
+                0.029993759129464337
+              ],
+              "gap_m": 0.24623526018897218,
+              "length_m": 0.2,
+              "table_z": 0.9,
+              "wall_height_m": 0.18,
+              "wall_thickness_m": 0.02,
+              "yaw_rad": -3.118533450476549
+            },
+            "no_wall_control": null,
+            "wide_control": {
+              "center_xy": [
+                -0.08253330500098896,
+                0.029993759129464337
+              ],
+              "gap_m": 0.3212352601889722,
+              "length_m": 0.2,
+              "table_z": 0.9,
+              "wall_height_m": 0.18,
+              "wall_thickness_m": 0.02,
+              "yaw_rad": -3.118533450476549
+            }
+          },
+          "validity": {
+            "decided_before_option_outcome": true,
+            "metrics": {
+              "extra_clearance_m": 0.0050000000000000044,
+              "gap_m": 0.24623526018897218,
+              "maximum_extra_clearance_m": 0.02,
+              "robot_envelope_width_m": 0.24123526018897218,
+              "wide_control_gap_m": 0.3212352601889722
+            },
+            "reason": "narrow_corridor_geometry_resolved",
+            "valid": true
+          }
+        },
+        "clearance_010": {
+          "conditions": {
+            "narrow": {
+              "center_xy": [
+                -0.08253330500098896,
+                0.029993759129464337
+              ],
+              "gap_m": 0.2512352601889722,
+              "length_m": 0.2,
+              "table_z": 0.9,
+              "wall_height_m": 0.18,
+              "wall_thickness_m": 0.02,
+              "yaw_rad": -3.118533450476549
+            },
+            "no_wall_control": null,
+            "wide_control": {
+              "center_xy": [
+                -0.08253330500098896,
+                0.029993759129464337
+              ],
+              "gap_m": 0.3212352601889722,
+              "length_m": 0.2,
+              "table_z": 0.9,
+              "wall_height_m": 0.18,
+              "wall_thickness_m": 0.02,
+              "yaw_rad": -3.118533450476549
+            }
+          },
+          "validity": {
+            "decided_before_option_outcome": true,
+            "metrics": {
+              "extra_clearance_m": 0.010000000000000009,
+              "gap_m": 0.2512352601889722,
+              "maximum_extra_clearance_m": 0.02,
+              "robot_envelope_width_m": 0.24123526018897218,
+              "wide_control_gap_m": 0.3212352601889722
+            },
+            "reason": "narrow_corridor_geometry_resolved",
+            "valid": true
+          }
+        },
+        "clearance_015": {
+          "conditions": {
+            "narrow": {
+              "center_xy": [
+                -0.08253330500098896,
+                0.029993759129464337
+              ],
+              "gap_m": 0.2562352601889722,
+              "length_m": 0.2,
+              "table_z": 0.9,
+              "wall_height_m": 0.18,
+              "wall_thickness_m": 0.02,
+              "yaw_rad": -3.118533450476549
+            },
+            "no_wall_control": null,
+            "wide_control": {
+              "center_xy": [
+                -0.08253330500098896,
+                0.029993759129464337
+              ],
+              "gap_m": 0.3212352601889722,
+              "length_m": 0.2,
+              "table_z": 0.9,
+              "wall_height_m": 0.18,
+              "wall_thickness_m": 0.02,
+              "yaw_rad": -3.118533450476549
+            }
+          },
+          "validity": {
+            "decided_before_option_outcome": true,
+            "metrics": {
+              "extra_clearance_m": 0.015000000000000013,
+              "gap_m": 0.2562352601889722,
+              "maximum_extra_clearance_m": 0.02,
+              "robot_envelope_width_m": 0.24123526018897218,
+              "wide_control_gap_m": 0.3212352601889722
+            },
+            "reason": "narrow_corridor_geometry_resolved",
+            "valid": true
+          }
+        }
+      },
+      "source_state_sha256": "867bdbcfccac104173add9c91f1ce9e74de1050f2449a6fc1bb7ddaa72382a81",
+      "status": "MECHANICAL_VALID",
+      "support_top_z": 0.9,
+      "task_id": 2
+    }
+  ],
+  "schema_version": 1,
+  "task_id": 2
+}
