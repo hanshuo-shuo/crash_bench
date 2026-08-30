@@ -526,6 +526,7 @@ def expansion_governance_errors() -> list[str]:
         "scripts/expansion/merge_statewise_dataset.py",
         "scripts/expansion/merge_benchmark_test_dataset.py",
         "scripts/expansion/analyze_benchmark_test.py",
+        "scripts/expansion/analyze_full_utility_sensitivity.py",
         "scripts/expansion/freeze_d8_benchmark_execution.py",
         "scripts/expansion/postprocess_d8_benchmark.py",
         "scripts/expansion/build_scoped_benchmark_release.py",
