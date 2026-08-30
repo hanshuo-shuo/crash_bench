@@ -38,3 +38,22 @@ class OptionCatalog:
         overlap = set(self._specs) & set(other._specs)
         if overlap:
             raise ValueError(f"deployable/diagnostic option IDs overlap: {sorted(overlap)}")
+
+    @classmethod
+    def from_payload(cls, payload: dict) -> "OptionCatalog":
+        kind = CatalogKind(payload["catalog_kind"])
+        specs = [
+            OptionSpec(
+                option_id=str(row["option_id"]),
+                version=int(row["version"]),
+                catalog_kind=kind,
+                mechanical_family=str(row["mechanical_family"]),
+                max_duration_steps=int(row["max_duration_steps"]),
+                information_fields=frozenset(map(str, row["information_fields"])),
+                intervention_cost=float(row["intervention_cost"]),
+                allows_return_to_base=bool(row["allows_return_to_base"]),
+                snapshot_contract_version=int(row["snapshot_contract_version"]),
+            )
+            for row in payload["options"]
+        ]
+        return cls(kind, specs)

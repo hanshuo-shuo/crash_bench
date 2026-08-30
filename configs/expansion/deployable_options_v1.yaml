@@ -1,10 +1,12 @@
 {
   "schema_version": 1,
   "catalog_kind": "deployable",
-  "status": "DRAFT_D1_ONLY__FREEZE_AT_D4",
+  "status": "D2_MECHANISM_IMPLEMENTATION__FREEZE_AT_D4",
   "options": [
     {"option_id": "base_continue", "version": 1, "mechanical_family": "global", "max_duration_steps": 1, "information_fields": ["policy_observation", "instruction", "action_history"], "intervention_cost": 0.0, "allows_return_to_base": false, "snapshot_contract_version": 1},
     {"option_id": "safe_stop", "version": 1, "mechanical_family": "global", "max_duration_steps": 20, "information_fields": ["proprioception", "force_history", "action_history"], "intervention_cost": 0.05, "allows_return_to_base": false, "snapshot_contract_version": 1},
-    {"option_id": "backtrack_requery", "version": 1, "mechanical_family": "global", "max_duration_steps": 40, "information_fields": ["policy_observation", "instruction", "proprioception", "force_history", "action_history"], "intervention_cost": 0.05, "allows_return_to_base": true, "snapshot_contract_version": 1}
+    {"option_id": "backtrack_requery", "version": 1, "mechanical_family": "global", "max_duration_steps": 40, "information_fields": ["eef_history", "current_eef", "force_history", "gripper_command"], "intervention_cost": 0.05, "allows_return_to_base": true, "snapshot_contract_version": 1},
+    {"option_id": "observation_refresh", "version": 1, "mechanical_family": "observation_staleness", "max_duration_steps": 1, "information_fields": ["policy_observation", "observation_queue"], "intervention_cost": 0.05, "allows_return_to_base": true, "snapshot_contract_version": 1},
+    {"option_id": "corrective_requery", "version": 1, "mechanical_family": "action_drift", "max_duration_steps": 20, "information_fields": ["commanded_action_history", "executed_action_history", "base_proposed_action"], "intervention_cost": 0.05, "allows_return_to_base": true, "snapshot_contract_version": 1}
   ]
 }

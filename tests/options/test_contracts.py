@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 import pytest
 
 from crashbench.options.base import CatalogKind, InformationBoundaryViolation, OptionSpec
@@ -45,3 +48,16 @@ def test_same_option_id_cannot_exist_in_deployable_and_oracle_catalogs():
 def test_deployable_spec_cannot_declare_oracle_information():
     with pytest.raises(InformationBoundaryViolation, match="oracle fields"):
         spec("bad", fields=frozenset({"proprioception", "future_outcome"}))
+
+
+def test_repository_catalogs_parse_and_are_disjoint():
+    root = Path(__file__).resolve().parents[2]
+    deployable = OptionCatalog.from_payload(
+        json.loads((root / "configs/expansion/deployable_options_v1.yaml").read_text())
+    )
+    oracle = OptionCatalog.from_payload(
+        json.loads((root / "configs/expansion/diagnostic_oracle_options_v1.yaml").read_text())
+    )
+    deployable.assert_disjoint(oracle)
+    assert "deployable:observation_refresh:v1" in deployable.canonical_ids()
+    assert "diagnostic_oracle:oracle_inverse_drift:v1" in oracle.canonical_ids()

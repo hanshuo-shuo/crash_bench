@@ -1,8 +1,11 @@
 {
   "schema_version": 1,
   "catalog_kind": "diagnostic_oracle",
-  "status": "DRAFT_D1_ONLY__NEVER_DEPLOYABLE_GAIN",
+  "status": "D2_DIAGNOSTIC_ONLY__NEVER_DEPLOYABLE_GAIN__FREEZE_AT_D4",
   "options": [
-    {"option_id": "oracle_task_preserving_path", "version": 1, "mechanical_family": "mechanism_specific", "max_duration_steps": 200, "information_fields": ["oracle_geometry", "true_mechanism", "task_success_predicate"], "intervention_cost": 0.05, "allows_return_to_base": false, "snapshot_contract_version": 1}
+    {"option_id": "oracle_task_preserving_path", "version": 1, "mechanical_family": "fragile_path_collision", "max_duration_steps": 200, "information_fields": ["oracle_geometry", "true_mechanism", "task_success_predicate"], "intervention_cost": 0.05, "allows_return_to_base": false, "snapshot_contract_version": 1},
+    {"option_id": "oracle_fresh_observation", "version": 1, "mechanical_family": "observation_staleness", "max_duration_steps": 1, "information_fields": ["future_outcome", "true_mechanism"], "intervention_cost": 0.05, "allows_return_to_base": false, "snapshot_contract_version": 1},
+    {"option_id": "oracle_inverse_drift", "version": 1, "mechanical_family": "action_drift", "max_duration_steps": 20, "information_fields": ["true_mechanism", "future_outcome"], "intervention_cost": 0.05, "allows_return_to_base": false, "snapshot_contract_version": 1},
+    {"option_id": "oracle_corridor_path", "version": 1, "mechanical_family": "narrow_clearance", "max_duration_steps": 200, "information_fields": ["oracle_geometry", "true_mechanism", "task_success_predicate"], "intervention_cost": 0.05, "allows_return_to_base": false, "snapshot_contract_version": 1}
   ]
 }
