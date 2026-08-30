@@ -528,6 +528,7 @@ def expansion_governance_errors() -> list[str]:
         "scripts/expansion/analyze_benchmark_test.py",
         "scripts/expansion/freeze_d8_benchmark_execution.py",
         "scripts/expansion/postprocess_d8_benchmark.py",
+        "scripts/expansion/build_scoped_benchmark_release.py",
         "setup/expansion_benchmark_test.sbatch",
         "setup/submit_expansion_benchmark_test.sh",
         "scripts/expansion/audit_statewise_shards.py",
