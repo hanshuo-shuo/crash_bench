@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://crashbench.local/schemas/split_manifest.schema.json",
+  "title": "CrashBench expansion split manifest",
+  "type": "object",
+  "required": ["schema_version", "kind", "protocol_sha256", "manifest_sha256", "counts_by_cell", "assignments", "test_outcomes_read"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "crashbench_expansion_split_manifest"},
+    "protocol_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "manifest_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "test_outcomes_read": {"const": 0},
+    "assignments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["physical_source_id", "mechanism_source_id", "policy_source_id", "mechanism_id", "task_id", "policy_id", "role"]
+      }
+    }
+  }
+}

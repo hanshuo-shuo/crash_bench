@@ -457,6 +457,7 @@ def expansion_governance_errors() -> list[str]:
         "configs/expansion/compute_budget_v1.yaml",
         "schemas/source_registry.schema.json",
         "schemas/exact_state.schema.json",
+        "schemas/split_manifest.schema.json",
         "results/expansion/governance/exposure_registry.json",
         "results/expansion/governance/power_planning.json",
         "results/expansion/governance/remote_missing_lineage.json",

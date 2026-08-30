@@ -17,6 +17,7 @@ from typing import Any, Iterable, Mapping
 
 
 class SplitRole(str, Enum):
+    ENGINEERING_SCREEN = "engineering_screen"
     TRAIN = "train"
     CALIBRATION = "calibration"
     DEVELOPMENT = "development"
@@ -24,8 +25,9 @@ class SplitRole(str, Enum):
     OOD_TASK_TEST = "ood_task_test"
     OOD_SEVERITY_TEST = "ood_severity_test"
     CROSS_POLICY_TEST = "cross_policy_test"
+    CROSS_POLICY_CALIBRATION = "cross_policy_calibration"
     FRESH_SEQUENTIAL_TEST = "fresh_sequential_test"
-    ENGINEERING = "engineering"
+    ADAPTIVE_TRAINING = "adaptive_training"
     LEGACY_PRETRAINING_ABLATION = "legacy_pretraining_ablation"
 
 

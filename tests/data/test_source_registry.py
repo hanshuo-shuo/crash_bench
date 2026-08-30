@@ -52,7 +52,9 @@ def test_every_claim_bearing_test_role_rejects_exposed_hash(role):
 
 
 def test_non_test_roles_may_use_exposed_fixture():
-    registry().assert_role_allowed(SourceIdentity(source_state_sha256=EXPOSED), SplitRole.ENGINEERING)
+    registry().assert_role_allowed(
+        SourceIdentity(source_state_sha256=EXPOSED), SplitRole.ENGINEERING_SCREEN
+    )
 
 
 def test_seed_physical_scene_and_missing_pool_each_block_test():
