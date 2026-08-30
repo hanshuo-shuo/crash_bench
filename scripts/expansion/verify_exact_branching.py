@@ -18,6 +18,7 @@ from crashbench.data.source_registry import ExposureRegistry, SourceIdentity
 from crashbench.envs import LiberoEnv
 from crashbench.glass_recovery_data import array_sha256
 from crashbench.policies import build_policy, canonical_name
+from scripts.expansion.hash_tree_manifest import resolve_git_head
 
 
 OPENVLA_CHECKPOINT = "openvla/openvla-7b-finetuned-libero-spatial"
@@ -177,6 +178,11 @@ def main() -> None:
         "schema_version": 1,
         "kind": "crashbench_expansion_d1_exact_branching_conformance",
         "backend": backend,
+        "execution": {
+            "git_commit": resolve_git_head(Path.cwd()),
+            "slurm_job_id": os.environ.get("SLURM_JOB_ID"),
+            "slurm_array_task_id": os.environ.get("SLURM_ARRAY_TASK_ID"),
+        },
         "source": {
             "suite": args.suite,
             "task_id": args.task_id,

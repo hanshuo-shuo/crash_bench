@@ -16,6 +16,7 @@ cd "${SLURM_SUBMIT_DIR:-$HOME/crash_bench}"
 module purge
 module load mamba/24.3.0
 policy="${CB_POLICY:-openvla}"
+task_id="${CB_TASK_ID:-0}"
 case "$policy" in
   openvla) source activate "$HOME/crash_bench/envs/openvla" ;;
   pi0) source /projects/p33100/siosio/envs/openpi/bin/activate ;;
@@ -31,14 +32,18 @@ export XLA_PYTHON_CLIENT_MEM_FRACTION=0.85
 commit="$(python scripts/expansion/hash_tree_manifest.py --print-git-head .)"
 protocol_sha="$(sha256sum configs/expansion/benchmark_v1.yaml | awk '{print $1}')"
 utc="$(date -u +%Y%m%dT%H%M%SZ)"
+case "$task_id" in
+  0|2) ;;
+  *) printf 'unsupported CB_TASK_ID=%s\n' "$task_id" >&2; exit 2 ;;
+esac
 run_id="${protocol_sha:0:12}_${commit:0:12}_${utc}"
-result_root="results/expansion/d1_exactness/${policy}_${run_id}"
+result_root="results/expansion/d1_exactness/${policy}_task${task_id}_${run_id}"
 test ! -e "$result_root"
 
 python scripts/expansion/verify_exact_branching.py \
   --policy "$policy" \
   --suite libero_spatial \
-  --task-id 0 \
+  --task-id "$task_id" \
   --init-index -1 \
   --settle-steps 10 \
   --warmup-policy-steps 1 \

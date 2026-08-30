@@ -507,12 +507,23 @@ def expansion_governance_errors() -> list[str]:
     if remote.get("unblacklisted_missing_pool_count") != 0:
         errors.append("D0 remote lineage ledger has an unblacklisted pool")
     d1 = read_json(ROOT / "results/expansion/governance/d1_backend_capability_report.json")
-    if d1.get("d1_gate", {}).get("status") != "NOT_EVALUATED":
-        errors.append("D1 live gate changed without an audited conformance result")
+    if d1.get("d1_gate", {}).get("status") not in {"NOT_EVALUATED", "PARTIAL_PASS", "GO", "NO_GO"}:
+        errors.append("D1 live gate has an unregistered status")
     if d1.get("claim_boundary") != (
         "Synthetic tests establish software contracts only and are not benchmark evidence."
     ):
         errors.append("D1 capability report does not preserve the synthetic-evidence boundary")
+    for backend in d1.get("backends", []):
+        for cell in backend.get("live_cells", []):
+            result_path = ROOT / cell["result"]
+            if not result_path.is_file():
+                errors.append(f"D1 live conformance result missing: {cell['result']}")
+                continue
+            result = read_json(result_path)
+            if result.get("gate", {}).get("status") != "PASS":
+                errors.append(f"D1 claimed live PASS disagrees with result: {cell['result']}")
+            if result.get("source", {}).get("role") != "EXPOSED_ENGINEERING_ONLY":
+                errors.append(f"D1 live source is not engineering-only: {cell['result']}")
     pi0 = benchmark.get("transfer_policy", {})
     identity_path = pi0.get("identity_manifest")
     if not identity_path or not (ROOT / identity_path).is_file():

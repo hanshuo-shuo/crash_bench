@@ -17,8 +17,23 @@
       "backend": "openvla",
       "continuation_contract": "STATELESS_SINGLE_FRAME_WITH_STEERING_CONFIGURATION",
       "queue_snapshot": "NOT_APPLICABLE",
-      "live_classification": "UNVERIFIED",
-      "gate": "BLOCKED_PENDING_3_OF_3_LIVE_SAME_SEED_REPEATS"
+      "live_classification": "PARTIAL_DETERMINISTIC_EXACT",
+      "live_cells": [
+        {
+          "suite": "libero_spatial",
+          "task_id": 0,
+          "source_state_sha256": "9ec04c0eaab52f9d52c2501085449f0e1940466fbf10e313e8ddcb657a347f2e",
+          "classification": "DETERMINISTIC_EXACT",
+          "repeat_gate": "3_OF_3_PASS",
+          "branch_start_hash_pass_rate": 1.0,
+          "capture_seconds": 0.019512467086315155,
+          "restore_and_three_step_trace_seconds": [1.9838448958471417, 1.8877599444240332, 1.8587298123165965],
+          "slurm_job_id": "5204062",
+          "execution_commit": "9c8059b39730a54a290498f0d17e1d900a240ff0",
+          "result": "results/expansion/d1_exactness/openvla_47f043c30659_9c8059b39730_20260830T072357Z/conformance.json"
+        }
+      ],
+      "gate": "TASK0_PASS__TASK2_PENDING"
     },
     {
       "backend": "openvla_oft",
@@ -45,11 +60,11 @@
     }
   ],
   "d1_gate": {
-    "status": "NOT_EVALUATED",
-    "branch_start_hash_pass_rate": null,
-    "same_seed_repeat_count": 0,
-    "throughput": null,
-    "next_action": "RUN_LIVE_OPENVLA_CONFORMANCE_ON_ENGINEERING_ANCHORS_AFTER_CLEAN_PUBLISHED_COMMIT"
+    "status": "PARTIAL_PASS",
+    "branch_start_hash_pass_rate": 1.0,
+    "same_seed_repeat_count": 3,
+    "throughput": {"openvla_task0_restore_and_three_step_trace_median_seconds": 1.8877599444240332},
+    "next_action": "RUN_OPENVLA_TASK2_AND_PI0_TASK0_TASK2_LIVE_CONFORMANCE"
   },
   "operational_attempts": [
     {
