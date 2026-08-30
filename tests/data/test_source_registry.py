@@ -9,6 +9,7 @@ from crashbench.data.source_registry import (
     ExposureViolation,
     SourceIdentity,
     SplitRole,
+    append_exposure_attempt,
 )
 
 
@@ -79,3 +80,39 @@ def test_registry_load(tmp_path):
     path.write_text(json.dumps(registry().payload))
     loaded = ExposureRegistry.load(path)
     assert EXPOSED in loaded.source_hashes
+
+
+def test_identifier_union_blocks_seed_and_manifest_without_source_hash():
+    payload = {
+        "kind": "crashbench_expansion_exposure_registry",
+        "sources": [],
+        "identifiers": [
+            {"identifier_type": "reset_seed", "value": "42"},
+            {"identifier_type": "source_manifest_sha256", "value": MANIFEST},
+        ],
+        "pool_blacklists": [],
+    }
+    frozen = ExposureRegistry(payload)
+    for identity in (
+        SourceIdentity(reset_seed=42),
+        SourceIdentity(source_manifest_sha256=MANIFEST),
+    ):
+        with pytest.raises(ExposureViolation):
+            frozen.assert_role_allowed(identity, SplitRole.CONFIRMATORY_ID_TEST)
+
+
+def test_append_exposure_attempt_is_idempotent_and_conflicts_fail(tmp_path):
+    ledger = tmp_path / "attempts.jsonl"
+    row = {
+        "attempt_id": "screen-1",
+        "artifact_role": "ENGINEERING_SCREEN",
+        "protocol_sha256": "c" * 64,
+        "reset_seed": 17,
+    }
+    assert append_exposure_attempt(ledger, row)
+    assert not append_exposure_attempt(ledger, row)
+    with pytest.raises(ValueError, match="conflicting"):
+        append_exposure_attempt(ledger, {**row, "reset_seed": 18})
+    stored = [json.loads(line) for line in ledger.read_text().splitlines()]
+    assert len(stored) == 1
+    assert stored[0]["test_eligible"] is False

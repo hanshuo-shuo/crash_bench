@@ -1,6 +1,7 @@
 {
   "command": "python scripts/expansion/freeze_exposure_registry.py --repo-root . --include-tracked-and-local-results --remote-lineage-ledger configs/expansion/exposed_sources_v1.yaml --output results/expansion/governance/exposure_registry.json --fail-on-unresolved-unblacklisted",
   "counts": {
+    "identifier_union_count": 12,
     "input_count": 83,
     "pool_blacklist_count": 3,
     "source_union_count": 263
@@ -11,12 +12,188 @@
     "status": "GO",
     "unresolved_unblacklisted_count": 0
   },
+  "identifiers": [
+    {
+      "artifact_roles": [
+        "EXPOSED_LEGACY_SOURCE_LINEAGE"
+      ],
+      "evidence": [
+        "configs/expansion/exposed_sources_v1.yaml",
+        "results/expansion/governance/remote_missing_lineage.json"
+      ],
+      "identifier_type": "generator_seed",
+      "test_eligible": false,
+      "value": "2026081901"
+    },
+    {
+      "artifact_roles": [
+        "ENGINEERING_ONLY_INVALID_PREFLIGHT",
+        "EXPOSED_LEGACY_SOURCE_LINEAGE"
+      ],
+      "evidence": [
+        "configs/iclr27/non_glass_unstable_placement_screen_v1.json",
+        "results/iclr27/non_glass_option_ambiguity_screen_c0bb9015a0a3_20260829T170210Z/future_benchmark_exclusions.json",
+        "results/iclr27/non_glass_option_ambiguity_screen_c0bb9015a0a3_20260829T170210Z/resolved_config.json",
+        "results/iclr27/non_glass_option_ambiguity_screen_c0bb9015a0a3_20260829T170210Z/source_registry.json"
+      ],
+      "identifier_type": "reset_seed",
+      "test_eligible": false,
+      "value": "202608300"
+    },
+    {
+      "artifact_roles": [
+        "ENGINEERING_ONLY_INVALID_PREFLIGHT",
+        "EXPOSED_LEGACY_SOURCE_LINEAGE"
+      ],
+      "evidence": [
+        "configs/iclr27/non_glass_unstable_placement_screen_v1.json",
+        "results/iclr27/non_glass_option_ambiguity_screen_c0bb9015a0a3_20260829T170210Z/future_benchmark_exclusions.json",
+        "results/iclr27/non_glass_option_ambiguity_screen_c0bb9015a0a3_20260829T170210Z/resolved_config.json",
+        "results/iclr27/non_glass_option_ambiguity_screen_c0bb9015a0a3_20260829T170210Z/source_registry.json"
+      ],
+      "identifier_type": "reset_seed",
+      "test_eligible": false,
+      "value": "202608301"
+    },
+    {
+      "artifact_roles": [
+        "ENGINEERING_ONLY_INVALID_PREFLIGHT",
+        "EXPOSED_LEGACY_SOURCE_LINEAGE"
+      ],
+      "evidence": [
+        "configs/iclr27/non_glass_unstable_placement_screen_v1.json",
+        "results/iclr27/non_glass_option_ambiguity_screen_c0bb9015a0a3_20260829T170210Z/future_benchmark_exclusions.json",
+        "results/iclr27/non_glass_option_ambiguity_screen_c0bb9015a0a3_20260829T170210Z/resolved_config.json",
+        "results/iclr27/non_glass_option_ambiguity_screen_c0bb9015a0a3_20260829T170210Z/source_registry.json"
+      ],
+      "identifier_type": "reset_seed",
+      "test_eligible": false,
+      "value": "202608302"
+    },
+    {
+      "artifact_roles": [
+        "ENGINEERING_ONLY_INVALID_PREFLIGHT",
+        "EXPOSED_LEGACY_SOURCE_LINEAGE"
+      ],
+      "evidence": [
+        "configs/iclr27/non_glass_unstable_placement_screen_v1.json",
+        "results/iclr27/non_glass_option_ambiguity_screen_c0bb9015a0a3_20260829T170210Z/future_benchmark_exclusions.json",
+        "results/iclr27/non_glass_option_ambiguity_screen_c0bb9015a0a3_20260829T170210Z/resolved_config.json",
+        "results/iclr27/non_glass_option_ambiguity_screen_c0bb9015a0a3_20260829T170210Z/source_registry.json"
+      ],
+      "identifier_type": "reset_seed",
+      "test_eligible": false,
+      "value": "202608303"
+    },
+    {
+      "artifact_roles": [
+        "ENGINEERING_ONLY_INVALID_PREFLIGHT",
+        "EXPOSED_LEGACY_SOURCE_LINEAGE"
+      ],
+      "evidence": [
+        "configs/iclr27/non_glass_unstable_placement_screen_v1.json",
+        "results/iclr27/non_glass_option_ambiguity_screen_c0bb9015a0a3_20260829T170210Z/future_benchmark_exclusions.json",
+        "results/iclr27/non_glass_option_ambiguity_screen_c0bb9015a0a3_20260829T170210Z/resolved_config.json",
+        "results/iclr27/non_glass_option_ambiguity_screen_c0bb9015a0a3_20260829T170210Z/source_registry.json"
+      ],
+      "identifier_type": "reset_seed",
+      "test_eligible": false,
+      "value": "202608304"
+    },
+    {
+      "artifact_roles": [
+        "ENGINEERING_ONLY_INVALID_PREFLIGHT",
+        "EXPOSED_LEGACY_SOURCE_LINEAGE"
+      ],
+      "evidence": [
+        "configs/iclr27/non_glass_unstable_placement_screen_v1.json",
+        "results/iclr27/non_glass_option_ambiguity_screen_c0bb9015a0a3_20260829T170210Z/future_benchmark_exclusions.json",
+        "results/iclr27/non_glass_option_ambiguity_screen_c0bb9015a0a3_20260829T170210Z/resolved_config.json",
+        "results/iclr27/non_glass_option_ambiguity_screen_c0bb9015a0a3_20260829T170210Z/source_registry.json"
+      ],
+      "identifier_type": "reset_seed",
+      "test_eligible": false,
+      "value": "202608305"
+    },
+    {
+      "artifact_roles": [
+        "ENGINEERING_ONLY_INVALID_PREFLIGHT",
+        "EXPOSED_LEGACY_SOURCE_LINEAGE"
+      ],
+      "evidence": [
+        "configs/iclr27/non_glass_unstable_placement_screen_v1.json",
+        "results/iclr27/non_glass_option_ambiguity_screen_c0bb9015a0a3_20260829T170210Z/future_benchmark_exclusions.json",
+        "results/iclr27/non_glass_option_ambiguity_screen_c0bb9015a0a3_20260829T170210Z/resolved_config.json",
+        "results/iclr27/non_glass_option_ambiguity_screen_c0bb9015a0a3_20260829T170210Z/screen_manifest.json",
+        "results/iclr27/non_glass_option_ambiguity_screen_c0bb9015a0a3_20260829T170210Z/source_registry.json"
+      ],
+      "identifier_type": "reset_seed",
+      "test_eligible": false,
+      "value": "202608306"
+    },
+    {
+      "artifact_roles": [
+        "ENGINEERING_ONLY_INVALID_PREFLIGHT",
+        "EXPOSED_LEGACY_SOURCE_LINEAGE"
+      ],
+      "evidence": [
+        "configs/iclr27/non_glass_unstable_placement_screen_v1.json",
+        "results/iclr27/non_glass_option_ambiguity_screen_c0bb9015a0a3_20260829T170210Z/future_benchmark_exclusions.json",
+        "results/iclr27/non_glass_option_ambiguity_screen_c0bb9015a0a3_20260829T170210Z/resolved_config.json",
+        "results/iclr27/non_glass_option_ambiguity_screen_c0bb9015a0a3_20260829T170210Z/screen_manifest.json",
+        "results/iclr27/non_glass_option_ambiguity_screen_c0bb9015a0a3_20260829T170210Z/source_registry.json"
+      ],
+      "identifier_type": "reset_seed",
+      "test_eligible": false,
+      "value": "202608307"
+    },
+    {
+      "artifact_roles": [
+        "EXPOSED_HISTORICAL_TEST"
+      ],
+      "evidence": [
+        "results/counterfactual_router/fresh_random_9ed5ad656a08_20260817T0845Z/full/capture_manifest.json"
+      ],
+      "identifier_type": "source_manifest_sha256",
+      "test_eligible": false,
+      "value": "932e6e3890c9668b3aba3f33621c5a8ae2f50e2658d866d5ea5c8849a3ec817d"
+    },
+    {
+      "artifact_roles": [
+        "EXPOSED_LEGACY_SOURCE_LINEAGE"
+      ],
+      "evidence": [
+        "results/p3_2_frozen_dynamic_closeout_analysis_20260819.json",
+        "results/p3_2_frozen_dynamic_closeout_capture_manifest_20260819.json"
+      ],
+      "identifier_type": "source_manifest_sha256",
+      "test_eligible": false,
+      "value": "9ac9124c1f222f281eaf06fd8741c9775cb4cbae858e204f7a469b5f69dcadfd"
+    },
+    {
+      "artifact_roles": [
+        "EXPOSED_HISTORICAL_TEST",
+        "EXPOSED_LEGACY_SOURCE_LINEAGE"
+      ],
+      "evidence": [
+        "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/full/capture_manifest.json",
+        "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/placements/placements.json",
+        "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/smoke/capture_manifest.json",
+        "results/glass_recovery_pilot_b_frontier_20260811.json",
+        "results/glass_recovery_v2/pilot_b_fresh_h20_20260812_r2/frontier_placements/placements.json",
+        "results/p3_2_direct_sequential_calibration_manifest_20260819.json"
+      ],
+      "identifier_type": "source_manifest_sha256",
+      "test_eligible": false,
+      "value": "fa484682aa7bb5745ffe023454d9b43e7a87d90a5eab0e69aa1c4ef1aa21f68f"
+    }
+  ],
   "inputs": [
     {
       "parser": "json_compatible_yaml",
       "path": "configs/expansion/exposed_sources_v1.yaml",
       "row_count": 1,
-      "sha256": "9906143b95a07f0d3a50d851dac73cf8804ef67de9466a64e6750409708d286d",
+      "sha256": "020dba6a6adf3156cbae375b724bbf70335b82791597469506e8e900b484cf1a",
       "source_hash_count": 0
     },
     {
@@ -329,10 +506,10 @@
     },
     {
       "parser": "json",
-      "path": "results/expansion/governance/exposure_registry.json",
+      "path": "results/expansion/governance/remote_missing_lineage.json",
       "row_count": 1,
-      "sha256": "a2c2647f25cb804b98d3bd1441780cab86ceff2f4a2a0285b8558c3e44415dfa",
-      "source_hash_count": 80
+      "sha256": "2bbbee5d4e4ee3ff8ce45bcadf5a6c14178eeb9da53bdfbd992e71ffbe4cbf62",
+      "source_hash_count": 0
     },
     {
       "parser": "json",
@@ -607,22 +784,20 @@
     {
       "generator_seed_end": 2026081729,
       "generator_seed_start": 2026081700,
-      "identifier_quality": "ABBREVIATED_REMOTE_HASH",
-      "manifest_sha256": "932e6e0000000000000000000000000000000000000000000000000000817d",
+      "manifest_sha256": "932e6e3890c9668b3aba3f33621c5a8ae2f50e2658d866d5ea5c8849a3ec817d",
       "name": "e16_random_generation_pool",
-      "reason": "displayed plan hash is abbreviated; seed range is conservatively excluded"
+      "reason": "full local candidate mapping is incomplete; the complete generation seed range is excluded"
     },
     {
       "candidate_index_end": 29,
       "candidate_index_start": 0,
       "generator_seed": 2026081901,
-      "identifier_quality": "ABBREVIATED_REMOTE_HASH",
-      "manifest_sha256": "9ac9124000000000000000000000000000000000000000000000000000adfd",
+      "manifest_sha256": "9ac9124c1f222f281eaf06fd8741c9775cb4cbae858e204f7a469b5f69dcadfd",
       "name": "p3_2_source_trace_pool",
-      "reason": "remote source-trace manifest unavailable; full candidate range excluded"
+      "reason": "complete source-trace mapping is unavailable; the full candidate range is excluded"
     }
   ],
-  "registry_sha256": "cda0ada5fddfb9a3e9ff5cc18be73e730e3ee429e5b2ee85f531cfbeb1f7cffa",
+  "registry_sha256": "25962b6bbc8aa12e45630df54754880024eb9a6511192fb28b16ae010e1e2082",
   "schema_version": 1,
   "sources": [
     {
@@ -668,7 +843,6 @@
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/capture_progress.jsonl",
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/decision_metadata.json",
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/option_rollouts.jsonl",
-        "results/expansion/governance/exposure_registry.json",
         "results/p1_timing_choice_development_20260818/benchmark_manifest.json",
         "results/p1_timing_choice_development_20260818/benchmark_records.csv"
       ],
@@ -710,7 +884,6 @@
         "EXPOSED_LEGACY_SOURCE_LINEAGE"
       ],
       "evidence": [
-        "results/expansion/governance/exposure_registry.json",
         "results/p3_2_frozen_dynamic_closeout_analysis_20260819.json",
         "results/p3_2_frozen_dynamic_closeout_capture_manifest_20260819.json"
       ],
@@ -739,13 +912,11 @@
     },
     {
       "artifact_roles": [
-        "EXPOSED_HISTORICAL_TEST",
-        "EXPOSED_LEGACY_SOURCE_LINEAGE"
+        "EXPOSED_HISTORICAL_TEST"
       ],
       "evidence": [
         "results/counterfactual_router/fresh_random_9ed5ad656a08_20260817T0845Z/full/capture_manifest.json",
-        "results/counterfactual_router/fresh_random_9ed5ad656a08_20260817T0845Z/full/progress.jsonl",
-        "results/expansion/governance/exposure_registry.json"
+        "results/counterfactual_router/fresh_random_9ed5ad656a08_20260817T0845Z/full/progress.jsonl"
       ],
       "source_state_sha256": "1355bc73fe36b01ecd7eeecd5d4bbabc8742e17d671d28c05c9f22d20ea8d847",
       "test_eligible": false
@@ -803,12 +974,10 @@
     {
       "artifact_roles": [
         "ENGINEERING_ONLY_INVALID_PREFLIGHT",
-        "EXPOSED_HISTORICAL_TEST",
-        "EXPOSED_LEGACY_SOURCE_LINEAGE"
+        "EXPOSED_HISTORICAL_TEST"
       ],
       "evidence": [
         "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/placements/placements.json",
-        "results/expansion/governance/exposure_registry.json",
         "results/iclr27/non_glass_option_ambiguity_screen_c0bb9015a0a3_20260829T170210Z/future_benchmark_exclusions.json",
         "results/iclr27/non_glass_option_ambiguity_screen_c0bb9015a0a3_20260829T170210Z/resolved_config.json",
         "results/iclr27/non_glass_option_ambiguity_screen_c0bb9015a0a3_20260829T170210Z/screen_manifest.json",
@@ -903,7 +1072,6 @@
         "EXPOSED_LEGACY_SOURCE_LINEAGE"
       ],
       "evidence": [
-        "results/expansion/governance/exposure_registry.json",
         "results/p3_2_frozen_dynamic_closeout_analysis_20260819.json",
         "results/p3_2_frozen_dynamic_closeout_episodes_20260819.jsonl",
         "results/p3_2_frozen_dynamic_closeout_paired_20260819.csv",
@@ -954,12 +1122,10 @@
     },
     {
       "artifact_roles": [
-        "EXPOSED_HISTORICAL_TEST",
-        "EXPOSED_LEGACY_SOURCE_LINEAGE"
+        "EXPOSED_HISTORICAL_TEST"
       ],
       "evidence": [
-        "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/placements/placements.json",
-        "results/expansion/governance/exposure_registry.json"
+        "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/placements/placements.json"
       ],
       "source_state_sha256": "231435cb1d725ce12aae2e044ae530320031e83f250bc94c8146507dd1352d36",
       "test_eligible": false
@@ -969,7 +1135,6 @@
         "EXPOSED_LEGACY_SOURCE_LINEAGE"
       ],
       "evidence": [
-        "results/expansion/governance/exposure_registry.json",
         "results/p3_2_frozen_dynamic_closeout_analysis_20260819.json",
         "results/p3_2_frozen_dynamic_closeout_episodes_20260819.jsonl",
         "results/p3_2_frozen_dynamic_closeout_paired_20260819.csv",
@@ -981,13 +1146,11 @@
     },
     {
       "artifact_roles": [
-        "EXPOSED_HISTORICAL_TEST",
-        "EXPOSED_LEGACY_SOURCE_LINEAGE"
+        "EXPOSED_HISTORICAL_TEST"
       ],
       "evidence": [
         "results/counterfactual_router/fresh_random_9ed5ad656a08_20260817T0845Z/full/capture_manifest.json",
-        "results/counterfactual_router/fresh_random_9ed5ad656a08_20260817T0845Z/full/progress.jsonl",
-        "results/expansion/governance/exposure_registry.json"
+        "results/counterfactual_router/fresh_random_9ed5ad656a08_20260817T0845Z/full/progress.jsonl"
       ],
       "source_state_sha256": "2582d2de8255840be910a7311441170b1cbe2bc3d9870d9227e08fd811b77581",
       "test_eligible": false
@@ -1054,12 +1217,10 @@
     },
     {
       "artifact_roles": [
-        "EXPOSED_HISTORICAL_TEST",
-        "EXPOSED_LEGACY_SOURCE_LINEAGE"
+        "EXPOSED_HISTORICAL_TEST"
       ],
       "evidence": [
-        "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/placements/placements.json",
-        "results/expansion/governance/exposure_registry.json"
+        "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/placements/placements.json"
       ],
       "source_state_sha256": "2805df0cc7e1a5f1975b8380aa1d8847bb7ffc8578456a45b9ff4f2155e28578",
       "test_eligible": false
@@ -1087,7 +1248,6 @@
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/capture_progress.jsonl",
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/decision_metadata.json",
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/option_rollouts.jsonl",
-        "results/expansion/governance/exposure_registry.json",
         "results/p1_timing_choice_development_20260818/benchmark_manifest.json"
       ],
       "source_state_sha256": "28c563172e6e13a0d3d84f1527243878c67a2140fa8c9a81ecb8b81ec9402dc8",
@@ -1102,7 +1262,6 @@
         "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/full/capture_manifest.json",
         "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/full/progress.jsonl",
         "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/placements/placements.json",
-        "results/expansion/governance/exposure_registry.json",
         "results/glass_recovery_acceptance_smoke_20260809.json",
         "results/glass_recovery_v2/pilot_a/core_salvage_audit.jsonl",
         "results/glass_recovery_v2/pilot_a_recovery_20260811/core_salvage_audit.jsonl"
@@ -1135,7 +1294,6 @@
         "EXPOSED_LEGACY_SOURCE_LINEAGE"
       ],
       "evidence": [
-        "results/expansion/governance/exposure_registry.json",
         "results/p3_2_frozen_dynamic_closeout_analysis_20260819.json",
         "results/p3_2_frozen_dynamic_closeout_episodes_20260819.jsonl",
         "results/p3_2_frozen_dynamic_closeout_paired_20260819.csv",
@@ -1167,7 +1325,6 @@
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/capture_progress.jsonl",
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/decision_metadata.json",
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/option_rollouts.jsonl",
-        "results/expansion/governance/exposure_registry.json",
         "results/glass_recovery_pilot_b_scoped_20260812.json",
         "results/glass_recovery_v2/pilot_b_fresh_h20_20260812_r2/frontier_placements/placements.json",
         "results/p1_timing_choice_development_20260818/benchmark_manifest.json",
@@ -1186,7 +1343,6 @@
         "results/counterfactual_router/fresh_random_9ed5ad656a08_20260817T0845Z/full/option_rollouts.jsonl",
         "results/counterfactual_router/fresh_random_9ed5ad656a08_20260817T0845Z/full/progress.jsonl",
         "results/counterfactual_router/fresh_random_9ed5ad656a08_20260817T0845Z/full/prompt_rollouts.jsonl",
-        "results/expansion/governance/exposure_registry.json",
         "results/p3_1_direct_recovery_head_analysis_20260819.json",
         "results/p3_1_direct_recovery_head_oof_predictions_20260819.csv",
         "results/p3_recovery_window_records_20260819.csv",
@@ -1204,7 +1360,6 @@
       "evidence": [
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/capture_manifest.json",
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/capture_progress.jsonl",
-        "results/expansion/governance/exposure_registry.json",
         "results/p3_2_direct_sequential_calibration_manifest_20260819.json",
         "results/p3_2_direct_sequential_calibration_trajectories_20260819.jsonl"
       ],
@@ -1246,7 +1401,6 @@
         "EXPOSED_LEGACY_SOURCE_LINEAGE"
       ],
       "evidence": [
-        "results/expansion/governance/exposure_registry.json",
         "results/p3_2_frozen_dynamic_closeout_analysis_20260819.json",
         "results/p3_2_frozen_dynamic_closeout_capture_manifest_20260819.json"
       ],
@@ -1255,13 +1409,11 @@
     },
     {
       "artifact_roles": [
-        "EXPOSED_DEVELOPMENT",
-        "EXPOSED_LEGACY_SOURCE_LINEAGE"
+        "EXPOSED_DEVELOPMENT"
       ],
       "evidence": [
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/capture_manifest.json",
-        "results/counterfactual_router/full_d4751330395e_20260814T152231Z/capture_progress.jsonl",
-        "results/expansion/governance/exposure_registry.json"
+        "results/counterfactual_router/full_d4751330395e_20260814T152231Z/capture_progress.jsonl"
       ],
       "source_state_sha256": "341c49de2e2c696e8d20704c11da65c7bc3a3da5b1c643b2ae62684458783b4a",
       "test_eligible": false
@@ -1291,7 +1443,6 @@
         "results/counterfactual_router/p1_timing_choice_smoke_7ac05de_20260818_r2/option_rollouts.jsonl",
         "results/counterfactual_router/p1_timing_choice_smoke_7ac05de_20260818_r2/p1_authoring/benchmark_manifest.json",
         "results/counterfactual_router/p1_timing_choice_smoke_7ac05de_20260818_r2/p1_authoring/benchmark_records.csv",
-        "results/expansion/governance/exposure_registry.json",
         "results/p3_1_direct_recovery_head_analysis_20260819.json",
         "results/p3_1_direct_recovery_head_oof_predictions_20260819.csv",
         "results/p3_recovery_window_records_20260819.csv",
@@ -1360,7 +1511,6 @@
       "evidence": [
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/capture_manifest.json",
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/capture_progress.jsonl",
-        "results/expansion/governance/exposure_registry.json",
         "results/iclr27/non_glass_option_ambiguity_screen_c0bb9015a0a3_20260829T170210Z/future_benchmark_exclusions.json",
         "results/iclr27/non_glass_option_ambiguity_screen_c0bb9015a0a3_20260829T170210Z/source_registry.json",
         "results/p3_2_direct_sequential_calibration_trajectories_20260819.jsonl"
@@ -1483,7 +1633,6 @@
         "EXPOSED_LEGACY_SOURCE_LINEAGE"
       ],
       "evidence": [
-        "results/expansion/governance/exposure_registry.json",
         "results/p3_2_frozen_dynamic_closeout_analysis_20260819.json",
         "results/p3_2_frozen_dynamic_closeout_capture_manifest_20260819.json"
       ],
@@ -1503,7 +1652,6 @@
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/capture_progress.jsonl",
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/decision_metadata.json",
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/option_rollouts.jsonl",
-        "results/expansion/governance/exposure_registry.json",
         "results/glass_recovery_pilot_b_scoped_20260812.json",
         "results/glass_recovery_v2/pilot_b_fresh_h20_20260812_r2/frontier_placements/placements.json",
         "results/glass_recovery_v2/pilot_c_scoped_certified_h20_20260812_r1/eval_pilot_c_dev360_treatment_seed_17.json",
@@ -1514,14 +1662,12 @@
     },
     {
       "artifact_roles": [
-        "EXPOSED_HISTORICAL_TEST",
-        "EXPOSED_LEGACY_SOURCE_LINEAGE"
+        "EXPOSED_HISTORICAL_TEST"
       ],
       "evidence": [
         "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/full/capture_manifest.json",
         "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/full/progress.jsonl",
-        "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/placements/placements.json",
-        "results/expansion/governance/exposure_registry.json"
+        "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/placements/placements.json"
       ],
       "source_state_sha256": "40b86e68d01b8d02dc829502ea050d6397e5bc49f3686cf66b3ee109108a549c",
       "test_eligible": false
@@ -1611,7 +1757,6 @@
         "EXPOSED_LEGACY_SOURCE_LINEAGE"
       ],
       "evidence": [
-        "results/expansion/governance/exposure_registry.json",
         "results/oracle_recovery/dataset_v1/metadata.json"
       ],
       "source_state_sha256": "4db02219abfaa92cd815af06cceb867cd103d060dc4db231cc1c9a4cd8c0aac7",
@@ -1689,12 +1834,10 @@
     },
     {
       "artifact_roles": [
-        "EXPOSED_HISTORICAL_TEST",
-        "EXPOSED_LEGACY_SOURCE_LINEAGE"
+        "EXPOSED_HISTORICAL_TEST"
       ],
       "evidence": [
-        "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/placements/placements.json",
-        "results/expansion/governance/exposure_registry.json"
+        "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/placements/placements.json"
       ],
       "source_state_sha256": "54af77381c9ae6dec348622e1657210d7de7b573a1600175dec33e6194485f6f",
       "test_eligible": false
@@ -1711,14 +1854,12 @@
     },
     {
       "artifact_roles": [
-        "EXPOSED_HISTORICAL_TEST",
-        "EXPOSED_LEGACY_SOURCE_LINEAGE"
+        "EXPOSED_HISTORICAL_TEST"
       ],
       "evidence": [
         "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/full/capture_manifest.json",
         "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/full/progress.jsonl",
-        "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/placements/placements.json",
-        "results/expansion/governance/exposure_registry.json"
+        "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/placements/placements.json"
       ],
       "source_state_sha256": "554a450cb341035cb4bde20c60a3ed0fd821730e7677eb6ba16d4a47fcf12b2f",
       "test_eligible": false
@@ -1817,7 +1958,6 @@
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/capture_progress.jsonl",
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/decision_metadata.json",
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/option_rollouts.jsonl",
-        "results/expansion/governance/exposure_registry.json",
         "results/glass_recovery_v2/pilot_b_fresh_h20_20260812_r2/frontier_placements/placements.json",
         "results/iclr27/non_glass_option_ambiguity_screen_c0bb9015a0a3_20260829T170210Z/future_benchmark_exclusions.json",
         "results/iclr27/non_glass_option_ambiguity_screen_c0bb9015a0a3_20260829T170210Z/source_registry.json",
@@ -1900,7 +2040,6 @@
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/capture_progress.jsonl",
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/decision_metadata.json",
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/option_rollouts.jsonl",
-        "results/expansion/governance/exposure_registry.json",
         "results/glass_recovery_v2/pilot_b_fresh_h20_20260812_r2/frontier_placements/placements.json",
         "results/p1_timing_choice_development_20260818/benchmark_manifest.json",
         "results/p1_timing_choice_development_20260818/benchmark_records.csv"
@@ -1942,7 +2081,6 @@
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/capture_progress.jsonl",
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/decision_metadata.json",
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/option_rollouts.jsonl",
-        "results/expansion/governance/exposure_registry.json",
         "results/glass_recovery_pilot_b_scoped_20260812.json",
         "results/glass_recovery_v2/pilot_b_fresh_h20_20260812_r2/frontier_placements/placements.json",
         "results/glass_recovery_v2/pilot_c_scoped_certified_h20_20260812_r1/eval_pilot_c_dev360_treatment_seed_17.json",
@@ -1968,13 +2106,11 @@
     },
     {
       "artifact_roles": [
-        "EXPOSED_HISTORICAL_TEST",
-        "EXPOSED_LEGACY_SOURCE_LINEAGE"
+        "EXPOSED_HISTORICAL_TEST"
       ],
       "evidence": [
         "results/counterfactual_router/fresh_random_9ed5ad656a08_20260817T0845Z/full/capture_manifest.json",
-        "results/counterfactual_router/fresh_random_9ed5ad656a08_20260817T0845Z/full/progress.jsonl",
-        "results/expansion/governance/exposure_registry.json"
+        "results/counterfactual_router/fresh_random_9ed5ad656a08_20260817T0845Z/full/progress.jsonl"
       ],
       "source_state_sha256": "636cee06ead93bda14b580aba3003bd78a4ae9b5947422c7e51c897e4601ce42",
       "test_eligible": false
@@ -1991,13 +2127,11 @@
     },
     {
       "artifact_roles": [
-        "EXPOSED_DEVELOPMENT",
-        "EXPOSED_LEGACY_SOURCE_LINEAGE"
+        "EXPOSED_DEVELOPMENT"
       ],
       "evidence": [
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/capture_manifest.json",
-        "results/counterfactual_router/full_d4751330395e_20260814T152231Z/capture_progress.jsonl",
-        "results/expansion/governance/exposure_registry.json"
+        "results/counterfactual_router/full_d4751330395e_20260814T152231Z/capture_progress.jsonl"
       ],
       "source_state_sha256": "64d921063eb0a02530efbea3434c347d28bd353cbb04464e5d91d499f62f61ef",
       "test_eligible": false
@@ -2015,7 +2149,6 @@
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/capture_progress.jsonl",
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/decision_metadata.json",
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/option_rollouts.jsonl",
-        "results/expansion/governance/exposure_registry.json",
         "results/glass_recovery_v2/pilot_b_fresh_h20_20260812_r2/frontier_placements/placements.json",
         "results/p1_timing_choice_development_20260818/benchmark_manifest.json",
         "results/p1_timing_choice_development_20260818/benchmark_records.csv"
@@ -2046,7 +2179,6 @@
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/capture_progress.jsonl",
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/decision_metadata.json",
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/option_rollouts.jsonl",
-        "results/expansion/governance/exposure_registry.json",
         "results/iclr27/non_glass_option_ambiguity_screen_c0bb9015a0a3_20260829T170210Z/future_benchmark_exclusions.json",
         "results/iclr27/non_glass_option_ambiguity_screen_c0bb9015a0a3_20260829T170210Z/source_registry.json",
         "results/p1_timing_choice_development_20260818/benchmark_manifest.json",
@@ -2110,7 +2242,6 @@
         "EXPOSED_LEGACY_SOURCE_LINEAGE"
       ],
       "evidence": [
-        "results/expansion/governance/exposure_registry.json",
         "results/p3_2_frozen_dynamic_closeout_analysis_20260819.json",
         "results/p3_2_frozen_dynamic_closeout_episodes_20260819.jsonl",
         "results/p3_2_frozen_dynamic_closeout_paired_20260819.csv",
@@ -2142,7 +2273,6 @@
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/capture_progress.jsonl",
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/decision_metadata.json",
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/option_rollouts.jsonl",
-        "results/expansion/governance/exposure_registry.json",
         "results/p1_timing_choice_development_20260818/benchmark_manifest.json",
         "results/p1_timing_choice_development_20260818/benchmark_records.csv",
         "results/p3_2_direct_sequential_calibration_trajectories_20260819.jsonl"
@@ -2172,12 +2302,10 @@
     },
     {
       "artifact_roles": [
-        "EXPOSED_HISTORICAL_TEST",
-        "EXPOSED_LEGACY_SOURCE_LINEAGE"
+        "EXPOSED_HISTORICAL_TEST"
       ],
       "evidence": [
-        "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/placements/placements.json",
-        "results/expansion/governance/exposure_registry.json"
+        "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/placements/placements.json"
       ],
       "source_state_sha256": "78bc8f46934c02b824140acad0bf55d46ea8bc3fa00eb531311223e946271951",
       "test_eligible": false
@@ -2235,7 +2363,6 @@
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/capture_progress.jsonl",
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/decision_metadata.json",
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/option_rollouts.jsonl",
-        "results/expansion/governance/exposure_registry.json",
         "results/iclr27/non_glass_option_ambiguity_screen_c0bb9015a0a3_20260829T170210Z/future_benchmark_exclusions.json",
         "results/iclr27/non_glass_option_ambiguity_screen_c0bb9015a0a3_20260829T170210Z/source_registry.json",
         "results/p1_timing_choice_development_20260818/benchmark_manifest.json",
@@ -2266,7 +2393,6 @@
         "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/smoke/option_rollouts.jsonl",
         "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/smoke/progress.jsonl",
         "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/smoke/prompt_rollouts.jsonl",
-        "results/expansion/governance/exposure_registry.json",
         "results/glass_recovery_acceptance_smoke_20260809.json",
         "results/glass_recovery_v2/pilot_a/core_salvage_audit.jsonl",
         "results/glass_recovery_v2/pilot_a_recovery_20260811/core_salvage_audit.jsonl"
@@ -2316,7 +2442,6 @@
         "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/full/progress.jsonl",
         "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/full/prompt_rollouts.jsonl",
         "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/placements/placements.json",
-        "results/expansion/governance/exposure_registry.json",
         "results/p2_trace_morphology_audit_20260819.json",
         "results/p2_trace_morphology_episode_stats_20260819.csv"
       ],
@@ -2385,7 +2510,6 @@
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/capture_progress.jsonl",
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/decision_metadata.json",
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/option_rollouts.jsonl",
-        "results/expansion/governance/exposure_registry.json",
         "results/p1_timing_choice_development_20260818/benchmark_manifest.json",
         "results/p1_timing_choice_development_20260818/benchmark_records.csv",
         "results/p3_2_direct_sequential_calibration_trajectories_20260819.jsonl"
@@ -2415,15 +2539,13 @@
     },
     {
       "artifact_roles": [
-        "EXPOSED_HISTORICAL_TEST",
-        "EXPOSED_LEGACY_SOURCE_LINEAGE"
+        "EXPOSED_HISTORICAL_TEST"
       ],
       "evidence": [
         "results/counterfactual_router/fresh_random_9ed5ad656a08_20260817T0845Z/full/fresh_decisions.json",
         "results/counterfactual_router/fresh_random_9ed5ad656a08_20260817T0845Z/full/option_rollouts.jsonl",
         "results/counterfactual_router/fresh_random_9ed5ad656a08_20260817T0845Z/full/progress.jsonl",
-        "results/counterfactual_router/fresh_random_9ed5ad656a08_20260817T0845Z/full/prompt_rollouts.jsonl",
-        "results/expansion/governance/exposure_registry.json"
+        "results/counterfactual_router/fresh_random_9ed5ad656a08_20260817T0845Z/full/prompt_rollouts.jsonl"
       ],
       "source_state_sha256": "9206d6da8f7501b11e488297c8a5687c8091b6159bfbb7a021ca59ac3108cb30",
       "test_eligible": false
@@ -2460,14 +2582,12 @@
     },
     {
       "artifact_roles": [
-        "EXPOSED_HISTORICAL_TEST",
-        "EXPOSED_LEGACY_SOURCE_LINEAGE"
+        "EXPOSED_HISTORICAL_TEST"
       ],
       "evidence": [
         "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/full/capture_manifest.json",
         "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/full/progress.jsonl",
-        "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/placements/placements.json",
-        "results/expansion/governance/exposure_registry.json"
+        "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/placements/placements.json"
       ],
       "source_state_sha256": "937a1708bc10681cfa21be5c84956ce9b6b17ad64c2dcc9c67d19106c5bebcf2",
       "test_eligible": false
@@ -2495,8 +2615,7 @@
         "results/counterfactual_router/p1_timing_choice_smoke_7ac05de_20260818_r1/capture_progress.jsonl",
         "results/counterfactual_router/p1_timing_choice_smoke_7ac05de_20260818_r1/decision_metadata.json",
         "results/counterfactual_router/p1_timing_choice_smoke_7ac05de_20260818_r1/option_rollouts.jsonl",
-        "results/counterfactual_router/p1_timing_choice_smoke_7ac05de_20260818_r1/p1_authoring/benchmark_manifest.json",
-        "results/expansion/governance/exposure_registry.json"
+        "results/counterfactual_router/p1_timing_choice_smoke_7ac05de_20260818_r1/p1_authoring/benchmark_manifest.json"
       ],
       "source_state_sha256": "94e40cbe9347ec0ea5e2c8952bea9d57a71ffff5795f258d237e28ffa9d9b97e",
       "test_eligible": false
@@ -2554,7 +2673,6 @@
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/capture_progress.jsonl",
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/decision_metadata.json",
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/option_rollouts.jsonl",
-        "results/expansion/governance/exposure_registry.json",
         "results/p1_timing_choice_development_20260818/benchmark_manifest.json",
         "results/p1_timing_choice_development_20260818/benchmark_records.csv",
         "results/p3_2_direct_sequential_calibration_trajectories_20260819.jsonl"
@@ -2567,7 +2685,6 @@
         "EXPOSED_LEGACY_SOURCE_LINEAGE"
       ],
       "evidence": [
-        "results/expansion/governance/exposure_registry.json",
         "results/p3_2_frozen_dynamic_closeout_analysis_20260819.json",
         "results/p3_2_frozen_dynamic_closeout_episodes_20260819.jsonl",
         "results/p3_2_frozen_dynamic_closeout_paired_20260819.csv",
@@ -2602,7 +2719,6 @@
         "EXPOSED_LEGACY_SOURCE_LINEAGE"
       ],
       "evidence": [
-        "results/expansion/governance/exposure_registry.json",
         "results/p3_2_frozen_dynamic_closeout_analysis_20260819.json",
         "results/p3_2_frozen_dynamic_closeout_capture_manifest_20260819.json"
       ],
@@ -2624,7 +2740,6 @@
         "EXPOSED_LEGACY_SOURCE_LINEAGE"
       ],
       "evidence": [
-        "results/expansion/governance/exposure_registry.json",
         "results/p3_2_frozen_dynamic_closeout_analysis_20260819.json",
         "results/p3_2_frozen_dynamic_closeout_capture_manifest_20260819.json"
       ],
@@ -2633,13 +2748,11 @@
     },
     {
       "artifact_roles": [
-        "EXPOSED_DEVELOPMENT",
-        "EXPOSED_LEGACY_SOURCE_LINEAGE"
+        "EXPOSED_DEVELOPMENT"
       ],
       "evidence": [
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/capture_manifest.json",
-        "results/counterfactual_router/full_d4751330395e_20260814T152231Z/capture_progress.jsonl",
-        "results/expansion/governance/exposure_registry.json"
+        "results/counterfactual_router/full_d4751330395e_20260814T152231Z/capture_progress.jsonl"
       ],
       "source_state_sha256": "9e0d876cfbdf0a1f3140c28497bbb67cfa132d0e151f35741631db9136474cb2",
       "test_eligible": false
@@ -2647,12 +2760,10 @@
     {
       "artifact_roles": [
         "ENGINEERING_ONLY_INVALID_PREFLIGHT",
-        "EXPOSED_HISTORICAL_TEST",
-        "EXPOSED_LEGACY_SOURCE_LINEAGE"
+        "EXPOSED_HISTORICAL_TEST"
       ],
       "evidence": [
         "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/placements/placements.json",
-        "results/expansion/governance/exposure_registry.json",
         "results/iclr27/non_glass_option_ambiguity_screen_c0bb9015a0a3_20260829T170210Z/future_benchmark_exclusions.json",
         "results/iclr27/non_glass_option_ambiguity_screen_c0bb9015a0a3_20260829T170210Z/source_registry.json"
       ],
@@ -2692,7 +2803,6 @@
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/capture_progress.jsonl",
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/decision_metadata.json",
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/option_rollouts.jsonl",
-        "results/expansion/governance/exposure_registry.json",
         "results/p1_timing_choice_development_20260818/benchmark_manifest.json"
       ],
       "source_state_sha256": "a3e1c487338ecfe4ce59e1e8f0be7a20d0442476ad923022ec430bdb5470ee56",
@@ -2713,7 +2823,6 @@
         "EXPOSED_LEGACY_SOURCE_LINEAGE"
       ],
       "evidence": [
-        "results/expansion/governance/exposure_registry.json",
         "results/p3_2_frozen_dynamic_closeout_analysis_20260819.json",
         "results/p3_2_frozen_dynamic_closeout_episodes_20260819.jsonl",
         "results/p3_2_frozen_dynamic_closeout_paired_20260819.csv",
@@ -2727,7 +2836,6 @@
         "EXPOSED_LEGACY_SOURCE_LINEAGE"
       ],
       "evidence": [
-        "results/expansion/governance/exposure_registry.json",
         "results/p3_2_frozen_dynamic_closeout_analysis_20260819.json",
         "results/p3_2_frozen_dynamic_closeout_capture_manifest_20260819.json"
       ],
@@ -2787,7 +2895,6 @@
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/capture_progress.jsonl",
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/decision_metadata.json",
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/option_rollouts.jsonl",
-        "results/expansion/governance/exposure_registry.json",
         "results/p1_timing_choice_development_20260818/benchmark_manifest.json",
         "results/p1_timing_choice_development_20260818/benchmark_records.csv",
         "results/p3_2_direct_sequential_calibration_trajectories_20260819.jsonl"
@@ -2836,7 +2943,6 @@
         "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/full/progress.jsonl",
         "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/full/prompt_rollouts.jsonl",
         "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/placements/placements.json",
-        "results/expansion/governance/exposure_registry.json",
         "results/p2_trace_morphology_audit_20260819.json",
         "results/p2_trace_morphology_episode_stats_20260819.csv",
         "results/p3_1_direct_recovery_head_analysis_20260819.json",
@@ -2910,14 +3016,12 @@
     },
     {
       "artifact_roles": [
-        "EXPOSED_HISTORICAL_TEST",
-        "EXPOSED_LEGACY_SOURCE_LINEAGE"
+        "EXPOSED_HISTORICAL_TEST"
       ],
       "evidence": [
         "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/full/capture_manifest.json",
         "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/full/progress.jsonl",
-        "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/placements/placements.json",
-        "results/expansion/governance/exposure_registry.json"
+        "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/placements/placements.json"
       ],
       "source_state_sha256": "b539cac9fc4adfa51bf30dc81d4a1643716872f981eb36709cd2043f5c018c75",
       "test_eligible": false
@@ -2974,7 +3078,6 @@
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/capture_progress.jsonl",
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/decision_metadata.json",
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/option_rollouts.jsonl",
-        "results/expansion/governance/exposure_registry.json",
         "results/glass_recovery_v2/pilot_b_fresh_h20_20260812_r2/frontier_placements/placements.json",
         "results/p1_timing_choice_development_20260818/benchmark_manifest.json",
         "results/p1_timing_choice_development_20260818/benchmark_records.csv"
@@ -2994,14 +3097,12 @@
     },
     {
       "artifact_roles": [
-        "EXPOSED_HISTORICAL_TEST",
-        "EXPOSED_LEGACY_SOURCE_LINEAGE"
+        "EXPOSED_HISTORICAL_TEST"
       ],
       "evidence": [
         "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/full/capture_manifest.json",
         "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/full/progress.jsonl",
-        "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/placements/placements.json",
-        "results/expansion/governance/exposure_registry.json"
+        "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/placements/placements.json"
       ],
       "source_state_sha256": "b99bb70b954ce426aee8daf23225036b5de1ca3fc5522fc68febed093d2d7f5d",
       "test_eligible": false
@@ -3011,7 +3112,6 @@
         "EXPOSED_LEGACY_SOURCE_LINEAGE"
       ],
       "evidence": [
-        "results/expansion/governance/exposure_registry.json",
         "results/p3_2_frozen_dynamic_closeout_analysis_20260819.json",
         "results/p3_2_frozen_dynamic_closeout_capture_manifest_20260819.json"
       ],
@@ -3023,7 +3123,6 @@
         "EXPOSED_LEGACY_SOURCE_LINEAGE"
       ],
       "evidence": [
-        "results/expansion/governance/exposure_registry.json",
         "results/p3_2_frozen_dynamic_closeout_analysis_20260819.json",
         "results/p3_2_frozen_dynamic_closeout_capture_manifest_20260819.json"
       ],
@@ -3088,7 +3187,6 @@
       "evidence": [
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/capture_manifest.json",
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/capture_progress.jsonl",
-        "results/expansion/governance/exposure_registry.json",
         "results/glass_recovery_v2/pilot_b_fresh_h20_20260812_r2/frontier_placements/placements.json"
       ],
       "source_state_sha256": "c42d5373619bdca4a0ca31a64ed81ae3940d3f105b13eb475cd0c54fe053bc6e",
@@ -3124,7 +3222,6 @@
         "results/counterfactual_router/fresh_random_9ed5ad656a08_20260817T0845Z/full/option_rollouts.jsonl",
         "results/counterfactual_router/fresh_random_9ed5ad656a08_20260817T0845Z/full/progress.jsonl",
         "results/counterfactual_router/fresh_random_9ed5ad656a08_20260817T0845Z/full/prompt_rollouts.jsonl",
-        "results/expansion/governance/exposure_registry.json",
         "results/p3_1_direct_recovery_head_analysis_20260819.json",
         "results/p3_1_direct_recovery_head_oof_predictions_20260819.csv",
         "results/p3_recovery_window_records_20260819.csv",
@@ -3155,7 +3252,6 @@
         "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/full/progress.jsonl",
         "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/full/prompt_rollouts.jsonl",
         "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/placements/placements.json",
-        "results/expansion/governance/exposure_registry.json",
         "results/p2_trace_morphology_audit_20260819.json",
         "results/p2_trace_morphology_episode_stats_20260819.csv",
         "results/p3_1_direct_recovery_head_analysis_20260819.json",
@@ -3202,7 +3298,6 @@
         "EXPOSED_LEGACY_SOURCE_LINEAGE"
       ],
       "evidence": [
-        "results/expansion/governance/exposure_registry.json",
         "results/p3_2_frozen_dynamic_closeout_analysis_20260819.json",
         "results/p3_2_frozen_dynamic_closeout_capture_manifest_20260819.json"
       ],
@@ -3224,7 +3319,6 @@
         "EXPOSED_LEGACY_SOURCE_LINEAGE"
       ],
       "evidence": [
-        "results/expansion/governance/exposure_registry.json",
         "results/p3_2_frozen_dynamic_closeout_analysis_20260819.json",
         "results/p3_2_frozen_dynamic_closeout_capture_manifest_20260819.json"
       ],
@@ -3246,7 +3340,6 @@
         "EXPOSED_LEGACY_SOURCE_LINEAGE"
       ],
       "evidence": [
-        "results/expansion/governance/exposure_registry.json",
         "results/p3_2_frozen_dynamic_closeout_analysis_20260819.json",
         "results/p3_2_frozen_dynamic_closeout_capture_manifest_20260819.json"
       ],
@@ -3265,7 +3358,6 @@
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/capture_progress.jsonl",
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/decision_metadata.json",
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/option_rollouts.jsonl",
-        "results/expansion/governance/exposure_registry.json",
         "results/p1_timing_choice_development_20260818/benchmark_manifest.json",
         "results/p1_timing_choice_development_20260818/benchmark_records.csv",
         "results/p3_2_direct_sequential_calibration_trajectories_20260819.jsonl"
@@ -3305,15 +3397,13 @@
     },
     {
       "artifact_roles": [
-        "EXPOSED_HISTORICAL_TEST",
-        "EXPOSED_LEGACY_SOURCE_LINEAGE"
+        "EXPOSED_HISTORICAL_TEST"
       ],
       "evidence": [
         "results/counterfactual_router/fresh_random_9ed5ad656a08_20260817T0845Z/full/fresh_decisions.json",
         "results/counterfactual_router/fresh_random_9ed5ad656a08_20260817T0845Z/full/option_rollouts.jsonl",
         "results/counterfactual_router/fresh_random_9ed5ad656a08_20260817T0845Z/full/progress.jsonl",
-        "results/counterfactual_router/fresh_random_9ed5ad656a08_20260817T0845Z/full/prompt_rollouts.jsonl",
-        "results/expansion/governance/exposure_registry.json"
+        "results/counterfactual_router/fresh_random_9ed5ad656a08_20260817T0845Z/full/prompt_rollouts.jsonl"
       ],
       "source_state_sha256": "cafc529a972e42cb00d22d9baf55c102e5c7b6a8ce4eed6355e6fcf44f65593a",
       "test_eligible": false
@@ -3336,7 +3426,6 @@
       "evidence": [
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/capture_manifest.json",
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/capture_progress.jsonl",
-        "results/expansion/governance/exposure_registry.json",
         "results/glass_recovery_acceptance_smoke_20260809.json",
         "results/glass_recovery_v2/pilot_a/core_salvage_audit.jsonl",
         "results/glass_recovery_v2/pilot_a_recovery_20260811/core_salvage_audit.jsonl",
@@ -3387,14 +3476,12 @@
     },
     {
       "artifact_roles": [
-        "EXPOSED_HISTORICAL_TEST",
-        "EXPOSED_LEGACY_SOURCE_LINEAGE"
+        "EXPOSED_HISTORICAL_TEST"
       ],
       "evidence": [
         "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/full/capture_manifest.json",
         "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/full/progress.jsonl",
-        "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/placements/placements.json",
-        "results/expansion/governance/exposure_registry.json"
+        "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/placements/placements.json"
       ],
       "source_state_sha256": "d1bcdf9d8e813e5dfb90e241e89a58ca1c41226ba9928c221154c090f70175e0",
       "test_eligible": false
@@ -3432,7 +3519,6 @@
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/capture_progress.jsonl",
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/decision_metadata.json",
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/option_rollouts.jsonl",
-        "results/expansion/governance/exposure_registry.json",
         "results/glass_recovery_v2/pilot_b_fresh_h20_20260812_r2/frontier_placements/placements.json",
         "results/p1_timing_choice_development_20260818/benchmark_manifest.json"
       ],
@@ -3481,7 +3567,6 @@
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/capture_progress.jsonl",
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/decision_metadata.json",
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/option_rollouts.jsonl",
-        "results/expansion/governance/exposure_registry.json",
         "results/p1_timing_choice_development_20260818/benchmark_manifest.json",
         "results/p1_timing_choice_development_20260818/benchmark_records.csv",
         "results/p3_2_direct_sequential_calibration_trajectories_20260819.jsonl"
@@ -3494,7 +3579,6 @@
         "EXPOSED_LEGACY_SOURCE_LINEAGE"
       ],
       "evidence": [
-        "results/expansion/governance/exposure_registry.json",
         "results/p3_1_direct_recovery_head_analysis_20260819.json",
         "results/p3_1_direct_recovery_head_oof_predictions_20260819.csv",
         "results/p3_recovery_window_records_20260819.csv",
@@ -3546,13 +3630,11 @@
     },
     {
       "artifact_roles": [
-        "EXPOSED_HISTORICAL_TEST",
-        "EXPOSED_LEGACY_SOURCE_LINEAGE"
+        "EXPOSED_HISTORICAL_TEST"
       ],
       "evidence": [
         "results/counterfactual_router/fresh_random_9ed5ad656a08_20260817T0845Z/full/capture_manifest.json",
-        "results/counterfactual_router/fresh_random_9ed5ad656a08_20260817T0845Z/full/progress.jsonl",
-        "results/expansion/governance/exposure_registry.json"
+        "results/counterfactual_router/fresh_random_9ed5ad656a08_20260817T0845Z/full/progress.jsonl"
       ],
       "source_state_sha256": "e28ef0c37d2a1f06e8fc7ee8612f1873cfe1f7f70791a6711a78a7c05072543e",
       "test_eligible": false
@@ -3612,7 +3694,6 @@
         "results/counterfactual_router/p1_timing_choice_smoke_7ac05de_20260818_r2/option_rollouts.jsonl",
         "results/counterfactual_router/p1_timing_choice_smoke_7ac05de_20260818_r2/p1_authoring/benchmark_manifest.json",
         "results/counterfactual_router/p1_timing_choice_smoke_7ac05de_20260818_r2/p1_authoring/benchmark_records.csv",
-        "results/expansion/governance/exposure_registry.json",
         "results/p3_1_direct_recovery_head_analysis_20260819.json",
         "results/p3_1_direct_recovery_head_oof_predictions_20260819.csv",
         "results/p3_recovery_window_records_20260819.csv",
@@ -3693,7 +3774,6 @@
         "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/full/progress.jsonl",
         "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/full/prompt_rollouts.jsonl",
         "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/placements/placements.json",
-        "results/expansion/governance/exposure_registry.json",
         "results/p2_trace_morphology_audit_20260819.json",
         "results/p2_trace_morphology_episode_stats_20260819.csv",
         "results/p3_1_direct_recovery_head_analysis_20260819.json",
@@ -3746,7 +3826,6 @@
         "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/full/progress.jsonl",
         "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/full/prompt_rollouts.jsonl",
         "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/placements/placements.json",
-        "results/expansion/governance/exposure_registry.json",
         "results/p2_trace_morphology_audit_20260819.json",
         "results/p2_trace_morphology_episode_stats_20260819.csv",
         "results/p3_1_direct_recovery_head_analysis_20260819.json",
@@ -3781,7 +3860,6 @@
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/capture_progress.jsonl",
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/decision_metadata.json",
         "results/counterfactual_router/full_d4751330395e_20260814T152231Z/option_rollouts.jsonl",
-        "results/expansion/governance/exposure_registry.json",
         "results/p1_timing_choice_development_20260818/benchmark_manifest.json",
         "results/p1_timing_choice_development_20260818/benchmark_records.csv"
       ],
@@ -3803,7 +3881,6 @@
         "EXPOSED_LEGACY_SOURCE_LINEAGE"
       ],
       "evidence": [
-        "results/expansion/governance/exposure_registry.json",
         "results/p3_2_frozen_dynamic_closeout_analysis_20260819.json",
         "results/p3_2_frozen_dynamic_closeout_episodes_20260819.jsonl",
         "results/p3_2_frozen_dynamic_closeout_paired_20260819.csv",
@@ -3814,15 +3891,13 @@
     },
     {
       "artifact_roles": [
-        "EXPOSED_HISTORICAL_TEST",
-        "EXPOSED_LEGACY_SOURCE_LINEAGE"
+        "EXPOSED_HISTORICAL_TEST"
       ],
       "evidence": [
         "results/counterfactual_router/fresh_random_9ed5ad656a08_20260817T0845Z/full/fresh_decisions.json",
         "results/counterfactual_router/fresh_random_9ed5ad656a08_20260817T0845Z/full/option_rollouts.jsonl",
         "results/counterfactual_router/fresh_random_9ed5ad656a08_20260817T0845Z/full/progress.jsonl",
-        "results/counterfactual_router/fresh_random_9ed5ad656a08_20260817T0845Z/full/prompt_rollouts.jsonl",
-        "results/expansion/governance/exposure_registry.json"
+        "results/counterfactual_router/fresh_random_9ed5ad656a08_20260817T0845Z/full/prompt_rollouts.jsonl"
       ],
       "source_state_sha256": "facbd345218b5128aaeefce89c5d5ff6fa5a6e992575fbbbaf1a0c2214297caa",
       "test_eligible": false
@@ -3832,7 +3907,6 @@
         "EXPOSED_LEGACY_SOURCE_LINEAGE"
       ],
       "evidence": [
-        "results/expansion/governance/exposure_registry.json",
         "results/p3_2_frozen_dynamic_closeout_analysis_20260819.json",
         "results/p3_2_frozen_dynamic_closeout_episodes_20260819.jsonl",
         "results/p3_2_frozen_dynamic_closeout_paired_20260819.csv",
@@ -3854,12 +3928,10 @@
     {
       "artifact_roles": [
         "ENGINEERING_ONLY_INVALID_PREFLIGHT",
-        "EXPOSED_HISTORICAL_TEST",
-        "EXPOSED_LEGACY_SOURCE_LINEAGE"
+        "EXPOSED_HISTORICAL_TEST"
       ],
       "evidence": [
         "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/placements/placements.json",
-        "results/expansion/governance/exposure_registry.json",
         "results/iclr27/non_glass_option_ambiguity_screen_c0bb9015a0a3_20260829T170210Z/future_benchmark_exclusions.json",
         "results/iclr27/non_glass_option_ambiguity_screen_c0bb9015a0a3_20260829T170210Z/source_registry.json"
       ],

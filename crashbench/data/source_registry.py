@@ -10,6 +10,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
+import fcntl
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
@@ -98,6 +100,23 @@ class ExposureRegistry:
             if row.get("scene_fingerprint") not in (None, "")
         )
         self.pool_blacklists = tuple(payload.get("pool_blacklists", []))
+        identifiers = payload.get("identifiers", [])
+        self.physical_source_ids = self.physical_source_ids | frozenset(
+            str(row["value"]) for row in identifiers if row.get("identifier_type") == "physical_source_id"
+        )
+        self.reset_seeds = self.reset_seeds | frozenset(
+            str(row["value"])
+            for row in identifiers
+            if row.get("identifier_type") in {"reset_seed", "generator_seed"}
+        )
+        self.scene_fingerprints = self.scene_fingerprints | frozenset(
+            str(row["value"]) for row in identifiers if row.get("identifier_type") == "scene_fingerprint"
+        )
+        self.manifest_sha256s = frozenset(
+            str(row["value"]).lower()
+            for row in identifiers
+            if row.get("identifier_type") == "source_manifest_sha256"
+        )
 
     @classmethod
     def load(cls, path: str | Path) -> "ExposureRegistry":
@@ -116,6 +135,8 @@ class ExposureRegistry:
             reasons.append(f"scene_fingerprint:{identity.scene_fingerprint}")
         manifest = _canonical_sha(identity.source_manifest_sha256)
         if manifest:
+            if manifest in self.manifest_sha256s:
+                reasons.append(f"source_manifest_sha256:{manifest}")
             for pool in self.pool_blacklists:
                 if _canonical_sha(pool.get("manifest_sha256")) != manifest:
                     continue
@@ -143,3 +164,61 @@ class ExposureRegistry:
     ) -> None:
         for candidate in candidates:
             self.assert_role_allowed(candidate, role)
+
+
+EXPOSURE_ATTEMPT_KEYS = frozenset(
+    {
+        "source_state_sha256",
+        "physical_source_id",
+        "reset_seed",
+        "generator_seed",
+        "source_manifest_sha256",
+        "candidate_index",
+        "scene_fingerprint",
+    }
+)
+
+
+def append_exposure_attempt(path: str | Path, record: Mapping[str, Any]) -> bool:
+    """Append one pre-outcome source attempt, idempotently and under a file lock.
+
+    Returns ``True`` for a new row and ``False`` when the exact attempt already
+    exists. Reusing an attempt ID with different bytes is a hard error.
+    """
+
+    required = {"attempt_id", "artifact_role", "protocol_sha256"}
+    missing = required - set(record)
+    if missing:
+        raise ValueError(f"exposure attempt lacks required fields: {sorted(missing)}")
+    if record.get("test_eligible", False) is not False:
+        raise ValueError("exposure attempts can never be test eligible")
+    if not any(record.get(key) not in (None, "") for key in EXPOSURE_ATTEMPT_KEYS):
+        raise ValueError("exposure attempt has no lineage identifier")
+    payload = {
+        "schema_version": 1,
+        "kind": "crashbench_expansion_exposure_attempt",
+        **dict(record),
+        "test_eligible": False,
+    }
+    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"))
+    ledger = Path(path)
+    ledger.parent.mkdir(parents=True, exist_ok=True)
+    descriptor = os.open(ledger, os.O_RDWR | os.O_CREAT | os.O_APPEND, 0o644)
+    try:
+        with os.fdopen(descriptor, "r+", closefd=False) as handle:
+            fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
+            handle.seek(0)
+            for line in handle:
+                if not line.strip():
+                    continue
+                existing = json.loads(line)
+                if existing.get("attempt_id") != payload["attempt_id"]:
+                    continue
+                if json.dumps(existing, sort_keys=True, separators=(",", ":")) == encoded:
+                    return False
+                raise ValueError(f"conflicting exposure attempt_id: {payload['attempt_id']}")
+            os.write(handle.fileno(), (encoded + "\n").encode())
+            os.fsync(handle.fileno())
+            return True
+    finally:
+        os.close(descriptor)

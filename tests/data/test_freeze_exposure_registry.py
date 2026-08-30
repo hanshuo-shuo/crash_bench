@@ -40,3 +40,17 @@ def test_parse_failure_is_fail_closed(tmp_path, monkeypatch):
     )
     assert payload["gate"]["status"] == "NO_GO"
     assert payload["gate"]["unresolved_unblacklisted_count"] == 1
+
+
+def test_registry_excludes_its_own_generated_output(tmp_path, monkeypatch):
+    output = tmp_path / "results/expansion/governance/exposure_registry.json"
+    output.parent.mkdir(parents=True)
+    output.write_text(json.dumps({"source_state_sha256": "d" * 64}))
+    monkeypatch.setattr(MODULE, "git_tracked_files", lambda _: set())
+    payload = MODULE.build_registry(
+        tmp_path,
+        {"scan_roots": ["results"], "artifact_roots": [], "pool_blacklists": []},
+        include_local=True,
+    )
+    assert payload["sources"] == []
+    assert payload["inputs"] == []

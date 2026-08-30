@@ -3,7 +3,7 @@
   "$id": "https://crashbench.local/schemas/source_registry.schema.json",
   "title": "CrashBench Expansion Exposure Registry",
   "type": "object",
-  "required": ["schema_version", "kind", "registry_sha256", "sources", "inputs", "pool_blacklists", "gate"],
+  "required": ["schema_version", "kind", "registry_sha256", "sources", "identifiers", "inputs", "pool_blacklists", "gate"],
   "properties": {
     "schema_version": {"const": 1},
     "kind": {"const": "crashbench_expansion_exposure_registry"},
@@ -21,6 +21,13 @@
       }
     },
     "inputs": {"type": "array"},
+    "identifiers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["identifier_type", "value", "artifact_roles", "evidence", "test_eligible"]
+      }
+    },
     "pool_blacklists": {"type": "array"},
     "gate": {
       "type": "object",

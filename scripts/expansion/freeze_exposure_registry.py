@@ -30,6 +30,16 @@ LINEAGE_HINTS = SOURCE_KEYS | {
     "physical_source_id",
 }
 SUPPORTED_SUFFIXES = {".json", ".jsonl", ".csv", ".yaml", ".yml"}
+SELF_EXCLUDED_PATHS = {"results/expansion/governance/exposure_registry.json"}
+IDENTIFIER_KEYS = {
+    "physical_source_id": "physical_source_id",
+    "scene_fingerprint": "scene_fingerprint",
+    "reset_seed": "reset_seed",
+    "generator_seed": "generator_seed",
+    "source_manifest_sha256": "source_manifest_sha256",
+    "source_trace_manifest_sha256": "source_manifest_sha256",
+    "nominal_source_trace_manifest_sha256": "source_manifest_sha256",
+}
 
 
 def sha256_file(path: Path) -> str:
@@ -127,6 +137,8 @@ def candidate_files(repo_root: Path, scan_roots: list[str], include_local: bool)
         for path in root.rglob("*"):
             resolved = path.resolve()
             if path.is_file() and path.suffix.lower() in SUPPORTED_SUFFIXES:
+                if path.relative_to(repo_root).as_posix() in SELF_EXCLUDED_PATHS:
+                    continue
                 if include_local or resolved in tracked:
                     paths.add(resolved)
     return sorted(paths)
@@ -137,6 +149,8 @@ def build_registry(repo_root: Path, ledger: dict[str, Any], include_local: bool)
     source_evidence: dict[str, set[str]] = defaultdict(set)
     source_roles: dict[str, set[str]] = defaultdict(set)
     source_metadata: dict[str, dict[str, set[str]]] = defaultdict(lambda: defaultdict(set))
+    identifier_evidence: dict[tuple[str, str], set[str]] = defaultdict(set)
+    identifier_roles: dict[tuple[str, str], set[str]] = defaultdict(set)
     inputs: list[dict[str, Any]] = []
     unresolved: list[dict[str, str]] = []
 
@@ -158,6 +172,15 @@ def build_registry(repo_root: Path, ledger: dict[str, Any], include_local: bool)
         current_role = artifact_role(relative, artifact_roots)
         for record in records:
             flattened = list(walk_values(record))
+            for key, value in flattened:
+                identifier_type = IDENTIFIER_KEYS.get(key)
+                if identifier_type is None or value in (None, "") or isinstance(value, (dict, list)):
+                    continue
+                normalized = str(value).lower() if identifier_type == "source_manifest_sha256" else str(value)
+                if identifier_type == "source_manifest_sha256" and canonical_sha(normalized) is None:
+                    continue
+                identifier_evidence[(identifier_type, normalized)].add(relative)
+                identifier_roles[(identifier_type, normalized)].add(current_role)
             row_sources = {
                 source_hash
                 for key, value in flattened
@@ -203,17 +226,29 @@ def build_registry(repo_root: Path, ledger: dict[str, Any], include_local: bool)
         sources.append(row)
 
     gate_pass = not unresolved and not missing_roots
+    identifiers = [
+        {
+            "identifier_type": identifier_type,
+            "value": value,
+            "artifact_roles": sorted(identifier_roles[(identifier_type, value)]),
+            "evidence": sorted(evidence),
+            "test_eligible": False,
+        }
+        for (identifier_type, value), evidence in sorted(identifier_evidence.items())
+    ]
     payload: dict[str, Any] = {
         "schema_version": 1,
         "kind": "crashbench_expansion_exposure_registry",
         "command": "python scripts/expansion/freeze_exposure_registry.py --repo-root . --include-tracked-and-local-results --remote-lineage-ledger configs/expansion/exposed_sources_v1.yaml --output results/expansion/governance/exposure_registry.json --fail-on-unresolved-unblacklisted",
         "sources": sources,
+        "identifiers": identifiers,
         "inputs": inputs,
         "pool_blacklists": ledger.get("pool_blacklists", []),
         "unresolved": unresolved,
         "missing_required_roots": missing_roots,
         "counts": {
             "source_union_count": len(sources),
+            "identifier_union_count": len(identifiers),
             "input_count": len(inputs),
             "pool_blacklist_count": len(ledger.get("pool_blacklists", [])),
         },

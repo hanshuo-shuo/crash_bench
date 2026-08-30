@@ -30,9 +30,9 @@ Known D0 limitations:
   by Quest job `5203988`. Cross-policy use still requires live exactness.
 - Physical normalization budgets remain intentionally unset until D1 measures
   throughput and control ranges; they must be filled before D4.
-- Two remote manifest hashes are available only in abbreviated prose form, so
-  their full seed/index ranges are excluded rather than represented as verified
-  hashes.
+- The E16-random and P3.2 full manifest hashes were recovered from local machine
+  artifacts. Their complete source mappings remain unavailable, so their full
+  declared seed/index ranges stay conservatively excluded.
 - Unstable placement v2 retains its separate pre-run authorization requirement.
 
 Next action: implement D1 exact-state conformance primitives and synthetic
