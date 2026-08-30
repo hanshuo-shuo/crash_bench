@@ -1,0 +1,148 @@
+{
+  "backend": "openvla",
+  "bundle": {
+    "bundle_id": "5eb3ff3f23f1eb0fcd290ee061ecac9ca9ac74dc992495938b9febba77ae974e",
+    "capture_seconds": 0.019393126480281353,
+    "component_hashes": {
+      "model_xml_sha256": "3fc5f35e4c486f25b9c9f90347dc7d2fde16b7bd840382952b9facc357d6fab9",
+      "policy_continuation_sha256": "87d08e0f3542178fa73279e82a93dfc9980e5a24ee88c51679be449e54662fe7",
+      "rng_sha256": "89b9cbb106be81ce60a0dcab1882225560257dd3c8ddd9d25ff08c33935d10af",
+      "runtime_state_sha256": "2d7a2138c2acde502829f966839d9f9a261063e943394523fc692cabe092ba55",
+      "simulator_state_sha256": "7d2467c169ead1e757b0e376ab1b7df23c32c1e17ce1151c8944c997fb23192f"
+    },
+    "rng_sources": {
+      "numpy_generators": [],
+      "numpy_random_states": [],
+      "policy_continuation_sha256": "87d08e0f3542178fa73279e82a93dfc9980e5a24ee88c51679be449e54662fe7",
+      "torch_cpu": true,
+      "torch_cuda_devices": 1
+    }
+  },
+  "claim_boundary": "Engineering conformance only; no scientific option outcome was opened.",
+  "configuration": {
+    "exposure_registry": "results/expansion/governance/exposure_registry.json",
+    "init_index": -1,
+    "output": "results/expansion/d1_exactness/openvla_task2_47f043c30659_3bbe156c7e78_20260830T081112Z/conformance.json",
+    "policy": "openvla",
+    "repeats": 3,
+    "seed": 0,
+    "settle_steps": 10,
+    "suite": "libero_spatial",
+    "task_id": 2,
+    "trace_policy_steps": 3,
+    "warmup_policy_steps": 1
+  },
+  "execution": {
+    "git_commit": "3bbe156c7e784665af6668efdaad32e54fecf411",
+    "slurm_array_task_id": null,
+    "slurm_job_id": "5204570"
+  },
+  "gate": {
+    "classification": "UNCLASSIFIED_FAIL_CLOSED",
+    "criteria": {
+      "branch_start_bundle_identical": true,
+      "branch_start_components_identical": true,
+      "next_action_trace_identical": false,
+      "repeat_count_exact": true,
+      "state_trace_identical": false,
+      "terminal_signature_identical": false
+    },
+    "status": "FAIL"
+  },
+  "kind": "crashbench_expansion_d1_exact_branching_conformance",
+  "repeats": [
+    {
+      "action_sha256": [
+        "a393b532a5a5f6f658f03443acb8f33f33b99f73d1a71af3494eb5c2262bf743",
+        "72c8ef2897c726cb82e80d6b91f6bc3258834fd52114cc2f1099bea4991b9f49",
+        "0312b09eb4b6743b731bb301483b147fcb8e876436562536b83c17cd849992eb"
+      ],
+      "branch_start_bundle_id": "5eb3ff3f23f1eb0fcd290ee061ecac9ca9ac74dc992495938b9febba77ae974e",
+      "branch_start_component_hashes": {
+        "model_xml_sha256": "3fc5f35e4c486f25b9c9f90347dc7d2fde16b7bd840382952b9facc357d6fab9",
+        "policy_continuation_sha256": "87d08e0f3542178fa73279e82a93dfc9980e5a24ee88c51679be449e54662fe7",
+        "rng_sha256": "89b9cbb106be81ce60a0dcab1882225560257dd3c8ddd9d25ff08c33935d10af",
+        "runtime_state_sha256": "2d7a2138c2acde502829f966839d9f9a261063e943394523fc692cabe092ba55",
+        "simulator_state_sha256": "7d2467c169ead1e757b0e376ab1b7df23c32c1e17ce1151c8944c997fb23192f"
+      },
+      "done": [
+        false,
+        false,
+        false
+      ],
+      "repeat_index": 0,
+      "restore_and_trace_seconds": 1.978142916224897,
+      "state_sha256": [
+        "c7189663cb88f8c7e9cb6b83c742324b525c53fd65823dc6e30a5c71eee62a13",
+        "58d2ac38c57442004ffefa357b66e0f195e4be59ffa386e694e8a4e32f0648fb",
+        "5b5ceca61af0783f096544df17e41d2a7221b539f8a81d7c3e024bebfc750918"
+      ],
+      "terminal_signature": "aafd588e13a2e1167fc42a7e8a8b1dc36f907599f91a5351f6cb713be86c6b8e"
+    },
+    {
+      "action_sha256": [
+        "a393b532a5a5f6f658f03443acb8f33f33b99f73d1a71af3494eb5c2262bf743",
+        "72c8ef2897c726cb82e80d6b91f6bc3258834fd52114cc2f1099bea4991b9f49",
+        "0312b09eb4b6743b731bb301483b147fcb8e876436562536b83c17cd849992eb"
+      ],
+      "branch_start_bundle_id": "5eb3ff3f23f1eb0fcd290ee061ecac9ca9ac74dc992495938b9febba77ae974e",
+      "branch_start_component_hashes": {
+        "model_xml_sha256": "3fc5f35e4c486f25b9c9f90347dc7d2fde16b7bd840382952b9facc357d6fab9",
+        "policy_continuation_sha256": "87d08e0f3542178fa73279e82a93dfc9980e5a24ee88c51679be449e54662fe7",
+        "rng_sha256": "89b9cbb106be81ce60a0dcab1882225560257dd3c8ddd9d25ff08c33935d10af",
+        "runtime_state_sha256": "2d7a2138c2acde502829f966839d9f9a261063e943394523fc692cabe092ba55",
+        "simulator_state_sha256": "7d2467c169ead1e757b0e376ab1b7df23c32c1e17ce1151c8944c997fb23192f"
+      },
+      "done": [
+        false,
+        false,
+        false
+      ],
+      "repeat_index": 1,
+      "restore_and_trace_seconds": 1.9442763337865472,
+      "state_sha256": [
+        "c7189663cb88f8c7e9cb6b83c742324b525c53fd65823dc6e30a5c71eee62a13",
+        "58d2ac38c57442004ffefa357b66e0f195e4be59ffa386e694e8a4e32f0648fb",
+        "5b5ceca61af0783f096544df17e41d2a7221b539f8a81d7c3e024bebfc750918"
+      ],
+      "terminal_signature": "aafd588e13a2e1167fc42a7e8a8b1dc36f907599f91a5351f6cb713be86c6b8e"
+    },
+    {
+      "action_sha256": [
+        "a393b532a5a5f6f658f03443acb8f33f33b99f73d1a71af3494eb5c2262bf743",
+        "0312b09eb4b6743b731bb301483b147fcb8e876436562536b83c17cd849992eb",
+        "0312b09eb4b6743b731bb301483b147fcb8e876436562536b83c17cd849992eb"
+      ],
+      "branch_start_bundle_id": "5eb3ff3f23f1eb0fcd290ee061ecac9ca9ac74dc992495938b9febba77ae974e",
+      "branch_start_component_hashes": {
+        "model_xml_sha256": "3fc5f35e4c486f25b9c9f90347dc7d2fde16b7bd840382952b9facc357d6fab9",
+        "policy_continuation_sha256": "87d08e0f3542178fa73279e82a93dfc9980e5a24ee88c51679be449e54662fe7",
+        "rng_sha256": "89b9cbb106be81ce60a0dcab1882225560257dd3c8ddd9d25ff08c33935d10af",
+        "runtime_state_sha256": "2d7a2138c2acde502829f966839d9f9a261063e943394523fc692cabe092ba55",
+        "simulator_state_sha256": "7d2467c169ead1e757b0e376ab1b7df23c32c1e17ce1151c8944c997fb23192f"
+      },
+      "done": [
+        false,
+        false,
+        false
+      ],
+      "repeat_index": 2,
+      "restore_and_trace_seconds": 1.8887711931020021,
+      "state_sha256": [
+        "c7189663cb88f8c7e9cb6b83c742324b525c53fd65823dc6e30a5c71eee62a13",
+        "9a14681a64c51db864fd9ed050be6b5520bcae29a194cbe364ada545ed05a1b1",
+        "f12d84fc92e6a1d24b53395e3694968bb396b1a2c6df84c505fbdde6a589890c"
+      ],
+      "terminal_signature": "f9b2a7692c1c44593720fb1ad3002129210c448bf8854a0300cf0d5ffce35f24"
+    }
+  ],
+  "schema_version": 1,
+  "source": {
+    "default_init_index": 0,
+    "role": "EXPOSED_ENGINEERING_ONLY",
+    "source_state_sha256": "56975ab26705ae980f07ef9db427ec165750581793fd8d5babf8f845fcdc19d4",
+    "suite": "libero_spatial",
+    "task_id": 2,
+    "upstream_source_key": "libero_default_init:libero_spatial:2:0"
+  }
+}

@@ -532,8 +532,12 @@ def expansion_governance_errors() -> list[str]:
                 errors.append(f"D1 live conformance result missing: {cell['result']}")
                 continue
             result = read_json(result_path)
-            if result.get("gate", {}).get("status") != "PASS":
-                errors.append(f"D1 claimed live PASS disagrees with result: {cell['result']}")
+            claimed_pass = cell.get("classification") == "DETERMINISTIC_EXACT"
+            result_pass = result.get("gate", {}).get("status") == "PASS"
+            if claimed_pass != result_pass:
+                errors.append(
+                    f"D1 live cell classification disagrees with result gate: {cell['result']}"
+                )
             if result.get("source", {}).get("role") != "EXPOSED_ENGINEERING_ONLY":
                 errors.append(f"D1 live source is not engineering-only: {cell['result']}")
     pi0 = benchmark.get("transfer_policy", {})

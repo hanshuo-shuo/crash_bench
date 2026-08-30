@@ -14,6 +14,8 @@ from typing import Any, Mapping
 import numpy as np
 
 from crashbench.branching.state import capture_exact_state, restore_exact_state
+from crashbench.branching.policy_state import capture_policy_continuation
+from crashbench.branching.rng import capture_rng_state
 from crashbench.data.source_registry import ExposureRegistry, SourceIdentity
 from crashbench.envs import LiberoEnv
 from crashbench.glass_recovery_data import array_sha256
@@ -28,6 +30,14 @@ PI0_CHECKPOINT = "gs://openpi-assets/checkpoints/pi0_libero"
 
 def action_sha256(action: Any) -> str:
     return array_sha256(np.asarray(action))
+
+
+def observation_sha256(observation: Mapping[str, Any]) -> str:
+    digest = hashlib.sha256()
+    for key in sorted(observation):
+        digest.update(key.encode() + b"\0")
+        digest.update(array_sha256(np.asarray(observation[key])).encode() + b"\0")
+    return digest.hexdigest()
 
 
 def repeat_gate(rows: list[Mapping[str, Any]], expected_repeats: int) -> dict[str, Any]:
@@ -46,10 +56,21 @@ def repeat_gate(rows: list[Mapping[str, Any]], expected_repeats: int) -> dict[st
         "state_trace_identical": len(state_traces) == 1,
         "terminal_signature_identical": len(terminals) == 1,
     }
+    exact = all(criteria.values())
+    same_start = criteria["branch_start_bundle_identical"] and criteria[
+        "branch_start_components_identical"
+    ]
+    classification = (
+        "DETERMINISTIC_EXACT"
+        if exact
+        else "RESIDUAL_STOCHASTIC"
+        if same_start and expected_repeats >= 5
+        else "UNCLASSIFIED_FAIL_CLOSED"
+    )
     return {
         "criteria": criteria,
-        "status": "PASS" if all(criteria.values()) else "FAIL",
-        "classification": "DETERMINISTIC_EXACT" if all(criteria.values()) else "UNCLASSIFIED_FAIL_CLOSED",
+        "status": "PASS" if exact else "FAIL",
+        "classification": classification,
     }
 
 
@@ -166,12 +187,20 @@ def main() -> None:
         started = time.monotonic()
         obs = restore_exact_state(bundle, env, policy)
         actions: list[str] = []
+        action_values: list[list[float]] = []
+        observation_hashes: list[str] = []
+        policy_hashes: list[str] = []
+        rng_hashes: list[str] = []
         states: list[str] = []
         dones: list[bool] = []
         for _ in range(args.trace_policy_steps):
             policy_obs = env.policy_observation(obs, policy.resize_size)
+            observation_hashes.append(observation_sha256(policy_obs))
+            policy_hashes.append(capture_policy_continuation(policy).sha256())
+            rng_hashes.append(capture_rng_state().sha256())
             action = policy.act(policy_obs, env.task_description)
             actions.append(action_sha256(action))
+            action_values.append(np.asarray(action, dtype=np.float64).tolist())
             obs, _, done, _ = env.step(np.asarray(action).tolist())
             states.append(array_sha256(env.flat_state()))
             dones.append(bool(done))
@@ -181,6 +210,10 @@ def main() -> None:
                 "branch_start_bundle_id": bundle.bundle_id,
                 "branch_start_component_hashes": dict(bundle.component_hashes),
                 "action_sha256": actions,
+                "action_values": action_values,
+                "policy_observation_sha256": observation_hashes,
+                "policy_continuation_sha256_before_action": policy_hashes,
+                "rng_sha256_before_action": rng_hashes,
                 "state_sha256": states,
                 "done": dones,
                 "terminal_signature": terminal_signature(actions, states, dones),

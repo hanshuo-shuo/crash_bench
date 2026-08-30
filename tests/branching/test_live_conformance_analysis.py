@@ -34,6 +34,13 @@ def test_repeat_gate_rejects_missing_repeat():
     assert not failed["criteria"]["repeat_count_exact"]
 
 
+def test_five_repeat_same_start_divergence_is_residual_stochastic():
+    rows = [row()] * 4 + [row(action="different", state="different", terminal="different")]
+    result = MODULE.repeat_gate(rows, 5)
+    assert result["status"] == "FAIL"
+    assert result["classification"] == "RESIDUAL_STOCHASTIC"
+
+
 def test_source_selection_accepts_frozen_upstream_key_without_old_exact_hash():
     from crashbench.data.source_registry import ExposureRegistry
 

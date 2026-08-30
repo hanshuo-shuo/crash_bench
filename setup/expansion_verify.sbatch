@@ -17,6 +17,7 @@ module purge
 module load mamba/24.3.0
 policy="${CB_POLICY:-openvla}"
 task_id="${CB_TASK_ID:-0}"
+repeats="${CB_REPEATS:-3}"
 case "$policy" in
   openvla) source activate "$HOME/crash_bench/envs/openvla" ;;
   pi0) source /projects/p33100/siosio/envs/openpi/bin/activate ;;
@@ -36,6 +37,10 @@ case "$task_id" in
   0|2) ;;
   *) printf 'unsupported CB_TASK_ID=%s\n' "$task_id" >&2; exit 2 ;;
 esac
+case "$repeats" in
+  3|5) ;;
+  *) printf 'unsupported CB_REPEATS=%s\n' "$repeats" >&2; exit 2 ;;
+esac
 run_id="${protocol_sha:0:12}_${commit:0:12}_${utc}"
 result_root="results/expansion/d1_exactness/${policy}_task${task_id}_${run_id}"
 test ! -e "$result_root"
@@ -48,7 +53,7 @@ python scripts/expansion/verify_exact_branching.py \
   --settle-steps 10 \
   --warmup-policy-steps 1 \
   --trace-policy-steps 3 \
-  --repeats 3 \
+  --repeats "$repeats" \
   --seed 0 \
   --exposure-registry results/expansion/governance/exposure_registry.json \
   --output "$result_root/conformance.json"
