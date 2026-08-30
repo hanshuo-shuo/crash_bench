@@ -8,7 +8,10 @@ from crashbench.branching.artifacts import (
     ContentAddressedStore,
     seal_artifact_manifest,
     verify_artifact_manifest,
+    pack_numeric_mapping,
+    unpack_numeric_mapping,
 )
+import numpy as np
 
 
 def test_content_addressed_put_deduplicates_and_validates(tmp_path):
@@ -58,3 +61,17 @@ def test_manifest_refuses_overwrite_and_recursive_self_pin(tmp_path):
         seal_artifact_manifest(
             tmp_path / "other.json", kind="fixture", blobs={"self": ref}, metadata={}
         )
+
+
+def test_numeric_mapping_pack_is_deterministic_and_roundtrips():
+    mapping = {
+        "image": np.arange(12, dtype=np.uint8).reshape(2, 2, 3),
+        "state": np.array([1.5, 2.5], dtype=np.float32),
+    }
+    first = pack_numeric_mapping(mapping)
+    second = pack_numeric_mapping(dict(reversed(list(mapping.items()))))
+    assert first == second
+    restored = unpack_numeric_mapping(first)
+    assert set(restored) == set(mapping)
+    for key in mapping:
+        np.testing.assert_array_equal(restored[key], mapping[key])

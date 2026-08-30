@@ -520,6 +520,9 @@ def expansion_governance_errors() -> list[str]:
         "scripts/expansion/freeze_splits.py",
         "scripts/expansion/freeze_protocol.py",
         "schemas/protocol_freeze.schema.json",
+        "scripts/expansion/collect_staleness_statewise.py",
+        "setup/expansion_collect_statewise.sbatch",
+        "setup/submit_expansion_statewise_collection.sh",
         "setup/expansion_fragile_screen.sbatch",
         "setup/submit_expansion_fragile_screen.sh",
     )

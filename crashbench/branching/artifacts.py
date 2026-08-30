@@ -5,10 +5,13 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import struct
 import tempfile
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, BinaryIO, Iterable, Mapping
+
+import numpy as np
 
 
 @dataclass(frozen=True)
@@ -103,6 +106,53 @@ class ContentAddressedStore:
             digest, size = _stream_sha256(handle)
         if digest != ref.sha256 or size != ref.size_bytes:
             raise ValueError(f"content-addressed blob integrity mismatch: {ref.sha256}")
+
+
+def pack_numeric_mapping(mapping: Mapping[str, Any]) -> bytes:
+    """Serialize numeric arrays deterministically without pickle or ZIP timestamps."""
+
+    metadata = []
+    chunks = []
+    offset = 0
+    for key in sorted(mapping):
+        array = np.ascontiguousarray(np.asarray(mapping[key]))
+        if array.dtype.hasobject:
+            raise TypeError(f"numeric mapping field contains object dtype: {key}")
+        raw = array.tobytes()
+        metadata.append(
+            {
+                "key": key,
+                "dtype": array.dtype.str,
+                "shape": list(array.shape),
+                "offset": offset,
+                "nbytes": len(raw),
+            }
+        )
+        chunks.append(raw)
+        offset += len(raw)
+    header = json.dumps(metadata, sort_keys=True, separators=(",", ":")).encode()
+    return b"CBNM1" + struct.pack(">Q", len(header)) + header + b"".join(chunks)
+
+
+def unpack_numeric_mapping(payload: bytes) -> dict[str, np.ndarray]:
+    if not payload.startswith(b"CBNM1") or len(payload) < 13:
+        raise ValueError("not a CrashBench numeric mapping blob")
+    header_size = struct.unpack(">Q", payload[5:13])[0]
+    header_end = 13 + header_size
+    if header_end > len(payload):
+        raise ValueError("numeric mapping header is truncated")
+    metadata = json.loads(payload[13:header_end])
+    raw = memoryview(payload)[header_end:]
+    result = {}
+    for row in metadata:
+        start = int(row["offset"])
+        end = start + int(row["nbytes"])
+        if start < 0 or end > len(raw):
+            raise ValueError(f"numeric mapping field is truncated: {row['key']}")
+        array = np.frombuffer(raw[start:end], dtype=np.dtype(row["dtype"])).copy()
+        array = array.reshape(tuple(row["shape"]))
+        result[str(row["key"])] = array
+    return result
 
 
 def seal_artifact_manifest(
