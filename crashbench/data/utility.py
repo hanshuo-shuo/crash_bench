@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import itertools
+import re
 from dataclasses import asdict, dataclass, replace
 from typing import Iterable, Mapping, Sequence
 
@@ -25,7 +26,19 @@ class PhysicalBudgets:
             self.latency_ms,
         ) <= 0:
             raise ValueError("all physical normalization budgets must be positive")
-        if "quantile" in self.source.lower() or "test" in self.source.lower():
+        source = self.source.lower().replace("/", " ")
+        mentions_test_quantile = re.search(r"\btest\s+quantiles?\b", source) is not None
+        explicitly_negated = re.search(
+            r"\b(no|not|without)\b[^.;]{0,48}\btest\s+quantiles?\b", source
+        ) is not None
+        derived_from_test = any(
+            phrase in source
+            for phrase in (
+                "derived from test", "estimated from test", "fit from test",
+                "test-derived", "test outcome quantile",
+            )
+        )
+        if derived_from_test or (mentions_test_quantile and not explicitly_negated):
             raise ValueError("normalization budgets cannot be derived from test quantiles")
 
 

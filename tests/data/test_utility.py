@@ -45,6 +45,13 @@ def test_normalization_refuses_test_quantiles():
         budgets("95% test quantile")
 
 
+def test_normalization_accepts_explicit_no_test_quantile_provenance():
+    value = budgets(
+        "physical control limits plus D1/D2 engineering timing; no formal/test quantiles"
+    )
+    assert value.source.endswith("no formal/test quantiles")
+
+
 def test_outcome_terminal_indicators_are_exclusive():
     with pytest.raises(ValueError, match="exactly one"):
         outcome(task_success=1, catastrophe=1)
