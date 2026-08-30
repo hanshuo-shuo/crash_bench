@@ -1,0 +1,364 @@
+{
+  "analysis_sha256": "92ad738236bc5003c43fc3e16f0189abc1af325edc138ade35fc9bd0f3735577",
+  "complete_block_count": 144,
+  "duplicate_keys": [],
+  "gate": {
+    "claim_scope_failures": [
+      "benefit_zero_sources",
+      "two_distinct_strict_winner_sources"
+    ],
+    "criteria": [
+      {
+        "actual": 0.875,
+        "criterion_class": "hard_validity",
+        "criterion_id": "task0_nominal_success",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": ">=",
+        "pass": true,
+        "threshold": 0.7
+      },
+      {
+        "actual": 1.0,
+        "criterion_class": "hard_validity",
+        "criterion_id": "task2_nominal_success",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": ">=",
+        "pass": true,
+        "threshold": 0.7
+      },
+      {
+        "actual": 8,
+        "criterion_class": "hard_validity",
+        "criterion_id": "task0_eligible_sources",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": ">=",
+        "pass": true,
+        "threshold": 6
+      },
+      {
+        "actual": 8,
+        "criterion_class": "hard_validity",
+        "criterion_id": "task2_eligible_sources",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": ">=",
+        "pass": true,
+        "threshold": 6
+      },
+      {
+        "actual": 1.0,
+        "criterion_class": "hard_validity",
+        "criterion_id": "exact_restore_rate",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": ">=",
+        "pass": true,
+        "threshold": 0.95
+      },
+      {
+        "actual": 1.0,
+        "criterion_class": "hard_validity",
+        "criterion_id": "admissible_execution_rate",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": ">=",
+        "pass": true,
+        "threshold": 0.9
+      },
+      {
+        "actual": 0.020833333333333332,
+        "criterion_class": "hard_validity",
+        "criterion_id": "matched_control_catastrophe",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": "<=",
+        "pass": true,
+        "threshold": 0.05
+      },
+      {
+        "actual": true,
+        "criterion_class": "hard_validity",
+        "criterion_id": "mechanism_attribution_valid",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": "==",
+        "pass": true,
+        "threshold": true
+      },
+      {
+        "actual": 0,
+        "criterion_class": "claim_scope",
+        "criterion_id": "benefit_zero_sources",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": ">=",
+        "pass": false,
+        "threshold": 3
+      },
+      {
+        "actual": 16,
+        "criterion_class": "claim_scope",
+        "criterion_id": "benefit_one_sources",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": ">=",
+        "pass": true,
+        "threshold": 3
+      },
+      {
+        "actual": 8,
+        "criterion_class": "claim_scope",
+        "criterion_id": "task0_benefit_sources",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": ">=",
+        "pass": true,
+        "threshold": 1
+      },
+      {
+        "actual": 8,
+        "criterion_class": "claim_scope",
+        "criterion_id": "task2_benefit_sources",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": ">=",
+        "pass": true,
+        "threshold": 1
+      },
+      {
+        "actual": 1,
+        "criterion_class": "claim_scope",
+        "criterion_id": "two_distinct_strict_winner_sources",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": ">=",
+        "pass": false,
+        "threshold": 2
+      }
+    ],
+    "decision_sha256": "4adb78bbadf9ea240bfb88c6321d8dc48c863eb0993ab2fd585bf176a6130970",
+    "hard_failures": [],
+    "kind": "crashbench_machine_gate_decision",
+    "missing_evidence": [],
+    "next_action": "MECHANICALLY_VALID_EXPLORATORY_ONLY__NO_BROAD_SUPPORT_CLAIM",
+    "non_compensatory": true,
+    "policy": {
+      "allow_scoped_continuation": true,
+      "confirmatory": false,
+      "fail_next_action": "STOP_MECHANISM_VERSION",
+      "go_next_action": "ELIGIBLE_FOR_FORMAL_MECHANISM_SHORTLIST",
+      "scoped_next_action": "MECHANICALLY_VALID_EXPLORATORY_ONLY__NO_BROAD_SUPPORT_CLAIM",
+      "stage_id": "D2_SCREEN:action_drift_v1",
+      "test_outcomes_opened": false
+    },
+    "schema_version": 1,
+    "stage_id": "D2_SCREEN:action_drift_v1",
+    "status": "SCOPED_CONTINUE"
+  },
+  "kind": "crashbench_expansion_action_drift_screen_analysis",
+  "mechanism_id": "action_drift_v1",
+  "missing_keys": [],
+  "observed_sources": 16,
+  "schema_version": 1,
+  "sources": [
+    {
+      "benefit": true,
+      "complete_blocks": 9,
+      "eligible": true,
+      "source_index": 0,
+      "strict_intervention_winners": [
+        "corrective_requery"
+      ],
+      "task_id": 0,
+      "two_distinct_strict_interventions": false
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 9,
+      "eligible": true,
+      "source_index": 1,
+      "strict_intervention_winners": [
+        "corrective_requery",
+        "safe_stop"
+      ],
+      "task_id": 0,
+      "two_distinct_strict_interventions": true
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 9,
+      "eligible": true,
+      "source_index": 2,
+      "strict_intervention_winners": [
+        "corrective_requery"
+      ],
+      "task_id": 0,
+      "two_distinct_strict_interventions": false
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 9,
+      "eligible": true,
+      "source_index": 3,
+      "strict_intervention_winners": [
+        "corrective_requery"
+      ],
+      "task_id": 0,
+      "two_distinct_strict_interventions": false
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 9,
+      "eligible": true,
+      "source_index": 4,
+      "strict_intervention_winners": [
+        "corrective_requery"
+      ],
+      "task_id": 0,
+      "two_distinct_strict_interventions": false
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 9,
+      "eligible": true,
+      "source_index": 5,
+      "strict_intervention_winners": [
+        "corrective_requery"
+      ],
+      "task_id": 0,
+      "two_distinct_strict_interventions": false
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 9,
+      "eligible": true,
+      "source_index": 6,
+      "strict_intervention_winners": [
+        "corrective_requery"
+      ],
+      "task_id": 0,
+      "two_distinct_strict_interventions": false
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 9,
+      "eligible": true,
+      "source_index": 7,
+      "strict_intervention_winners": [
+        "corrective_requery"
+      ],
+      "task_id": 0,
+      "two_distinct_strict_interventions": false
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 9,
+      "eligible": true,
+      "source_index": 0,
+      "strict_intervention_winners": [
+        "corrective_requery"
+      ],
+      "task_id": 2,
+      "two_distinct_strict_interventions": false
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 9,
+      "eligible": true,
+      "source_index": 1,
+      "strict_intervention_winners": [
+        "corrective_requery"
+      ],
+      "task_id": 2,
+      "two_distinct_strict_interventions": false
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 9,
+      "eligible": true,
+      "source_index": 2,
+      "strict_intervention_winners": [
+        "corrective_requery"
+      ],
+      "task_id": 2,
+      "two_distinct_strict_interventions": false
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 9,
+      "eligible": true,
+      "source_index": 3,
+      "strict_intervention_winners": [
+        "corrective_requery"
+      ],
+      "task_id": 2,
+      "two_distinct_strict_interventions": false
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 9,
+      "eligible": true,
+      "source_index": 4,
+      "strict_intervention_winners": [
+        "corrective_requery"
+      ],
+      "task_id": 2,
+      "two_distinct_strict_interventions": false
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 9,
+      "eligible": true,
+      "source_index": 5,
+      "strict_intervention_winners": [
+        "corrective_requery"
+      ],
+      "task_id": 2,
+      "two_distinct_strict_interventions": false
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 9,
+      "eligible": true,
+      "source_index": 6,
+      "strict_intervention_winners": [
+        "corrective_requery"
+      ],
+      "task_id": 2,
+      "two_distinct_strict_interventions": false
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 9,
+      "eligible": true,
+      "source_index": 7,
+      "strict_intervention_winners": [
+        "corrective_requery"
+      ],
+      "task_id": 2,
+      "two_distinct_strict_interventions": false
+    }
+  ],
+  "summary": {
+    "admissible_execution_rate": 1.0,
+    "benefit_one_sources": 16,
+    "benefit_zero_sources": 0,
+    "control_base_success": 0.8020833333333334,
+    "drift_base_catastrophe": 0.10416666666666667,
+    "drift_base_success": 0.6041666666666666,
+    "exact_restore_rate": 1.0,
+    "matched_control_catastrophe": 0.020833333333333332,
+    "mechanism_attribution_valid": true,
+    "task0_benefit_sources": 8,
+    "task0_eligible_sources": 8,
+    "task0_nominal_success": 0.875,
+    "task2_benefit_sources": 8,
+    "task2_eligible_sources": 8,
+    "task2_nominal_success": 1.0,
+    "two_distinct_strict_winner_sources": 1
+  },
+  "unexpected_keys": []
+}

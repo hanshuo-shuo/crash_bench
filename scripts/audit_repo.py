@@ -480,6 +480,7 @@ def expansion_governance_errors() -> list[str]:
         "results/expansion/d2_mechanical/d79973fd46e3_f2a8d011f62d_20260830T090458Z/mechanical_preflight_analysis.json",
         "results/expansion/d2_fragile_screen/0f270c3d9c8c_64cc00fdccbb_20260830T091340Z/fragile_screen_analysis.json",
         "results/expansion/d2_staleness_screen/1f39d658a829_0100901d1cc6_20260830T093356Z/staleness_screen_analysis.json",
+        "results/expansion/d2_action_drift_screen/117904fb3d5c_cb828fc5e0e0_20260830T095028Z/action_drift_screen_analysis.json",
         "scripts/expansion/verify_exact_branching.py",
         "setup/expansion_verify.sbatch",
         "setup/submit_expansion_verify.sh",
@@ -726,6 +727,36 @@ def expansion_governance_errors() -> list[str]:
     for key, value in expected_staleness.items():
         if staleness.get("summary", {}).get(key) != value:
             errors.append(f"D2 staleness screen summary drift: {key}")
+    drift_root = ROOT / (
+        "results/expansion/d2_action_drift_screen/"
+        "117904fb3d5c_cb828fc5e0e0_20260830T095028Z"
+    )
+    drift_shards = sorted(drift_root.glob("task*_source*.json"))
+    if len(drift_shards) != 16:
+        errors.append("D2 action-drift screen must contain exactly sixteen shards")
+    drift = read_json(drift_root / "action_drift_screen_analysis.json")
+    if drift.get("gate", {}).get("status") != "SCOPED_CONTINUE":
+        errors.append("D2 action-drift decision must remain SCOPED_CONTINUE")
+    expected_drift = {
+        "task0_eligible_sources": 8,
+        "task2_eligible_sources": 8,
+        "exact_restore_rate": 1.0,
+        "admissible_execution_rate": 1.0,
+        "benefit_zero_sources": 0,
+        "benefit_one_sources": 16,
+        "two_distinct_strict_winner_sources": 1,
+        "drift_base_catastrophe": 0.10416666666666667,
+        "drift_base_success": 0.6041666666666666,
+        "control_base_success": 0.8020833333333334,
+    }
+    for key, value in expected_drift.items():
+        if drift.get("summary", {}).get(key) != value:
+            errors.append(f"D2 action-drift summary drift: {key}")
+    if drift.get("gate", {}).get("claim_scope_failures") != [
+        "benefit_zero_sources",
+        "two_distinct_strict_winner_sources",
+    ]:
+        errors.append("D2 action-drift failure scope drift")
     return errors
 
 
