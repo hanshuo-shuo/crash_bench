@@ -1,0 +1,90 @@
+{
+  "base_development_source_macro_u0": 0.39319280697684517,
+  "baseline_selection_sha256": "e5113e2332ee350dacb32278f41a49f9a17ef6e1f6af4cd7471a83901390d4a6",
+  "calibration_rows_read": 0,
+  "comparator_development_source_macro_u0": 0.3965334152776712,
+  "deployable_oracle_development_source_macro_u0": 0.6048052741434379,
+  "ensemble_delta_u0": -0.011186371249220728,
+  "ensemble_development_source_macro_u0": 0.3853470440284505,
+  "fit_stage": "train_only_development_readout",
+  "frozen_strongest_deployable_comparator": "DirectQ",
+  "kind": "crashbench_expansion_development_model_selection",
+  "median_delta_u0": -0.011585790196858792,
+  "next_action": "REFIT_SELECTED_RECIPE_ON_TRAIN_DEVELOPMENT_THEN_CALIBRATE",
+  "oracle_gap_recovered": -0.053710430732893485,
+  "per_seed": [
+    {
+      "delta_vs_comparator": -0.011585790196858792,
+      "seed": 0,
+      "source_macro_u0": 0.38494762508081243
+    },
+    {
+      "delta_vs_comparator": 0.008769890441408523,
+      "seed": 1,
+      "source_macro_u0": 0.40530330571907974
+    },
+    {
+      "delta_vs_comparator": -0.015106830069570476,
+      "seed": 2,
+      "source_macro_u0": 0.38142658520810074
+    },
+    {
+      "delta_vs_comparator": 0.003774181925521425,
+      "seed": 3,
+      "source_macro_u0": 0.40030759720319264
+    },
+    {
+      "delta_vs_comparator": -0.01900960065089552,
+      "seed": 4,
+      "source_macro_u0": 0.3775238146267757
+    }
+  ],
+  "schema_version": 1,
+  "scope": "single_primary_policy_single_staleness_mechanism_pilot",
+  "seed_artifacts": [
+    {
+      "development_rows": 972,
+      "manifest_sha256": "b5828c0e7ef8bc74645c1ffccda6b81096a2d13f382452b8d2ce93c8f504e348",
+      "model_sha256": "2a4ef8376f9a76ed9f0a46714657457b0449c8564b46dc2da9c7df38e0b1a072",
+      "predictions_sha256": "c0dd929877ac9bad83c41fb02d4ff2d781f79cdfc13bda159168181124f5c374",
+      "seed": 0,
+      "test_rows_read": 0
+    },
+    {
+      "development_rows": 972,
+      "manifest_sha256": "9ba660b349c39f7969312a2e6a15278e5ad977f206b3e8b6ed0c1908dd2db128",
+      "model_sha256": "1b05e1cf116fc799e5aed9c6b09d77514e3b3fec9913a7aacde3838e8e3da9e1",
+      "predictions_sha256": "d05115afd78db943ae52fd6618299a7b93c67fd06f49968ab383fa4ae77e3d66",
+      "seed": 1,
+      "test_rows_read": 0
+    },
+    {
+      "development_rows": 972,
+      "manifest_sha256": "3868845e5ad747ec4f54e6cb997d648bf80ede686ea1e80c0e6c564577f114fd",
+      "model_sha256": "a1e38e0dce1dedb7c13d02e5746f6fe108ba7d1d19981698528c2659b0ceda15",
+      "predictions_sha256": "74ba458518d294d2242e89d91adcba05373fc9ebad4139cbca2578706282e5c7",
+      "seed": 2,
+      "test_rows_read": 0
+    },
+    {
+      "development_rows": 972,
+      "manifest_sha256": "c62e2e43eb1a2580decb38be96c760b3e399e2d5d15ba43179172411b9f25f2e",
+      "model_sha256": "38e6199d54a48600afcd0c89fc5dc075a10c97638bebc17cc4f8ba8ee37997e9",
+      "predictions_sha256": "48888faf740ae859e42cb85872e551d6544b028029c9d1f02a6af178f02399d3",
+      "seed": 3,
+      "test_rows_read": 0
+    },
+    {
+      "development_rows": 972,
+      "manifest_sha256": "679681d08b770b158a6d61a314323e5859401146af445f48af8919d4d0774505",
+      "model_sha256": "480d49166a90116f30c80a66b1e9c26510a7956a065f61ec5373129bafbd3717",
+      "predictions_sha256": "6dd72742f83ef94ba4dca9aec3bf74d871934ae8a004b7d52d5100b0e3718c47",
+      "seed": 4,
+      "test_rows_read": 0
+    }
+  ],
+  "seeds_beating_comparator": 2,
+  "selected_model_identity": "ODUR-v1-fixed-pooled-dual-camera-proprio",
+  "selection_sha256": "cedcda202fe21affe96d36c31355d15fc2619eeccb2383732d91bea440543eef",
+  "test_rows_read": 0
+}
