@@ -515,6 +515,8 @@ def expansion_governance_errors() -> list[str]:
         "setup/expansion_formal_nominal.sbatch",
         "setup/submit_expansion_formal_nominal.sh",
         "scripts/expansion/freeze_splits.py",
+        "scripts/expansion/freeze_protocol.py",
+        "schemas/protocol_freeze.schema.json",
         "setup/expansion_fragile_screen.sbatch",
         "setup/submit_expansion_fragile_screen.sh",
     )

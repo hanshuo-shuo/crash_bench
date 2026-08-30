@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://crashbench.local/schemas/protocol_freeze.schema.json",
+  "title": "CrashBench D4 protocol freeze",
+  "type": "object",
+  "required": ["schema_version", "kind", "protocol_sha256", "git_commit", "inputs", "primary_policy", "active_scope", "test_authorized", "test_outcomes_read", "freeze_sha256"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "crashbench_expansion_d4_protocol_freeze"},
+    "protocol_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "test_authorized": {"const": false},
+    "test_outcomes_read": {"const": 0}
+  }
+}

@@ -15,7 +15,12 @@
   "normalization": {
     "method": "clip_against_predeclared_physical_budget",
     "test_quantiles_forbidden": true,
-    "budgets_status": "VALUES_MUST_BE_FILLED_FROM_D1_THROUGHPUT_BEFORE_D4"
+    "budgets_status": "FROZEN_FROM_CONTROL_LIMITS_AND_D1_D2_ENGINEERING_BEFORE_FORMAL_OPTION_OUTCOMES",
+    "option_duration_steps": 100,
+    "path_length_m": 2.0,
+    "force_exposure_ns": 75.0,
+    "latency_ms": 1000.0,
+    "source": "physical control limits plus D1/D2 engineering timing; no formal/test quantiles"
   },
   "benefit_epsilon": 0.0,
   "strict_gap_gamma": 0.10,
