@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://crashbench.local/schemas/source_attempt.schema.json",
+  "title": "CrashBench pre-outcome source attempt",
+  "type": "object",
+  "required": ["schema_version", "kind", "attempt_id", "artifact_role", "protocol_sha256", "reset_seed", "candidate_index", "test_eligible"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "crashbench_expansion_exposure_attempt"},
+    "attempt_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "protocol_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "test_eligible": {"const": false}
+  }
+}

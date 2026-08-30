@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "status": "DRAFT_D1_READY__FREEZE_AT_D4",
+  "allocation_unit": "physical_source_id",
+  "strata": ["mechanism_id", "task_id"],
+  "primary_policy_per_mechanism_task": {
+    "train": 12,
+    "calibration": 6,
+    "development": 6,
+    "confirmatory_id_test": 16,
+    "fresh_sequential_test": 10
+  },
+  "transfer_policy": {
+    "cross_policy_calibration_total": 12,
+    "cross_policy_test_total": 24,
+    "inherits_physical_parent_split": true
+  },
+  "one_time_test_lock": true,
+  "maximum_operational_retries": 2
+}

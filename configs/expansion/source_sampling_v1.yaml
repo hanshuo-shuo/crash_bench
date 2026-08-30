@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "status": "DRAFT_D1_READY__NO_SOURCE_EXECUTION_YET",
+  "tasks": [
+    {"suite": "libero_spatial", "task_id": 0},
+    {"suite": "libero_spatial", "task_id": 2}
+  ],
+  "screen": {
+    "ordered_mechanisms": ["fragile_path_collision_v2", "unstable_final_placement_v2", "observation_staleness_v1", "action_drift_v1", "narrow_clearance_v1"],
+    "sources_per_mechanism_task": 8,
+    "base_reset_seed": 2026090100
+  },
+  "formal_nominal": {
+    "target_primary_physical_sources": 300,
+    "candidate_oversampling_factor": 1.25,
+    "candidates_per_task": 188,
+    "base_reset_seed": 2026100000,
+    "option_outcomes_allowed_during_enumeration": false,
+    "router_scores_allowed": false
+  }
+}
