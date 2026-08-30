@@ -473,9 +473,27 @@ class LiberoEnv:
         return {"generators": generators, "random_states": random_states}
 
     def default_init_states(self) -> np.ndarray:
-        from libero.libero import benchmark
+        """Load trusted, repository-pinned LIBERO initial states.
+
+        PyTorch 2.6 changed ``torch.load`` to ``weights_only=True`` by default,
+        but LIBERO's historical init-state files contain NumPy arrays. They are
+        not model checkpoints and come from the locally pinned LIBERO checkout,
+        so this narrow loader explicitly opts into the legacy trusted format.
+        """
+
+        import torch
+        from libero.libero import benchmark, get_libero_path
+
         suite = benchmark.get_benchmark_dict()[self.task_suite]()
-        return suite.get_task_init_states(self.task_id)
+        task = suite.get_task(self.task_id)
+        path = os.path.join(
+            get_libero_path("init_states"), task.problem_folder, task.init_states_file
+        )
+        try:
+            values = torch.load(path, weights_only=False)
+        except TypeError:
+            values = torch.load(path)
+        return np.asarray(values)
 
     # ---- rollout API (mirrors run_libero_eval.py) --------------------------
     def reset_to(self, init_state: np.ndarray, obstacles: list[dict] | None = None,

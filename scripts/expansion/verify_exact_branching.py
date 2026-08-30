@@ -54,13 +54,24 @@ def repeat_gate(rows: list[Mapping[str, Any]], expected_repeats: int) -> dict[st
 
 
 def select_exposed_init_state(
-    states: np.ndarray, registry: ExposureRegistry, requested_index: int
+    states: np.ndarray,
+    registry: ExposureRegistry,
+    requested_index: int,
+    *,
+    suite: str,
+    task_id: int,
 ) -> tuple[int, np.ndarray, str]:
     candidates = range(len(states)) if requested_index < 0 else (requested_index,)
     for index in candidates:
         state = np.asarray(states[index])
         source_hash = array_sha256(state)
-        if registry.exposure_reasons(SourceIdentity(source_state_sha256=source_hash)):
+        upstream_key = f"libero_default_init:{suite}:{task_id}:{index}"
+        if registry.exposure_reasons(
+            SourceIdentity(
+                source_state_sha256=source_hash,
+                upstream_source_key=upstream_key,
+            )
+        ):
             return index, state, source_hash
     raise RuntimeError("no requested default init state is present in the frozen exposure registry")
 
@@ -96,7 +107,11 @@ def main() -> None:
     env = LiberoEnv(args.suite, args.task_id, model_family=env_family, seed=args.seed)
     registry = ExposureRegistry.load(args.exposure_registry)
     init_index, init_state, source_hash = select_exposed_init_state(
-        env.default_init_states(), registry, args.init_index
+        env.default_init_states(),
+        registry,
+        args.init_index,
+        suite=args.suite,
+        task_id=args.task_id,
     )
 
     policy_kwargs: dict[str, Any]
@@ -188,6 +203,7 @@ def main() -> None:
             "task_id": args.task_id,
             "default_init_index": init_index,
             "source_state_sha256": source_hash,
+            "upstream_source_key": f"libero_default_init:{args.suite}:{args.task_id}:{init_index}",
             "role": "EXPOSED_ENGINEERING_ONLY",
         },
         "configuration": vars(args) | {"output": str(args.output), "exposure_registry": str(args.exposure_registry)},

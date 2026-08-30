@@ -105,5 +105,46 @@
       "retry_ordinal": 2
     }
   ],
+  "conformance_operational_attempts": [
+    {
+      "slurm_job_id": "5204262",
+      "backend": "openvla",
+      "task_id": 2,
+      "execution_commit": "a62929b2084375dc9da519f5771ced704ba5fc6f",
+      "state": "FAILED",
+      "exit_code": "1:0",
+      "elapsed": "00:02:11",
+      "failure": "task2 default init state lacked a frozen exact hash or upstream source key",
+      "model_loaded": false,
+      "scientific_outcomes_opened": 0,
+      "retry_ordinal": 0
+    },
+    {
+      "slurm_job_id": "5204269",
+      "backend": "pi0",
+      "task_id": 0,
+      "execution_commit": "a62929b2084375dc9da519f5771ced704ba5fc6f",
+      "state": "FAILED",
+      "exit_code": "1:0",
+      "elapsed": "00:00:35",
+      "failure": "PyTorch 2.6 weights_only default rejected trusted LIBERO NumPy init-state file",
+      "model_loaded": false,
+      "scientific_outcomes_opened": 0,
+      "retry_ordinal": 0
+    },
+    {
+      "slurm_job_id": "5204267",
+      "backend": "pi0",
+      "task_id": 2,
+      "execution_commit": "a62929b2084375dc9da519f5771ced704ba5fc6f",
+      "state": "FAILED",
+      "exit_code": "1:0",
+      "elapsed": "00:00:50",
+      "failure": "PyTorch 2.6 weights_only default rejected trusted LIBERO NumPy init-state file",
+      "model_loaded": false,
+      "scientific_outcomes_opened": 0,
+      "retry_ordinal": 0
+    }
+  ],
   "claim_boundary": "Synthetic tests establish software contracts only and are not benchmark evidence."
 }

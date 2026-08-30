@@ -56,6 +56,7 @@ class SourceIdentity:
     source_manifest_sha256: str | None = None
     candidate_index: int | None = None
     scene_fingerprint: str | None = None
+    upstream_source_key: str | None = None
 
 
 def _canonical_sha(value: object) -> str | None:
@@ -117,6 +118,11 @@ class ExposureRegistry:
             for row in identifiers
             if row.get("identifier_type") == "source_manifest_sha256"
         )
+        self.upstream_source_keys = frozenset(
+            str(row["value"])
+            for row in identifiers
+            if row.get("identifier_type") == "upstream_source_key"
+        )
 
     @classmethod
     def load(cls, path: str | Path) -> "ExposureRegistry":
@@ -133,6 +139,8 @@ class ExposureRegistry:
             reasons.append(f"reset_seed:{identity.reset_seed}")
         if identity.scene_fingerprint and identity.scene_fingerprint in self.scene_fingerprints:
             reasons.append(f"scene_fingerprint:{identity.scene_fingerprint}")
+        if identity.upstream_source_key and identity.upstream_source_key in self.upstream_source_keys:
+            reasons.append(f"upstream_source_key:{identity.upstream_source_key}")
         manifest = _canonical_sha(identity.source_manifest_sha256)
         if manifest:
             if manifest in self.manifest_sha256s:
@@ -175,6 +183,7 @@ EXPOSURE_ATTEMPT_KEYS = frozenset(
         "source_manifest_sha256",
         "candidate_index",
         "scene_fingerprint",
+        "upstream_source_key",
     }
 )
 

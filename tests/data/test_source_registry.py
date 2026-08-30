@@ -89,6 +89,7 @@ def test_identifier_union_blocks_seed_and_manifest_without_source_hash():
         "identifiers": [
             {"identifier_type": "reset_seed", "value": "42"},
             {"identifier_type": "source_manifest_sha256", "value": MANIFEST},
+            {"identifier_type": "upstream_source_key", "value": "libero_default_init:suite:2:0"},
         ],
         "pool_blacklists": [],
     }
@@ -96,6 +97,7 @@ def test_identifier_union_blocks_seed_and_manifest_without_source_hash():
     for identity in (
         SourceIdentity(reset_seed=42),
         SourceIdentity(source_manifest_sha256=MANIFEST),
+        SourceIdentity(upstream_source_key="libero_default_init:suite:2:0"),
     ):
         with pytest.raises(ExposureViolation):
             frozen.assert_role_allowed(identity, SplitRole.CONFIRMATORY_ID_TEST)

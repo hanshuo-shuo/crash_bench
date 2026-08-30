@@ -32,3 +32,31 @@ def test_repeat_gate_rejects_missing_repeat():
     failed = MODULE.repeat_gate([row(), row()], 3)
     assert failed["status"] == "FAIL"
     assert not failed["criteria"]["repeat_count_exact"]
+
+
+def test_source_selection_accepts_frozen_upstream_key_without_old_exact_hash():
+    from crashbench.data.source_registry import ExposureRegistry
+
+    registry = ExposureRegistry(
+        {
+            "kind": "crashbench_expansion_exposure_registry",
+            "sources": [],
+            "identifiers": [
+                {
+                    "identifier_type": "upstream_source_key",
+                    "value": "libero_default_init:libero_spatial:2:0",
+                }
+            ],
+            "pool_blacklists": [],
+        }
+    )
+    index, state, source_hash = MODULE.select_exposed_init_state(
+        [[1.0, 2.0]],
+        registry,
+        -1,
+        suite="libero_spatial",
+        task_id=2,
+    )
+    assert index == 0
+    assert list(state) == [1.0, 2.0]
+    assert len(source_hash) == 64

@@ -1,8 +1,8 @@
 {
   "command": "python scripts/expansion/freeze_exposure_registry.py --repo-root . --include-tracked-and-local-results --remote-lineage-ledger configs/expansion/exposed_sources_v1.yaml --output results/expansion/governance/exposure_registry.json --fail-on-unresolved-unblacklisted",
   "counts": {
-    "identifier_union_count": 12,
-    "input_count": 83,
+    "identifier_union_count": 13,
+    "input_count": 87,
     "pool_blacklist_count": 3,
     "source_union_count": 263
   },
@@ -186,6 +186,17 @@
       "identifier_type": "source_manifest_sha256",
       "test_eligible": false,
       "value": "fa484682aa7bb5745ffe023454d9b43e7a87d90a5eab0e69aa1c4ef1aa21f68f"
+    },
+    {
+      "artifact_roles": [
+        "EXPOSED_LEGACY_SOURCE_LINEAGE"
+      ],
+      "evidence": [
+        "configs/expansion/exposed_sources_v1.yaml"
+      ],
+      "identifier_type": "upstream_source_key",
+      "test_eligible": false,
+      "value": "libero_default_init:libero_spatial:2:0"
     }
   ],
   "inputs": [
@@ -193,7 +204,21 @@
       "parser": "json_compatible_yaml",
       "path": "configs/expansion/exposed_sources_v1.yaml",
       "row_count": 1,
-      "sha256": "020dba6a6adf3156cbae375b724bbf70335b82791597469506e8e900b484cf1a",
+      "sha256": "7babd0a74a3bbe6fafa4bbbe5548e95068ccedb20a82936e89e6717fa7b56705",
+      "source_hash_count": 0
+    },
+    {
+      "parser": "json_compatible_yaml",
+      "path": "configs/expansion/source_sampling_v1.yaml",
+      "row_count": 1,
+      "sha256": "6e8d8fca71b36697fdb7ff17f46f593ba183cd2338aa11ee51a86c0a36dbad05",
+      "source_hash_count": 0
+    },
+    {
+      "parser": "json_compatible_yaml",
+      "path": "configs/expansion/splits_v1.yaml",
+      "row_count": 1,
+      "sha256": "0a9a5302a69531bf28affbe566c99063ceba0469cb4ba3b51930b86f63716d1d",
       "source_hash_count": 0
     },
     {
@@ -506,6 +531,20 @@
     },
     {
       "parser": "json",
+      "path": "results/expansion/d1_exactness/openvla_47f043c30659_9c8059b39730_20260830T072357Z/conformance.json",
+      "row_count": 1,
+      "sha256": "357a4bb01e01b414372512d427a58545745da256c036d890a179d8e536edcf2f",
+      "source_hash_count": 1
+    },
+    {
+      "parser": "json",
+      "path": "results/expansion/governance/d1_backend_capability_report.json",
+      "row_count": 1,
+      "sha256": "e39f5e1b83f041fc061fd126fb878c2bc41fea4f109546990509131541a5023a",
+      "source_hash_count": 1
+    },
+    {
+      "parser": "json",
       "path": "results/expansion/governance/remote_missing_lineage.json",
       "row_count": 1,
       "sha256": "2bbbee5d4e4ee3ff8ce45bcadf5a6c14178eeb9da53bdfbd992e71ffbe4cbf62",
@@ -797,7 +836,7 @@
       "reason": "complete source-trace mapping is unavailable; the full candidate range is excluded"
     }
   ],
-  "registry_sha256": "25962b6bbc8aa12e45630df54754880024eb9a6511192fb28b16ae010e1e2082",
+  "registry_sha256": "1a7367b1b5ff18fb12012831253c12ab3091452b0d68fd4dc33f4025b5e7fe66",
   "schema_version": 1,
   "sources": [
     {
@@ -2760,10 +2799,13 @@
     {
       "artifact_roles": [
         "ENGINEERING_ONLY_INVALID_PREFLIGHT",
-        "EXPOSED_HISTORICAL_TEST"
+        "EXPOSED_HISTORICAL_TEST",
+        "EXPOSED_LEGACY_SOURCE_LINEAGE"
       ],
       "evidence": [
         "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/placements/placements.json",
+        "results/expansion/d1_exactness/openvla_47f043c30659_9c8059b39730_20260830T072357Z/conformance.json",
+        "results/expansion/governance/d1_backend_capability_report.json",
         "results/iclr27/non_glass_option_ambiguity_screen_c0bb9015a0a3_20260829T170210Z/future_benchmark_exclusions.json",
         "results/iclr27/non_glass_option_ambiguity_screen_c0bb9015a0a3_20260829T170210Z/source_registry.json"
       ],

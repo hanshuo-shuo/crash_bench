@@ -28,10 +28,12 @@ LINEAGE_HINTS = SOURCE_KEYS | {
     "generator_seed",
     "scene_fingerprint",
     "physical_source_id",
+    "upstream_source_key",
 }
 SUPPORTED_SUFFIXES = {".json", ".jsonl", ".csv", ".yaml", ".yml"}
 SELF_EXCLUDED_PATHS = {"results/expansion/governance/exposure_registry.json"}
 IDENTIFIER_KEYS = {
+    "upstream_source_key": "upstream_source_key",
     "physical_source_id": "physical_source_id",
     "scene_fingerprint": "scene_fingerprint",
     "reset_seed": "reset_seed",
