@@ -23,8 +23,10 @@ sound. Test thresholds cannot be changed after outcomes are opened.
 
 Known D0 limitations:
 
-- π0 transfer remains blocked until its code revision and checkpoint/norm-stat
-  tree content hash are pinned.
+- π0's openpi code is pinned to
+  `15a9616a00943ada6c20a0f158e3adb39df2ccac`; transfer remains blocked until the
+  12 GB checkpoint/norm-stat tree is content-hashed by the prepared `short` CPU
+  job.
 - Physical normalization budgets remain intentionally unset until D1 measures
   throughput and control ranges; they must be filled before D4.
 - Two remote manifest hashes are available only in abbreviated prose form, so
