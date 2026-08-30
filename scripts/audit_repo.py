@@ -525,6 +525,7 @@ def expansion_governance_errors() -> list[str]:
         "setup/submit_expansion_statewise_collection.sh",
         "scripts/expansion/merge_statewise_dataset.py",
         "scripts/expansion/analyze_statewise_gate_a.py",
+        "scripts/expansion/train_option_value.py",
         "setup/expansion_fragile_screen.sbatch",
         "setup/submit_expansion_fragile_screen.sh",
     )
