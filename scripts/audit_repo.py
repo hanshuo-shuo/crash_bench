@@ -533,6 +533,7 @@ def expansion_governance_errors() -> list[str]:
         "scripts/expansion/audit_statewise_shards.py",
         "scripts/expansion/audit_benchmark_test_shards.py",
         "scripts/expansion/analyze_statewise_gate_a.py",
+        "scripts/expansion/audit_gate_a_role_correction.py",
         "scripts/expansion/summarize_statewise_dataset.py",
         "scripts/expansion/materialize_statewise_features.py",
         "scripts/expansion/train_option_value.py",

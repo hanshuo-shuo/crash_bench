@@ -26,16 +26,25 @@ Tasks: `libero_spatial:0`, `libero_spatial:2`
 
 ## Scoped Gate A
 
-Machine status: `SCOPED_CONTINUE`; decision SHA
-`378f1650bffe8b6385b0c7f18c811ddbf5bc5980f223fb7666bbce9383897055`.
+Machine status: `SCOPED_CONTINUE`; corrected train+development-only decision SHA
+`7bf9f9b5170ef338d345d71d4c38ae8b336890443f1a7b96af3e95d292062dda`.
 
-- B=1 physical sources: 43.
-- B=0 physical sources: 5 (the sole claim-scope miss versus the prospective target 8).
-- Strict observation-refresh support: 25 sources.
-- Strict safe-stop support: 28 sources.
-- Same-Base-risk heterogeneous decision support: 38 sources.
+- Analyzed physical sources: 36 train+development; 12 calibration sources excluded.
+- B=1 physical sources: 32.
+- B=0 physical sources: 4 (the sole claim-scope miss versus the prospective target 8).
+- Strict observation-refresh support: 20 sources.
+- Strict safe-stop support: 21 sources.
+- Same-Base-risk heterogeneous decision support: 29 sources.
 - No hard validity criterion failed. The narrow control-support miss limits scope but does
   not invalidate training or the single-mechanism benchmark pilot.
+
+The first Gate-A artifact incorrectly aggregated all 48 train/calibration/development
+sources despite the protocol's train+development-only rule. This was discovered after the
+D8-B test lock opened. The corrected artifact excludes calibration and preserves the same
+`SCOPED_CONTINUE` status and next action. It did not change the frozen D8 source list,
+thresholds, execution files, or authorization; no D8 outcome was inspected for the
+correction. The original support counts are superseded and the post-open timing is retained
+in `d8_gate_a_role_correction_audit.json`; reauthorization or test reopening is forbidden.
 
 ## D6/D7 model and calibration
 

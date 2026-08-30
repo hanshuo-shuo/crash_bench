@@ -30,7 +30,14 @@ def analyze_gate_a(
     invalid: Iterable[dict[str, Any]],
     manifest: dict[str, Any],
 ) -> dict[str, Any]:
-    anchors, branches, invalid = list(anchors), list(branches), list(invalid)
+    all_anchors, all_branches, all_invalid = list(anchors), list(branches), list(invalid)
+    allowed_roles = {"train", "development"}
+    anchors = [row for row in all_anchors if row.get("split_role") in allowed_roles]
+    branches = [row for row in all_branches if row.get("split_role") in allowed_roles]
+    invalid = [row for row in all_invalid if row.get("split_role") in allowed_roles]
+    calibration_sources_excluded = len(
+        {row["physical_source_id"] for row in all_anchors if row.get("split_role") == "calibration"}
+    )
     by_block = defaultdict(list)
     for row in branches:
         by_block[row["block_id"]].append(row)
@@ -104,7 +111,7 @@ def analyze_gate_a(
     claim = CriterionClass.CLAIM_SCOPE
     criteria = [
         Criterion("source_shard_count", hard, manifest.get("physical_source_count"), "==", 48),
-        Criterion("observed_source_count", hard, len(source_rows), "==", 48),
+        Criterion("train_development_source_count", hard, len(source_rows), "==", 36),
         Criterion("merge_status", hard, manifest.get("status"), "==", "GO"),
         Criterion("test_rows_read", hard, manifest.get("test_rows_read"), "==", 0),
         Criterion("exact_branch_start_rate", hard, exact_rate, "==", 1.0),
@@ -132,10 +139,13 @@ def analyze_gate_a(
         ),
     )
     payload: dict[str, Any] = {
-        "schema_version": 1,
+        "schema_version": 2,
         "kind": "crashbench_expansion_d5_gate_a_analysis",
         "gate": gate,
         "source_count": len(source_rows),
+        "roles_analyzed": ["development", "train"],
+        "calibration_sources_excluded": calibration_sources_excluded,
+        "calibration_rows_read": 0,
         "benefit_zero_sources": benefit_zero,
         "benefit_one_sources": benefit_one,
         "strict_support_sources": {

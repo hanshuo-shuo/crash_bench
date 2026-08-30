@@ -1,0 +1,585 @@
+{
+  "analysis_sha256": "aa80af7ac4f679068da0832b55211f0f1f3cbe5ed822e5b00adceab2a13ce9c4",
+  "benefit_one_sources": 32,
+  "benefit_zero_sources": 4,
+  "block_decision_count": 972,
+  "calibration_rows_read": 0,
+  "calibration_sources_excluded": 12,
+  "exact_branch_start_rate": 1.0,
+  "gate": {
+    "claim_scope_failures": [
+      "benefit_zero_sources"
+    ],
+    "criteria": [
+      {
+        "actual": 48,
+        "criterion_class": "hard_validity",
+        "criterion_id": "source_shard_count",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": "==",
+        "pass": true,
+        "threshold": 48
+      },
+      {
+        "actual": 36,
+        "criterion_class": "hard_validity",
+        "criterion_id": "train_development_source_count",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": "==",
+        "pass": true,
+        "threshold": 36
+      },
+      {
+        "actual": "GO",
+        "criterion_class": "hard_validity",
+        "criterion_id": "merge_status",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": "==",
+        "pass": true,
+        "threshold": "GO"
+      },
+      {
+        "actual": 0,
+        "criterion_class": "hard_validity",
+        "criterion_id": "test_rows_read",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": "==",
+        "pass": true,
+        "threshold": 0
+      },
+      {
+        "actual": 1.0,
+        "criterion_class": "hard_validity",
+        "criterion_id": "exact_branch_start_rate",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": "==",
+        "pass": true,
+        "threshold": 1.0
+      },
+      {
+        "actual": 0.0,
+        "criterion_class": "hard_validity",
+        "criterion_id": "task0_invalid_rate",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": "<=",
+        "pass": true,
+        "threshold": 0.1
+      },
+      {
+        "actual": 0.0,
+        "criterion_class": "hard_validity",
+        "criterion_id": "task2_invalid_rate",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": "<=",
+        "pass": true,
+        "threshold": 0.1
+      },
+      {
+        "actual": 4,
+        "criterion_class": "claim_scope",
+        "criterion_id": "benefit_zero_sources",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": ">=",
+        "pass": false,
+        "threshold": 8
+      },
+      {
+        "actual": 32,
+        "criterion_class": "claim_scope",
+        "criterion_id": "benefit_one_sources",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": ">=",
+        "pass": true,
+        "threshold": 8
+      },
+      {
+        "actual": 20,
+        "criterion_class": "claim_scope",
+        "criterion_id": "strict_observation_refresh_sources",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": ">=",
+        "pass": true,
+        "threshold": 6
+      },
+      {
+        "actual": 21,
+        "criterion_class": "claim_scope",
+        "criterion_id": "strict_safe_stop_sources",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": ">=",
+        "pass": true,
+        "threshold": 6
+      },
+      {
+        "actual": 29,
+        "criterion_class": "claim_scope",
+        "criterion_id": "same_risk_flip_sources",
+        "evidence_path": null,
+        "evidence_state": "observed",
+        "operator": ">=",
+        "pass": true,
+        "threshold": 4
+      }
+    ],
+    "decision_sha256": "7bf9f9b5170ef338d345d71d4c38ae8b336890443f1a7b96af3e95d292062dda",
+    "hard_failures": [],
+    "kind": "crashbench_machine_gate_decision",
+    "missing_evidence": [],
+    "next_action": "CONTINUE_METHOD_PILOT_WITH_LIMITED_SUPPORT_CLAIMS",
+    "non_compensatory": true,
+    "policy": {
+      "allow_scoped_continuation": true,
+      "confirmatory": false,
+      "fail_next_action": "STOP_MODEL_TRAINING_AND_AUDIT_D5_VALIDITY",
+      "go_next_action": "TRAIN_ODUR_AND_FROZEN_BASELINES",
+      "scoped_next_action": "CONTINUE_METHOD_PILOT_WITH_LIMITED_SUPPORT_CLAIMS",
+      "stage_id": "D5_SCOPED_STALENESS_GATE_A",
+      "test_outcomes_opened": false
+    },
+    "schema_version": 1,
+    "stage_id": "D5_SCOPED_STALENESS_GATE_A",
+    "status": "SCOPED_CONTINUE"
+  },
+  "kind": "crashbench_expansion_d5_gate_a_analysis",
+  "roles_analyzed": [
+    "development",
+    "train"
+  ],
+  "same_risk_flip_sources": 29,
+  "schema_version": 2,
+  "source_count": 36,
+  "sources": [
+    {
+      "benefit": true,
+      "complete_blocks": 27,
+      "physical_source_id": "0ce2dff152007dd84575b20b26dce4153773129f76343fa64d9313b00f84c39d",
+      "same_risk_flip": false,
+      "split_role": "train",
+      "strict_winners": [
+        "safe_stop"
+      ],
+      "task_id": "libero_spatial:0"
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 27,
+      "physical_source_id": "0e8f3f1b4ee6e7e6f48069659fd0fd1a08fe0c9b19a5082f707d47315f8551f8",
+      "same_risk_flip": true,
+      "split_role": "train",
+      "strict_winners": [
+        "observation_refresh",
+        "safe_stop"
+      ],
+      "task_id": "libero_spatial:0"
+    },
+    {
+      "benefit": false,
+      "complete_blocks": 27,
+      "physical_source_id": "0f67f98671271145b7573e71f168456a1ca92b9de145b82fe1475ae3f450a85d",
+      "same_risk_flip": true,
+      "split_role": "train",
+      "strict_winners": [
+        "base_continue"
+      ],
+      "task_id": "libero_spatial:2"
+    },
+    {
+      "benefit": false,
+      "complete_blocks": 27,
+      "physical_source_id": "196e952f65cd0b53e917dd0e7efda07dd8f1a0eb26ddf28c21b37f04c9c94d1b",
+      "same_risk_flip": false,
+      "split_role": "development",
+      "strict_winners": [],
+      "task_id": "libero_spatial:2"
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 27,
+      "physical_source_id": "1978a0bca574968027e1c0f5b3cfab76e2e9b8418c132341114b331acd436ef9",
+      "same_risk_flip": true,
+      "split_role": "development",
+      "strict_winners": [
+        "base_continue",
+        "observation_refresh"
+      ],
+      "task_id": "libero_spatial:2"
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 27,
+      "physical_source_id": "27efbd6bc5dd9e1b629628ddc1ebcd9a29aed2df4deec4e313d91ec273654991",
+      "same_risk_flip": true,
+      "split_role": "train",
+      "strict_winners": [
+        "observation_refresh",
+        "safe_stop"
+      ],
+      "task_id": "libero_spatial:0"
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 27,
+      "physical_source_id": "36eacfebfbd76af06876840ef2aec1fff2a3560eaee40546d7c1406d92a5903e",
+      "same_risk_flip": true,
+      "split_role": "development",
+      "strict_winners": [
+        "safe_stop"
+      ],
+      "task_id": "libero_spatial:0"
+    },
+    {
+      "benefit": false,
+      "complete_blocks": 27,
+      "physical_source_id": "38e107356f104e793dcbd7a39c212dbb93a19d52f988b0db8496f4234846d0b7",
+      "same_risk_flip": false,
+      "split_role": "development",
+      "strict_winners": [],
+      "task_id": "libero_spatial:2"
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 27,
+      "physical_source_id": "39ae394166b56ca17d0a9267497f5e6db270595394b437bc40b499c95bc78744",
+      "same_risk_flip": true,
+      "split_role": "train",
+      "strict_winners": [
+        "observation_refresh",
+        "safe_stop"
+      ],
+      "task_id": "libero_spatial:0"
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 27,
+      "physical_source_id": "402e9477773de52f82f0cf5eac361a4ebde382b86e106fa4ad0b17e64175d4c2",
+      "same_risk_flip": true,
+      "split_role": "development",
+      "strict_winners": [
+        "observation_refresh",
+        "safe_stop"
+      ],
+      "task_id": "libero_spatial:0"
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 27,
+      "physical_source_id": "41989ab7c42dd1f5a1560c6d68eb3e10f4dc95658f9e6996a1fd971d7b68523f",
+      "same_risk_flip": true,
+      "split_role": "train",
+      "strict_winners": [
+        "base_continue",
+        "observation_refresh",
+        "safe_stop"
+      ],
+      "task_id": "libero_spatial:0"
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 27,
+      "physical_source_id": "4a518b7b91be76bb81c43ac29c9d0e2ee35355fd5871e30c532f8857c02e61a3",
+      "same_risk_flip": true,
+      "split_role": "train",
+      "strict_winners": [
+        "base_continue",
+        "safe_stop"
+      ],
+      "task_id": "libero_spatial:0"
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 27,
+      "physical_source_id": "50ab01eec73dc30b12da994b8ffb685df81ab1380168746c6a27690e5eff1087",
+      "same_risk_flip": false,
+      "split_role": "train",
+      "strict_winners": [
+        "safe_stop"
+      ],
+      "task_id": "libero_spatial:2"
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 27,
+      "physical_source_id": "5202cf46c6a3a259c3c924c628697cec8c3a284d0853d152f57cfdd905baca45",
+      "same_risk_flip": false,
+      "split_role": "train",
+      "strict_winners": [],
+      "task_id": "libero_spatial:2"
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 27,
+      "physical_source_id": "54983f8fe9cb74a0ee4f1658c92e7d9c770785938bcfd74667354d209afcd8ea",
+      "same_risk_flip": true,
+      "split_role": "development",
+      "strict_winners": [
+        "observation_refresh"
+      ],
+      "task_id": "libero_spatial:2"
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 27,
+      "physical_source_id": "55a791e7d4187ccc4fa8d76e3f770d102f8cbf6c00a014e2db05334ba0d8018a",
+      "same_risk_flip": true,
+      "split_role": "train",
+      "strict_winners": [
+        "base_continue",
+        "observation_refresh"
+      ],
+      "task_id": "libero_spatial:2"
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 27,
+      "physical_source_id": "637f0ffaf216f7c911847b6fc6b547de8a7036bafe7002401e9539e64b7311f8",
+      "same_risk_flip": true,
+      "split_role": "train",
+      "strict_winners": [
+        "safe_stop"
+      ],
+      "task_id": "libero_spatial:0"
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 27,
+      "physical_source_id": "655952b5a3ee521db068362d286cb8bcf03fc79d0489f42008cd5efae4321345",
+      "same_risk_flip": true,
+      "split_role": "train",
+      "strict_winners": [
+        "observation_refresh",
+        "safe_stop"
+      ],
+      "task_id": "libero_spatial:0"
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 27,
+      "physical_source_id": "6e195754969373d0c57b6baeb42247d6f642072c6e1b86928d79d957beb897a6",
+      "same_risk_flip": true,
+      "split_role": "development",
+      "strict_winners": [
+        "observation_refresh",
+        "safe_stop"
+      ],
+      "task_id": "libero_spatial:0"
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 27,
+      "physical_source_id": "6f712d8424dbc8e18b823f0b0e77a498645f8ea3df63adf1b5ec916dcd7ba14c",
+      "same_risk_flip": true,
+      "split_role": "train",
+      "strict_winners": [
+        "observation_refresh"
+      ],
+      "task_id": "libero_spatial:2"
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 27,
+      "physical_source_id": "7912ad61ae8b50b9d42576ccfebe2278d44e7a9dd3cb27b3d97db840dbd53133",
+      "same_risk_flip": true,
+      "split_role": "development",
+      "strict_winners": [
+        "base_continue",
+        "observation_refresh"
+      ],
+      "task_id": "libero_spatial:2"
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 27,
+      "physical_source_id": "7c37bc461026a4c0baa8f078d0044e9be9dbac54215649145889b00de22372bc",
+      "same_risk_flip": true,
+      "split_role": "train",
+      "strict_winners": [
+        "observation_refresh"
+      ],
+      "task_id": "libero_spatial:2"
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 27,
+      "physical_source_id": "7f238ee6ea3db9a204b021e891e71aa7039e714f829604ec94c6d17141d7e36e",
+      "same_risk_flip": true,
+      "split_role": "train",
+      "strict_winners": [
+        "base_continue",
+        "observation_refresh"
+      ],
+      "task_id": "libero_spatial:2"
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 27,
+      "physical_source_id": "87d45c926940297b00a072d317fb820549953931a1bb136b33868c29517d5060",
+      "same_risk_flip": true,
+      "split_role": "train",
+      "strict_winners": [
+        "base_continue",
+        "safe_stop"
+      ],
+      "task_id": "libero_spatial:0"
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 27,
+      "physical_source_id": "8cbfe019b55a3dc302119721bcd02c60a623d223ffcf21ab07b09cc343b71267",
+      "same_risk_flip": true,
+      "split_role": "development",
+      "strict_winners": [
+        "observation_refresh",
+        "safe_stop"
+      ],
+      "task_id": "libero_spatial:0"
+    },
+    {
+      "benefit": false,
+      "complete_blocks": 27,
+      "physical_source_id": "8cfa8b72ebc8714f94c1a01cedf29de140651c35b340778795e63d9fa49971c2",
+      "same_risk_flip": false,
+      "split_role": "train",
+      "strict_winners": [],
+      "task_id": "libero_spatial:2"
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 27,
+      "physical_source_id": "8f6b5d676610fe21c6b8f73e69548116eaaf5f4282febc238ebc203519eb7913",
+      "same_risk_flip": true,
+      "split_role": "train",
+      "strict_winners": [
+        "base_continue",
+        "safe_stop"
+      ],
+      "task_id": "libero_spatial:0"
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 27,
+      "physical_source_id": "97bfe746879580fe827de21f505d3f2b31b6a62999bc3a7c5313d131712f64fc",
+      "same_risk_flip": true,
+      "split_role": "development",
+      "strict_winners": [
+        "base_continue",
+        "safe_stop"
+      ],
+      "task_id": "libero_spatial:0"
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 27,
+      "physical_source_id": "9ddfc8957f10b37d51c595b3c81483a4b2f6315cc34c3182e34361285519723c",
+      "same_risk_flip": false,
+      "split_role": "train",
+      "strict_winners": [
+        "safe_stop"
+      ],
+      "task_id": "libero_spatial:2"
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 27,
+      "physical_source_id": "accc98df3d26eb557056911960404239a956e9810c5e5dccb188dfcc8fe70827",
+      "same_risk_flip": true,
+      "split_role": "train",
+      "strict_winners": [
+        "safe_stop"
+      ],
+      "task_id": "libero_spatial:0"
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 27,
+      "physical_source_id": "ba86a5891001072b043209757ee371b34e30f34aea2e1396b4c96f9af1750e66",
+      "same_risk_flip": true,
+      "split_role": "development",
+      "strict_winners": [
+        "base_continue",
+        "observation_refresh",
+        "safe_stop"
+      ],
+      "task_id": "libero_spatial:2"
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 27,
+      "physical_source_id": "bf2eb93d154d15c866b7220cb75da05186d637f439b488cb72df5d6e0ca225c6",
+      "same_risk_flip": true,
+      "split_role": "train",
+      "strict_winners": [
+        "observation_refresh"
+      ],
+      "task_id": "libero_spatial:2"
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 27,
+      "physical_source_id": "cd8d51cb68d0b6263d1dfeb23031fde3f9fef779ac358a807df9ff3f2ed67a41",
+      "same_risk_flip": true,
+      "split_role": "train",
+      "strict_winners": [
+        "base_continue",
+        "observation_refresh",
+        "safe_stop"
+      ],
+      "task_id": "libero_spatial:0"
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 27,
+      "physical_source_id": "d5920415736ede3ad9cd7f0d77808ba53cd846a15e71070525eb7160135c51f0",
+      "same_risk_flip": true,
+      "split_role": "development",
+      "strict_winners": [
+        "base_continue",
+        "observation_refresh",
+        "safe_stop"
+      ],
+      "task_id": "libero_spatial:0"
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 27,
+      "physical_source_id": "e0e6b8a3d1c85c80ca9a0ebb4640c98bc543a40a920203184457bc8a240aea78",
+      "same_risk_flip": true,
+      "split_role": "train",
+      "strict_winners": [
+        "observation_refresh"
+      ],
+      "task_id": "libero_spatial:2"
+    },
+    {
+      "benefit": true,
+      "complete_blocks": 27,
+      "physical_source_id": "e2c3cb61aaa6c86065578242fdb8712f84b49312dc1bbedda6eced99d8f27bfb",
+      "same_risk_flip": true,
+      "split_role": "train",
+      "strict_winners": [
+        "base_continue"
+      ],
+      "task_id": "libero_spatial:2"
+    }
+  ],
+  "strict_support_sources": {
+    "base_continue": 14,
+    "observation_refresh": 20,
+    "safe_stop": 21
+  },
+  "task_invalid_rates": {
+    "libero_spatial:0": 0.0,
+    "libero_spatial:2": 0.0
+  },
+  "test_rows_read": 0
+}

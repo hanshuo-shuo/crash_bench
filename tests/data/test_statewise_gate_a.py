@@ -19,12 +19,13 @@ def fixture_data():
             [(0, False, False), (1, True, False), (1, False, True)]
         ):
             block = f"s{source}:b{block_index}"
+            role = "calibration" if source >= 36 else "train"
             anchors.append(
                 {
                     "block_id": block,
                     "physical_source_id": f"s{source}",
                     "task_id": task,
-                    "split_role": "train",
+                    "split_role": role,
                     "condition": "stale",
                     "severity_id": "delay_3",
                     "anchor_steps": 10,
@@ -41,6 +42,7 @@ def fixture_data():
                     {
                         "block_id": block,
                         "option_id": option,
+                        "split_role": role,
                         "u0": value,
                         "outcome": {"catastrophe": int(option == "base_continue" and risk)},
                     }
@@ -57,7 +59,10 @@ def test_scoped_gate_a_uses_source_counts_and_exactness():
         {"physical_source_count": 48, "status": "GO", "test_rows_read": 0},
     )
     assert result["exact_branch_start_rate"] == 1.0
-    assert result["same_risk_flip_sources"] == 48
+    assert result["source_count"] == 36
+    assert result["calibration_sources_excluded"] == 12
+    assert result["calibration_rows_read"] == 0
+    assert result["same_risk_flip_sources"] == 36
     assert result["gate"]["status"] in {"GO", "SCOPED_CONTINUE"}
 
 
