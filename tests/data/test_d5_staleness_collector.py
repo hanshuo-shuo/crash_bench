@@ -40,3 +40,17 @@ def test_active_assignments_excludes_every_test_role():
 def test_active_assignment_count_fails_closed():
     with pytest.raises(ValueError, match="48"):
         MODULE.active_assignments({"assignments": []})
+
+
+def test_formal_outcome_contract_declares_all_u0_continuous_fields():
+    text = SCRIPT.read_text()
+    for field in (
+        "option_duration_steps",
+        "path_length_m",
+        "force_exposure_ns",
+        "latency_ms",
+        "inference_latency_ms",
+        "actuation_latency_ms",
+        "max_force_n",
+    ):
+        assert field in text

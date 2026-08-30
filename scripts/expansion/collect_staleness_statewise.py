@@ -8,6 +8,7 @@ import hashlib
 import json
 import os
 import sys
+import time
 from dataclasses import asdict
 from pathlib import Path
 from typing import Any
@@ -170,6 +171,13 @@ def main() -> None:
                         catastrophe = False
                         success = False
                         steps = 0
+                        inference_latency_ms = 0.0
+                        actuation_latency_ms = 0.0
+                        force_exposure_ns = 0.0
+                        max_force_n = 0.0
+                        control_timestep = float(
+                            getattr(current_env._raw_env(), "control_timestep", 0.05)
+                        )
                         refreshed = False
                         if option_id == "safe_stop":
                             option = SafeStopOption(stable_force_threshold=75.0, stable_steps=3)
@@ -199,13 +207,19 @@ def main() -> None:
                                     refreshed = True
                                 else:
                                     policy_obs = mechanism_observation(queue, fresh, condition=condition)
+                                infer_started = time.perf_counter()
                                 action = np.asarray(current_policy.act(policy_obs, current_env.task_description))
+                                inference_latency_ms += (time.perf_counter() - infer_started) * 1000
+                            step_started = time.perf_counter()
                             current_obs, _, done, _ = current_env.step(np.asarray(action).tolist())
+                            actuation_latency_ms += (time.perf_counter() - step_started) * 1000
                             steps = step + 1
                             path.append(np.asarray(current_obs["robot0_eef_pos"], dtype=np.float64))
                             force = float(
                                 current_env.sim_view.max_contact_force(current_env.sim_view._robot_bodies())
                             )
+                            max_force_n = max(max_force_n, force)
+                            force_exposure_ns += min(force, 75.0) * control_timestep
                             catastrophe = force >= 75.0
                             if catastrophe or done or current_env.episode_terminated():
                                 success = bool(done)
@@ -215,13 +229,25 @@ def main() -> None:
                         path_length = float(
                             np.sum(np.linalg.norm(np.diff(np.asarray(path), axis=0), axis=1))
                         ) if len(path) >= 2 else 0.0
-                        return classify_terminal(
+                        outcome = classify_terminal(
                             task_success=success,
                             catastrophe=catastrophe,
                             intervention=option_id != "base_continue",
                             steps=steps,
                             path_length=path_length,
                         )
+                        outcome.update(
+                            {
+                                "option_duration_steps": steps,
+                                "path_length_m": path_length,
+                                "max_force_n": max_force_n,
+                                "force_exposure_ns": force_exposure_ns,
+                                "inference_latency_ms": inference_latency_ms,
+                                "actuation_latency_ms": actuation_latency_ms,
+                                "latency_ms": inference_latency_ms + actuation_latency_ms,
+                            }
+                        )
+                        return outcome
                     return run
 
                 try:
