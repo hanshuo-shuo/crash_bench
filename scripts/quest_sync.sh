@@ -30,6 +30,9 @@ Commands:
   queue                  Show this user's Slurm jobs.
   exec 'COMMAND'         Run a shell command from the remote project root.
   pull-result PATH       Pull one file or directory under results/ (no delete).
+  pull-packed-result PATH
+                         Pull one precompressed .tar.gz/.tar.zst under results/
+                         without redundant transport compression (no delete).
 
 Environment overrides:
   QUEST_HOST, QUEST_REMOTE_DIR, QUEST_SOCKET
@@ -223,6 +226,19 @@ case "$command" in
       rsync -az --itemize-changes -e "$SSH_TRANSPORT" \
         "$QUEST_HOST:$QUEST_REMOTE_DIR/$path" "$ROOT/$path"
     fi
+    ;;
+  pull-packed-result)
+    path="${2:-}"
+    [[ "$path" =~ ^results/[A-Za-z0-9._/-]+\.(tar\.gz|tar\.zst)$ && "$path" != */ ]] \
+      || die "pull-packed-result only accepts a .tar.gz/.tar.zst file below results/"
+    check_connection
+    check_project_identity
+    quoted_path="$(printf '%q' "$path")"
+    remote_in_project "test -f $quoted_path" \
+      || die "packed result is not a regular file: $path"
+    mkdir -p "$ROOT/$(dirname "$path")"
+    rsync -a --partial --append-verify --itemize-changes -e "$SSH_TRANSPORT" \
+      "$QUEST_HOST:$QUEST_REMOTE_DIR/$path" "$ROOT/$path"
     ;;
   -h|--help|help|'')
     usage
