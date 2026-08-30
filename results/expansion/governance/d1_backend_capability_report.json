@@ -80,9 +80,22 @@
           "slurm_job_id": "5204569",
           "execution_commit": "3bbe156c7e784665af6668efdaad32e54fecf411",
           "result": "results/expansion/d1_exactness/pi0_task0_47f043c30659_3bbe156c7e78_20260830T080731Z/conformance.json"
+        },
+        {
+          "suite": "libero_spatial",
+          "task_id": 2,
+          "source_state_sha256": "56975ab26705ae980f07ef9db427ec165750581793fd8d5babf8f845fcdc19d4",
+          "classification": "DETERMINISTIC_EXACT",
+          "repeat_gate": "3_OF_3_PASS",
+          "branch_start_hash_pass_rate": 1.0,
+          "capture_seconds": 0.05096928682178259,
+          "restore_and_three_step_trace_seconds": [1.3936743093654513, 1.2654838990420103, 1.245172324590385],
+          "slurm_job_id": "5204571",
+          "execution_commit": "3bbe156c7e784665af6668efdaad32e54fecf411",
+          "result": "results/expansion/d1_exactness/pi0_task2_47f043c30659_3bbe156c7e78_20260830T081420Z/conformance.json"
         }
       ],
-      "gate": "TASK0_PASS__TASK2_PENDING"
+      "gate": "TASK0_TASK2_DETERMINISTIC_EXACT"
     }
   ],
   "d1_gate": {
@@ -170,6 +183,38 @@
       "model_loaded": false,
       "scientific_outcomes_opened": 0,
       "retry_ordinal": 0
+    }
+  ],
+  "conformance_retry_results": [
+    {
+      "slurm_job_id": "5204569",
+      "backend": "pi0",
+      "task_id": 0,
+      "execution_commit": "3bbe156c7e784665af6668efdaad32e54fecf411",
+      "state": "COMPLETED",
+      "exit_code": "0:0",
+      "classification": "DETERMINISTIC_EXACT",
+      "retry_ordinal": 1
+    },
+    {
+      "slurm_job_id": "5204570",
+      "backend": "openvla",
+      "task_id": 2,
+      "execution_commit": "3bbe156c7e784665af6668efdaad32e54fecf411",
+      "state": "FAILED_GATE",
+      "exit_code": "2:0",
+      "classification": "UNCLASSIFIED_FAIL_CLOSED",
+      "retry_ordinal": 1
+    },
+    {
+      "slurm_job_id": "5204571",
+      "backend": "pi0",
+      "task_id": 2,
+      "execution_commit": "3bbe156c7e784665af6668efdaad32e54fecf411",
+      "state": "COMPLETED",
+      "exit_code": "0:0",
+      "classification": "DETERMINISTIC_EXACT",
+      "retry_ordinal": 1
     }
   ],
   "claim_boundary": "Synthetic tests establish software contracts only and are not benchmark evidence."

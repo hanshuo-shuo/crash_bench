@@ -1,0 +1,148 @@
+{
+  "backend": "pi0",
+  "bundle": {
+    "bundle_id": "d504dc6b4583c80a0f8bcd43e467d924a88dece9d749718736afd90ad2043c32",
+    "capture_seconds": 0.05096928682178259,
+    "component_hashes": {
+      "model_xml_sha256": "3d4d1f02dcac05daf77d8eaa87f4c58a3095e2c81a9db0fc1f68fe9d7e83635c",
+      "policy_continuation_sha256": "550e12f66bdfa5a834b15ce5798c0ad831e57dc43aae5f6759eb62e18a93be62",
+      "rng_sha256": "74eeb0479fd85a535567ac9feb9b0923437d16ed6150bd8903c1154c1e3ec00d",
+      "runtime_state_sha256": "d39aeda9159bfb2cc4b6b1586a691de4b1daa38d48c1fa677532d893dfe6b893",
+      "simulator_state_sha256": "94e2150fdc7ba97aa6f18bb3660cc8156c59b9f82cded11d0fb0d35543e9acdf"
+    },
+    "rng_sources": {
+      "numpy_generators": [],
+      "numpy_random_states": [],
+      "policy_continuation_sha256": "550e12f66bdfa5a834b15ce5798c0ad831e57dc43aae5f6759eb62e18a93be62",
+      "torch_cpu": true,
+      "torch_cuda_devices": 1
+    }
+  },
+  "claim_boundary": "Engineering conformance only; no scientific option outcome was opened.",
+  "configuration": {
+    "exposure_registry": "results/expansion/governance/exposure_registry.json",
+    "init_index": -1,
+    "output": "results/expansion/d1_exactness/pi0_task2_47f043c30659_3bbe156c7e78_20260830T081420Z/conformance.json",
+    "policy": "pi0",
+    "repeats": 3,
+    "seed": 0,
+    "settle_steps": 10,
+    "suite": "libero_spatial",
+    "task_id": 2,
+    "trace_policy_steps": 3,
+    "warmup_policy_steps": 1
+  },
+  "execution": {
+    "git_commit": "3bbe156c7e784665af6668efdaad32e54fecf411",
+    "slurm_array_task_id": null,
+    "slurm_job_id": "5204571"
+  },
+  "gate": {
+    "classification": "DETERMINISTIC_EXACT",
+    "criteria": {
+      "branch_start_bundle_identical": true,
+      "branch_start_components_identical": true,
+      "next_action_trace_identical": true,
+      "repeat_count_exact": true,
+      "state_trace_identical": true,
+      "terminal_signature_identical": true
+    },
+    "status": "PASS"
+  },
+  "kind": "crashbench_expansion_d1_exact_branching_conformance",
+  "repeats": [
+    {
+      "action_sha256": [
+        "1e44cd7ec1ecf27d8a319d155b956aec7a8a24fd67510a0e05e4cb786325aa27",
+        "3a86c7b00d83afd5af83384d4547ac900da6ffea07c17f2ba27b63b1176c95ca",
+        "3b91c34637179ce7358016aaaa5a1438c87ee7004682d61bc476562bd2de72df"
+      ],
+      "branch_start_bundle_id": "d504dc6b4583c80a0f8bcd43e467d924a88dece9d749718736afd90ad2043c32",
+      "branch_start_component_hashes": {
+        "model_xml_sha256": "3d4d1f02dcac05daf77d8eaa87f4c58a3095e2c81a9db0fc1f68fe9d7e83635c",
+        "policy_continuation_sha256": "550e12f66bdfa5a834b15ce5798c0ad831e57dc43aae5f6759eb62e18a93be62",
+        "rng_sha256": "74eeb0479fd85a535567ac9feb9b0923437d16ed6150bd8903c1154c1e3ec00d",
+        "runtime_state_sha256": "d39aeda9159bfb2cc4b6b1586a691de4b1daa38d48c1fa677532d893dfe6b893",
+        "simulator_state_sha256": "94e2150fdc7ba97aa6f18bb3660cc8156c59b9f82cded11d0fb0d35543e9acdf"
+      },
+      "done": [
+        false,
+        false,
+        false
+      ],
+      "repeat_index": 0,
+      "restore_and_trace_seconds": 1.3936743093654513,
+      "state_sha256": [
+        "1184e8cd7964b1e0951573019e4caf05b535864a7a1319b7de3625008d52cb07",
+        "b9abf8551fc54ad61272e914f951c60773ac6926218280ea472b548d7dc26850",
+        "18ee0a5c5988185ecbd5940ddae779cb31ea90ddf9f96fb8de21976f09fbf2eb"
+      ],
+      "terminal_signature": "c432f07f8479926cd2b7faffd9d31ae520905deb0c40f5a685bb212fee7c0554"
+    },
+    {
+      "action_sha256": [
+        "1e44cd7ec1ecf27d8a319d155b956aec7a8a24fd67510a0e05e4cb786325aa27",
+        "3a86c7b00d83afd5af83384d4547ac900da6ffea07c17f2ba27b63b1176c95ca",
+        "3b91c34637179ce7358016aaaa5a1438c87ee7004682d61bc476562bd2de72df"
+      ],
+      "branch_start_bundle_id": "d504dc6b4583c80a0f8bcd43e467d924a88dece9d749718736afd90ad2043c32",
+      "branch_start_component_hashes": {
+        "model_xml_sha256": "3d4d1f02dcac05daf77d8eaa87f4c58a3095e2c81a9db0fc1f68fe9d7e83635c",
+        "policy_continuation_sha256": "550e12f66bdfa5a834b15ce5798c0ad831e57dc43aae5f6759eb62e18a93be62",
+        "rng_sha256": "74eeb0479fd85a535567ac9feb9b0923437d16ed6150bd8903c1154c1e3ec00d",
+        "runtime_state_sha256": "d39aeda9159bfb2cc4b6b1586a691de4b1daa38d48c1fa677532d893dfe6b893",
+        "simulator_state_sha256": "94e2150fdc7ba97aa6f18bb3660cc8156c59b9f82cded11d0fb0d35543e9acdf"
+      },
+      "done": [
+        false,
+        false,
+        false
+      ],
+      "repeat_index": 1,
+      "restore_and_trace_seconds": 1.2654838990420103,
+      "state_sha256": [
+        "1184e8cd7964b1e0951573019e4caf05b535864a7a1319b7de3625008d52cb07",
+        "b9abf8551fc54ad61272e914f951c60773ac6926218280ea472b548d7dc26850",
+        "18ee0a5c5988185ecbd5940ddae779cb31ea90ddf9f96fb8de21976f09fbf2eb"
+      ],
+      "terminal_signature": "c432f07f8479926cd2b7faffd9d31ae520905deb0c40f5a685bb212fee7c0554"
+    },
+    {
+      "action_sha256": [
+        "1e44cd7ec1ecf27d8a319d155b956aec7a8a24fd67510a0e05e4cb786325aa27",
+        "3a86c7b00d83afd5af83384d4547ac900da6ffea07c17f2ba27b63b1176c95ca",
+        "3b91c34637179ce7358016aaaa5a1438c87ee7004682d61bc476562bd2de72df"
+      ],
+      "branch_start_bundle_id": "d504dc6b4583c80a0f8bcd43e467d924a88dece9d749718736afd90ad2043c32",
+      "branch_start_component_hashes": {
+        "model_xml_sha256": "3d4d1f02dcac05daf77d8eaa87f4c58a3095e2c81a9db0fc1f68fe9d7e83635c",
+        "policy_continuation_sha256": "550e12f66bdfa5a834b15ce5798c0ad831e57dc43aae5f6759eb62e18a93be62",
+        "rng_sha256": "74eeb0479fd85a535567ac9feb9b0923437d16ed6150bd8903c1154c1e3ec00d",
+        "runtime_state_sha256": "d39aeda9159bfb2cc4b6b1586a691de4b1daa38d48c1fa677532d893dfe6b893",
+        "simulator_state_sha256": "94e2150fdc7ba97aa6f18bb3660cc8156c59b9f82cded11d0fb0d35543e9acdf"
+      },
+      "done": [
+        false,
+        false,
+        false
+      ],
+      "repeat_index": 2,
+      "restore_and_trace_seconds": 1.245172324590385,
+      "state_sha256": [
+        "1184e8cd7964b1e0951573019e4caf05b535864a7a1319b7de3625008d52cb07",
+        "b9abf8551fc54ad61272e914f951c60773ac6926218280ea472b548d7dc26850",
+        "18ee0a5c5988185ecbd5940ddae779cb31ea90ddf9f96fb8de21976f09fbf2eb"
+      ],
+      "terminal_signature": "c432f07f8479926cd2b7faffd9d31ae520905deb0c40f5a685bb212fee7c0554"
+    }
+  ],
+  "schema_version": 1,
+  "source": {
+    "default_init_index": 0,
+    "role": "EXPOSED_ENGINEERING_ONLY",
+    "source_state_sha256": "56975ab26705ae980f07ef9db427ec165750581793fd8d5babf8f845fcdc19d4",
+    "suite": "libero_spatial",
+    "task_id": 2,
+    "upstream_source_key": "libero_default_init:libero_spatial:2:0"
+  }
+}
