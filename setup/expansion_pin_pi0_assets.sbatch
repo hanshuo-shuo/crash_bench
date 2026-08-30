@@ -12,8 +12,11 @@
 set -euo pipefail
 cd "${SLURM_SUBMIT_DIR:-$HOME/crash_bench}"
 
-: "${CB_EXPANSION_RUN_ID:?set CB_EXPANSION_RUN_ID to protocolSHA_commit_UTC}"
-case "$CB_EXPANSION_RUN_ID" in
+commit="$(git rev-parse HEAD)"
+protocol_sha="$(sha256sum configs/expansion/benchmark_v1.yaml | awk '{print $1}')"
+utc="$(date -u +%Y%m%dT%H%M%SZ)"
+run_id="${CB_EXPANSION_RUN_ID:-${protocol_sha:0:12}_${commit:0:12}_${utc}}"
+case "$run_id" in
   *[!A-Za-z0-9._-]*) printf 'invalid CB_EXPANSION_RUN_ID\n' >&2; exit 2 ;;
 esac
 
@@ -22,7 +25,7 @@ actual_openpi_commit="$(git -C /projects/p33100/siosio/third_party/openpi rev-pa
 test "$actual_openpi_commit" = "$expected_openpi_commit"
 test -z "$(git -C /projects/p33100/siosio/third_party/openpi status --porcelain)"
 
-result_root="results/expansion/governance/pi0_identity_${CB_EXPANSION_RUN_ID}"
+result_root="results/expansion/governance/pi0_identity_${run_id}"
 test ! -e "$result_root"
 
 module purge
@@ -36,4 +39,4 @@ python scripts/expansion/hash_tree_manifest.py \
   --output "$result_root/checkpoint_tree_manifest.json"
 
 printf 'commit=%s\njob=%s\nresult=%s\n' \
-  "$(git rev-parse HEAD)" "$SLURM_JOB_ID" "$result_root"
+  "$commit" "$SLURM_JOB_ID" "$result_root"
