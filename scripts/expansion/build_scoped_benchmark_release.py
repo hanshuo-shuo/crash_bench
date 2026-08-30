@@ -47,6 +47,7 @@ def main() -> None:
     parser.add_argument("--benchmark-freeze", type=Path, required=True)
     parser.add_argument("--d8-run-root", type=Path, required=True)
     parser.add_argument("--figure-manifest", type=Path, required=True)
+    parser.add_argument("--full-sensitivity", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
     args = parser.parse_args()
     if args.output_dir.exists():
@@ -61,6 +62,7 @@ def main() -> None:
     d8_manifest = load(d8_post / "run_manifest.json")
     d8_analysis = load(d8_post / "benchmark_test_analysis.json")
     figure_manifest = load(args.figure_manifest)
+    full_sensitivity = load(args.full_sensitivity)
     test_seal = args.d8_run_root / "authorization" / "test_complete.seal"
     if not test_seal.is_file() or d8_manifest.get("test_complete_sealed") is not True:
         raise ValueError("D10 release requires a sealed one-time D8 test")
@@ -76,6 +78,12 @@ def main() -> None:
         raise ValueError("benchmark-only release cannot contain a method superiority result")
     if figure_manifest.get("method_superiority_depicted") is not False:
         raise ValueError("release figure crosses the method claim boundary")
+    if (
+        full_sensitivity.get("weight_setting_count") != 108
+        or full_sensitivity.get("confirmatory_gate_changed") is not False
+        or full_sensitivity.get("analysis_role") != "SUPPLEMENTAL_NON_GATING_PREDECLARED_WEIGHT_GRID"
+    ):
+        raise ValueError("release lacks the complete non-gating 108-setting utility sensitivity")
     confirmatory_status = d8_analysis["gate"]["status"]
     release_mode = (
         "SCOPED_SINGLE_MECHANISM_BENCHMARK_DATA"
@@ -164,6 +172,7 @@ def main() -> None:
 - Test lock: sealed; no reopen or top-up permitted
 - D5 Gate-A correction: calibration excluded; correction discovered after D8 opened and fully disclosed
 - Method result: development null/negative; 100% safe-stop degeneration after calibration
+- Utility sensitivity: all 108 predeclared settings reported as supplemental non-gating analysis
 - Raw observations: content-addressed and Quest-available; compact shards, merged tables, models, and manifests tracked
 """
     (args.output_dir / "DATA_CARD.md").write_text(data_card)
@@ -178,6 +187,7 @@ def main() -> None:
         "d8_analysis": d8_post / "benchmark_test_analysis.json",
         "d8_test_complete_seal": test_seal,
         "figure_manifest": args.figure_manifest,
+        "full_utility_sensitivity": args.full_sensitivity,
         "dataset_coverage_table": tables / "dataset_coverage.csv",
         "heterogeneity_table": tables / "heterogeneity_support.csv",
         "gate_table": tables / "gate_decisions.csv",

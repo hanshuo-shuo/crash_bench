@@ -69,6 +69,12 @@ def main() -> None:
         errors.append("figure_effective_n_mismatch")
     if figure_manifest.get("method_superiority_depicted") is not False:
         errors.append("figure_depicts_forbidden_method_claim")
+    sensitivity_path = Path(manifest["artifacts"]["full_utility_sensitivity"]["path"])
+    sensitivity = json.loads(sensitivity_path.read_text())
+    if sensitivity.get("weight_setting_count") != 108:
+        errors.append("utility_sensitivity_grid_incomplete")
+    if sensitivity.get("confirmatory_gate_changed") is not False:
+        errors.append("supplemental_sensitivity_changed_confirmatory_gate")
     caption_path = figure_manifest_path.parent / "figure_scoped_support_caption.md"
     caption = caption_path.read_text() if caption_path.is_file() else ""
     if "effective n=36" not in caption or "effective n=32" not in caption:
