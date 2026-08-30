@@ -16,7 +16,7 @@ ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from crashbench.branching.artifacts import unpack_numeric_mapping
+from crashbench.branching.artifacts import BlobRef, ContentAddressedStore, unpack_numeric_mapping
 from crashbench.data.utility import OutcomeVector, PhysicalBudgets, normalized_costs
 from crashbench.models.option_outcome import (
     COST_TARGETS,
@@ -47,6 +47,7 @@ def build_training_arrays(
     if not allowed_roles or allowed_roles - {"train", "development", "calibration"}:
         raise ValueError("feature loader role request is empty or forbidden")
     anchor_by_block = {row["block_id"]: row for row in anchors}
+    store = ContentAddressedStore(artifact_store)
     feature_cache = {}
     features, options, outcomes, costs, sources, roles, row_ids, actual_u0 = (
         [], [], [], [], [], [], [], [],
@@ -56,12 +57,16 @@ def build_training_arrays(
         if anchor is None:
             raise ValueError(f"branch lacks anchor: {branch['block_id']}")
         role = str(anchor["split_role"])
+        if str(branch.get("split_role")) != role:
+            raise ValueError(f"anchor/branch split role mismatch: {branch['block_id']}")
         if role not in allowed_roles:
             continue
         ref = anchor["anchor_feature_blob"]
         key = ref["sha256"]
         if key not in feature_cache:
-            payload = (artifact_store / ref["relative_path"]).read_bytes()
+            blob_ref = BlobRef(**ref)
+            store.validate(blob_ref)
+            payload = (store.root / blob_ref.relative_path).read_bytes()
             feature_cache[key] = pooled_anchor_features(unpack_numeric_mapping(payload))
         outcome = branch["outcome"]
         terminal = [

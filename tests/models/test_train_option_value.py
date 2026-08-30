@@ -31,3 +31,9 @@ def test_two_stage_fit_modes_are_explicit_in_cli_source():
     source = SCRIPT.read_text()
     assert 'choices=("train", "train_development")' in source
     assert 'args.fit_on == "train"' in source
+
+
+def test_feature_loader_revalidates_content_address_and_split_identity():
+    source = SCRIPT.read_text()
+    assert "store.validate(blob_ref)" in source
+    assert "anchor/branch split role mismatch" in source
