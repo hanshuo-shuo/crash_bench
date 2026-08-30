@@ -42,6 +42,30 @@ def test_active_assignment_count_fails_closed():
         MODULE.active_assignments({"assignments": []})
 
 
+def test_test_assignments_are_exact_and_separate_from_active_roles():
+    rows = [
+        {
+            "task_id": f"libero_spatial:{task}",
+            "role": "confirmatory_id_test",
+            "physical_source_id": f"{task}:test:{index}",
+        }
+        for task in (0, 2)
+        for index in range(16)
+    ]
+    selected = MODULE.test_assignments({"assignments": rows})
+    assert len(selected) == 32
+    assert {row["role"] for row in selected} == {"confirmatory_id_test"}
+
+
+def test_collector_source_requires_full_test_authorization_contract():
+    text = SCRIPT.read_text()
+    for token in (
+        "validate_test_retry", "benchmark_freeze", "test_source_manifest_sha256",
+        "collector run_id differs", "test_rows_read = 1",
+    ):
+        assert token in text
+
+
 def test_formal_outcome_contract_declares_all_u0_continuous_fields():
     text = SCRIPT.read_text()
     for field in (

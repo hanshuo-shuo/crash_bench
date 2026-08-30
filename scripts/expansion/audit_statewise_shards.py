@@ -55,18 +55,31 @@ def audit(
     split: dict[str, Any],
     store: ContentAddressedStore,
     expected_commit: str,
+    assignments_override: list[dict[str, Any]] | None = None,
+    expected_role_counts: Counter | None = None,
+    expected_task_counts: Counter | None = None,
+    expected_test_rows_read_per_shard: int = 0,
+    kind: str = "crashbench_expansion_d5_source_shard_audit",
 ) -> dict[str, Any]:
     rows = list(shards)
-    assignments = active_assignments(split)
+    assignments = active_assignments(split) if assignments_override is None else assignments_override
+    expected_role_counts = (
+        Counter({"train": 24, "calibration": 12, "development": 12})
+        if expected_role_counts is None else expected_role_counts
+    )
+    expected_task_counts = (
+        Counter({"libero_spatial:0": 24, "libero_spatial:2": 24})
+        if expected_task_counts is None else expected_task_counts
+    )
     errors: list[str] = []
     indices = [int(row.get("assignment_index", -1)) for row in rows]
-    if sorted(indices) != list(range(48)):
-        errors.append("assignment_indices_are_not_exactly_0_through_47")
+    if sorted(indices) != list(range(len(assignments))):
+        errors.append("assignment_indices_do_not_match_frozen_assignment_count")
     audits = []
     for shard in sorted(rows, key=lambda row: int(row.get("assignment_index", -1))):
         index = int(shard.get("assignment_index", -1))
         shard_errors = []
-        if not 0 <= index < 48:
+        if not 0 <= index < len(assignments):
             shard_errors.append("invalid_assignment_index")
             audits.append({"assignment_index": index, "errors": shard_errors})
             continue
@@ -84,8 +97,8 @@ def audit(
             shard_errors.append("protocol_sha256_mismatch")
         if shard.get("execution", {}).get("git_commit") != expected_commit:
             shard_errors.append("execution_commit_mismatch")
-        if shard.get("test_rows_read") != 0:
-            shard_errors.append("test_rows_read_nonzero")
+        if shard.get("test_rows_read") != expected_test_rows_read_per_shard:
+            shard_errors.append("test_rows_read_mismatch")
         if shard.get("planned_blocks") != 27 or shard.get("complete_blocks") != 27:
             shard_errors.append("incomplete_block_count")
         if shard.get("all_blocks_accounted") is not True or len(shard.get("blocks", [])) != 27:
@@ -133,13 +146,13 @@ def audit(
         )
     role_counts = Counter(str(row.get("split_role")) for row in rows)
     task_counts = Counter(str(row.get("task_id")) for row in rows)
-    if role_counts != Counter({"train": 24, "calibration": 12, "development": 12}):
+    if role_counts != expected_role_counts:
         errors.append("split_role_counts_mismatch")
-    if task_counts != Counter({"libero_spatial:0": 24, "libero_spatial:2": 24}):
+    if task_counts != expected_task_counts:
         errors.append("task_counts_mismatch")
     payload: dict[str, Any] = {
         "schema_version": 1,
-        "kind": "crashbench_expansion_d5_source_shard_audit",
+        "kind": kind,
         "expected_execution_commit": expected_commit,
         "protocol_sha256": split["protocol_sha256"],
         "observed_shards": len(rows),

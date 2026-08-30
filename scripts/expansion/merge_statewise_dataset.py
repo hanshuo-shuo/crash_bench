@@ -59,6 +59,9 @@ def merge_shards(
     store: ContentAddressedStore,
     budgets: PhysicalBudgets,
     expected_indices: Sequence[int] = tuple(range(48)),
+    allowed_roles: set[str] = ALLOWED_ROLES,
+    expected_test_rows_read_per_shard: int = 0,
+    kind: str = "crashbench_expansion_d5_merged_dataset_manifest",
 ) -> tuple[dict[str, Any], list[dict], list[dict], list[dict]]:
     shards = list(shards)
     indices = [int(row.get("assignment_index", -1)) for row in shards]
@@ -71,9 +74,9 @@ def merge_shards(
     physical_ids = set()
     for shard in sorted(shards, key=lambda row: int(row.get("assignment_index", -1))):
         role = str(shard.get("split_role"))
-        if role not in ALLOWED_ROLES or "test" in role:
+        if role not in allowed_roles:
             errors.append(f"forbidden_split_role:{role}")
-        if shard.get("test_rows_read") != 0:
+        if shard.get("test_rows_read") != expected_test_rows_read_per_shard:
             errors.append(f"test_rows_read:{shard.get('assignment_index')}")
         if shard.get("planned_blocks") != 27 or shard.get("all_blocks_accounted") is not True:
             errors.append(f"block_accounting:{shard.get('assignment_index')}")
@@ -150,7 +153,7 @@ def merge_shards(
         errors.append("unexpected_assignment_indices")
     manifest: dict[str, Any] = {
         "schema_version": 1,
-        "kind": "crashbench_expansion_d5_merged_dataset_manifest",
+        "kind": kind,
         "observed_source_shards": len(shards),
         "expected_source_shards": len(expected),
         "duplicate_assignment_indices": duplicate,
@@ -162,7 +165,7 @@ def merge_shards(
         "invalid_block_count": len(invalid),
         "errors": errors,
         "status": "GO" if not errors else "NO_GO",
-        "test_rows_read": 0,
+        "test_rows_read": sum(int(row.get("test_rows_read", 0)) for row in shards),
     }
     manifest["manifest_sha256"] = hashlib.sha256(
         json.dumps(manifest, sort_keys=True, separators=(",", ":")).encode()

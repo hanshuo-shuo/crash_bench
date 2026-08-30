@@ -23,3 +23,10 @@ def test_self_hash_excludes_only_declared_self_hash():
 def test_required_outcomes_include_post_review_physical_metrics():
     required = MODULE.REQUIRED_OUTCOME_FIELDS
     assert {"max_force_n", "force_exposure_ns", "inference_latency_ms", "actuation_latency_ms", "latency_ms"} <= required
+
+
+def test_audit_source_supports_explicit_confirmatory_parameterization():
+    source = SCRIPT.read_text()
+    assert "assignments_override" in source
+    assert "expected_test_rows_read_per_shard" in source
+    assert "assignment_indices_do_not_match_frozen_assignment_count" in source

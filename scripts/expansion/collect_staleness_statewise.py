@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Collect one train/calibration/development staleness source shard for D5."""
+"""Collect one staleness source shard with a fail-closed D5/D8 role firewall."""
 
 from __future__ import annotations
 
@@ -27,6 +27,7 @@ from crashbench.glass_recovery_data import array_sha256
 from crashbench.mechanisms.observation_staleness import ObservationDelayQueue
 from crashbench.options.common import ObservationRefreshOption, SafeStopOption
 from crashbench.policies import build_policy
+from crashbench.data.splits import TestAuthorization, validate_test_retry
 from scripts.expansion.hash_tree_manifest import resolve_git_head
 from scripts.expansion.run_fragile_screen import classify_terminal, screen_utility
 from scripts.expansion.run_staleness_screen import mechanism_observation, queue_state_sha256
@@ -34,6 +35,7 @@ from scripts.expansion.run_staleness_screen import mechanism_observation, queue_
 
 PI0_CHECKPOINT = "gs://openpi-assets/checkpoints/pi0_libero"
 ALLOWED_ROLES = ("train", "calibration", "development")
+TEST_ROLE = "confirmatory_id_test"
 ROLE_ORDER = {role: index for index, role in enumerate(ALLOWED_ROLES)}
 ANCHOR_STEPS = (5, 10, 15)
 SEVERITIES = {"delay_1": 1, "delay_3": 3, "delay_5": 5}
@@ -57,6 +59,51 @@ def active_assignments(split_manifest: dict[str, Any]) -> list[dict[str, Any]]:
     return rows
 
 
+def test_assignments(split_manifest: dict[str, Any]) -> list[dict[str, Any]]:
+    rows = [row for row in split_manifest.get("assignments", []) if row.get("role") == TEST_ROLE]
+    rows.sort(key=lambda row: (str(row["task_id"]), str(row["physical_source_id"])))
+    if len(rows) != 32 or len({row["physical_source_id"] for row in rows}) != 32:
+        raise ValueError("D8-B test split must contain exactly 32 physical sources")
+    if {
+        task: sum(row["task_id"] == task for row in rows)
+        for task in sorted({row["task_id"] for row in rows})
+    } != {"libero_spatial:0": 16, "libero_spatial:2": 16}:
+        raise ValueError("D8-B test split must contain exactly 16 sources per task")
+    return rows
+
+
+def validate_benchmark_test_access(
+    *,
+    authorization_root: Path,
+    benchmark_freeze: dict[str, Any],
+    split_manifest: dict[str, Any],
+    run_id: str,
+) -> str:
+    if benchmark_freeze.get("mode") != "SCOPED_BENCHMARK_ONLY__NO_METHOD_SUPERIORITY_TEST":
+        raise ValueError("D8-B collector requires the benchmark-only fallback freeze")
+    if benchmark_freeze.get("test_opened") is not False or benchmark_freeze.get("test_outcomes_read") != 0:
+        raise ValueError("benchmark-only freeze already reports test access")
+    if benchmark_freeze.get("protocol_sha256") != split_manifest.get("protocol_sha256"):
+        raise ValueError("benchmark freeze/split protocol mismatch")
+    payload = json.loads((authorization_root / "test_authorization.json").read_text())
+    authorization = TestAuthorization(
+        run_id=payload["run_id"],
+        protocol_sha256=payload["protocol_sha256"],
+        test_source_manifest_sha256=payload["test_source_manifest_sha256"],
+        model_sha256=payload["model_sha256"],
+        comparator_sha256=payload["comparator_sha256"],
+        calibration_sha256=payload["calibration_sha256"],
+        analysis_script_sha256=payload["analysis_script_sha256"],
+    )
+    if authorization.run_id != run_id:
+        raise ValueError("collector run_id differs from one-time authorization")
+    if authorization.protocol_sha256 != benchmark_freeze["protocol_sha256"]:
+        raise ValueError("authorization protocol differs from benchmark freeze")
+    if authorization.test_source_manifest_sha256 != benchmark_freeze["test_source_manifest_sha256"]:
+        raise ValueError("authorization source identity differs from benchmark freeze")
+    return validate_test_retry(authorization_root, authorization)
+
+
 def source_by_physical_id(formal_analysis: dict[str, Any], physical_source_id: str) -> dict[str, Any]:
     matches = [
         row
@@ -72,18 +119,46 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--formal-analysis", type=Path, required=True)
     parser.add_argument("--split-manifest", type=Path, required=True)
-    parser.add_argument("--assignment-index", type=int, choices=range(48), required=True)
+    parser.add_argument("--assignment-index", type=int, required=True)
+    parser.add_argument("--mode", choices=("active", "benchmark_test"), default="active")
+    parser.add_argument("--authorization-root", type=Path)
+    parser.add_argument("--benchmark-freeze", type=Path)
+    parser.add_argument("--run-id")
     parser.add_argument("--artifact-store", type=Path, required=True)
     parser.add_argument("--max-branch-steps", type=int, default=100)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     if args.output.exists():
-        raise FileExistsError(f"refusing to overwrite D5 source shard: {args.output}")
+        raise FileExistsError(f"refusing to overwrite statewise source shard: {args.output}")
     formal = json.loads(args.formal_analysis.read_text())
     split = json.loads(args.split_manifest.read_text())
-    assignment = active_assignments(split)[args.assignment_index]
-    if assignment["role"] not in ALLOWED_ROLES:
+    authorization_token = None
+    if args.mode == "active":
+        if any(value is not None for value in (args.authorization_root, args.benchmark_freeze, args.run_id)):
+            raise ValueError("D5 active mode refuses test authorization arguments")
+        assignments = active_assignments(split)
+        shard_kind = "crashbench_expansion_d5_staleness_source_shard"
+        test_rows_read = 0
+    else:
+        if args.authorization_root is None or args.benchmark_freeze is None or args.run_id is None:
+            raise ValueError("D8-B mode requires authorization root, benchmark freeze, and run_id")
+        freeze = json.loads(args.benchmark_freeze.read_text())
+        authorization_token = validate_benchmark_test_access(
+            authorization_root=args.authorization_root,
+            benchmark_freeze=freeze,
+            split_manifest=split,
+            run_id=args.run_id,
+        )
+        assignments = test_assignments(split)
+        shard_kind = "crashbench_expansion_d8_benchmark_test_source_shard"
+        test_rows_read = 1
+    if not 0 <= args.assignment_index < len(assignments):
+        raise ValueError("assignment index is outside the selected frozen role")
+    assignment = assignments[args.assignment_index]
+    if args.mode == "active" and assignment["role"] not in ALLOWED_ROLES:
         raise RuntimeError(f"D5 refuses non-active role: {assignment['role']}")
+    if args.mode == "benchmark_test" and assignment["role"] != TEST_ROLE:
+        raise RuntimeError(f"D8-B refuses non-confirmatory role: {assignment['role']}")
     source = source_by_physical_id(formal, assignment["physical_source_id"])
     if source["attempt_id"] != assignment["formal_attempt_id"]:
         raise ValueError("formal attempt identity differs between source and split")
@@ -297,7 +372,7 @@ def main() -> None:
     complete = sum(block["status"] == "COMPLETE_REALIZED_OPTIONS" for block in blocks)
     payload: dict[str, Any] = {
         "schema_version": 1,
-        "kind": "crashbench_expansion_d5_staleness_source_shard",
+        "kind": shard_kind,
         "protocol_sha256": split["protocol_sha256"],
         "physical_source_id": assignment["physical_source_id"],
         "mechanism_source_id": assignment["mechanism_source_id"],
@@ -313,7 +388,8 @@ def main() -> None:
         "planned_blocks": 27,
         "complete_blocks": complete,
         "all_blocks_accounted": len(blocks) == 27,
-        "test_rows_read": 0,
+        "test_rows_read": test_rows_read,
+        "authorization_token": authorization_token,
         "blocks": blocks,
     }
     payload["shard_sha256"] = hashlib.sha256(

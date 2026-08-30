@@ -114,3 +114,20 @@ def test_merge_rejects_test_role_and_missing_source(tmp_path):
     assert manifest["status"] == "NO_GO"
     assert "missing_assignment_indices" in manifest["errors"]
     assert any(error.startswith("forbidden_split_role") for error in manifest["errors"])
+
+
+def test_merge_can_only_accept_test_rows_under_explicit_parameterization(tmp_path):
+    store = ContentAddressedStore(tmp_path / "store")
+    shard = {
+        "assignment_index": 0, "split_role": "confirmatory_id_test", "test_rows_read": 1,
+        "planned_blocks": 27, "all_blocks_accounted": True, "complete_blocks": 0,
+        "physical_source_id": "p", "mechanism_source_id": "m", "policy_source_id": "q",
+        "task_id": "t", "blocks": [],
+    }
+    manifest, *_ = MODULE.merge_shards(
+        [shard], store=store, budgets=PhysicalBudgets(100, 2, 75, 1000, "physical limits"),
+        expected_indices=[0], allowed_roles={"confirmatory_id_test"},
+        expected_test_rows_read_per_shard=1, kind="test_fixture",
+    )
+    assert manifest["kind"] == "test_fixture"
+    assert manifest["test_rows_read"] == 1
