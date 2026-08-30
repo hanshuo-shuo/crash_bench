@@ -1,0 +1,382 @@
+\section{Frozen Corpus and Provenance}
+\label{app:provenance}
+
+Table~\ref{tab:provenance} records the contracts used by every main-text
+number. The PIVOT-0 synthesis generated no rollout and trained no model; it
+reads frozen Phase 2.5A, Phase 2.5B, Phase 2.5B-R, and sequential-closeout
+artifacts. Historical train/calibration/development names remain provenance
+fields only. PIVOT-0 treats all 20 sources as exposed development.
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\linewidth}{@{}l Y@{}}
+\toprule
+Contract & Frozen value \\
+\midrule
+Policy checkpoint & \texttt{openvla/openvla-7b-finetuned-libero-spatial}, revision \texttt{962318cec55ac10993ff0f5f43eda9a270b4c873} \\
+Capture commit & \texttt{d4751330395eec11691f4830761b76f5f1ac36b7} (clean) \\
+Capture protocol hash & \texttt{b487d8b5cc20c1fe932d8ee4ff67f05883e2b010b6ee9eb155eb9b93c2d1a4c3} \\
+PIVOT generation commit & \texttt{98b3ffe0aec2838448d0536b6c62036e37487f6f} (clean) \\
+PIVOT evidence fingerprint & \texttt{dc48ff317dad}; capture fingerprint \texttt{d4751330395e} \\
+Sources and decisions & 20 exposed-development sources; 273 eligible decisions; 819 realized option rows \\
+Historical split provenance & 5 train, 7 calibration, 8 development sources; no confirmatory split in this synthesis \\
+Mechanical scope & one \texttt{glass\_recovery} family; \texttt{glass} treatment plus \texttt{offpath}/\texttt{noglass} controls \\
+Options & \texttt{base\_continue}, privileged \texttt{detour\_complete}, \texttt{retreat\_hold} \\
+Outcomes and utility & task success $=+1$; safe noncompletion $=0$; catastrophe $=-1$ \\
+Decode and seed & deterministic decoding (no sampling, one beam); rollout seed 0 \\
+PIVOT actions & new rollouts false; new training false; fresh test outcomes loaded false \\
+\bottomrule
+\end{tabularx}
+\caption{Frozen corpus and provenance contract. Effective independent sources:
+20; repeated decisions: 273.}
+\label{tab:provenance}
+\end{table}
+
+\section{Exact Restoration, Eligibility, and Finite-Option Semantics}
+\label{app:restore}
+
+\paragraph{Saved state.}
+The collector stores flattened MuJoCo time, $qpos$, and $qvel$; exact model XML;
+OSC goals, gains, torques, and interpolator state; integration inputs; episode
+counters; robot temporal buffers; observable values and timers; the observation
+cache; and the explicit policy-boundary observation. The historical name
+``controller state'' therefore denotes a broader continuation snapshot, not
+only an OSC command.
+
+\paragraph{Five required identities.}
+Before each option branch, the collector rebuilds the model, restores the
+numeric state and continuation snapshot, and recomputes SHA-256 identities for
+(i) simulator state, (ii) controller/dynamics state excluding scene-specific
+observations, (iii) the complete numeric continuation including observation
+history, (iv) every policy-boundary observation field with dtype and shape, and
+(v) model XML. Any mismatch raises \texttt{exact\_state\_restore\_mismatch} and
+the decision cannot be retained. The 273 retained decisions each have three
+completed option rows under this fail-closed code path.
+
+\paragraph{RNG boundary.}
+The run fixes seed 0 and deterministic policy generation, and the structured
+controllers are deterministic. The stored branch identities do not include a
+separate serialization or hash of global Python, NumPy, or framework RNG state
+at every decision. The exact-state claim in this paper is restricted to the
+five verified branch-start identities. A broader benchmark should add explicit
+RNG serialization even when decoding is deterministic.
+
+\paragraph{Eligibility.}
+Source/placement eligibility is mechanical and Base-defined, not selected by a
+router result. Exclusions include invalid initial catastrophe, on-path failure
+to produce the intended catastrophe, catastrophe before the requested horizon,
+and a control terminating before the matched anchor. A placement/condition/
+horizon enters only when a valid branch start exists. All retained branches
+receive exactly one of the three terminal outcomes. The PIVOT synthesis keeps
+all 273 retained decisions and does not recensor after observing option labels.
+
+\paragraph{Interpretation.}
+Executing all three branches is full information for this finite option set at
+these saved states. It does not identify the value of an unexecuted controller,
+an observational population effect, or the best policy in a continuous action
+space. Privileged Detour receives obstacle geometry. Retreat is a conservative
+fallback. Their different control horizons and effort are not charged by the
+frozen utility.
+
+\section{Complete Risk-Benefit Accounting}
+\label{app:risk-benefit}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+Cell & Raw decisions & Supporting sources & Equal-source joint mass \\
+\midrule
+$R=0,B=0$ & 172 & 19 & 0.5831 \\
+$R=0,B=1$ & 9 & 6 & 0.0278 \\
+$R=1,B=0$ & 10 & 6 & 0.0742 \\
+$R=1,B=1$ & 82 & 19 & 0.3150 \\
+\midrule
+Total & 273 & 20 & 1.0000 \\
+\bottomrule
+\end{tabular}
+\caption{Raw and equal-source $R\times B$ accounting over 20 independent
+sources. A supporting-source
+count means that the source contains at least one decision in the cell; counts
+therefore do not sum to 20.}
+\label{tab:rb-full}
+\end{table}
+
+The raw conditional probabilities are 0.8913 for $P(B=1\mid R=1)$, 0.0497 for
+$P(B=1\mid R=0)$, and 0.9011 for $P(R=1\mid B=1)$. Equal-source conditional
+means are respectively 0.8700 over 20 denominator-bearing sources, 0.0415 over
+19, and 0.9328 over 19. Ratios of the equal-source joint cells in
+Table~\ref{tab:rb-full} are different estimands and are not substituted for
+these conditional means.
+
+The 10 $R=1,B=0$ decisions occur at horizons 5/10/30/40 in counts 6/1/1/2 and
+conditions glass/offpath in counts 9/1. The nine $R=0,B=1$ decisions occur at
+horizons 5/10/20/30 in counts 5/2/1/1 and conditions noglass/offpath in counts
+5/4. Each direction has six sources, and the source sets are disjoint.
+
+\section{Complete Tight Witnesses}
+\label{app:witnesses}
+
+The deterministic witness rule matches source, condition, horizon, and binary
+risk exactly. Table~\ref{tab:witness-detail} contains every resulting pair.
+The ``feature summary'' columns are computed from deployable robot state,
+nominal action, and frozen hidden features. Raw pixels are not retained; exact
+observation and hidden hashes make that limitation explicit.
+
+\small
+\begin{longtable}{@{}p{0.16\linewidth}p{0.79\linewidth}@{}}
+\caption{Full deterministic witness records: 3 pairs across 2 independent
+sources, with 1 source for the exact Detour/Retreat contrast.}\label{tab:witness-detail}\\
+\toprule
+Field & Value \\
+\midrule
+\endfirsthead
+\toprule
+Field & Value \\
+\midrule
+\endhead
+Pair 1 stratum & mechanical family \texttt{glass\_recovery}; condition \texttt{glass}; source \nolinkurl{69fa7e93588c6aea4b134efa44633d38556ce1656b46df276021920a664881a3}; $H=5$; $R=1$ \\
+Pair 1 states & A \nolinkurl{43347d99e35479cdc3d3197e5c6127d8bb063ec834656eecdd505a39f52d7167}; B \nolinkurl{f83d0199d1f4fdc40ae28dc3a5c02514dc5ae737d391602dea012bb750f98642} \\
+Pair 1 observations & A \nolinkurl{fe26c03740a7719695c9e5e2bdbac19a64e0bcb93c52ce587fb187c95f55652e}; B \nolinkurl{cd048daaae15635b63b6ea1c4568163ee75066ca3ae1eccb7cb69c2323750e64} \\
+Pair 1 outcomes/utility & A: (Base catastrophe $-1$, Detour success $+1$, Retreat safe $0$), strict Detour. B: (Base catastrophe $-1$, Detour catastrophe $-1$, Retreat safe $0$), strict Retreat. \\
+Pair 1 feature summary & z-scored robot/action distance 3.2781; hidden cosine distance 0.6481; hidden hashes A \nolinkurl{9810a1fd95eb8fb0b82787c1f52adf76c98e2f27c1683fa32b238eb2c60955ad}, B \nolinkurl{334985f6df5e8d698a1d0e06d3a8ddbb9c04d556257be6a8f5d33c7b2bb94de3}. \\
+\midrule
+Pair 2 stratum & mechanical family \texttt{glass\_recovery}; condition \texttt{offpath}; source \nolinkurl{69fa7e93588c6aea4b134efa44633d38556ce1656b46df276021920a664881a3}; $H=5$; $R=0$ \\
+Pair 2 states & A \nolinkurl{db05c17974a1032f5835681f51f63fcb978004eecfe48098e0892f5bd6ada082}; B \nolinkurl{09da0904e292712e5ed0fbdeaeb877e637acabfb5f929d8276f5fdb0c3004a96} \\
+Pair 2 observations & A \nolinkurl{226d3ac32a8c77573e890d4948eb07e0ffd911eddb26ee53763ae5ab885734b7}; B \nolinkurl{910cb06477e5969823bbb792a43446d4c99146799c761208495a74730aabf11a} \\
+Pair 2 outcomes/utility & A: (Base success $+1$, Detour safe $0$, Retreat safe $0$), strict Base. B: (Base safe $0$, Detour success $+1$, Retreat safe $0$), strict Detour. \\
+Pair 2 feature summary & z-scored robot/action distance 3.8686; hidden cosine distance 0.4464; hidden hashes A \nolinkurl{4c1b430253f5e6f64a19ea060abb815b8ffa91a1e675b1649466d6b0c2832f35}, B \nolinkurl{5a148ac7f5e7145c671ab2eb0996613473be787531dc17889ecacc5d1a8a617e}. \\
+\midrule
+Pair 3 stratum & mechanical family \texttt{glass\_recovery}; condition \texttt{noglass}; source \nolinkurl{b830bede73f505b84b88a6596e92c22a5a4c0ded1e275e8e5b28a599849d2df6}; $H=5$; $R=0$ \\
+Pair 3 states & A \nolinkurl{7cc66a27ce2971b4dd170aa8f8b415751cf10acaf0a4eb4a2ac10682c2b9dda6}; B \nolinkurl{2ccd971e77ce745c2eb16199826277fcd3c3072243e5e2d9b5214fb4b1d0b89c} \\
+Pair 3 observations & A \nolinkurl{44fadc36ca73e1c03ec22f5653aed6748c82f7bc39c7ce1edfc8fc4c7813faa1}; B \nolinkurl{7dd048488f8e3683036bd9e47426b4b98b05ffb109f09eaa99d814ccca3f07fa} \\
+Pair 3 outcomes/utility & A: (Base success $+1$, Detour safe $0$, Retreat safe $0$), strict Base. B: (Base safe $0$, Detour success $+1$, Retreat safe $0$), strict Detour. \\
+Pair 3 feature summary & z-scored robot/action distance 2.0406; hidden cosine distance 0.6742; hidden hashes A \nolinkurl{c9370f4f86e582a51e3fc1acc5023bf8854e57817c7196dca65773a31a98ae85}, B \nolinkurl{97d05dc72f018a054679495cfd8d7584f80389153a74862f086099ce9ec99c26}. \\
+\bottomrule
+\end{longtable}
+\normalsize
+
+Pair 1 is the only exact Detour/Retreat contrast and has one independent
+source. Pairs 1 and 2 share that source, so the complete three-pair set has two
+independent sources, not three.
+
+\section{Complete Source-Macro Policy-Regret Table}
+\label{app:policy-regret}
+
+\begin{table}[H]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{@{}lrrrrrrr@{}}
+\toprule
+Policy & Success & Cat. & Safe & Interv. & Utility & Regret & Opp. rec. \\
+\midrule
+Always Base & .5197 & .3892 & .0911 & .0000 & .1306 & .4336 & -.4000 \\
+Always Detour & .4347 & .1800 & .3853 & 1.0000 & .2547 & .3094 & .0009 \\
+Always Retreat & .0000 & .1858 & .8142 & 1.0000 & -.1858 & .7500 & -1.4215 \\
+Risk $\rightarrow$ Detour & .4989 & .2511 & .2500 & .4981 & .2478 & .3164 & -.0215 \\
+Risk $\rightarrow$ Retreat & .4394 & .3097 & .2508 & .3506 & .1297 & .4344 & -.4027 \\
+Risk $\rightarrow$ Best Fixed & .5022 & .2478 & .2500 & .4947 & .2544 & .3097 & .0000 \\
+Oracle Benefit Gate $\rightarrow$ fixed Detour & .6383 & .1483 & .2133 & .3428 & .4900 & .0742 & .7605 \\
+OracleGate + tiny learned choice & .6158 & .1242 & .2600 & .3428 & .4917 & .0725 & .7659 \\
+Tiny LearnedGate + OracleChoice & .4878 & .2164 & .2958 & .4567 & .2714 & .2928 & .0547 \\
+Full tiny ADR & .4733 & .2422 & .2844 & .4567 & .2311 & .3331 & -.0753 \\
+Oracle & .6383 & .0742 & .2875 & .3428 & .5642 & .0000 & 1.0000 \\
+\bottomrule
+\end{tabular}
+\caption{All policy-regret rows under the same 20 sources and 273 repeated
+decisions under the
+source-macro contract. ``Opp. rec.'' is the fraction of the Oracle improvement
+above Risk $\rightarrow$ Best Fixed. Negative values mean a policy falls below
+that risk reference. Oracle gates/choices are diagnostic and unavailable at
+deployment.}
+\label{tab:policy-full}
+\end{table}
+
+The Phase 2.5B OutcomeRouter row is not repeated in
+Table~\ref{tab:policy-full} because the frozen PIVOT policy-regret CSV records
+the fixed/risk/oracle-hybrid composition table. Under the same 20 source blocks,
+OutcomeRouter has success 0.5008, catastrophe 0.2286, intervention 0.4831, and
+utility 0.2722. Its +0.0178 utility gain over the 0.2544 risk reference is below
+the +0.03 gate and it fails the three strict-recall criteria.
+
+\section{Learned Selector and Attribution Audits}
+\label{app:learned}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{@{}lrrrrl@{}}
+\toprule
+Method & Utility & Base rec. & Detour rec. & Retreat rec. & Frozen result \\
+\midrule
+Risk $\rightarrow$ Best Fixed & .2544 & .5595 & .5705 & .0556 & reference \\
+OutcomeRouter & .2722 & .5926 & .3269 & .3704 & no pass \\
+Support-balanced OutcomeRouter & .2672 & .6534 & .3013 & .4815 & no pass \\
+Hidden-only OutcomeRouter & .2644 & .4881 & .4359 & .5185 & no pass \\
+ADR linear full & .2097 & .5874 & .3910 & .2593 & no pass \\
+ADR linear split & .2222 & .4999 & .4487 & .3704 & no pass \\
+ADR tiny nonlinear choice & .2311 & .5749 & .4551 & .4444 & no pass \\
+\bottomrule
+\end{tabular}
+\caption{Frozen source-OOF learned-selector results over 20 sources. Phase 2.5B is
+\texttt{INCONCLUSIVE} and fail-closed; Phase 2.5B-R records
+\texttt{CHOICE\_CAPACITY\_BOTTLENECK} while every complete ADR has
+\texttt{method\_pass=false}.}
+\label{tab:method-null}
+\end{table}
+
+On the 60 strict Detour/Retreat decisions, conditional balanced accuracy is
+0.5579 for the full linear head, 0.6369 for the split linear head, and 0.7253
+for the fixed tiny nonlinear head. Their Detour/Retreat recalls are
+0.7421/0.3738, 0.8354/0.4385, and 0.8559/0.5947. Only the tiny conditional head
+passes the point-estimate choice gate. All candidates share a weak learned
+benefit score (AUROC 0.6062, AUPRC 0.4783), and no full composition passes.
+
+For the tiny candidate, the source-macro losses from Oracle are 0.0725 for
+OracleGate plus learned choice, 0.2928 for LearnedGate plus OracleChoice, and
+0.3331 for the full composition. The split-linear OracleGate hybrid reaches
+0.4975, slightly above the tiny hybrid's 0.4917. The tiny head is therefore not
+selected as a generally superior model; it diagnoses conditional capacity only.
+
+\section{Condition and Horizon Support}
+\label{app:support}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{@{}lrrrrrrrr@{}}
+\toprule
+Condition & Decisions & Sources & $R\ne B$ & $R\ne B$ src. & Strict B & Strict D & Strict R & D/R ties \\
+\midrule
+glass & 101 & 20 & 9 & 6 & 2 & 28 & 23 & 31 \\
+offpath & 86 & 17 & 5 & 5 & 24 & 4 & 0 & 0 \\
+noglass & 86 & 17 & 5 & 4 & 35 & 5 & 0 & 0 \\
+\bottomrule
+\end{tabular}
+\caption{Condition accounting over a 20-source universe inside the single
+\texttt{glass\_recovery} mechanical family; glass/offpath/noglass contribute
+20/17/17 sources. Here B/D/R in the strict columns denote Base, Detour, and
+Retreat, not the binary benefit variable.}
+\label{tab:condition-support}
+\end{table}
+
+Across all conditions, strict Base/Detour/Retreat counts are 61/37/23 and their
+source supports are 16/13/9. Horizon-level strict Base/Detour/Retreat counts are
+4/2/1 at H40, 15/6/1 at H30, 16/8/5 at H20, 11/11/9 at H10, and 15/10/7 at H5.
+Retreat support is both glass-only and late-state concentrated: 16/23 strict
+Retreat decisions occur at H5 or H10.
+
+Nineteen sources contain both benefit labels. Nine contain a strict Base/Detour
+flip, nine a strict Base/Retreat flip, and five a pooled strict Detour/Retreat
+flip. Only two have a within-glass strict Detour/Retreat flip. The complete
+per-source flag matrix is the tracked \texttt{source\_support.csv}; it is not
+expanded into 20 rows here because the artifact map identifies the exact file
+and SHA-256.
+
+\section{Expanded Sequential Boundary}
+\label{app:sequential}
+
+\begin{table}[H]
+\centering
+\scriptsize
+\begin{tabularx}{\linewidth}{@{}l l r r r r Y@{}}
+\toprule
+Stage & Method/diagnostic & Sources & Units & Success & Interv. & Frozen reading \\
+\midrule
+P2 & exact T-20 opportunity & 4 & 4 & 2 known & -- & option label, not policy \\
+P2 & fixed T-20 Router & 4 & 12 & 7/12 & 0/12 & misses 2/2 known opportunities \\
+P2 & dynamic first crossing & 4 & 12 & 8/12 & 2/12 & 3/12 catastrophes; development only \\
+P2.5 & trajectory morphology & 4 & 11 & -- & -- & raw max AUC .357; moving-average AUC .286 \\
+P3.1 & direct head strict LOSO & 9 & 142 & -- & -- & recovery AUC 1.000; needed AUC .995; source-macro accuracy .632 \\
+P3.2 & old P2 comparator & 8 & 24 & 17/24 & 5/24 & recovers 1/8 glass; two unnecessary control interventions \\
+P3.2 & direct recovery Router & 8 & 24 & 16/24 & 0/24 & Base 24/24; recovers 0/8 glass; misses 2/2 \\
+P3.2 & exact T-20 Detour & 8 & 8 & 2/8 & -- & option diagnostic; not deployed timing \\
+P3.2 & trajectory maxima & 2 positive & 24 & -- & 0/24 & known-recovery vs control AUC .250 \\
+\bottomrule
+\end{tabularx}
+\caption{Complete frozen statewise-to-sequential summary over stage-specific
+sets of 4, 9, and 8 sources. ``Units'' are
+repeated decisions, anchors, or episodes, not additional independent sources.}
+\label{tab:sequential-full}
+\end{table}
+
+The direct P3.2 method's zero false interventions are mechanically coupled to
+choosing Base in every episode. They are not evidence of a selective policy
+that both preserves controls and intervenes on opportunities. The old P2
+comparator retains task success on all 16 controls but recovers only one of
+eight glass episodes. These results close threshold and temporal rescue for the
+frozen protocol; they do not prove that sequential intervention is impossible.
+
+\section{Artifact Availability and Reproduction Boundary}
+\label{app:availability}
+
+The reviewed PIVOT manifest, seven CSV tables, story decision, and three PDF
+figures are tracked in Git and hash-pinned by the PIVOT manifest. The capture
+manifest, feature archive, decision metadata, and option-rollout JSONL are
+present in the working environment and match the hashes recorded by PIVOT, but
+the \texttt{results/counterfactual\_router/} directory is ignored by Git. A
+clean repository checkout therefore supports auditing all paper numbers from
+tracked reviewed summaries, but does not by itself contain the raw hidden
+features or 819 branch rows. We call this
+\texttt{local\_untracked\_hash\_pinned}, not repository-tracked availability.
+
+The root ICLR manifest predates PIVOT-0 and does not enumerate the later PIVOT
+package. We preserve that frozen manifest and add the publication artifact map
+instead of rewriting history. The PIVOT manifest pins its outputs but cannot
+self-pin its own bytes; the publication artifact map records the current
+manifest hash separately. Generation commits and later record commits are kept
+as distinct fields.
+
+The local package audit verifies PIVOT required-artifact membership and hashes,
+all headline values, source/family language, prohibited affirmative claims,
+artifact-map schema, PDF existence, and the absence of unfinished markers.
+Repository audit and unit tests remain separate checks. None of these commands
+opens a simulator, fits a model, or contacts Quest.
+
+\section{Non-Glass v1 Exclusion}
+\label{app:nonglass}
+
+The optional unstable-placement v1 job is not scientific evidence for this
+paper. It attempted eight nominal source candidates, marked two as selected
+before location resolution, resolved zero physical blocks, opened zero option
+decisions, performed zero restoration audits, and produced zero ordinary
+option-outcome rows. Its terminal status is
+\texttt{INVALID\_PREFLIGHT\_ZERO\_OPTION\_OUTCOMES}. The failure was an
+engineering geometry/source-freeze defect, not a positive or negative result
+about non-glass intervention ambiguity. v1 contributes nothing to the 20-source
+or 273-decision denominators and is mentioned here only to make exclusion
+auditable.
+
+\section{Claim Boundary Checklist}
+\label{app:claims}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\linewidth}{@{}Y Y@{}}
+\toprule
+Supported within scope & Not established \\
+\midrule
+Exact realized outcomes distinguish Base risk, intervention benefit, best
+finite option, and sequential realization in one frozen design. & A universal
+theorem about risk, regret, hazards, tasks, backbones, or controllers. \\
+Risk and benefit disagree on 19/273 decisions across 12 sources. & A broad,
+confirmatory VLA-safety benchmark. \\
+Three exact tight pairs occur across two sources; the D/R witness has one
+source. & Reliable non-glass Retreat support or replicated cross-mechanism
+option ambiguity. \\
+Risk $\rightarrow$ Best Fixed leaves an observed 0.3097 finite-option Oracle
+opportunity. & A reachable or learned Oracle at deployment. \\
+Benefit gating dominates the reported oracle-hybrid loss. & A successful,
+superior, or deployable learned router. \\
+Fresh direct first crossing collapses to Base in this protocol. & The
+impossibility of all temporal or sequential intervention methods. \\
+\bottomrule
+\end{tabularx}
+\caption{Submission-facing claim boundary. The core corpus has 20 sources; the
+tight witness set has 2 sources and its exact Detour/Retreat contrast has 1.}
+\label{tab:claim-boundary}
+\end{table}

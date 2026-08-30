@@ -1,0 +1,540 @@
+\documentclass[10pt]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[margin=0.82in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs,tabularx,array,longtable}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{xspace}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage{url}
+\usepackage[colorlinks=true,allcolors=teal!55!black]{hyperref}
+\emergencystretch=2em
+
+\definecolor{ink}{HTML}{17323A}
+\definecolor{muted}{HTML}{51666B}
+\definecolor{orange}{HTML}{D68155}
+\definecolor{tealpaper}{HTML}{398783}
+\definecolor{redpaper}{HTML}{A54132}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcommand{\Base}{\textsc{Base}\xspace}
+\newcommand{\Detour}{\textsc{Detour}\xspace}
+\newcommand{\Retreat}{\textsc{Retreat}\xspace}
+\newcommand{\Oracle}{\textsc{Oracle}\xspace}
+\newcommand{\RiskBest}{\textsc{Risk}$\rightarrow$\textsc{BestFixed}\xspace}
+\newcommand{\source}{\texttt{source\_state\_sha256}\xspace}
+\graphicspath{{../../../results/iclr27/risk_value_decoupling_dc48ff317dad_20260829T154351Z/}}
+
+\title{\textbf{Risk Does Not Specify Intervention: Exact-State Diagnostics for an OpenVLA--LIBERO Safety Case Study}}
+\author{Anonymous authors}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Runtime safety for vision-language-action policies is often formulated as
+predicting whether nominal behavior will catastrophize. That binary label does
+not identify whether intervention improves realized utility, which finite
+option is best, or whether a statewise opportunity can be reached
+sequentially. We study these distinctions in one frozen OpenVLA--LIBERO
+\texttt{glass\_recovery} exact-state design. From identical hash-verified
+branch starts, we execute \Base, a privileged task-preserving \Detour, and a
+conservative \Retreat under a common task-success, catastrophe, and safe-
+noncompletion utility. All 20 sources and 273 eligible decisions are exposed
+development evidence. Binary Base risk and intervention benefit disagree on
+19/273 decisions across 12 sources. Exhaustive tight matching yields three
+same-risk, different-strict-action pairs across two sources; the exact
+\Detour--\Retreat witness has only one independent source. Source-macro utility
+is 0.2544 for \RiskBest and 0.5642 for the realized finite-option \Oracle,
+leaving an observed opportunity of 0.3097. The strongest evaluated
+OutcomeRouter gains only +0.0178 over \RiskBest and no method gate passes; the
+full tiny advantage-decomposed router reaches only 0.2311. Support is
+mechanically concentrated: all 23 strict \Retreat states and 51/60 strict
+\Detour-or-\Retreat states are glass. At fresh sequential first crossing, the
+direct selector chooses \Base on 24/24 episodes, recovers 0/8 glass episodes,
+and misses 2/2 known opportunities. The result is therefore a glass-scoped
+exact-state diagnostic and negative-result case study, not a successful router
+or a broad VLA-safety benchmark.
+\end{abstract}
+
+\section{Introduction}
+
+Consider two saved states from the same source, the same glass condition, the
+same five-action horizon, and the same binary observation that continuing
+\Base catastrophizes. In state \texttt{43347d99...}, realized outcomes for
+(\Base, \Detour, \Retreat) are (catastrophe, task success, safe
+noncompletion), so \Detour is uniquely best. In state \texttt{f83d0199...},
+the outcomes are (catastrophe, catastrophe, safe noncompletion), so \Retreat is
+uniquely best. A perfect binary risk bit is identical for the pair but cannot
+specify the action. This witness is deliberately narrow: both states come from
+one source in one mechanical design. Its value is diagnostic, not universal.
+
+This distinction matters whenever a runtime system can choose among preserving
+the nominal policy, attempting task-preserving recovery, and stopping or
+retreating safely. Failure detection asks whether nominal continuation is bad.
+Intervention asks a different question: whether any available alternative is
+better, and if so which one. A further gap separates a choice that is clear at
+an authored saved state from one that a sequential policy can realize at the
+right time. We write these four targets as
+\[
+  \text{Base risk}\;\neq\;\text{intervention benefit}
+  \;\neq\;\text{best finite option}
+  \;\neq\;\text{sequential realization}.
+\]
+
+We use the frozen CrashBench exact-state corpus to measure those distinctions
+without introducing a new learned method or collecting another outcome. At
+each eligible decision, three controllers are executed from the same verified
+branch start. The resulting finite-option outcomes support a source-aware
+diagnosis of risk-benefit disagreement, strict action ambiguity, policy
+regret, and oracle-hybrid attribution. The strongest learned selectors remain
+null under their frozen gates, and a fresh sequential evaluation collapses to
+\Base. The appropriate scientific object is therefore the diagnostic protocol
+and its scoped negative result.
+
+Our contributions are exactly four:
+\begin{enumerate}
+  \item an exact-state realized-option protocol that restores a complete
+  simulator/controller/continuation state and executes every member of a
+  finite option set, observing outcomes instead of predicting them with a
+  learned world model;
+  \item a source-aware risk-regret diagnosis that separately measures Base
+  risk, intervention benefit, strict option support, same-risk action
+  ambiguity, and risk-only policy regret;
+  \item a fair-baseline null and oracle attribution showing that the evaluated
+  learned selectors do not pass the frozen method gate and that benefit gating
+  accounts for most of the reported oracle-hybrid loss; and
+  \item a statewise-to-sequential boundary preserving the fresh first-crossing
+  null: statewise option opportunity does not imply reliable sequential
+  realization.
+\end{enumerate}
+
+The evidence is one OpenVLA checkpoint, one LIBERO pick-and-place task, and one
+\texttt{glass\_recovery} mechanical family. The labels \texttt{glass},
+\texttt{offpath}, and \texttt{noglass} are a treatment and matched controls,
+not three hazard families. We make no claim of a deployable router, broad
+benchmark, cross-mechanism generality, or reliable sequential intervention.
+
+\section{Related Work and Novelty Boundary}
+
+\paragraph{VLA policies and failure detection.}
+OpenVLA supplies the frozen policy and LIBERO supplies the manipulation
+environment used in this case study \citep{kim2024openvla,liu2023libero}.
+SAFE learns scalar failure scores from VLA internal features across tasks and
+policies \citep{gu2025safe}; Hide-and-Seek localizes trajectory failure signals
+from coarse labels \citep{park2026hide}. Our result is not a new failure
+detector. It uses all realized outcomes of a fixed option set at identical
+saved states to ask what a scalar failure target leaves unidentified.
+
+\paragraph{Runtime verification and selective intervention.}
+CheckVLA uses an action-conditioned world model to verify and rewrite action
+suffixes \citep{liu2026checkvla}. CoWAM selects among shared candidate pools
+using predicted futures and coordination contracts \citep{liu2026cowam}; this
+is the nearest selective-intervention comparison. Model-based runtime
+monitoring with interactive imitation learning anticipates failures and can
+request oversight \citep{liu2023runtime}. CrashBench neither learns a rollout
+world model nor proposes a deployment layer. Its narrower distinction is
+realized, full-information branching for three fixed options from serialized
+simulator states, followed by source-paired diagnosis. CheckVLA and the
+monitoring literature have substantially broader sequential evidence.
+
+\paragraph{Safety alignment, steering, and counterfactual language.}
+SafeVLA changes the policy through constrained learning
+\citep{zhang2025safevla}; our OpenVLA checkpoint remains frozen. Mechanistic
+activation steering can causally change VLA behavior
+\citep{haon2025steering}, so our historical final-readout steering null is not
+a general statement about steerability. Counterfactual VLA generates reasoning
+traces that revise driving meta-actions \citep{peng2025counterfactualvla}, while
+counterfactual safe reinforcement learning constrains harm relative to a
+default policy \citep{vaskov2024donoharm}. Here ``counterfactual'' means only
+that each listed controller was actually executed from an identical saved
+simulator state. We do not claim an observational causal estimator, language
+self-reflection, or novelty from the term itself.
+
+\section{Exact-State Realized-Option Protocol}
+\label{sec:protocol}
+
+\subsection{System, sources, and eligibility}
+
+The frozen capture uses checkpoint revision \texttt{962318ce...c873} of the
+OpenVLA LIBERO-Spatial checkpoint (full identity in
+Appendix~\ref{app:provenance}). Decoding is deterministic
+(no sampling, one beam), and the rollout seed is 0. The retained corpus has 20
+unique \source values and 273 eligible decisions. Historical split labels are
+5 train, 7 calibration, and 8 development sources, but they have all been
+inspected and reused during the successive audits. We therefore treat all 20
+as exposed development and make no confirmatory claim.
+
+Each source contributes matched placements and conditions at remaining-action
+horizons 40, 30, 20, 10, or 5 when mechanically eligible. Eligibility is
+resolved before method comparison from Base and mechanical contracts. The
+independent unit is the source state. Conditions, placements, horizons,
+branches, and frames are repeated observations nested within a source.
+
+\subsection{Branch and restoration contract}
+
+Figure~\ref{fig:protocol-flow} summarizes the protocol. The collector rebuilds
+the exact model XML, restores flattened MuJoCo time, position, and velocity
+state, restores OSC/controller interpolation state, episode counters, robot
+buffers, observable timing and cached observations, and restores the explicit
+policy-boundary observation. Before every option, it requires equality of five
+SHA-256 identities: simulator state, controller state, the full numeric
+continuation snapshot, observation dictionary, and model XML. A mismatch
+fails the decision rather than entering the corpus.
+
+The capture also fixes the rollout seed and uses deterministic policy decoding
+and deterministic structured controllers. It does not retain a separate
+per-decision hash of global Python/NumPy/framework RNG bytes. We consequently
+describe exact restoration at the five verified state boundaries above and do
+not claim a stronger byte-level RNG restoration audit. This distinction is
+recorded in the reproducibility statement and appendix.
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[
+      node distance=7mm and 9mm,
+      box/.style={draw=ink, rounded corners=2pt, align=center, inner sep=5pt,
+                  font=\small, fill=white},
+      opt/.style={box, minimum width=32mm},
+      arr/.style={-{Latex[length=2mm]}, thick, draw=muted}]
+    \node[box, fill=tealpaper!10, minimum width=45mm] (state)
+      {Saved decision $x$\\five branch-start hashes verified};
+    \node[opt, below left=of state] (base) {\Base\\frozen VLA continuation};
+    \node[opt, below=of state] (detour) {\Detour\\privileged task-preserving};
+    \node[opt, below right=of state] (retreat) {\Retreat\\conservative safe abort};
+    \draw[arr] (state) -- (base);
+    \draw[arr] (state) -- (detour);
+    \draw[arr] (state) -- (retreat);
+    \node[box, below=12mm of detour, minimum width=100mm, fill=orange!10] (out)
+      {Realized outcomes $Y_o\in\{\mathrm{success},\mathrm{catastrophe},\mathrm{safe}\}$ and utilities
+       $U_o\in\{+1,-1,0\}$};
+    \draw[arr] (base) -- (out);
+    \draw[arr] (detour) -- (out);
+    \draw[arr] (retreat) -- (out);
+    \node[box, below=of out, minimum width=115mm, fill=tealpaper!8] (targets)
+      {$R=\mathbf{1}[Y_B=\mathrm{catastrophe}]$; $B=\mathbf{1}[\max(U_D,U_R)>U_B]$;
+       $O=\arg\max_o U_o$; regret $=\max_oU_o-U_a$};
+    \draw[arr] (out) -- (targets);
+  \end{tikzpicture}
+  \vspace{3mm}
+
+  \includegraphics[width=0.94\linewidth]{figure_risk_benefit_flow.pdf}
+  \caption{\textbf{Exact-state protocol and risk-benefit flow.} Top: every
+  member of the finite option set begins at a hash-verified saved state; the
+  privileged \Detour uses injected geometry and is not end-to-end learned.
+  Bottom: the complete raw $R\times B$ table over 273 repeated decisions from
+  20 independent sources. The 10 $R{=}1,B{=}0$ decisions and nine
+  $R{=}0,B{=}1$ decisions each occur in six sources; their source sets are
+  disjoint. All observations belong to the single \texttt{glass\_recovery}
+  mechanical family.}
+  \label{fig:protocol-flow}
+\end{figure}
+
+\subsection{Options, outcomes, and decision targets}
+
+\Base continues the frozen OpenVLA policy from the restored observation.
+\Detour is a privileged structured controller with access to glass geometry;
+it is designed to preserve task progress and complete the original placement.
+\Retreat moves back and up, then holds; it prioritizes avoiding catastrophe but
+normally does not complete the task. These are fixed option contracts, not a
+common action budget or a learned proposal set.
+
+Each branch receives exactly one terminal outcome: task success, catastrophe,
+or safe noncompletion, mapped to utility $+1$, $-1$, or $0$. For a saved state
+$x$, let $U_B,U_D,U_R$ denote the three realized utilities. With the frozen
+strict benefit epsilon of zero,
+\begin{align}
+  R(x) &= \mathbf{1}[Y_B=\mathrm{catastrophe}],\\
+  B(x) &= \mathbf{1}[\max(U_D,U_R)>U_B],\\
+  O(x) &= \arg\max_{o\in\{B,D,R\}} U_o,\\
+  A_{\mathrm{int}}(x)&=\max(U_D,U_R)-U_B,\qquad
+  A_{DR}(x)=U_D-U_R.
+\end{align}
+Oracle ties use the order \Base, \Detour, \Retreat. Strict support is a
+different label: it requires a unique maximizer under the frozen support margin
+$\gamma=0.5$, excluding all ties.
+
+\subsection{Source-aware estimands}
+
+Raw decision counts describe repeated observations. Equal-source metrics first
+compute a rate within each source and then average across sources. Conditional
+source-macro probabilities average only source conditionals whose denominator
+is nonzero; they are not ratios of macro joint cells. Learned methods use the
+frozen leave-one-source-out predictions and their existing foldwise calibration
+rules. Oracle and oracle-hybrid combinations are diagnostic upper bounds, not
+deployable methods.
+
+\section{Model-Free Risk, Benefit, and Option Evidence}
+
+\subsection{Risk and benefit disagree in both directions}
+
+The raw $R\times B$ table contains 172 $(0,0)$, 9 $(0,1)$, 10 $(1,0)$, and 82
+$(1,1)$ decisions. Thus 19/273 decisions disagree across 12 independent
+sources. Ten risky Base decisions have no better intervention ($R{=}1,B{=}0$),
+across six sources. Nine non-catastrophic Base decisions are nevertheless
+improvable ($R{=}0,B{=}1$), also across six sources. The two source sets are
+disjoint. Mechanically, the first direction is concentrated in glass (nine
+glass and one offpath decision), while the second occurs only in controls (five
+noglass and four offpath decisions). This supports separation within the
+design, not a cross-family law.
+
+Raw conditionals are $P(B{=}1\mid R{=}1)=82/92=0.8913$,
+$P(B{=}1\mid R{=}0)=9/181=0.0497$, and
+$P(R{=}1\mid B{=}1)=82/91=0.9011$. Their equal-source counterparts are
+0.8700 over 20 denominator-bearing sources, 0.0415 over 19, and 0.9328 over 19.
+The high association explains why risk is a strong baseline; the 19
+disagreements establish only that it is not decision-complete.
+
+\subsection{Same binary risk, different strict action}
+
+We exhaustively form strata matched on source, condition, remaining-action
+horizon, and binary $R$, retaining every stratum with at least two different
+strict optimal labels. This deterministic rule yields exactly three tight
+pairs across two sources (Table~\ref{tab:witnesses}); it does not select a
+visually preferred subset. The only exact \Detour--\Retreat pair has one-source
+support.
+
+\begin{table}[H]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabularx}{\linewidth}{@{}l l c Y Y l@{}}
+\toprule
+Condition & Source & $H/R$ & State A: $(B,D,R)$ & State B: $(B,D,R)$ & Strict actions \\
+\midrule
+glass & \texttt{69fa7e93...} & 5/1 &
+\texttt{43347d99...}: (cat, success, safe) &
+\texttt{f83d0199...}: (cat, cat, safe) & Detour / Retreat \\
+offpath & \texttt{69fa7e93...} & 5/0 &
+\texttt{db05c179...}: (success, safe, safe) &
+\texttt{09da0904...}: (safe, success, safe) & Base / Detour \\
+noglass & \texttt{b830bede...} & 5/0 &
+\texttt{7cc66a27...}: (success, safe, safe) &
+\texttt{2ccd971e...}: (safe, success, safe) & Base / Detour \\
+\bottomrule
+\end{tabularx}
+\caption{\textbf{Complete deterministic tight-witness set.} All three pairs
+are shown. They span 2 independent sources in the one
+\texttt{glass\_recovery} mechanical family. The exact Detour/Retreat contrast
+is supported by 1 source. ``offpath'' and ``noglass'' are controls, not
+families. Full state and observation hashes plus deployable feature summaries
+are in Appendix~\ref{app:witnesses}.}
+\label{tab:witnesses}
+\end{table}
+
+\section{Fair Baselines and Oracle Attribution}
+
+\subsection{The learned-method result is null}
+
+All comparisons in this section use the same 20 source-held-out prediction
+blocks and source-macro utility. \RiskBest chooses both its non-Base option and
+threshold within each outer calibration fold; it is not a globally fixed
+Risk-to-Detour rule. It reaches utility 0.2544. The strongest evaluated learned
+method, OutcomeRouter, reaches 0.2722, a gain of only +0.0178, below the frozen
++0.03 requirement. It also misses all three strict Base/Detour/Retreat recall
+requirements, so no Phase 2.5B method gate passes. The complete tiny nonlinear
+advantage-decomposed router reaches 0.2311, below the risk reference, and no
+advantage router passes its method gate.
+
+The null does not erase diagnostic structure. Conditional on a true benefit
+gate, the tiny nonlinear choice head passes its frozen strict Detour/Retreat
+point-estimate gate, while both linear heads fail. That head is a capacity
+diagnostic only: it is not the paper method, not an architecture-selection
+result, and not evidence that a larger router would solve the benefit gate.
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\linewidth}{@{}Y r r r Y@{}}
+\toprule
+Policy or diagnostic & Utility & Gain vs. risk ref. & Gap to Oracle & Gate/status \\
+\midrule
+\RiskBest & 0.2544 & 0.0000 & 0.3097 & strong scalar-risk reference \\
+OutcomeRouter & 0.2722 & +0.0178 & 0.2919 & no method pass \\
+LearnedGate + OracleChoice (tiny) & 0.2714 & +0.0169 & 0.2928 & oracle diagnostic \\
+OracleGate + learned linear choice & 0.4975 & +0.2431 & 0.0667 & oracle diagnostic \\
+OracleGate + learned tiny choice & 0.4917 & +0.2372 & 0.0725 & capacity diagnostic \\
+Full tiny ADR & 0.2311 & -0.0233 & 0.3331 & no method pass \\
+\Oracle & 0.5642 & +0.3097 & 0.0000 & realized upper bound \\
+\bottomrule
+\end{tabularx}
+\caption{\textbf{Risk reference, learned selectors, hybrids, and Oracle.}
+Values are equal-source utility over 20 exposed-development sources and 273
+repeated decisions. OracleGate and OracleChoice require realized labels and are
+diagnostic only. No displayed learned method passes its frozen method gate.}
+\label{tab:regret-main}
+\end{table}
+
+\subsection{Benefit gating dominates the reported composition gap}
+
+The finite-option \Oracle reaches 0.5642, giving an observed opportunity of
+$0.5642-0.2544=0.3097$ above \RiskBest. For the tiny candidate, OracleGate plus
+learned choice loses 0.0725 from Oracle and recovers 0.7659 of that opportunity.
+LearnedGate plus OracleChoice loses 0.2928 and recovers only 0.0547. The full
+composition recovers $-0.0753$. In this frozen composition, benefit gating is
+the dominant empirical loss. This is attribution using unavailable oracle
+components, not a proposal for deployment.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.96\linewidth]{figure_oracle_gap_waterfall.pdf}
+  \caption{\textbf{Oracle-gap attribution.} Source-macro utilities use the
+  same 20 exposed-development sources. The 0.3097 opportunity is the observed
+  difference between \RiskBest (0.2544) and the realized finite-option Oracle
+  (0.5642). Every OracleGate or OracleChoice bar is diagnostic only. The tiny
+  nonlinear head is a conditional capacity diagnostic, not a successful
+  router.}
+  \label{fig:oracle-gap}
+\end{figure}
+
+\section{Source and Mechanical-Scope Audit}
+
+Nineteen of 20 sources contain both benefit labels. Strict support is present
+for Base, Detour, and Retreat in 16, 13, and 9 sources, respectively. However,
+pooled source counts conceal mechanical concentration. Glass contains 101
+decisions from 20 sources, offpath 86 from 17, and noglass 86 from 17. All 23
+strict Retreat states, across nine sources, are glass. Glass also contains
+51/60 strict Detour-or-Retreat states across 16 sources; all 60 occur across 17
+sources. Non-glass controls contribute nine strict Detour states across six
+sources and no strict Retreat state.
+
+Five sources contain both a strict Detour and a strict Retreat label when
+conditions are pooled, but only two contain such a flip within glass. The
+tight exact Detour/Retreat witness in Table~\ref{tab:witnesses} has one source.
+These nested counts are not interchangeable. They support a glass-scoped
+diagnosis while ruling out a claim of broad option ambiguity.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.96\linewidth]{figure_source_support.pdf}
+  \caption{\textbf{Condition-level source support within one mechanical
+  family.} The 20-source universe has condition-specific effective counts of
+  20/17/17 sources for glass/offpath/noglass, respectively. The bars show
+  effective independent-source counts separately for
+  the \texttt{glass}, \texttt{offpath}, and \texttt{noglass} conditions.
+  All conditions share the single \texttt{glass\_recovery} family; offpath and
+  noglass are matched controls. Glass supplies all 23 strict Retreat states
+  (nine sources) and 51/60 strict Detour-or-Retreat states (16 of the 17
+  sources supporting any strict D/R state).}
+  \label{fig:source-scope}
+\end{figure}
+
+\section{From Statewise Opportunity to Sequential Realization}
+
+Statewise exact branching gives labels at authored states. A sequential policy
+must reach those states from reset and cross a decision boundary at a useful
+time without unnecessary control interventions. The frozen sequence in
+Table~\ref{tab:sequential} is therefore a boundary analysis, not a second
+method arc.
+
+Matched-state source-OOF evaluation contains a large Oracle opportunity, yet
+OutcomeRouter gains only +0.0178 and no method passes. On four development
+sources, P2 changes 7/12 successes and 4/12 catastrophes to 8/12 and 3/12 at
+2/12 interventions, while missing both known T-20 recoveries. Simple temporal
+summaries in P2.5 do not repair the ordering. P3.1 then obtains extremely high
+offline source-held-out separation (AUC 1.000 for recovery-open versus hard
+control and 0.995 for intervention-needed versus hard control), but only 0.632
+source-macro accuracy.
+
+The decisive fresh P3.2 closeout uses eight sources and three conditions per
+source. The direct selector chooses \Base in all 24 episodes. It therefore has
+zero false interventions by inactivity, not by successful selectivity. It
+recovers 0/8 glass episodes and misses 2/2 known recovery opportunities. The
+older P2 comparator selects Detour in 5/24, recovers 1/8 glass episodes, and
+retains 16/16 control successes. Neither result authorizes reliable sequential
+intervention, and the frozen threshold is not reopened.
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\linewidth}{@{}l Y r Y@{}}
+\toprule
+Stage & Evidence & Sources/units & Scoped interpretation \\
+\midrule
+Matched state & Oracle 0.5642; risk ref. 0.2544; OutcomeRouter 0.2722 & 20/273 & opportunity exists; learned gain +0.0178; no pass \\
+P2 & 7/12 to 8/12 success; 4/12 to 3/12 catastrophe; 2/12 intervention & 4/12 & development only; misses 2/2 known recoveries \\
+P2.5 & raw max AUC 0.357; MA-3/5/8 AUC 0.286 & 4/11 & tested simple temporal summaries do not repair ordering \\
+P3.1 & recovery-open AUC 1.000; intervention-needed AUC 0.995; accuracy 0.632 & 9/142 & offline source-held-out separability only \\
+P3.2 & Direct: Base 24/24; glass recovery 0/8; known misses 2/2 & 8/24 & fresh first-crossing collapse to Base \\
+\bottomrule
+\end{tabularx}
+\caption{\textbf{Statewise-to-sequential evidence.} The fresh closeout has 8
+sources. Sources are independent;
+units are repeated decisions, anchors, or episodes as indicated. The P3.2
+negative closeout is one fresh eight-source cohort in the same
+\texttt{glass\_recovery} design, not evidence that all sequential methods are
+impossible.}
+\label{tab:sequential}
+\end{table}
+
+\section{Limitations and Safety Scope}
+
+\paragraph{Scope and statistical unit.}
+This is one frozen OpenVLA checkpoint, one LIBERO task, one embodiment, and one
+glass-recovery mechanical design. All 20 sources are exposed development.
+Decision counts are repeated observations; source counts are the inferential
+unit. The three condition labels are not independent hazard families. Exact
+Detour/Retreat ambiguity has only one-source support.
+
+\paragraph{Options and utility.}
+The result is conditional on exactly three engineered options and the frozen
+$+1/0/-1$ utility. Privileged Detour uses geometry unavailable to a generic
+deployment. Retreat is a conservative safe-abort controller rather than a task
+recovery policy. The utility does not charge different duration, path length,
+latency, or control effort, so Oracle is only the best realized option under
+this contract.
+
+\paragraph{Restoration and artifact availability.}
+The collector verifies five branch-start hashes, but does not record a separate
+per-decision global RNG-state hash. Deterministic decoding and fixed seed limit
+the practical dependence without proving byte-identical RNG restoration. Raw
+capture files are locally hash-pinned but ignored by Git; the reviewed PIVOT
+tables, figures, and manifests are tracked. Raw witness pixels were not
+retained, so the released witness table provides observation hashes and feature
+summaries rather than images.
+
+\paragraph{Learning and sequential deployment.}
+No learned method passes the frozen method gate. The tiny nonlinear choice
+result is conditional on an oracle gate. High offline P3.1 AUC does not transfer
+to fresh first crossing. The P3.2 null closes this protocol, not every possible
+temporal model. We do not propose threshold lowering, another router, or a new
+cohort from these results.
+
+\paragraph{Ethics and safety.}
+All claim-bearing outcomes are simulated robot manipulation; no human-subject
+or personal data are used. The diagnostic could help expose unsafe assumptions
+in runtime intervention systems, but it is not a safety certificate. Reporting
+the null method and sequential results reduces the risk that an offline oracle
+gap is mistaken for deployable protection. Any real-robot use would require
+independent mechanical validation, calibrated monitoring, fail-safe hardware,
+and task-specific oversight beyond this study.
+
+\section{Conclusion}
+
+Within one frozen OpenVLA--LIBERO glass-recovery design, realized exact-state
+outcomes show that Base catastrophe status does not uniquely determine
+intervention benefit or the best finite option. The phenomenon is supported by
+12 sources for risk-benefit disagreement but by only two sources for tight
+same-risk action pairs, with one source for the exact Detour/Retreat witness.
+A substantial observed Oracle opportunity remains, yet the evaluated learned
+selectors do not pass their method gates and the fresh sequential selector
+collapses to Base. The defensible result is a source-aware, glass-scoped
+diagnostic and negative-result case study. Broader claims require separately
+authorized evidence across mechanical families, tasks, policies, and
+confirmatory sources; they are not inferred here.
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\clearpage
+\appendix
+\input{appendix}
+
+\end{document}
