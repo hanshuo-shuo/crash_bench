@@ -237,7 +237,9 @@ case "$command" in
     remote_in_project "test -f $quoted_path" \
       || die "packed result is not a regular file: $path"
     mkdir -p "$ROOT/$(dirname "$path")"
-    rsync -a --partial --append-verify --itemize-changes -e "$SSH_TRANSPORT" \
+    # macOS ships an older rsync without --append-verify.  The packed artifact
+    # must carry an independently pulled SHA-256 sidecar, verified by the caller.
+    rsync -a --partial --append --itemize-changes -e "$SSH_TRANSPORT" \
       "$QUEST_HOST:$QUEST_REMOTE_DIR/$path" "$ROOT/$path"
     ;;
   -h|--help|help|'')

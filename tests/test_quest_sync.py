@@ -10,6 +10,7 @@ def test_packed_result_transfer_is_guarded_and_disables_recompression():
     assert "^results/" in block
     assert "tar\\.gz|tar\\.zst" in block
     assert "test -f" in block
-    assert "--append-verify" in block
+    assert "--partial --append" in block
+    assert "independently pulled SHA-256 sidecar" in block
     assert "rsync -a " in block
     assert "rsync -az" not in block
