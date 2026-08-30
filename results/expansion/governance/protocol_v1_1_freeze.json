@@ -1,0 +1,74 @@
+{
+  "active_scope": {
+    "exploratory_mechanisms": [
+      "fragile_path_collision_v2",
+      "action_drift_v1"
+    ],
+    "formal_mechanisms": [
+      "observation_staleness_v1"
+    ],
+    "per_task": {
+      "calibration": 6,
+      "development": 6,
+      "future_sequential": 10,
+      "future_test": 16,
+      "train": 12
+    },
+    "primary_physical_sources": 100,
+    "selection_decision": "results/expansion/governance/d2_selection_decision.json",
+    "status": "LABELLED_METHOD_PILOT__NOT_BROAD_BENCHMARK",
+    "stopped_mechanisms": [
+      "narrow_clearance_v1"
+    ],
+    "test_authorized": false
+  },
+  "freeze_sha256": "ece36dafe566a397c8788c9dd04554a7375491bae09910e64b753bfd407218f7",
+  "git_commit": "9d3a878d36ce5e02e0ac254320f4137268219fca",
+  "inputs": [
+    {
+      "path": "configs/expansion/benchmark_v1.yaml",
+      "sha256": "05ddc6a3a7c363730ef99a9b9175c19a880c57de1bb24b262aa0811120635abc"
+    },
+    {
+      "path": "configs/expansion/deployable_options_v1.yaml",
+      "sha256": "3084f1eaa54fccb1742292493b1e131854a4760578bb1bf4167296ea32998180"
+    },
+    {
+      "path": "configs/expansion/diagnostic_oracle_options_v1.yaml",
+      "sha256": "a241f997da558cdeb8d2c68bf8335f3b3fb0f3bb6b93e25dd4c7f0e615ced317"
+    },
+    {
+      "path": "configs/expansion/mechanism_screens_v1.yaml",
+      "sha256": "27dfd81e5b52eb870d73dc2fa372583f7ba722b622f06099b090f2496b4858f0"
+    },
+    {
+      "path": "configs/expansion/source_sampling_v1.yaml",
+      "sha256": "ebec3bf80f1db4ba890304b0ebddd33de545b37b9e37a77d1014e96e952d8c27"
+    },
+    {
+      "path": "configs/expansion/splits_v1.yaml",
+      "sha256": "fcb9d5df80b817f7e8c77df46c9a39e52b54d9434a91616e76f8e8c9cbb6673e"
+    },
+    {
+      "path": "configs/expansion/utility_v1.yaml",
+      "sha256": "b3b06646719ef5d4bc583c884ca50be76a49e7cf9abd2a6977844f38a6257ba6"
+    }
+  ],
+  "kind": "crashbench_expansion_d4_protocol_freeze",
+  "primary_policy": {
+    "backend": "pi0",
+    "checkpoint": "gs://openpi-assets/checkpoints/pi0_libero",
+    "checkpoint_tree_bytes": 12014131888,
+    "checkpoint_tree_file_count": 19,
+    "checkpoint_tree_manifest_sha256": "ea876fed5d324aa6a61e8a6a31b65ab233de3c1d02b42791613c60ea84daeb8b",
+    "config_name": "pi0_libero",
+    "identity_manifest": "results/expansion/governance/pi0_identity_222c3451cd2b_26bf314df54b_20260830T065649Z/checkpoint_tree_manifest.json",
+    "num_open_loop_steps": 5,
+    "openpi_code_commit": "15a9616a00943ada6c20a0f158e3adb39df2ccac",
+    "status": "TASK0_TASK2_DETERMINISTIC_EXACT"
+  },
+  "protocol_sha256": "e2a5264a802ad58fc955a3bc898821f3880c58023ccbd47bef0bfe15012c5997",
+  "schema_version": 1,
+  "test_authorized": false,
+  "test_outcomes_read": 0
+}

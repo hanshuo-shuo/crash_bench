@@ -474,6 +474,9 @@ def expansion_governance_errors() -> list[str]:
         "results/expansion/governance/power_planning.json",
         "results/expansion/governance/remote_missing_lineage.json",
         "results/expansion/governance/d1_backend_capability_report.json",
+        "results/expansion/governance/protocol_v1_1_freeze.json",
+        "results/expansion/governance/split_manifest_v1_1.json",
+        "results/expansion/d3_formal_nominal/05ddc6a3a7c3_acb3d2d28dc2_20260830T103120Z/formal_nominal_analysis.json",
         "results/expansion/governance/exposure_attempts.jsonl",
         "results/expansion/d2_sources/screen_plan_256ce74521254ec9f692b77cb5197b5aa29be73f58d91ce29a6c945841cba7de.json",
         "results/expansion/d3_sources/formal_nominal_plan_a42e34a64bf2e0f8200e3171f80bd646e59ffc442edbcd09fa62fe376029e667.json",
@@ -808,6 +811,69 @@ def expansion_governance_errors() -> list[str]:
         errors.append("D2 strict broad gate was incorrectly promoted")
     if selection.get("formal_go_count") != 1 or selection.get("scoped_continue_count") != 2:
         errors.append("D2 overall mechanism counts drift")
+    formal_root = ROOT / (
+        "results/expansion/d3_formal_nominal/05ddc6a3a7c3_acb3d2d28dc2_20260830T103120Z"
+    )
+    formal_shards = sorted(formal_root.glob("shard_*.json"))
+    if len(formal_shards) != 6:
+        errors.append("D3 formal nominal collection must contain six shards")
+    formal_analysis = read_json(formal_root / "formal_nominal_analysis.json")
+    if formal_analysis.get("status") != "GO":
+        errors.append("D3 formal nominal selection is not GO")
+    if formal_analysis.get("selected_physical_sources") != 100:
+        errors.append("D3 formal nominal selection does not contain 100 sources")
+    expected_formal_rates = {"0": 57 / 63, "2": 61 / 63}
+    for task, rate in expected_formal_rates.items():
+        if formal_analysis.get("task_summary", {}).get(task, {}).get(
+            "nominal_success_rate"
+        ) != rate:
+            errors.append(f"D3 formal nominal task{task} success-rate drift")
+    protocol = read_json(ROOT / "results/expansion/governance/protocol_v1_1_freeze.json")
+    protocol_inputs = []
+    for row in protocol.get("inputs", []):
+        path = ROOT / row["path"]
+        actual = hashlib.sha256(path.read_bytes()).hexdigest()
+        if actual != row["sha256"]:
+            errors.append(f"D4 protocol input drift: {row['path']}")
+        protocol_inputs.append({"path": row["path"], "sha256": actual})
+    actual_protocol_sha = hashlib.sha256(
+        json.dumps(protocol_inputs, sort_keys=True, separators=(",", ":")).encode()
+    ).hexdigest()
+    if actual_protocol_sha != protocol.get("protocol_sha256"):
+        errors.append("D4 composite protocol SHA mismatch")
+    if protocol.get("test_authorized") is not False or protocol.get("test_outcomes_read") != 0:
+        errors.append("D4 protocol prematurely opens test")
+    split = read_json(ROOT / "results/expansion/governance/split_manifest_v1_1.json")
+    split_payload = dict(split)
+    split_hash = split_payload.pop("manifest_sha256", None)
+    actual_split_hash = hashlib.sha256(
+        json.dumps(split_payload, sort_keys=True, separators=(",", ":")).encode()
+    ).hexdigest()
+    if split_hash != actual_split_hash:
+        errors.append("D4 split manifest self hash mismatch")
+    if split.get("protocol_sha256") != protocol.get("protocol_sha256"):
+        errors.append("D4 split manifest protocol mismatch")
+    if split.get("physical_source_count") != 100 or split.get("policy_source_count") != 100:
+        errors.append("D4 split manifest source count drift")
+    if split.get("test_outcomes_read") != 0:
+        errors.append("D4 split manifest records test outcome access")
+    role_counts = {}
+    for row in split.get("assignments", []):
+        key = (row["task_id"], row["role"])
+        role_counts[key] = role_counts.get(key, 0) + 1
+    expected_roles = {
+        (f"libero_spatial:{task}", role): count
+        for task in (0, 2)
+        for role, count in {
+            "train": 12,
+            "calibration": 6,
+            "development": 6,
+            "confirmatory_id_test": 16,
+            "fresh_sequential_test": 10,
+        }.items()
+    }
+    if role_counts != expected_roles:
+        errors.append("D4 per-task split counts drift")
     return errors
 
 
