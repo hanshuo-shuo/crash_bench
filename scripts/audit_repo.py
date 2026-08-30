@@ -469,6 +469,7 @@ def expansion_governance_errors() -> list[str]:
         "schemas/source_attempt.schema.json",
         "schemas/mechanism.schema.json",
         "schemas/d1_conformance_decision.schema.json",
+        "schemas/shard_audit.schema.json",
         "results/expansion/governance/exposure_registry.json",
         "results/expansion/governance/power_planning.json",
         "results/expansion/governance/remote_missing_lineage.json",

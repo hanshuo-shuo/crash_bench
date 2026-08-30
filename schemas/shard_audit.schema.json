@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://crashbench.local/schemas/shard_audit.schema.json",
+  "title": "CrashBench logical shard completeness audit",
+  "type": "object",
+  "required": ["schema_version", "kind", "expected_logical_shards", "complete_logical_shards", "incomplete_logical_keys", "unexpected_logical_keys", "rows", "status", "next_action", "audit_sha256"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "crashbench_expansion_shard_completeness_audit"},
+    "status": {"enum": ["GO", "NO_GO"]},
+    "audit_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  }
+}
