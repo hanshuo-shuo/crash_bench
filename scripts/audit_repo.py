@@ -461,6 +461,8 @@ def expansion_governance_errors() -> list[str]:
         "results/expansion/governance/power_planning.json",
         "results/expansion/governance/remote_missing_lineage.json",
         "results/expansion/governance/d1_backend_capability_report.json",
+        "scripts/expansion/verify_exact_branching.py",
+        "setup/expansion_verify.sbatch",
     )
     for relative in required:
         if not (ROOT / relative).is_file():

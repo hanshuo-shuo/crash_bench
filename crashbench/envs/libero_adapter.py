@@ -430,6 +430,48 @@ class LiberoEnv:
         self.seed_value = int(seed)
         self.env.seed(self.seed_value)
 
+    def rng_sources(self) -> dict[str, dict[str, object]]:
+        """Return named env/controller/sensor NumPy RNG objects for exact restore.
+
+        Capability discovery is deliberately shallow and allowlisted. It avoids
+        serializing arbitrary environment objects while still covering the RNG
+        attributes used across Gym, robosuite controllers, and observables.
+        Aliases are deduplicated by object identity.
+        """
+
+        owners: list[tuple[str, object]] = [("env", self.env)]
+        try:
+            raw = self._raw_env()
+        except RuntimeError:
+            raw = None
+        if raw is not None:
+            owners.append(("raw_env", raw))
+            for index, robot in enumerate(getattr(raw, "robots", ())):
+                owners.append((f"robot{index}", robot))
+                controller = getattr(robot, "controller", None)
+                if controller is not None:
+                    owners.append((f"robot{index}.controller", controller))
+            for name, observable in sorted(getattr(raw, "_observables", {}).items()):
+                owners.append((f"observable.{name}", observable))
+
+        generators: dict[str, np.random.Generator] = {}
+        random_states: dict[str, np.random.RandomState] = {}
+        seen: set[int] = set()
+        for owner_name, owner in owners:
+            for attribute in (
+                "np_random", "_np_random", "rng", "_rng", "random_state", "_random_state"
+            ):
+                value = getattr(owner, attribute, None)
+                if id(value) in seen:
+                    continue
+                if isinstance(value, np.random.Generator):
+                    generators[f"{owner_name}.{attribute}"] = value
+                    seen.add(id(value))
+                elif isinstance(value, np.random.RandomState):
+                    random_states[f"{owner_name}.{attribute}"] = value
+                    seen.add(id(value))
+        return {"generators": generators, "random_states": random_states}
+
     def default_init_states(self) -> np.ndarray:
         from libero.libero import benchmark
         suite = benchmark.get_benchmark_dict()[self.task_suite]()

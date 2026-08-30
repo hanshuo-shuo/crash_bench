@@ -50,12 +50,14 @@ class BranchEngine:
         policy: Any,
         *,
         numpy_generators: Mapping[str, np.random.Generator] | None = None,
+        numpy_random_states: Mapping[str, np.random.RandomState] | None = None,
         jax_key_targets: dict[str, Any] | None = None,
         restore_torch_rng: bool = True,
     ):
         self.env = env
         self.policy = policy
         self.numpy_generators = numpy_generators
+        self.numpy_random_states = numpy_random_states
         self.jax_key_targets = jax_key_targets
         self.restore_torch_rng = restore_torch_rng
 
@@ -93,6 +95,7 @@ class BranchEngine:
                         self.env,
                         self.policy,
                         numpy_generators=self.numpy_generators,
+                        numpy_random_states=self.numpy_random_states,
                         jax_key_targets=self.jax_key_targets,
                         restore_torch_rng=self.restore_torch_rng,
                     )

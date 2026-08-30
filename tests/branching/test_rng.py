@@ -30,6 +30,15 @@ def test_named_generator_restore_fails_closed_when_target_missing():
         restore_rng_state(snapshot, restore_torch=False)
 
 
+def test_named_legacy_random_state_roundtrip():
+    legacy = np.random.RandomState(31)
+    snapshot = capture_rng_state(numpy_random_states={"env": legacy}, capture_torch=False)
+    expected = legacy.rand(3)
+    legacy.rand(3)
+    restore_rng_state(snapshot, numpy_random_states={"env": legacy}, restore_torch=False)
+    np.testing.assert_array_equal(legacy.rand(3), expected)
+
+
 def test_jax_explicit_key_roundtrip_without_importing_jax():
     snapshot = capture_rng_state(jax_keys={"policy": np.array([2, 3], dtype=np.uint32)}, capture_torch=False)
     target = {"policy": np.array([9, 9], dtype=np.uint32)}

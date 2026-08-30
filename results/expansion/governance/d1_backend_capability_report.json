@@ -7,7 +7,10 @@
     "simulator_runtime_adapter": "existing LiberoEnv flat_state/controller_state/model_xml/reset_to_exact/restore_controller_state",
     "rng_components": ["python", "numpy_global", "numpy_named_generators", "torch_cpu", "torch_all_cuda_devices", "jax_explicit_keys"],
     "integrity": ["dtype-shape-byte component hashes", "complete bundle hash", "post-restore recapture equality"],
-    "synthetic_test_evidence": "tests/branching"
+    "synthetic_test_evidence": "tests/branching",
+    "live_runner": "scripts/expansion/verify_exact_branching.py",
+    "slurm_entry": "setup/expansion_verify.sbatch",
+    "live_protocol": "exposed default init source; one warmup policy step; exact bundle; three 3-step Base repeats"
   },
   "backends": [
     {

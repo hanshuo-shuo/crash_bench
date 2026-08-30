@@ -16,6 +16,7 @@ class RNGSnapshot:
     python_state: object
     numpy_global_state: tuple
     numpy_generators: Mapping[str, dict[str, Any]]
+    numpy_random_states: Mapping[str, tuple] = None
     torch_cpu_state: Any | None = None
     torch_cuda_states: tuple[Any, ...] = ()
     jax_keys: Mapping[str, np.ndarray] | None = None
@@ -26,6 +27,7 @@ class RNGSnapshot:
         _update_digest(digest, self.python_state)
         _update_digest(digest, self.numpy_global_state)
         _update_digest(digest, self.numpy_generators)
+        _update_digest(digest, self.numpy_random_states)
         _update_digest(digest, self.torch_cpu_state)
         _update_digest(digest, self.torch_cuda_states)
         _update_digest(digest, self.jax_keys)
@@ -63,6 +65,7 @@ def _update_digest(digest: Any, value: Any) -> None:
 def capture_rng_state(
     *,
     numpy_generators: Mapping[str, np.random.Generator] | None = None,
+    numpy_random_states: Mapping[str, np.random.RandomState] | None = None,
     jax_keys: Mapping[str, Any] | None = None,
     declared_branch_seed: int | None = None,
     capture_torch: bool = True,
@@ -87,6 +90,10 @@ def capture_rng_state(
             name: copy.deepcopy(generator.bit_generator.state)
             for name, generator in sorted((numpy_generators or {}).items())
         },
+        numpy_random_states={
+            name: copy.deepcopy(random_state.get_state())
+            for name, random_state in sorted((numpy_random_states or {}).items())
+        },
         torch_cpu_state=torch_cpu,
         torch_cuda_states=torch_cuda,
         jax_keys={
@@ -100,6 +107,7 @@ def restore_rng_state(
     snapshot: RNGSnapshot,
     *,
     numpy_generators: Mapping[str, np.random.Generator] | None = None,
+    numpy_random_states: Mapping[str, np.random.RandomState] | None = None,
     jax_key_targets: dict[str, Any] | None = None,
     restore_torch: bool = True,
 ) -> None:
@@ -111,6 +119,15 @@ def restore_rng_state(
         raise KeyError(f"missing named NumPy generators during restore: {sorted(missing)}")
     for name, state in snapshot.numpy_generators.items():
         generators[name].bit_generator.state = copy.deepcopy(state)
+    random_states = numpy_random_states or {}
+    captured_random_states = snapshot.numpy_random_states or {}
+    missing_random_states = set(captured_random_states) - set(random_states)
+    if missing_random_states:
+        raise KeyError(
+            f"missing named NumPy RandomState objects during restore: {sorted(missing_random_states)}"
+        )
+    for name, state in captured_random_states.items():
+        random_states[name].set_state(copy.deepcopy(state))
     if snapshot.jax_keys:
         if jax_key_targets is None:
             raise KeyError("JAX keys were captured but no restore targets were provided")

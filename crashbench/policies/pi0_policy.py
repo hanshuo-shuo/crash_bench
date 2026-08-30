@@ -157,8 +157,12 @@ class Pi0Policy:
         return True
 
     def snapshot_continuation(self):
+        import jax
+
         from crashbench.branching.policy_state import PolicyContinuation
 
+        if getattr(self._policy, "_is_pytorch_model", False) or not hasattr(self._policy, "_rng"):
+            raise RuntimeError("pi0 exact branching requires the JAX policy _rng state")
         return PolicyContinuation(
             backend="pi0",
             contract_version=1,
@@ -167,10 +171,15 @@ class Pi0Policy:
                 "num_open_loop_steps": self._n_open_loop,
                 "capture_hidden": bool(self.capture_hidden),
                 "tap": self.pi0_tap,
+                "jax_rng_key_data": np.asarray(
+                    jax.random.key_data(self._policy._rng), dtype=np.uint32
+                ).copy(),
             },
         )
 
     def restore_continuation(self, snapshot) -> None:
+        import jax
+
         if snapshot.backend != "pi0" or snapshot.contract_version != 1:
             raise ValueError("incompatible pi0 continuation snapshot")
         payload = snapshot.payload
@@ -180,6 +189,9 @@ class Pi0Policy:
             raise ValueError("pi0 continuation configuration drift")
         self._queue.clear()
         self._queue.extend(np.asarray(action).copy() for action in payload["queue"])
+        self._policy._rng = jax.random.wrap_key_data(
+            np.asarray(payload["jax_rng_key_data"], dtype=np.uint32)
+        )
         self.last_hidden = None
 
     def _prep_image(self, img: np.ndarray) -> np.ndarray:

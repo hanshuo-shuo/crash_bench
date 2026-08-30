@@ -85,10 +85,15 @@ def capture_exact_state(
     identity: Mapping[str, Any],
     provenance: Mapping[str, Any] | None = None,
     numpy_generators: Mapping[str, np.random.Generator] | None = None,
+    numpy_random_states: Mapping[str, np.random.RandomState] | None = None,
     jax_keys: Mapping[str, Any] | None = None,
     declared_branch_seed: int | None = None,
     capture_torch_rng: bool = True,
 ) -> ExactStateBundle:
+    if numpy_generators is None and numpy_random_states is None and hasattr(env, "rng_sources"):
+        sources = env.rng_sources()
+        numpy_generators = sources.get("generators", {})
+        numpy_random_states = sources.get("random_states", {})
     base = ExactStateBundle(
         identity=dict(identity),
         flat_state=np.asarray(env.flat_state()).copy(),
@@ -97,6 +102,7 @@ def capture_exact_state(
         policy_continuation=capture_policy_continuation(policy),
         rng=capture_rng_state(
             numpy_generators=numpy_generators,
+            numpy_random_states=numpy_random_states,
             jax_keys=jax_keys,
             declared_branch_seed=declared_branch_seed,
             capture_torch=capture_torch_rng,
@@ -116,6 +122,7 @@ def restore_exact_state(
     policy: Any,
     *,
     numpy_generators: Mapping[str, np.random.Generator] | None = None,
+    numpy_random_states: Mapping[str, np.random.RandomState] | None = None,
     jax_key_targets: dict[str, Any] | None = None,
     restore_torch_rng: bool = True,
 ) -> Any:
@@ -126,9 +133,14 @@ def restore_exact_state(
     observation = env.restore_controller_state(dict(bundle.runtime_state))
     # Policy state precedes RNG by contract; neither operation may advance time.
     restore_policy_continuation(policy, bundle.policy_continuation)
+    if numpy_generators is None and numpy_random_states is None and hasattr(env, "rng_sources"):
+        sources = env.rng_sources()
+        numpy_generators = sources.get("generators", {})
+        numpy_random_states = sources.get("random_states", {})
     restore_rng_state(
         bundle.rng,
         numpy_generators=numpy_generators,
+        numpy_random_states=numpy_random_states,
         jax_key_targets=jax_key_targets,
         restore_torch=restore_torch_rng,
     )
@@ -138,6 +150,7 @@ def restore_exact_state(
         identity=bundle.identity,
         provenance=bundle.provenance,
         numpy_generators=numpy_generators,
+        numpy_random_states=numpy_random_states,
         jax_keys=jax_key_targets,
         declared_branch_seed=bundle.rng.declared_branch_seed,
         capture_torch_rng=restore_torch_rng,

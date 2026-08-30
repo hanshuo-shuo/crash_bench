@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from collections import deque
+from types import SimpleNamespace
+import sys
 
 import numpy as np
 import pytest
@@ -36,7 +38,7 @@ def test_openvla_stateless_certificate_roundtrip_without_loading_model():
         (Pi0Policy, "pi0", {"num_open_loop_steps": 5, "tap": "vlm"}),
     ],
 )
-def test_chunk_policy_mid_queue_roundtrip(policy_class, backend, extra):
+def test_chunk_policy_mid_queue_roundtrip(policy_class, backend, extra, monkeypatch):
     policy = policy_class.__new__(policy_class)
     policy.capture_hidden = False
     policy.last_hidden = None
@@ -46,11 +48,20 @@ def test_chunk_policy_mid_queue_roundtrip(policy_class, backend, extra):
     else:
         policy._n_open_loop = extra["num_open_loop_steps"]
         policy.pi0_tap = extra["tap"]
+        key = np.array([3, 4], dtype=np.uint32)
+        policy._policy = SimpleNamespace(_rng=key, _is_pytorch_model=False)
+        fake_random = SimpleNamespace(
+            key_data=lambda value: np.asarray(value),
+            wrap_key_data=lambda value: np.asarray(value).copy(),
+        )
+        monkeypatch.setitem(sys.modules, "jax", SimpleNamespace(random=fake_random))
     snapshot = policy.snapshot_continuation()
     policy._queue.popleft()
     policy.restore_continuation(snapshot)
     np.testing.assert_array_equal(policy._queue.popleft(), [1.0])
     np.testing.assert_array_equal(policy._queue.popleft(), [2.0])
+    if backend == "pi0":
+        np.testing.assert_array_equal(policy._policy._rng, [3, 4])
 
 
 def test_oft_rejects_chunk_contract_drift():
