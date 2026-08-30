@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://crashbench.local/schemas/utility.schema.json",
+  "title": "CrashBench expansion branch utility row",
+  "type": "object",
+  "required": ["task_success", "catastrophe", "safe_noncompletion", "intervention_invoked", "human_help", "option_duration_steps", "path_length_m", "force_exposure_ns", "latency_ms"],
+  "properties": {
+    "task_success": {"enum": [0, 1]},
+    "catastrophe": {"enum": [0, 1]},
+    "safe_noncompletion": {"enum": [0, 1]},
+    "intervention_invoked": {"enum": [0, 1]},
+    "human_help": {"enum": [0, 1]},
+    "option_duration_steps": {"type": "number", "minimum": 0},
+    "path_length_m": {"type": "number", "minimum": 0},
+    "force_exposure_ns": {"type": "number", "minimum": 0},
+    "latency_ms": {"type": "number", "minimum": 0}
+  }
+}
