@@ -75,9 +75,10 @@ BANNED_CURRENT_TEXT = (
 )
 REQUIRED_CURRENT_TEXT = {
     ROOT / "README.md": (
-        "Knowing When to Intervene",
+        "CrashBench: ODUR Negative Result",
         "option-conditioned outcome prediction",
-        "Always Retreat",
+        "SCOPED_TEST_SCOPE_FAILURE_RELEASE",
+        "Knowing When to Intervene",
     ),
     ROOT / "docs/CURRENT.md": (
         "C0–C14",

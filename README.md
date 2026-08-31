@@ -1,148 +1,170 @@
-# CrashBench
+# CrashBench: ODUR Negative Result
 
-> **Current direction (2026-08-30):** The router-centered headline and recovery
-> queues below are historical context. Current work is the publication-first,
-> glass-scoped exact-state diagnostic defined in
-> [`docs/iclr27/PUBLICATION_FIRST_RESOLUTION.md`](docs/iclr27/PUBLICATION_FIRST_RESOLUTION.md).
-> No new outcome experiment, router rescue, or sequential rescue is required or
-> authorized by default.
+> **Final status (2026-08-31):** the Option-Conditioned Distributional Utility
+> Router (ODUR) experiment completed correctly, but the learned method and the
+> confirmatory benchmark claim did not pass their frozen gates. The terminal
+> release is `SCOPED_TEST_SCOPE_FAILURE_RELEASE`, not a successful router or a
+> general safety benchmark.
 
-Working paper title: **Knowing When to Intervene: Counterfactual Outcome
-Routing for VLA Safety**.
+CrashBench asks a simple question: if a robot may be in danger, what should it
+actually do? A binary risk score cannot by itself tell us whether intervention
+will help, which intervention is best, or whether a safe action merely abandons
+the task. We therefore tested **option-conditioned outcome prediction** and
+conservative action selection using exact-state realized outcomes.
 
-CrashBench studies a practical failure of robot safety systems: predicting that
-the Base policy may fail does not reveal whether intervention will help, which
-intervention to use, or whether safety comes at the cost of abandoning the
-task. The paper therefore reframes safety routing from binary failure detection
-to option-conditioned outcome prediction.
+中文概括：实验和数据管线都成功运行了，但想证明的科学结论失败了。模型没有稳定
+超过简单基线；保守校准后又退化成几乎总是安全停止。最终测试还严重缺少“其实不该
+干预”的对照场景，所以不能证明系统同时知道什么时候该干预、什么时候不该动。
 
-## Main result
+## Core method / 核心方法
 
-The frozen router predicts
+ODUR stands for **Option-Conditioned Distributional Utility Router**. For every
+decision state, the benchmark restores the same simulator, controller, policy
+continuation, sensor queue, and random-number state, then executes each option
+from that identical branch point.
+
+本次 observation-staleness 实验使用三个可部署选项：
+
+1. `base_continue`：继续执行冻结的 π0 策略；
+2. `observation_refresh`：清理延迟视觉队列、刷新观测并重新查询策略；
+3. `safe_stop`：停止运动并接受安全但未完成任务的结果。
+
+For each state–option pair, ODUR predicts:
 
 ```text
 P(task success | state, option)
 P(catastrophe | state, option)
 P(safe noncompletion | state, option)
+normalized duration, path, force-exposure, and latency costs
 ```
 
-for Base, structured Detour, and structured Retreat. It evaluates
-`U_lambda(option) = P(success) - lambda * P(catastrophe)` and keeps Base unless
-the best intervention has a calibration-frozen advantage greater than `delta`.
+These predictions are converted to the frozen utility `U0`. Five independently
+seeded models form an ensemble. Source-level conformal residuals produce
+simultaneous lower confidence bounds on pairwise option advantages and upper
+bounds on absolute and relative catastrophe risk. A non-Base option is selected
+only if it strictly beats Base and every other admissible option while satisfying
+both safety bounds. Otherwise the router preserves Base or fails closed to safe
+stop.
 
-On an independent fresh cohort of eight source states and 24 matched decisions,
-the paper display point (`lambda=1,target=0.6`) is:
+简单说：我们不是只预测“危险不危险”，而是预测“继续、刷新视觉、停止”各自会发生
+什么，然后只有在证据足够强时才允许切换动作。
 
-| Method | Task success | Catastrophe | Safe noncompletion | Intervention |
-|---|---:|---:|---:|---:|
-| Base | 66.67% | 33.33% | 0.00% | 0.00% |
-| Hazard Prompt | 37.50% | 20.83% | 41.67% | 100.00% |
-| Binary Risk -> Retreat | 41.67% | 8.33% | 50.00% | 50.00% |
-| Always Detour | 70.83% | 4.17% | 25.00% | 100.00% |
-| Always Retreat | 0.00% | 0.00% | 100.00% | 100.00% |
-| **Counterfactual Router** | **87.50%** | 8.33% | **4.17%** | 58.33% |
-| Counterfactual Oracle | 91.67% | 0.00% | 8.33% | 33.33% |
+## What we tried / 我们做了什么
 
-At a similar intervention rate, Router improves task success over binary-risk
-routing by 45.83 points with the same catastrophe point estimate. Relative to
-Always Detour, it gains 16.67 success points and uses 41.67 fewer intervention
-points, with a 4.17-point higher catastrophe estimate. On off-path/no-glass
-controls, Router retains 93.75% task success versus 56.25% for Hazard Prompt.
+- Built an exact-state branch engine for π0 on two LIBERO-Spatial tasks.
+- Screened several mechanisms; only observation staleness had sufficient valid
+  support for the formal scoped pilot.
+- Collected 48 train/calibration/development physical sources: 1,296 decision
+  anchors and 3,888 complete realized option outcomes.
+- Trained five ODUR selection seeds, froze the strongest deployable baseline
+  (`DirectQ`), refit five final seeds, and calibrated on 12 disjoint sources.
+- Opened one immutable 32-source confirmatory split, collected all 864 anchors
+  and 2,592 option branches, audited every content-addressed blob, and permanently
+  sealed the test.
+- Evaluated the three frozen catastrophe-cost settings plus a separately frozen,
+  explicitly non-gating 108-setting utility sensitivity grid.
 
-![Fresh independent counterfactual-router frontier](results/counterfactual_router_fresh_online_n8_frontier_all_lambdas.png)
+## What failed / 为什么失败
 
-Four predeclared `(lambda,target)` points satisfy all four frontier criteria in
-the independent cohort. The combined 13-source analysis meets each criterion
-somewhere on the frontier but has no single all-criteria point. The result is a
-new safety--success--intervention Pareto tradeoff, not a universally dominant
-fixed operating point.
+### 1. The learned method did not beat the simple baseline
 
-The complete seven-method outcome and intervention-quality tables, metric
-definitions, plain-language interpretation, figures, confidence intervals, and
-caveats are in [the canonical main-result document](docs/COUNTERFACTUAL_ROUTER_MAIN_RESULT.md).
+Only 2 of 5 train-only ODUR seeds exceeded `DirectQ`; median development
+`Delta U0` was `-0.0116`. The method gate therefore failed before any method
+superiority test was opened.
 
-## Paper spine
+No method superiority test was opened.
 
-1. **Risk is not intervention value.** Exact-state branches show that Detour can
-   rescue Base catastrophes but can also damage Base successes; Retreat is often
-   safe without completing the task. No fixed option is uniformly correct.
-2. **Predict consequences, then route conservatively.** A deliberately small
-   single-frame model predicts three outcomes for every option and overrides
-   Base only when expected advantage clears a frozen margin.
-3. **Test the full frontier online.** Base, Hazard Prompt, Binary Risk, Always
-   Detour, Always Retreat, Router, and Oracle are evaluated on the same fresh
-   source placements, seeds, initializations, and exact T-20 branch states.
-   Uncertainty is clustered by source state.
-4. **Use diagnosis as mechanism support.** Earlier wall experiments show the
-   motivating “decoded but not routed” gap: imminent collision is linearly
-   readable while unsafe action continues, and an explicit
-   `risk-readout → controller` interface can stop collision. The new headline
-   advances from detecting failure to choosing valuable intervention.
+只有 2/5 个随机种子的 ODUR 超过 DirectQ，开发集效用中位差是 `-0.0116`。因此我们
+没有资格在最终测试集上宣称或检验“ODUR 比基线更好”。
 
-The structured Detour controller uses privileged geometry, and Oracle observes
-realized branches. Accordingly, the paper claims learned routing over structured
-options, not an end-to-end learned recovery policy.
+### 2. Conservative calibration collapsed to safe stop
 
-## Dynamic first-crossing closeout
+The source-level conformal bounds were extremely wide. On development data the
+calibrated selector chose safe stop for 100% of decisions. Catastrophe decreased
+by 6.79 percentage points, but source-macro utility decreased by `0.698` because
+the robot abandoned many tasks it could otherwise finish.
 
-E16 establishes intervention-value routing at matched T-20 decision states; it
-does not by itself establish reliable from-reset trigger timing. P2 evaluates
-that stronger deployment question separately. Source-level sequential
-calibration reduces repeated-look over-triggering to 16.7% and, on four stable
-development sources (12 episodes), changes Base success/catastrophe from
-58.3%/33.3% to 66.7%/25.0%. However, it misses both known T-20-recoverable
-glass episodes.
+校准后模型过于保守，所有状态都选择安全停止。碰撞确实少了，但机器人也放弃了大量
+本来能完成的任务，所以总体效用大幅下降。这不是一个有用的恢复策略。
 
-The P2.5 morphology audit closes the obvious threshold/accumulator follow-up.
-Across the two missed treatments and seven Base-success controls, raw maximum
-has pairwise AUC 0.357; the best simple temporal alternatives (MA-3/5/8) reach
-only 0.286. One missed episode has sustained Detour evidence, the other only a
-short burst, while several controls are also persistently high. The limitation
-is therefore not just one-step spikes or a badly chosen scalar boundary.
+### 3. The confirmatory test lacked enough non-intervention controls
 
-This result is a development diagnosis, not a new project-level GO/NO-GO. E16
-remains the headline matched-decision result; the paper must not claim that the
-current single-frame score reliably knows when to intervene from reset. If that
-claim is pursued, the minimum next method change is explicit recovery-window
-supervision, before a temporal value model. Further instantaneous-threshold or
-simple evidence-accumulator tuning on this cohort is closed.
+In the once-opened 32-source test, 31 sources benefited from at least one
+intervention and only 1 source was a `B=0` control. Even the prospectively scoped
+gate required at least 3 controls. The same deficiency appeared under all three
+catastrophe-cost settings (`0/3` settings passed the complete support contract).
+
+最终 32 个测试场景里，31 个都能从某种干预中获益，只有 1 个属于“不干预更合适”。
+最低要求仍是 3 个。正负场景太不平衡，因此无法证明 benchmark 能同时考察“何时该
+干预”和“何时不该干预”。其他很强的结果不能抵消这个缺口。
+
+## What worked / 哪些部分成功了
+
+| Evidence | Result |
+|---|---:|
+| D8 physical sources | 32/32 complete |
+| Tasks | 16 sources per task |
+| Exact branch-start equality | 100% |
+| Mechanical-invalid rate | 0% |
+| Missing planned branches | 0 |
+| B=1 support | 31 sources |
+| Strict observation-refresh support | 21 sources |
+| Strict safe-stop support | 22 sources |
+| Same-risk benefit/strict-option flips | 27 sources |
+| B=0 support | **1 source; required >=3** |
+
+The pipeline, exact restoration, option execution, data accounting, and one-time
+test protocol all worked. The failure is scientific: the evidence does not
+support the desired balanced benchmark or learned-router claim.
+
+实验程序没有坏，数据也没有损坏。失败的是研究假设，而不是运行本身。
+
+## Final claim boundary / 最终结论边界
+
+This repository does **not** claim:
+
+- a successful, superior, or deployable ODUR method;
+- a general multi-mechanism VLA-safety benchmark;
+- reliable online recovery or sequential safeguarding;
+- permission to reopen, replace, or top up the confirmatory test.
+
+The valid output is a complete, reproducible **single-policy,
+single-observation-staleness scope-failure and method-null release**.
+
+## Historical glass diagnostic
+
+The publication-first glass case study remains a separate preserved result. Its
+working history includes **Knowing When to Intervene: Counterfactual Outcome
+Routing for VLA Safety**, Base/Detour/**Always Retreat**, and the finding that
+risk does not specify intervention value. The current canonical scope and claim
+lock are in
+[`docs/iclr27/PUBLICATION_FIRST_RESOLUTION.md`](docs/iclr27/PUBLICATION_FIRST_RESOLUTION.md).
+The ODUR negative result does not rewrite or inflate that frozen glass evidence.
+
+## Final artifacts / 最终产物
+
+- [D8–D10 scope-failure audit](docs/mainconf/D8_D10_SCOPE_FAILURE_AUDIT.md)
+- [Scoped manuscript draft](docs/mainconf/SCOPED_STALENESS_BENCHMARK_MANUSCRIPT_V2.md)
+- [D10 release manifest](results/expansion/d10_release/e2a5264a802a_9c869dc8f97d_scope_failure_v2/release_manifest.json)
+- [D10 release audit](results/expansion/d10_release/e2a5264a802a_9c869dc8f97d_scope_failure_v2/release_audit.json)
+- [Final support figure](results/expansion/d10_figures/e2a5264a802a_9c869dc8f97d_scope_failure_v2/figure_scoped_support.svg)
+- [Confirmatory analysis](results/expansion/d8_benchmark/e2a5264a802a_9c869dc8f97d_20260830T124059Z/postprocess_pinned_9c869dc/benchmark_test_analysis.json)
+- [Full 108-setting sensitivity](results/expansion/d8_benchmark/e2a5264a802a_9c869dc8f97d_20260830T124059Z/postprocess_pinned_9c869dc/full_utility_sensitivity.json)
+- [One-time test completion seal](results/expansion/d8_benchmark/e2a5264a802a_9c869dc8f97d_20260830T124059Z/authorization/test_complete.seal)
 
 ## Repository map
 
 ```text
-crashbench/                 reusable scenario, policy, probe, and router code
-scripts/                    experiment, training, and analysis implementations
-setup/                      current environment and Quest submission guide
-results/                    promoted summaries, full tables, frontiers, and figures
-docs/                       current paper truth sources and frozen protocol
-docs/appendix/              supporting and negative evidence
-docs/archive/               superseded plans, execution records, and reports
-legacy/                     path-stable historical orchestration helpers
+crashbench/                 exact-state, option, model, and runtime libraries
+scripts/expansion/          source, collection, training, gate, and release tools
+setup/                      Quest/Slurm wrappers and environment instructions
+results/expansion/          frozen machine artifacts and compact releases
+docs/mainconf/              scoped expansion audit and manuscript package
+docs/iclr27/                publication-first glass truth sources
+docs/archive/               superseded historical plans and reports
 ```
 
-Historical files remain at stable paths when manifests, tests, or provenance
-records depend on them. They are not competing current entrypoints.
-
-## Start here
-
-- [CrashBench ↔ Quest workflow](QUEST_WORKFLOW.md)
-- [Main result and interpretation](docs/COUNTERFACTUAL_ROUTER_MAIN_RESULT.md)
-- [Current paper state](docs/CURRENT.md)
-- [Paper plan](docs/PAPER_PLAN.md)
-- [Claim ledger](docs/CLAIMS.md)
-- [Fresh online protocol](docs/FRESH_COUNTERFACTUAL_ROUTER_PROTOCOL.md)
-- [Experiment index](docs/EXPERIMENT_INDEX.md)
-- [Reproducibility and data availability](docs/REPRODUCIBILITY.md)
-- [Simple group-meeting explanation of the router and options](docs/GROUP_MEETING_ROUTER_EXPLAINER.md)
-- [P1 timing-choice benchmark](docs/P1_TIMING_CHOICE_BENCHMARK.md)
-- [P2 dynamic first-crossing protocol](docs/P2_DYNAMIC_FIRST_CROSSING.md)
-- [P2 development result](results/P2_DYNAMIC_FIRST_CROSSING_DEV_20260818.md)
-- [P2 sequential first-crossing result](results/P2_SEQUENTIAL_FIRST_CROSSING_DEV_20260819.md)
-- [P2.5 score-trajectory morphology audit](results/P2_TRACE_MORPHOLOGY_AUDIT_20260819.md)
-- [Appendix index](docs/appendix/README.md)
-- [Legacy archive](docs/archive/README.md)
-
-## Zero-GPU verification
+## Verification
 
 ```bash
 pip install -e .
@@ -151,9 +173,6 @@ PYTHONDONTWRITEBYTECODE=1 python scripts/audit_repo.py
 git diff --check
 ```
 
-These checks validate tracked metadata, frozen claim values, scenario
-fingerprints, promoted E16 assets, and local links. They do not reproduce GPU
-rollouts or restore ignored hidden-state/video assets.
-
-No archival citation or license file is currently supplied; add both before an
-external release.
+These checks validate tracked metadata, hashes, gates, test sealing, exposure
+lineage, release claim boundaries, and code invariants. They do not rerun GPU
+rollouts or reconstruct ignored raw observation blobs.

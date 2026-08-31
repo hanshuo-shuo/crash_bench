@@ -6,7 +6,6 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-import os
 import sys
 from pathlib import Path
 from typing import Any, Iterable, Sequence
@@ -19,7 +18,6 @@ from crashbench.branching.artifacts import BlobRef, ContentAddressedStore
 from crashbench.data.utility import (
     OutcomeVector,
     PhysicalBudgets,
-    UtilityWeights,
     scalar_utility,
 )
 
