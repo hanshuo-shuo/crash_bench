@@ -69,6 +69,12 @@ def main() -> None:
         errors.append("figure_effective_n_mismatch")
     if figure_manifest.get("method_superiority_depicted") is not False:
         errors.append("figure_depicts_forbidden_method_claim")
+    for name, artifact in figure_manifest.get("artifacts", {}).items():
+        path = figure_manifest_path.parent / name
+        if not path.is_file():
+            errors.append(f"missing_figure_artifact:{name}")
+        elif sha256_file(path) != artifact["sha256"] or path.stat().st_size != artifact["bytes"]:
+            errors.append(f"figure_artifact_identity_mismatch:{name}")
     sensitivity_path = Path(manifest["artifacts"]["full_utility_sensitivity"]["path"])
     sensitivity = json.loads(sensitivity_path.read_text())
     if sensitivity.get("weight_setting_count") != 108:

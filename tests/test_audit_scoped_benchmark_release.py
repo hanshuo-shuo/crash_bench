@@ -13,3 +13,4 @@ def test_release_audit_enforces_hashes_claims_effective_n_and_no_reopen():
     assert '"D5_train_development": 36' in source
     assert "FIX_GENERATION_OR_TEXT_ONLY__DO_NOT_CHANGE_EXPERIMENT" in source
     assert "utility_sensitivity_grid_incomplete" in source
+    assert "figure_artifact_identity_mismatch" in source
