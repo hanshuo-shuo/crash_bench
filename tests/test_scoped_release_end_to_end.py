@@ -104,6 +104,7 @@ def test_scoped_release_builder_and_audit_end_to_end(tmp_path):
             "--gate-b", str(gate_b),
             "--benchmark-freeze", str(benchmark),
             "--d8-run-root", str(d8_root),
+            "--d8-postprocess-dir", str(d8_root / "postprocess"),
             "--figure-manifest", str(figure_manifest),
             "--full-sensitivity", str(sensitivity),
             "--output-dir", str(release),

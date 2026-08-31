@@ -46,6 +46,7 @@ def main() -> None:
     parser.add_argument("--gate-b", type=Path, required=True)
     parser.add_argument("--benchmark-freeze", type=Path, required=True)
     parser.add_argument("--d8-run-root", type=Path, required=True)
+    parser.add_argument("--d8-postprocess-dir", type=Path, required=True)
     parser.add_argument("--figure-manifest", type=Path, required=True)
     parser.add_argument("--full-sensitivity", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
@@ -58,7 +59,9 @@ def main() -> None:
     d6 = load(args.d6_run_manifest)
     gate_b = load(args.gate_b)
     benchmark = load(args.benchmark_freeze)
-    d8_post = args.d8_run_root / "postprocess"
+    d8_post = args.d8_postprocess_dir
+    if d8_post.parent.resolve() != args.d8_run_root.resolve():
+        raise ValueError("D8 postprocess directory is not inside the authorized run root")
     d8_manifest = load(d8_post / "run_manifest.json")
     d8_analysis = load(d8_post / "benchmark_test_analysis.json")
     figure_manifest = load(args.figure_manifest)

@@ -14,3 +14,4 @@ def test_release_builder_enforces_sealed_test_and_claim_boundaries():
     assert "gate_a_correction_disclosed" in source
     assert "release figure crosses the method claim boundary" in source
     assert "complete non-gating 108-setting utility sensitivity" in source
+    assert "D8 postprocess directory is not inside the authorized run root" in source
