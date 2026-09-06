@@ -15,6 +15,7 @@ ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from crashbench.data.support import source_label_support, aggregate_source_support
 from crashbench.data.utility import option_decision
 from crashbench.mechanisms.registry import evaluate_mechanism_screen
 
@@ -79,6 +80,7 @@ def analyze_narrow_shards(shards: Iterable[dict[str, Any]]) -> dict[str, Any]:
                 "eligible": bool(complete),
                 "complete_blocks": len(complete),
                 "benefit": any(row["benefit"] for row in complete),
+                **source_label_support(row["benefit"] for row in complete),
                 "strict_intervention_winners": sorted(winners),
                 "two_distinct_strict_interventions": len(winners) >= 2,
             }
@@ -105,8 +107,7 @@ def analyze_narrow_shards(shards: Iterable[dict[str, Any]]) -> dict[str, Any]:
         "matched_control_catastrophe": control_cat,
         "mechanism_attribution_valid": bool(narrow and controls)
         and (narrow_cat > control_cat or narrow_success < control_success),
-        "benefit_zero_sources": sum(not row["benefit"] for row in eligible),
-        "benefit_one_sources": sum(row["benefit"] for row in eligible),
+        **aggregate_source_support(eligible),
         "task0_benefit_sources": sum(row["benefit"] and row["task_id"] == 0 for row in eligible),
         "task2_benefit_sources": sum(row["benefit"] and row["task_id"] == 2 for row in eligible),
         "two_distinct_strict_winner_sources": sum(

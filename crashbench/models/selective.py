@@ -82,6 +82,26 @@ class PairwiseSourceConformalSelector:
     def _combined(mapping: Mapping[str, float], mechanism_id: str) -> float:
         return max(float(mapping[PairwiseSourceConformalSelector.GLOBAL]), float(mapping.get(mechanism_id, math.inf)))
 
+    def certificate_diagnostic(self, mechanism_id: str) -> dict:
+        """Check feasibility, not coverage or a conditional risk guarantee.
+
+        Binary-outcome residual quantiles do not certify conditional event
+        probabilities. Preserve the frozen selector behavior for comparison.
+        """
+        q = self._combined(self.catastrophe_absolute_quantiles, mechanism_id)
+        impossible = q > self.catastrophe_absolute
+        finite = all(math.isfinite(self._combined(mapping, mechanism_id)) for mapping in (
+            self.utility_quantiles, self.catastrophe_difference_quantiles,
+            self.catastrophe_absolute_quantiles))
+        return {
+            "status": "CALIBRATION_FAILURE" if impossible or not finite else "NOT_PROVEN_INFEASIBLE",
+            "absolute_safety_feasible_for_any_probability": not impossible,
+            "forced_safe_stop_for_all_legal_predictions": impossible and "safe_stop" in self.option_ids,
+            "q_absolute": q,
+            "catastrophe_absolute_limit": self.catastrophe_absolute,
+            "conditional_risk_guarantee": False,
+        }
+
     def select(
         self,
         *,
@@ -96,6 +116,11 @@ class PairwiseSourceConformalSelector:
             raise ValueError("admissible options must be a frozen-catalog subset containing Base")
         if set(predicted_utility) != set(self.option_ids) or set(predicted_catastrophe) != set(self.option_ids):
             raise ValueError("prediction options differ from frozen catalog")
+        if not all(math.isfinite(float(value)) for value in predicted_utility.values()):
+            raise ValueError("utility predictions must be finite")
+        if not all(math.isfinite(float(value)) and 0 <= float(value) <= 1
+                   for value in predicted_catastrophe.values()):
+            raise ValueError("catastrophe predictions must be legal probabilities")
         q_utility = self._combined(self.utility_quantiles, mechanism_id)
         q_difference = self._combined(self.catastrophe_difference_quantiles, mechanism_id)
         q_absolute = self._combined(self.catastrophe_absolute_quantiles, mechanism_id)

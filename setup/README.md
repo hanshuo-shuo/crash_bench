@@ -1,3 +1,8 @@
+> Active work, 2026-09-06: [first audit repair round](../docs/audits/20260906/ROUND1_PLAN.md).
+> Submit `setup/audit_repair_round1.sbatch` for the bounded existing-data CPU comparison.
+> Older experiment stop notices below describe their frozen cohorts and do not
+> supersede this user-authorized repair. No new confirmatory test is authorized.
+
 # CrashBench 运行入口
 
 本目录只保留环境、验证和 Slurm 入口。论文主线与实验优先级以

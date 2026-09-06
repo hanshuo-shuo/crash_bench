@@ -28,6 +28,6 @@ def test_strict_recall_uses_margin_and_reports_empty_support():
 
 def test_gate_b_source_declares_scoped_test_and_zero_test_access():
     source = SCRIPT.read_text()
-    assert "AUTHORIZE_SCOPED_32_SOURCE_STATEWISE_METHOD_TEST" in source
+    assert "REVIEW_DEVELOPMENT_RESULTS_WITHOUT_AUTOMATIC_TEST_AUTHORIZATION" in source
     assert '"test_rows_read": 0' in source
     assert 'model_value - comparator_value > 0.0, "==", True' in source

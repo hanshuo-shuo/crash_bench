@@ -51,7 +51,9 @@ def test_staleness_source_aware_gate_can_pass():
     rows = [shard(task, source, beneficial=source < 4) for task in (0, 2) for source in range(8)]
     result = MODULE.analyze_staleness_shards(rows)
     assert result["summary"]["benefit_one_sources"] == 8
-    assert result["summary"]["benefit_zero_sources"] == 8
+    assert result["summary"]["benefit_zero_sources"] == 16
+    assert result["summary"]["entirely_B0"] == 8
+    assert result["summary"]["contains_both"] == 8
     assert result["summary"]["mechanism_attribution_valid"]
     assert result["gate"]["status"] in {"GO", "SCOPED_CONTINUE"}
 

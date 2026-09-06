@@ -75,15 +75,14 @@ BANNED_CURRENT_TEXT = (
 )
 REQUIRED_CURRENT_TEXT = {
     ROOT / "README.md": (
-        "CrashBench: ODUR Negative Result",
+        "CrashBench: Audit Repair Round 1",
         "option-conditioned outcome prediction",
         "SCOPED_TEST_SCOPE_FAILURE_RELEASE",
         "Knowing When to Intervene",
     ),
     ROOT / "docs/CURRENT.md": (
-        "C0–C14",
-        "Four predeclared points meet all four frontier criteria",
-        "Do not tune a deeper sequence model",
+        "AUDIT_REPAIR_ROUND1_DEVELOPMENT",
+        "ROUND1_PLAN.md",
     ),
     ROOT / "docs/PAPER_PLAN.md": (
         "Risk detection is not intervention selection",

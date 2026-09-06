@@ -143,7 +143,7 @@ def analyze(
         "schema_version": 1,
         "kind": "crashbench_expansion_development_model_selection",
         "scope": "single_primary_policy_single_staleness_mechanism_pilot",
-        "selected_model_identity": "ODUR-v1-fixed-pooled-dual-camera-proprio",
+        "selected_model_identity": "ODUR-fixed-pooled-dual-camera-proprio",
         "fit_stage": "train_only_development_readout",
         "seed_artifacts": seed_artifacts,
         "baseline_selection_sha256": sha256_file(baseline_path),
@@ -161,7 +161,7 @@ def analyze(
         ),
         "calibration_rows_read": 0,
         "test_rows_read": 0,
-        "next_action": "REFIT_SELECTED_RECIPE_ON_TRAIN_DEVELOPMENT_THEN_CALIBRATE",
+        "next_action": "CALIBRATE_TRAIN_ONLY_MODELS_THEN_EVALUATE_DEVELOPMENT",
     }
     payload["selection_sha256"] = hashlib.sha256(
         json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()

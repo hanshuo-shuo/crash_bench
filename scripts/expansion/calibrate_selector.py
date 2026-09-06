@@ -50,9 +50,10 @@ def predict_seed(model_path: Path, data: Mapping[str, Any]) -> tuple[np.ndarray,
 
     checkpoint = torch.load(model_path, map_location="cpu", weights_only=False)
     if tuple(checkpoint["option_ids"]) != OPTION_IDS:
-        raise ValueError("refit model option catalog identity drift")
+        raise ValueError("model option catalog identity drift")
     model = OptionOutcomeModel(
-        input_dim=int(checkpoint["input_dim"]), option_ids=checkpoint["option_ids"]
+        input_dim=int(checkpoint["input_dim"]), option_ids=checkpoint["option_ids"],
+        architecture=checkpoint.get("architecture", "additive")
     )
     model.load_state_dict(checkpoint["state_dict"])
     model.eval()
@@ -142,12 +143,13 @@ def main() -> None:
     parser.add_argument("--seed-dir", type=Path, action="append", required=True)
     parser.add_argument("--development-selection", type=Path, required=True)
     parser.add_argument("--baseline-selection", type=Path, required=True)
+    parser.add_argument("--fit-on", choices=("train", "train_development"), default="train")
     parser.add_argument("--output-dir", type=Path, required=True)
     args = parser.parse_args()
     if args.output_dir.exists():
         raise FileExistsError(f"refusing to overwrite calibration output: {args.output_dir}")
     if len(args.seed_dir) != 5:
-        raise ValueError("calibration requires exactly five frozen refit seeds")
+        raise ValueError("calibration requires exactly five frozen seeds")
     development = json.loads(args.development_selection.read_text())
     baseline_sha = sha256_file(args.baseline_selection)
     if development["baseline_selection_sha256"] != baseline_sha:
@@ -174,16 +176,16 @@ def main() -> None:
     for expected_seed, directory in zip(EXPECTED_SEEDS, args.seed_dir):
         manifest_path = directory / "manifest.json"
         manifest = json.loads(manifest_path.read_text())
-        if manifest.get("seed") != expected_seed or manifest.get("fit_on") != "train_development":
-            raise ValueError("calibration requires ordered train+development refit seeds")
+        if manifest.get("seed") != expected_seed or manifest.get("fit_on") != args.fit_on:
+            raise ValueError("calibration requires ordered seeds with the declared fitting role")
         if manifest.get("calibration_rows_read") != 0 or manifest.get("test_rows_read") != 0:
-            raise ValueError("refit artifact reports forbidden role access")
+            raise ValueError("model artifact reports forbidden role access")
         model_path = directory / "model.pt"
         predicted_u, predicted_cat = predict_seed(model_path, data)
         utility_predictions.append(predicted_u)
         catastrophe_predictions.append(predicted_cat)
         model_artifacts.append(
-            {"seed": expected_seed, "model_sha256": sha256_file(model_path), "manifest_sha256": sha256_file(manifest_path)}
+            {"seed": expected_seed, "fit_on": args.fit_on, "model_sha256": sha256_file(model_path), "manifest_sha256": sha256_file(manifest_path)}
         )
     predicted_u = np.asarray(utility_predictions)
     predicted_cat = np.asarray(catastrophe_predictions)
@@ -198,6 +200,7 @@ def main() -> None:
         "schema_version": 1,
         "kind": "crashbench_expansion_statewise_calibration_freeze",
         "scope": "single_primary_policy_single_staleness_mechanism_pilot",
+        "fit_on": args.fit_on,
         "alpha": ALPHA,
         "sigma_floor": SIGMA_FLOOR,
         "utility_pairwise_quantiles": quantile_payload(utility_scores),
@@ -220,6 +223,12 @@ def main() -> None:
         "test_rows_read": 0,
         "frozen": True,
     }
+    selector = PairwiseSourceConformalSelector(
+        OPTION_IDS, utility_quantiles=payload["utility_pairwise_quantiles"],
+        catastrophe_difference_quantiles=payload["catastrophe_difference_quantiles"],
+        catastrophe_absolute_quantiles=payload["catastrophe_absolute_quantiles"],
+    )
+    payload["certificate_diagnostic"] = selector.certificate_diagnostic(MECHANISM_ID)
     payload["calibration_sha256"] = hashlib.sha256(
         json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
     ).hexdigest()

@@ -130,7 +130,7 @@ def analyze(
     hard = CriterionClass.HARD_VALIDITY
     claim = CriterionClass.CLAIM_SCOPE
     criteria = [
-        Criterion("five_refit_models", hard, len(calibration["model_artifacts"]), "==", 5),
+        Criterion("five_train_only_models", hard, len(calibration["model_artifacts"]), "==", 5),
         Criterion("calibration_sources", hard, calibration["calibration_source_count"], ">=", 12),
         Criterion("finite_conformal_quantiles", hard, all(math.isfinite(value) for value in quantiles), "==", True),
         Criterion("calibration_test_rows_read", hard, calibration["test_rows_read"], "==", 0),
@@ -156,8 +156,8 @@ def analyze(
             "strict_safe_stop_recall", claim, recalls["safe_stop"][0], ">=", 0.55,
             EvidenceState.OBSERVED if recalls["safe_stop"][0] is not None else EvidenceState.NOT_OBSERVED,
         ),
-        Criterion("intervention_coverage_lower", claim, coverage, ">=", 0.40),
-        Criterion("intervention_coverage_upper", claim, coverage, "<=", 0.70),
+        Criterion("certificate_not_structurally_impossible", hard,
+                  selector.certificate_diagnostic(MECHANISM_ID)["status"] != "CALIBRATION_FAILURE", "==", True),
     ]
     gate = evaluate_gate(
         criteria,
@@ -166,8 +166,8 @@ def analyze(
             confirmatory=False,
             test_outcomes_opened=False,
             allow_scoped_continuation=True,
-            go_next_action="AUTHORIZE_SCOPED_32_SOURCE_STATEWISE_METHOD_TEST",
-            scoped_next_action="FREEZE_BENCHMARK_ONLY_MODE_AND_RUN_SCOPED_BENCHMARK_TEST",
+            go_next_action="REVIEW_DEVELOPMENT_RESULTS_WITHOUT_AUTOMATIC_TEST_AUTHORIZATION",
+            scoped_next_action="DIAGNOSE_DEVELOPMENT_LIMITATIONS",
             fail_next_action="STOP_BEFORE_TEST_AND_AUDIT_MODEL_CALIBRATION_VALIDITY",
         ),
     )
@@ -178,7 +178,7 @@ def analyze(
         "analysis_git_commit": resolve_git_head(ROOT),
         "prospective_adaptation": (
             "The original three-mechanism diversity clause is structurally inapplicable after D2; "
-            "all model, safety, recall, coverage, and no-test-access criteria remain non-compensatory."
+            "v2 removes intervention quotas and requires held-out development and certificate feasibility."
         ),
         "gate": gate,
         "frozen_strongest_deployable_comparator": comparator,
@@ -187,6 +187,8 @@ def analyze(
         "delta_u0": model_value - comparator_value,
         "catastrophe_point_difference": model_cat - comparator_cat,
         "intervention_coverage": coverage,
+        "certificate_diagnostic": selector.certificate_diagnostic(MECHANISM_ID),
+        "evaluation_role": "development_held_out_from_fit",
         "strict_recall": {
             option: {"recall": value[0], "support_blocks": value[1]}
             for option, value in recalls.items()
@@ -200,13 +202,27 @@ def analyze(
     return payload
 
 
+def validate_development_model(directory, expected_seed, calibration, development_sources):
+    """Reject in-sample development or calibration bound to another checkpoint."""
+    manifest = json.loads((directory / "manifest.json").read_text())
+    if manifest.get("seed") != expected_seed or manifest.get("fit_on") != "train":
+        raise ValueError("Gate B requires ordered train-only seeds; development refit is in-sample")
+    if manifest.get("calibration_rows_read") != 0 or manifest.get("test_rows_read") != 0:
+        raise ValueError("Gate B model reports forbidden role access")
+    artifact = calibration["model_artifacts"][expected_seed]
+    if (artifact["model_sha256"] != sha256_file(directory / "model.pt")
+            or artifact["manifest_sha256"] != sha256_file(directory / "manifest.json")):
+        raise ValueError("Gate B models differ from the calibrated models")
+    if set(manifest.get("fit_source_ids", [])) & set(map(str, development_sources)):
+        raise ValueError("Gate B development sources were used for model fitting")
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--merged-dir", type=Path, required=True)
     parser.add_argument("--artifact-store", type=Path, required=True)
     parser.add_argument("--feature-cache", type=Path)
     parser.add_argument("--utility-config", type=Path, required=True)
-    parser.add_argument("--refit-seed-dir", type=Path, action="append", required=True)
+    parser.add_argument("--seed-dir", "--refit-seed-dir", dest="seed_dir", type=Path, action="append", required=True)
     parser.add_argument("--calibration-freeze", type=Path, required=True)
     parser.add_argument("--development-selection", type=Path, required=True)
     parser.add_argument("--baseline-selection", type=Path, required=True)
@@ -214,8 +230,8 @@ def main() -> None:
     args = parser.parse_args()
     if args.output.exists():
         raise FileExistsError(f"refusing to overwrite Gate B analysis: {args.output}")
-    if len(args.refit_seed_dir) != 5:
-        raise ValueError("Gate B requires exactly five refit seeds")
+    if len(args.seed_dir) != 5:
+        raise ValueError("Gate B requires exactly five train-only seeds")
     calibration = json.loads(args.calibration_freeze.read_text())
     development_selection = json.loads(args.development_selection.read_text())
     baseline = json.loads(args.baseline_selection.read_text())
@@ -237,10 +253,8 @@ def main() -> None:
         feature_cache=args.feature_cache,
     )
     utility_predictions, catastrophe_predictions = [], []
-    for expected_seed, directory in enumerate(args.refit_seed_dir):
-        manifest = json.loads((directory / "manifest.json").read_text())
-        if manifest.get("seed") != expected_seed or manifest.get("fit_on") != "train_development":
-            raise ValueError("Gate B refit seed identity/order drift")
+    for expected_seed, directory in enumerate(args.seed_dir):
+        validate_development_model(directory, expected_seed, calibration, data["sources"])
         predicted_u, predicted_cat = predict_seed(directory / "model.pt", data)
         utility_predictions.append(predicted_u)
         catastrophe_predictions.append(predicted_cat)

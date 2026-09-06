@@ -62,7 +62,9 @@ def test_source_aware_screen_counts_and_gate():
     result = MODULE.analyze_fragile_shards(rows)
     assert result["observed_sources"] == 16
     assert result["summary"]["benefit_one_sources"] == 8
-    assert result["summary"]["benefit_zero_sources"] == 8
+    assert result["summary"]["benefit_zero_sources"] == 16
+    assert result["summary"]["entirely_B0"] == 8
+    assert result["summary"]["contains_both"] == 8
     assert result["summary"]["two_distinct_strict_winner_sources"] == 8
     assert result["gate"]["status"] == "GO"
 

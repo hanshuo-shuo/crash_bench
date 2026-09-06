@@ -16,6 +16,7 @@ ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from crashbench.data.support import source_label_support, aggregate_source_support
 from crashbench.data.utility import UtilityWeights, option_decision, scalar_utility
 from crashbench.governance.gates import Criterion, CriterionClass, GatePolicy, evaluate_gate
 from scripts.expansion.merge_statewise_dataset import budgets_from_config, outcome_vector
@@ -83,12 +84,11 @@ def support_counts(
         if flip:
             flip_sources.add(source)
         source_rows.append(
-            {"physical_source_id": source, "benefit": source_benefit, "strict_winners": sorted(winners), "same_risk_flip": flip}
+            {"physical_source_id": source, "benefit": source_benefit, **source_label_support(row["benefit"] for row in rows), "strict_winners": sorted(winners), "same_risk_flip": flip}
         )
     return {
         "source_count": len(source_rows),
-        "benefit_one_sources": benefit_one,
-        "benefit_zero_sources": len(source_rows) - benefit_one,
+        **aggregate_source_support(source_rows),
         "strict_support_sources": {option: len(strict_support[option]) for option in sorted(OPTIONS)},
         "same_risk_flip_sources": len(flip_sources),
         "block_decision_count": len(decisions),

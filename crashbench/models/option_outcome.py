@@ -83,8 +83,12 @@ if torch is not None:
             option_ids: Sequence[str],
             hidden_dim: int = 128,
             option_embedding_dim: int = 16,
+            architecture: str = "interaction",
         ):
             super().__init__()
+            self.architecture = architecture
+            if architecture not in {"additive", "interaction", "per_option"}:
+                raise ValueError(f"unknown ODUR architecture: {architecture}")
             self.option_ids = tuple(map(str, option_ids))
             if input_dim < 1 or len(self.option_ids) < 2 or len(set(self.option_ids)) != len(self.option_ids):
                 raise ValueError("ODUR needs positive input_dim and unique variable option IDs")
@@ -98,8 +102,14 @@ if torch is not None:
                 nn.GELU(),
             )
             joint_dim = hidden_dim + option_embedding_dim
-            self.outcome_head = nn.Linear(joint_dim, len(OUTCOME_CLASSES))
-            self.cost_head = nn.Linear(joint_dim, len(COST_TARGETS))
+            if architecture == "interaction":
+                self.joint = nn.Sequential(nn.Linear(joint_dim, hidden_dim), nn.GELU())
+                joint_dim = hidden_dim
+            if architecture == "per_option":
+                joint_dim = hidden_dim
+            heads = len(self.option_ids) if architecture == "per_option" else 1
+            self.outcome_head = nn.Linear(joint_dim, heads * len(OUTCOME_CLASSES))
+            self.cost_head = nn.Linear(joint_dim, heads * len(COST_TARGETS))
 
         def option_indices(self, option_ids: Sequence[str], *, device=None) -> "torch.Tensor":
             try:
@@ -114,10 +124,16 @@ if torch is not None:
             hidden = self.trunk(features)
             option = self.option_embedding(option_indices)
             joint = torch.cat([hidden, option], dim=-1)
-            return {
-                "outcome_logits": self.outcome_head(joint),
-                "cost_prediction": torch.sigmoid(self.cost_head(joint)),
-            }
+            if self.architecture == "interaction":
+                joint = self.joint(joint)
+            elif self.architecture == "per_option":
+                joint = hidden
+            logits, costs = self.outcome_head(joint), self.cost_head(joint)
+            if self.architecture == "per_option":
+                batch = torch.arange(len(features), device=features.device)
+                logits = logits.reshape(-1, len(self.option_ids), len(OUTCOME_CLASSES))[batch, option_indices]
+                costs = costs.reshape(-1, len(self.option_ids), len(COST_TARGETS))[batch, option_indices]
+            return {"outcome_logits": logits, "cost_prediction": torch.sigmoid(costs)}
 
         def loss(
             self,

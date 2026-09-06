@@ -75,15 +75,6 @@ def main() -> None:
     for directory in selection_dirs:
         command.extend(["--seed-dir", str(directory)])
     run(command)
-    refit_dirs = []
-    for seed in SEEDS:
-        output = args.output_dir / "refit" / f"seed_{seed}"
-        run([
-            python, "scripts/expansion/train_option_value.py", *common,
-            "--seed", str(seed), "--epochs", str(args.epochs),
-            "--fit-on", "train_development", "--output-dir", str(output),
-        ])
-        refit_dirs.append(output)
     calibration_dir = args.output_dir / "calibration"
     command = [
         python, "scripts/expansion/calibrate_selector.py", *common,
@@ -91,7 +82,7 @@ def main() -> None:
         "--baseline-selection", str(baseline_dir / "baseline_selection.json"),
         "--output-dir", str(calibration_dir),
     ]
-    for directory in refit_dirs:
+    for directory in selection_dirs:
         command.extend(["--seed-dir", str(directory)])
     run(command)
     gate_b = args.output_dir / "scoped_gate_b_analysis.json"
@@ -102,11 +93,13 @@ def main() -> None:
         "--baseline-selection", str(baseline_dir / "baseline_selection.json"),
         "--output", str(gate_b),
     ]
-    for directory in refit_dirs:
-        command.extend(["--refit-seed-dir", str(directory)])
+    for directory in selection_dirs:
+        command.extend(["--seed-dir", str(directory)])
     run(command)
     manifest = {
-        "schema_version": 1,
+        "schema_version": 2,
+        "evaluation_role": "development_held_out_from_fit",
+        "fit_on": "train",
         "kind": "crashbench_expansion_scoped_d6_d7_training_run",
         "scope": "single_primary_policy_single_staleness_mechanism_pilot",
         "created_at_utc": datetime.now(timezone.utc).isoformat(),

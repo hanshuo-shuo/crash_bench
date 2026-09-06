@@ -1,0 +1,2096 @@
+{
+  "D2": {
+    "action_drift": {
+      "corrected_summary": {
+        "admissible_execution_rate": 1.0,
+        "benefit_one_sources": 16,
+        "benefit_zero_sources": 16,
+        "contains_B0": 16,
+        "contains_B1": 16,
+        "contains_both": 16,
+        "control_base_success": 0.8020833333333334,
+        "drift_base_catastrophe": 0.10416666666666667,
+        "drift_base_success": 0.6041666666666666,
+        "entirely_B0": 0,
+        "exact_restore_rate": 1.0,
+        "matched_control_catastrophe": 0.020833333333333332,
+        "mechanism_attribution_valid": true,
+        "source_support_definition": "contains_label_v2_nonexclusive",
+        "task0_benefit_sources": 8,
+        "task0_eligible_sources": 8,
+        "task0_nominal_success": 0.875,
+        "task2_benefit_sources": 8,
+        "task2_eligible_sources": 8,
+        "task2_nominal_success": 1.0,
+        "two_distinct_strict_winner_sources": 1
+      },
+      "historical_gate": {
+        "claim_scope_failures": [
+          "benefit_zero_sources",
+          "two_distinct_strict_winner_sources"
+        ],
+        "criteria": [
+          {
+            "actual": 0.875,
+            "criterion_class": "hard_validity",
+            "criterion_id": "task0_nominal_success",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 0.7
+          },
+          {
+            "actual": 1.0,
+            "criterion_class": "hard_validity",
+            "criterion_id": "task2_nominal_success",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 0.7
+          },
+          {
+            "actual": 8,
+            "criterion_class": "hard_validity",
+            "criterion_id": "task0_eligible_sources",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 6
+          },
+          {
+            "actual": 8,
+            "criterion_class": "hard_validity",
+            "criterion_id": "task2_eligible_sources",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 6
+          },
+          {
+            "actual": 1.0,
+            "criterion_class": "hard_validity",
+            "criterion_id": "exact_restore_rate",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 0.95
+          },
+          {
+            "actual": 1.0,
+            "criterion_class": "hard_validity",
+            "criterion_id": "admissible_execution_rate",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 0.9
+          },
+          {
+            "actual": 0.020833333333333332,
+            "criterion_class": "hard_validity",
+            "criterion_id": "matched_control_catastrophe",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": "<=",
+            "pass": true,
+            "threshold": 0.05
+          },
+          {
+            "actual": true,
+            "criterion_class": "hard_validity",
+            "criterion_id": "mechanism_attribution_valid",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": "==",
+            "pass": true,
+            "threshold": true
+          },
+          {
+            "actual": 0,
+            "criterion_class": "claim_scope",
+            "criterion_id": "benefit_zero_sources",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": false,
+            "threshold": 3
+          },
+          {
+            "actual": 16,
+            "criterion_class": "claim_scope",
+            "criterion_id": "benefit_one_sources",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 3
+          },
+          {
+            "actual": 8,
+            "criterion_class": "claim_scope",
+            "criterion_id": "task0_benefit_sources",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 1
+          },
+          {
+            "actual": 8,
+            "criterion_class": "claim_scope",
+            "criterion_id": "task2_benefit_sources",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 1
+          },
+          {
+            "actual": 1,
+            "criterion_class": "claim_scope",
+            "criterion_id": "two_distinct_strict_winner_sources",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": false,
+            "threshold": 2
+          }
+        ],
+        "decision_sha256": "4adb78bbadf9ea240bfb88c6321d8dc48c863eb0993ab2fd585bf176a6130970",
+        "hard_failures": [],
+        "kind": "crashbench_machine_gate_decision",
+        "missing_evidence": [],
+        "next_action": "MECHANICALLY_VALID_EXPLORATORY_ONLY__NO_BROAD_SUPPORT_CLAIM",
+        "non_compensatory": true,
+        "policy": {
+          "allow_scoped_continuation": true,
+          "confirmatory": false,
+          "fail_next_action": "STOP_MECHANISM_VERSION",
+          "go_next_action": "ELIGIBLE_FOR_FORMAL_MECHANISM_SHORTLIST",
+          "scoped_next_action": "MECHANICALLY_VALID_EXPLORATORY_ONLY__NO_BROAD_SUPPORT_CLAIM",
+          "stage_id": "D2_SCREEN:action_drift_v1",
+          "test_outcomes_opened": false
+        },
+        "schema_version": 1,
+        "stage_id": "D2_SCREEN:action_drift_v1",
+        "status": "SCOPED_CONTINUE"
+      },
+      "inputs_sha256": {
+        "results/expansion/d2_action_drift_screen/117904fb3d5c_cb828fc5e0e0_20260830T095028Z/action_drift_screen_analysis.json": "d6cfc47941a034b76917e7f13ebc90ac92626d83a6ac00592688e8b3cf42ed05",
+        "results/expansion/d2_action_drift_screen/117904fb3d5c_cb828fc5e0e0_20260830T095028Z/task0_source0.json": "ff6830d2779e7472bc856578316af1810c07fa15bbce09f1a8b42df9861f63d2",
+        "results/expansion/d2_action_drift_screen/117904fb3d5c_cb828fc5e0e0_20260830T095028Z/task0_source1.json": "016068eed734d9f7581f610dde65ddaa37ec545d03b1ce4635275fbf2d1abd30",
+        "results/expansion/d2_action_drift_screen/117904fb3d5c_cb828fc5e0e0_20260830T095028Z/task0_source2.json": "4bc80400d48ca285cc8427f1e046c56564dee3ae5b03bc296c3b1dd2b56c62b5",
+        "results/expansion/d2_action_drift_screen/117904fb3d5c_cb828fc5e0e0_20260830T095028Z/task0_source3.json": "4fbe5c42a4a0360d86eb835c23896be4b43d2556d0221ac6be113cc2f44f18e9",
+        "results/expansion/d2_action_drift_screen/117904fb3d5c_cb828fc5e0e0_20260830T095028Z/task0_source4.json": "7e705854a1d2fa9ced562680111b1d6b18bca90974839805e9ae697ba0176db7",
+        "results/expansion/d2_action_drift_screen/117904fb3d5c_cb828fc5e0e0_20260830T095028Z/task0_source5.json": "9a9b9962f13c5c53b688c3e1623d201db6d135d4a8f10f041e0d9e87c4251856",
+        "results/expansion/d2_action_drift_screen/117904fb3d5c_cb828fc5e0e0_20260830T095028Z/task0_source6.json": "8698b8532d4c5152763a1bdd35eeed01b88da1748ff0fec04ff77a5a0762f720",
+        "results/expansion/d2_action_drift_screen/117904fb3d5c_cb828fc5e0e0_20260830T095028Z/task0_source7.json": "7f25a637429c90f11d8fb41954e19a0bf9530f6380ca6d9f0692ba59c007dedc",
+        "results/expansion/d2_action_drift_screen/117904fb3d5c_cb828fc5e0e0_20260830T095028Z/task2_source0.json": "152e8369868513eaa5d2dfd09c3b37358ef33989a5880da8a1f73f7fa6573d74",
+        "results/expansion/d2_action_drift_screen/117904fb3d5c_cb828fc5e0e0_20260830T095028Z/task2_source1.json": "6fd2981db302cd7ea11553a3c12670ce2d798bf90dbac51c4316381a5d769b76",
+        "results/expansion/d2_action_drift_screen/117904fb3d5c_cb828fc5e0e0_20260830T095028Z/task2_source2.json": "8234d7a82999ec7396457366cabcd15bec271e2b499115681a1b1e40843c6257",
+        "results/expansion/d2_action_drift_screen/117904fb3d5c_cb828fc5e0e0_20260830T095028Z/task2_source3.json": "82a8636fc8e7f0b1875ab1306fc71ae168649cc170bf4250e230e119334835b3",
+        "results/expansion/d2_action_drift_screen/117904fb3d5c_cb828fc5e0e0_20260830T095028Z/task2_source4.json": "6f2b24eed40f04fe4230ff6f0e4a8322599fd7d4239e85efe6b6599120351409",
+        "results/expansion/d2_action_drift_screen/117904fb3d5c_cb828fc5e0e0_20260830T095028Z/task2_source5.json": "265aa3db5a59718d9ae69b2d4356126645632de0f193a7a3df951f3dd419cfbc",
+        "results/expansion/d2_action_drift_screen/117904fb3d5c_cb828fc5e0e0_20260830T095028Z/task2_source6.json": "5e3b4ed5741d5efed655ceac5faaeaf917b2dede98202f36a7be6fc39826875b",
+        "results/expansion/d2_action_drift_screen/117904fb3d5c_cb828fc5e0e0_20260830T095028Z/task2_source7.json": "50b5a880ca342519983254658e2cfa8a1cd4a1c52c8df87db022652093653112"
+      },
+      "old_pure_B0_count": 0,
+      "retrospective_gate_recalculation": {
+        "claim_scope_failures": [
+          "two_distinct_strict_winner_sources"
+        ],
+        "criteria": [
+          {
+            "actual": 0.875,
+            "criterion_class": "hard_validity",
+            "criterion_id": "task0_nominal_success",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 0.7
+          },
+          {
+            "actual": 1.0,
+            "criterion_class": "hard_validity",
+            "criterion_id": "task2_nominal_success",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 0.7
+          },
+          {
+            "actual": 8,
+            "criterion_class": "hard_validity",
+            "criterion_id": "task0_eligible_sources",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 6
+          },
+          {
+            "actual": 8,
+            "criterion_class": "hard_validity",
+            "criterion_id": "task2_eligible_sources",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 6
+          },
+          {
+            "actual": 1.0,
+            "criterion_class": "hard_validity",
+            "criterion_id": "exact_restore_rate",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 0.95
+          },
+          {
+            "actual": 1.0,
+            "criterion_class": "hard_validity",
+            "criterion_id": "admissible_execution_rate",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 0.9
+          },
+          {
+            "actual": 0.020833333333333332,
+            "criterion_class": "hard_validity",
+            "criterion_id": "matched_control_catastrophe",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": "<=",
+            "pass": true,
+            "threshold": 0.05
+          },
+          {
+            "actual": true,
+            "criterion_class": "hard_validity",
+            "criterion_id": "mechanism_attribution_valid",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": "==",
+            "pass": true,
+            "threshold": true
+          },
+          {
+            "actual": 16,
+            "criterion_class": "claim_scope",
+            "criterion_id": "benefit_zero_sources",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 3
+          },
+          {
+            "actual": 16,
+            "criterion_class": "claim_scope",
+            "criterion_id": "benefit_one_sources",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 3
+          },
+          {
+            "actual": 8,
+            "criterion_class": "claim_scope",
+            "criterion_id": "task0_benefit_sources",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 1
+          },
+          {
+            "actual": 8,
+            "criterion_class": "claim_scope",
+            "criterion_id": "task2_benefit_sources",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 1
+          },
+          {
+            "actual": 1,
+            "criterion_class": "claim_scope",
+            "criterion_id": "two_distinct_strict_winner_sources",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": false,
+            "threshold": 2
+          }
+        ],
+        "decision_sha256": "dc2ec8af613d5fc56ae3c3a657829e4ec618b790a0e1f6034c61cf30c14cfb4b",
+        "hard_failures": [],
+        "kind": "crashbench_machine_gate_decision",
+        "missing_evidence": [],
+        "next_action": "MECHANICALLY_VALID_EXPLORATORY_ONLY__NO_BROAD_SUPPORT_CLAIM",
+        "non_compensatory": true,
+        "policy": {
+          "allow_scoped_continuation": true,
+          "confirmatory": false,
+          "fail_next_action": "STOP_MECHANISM_VERSION",
+          "go_next_action": "ELIGIBLE_FOR_FORMAL_MECHANISM_SHORTLIST",
+          "scoped_next_action": "MECHANICALLY_VALID_EXPLORATORY_ONLY__NO_BROAD_SUPPORT_CLAIM",
+          "stage_id": "D2_SCREEN:action_drift_v1",
+          "test_outcomes_opened": false
+        },
+        "schema_version": 1,
+        "stage_id": "D2_SCREEN:action_drift_v1",
+        "status": "SCOPED_CONTINUE"
+      }
+    },
+    "fragile": {
+      "corrected_summary": {
+        "admissible_execution_rate": 1.0,
+        "benefit_one_sources": 14,
+        "benefit_zero_sources": 16,
+        "contains_B0": 16,
+        "contains_B1": 14,
+        "contains_both": 14,
+        "entirely_B0": 2,
+        "exact_restore_rate": 1.0,
+        "matched_control_catastrophe": 0.04819277108433735,
+        "mechanism_attribution_valid": true,
+        "source_support_definition": "contains_label_v2_nonexclusive",
+        "task0_benefit_sources": 7,
+        "task0_eligible_sources": 8,
+        "task0_nominal_success": 0.75,
+        "task2_benefit_sources": 7,
+        "task2_eligible_sources": 8,
+        "task2_nominal_success": 1.0,
+        "two_distinct_strict_winner_sources": 3
+      },
+      "historical_gate": {
+        "claim_scope_failures": [
+          "benefit_zero_sources"
+        ],
+        "criteria": [
+          {
+            "actual": 0.75,
+            "criterion_class": "hard_validity",
+            "criterion_id": "task0_nominal_success",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 0.7
+          },
+          {
+            "actual": 1.0,
+            "criterion_class": "hard_validity",
+            "criterion_id": "task2_nominal_success",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 0.7
+          },
+          {
+            "actual": 8,
+            "criterion_class": "hard_validity",
+            "criterion_id": "task0_eligible_sources",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 6
+          },
+          {
+            "actual": 8,
+            "criterion_class": "hard_validity",
+            "criterion_id": "task2_eligible_sources",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 6
+          },
+          {
+            "actual": 1.0,
+            "criterion_class": "hard_validity",
+            "criterion_id": "exact_restore_rate",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 0.95
+          },
+          {
+            "actual": 1.0,
+            "criterion_class": "hard_validity",
+            "criterion_id": "admissible_execution_rate",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 0.9
+          },
+          {
+            "actual": 0.04819277108433735,
+            "criterion_class": "hard_validity",
+            "criterion_id": "matched_control_catastrophe",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": "<=",
+            "pass": true,
+            "threshold": 0.05
+          },
+          {
+            "actual": true,
+            "criterion_class": "hard_validity",
+            "criterion_id": "mechanism_attribution_valid",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": "==",
+            "pass": true,
+            "threshold": true
+          },
+          {
+            "actual": 2,
+            "criterion_class": "claim_scope",
+            "criterion_id": "benefit_zero_sources",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": false,
+            "threshold": 3
+          },
+          {
+            "actual": 14,
+            "criterion_class": "claim_scope",
+            "criterion_id": "benefit_one_sources",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 3
+          },
+          {
+            "actual": 7,
+            "criterion_class": "claim_scope",
+            "criterion_id": "task0_benefit_sources",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 1
+          },
+          {
+            "actual": 7,
+            "criterion_class": "claim_scope",
+            "criterion_id": "task2_benefit_sources",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 1
+          },
+          {
+            "actual": 3,
+            "criterion_class": "claim_scope",
+            "criterion_id": "two_distinct_strict_winner_sources",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 2
+          }
+        ],
+        "decision_sha256": "1a35f6d7f09d36674551191ead7270c1f4dab605a894daa31632f132dc0cb80e",
+        "hard_failures": [],
+        "kind": "crashbench_machine_gate_decision",
+        "missing_evidence": [],
+        "next_action": "MECHANICALLY_VALID_EXPLORATORY_ONLY__NO_BROAD_SUPPORT_CLAIM",
+        "non_compensatory": true,
+        "policy": {
+          "allow_scoped_continuation": true,
+          "confirmatory": false,
+          "fail_next_action": "STOP_MECHANISM_VERSION",
+          "go_next_action": "ELIGIBLE_FOR_FORMAL_MECHANISM_SHORTLIST",
+          "scoped_next_action": "MECHANICALLY_VALID_EXPLORATORY_ONLY__NO_BROAD_SUPPORT_CLAIM",
+          "stage_id": "D2_SCREEN:fragile_path_collision_v2",
+          "test_outcomes_opened": false
+        },
+        "schema_version": 1,
+        "stage_id": "D2_SCREEN:fragile_path_collision_v2",
+        "status": "SCOPED_CONTINUE"
+      },
+      "inputs_sha256": {
+        "results/expansion/d2_fragile_screen/0f270c3d9c8c_64cc00fdccbb_20260830T091340Z/fragile_screen_analysis.json": "b5dcc208590cf2115daa65733acdccf7c662a0d15fca50c859272ef9a812830d",
+        "results/expansion/d2_fragile_screen/0f270c3d9c8c_64cc00fdccbb_20260830T091340Z/task0_source0.json": "fbd30b39cf73c0ae3983ee399f87355e717f0b53e70f3115f77b1772831be95b",
+        "results/expansion/d2_fragile_screen/0f270c3d9c8c_64cc00fdccbb_20260830T091340Z/task0_source1.json": "2e98f4f09eaf74967f14118847f994a37721f79f5e534e975aaa682c6b2bbe97",
+        "results/expansion/d2_fragile_screen/0f270c3d9c8c_64cc00fdccbb_20260830T091340Z/task0_source2.json": "652865cfa772610c9db7eeb0ee257eb61f6a54a83d908325fd287734c6c48fe3",
+        "results/expansion/d2_fragile_screen/0f270c3d9c8c_64cc00fdccbb_20260830T091340Z/task0_source3.json": "33e767603052ba374111fb5c5390d061d5e7691bbb5814dd5748fe7f3c331ffd",
+        "results/expansion/d2_fragile_screen/0f270c3d9c8c_64cc00fdccbb_20260830T091340Z/task0_source4.json": "7ca1f0d5c916cd17347ba09f1a15d271f0d4a2091b033e0c4ad6cc121f9de192",
+        "results/expansion/d2_fragile_screen/0f270c3d9c8c_64cc00fdccbb_20260830T091340Z/task0_source5.json": "308a1eda08a6b7ad072eeaa86c5f03cdfd103ee80dd84fb7d819c9ee0de05e92",
+        "results/expansion/d2_fragile_screen/0f270c3d9c8c_64cc00fdccbb_20260830T091340Z/task0_source6.json": "02ae58c19a95d970e8679960b9494ec5db1b61490530114653ddd1972cef6e51",
+        "results/expansion/d2_fragile_screen/0f270c3d9c8c_64cc00fdccbb_20260830T091340Z/task0_source7.json": "f846c38b02d0fc85aca48a16ebe5aebf6752e09acfbace1536c2a0e3bf6de880",
+        "results/expansion/d2_fragile_screen/0f270c3d9c8c_64cc00fdccbb_20260830T091340Z/task2_source0.json": "222cd6aa737890d33db22fe39d99c4c66d584c895f00b9a2c7297493b0834fe6",
+        "results/expansion/d2_fragile_screen/0f270c3d9c8c_64cc00fdccbb_20260830T091340Z/task2_source1.json": "69af20670dc1a74e5bff5a2cf7d2a1a44410923a733cc3d7d49d4cbd7f7fcd41",
+        "results/expansion/d2_fragile_screen/0f270c3d9c8c_64cc00fdccbb_20260830T091340Z/task2_source2.json": "180d60e507a355627a00cff7657c8e82cece0a56ab9751b9609c7451e4d3664d",
+        "results/expansion/d2_fragile_screen/0f270c3d9c8c_64cc00fdccbb_20260830T091340Z/task2_source3.json": "942a89f2ab4682c165f8dcbf44773ffa8f1e4b6a5540b324d9299194938617a7",
+        "results/expansion/d2_fragile_screen/0f270c3d9c8c_64cc00fdccbb_20260830T091340Z/task2_source4.json": "b67e1ba4444d9c15ea4cb9d81103ba0fdd07ec58eee62eb6e5dce635f5d42ff3",
+        "results/expansion/d2_fragile_screen/0f270c3d9c8c_64cc00fdccbb_20260830T091340Z/task2_source5.json": "8b1b97f84b190cbf1c83b4f457f99165bda3bc60bc0338f8d6fd1a729c18c6a1",
+        "results/expansion/d2_fragile_screen/0f270c3d9c8c_64cc00fdccbb_20260830T091340Z/task2_source6.json": "e09c2757b5d0324bcc06d12b92c1896bfefc67b3eabb22e4c4f8d9764e705d82",
+        "results/expansion/d2_fragile_screen/0f270c3d9c8c_64cc00fdccbb_20260830T091340Z/task2_source7.json": "b290bba1478e2b6065651d54378381d31b54b3799be7cdf8dbf56bd89e25137c"
+      },
+      "old_pure_B0_count": 2,
+      "retrospective_gate_recalculation": {
+        "claim_scope_failures": [],
+        "criteria": [
+          {
+            "actual": 0.75,
+            "criterion_class": "hard_validity",
+            "criterion_id": "task0_nominal_success",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 0.7
+          },
+          {
+            "actual": 1.0,
+            "criterion_class": "hard_validity",
+            "criterion_id": "task2_nominal_success",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 0.7
+          },
+          {
+            "actual": 8,
+            "criterion_class": "hard_validity",
+            "criterion_id": "task0_eligible_sources",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 6
+          },
+          {
+            "actual": 8,
+            "criterion_class": "hard_validity",
+            "criterion_id": "task2_eligible_sources",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 6
+          },
+          {
+            "actual": 1.0,
+            "criterion_class": "hard_validity",
+            "criterion_id": "exact_restore_rate",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 0.95
+          },
+          {
+            "actual": 1.0,
+            "criterion_class": "hard_validity",
+            "criterion_id": "admissible_execution_rate",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 0.9
+          },
+          {
+            "actual": 0.04819277108433735,
+            "criterion_class": "hard_validity",
+            "criterion_id": "matched_control_catastrophe",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": "<=",
+            "pass": true,
+            "threshold": 0.05
+          },
+          {
+            "actual": true,
+            "criterion_class": "hard_validity",
+            "criterion_id": "mechanism_attribution_valid",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": "==",
+            "pass": true,
+            "threshold": true
+          },
+          {
+            "actual": 16,
+            "criterion_class": "claim_scope",
+            "criterion_id": "benefit_zero_sources",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 3
+          },
+          {
+            "actual": 14,
+            "criterion_class": "claim_scope",
+            "criterion_id": "benefit_one_sources",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 3
+          },
+          {
+            "actual": 7,
+            "criterion_class": "claim_scope",
+            "criterion_id": "task0_benefit_sources",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 1
+          },
+          {
+            "actual": 7,
+            "criterion_class": "claim_scope",
+            "criterion_id": "task2_benefit_sources",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 1
+          },
+          {
+            "actual": 3,
+            "criterion_class": "claim_scope",
+            "criterion_id": "two_distinct_strict_winner_sources",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 2
+          }
+        ],
+        "decision_sha256": "6634ff78ccdaf3e18683be8f14a910b93fc9bf42c6b8c35504c5d12de0e72745",
+        "hard_failures": [],
+        "kind": "crashbench_machine_gate_decision",
+        "missing_evidence": [],
+        "next_action": "ELIGIBLE_FOR_FORMAL_MECHANISM_SHORTLIST",
+        "non_compensatory": true,
+        "policy": {
+          "allow_scoped_continuation": true,
+          "confirmatory": false,
+          "fail_next_action": "STOP_MECHANISM_VERSION",
+          "go_next_action": "ELIGIBLE_FOR_FORMAL_MECHANISM_SHORTLIST",
+          "scoped_next_action": "MECHANICALLY_VALID_EXPLORATORY_ONLY__NO_BROAD_SUPPORT_CLAIM",
+          "stage_id": "D2_SCREEN:fragile_path_collision_v2",
+          "test_outcomes_opened": false
+        },
+        "schema_version": 1,
+        "stage_id": "D2_SCREEN:fragile_path_collision_v2",
+        "status": "GO"
+      }
+    },
+    "narrow": {
+      "corrected_summary": {
+        "admissible_execution_rate": 1.0,
+        "benefit_one_sources": 14,
+        "benefit_zero_sources": 16,
+        "contains_B0": 16,
+        "contains_B1": 14,
+        "contains_both": 14,
+        "control_base_success": 0.6704545454545454,
+        "entirely_B0": 2,
+        "exact_restore_rate": 1.0,
+        "matched_control_catastrophe": 0.11363636363636363,
+        "mechanism_attribution_valid": true,
+        "narrow_base_catastrophe": 0.7027027027027027,
+        "narrow_base_success": 0.13513513513513514,
+        "source_support_definition": "contains_label_v2_nonexclusive",
+        "task0_benefit_sources": 6,
+        "task0_eligible_sources": 8,
+        "task0_nominal_success": 0.875,
+        "task2_benefit_sources": 8,
+        "task2_eligible_sources": 8,
+        "task2_nominal_success": 1.0,
+        "two_distinct_strict_winner_sources": 2
+      },
+      "historical_gate": {
+        "claim_scope_failures": [
+          "benefit_zero_sources"
+        ],
+        "criteria": [
+          {
+            "actual": 0.875,
+            "criterion_class": "hard_validity",
+            "criterion_id": "task0_nominal_success",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 0.7
+          },
+          {
+            "actual": 1.0,
+            "criterion_class": "hard_validity",
+            "criterion_id": "task2_nominal_success",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 0.7
+          },
+          {
+            "actual": 8,
+            "criterion_class": "hard_validity",
+            "criterion_id": "task0_eligible_sources",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 6
+          },
+          {
+            "actual": 8,
+            "criterion_class": "hard_validity",
+            "criterion_id": "task2_eligible_sources",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 6
+          },
+          {
+            "actual": 1.0,
+            "criterion_class": "hard_validity",
+            "criterion_id": "exact_restore_rate",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 0.95
+          },
+          {
+            "actual": 1.0,
+            "criterion_class": "hard_validity",
+            "criterion_id": "admissible_execution_rate",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 0.9
+          },
+          {
+            "actual": 0.11363636363636363,
+            "criterion_class": "hard_validity",
+            "criterion_id": "matched_control_catastrophe",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": "<=",
+            "pass": false,
+            "threshold": 0.05
+          },
+          {
+            "actual": true,
+            "criterion_class": "hard_validity",
+            "criterion_id": "mechanism_attribution_valid",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": "==",
+            "pass": true,
+            "threshold": true
+          },
+          {
+            "actual": 2,
+            "criterion_class": "claim_scope",
+            "criterion_id": "benefit_zero_sources",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": false,
+            "threshold": 3
+          },
+          {
+            "actual": 14,
+            "criterion_class": "claim_scope",
+            "criterion_id": "benefit_one_sources",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 3
+          },
+          {
+            "actual": 6,
+            "criterion_class": "claim_scope",
+            "criterion_id": "task0_benefit_sources",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 1
+          },
+          {
+            "actual": 8,
+            "criterion_class": "claim_scope",
+            "criterion_id": "task2_benefit_sources",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 1
+          },
+          {
+            "actual": 2,
+            "criterion_class": "claim_scope",
+            "criterion_id": "two_distinct_strict_winner_sources",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 2
+          }
+        ],
+        "decision_sha256": "ad6b3afcc48d6bd1a56575ddfaa584dd10ece650feb279204f727519c1de2821",
+        "hard_failures": [
+          "matched_control_catastrophe"
+        ],
+        "kind": "crashbench_machine_gate_decision",
+        "missing_evidence": [],
+        "next_action": "STOP_MECHANISM_VERSION",
+        "non_compensatory": true,
+        "policy": {
+          "allow_scoped_continuation": true,
+          "confirmatory": false,
+          "fail_next_action": "STOP_MECHANISM_VERSION",
+          "go_next_action": "ELIGIBLE_FOR_FORMAL_MECHANISM_SHORTLIST",
+          "scoped_next_action": "MECHANICALLY_VALID_EXPLORATORY_ONLY__NO_BROAD_SUPPORT_CLAIM",
+          "stage_id": "D2_SCREEN:narrow_clearance_v1",
+          "test_outcomes_opened": false
+        },
+        "schema_version": 1,
+        "stage_id": "D2_SCREEN:narrow_clearance_v1",
+        "status": "NO_GO"
+      },
+      "inputs_sha256": {
+        "results/expansion/d2_narrow_screen/a1d7e8ab026a_384b032a68fc_20260830T100829Z/narrow_screen_analysis.json": "ab3e09ad51fc2a8e0d302567be6a14fbc263e1e7c8daa3e22cea2cfd64a728ca",
+        "results/expansion/d2_narrow_screen/a1d7e8ab026a_384b032a68fc_20260830T100829Z/task0_source0.json": "2be4599a233d573b2f24c1e26c6abfe9bd588839dd528bcf023d27c9ff575d89",
+        "results/expansion/d2_narrow_screen/a1d7e8ab026a_384b032a68fc_20260830T100829Z/task0_source1.json": "13b42715f3567f44ee07f9b48aae3851c1fe96e625d0f64c5b3292e17cf9c8ff",
+        "results/expansion/d2_narrow_screen/a1d7e8ab026a_384b032a68fc_20260830T100829Z/task0_source2.json": "680f4693bddcbe05caac3689259c484dfbf45a882de53072d30b434623d251c7",
+        "results/expansion/d2_narrow_screen/a1d7e8ab026a_384b032a68fc_20260830T100829Z/task0_source3.json": "2cf60703c4160a68504c6fcefed7013230b0eb33c65be656bb7805e741c3ac93",
+        "results/expansion/d2_narrow_screen/a1d7e8ab026a_384b032a68fc_20260830T100829Z/task0_source4.json": "77fdb93cbd5890d0720c3c92db77f6455b5994f6e50fe0f9d6653d12d2e87a3d",
+        "results/expansion/d2_narrow_screen/a1d7e8ab026a_384b032a68fc_20260830T100829Z/task0_source5.json": "4cd595684e53f03684d44c845e8e19c097ad1e3e13ed5cf4ce0f5d46bb52f68c",
+        "results/expansion/d2_narrow_screen/a1d7e8ab026a_384b032a68fc_20260830T100829Z/task0_source6.json": "aef263cd79233ccb72c871736692bda09f9fe37c5d921ad7fada0f4c3b8758a3",
+        "results/expansion/d2_narrow_screen/a1d7e8ab026a_384b032a68fc_20260830T100829Z/task0_source7.json": "1522dc4d717bcf3a0f429c6a4fa8d29cc3e175ffadb3818576da30699c79e9c4",
+        "results/expansion/d2_narrow_screen/a1d7e8ab026a_384b032a68fc_20260830T100829Z/task2_source0.json": "7d1beda3f9551fe69956378ea5a21f048475977ed91fb9542b6f1e5e9d58c582",
+        "results/expansion/d2_narrow_screen/a1d7e8ab026a_384b032a68fc_20260830T100829Z/task2_source1.json": "1bd00792f435b6cc687d9a82bf97bee965a00b29a606538a20dcaffd6d404e34",
+        "results/expansion/d2_narrow_screen/a1d7e8ab026a_384b032a68fc_20260830T100829Z/task2_source2.json": "af8515966e95d57765a3fcfc0f6dd8857f41b72f40f167b3b227099253fdfcb6",
+        "results/expansion/d2_narrow_screen/a1d7e8ab026a_384b032a68fc_20260830T100829Z/task2_source3.json": "653944960ff7cae5f4b36f286b9745203dfab044ca4897a9e4deb6b9988ec524",
+        "results/expansion/d2_narrow_screen/a1d7e8ab026a_384b032a68fc_20260830T100829Z/task2_source4.json": "f840545966a1779a43ef87c3d7c259ea10db3e138ba11aa8638710d7e9e723af",
+        "results/expansion/d2_narrow_screen/a1d7e8ab026a_384b032a68fc_20260830T100829Z/task2_source5.json": "57786a6b4b62cafa3d18cdd56d8015dd682ea2a6726437190e5ecbfca384abd1",
+        "results/expansion/d2_narrow_screen/a1d7e8ab026a_384b032a68fc_20260830T100829Z/task2_source6.json": "5a89ef1542831848078a70073f0015ce025158b79a7fd883ca370cc2f61c5cd4",
+        "results/expansion/d2_narrow_screen/a1d7e8ab026a_384b032a68fc_20260830T100829Z/task2_source7.json": "fb46a5a69cb3870949fbf1f25b89ae1444079e2f80ab6140a884f6a3cfd3a606"
+      },
+      "old_pure_B0_count": 2,
+      "retrospective_gate_recalculation": {
+        "claim_scope_failures": [],
+        "criteria": [
+          {
+            "actual": 0.875,
+            "criterion_class": "hard_validity",
+            "criterion_id": "task0_nominal_success",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 0.7
+          },
+          {
+            "actual": 1.0,
+            "criterion_class": "hard_validity",
+            "criterion_id": "task2_nominal_success",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 0.7
+          },
+          {
+            "actual": 8,
+            "criterion_class": "hard_validity",
+            "criterion_id": "task0_eligible_sources",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 6
+          },
+          {
+            "actual": 8,
+            "criterion_class": "hard_validity",
+            "criterion_id": "task2_eligible_sources",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 6
+          },
+          {
+            "actual": 1.0,
+            "criterion_class": "hard_validity",
+            "criterion_id": "exact_restore_rate",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 0.95
+          },
+          {
+            "actual": 1.0,
+            "criterion_class": "hard_validity",
+            "criterion_id": "admissible_execution_rate",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 0.9
+          },
+          {
+            "actual": 0.11363636363636363,
+            "criterion_class": "hard_validity",
+            "criterion_id": "matched_control_catastrophe",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": "<=",
+            "pass": false,
+            "threshold": 0.05
+          },
+          {
+            "actual": true,
+            "criterion_class": "hard_validity",
+            "criterion_id": "mechanism_attribution_valid",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": "==",
+            "pass": true,
+            "threshold": true
+          },
+          {
+            "actual": 16,
+            "criterion_class": "claim_scope",
+            "criterion_id": "benefit_zero_sources",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 3
+          },
+          {
+            "actual": 14,
+            "criterion_class": "claim_scope",
+            "criterion_id": "benefit_one_sources",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 3
+          },
+          {
+            "actual": 6,
+            "criterion_class": "claim_scope",
+            "criterion_id": "task0_benefit_sources",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 1
+          },
+          {
+            "actual": 8,
+            "criterion_class": "claim_scope",
+            "criterion_id": "task2_benefit_sources",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 1
+          },
+          {
+            "actual": 2,
+            "criterion_class": "claim_scope",
+            "criterion_id": "two_distinct_strict_winner_sources",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 2
+          }
+        ],
+        "decision_sha256": "c7d953dbb6a42a4458a73cc656f77567386fb8c0f45fe4bfa9cfc0151b1b2b88",
+        "hard_failures": [
+          "matched_control_catastrophe"
+        ],
+        "kind": "crashbench_machine_gate_decision",
+        "missing_evidence": [],
+        "next_action": "STOP_MECHANISM_VERSION",
+        "non_compensatory": true,
+        "policy": {
+          "allow_scoped_continuation": true,
+          "confirmatory": false,
+          "fail_next_action": "STOP_MECHANISM_VERSION",
+          "go_next_action": "ELIGIBLE_FOR_FORMAL_MECHANISM_SHORTLIST",
+          "scoped_next_action": "MECHANICALLY_VALID_EXPLORATORY_ONLY__NO_BROAD_SUPPORT_CLAIM",
+          "stage_id": "D2_SCREEN:narrow_clearance_v1",
+          "test_outcomes_opened": false
+        },
+        "schema_version": 1,
+        "stage_id": "D2_SCREEN:narrow_clearance_v1",
+        "status": "NO_GO"
+      }
+    },
+    "staleness": {
+      "corrected_summary": {
+        "admissible_execution_rate": 1.0,
+        "benefit_one_sources": 10,
+        "benefit_zero_sources": 16,
+        "contains_B0": 16,
+        "contains_B1": 10,
+        "contains_both": 10,
+        "control_base_success": 0.8958333333333334,
+        "entirely_B0": 6,
+        "exact_restore_rate": 1.0,
+        "matched_control_catastrophe": 0.020833333333333332,
+        "mechanism_attribution_valid": true,
+        "source_support_definition": "contains_label_v2_nonexclusive",
+        "stale_base_catastrophe": 0.25,
+        "stale_base_success": 0.25,
+        "task0_benefit_sources": 8,
+        "task0_eligible_sources": 8,
+        "task0_nominal_success": 0.875,
+        "task2_benefit_sources": 2,
+        "task2_eligible_sources": 8,
+        "task2_nominal_success": 1.0,
+        "two_distinct_strict_winner_sources": 2
+      },
+      "historical_gate": {
+        "claim_scope_failures": [],
+        "criteria": [
+          {
+            "actual": 0.875,
+            "criterion_class": "hard_validity",
+            "criterion_id": "task0_nominal_success",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 0.7
+          },
+          {
+            "actual": 1.0,
+            "criterion_class": "hard_validity",
+            "criterion_id": "task2_nominal_success",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 0.7
+          },
+          {
+            "actual": 8,
+            "criterion_class": "hard_validity",
+            "criterion_id": "task0_eligible_sources",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 6
+          },
+          {
+            "actual": 8,
+            "criterion_class": "hard_validity",
+            "criterion_id": "task2_eligible_sources",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 6
+          },
+          {
+            "actual": 1.0,
+            "criterion_class": "hard_validity",
+            "criterion_id": "exact_restore_rate",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 0.95
+          },
+          {
+            "actual": 1.0,
+            "criterion_class": "hard_validity",
+            "criterion_id": "admissible_execution_rate",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 0.9
+          },
+          {
+            "actual": 0.020833333333333332,
+            "criterion_class": "hard_validity",
+            "criterion_id": "matched_control_catastrophe",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": "<=",
+            "pass": true,
+            "threshold": 0.05
+          },
+          {
+            "actual": true,
+            "criterion_class": "hard_validity",
+            "criterion_id": "mechanism_attribution_valid",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": "==",
+            "pass": true,
+            "threshold": true
+          },
+          {
+            "actual": 6,
+            "criterion_class": "claim_scope",
+            "criterion_id": "benefit_zero_sources",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 3
+          },
+          {
+            "actual": 10,
+            "criterion_class": "claim_scope",
+            "criterion_id": "benefit_one_sources",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 3
+          },
+          {
+            "actual": 8,
+            "criterion_class": "claim_scope",
+            "criterion_id": "task0_benefit_sources",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 1
+          },
+          {
+            "actual": 2,
+            "criterion_class": "claim_scope",
+            "criterion_id": "task2_benefit_sources",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 1
+          },
+          {
+            "actual": 2,
+            "criterion_class": "claim_scope",
+            "criterion_id": "two_distinct_strict_winner_sources",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 2
+          }
+        ],
+        "decision_sha256": "dd7e903bc33136a1a2c2bd4bd5aea5131ee380f4d86b9dbbc213503f1008680f",
+        "hard_failures": [],
+        "kind": "crashbench_machine_gate_decision",
+        "missing_evidence": [],
+        "next_action": "ELIGIBLE_FOR_FORMAL_MECHANISM_SHORTLIST",
+        "non_compensatory": true,
+        "policy": {
+          "allow_scoped_continuation": true,
+          "confirmatory": false,
+          "fail_next_action": "STOP_MECHANISM_VERSION",
+          "go_next_action": "ELIGIBLE_FOR_FORMAL_MECHANISM_SHORTLIST",
+          "scoped_next_action": "MECHANICALLY_VALID_EXPLORATORY_ONLY__NO_BROAD_SUPPORT_CLAIM",
+          "stage_id": "D2_SCREEN:observation_staleness_v1",
+          "test_outcomes_opened": false
+        },
+        "schema_version": 1,
+        "stage_id": "D2_SCREEN:observation_staleness_v1",
+        "status": "GO"
+      },
+      "inputs_sha256": {
+        "results/expansion/d2_staleness_screen/1f39d658a829_0100901d1cc6_20260830T093356Z/staleness_screen_analysis.json": "48a872aa057be7469d97bf7f7ae600044a0dc64836d12db87aa68fd933f71e0c",
+        "results/expansion/d2_staleness_screen/1f39d658a829_0100901d1cc6_20260830T093356Z/task0_source0.json": "574958a2a9cb8dd7a3f1b0235354feaf719ac4a69875beddbbb20d20e25cb598",
+        "results/expansion/d2_staleness_screen/1f39d658a829_0100901d1cc6_20260830T093356Z/task0_source1.json": "5b9355d51c20567dd7df158b426eba707d7888db241f405869075726c1561bb5",
+        "results/expansion/d2_staleness_screen/1f39d658a829_0100901d1cc6_20260830T093356Z/task0_source2.json": "fbbb250b6eb29ebe463d9abaa309b8bc4d1b4795dbcc77eb5b4f672683e2993f",
+        "results/expansion/d2_staleness_screen/1f39d658a829_0100901d1cc6_20260830T093356Z/task0_source3.json": "fd104fa25a44be77260596d1a295b1a42775ede59662a6e18b04c24d180a4983",
+        "results/expansion/d2_staleness_screen/1f39d658a829_0100901d1cc6_20260830T093356Z/task0_source4.json": "7e61fac9c2423a58cc407e161bb009aca8c9d2e6605d1d1fd3e198151986df5e",
+        "results/expansion/d2_staleness_screen/1f39d658a829_0100901d1cc6_20260830T093356Z/task0_source5.json": "46956111f905ca58385f3e1e6ab8ad665b65343aa691c29befaf77c2dba0ecd7",
+        "results/expansion/d2_staleness_screen/1f39d658a829_0100901d1cc6_20260830T093356Z/task0_source6.json": "e1bc048b074eaf961e6cff63940e7a6c3d65c6e9a33bb8b9f84f3e0886b12de2",
+        "results/expansion/d2_staleness_screen/1f39d658a829_0100901d1cc6_20260830T093356Z/task0_source7.json": "24219c074c52ed36df6c01866c0b03d69b6512101466e20d7ead5d706701fc14",
+        "results/expansion/d2_staleness_screen/1f39d658a829_0100901d1cc6_20260830T093356Z/task2_source0.json": "9fdff9263805a4ebb46193d28a64a672e9136a9229fa91bedca9274e3f4d0bb8",
+        "results/expansion/d2_staleness_screen/1f39d658a829_0100901d1cc6_20260830T093356Z/task2_source1.json": "d9abf37a23d9c5e5c402ff1ed7085dafe15fa6eb34db3bff84c52bcba9e2834d",
+        "results/expansion/d2_staleness_screen/1f39d658a829_0100901d1cc6_20260830T093356Z/task2_source2.json": "0c698a23e95d606a6c543de6dca285ed5537e49c01b7449581b3862c4b3525d5",
+        "results/expansion/d2_staleness_screen/1f39d658a829_0100901d1cc6_20260830T093356Z/task2_source3.json": "e437489864b90226be957680f502ad4f8c8e22ac73cf991a5e251f7cfd865134",
+        "results/expansion/d2_staleness_screen/1f39d658a829_0100901d1cc6_20260830T093356Z/task2_source4.json": "8e9812ab8baacc41f1e7eb3c7bc442088e2e46823db2b2a67c5bb63b9e58b3a8",
+        "results/expansion/d2_staleness_screen/1f39d658a829_0100901d1cc6_20260830T093356Z/task2_source5.json": "ea34e0fc8603e50998c1211a6b18490a801219df99c4dd9e41437c016c877fc7",
+        "results/expansion/d2_staleness_screen/1f39d658a829_0100901d1cc6_20260830T093356Z/task2_source6.json": "966f70196bf19ef7cc75b3a8e7034e2f80471e86dc08ca5acfee87dbbddaacd3",
+        "results/expansion/d2_staleness_screen/1f39d658a829_0100901d1cc6_20260830T093356Z/task2_source7.json": "226a6c4250696209c8600e6b23b4bed394668da473823e505e971c5bcc83a8e6"
+      },
+      "old_pure_B0_count": 6,
+      "retrospective_gate_recalculation": {
+        "claim_scope_failures": [],
+        "criteria": [
+          {
+            "actual": 0.875,
+            "criterion_class": "hard_validity",
+            "criterion_id": "task0_nominal_success",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 0.7
+          },
+          {
+            "actual": 1.0,
+            "criterion_class": "hard_validity",
+            "criterion_id": "task2_nominal_success",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 0.7
+          },
+          {
+            "actual": 8,
+            "criterion_class": "hard_validity",
+            "criterion_id": "task0_eligible_sources",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 6
+          },
+          {
+            "actual": 8,
+            "criterion_class": "hard_validity",
+            "criterion_id": "task2_eligible_sources",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 6
+          },
+          {
+            "actual": 1.0,
+            "criterion_class": "hard_validity",
+            "criterion_id": "exact_restore_rate",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 0.95
+          },
+          {
+            "actual": 1.0,
+            "criterion_class": "hard_validity",
+            "criterion_id": "admissible_execution_rate",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 0.9
+          },
+          {
+            "actual": 0.020833333333333332,
+            "criterion_class": "hard_validity",
+            "criterion_id": "matched_control_catastrophe",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": "<=",
+            "pass": true,
+            "threshold": 0.05
+          },
+          {
+            "actual": true,
+            "criterion_class": "hard_validity",
+            "criterion_id": "mechanism_attribution_valid",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": "==",
+            "pass": true,
+            "threshold": true
+          },
+          {
+            "actual": 16,
+            "criterion_class": "claim_scope",
+            "criterion_id": "benefit_zero_sources",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 3
+          },
+          {
+            "actual": 10,
+            "criterion_class": "claim_scope",
+            "criterion_id": "benefit_one_sources",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 3
+          },
+          {
+            "actual": 8,
+            "criterion_class": "claim_scope",
+            "criterion_id": "task0_benefit_sources",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 1
+          },
+          {
+            "actual": 2,
+            "criterion_class": "claim_scope",
+            "criterion_id": "task2_benefit_sources",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 1
+          },
+          {
+            "actual": 2,
+            "criterion_class": "claim_scope",
+            "criterion_id": "two_distinct_strict_winner_sources",
+            "evidence_path": null,
+            "evidence_state": "observed",
+            "operator": ">=",
+            "pass": true,
+            "threshold": 2
+          }
+        ],
+        "decision_sha256": "aa309fd318fa0055a04a018fb9b7be0639b32d4b834478044615b834b9ce6365",
+        "hard_failures": [],
+        "kind": "crashbench_machine_gate_decision",
+        "missing_evidence": [],
+        "next_action": "ELIGIBLE_FOR_FORMAL_MECHANISM_SHORTLIST",
+        "non_compensatory": true,
+        "policy": {
+          "allow_scoped_continuation": true,
+          "confirmatory": false,
+          "fail_next_action": "STOP_MECHANISM_VERSION",
+          "go_next_action": "ELIGIBLE_FOR_FORMAL_MECHANISM_SHORTLIST",
+          "scoped_next_action": "MECHANICALLY_VALID_EXPLORATORY_ONLY__NO_BROAD_SUPPORT_CLAIM",
+          "stage_id": "D2_SCREEN:observation_staleness_v1",
+          "test_outcomes_opened": false
+        },
+        "schema_version": 1,
+        "stage_id": "D2_SCREEN:observation_staleness_v1",
+        "status": "GO"
+      }
+    }
+  },
+  "D5_D8": {
+    "D5_development": {
+      "inputs_sha256": {
+        "results/expansion/d5_statewise/e2a5264a802a_fe660c168e72_20260830T105726Z/postprocess_a4b1714/merged/anchors.jsonl": "7420f72daa3bcba974172dbd7f6e9aec008566ad27c1b919ed154e834ec2e7d1",
+        "results/expansion/d5_statewise/e2a5264a802a_fe660c168e72_20260830T105726Z/postprocess_a4b1714/merged/branches.jsonl": "f2ffadd91619c820eb74a766079e3a6c5edc2c2a68bd1a4f9cd0e5589b98e716"
+      },
+      "support": {
+        "benefit_one_sources": 10,
+        "benefit_zero_sources": 12,
+        "block_decision_count": 324,
+        "contains_B0": 12,
+        "contains_B1": 10,
+        "contains_both": 10,
+        "entirely_B0": 2,
+        "same_risk_flip_sources": 10,
+        "source_count": 12,
+        "source_support_definition": "contains_label_v2_nonexclusive",
+        "sources": [
+          {
+            "benefit": false,
+            "contains_B0": true,
+            "contains_B1": false,
+            "contains_both": false,
+            "entirely_B0": true,
+            "physical_source_id": "196e952f65cd0b53e917dd0e7efda07dd8f1a0eb26ddf28c21b37f04c9c94d1b",
+            "same_risk_flip": false,
+            "strict_winners": []
+          },
+          {
+            "benefit": true,
+            "contains_B0": true,
+            "contains_B1": true,
+            "contains_both": true,
+            "entirely_B0": false,
+            "physical_source_id": "1978a0bca574968027e1c0f5b3cfab76e2e9b8418c132341114b331acd436ef9",
+            "same_risk_flip": true,
+            "strict_winners": [
+              "base_continue",
+              "observation_refresh"
+            ]
+          },
+          {
+            "benefit": true,
+            "contains_B0": true,
+            "contains_B1": true,
+            "contains_both": true,
+            "entirely_B0": false,
+            "physical_source_id": "36eacfebfbd76af06876840ef2aec1fff2a3560eaee40546d7c1406d92a5903e",
+            "same_risk_flip": true,
+            "strict_winners": [
+              "safe_stop"
+            ]
+          },
+          {
+            "benefit": false,
+            "contains_B0": true,
+            "contains_B1": false,
+            "contains_both": false,
+            "entirely_B0": true,
+            "physical_source_id": "38e107356f104e793dcbd7a39c212dbb93a19d52f988b0db8496f4234846d0b7",
+            "same_risk_flip": false,
+            "strict_winners": []
+          },
+          {
+            "benefit": true,
+            "contains_B0": true,
+            "contains_B1": true,
+            "contains_both": true,
+            "entirely_B0": false,
+            "physical_source_id": "402e9477773de52f82f0cf5eac361a4ebde382b86e106fa4ad0b17e64175d4c2",
+            "same_risk_flip": true,
+            "strict_winners": [
+              "observation_refresh",
+              "safe_stop"
+            ]
+          },
+          {
+            "benefit": true,
+            "contains_B0": true,
+            "contains_B1": true,
+            "contains_both": true,
+            "entirely_B0": false,
+            "physical_source_id": "54983f8fe9cb74a0ee4f1658c92e7d9c770785938bcfd74667354d209afcd8ea",
+            "same_risk_flip": true,
+            "strict_winners": [
+              "observation_refresh"
+            ]
+          },
+          {
+            "benefit": true,
+            "contains_B0": true,
+            "contains_B1": true,
+            "contains_both": true,
+            "entirely_B0": false,
+            "physical_source_id": "6e195754969373d0c57b6baeb42247d6f642072c6e1b86928d79d957beb897a6",
+            "same_risk_flip": true,
+            "strict_winners": [
+              "observation_refresh",
+              "safe_stop"
+            ]
+          },
+          {
+            "benefit": true,
+            "contains_B0": true,
+            "contains_B1": true,
+            "contains_both": true,
+            "entirely_B0": false,
+            "physical_source_id": "7912ad61ae8b50b9d42576ccfebe2278d44e7a9dd3cb27b3d97db840dbd53133",
+            "same_risk_flip": true,
+            "strict_winners": [
+              "base_continue",
+              "observation_refresh"
+            ]
+          },
+          {
+            "benefit": true,
+            "contains_B0": true,
+            "contains_B1": true,
+            "contains_both": true,
+            "entirely_B0": false,
+            "physical_source_id": "8cbfe019b55a3dc302119721bcd02c60a623d223ffcf21ab07b09cc343b71267",
+            "same_risk_flip": true,
+            "strict_winners": [
+              "observation_refresh",
+              "safe_stop"
+            ]
+          },
+          {
+            "benefit": true,
+            "contains_B0": true,
+            "contains_B1": true,
+            "contains_both": true,
+            "entirely_B0": false,
+            "physical_source_id": "97bfe746879580fe827de21f505d3f2b31b6a62999bc3a7c5313d131712f64fc",
+            "same_risk_flip": true,
+            "strict_winners": [
+              "base_continue",
+              "safe_stop"
+            ]
+          },
+          {
+            "benefit": true,
+            "contains_B0": true,
+            "contains_B1": true,
+            "contains_both": true,
+            "entirely_B0": false,
+            "physical_source_id": "ba86a5891001072b043209757ee371b34e30f34aea2e1396b4c96f9af1750e66",
+            "same_risk_flip": true,
+            "strict_winners": [
+              "base_continue",
+              "observation_refresh",
+              "safe_stop"
+            ]
+          },
+          {
+            "benefit": true,
+            "contains_B0": true,
+            "contains_B1": true,
+            "contains_both": true,
+            "entirely_B0": false,
+            "physical_source_id": "d5920415736ede3ad9cd7f0d77808ba53cd846a15e71070525eb7160135c51f0",
+            "same_risk_flip": true,
+            "strict_winners": [
+              "base_continue",
+              "observation_refresh",
+              "safe_stop"
+            ]
+          }
+        ],
+        "strict_support_sources": {
+          "base_continue": 5,
+          "observation_refresh": 8,
+          "safe_stop": 7
+        }
+      }
+    },
+    "D5_train_development": {
+      "inputs_sha256": {
+        "results/expansion/d5_statewise/e2a5264a802a_fe660c168e72_20260830T105726Z/postprocess_a4b1714/merged/anchors.jsonl": "7420f72daa3bcba974172dbd7f6e9aec008566ad27c1b919ed154e834ec2e7d1",
+        "results/expansion/d5_statewise/e2a5264a802a_fe660c168e72_20260830T105726Z/postprocess_a4b1714/merged/branches.jsonl": "f2ffadd91619c820eb74a766079e3a6c5edc2c2a68bd1a4f9cd0e5589b98e716"
+      },
+      "support": {
+        "benefit_one_sources": 32,
+        "benefit_zero_sources": 36,
+        "block_decision_count": 972,
+        "contains_B0": 36,
+        "contains_B1": 32,
+        "contains_both": 32,
+        "entirely_B0": 4,
+        "same_risk_flip_sources": 29,
+        "source_count": 36,
+        "source_support_definition": "contains_label_v2_nonexclusive",
+        "sources": [
+          {
+            "benefit": true,
+            "contains_B0": true,
+            "contains_B1": true,
+            "contains_both": true,
+            "entirely_B0": false,
+            "physical_source_id": "0ce2dff152007dd84575b20b26dce4153773129f76343fa64d9313b00f84c39d",
+            "same_risk_flip": false,
+            "strict_winners": [
+              "safe_stop"
+            ]
+          },
+          {
+            "benefit": true,
+            "contains_B0": true,
+            "contains_B1": true,
+            "contains_both": true,
+            "entirely_B0": false,
+            "physical_source_id": "0e8f3f1b4ee6e7e6f48069659fd0fd1a08fe0c9b19a5082f707d47315f8551f8",
+            "same_risk_flip": true,
+            "strict_winners": [
+              "observation_refresh",
+              "safe_stop"
+            ]
+          },
+          {
+            "benefit": false,
+            "contains_B0": true,
+            "contains_B1": false,
+            "contains_both": false,
+            "entirely_B0": true,
+            "physical_source_id": "0f67f98671271145b7573e71f168456a1ca92b9de145b82fe1475ae3f450a85d",
+            "same_risk_flip": true,
+            "strict_winners": [
+              "base_continue"
+            ]
+          },
+          {
+            "benefit": false,
+            "contains_B0": true,
+            "contains_B1": false,
+            "contains_both": false,
+            "entirely_B0": true,
+            "physical_source_id": "196e952f65cd0b53e917dd0e7efda07dd8f1a0eb26ddf28c21b37f04c9c94d1b",
+            "same_risk_flip": false,
+            "strict_winners": []
+          },
+          {
+            "benefit": true,
+            "contains_B0": true,
+            "contains_B1": true,
+            "contains_both": true,
+            "entirely_B0": false,
+            "physical_source_id": "1978a0bca574968027e1c0f5b3cfab76e2e9b8418c132341114b331acd436ef9",
+            "same_risk_flip": true,
+            "strict_winners": [
+              "base_continue",
+              "observation_refresh"
+            ]
+          },
+          {
+            "benefit": true,
+            "contains_B0": true,
+            "contains_B1": true,
+            "contains_both": true,
+            "entirely_B0": false,
+            "physical_source_id": "27efbd6bc5dd9e1b629628ddc1ebcd9a29aed2df4deec4e313d91ec273654991",
+            "same_risk_flip": true,
+            "strict_winners": [
+              "observation_refresh",
+              "safe_stop"
+            ]
+          },
+          {
+            "benefit": true,
+            "contains_B0": true,
+            "contains_B1": true,
+            "contains_both": true,
+            "entirely_B0": false,
+            "physical_source_id": "36eacfebfbd76af06876840ef2aec1fff2a3560eaee40546d7c1406d92a5903e",
+            "same_risk_flip": true,
+            "strict_winners": [
+              "safe_stop"
+            ]
+          },
+          {
+            "benefit": false,
+            "contains_B0": true,
+            "contains_B1": false,
+            "contains_both": false,
+            "entirely_B0": true,
+            "physical_source_id": "38e107356f104e793dcbd7a39c212dbb93a19d52f988b0db8496f4234846d0b7",
+            "same_risk_flip": false,
+            "strict_winners": []
+          },
+          {
+            "benefit": true,
+            "contains_B0": true,
+            "contains_B1": true,
+            "contains_both": true,
+            "entirely_B0": false,
+            "physical_source_id": "39ae394166b56ca17d0a9267497f5e6db270595394b437bc40b499c95bc78744",
+            "same_risk_flip": true,
+            "strict_winners": [
+              "observation_refresh",
+              "safe_stop"
+            ]
+          },
+          {
+            "benefit": true,
+            "contains_B0": true,
+            "contains_B1": true,
+            "contains_both": true,
+            "entirely_B0": false,
+            "physical_source_id": "402e9477773de52f82f0cf5eac361a4ebde382b86e106fa4ad0b17e64175d4c2",
+            "same_risk_flip": true,
+            "strict_winners": [
+              "observation_refresh",
+              "safe_stop"
+            ]
+          },
+          {
+            "benefit": true,
+            "contains_B0": true,
+            "contains_B1": true,
+            "contains_both": true,
+            "entirely_B0": false,
+            "physical_source_id": "41989ab7c42dd1f5a1560c6d68eb3e10f4dc95658f9e6996a1fd971d7b68523f",
+            "same_risk_flip": true,
+            "strict_winners": [
+              "base_continue",
+              "observation_refresh",
+              "safe_stop"
+            ]
+          },
+          {
+            "benefit": true,
+            "contains_B0": true,
+            "contains_B1": true,
+            "contains_both": true,
+            "entirely_B0": false,
+            "physical_source_id": "4a518b7b91be76bb81c43ac29c9d0e2ee35355fd5871e30c532f8857c02e61a3",
+            "same_risk_flip": true,
+            "strict_winners": [
+              "base_continue",
+              "safe_stop"
+            ]
+          },
+          {
+            "benefit": true,
+            "contains_B0": true,
+            "contains_B1": true,
+            "contains_both": true,
+            "entirely_B0": false,
+            "physical_source_id": "50ab01eec73dc30b12da994b8ffb685df81ab1380168746c6a27690e5eff1087",
+            "same_risk_flip": false,
+            "strict_winners": [
+              "safe_stop"
+            ]
+          },
+          {
+            "benefit": true,
+            "contains_B0": true,
+            "contains_B1": true,
+            "contains_both": true,
+            "entirely_B0": false,
+            "physical_source_id": "5202cf46c6a3a259c3c924c628697cec8c3a284d0853d152f57cfdd905baca45",
+            "same_risk_flip": false,
+            "strict_winners": []
+          },
+          {
+            "benefit": true,
+            "contains_B0": true,
+            "contains_B1": true,
+            "contains_both": true,
+            "entirely_B0": false,
+            "physical_source_id": "54983f8fe9cb74a0ee4f1658c92e7d9c770785938bcfd74667354d209afcd8ea",
+            "same_risk_flip": true,
+            "strict_winners": [
+              "observation_refresh"
+            ]
+          },
+          {
+            "benefit": true,
+            "contains_B0": true,
+            "contains_B1": true,
+            "contains_both": true,
+            "entirely_B0": false,
+            "physical_source_id": "55a791e7d4187ccc4fa8d76e3f770d102f8cbf6c00a014e2db05334ba0d8018a",
+            "same_risk_flip": true,
+            "strict_winners": [
+              "base_continue",
+              "observation_refresh"
+            ]
+          },
+          {
+            "benefit": true,
+            "contains_B0": true,
+            "contains_B1": true,
+            "contains_both": true,
+            "entirely_B0": false,
+            "physical_source_id": "637f0ffaf216f7c911847b6fc6b547de8a7036bafe7002401e9539e64b7311f8",
+            "same_risk_flip": true,
+            "strict_winners": [
+              "safe_stop"
+            ]
+          },
+          {
+            "benefit": true,
+            "contains_B0": true,
+            "contains_B1": true,
+            "contains_both": true,
+            "entirely_B0": false,
+            "physical_source_id": "655952b5a3ee521db068362d286cb8bcf03fc79d0489f42008cd5efae4321345",
+            "same_risk_flip": true,
+            "strict_winners": [
+              "observation_refresh",
+              "safe_stop"
+            ]
+          },
+          {
+            "benefit": true,
+            "contains_B0": true,
+            "contains_B1": true,
+            "contains_both": true,
+            "entirely_B0": false,
+            "physical_source_id": "6e195754969373d0c57b6baeb42247d6f642072c6e1b86928d79d957beb897a6",
+            "same_risk_flip": true,
+            "strict_winners": [
+              "observation_refresh",
+              "safe_stop"
+            ]
+          },
+          {
+            "benefit": true,
+            "contains_B0": true,
+            "contains_B1": true,
+            "contains_both": true,
+            "entirely_B0": false,
+            "physical_source_id": "6f712d8424dbc8e18b823f0b0e77a498645f8ea3df63adf1b5ec916dcd7ba14c",
+            "same_risk_flip": true,
+            "strict_winners": [
+              "observation_refresh"
+            ]
+          },
+          {
+            "benefit": true,
+            "contains_B0": true,
+            "contains_B1": true,
+            "contains_both": true,
+            "entirely_B0": false,
+            "physical_source_id": "7912ad61ae8b50b9d42576ccfebe2278d44e7a9dd3cb27b3d97db840dbd53133",
+            "same_risk_flip": true,
+            "strict_winners": [
+              "base_continue",
+              "observation_refresh"
+            ]
+          },
+          {
+            "benefit": true,
+            "contains_B0": true,
+            "contains_B1": true,
+            "contains_both": true,
+            "entirely_B0": false,
+            "physical_source_id": "7c37bc461026a4c0baa8f078d0044e9be9dbac54215649145889b00de22372bc",
+            "same_risk_flip": true,
+            "strict_winners": [
+              "observation_refresh"
+            ]
+          },
+          {
+            "benefit": true,
+            "contains_B0": true,
+            "contains_B1": true,
+            "contains_both": true,
+            "entirely_B0": false,
+            "physical_source_id": "7f238ee6ea3db9a204b021e891e71aa7039e714f829604ec94c6d17141d7e36e",
+            "same_risk_flip": true,
+            "strict_winners": [
+              "base_continue",
+              "observation_refresh"
+            ]
+          },
+          {
+            "benefit": true,
+            "contains_B0": true,
+            "contains_B1": true,
+            "contains_both": true,
+            "entirely_B0": false,
+            "physical_source_id": "87d45c926940297b00a072d317fb820549953931a1bb136b33868c29517d5060",
+            "same_risk_flip": true,
+            "strict_winners": [
+              "base_continue",
+              "safe_stop"
+            ]
+          },
+          {
+            "benefit": true,
+            "contains_B0": true,
+            "contains_B1": true,
+            "contains_both": true,
+            "entirely_B0": false,
+            "physical_source_id": "8cbfe019b55a3dc302119721bcd02c60a623d223ffcf21ab07b09cc343b71267",
+            "same_risk_flip": true,
+            "strict_winners": [
+              "observation_refresh",
+              "safe_stop"
+            ]
+          },
+          {
+            "benefit": false,
+            "contains_B0": true,
+            "contains_B1": false,
+            "contains_both": false,
+            "entirely_B0": true,
+            "physical_source_id": "8cfa8b72ebc8714f94c1a01cedf29de140651c35b340778795e63d9fa49971c2",
+            "same_risk_flip": false,
+            "strict_winners": []
+          },
+          {
+            "benefit": true,
+            "contains_B0": true,
+            "contains_B1": true,
+            "contains_both": true,
+            "entirely_B0": false,
+            "physical_source_id": "8f6b5d676610fe21c6b8f73e69548116eaaf5f4282febc238ebc203519eb7913",
+            "same_risk_flip": true,
+            "strict_winners": [
+              "base_continue",
+              "safe_stop"
+            ]
+          },
+          {
+            "benefit": true,
+            "contains_B0": true,
+            "contains_B1": true,
+            "contains_both": true,
+            "entirely_B0": false,
+            "physical_source_id": "97bfe746879580fe827de21f505d3f2b31b6a62999bc3a7c5313d131712f64fc",
+            "same_risk_flip": true,
+            "strict_winners": [
+              "base_continue",
+              "safe_stop"
+            ]
+          },
+          {
+            "benefit": true,
+            "contains_B0": true,
+            "contains_B1": true,
+            "contains_both": true,
+            "entirely_B0": false,
+            "physical_source_id": "9ddfc8957f10b37d51c595b3c81483a4b2f6315cc34c3182e34361285519723c",
+            "same_risk_flip": false,
+            "strict_winners": [
+              "safe_stop"
+            ]
+          },
+          {
+            "benefit": true,
+            "contains_B0": true,
+            "contains_B1": true,
+            "contains_both": true,
+            "entirely_B0": false,
+            "physical_source_id": "accc98df3d26eb557056911960404239a956e9810c5e5dccb188dfcc8fe70827",
+            "same_risk_flip": true,
+            "strict_winners": [
+              "safe_stop"
+            ]
+          },
+          {
+            "benefit": true,
+            "contains_B0": true,
+            "contains_B1": true,
+            "contains_both": true,
+            "entirely_B0": false,
+            "physical_source_id": "ba86a5891001072b043209757ee371b34e30f34aea2e1396b4c96f9af1750e66",
+            "same_risk_flip": true,
+            "strict_winners": [
+              "base_continue",
+              "observation_refresh",
+              "safe_stop"
+            ]
+          },
+          {
+            "benefit": true,
+            "contains_B0": true,
+            "contains_B1": true,
+            "contains_both": true,
+            "entirely_B0": false,
+            "physical_source_id": "bf2eb93d154d15c866b7220cb75da05186d637f439b488cb72df5d6e0ca225c6",
+            "same_risk_flip": true,
+            "strict_winners": [
+              "observation_refresh"
+            ]
+          },
+          {
+            "benefit": true,
+            "contains_B0": true,
+            "contains_B1": true,
+            "contains_both": true,
+            "entirely_B0": false,
+            "physical_source_id": "cd8d51cb68d0b6263d1dfeb23031fde3f9fef779ac358a807df9ff3f2ed67a41",
+            "same_risk_flip": true,
+            "strict_winners": [
+              "base_continue",
+              "observation_refresh",
+              "safe_stop"
+            ]
+          },
+          {
+            "benefit": true,
+            "contains_B0": true,
+            "contains_B1": true,
+            "contains_both": true,
+            "entirely_B0": false,
+            "physical_source_id": "d5920415736ede3ad9cd7f0d77808ba53cd846a15e71070525eb7160135c51f0",
+            "same_risk_flip": true,
+            "strict_winners": [
+              "base_continue",
+              "observation_refresh",
+              "safe_stop"
+            ]
+          },
+          {
+            "benefit": true,
+            "contains_B0": true,
+            "contains_B1": true,
+            "contains_both": true,
+            "entirely_B0": false,
+            "physical_source_id": "e0e6b8a3d1c85c80ca9a0ebb4640c98bc543a40a920203184457bc8a240aea78",
+            "same_risk_flip": true,
+            "strict_winners": [
+              "observation_refresh"
+            ]
+          },
+          {
+            "benefit": true,
+            "contains_B0": true,
+            "contains_B1": true,
+            "contains_both": true,
+            "entirely_B0": false,
+            "physical_source_id": "e2c3cb61aaa6c86065578242fdb8712f84b49312dc1bbedda6eced99d8f27bfb",
+            "same_risk_flip": true,
+            "strict_winners": [
+              "base_continue"
+            ]
+          }
+        ],
+        "strict_support_sources": {
+          "base_continue": 14,
+          "observation_refresh": 20,
+          "safe_stop": 21
+        }
+      }
+    },
+    "D8_exposed_test": {
+      "inputs_sha256": {
+        "results/expansion/d8_benchmark/e2a5264a802a_9c869dc8f97d_20260830T124059Z/postprocess_pinned_9c869dc/merged/anchors.jsonl": "6090349d7932344dbd505118982a60b6c6c7b5e8a303ef29feb4a1297fcda2e0",
+        "results/expansion/d8_benchmark/e2a5264a802a_9c869dc8f97d_20260830T124059Z/postprocess_pinned_9c869dc/merged/branches.jsonl": "97b0a0f8bfbf7658e96131a55e2a0b122b48e7bf273c3da2f533bead94fd7aeb"
+      },
+      "support": {
+        "benefit_one_sources": 0,
+        "benefit_zero_sources": 0,
+        "block_decision_count": 0,
+        "contains_B0": 0,
+        "contains_B1": 0,
+        "contains_both": 0,
+        "entirely_B0": 0,
+        "same_risk_flip_sources": 0,
+        "source_count": 0,
+        "source_support_definition": "contains_label_v2_nonexclusive",
+        "sources": [],
+        "strict_support_sources": {
+          "base_continue": 0,
+          "observation_refresh": 0,
+          "safe_stop": 0
+        }
+      }
+    }
+  },
+  "confirmatory": false,
+  "definition": "contains_label_v2_nonexclusive",
+  "historical_results_modified": false,
+  "kind": "retrospective_source_support_erratum",
+  "test_authorized": false
+}

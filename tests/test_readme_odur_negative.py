@@ -1,7 +1,7 @@
 from pathlib import Path
 
 
-README = Path(__file__).resolve().parents[1] / "README.md"
+README = Path(__file__).resolve().parents[1] / "docs/audits/20260906/README_ODUR_20260831.txt"
 
 
 def test_readme_leads_with_odur_method_and_terminal_negative_result():

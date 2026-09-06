@@ -56,6 +56,13 @@ def build_training_arrays(
     allowed_roles = ALLOWED_ROLES if allowed_roles is None else set(allowed_roles)
     if not allowed_roles or allowed_roles - {"train", "development", "calibration"}:
         raise ValueError("feature loader role request is empty or forbidden")
+    source_roles = {}
+    for anchor in anchors:
+        source = str(anchor["physical_source_id"])
+        role = str(anchor["split_role"])
+        if source in source_roles and source_roles[source] != role:
+            raise ValueError(f"physical source crosses split roles: {source}")
+        source_roles[source] = role
     anchor_by_block = {row["block_id"]: row for row in anchors}
     store = ContentAddressedStore(artifact_store)
     cached_features: dict[str, np.ndarray] = {}
@@ -155,6 +162,7 @@ def main() -> None:
     parser.add_argument("--utility-config", type=Path, required=True)
     parser.add_argument("--seed", type=int, required=True)
     parser.add_argument("--epochs", type=int, default=100)
+    parser.add_argument("--architecture", choices=("additive", "interaction", "per_option"), default="interaction")
     parser.add_argument(
         "--fit-on",
         choices=("train", "train_development"),
@@ -189,7 +197,7 @@ def main() -> None:
         raise ValueError("ODUR requires both train and development rows")
     fit = train if args.fit_on == "train" else (train | development)
     model = OptionOutcomeModel(
-        input_dim=data["features"].shape[1], option_ids=OPTION_IDS
+        input_dim=data["features"].shape[1], option_ids=OPTION_IDS, architecture=args.architecture
     )
     optimizer = torch.optim.AdamW(model.parameters(), lr=1e-3, weight_decay=1e-4)
     x = torch.from_numpy(data["features"][fit])
@@ -238,6 +246,7 @@ def main() -> None:
     torch.save(
         {
             "state_dict": model.state_dict(),
+            "architecture": args.architecture,
             "input_dim": data["features"].shape[1],
             "option_ids": OPTION_IDS,
             "seed": args.seed,
@@ -252,6 +261,10 @@ def main() -> None:
         "kind": "crashbench_expansion_odur_seed",
         "seed": args.seed,
         "fit_on": args.fit_on,
+        "architecture": args.architecture,
+        "epochs": args.epochs,
+        "fit_source_ids": sorted(set(map(str, data["sources"][fit]))),
+        "development_source_ids": sorted(set(map(str, data["sources"][development]))),
         "fit_rows": int(np.sum(fit)),
         "git_commit": resolve_git_head(Path.cwd()),
         "train_rows": int(np.sum(train)),
@@ -265,7 +278,9 @@ def main() -> None:
     (args.output_dir / "manifest.json").write_text(
         json.dumps(manifest, indent=2, sort_keys=True) + "\n"
     )
-    print(json.dumps({"output": str(args.output_dir), "seed": args.seed, "fit_on": args.fit_on, "fit_rows": int(np.sum(fit)), "train": int(np.sum(train)), "development": int(np.sum(development))}, sort_keys=True))
+    print(json.dumps({"output": str(args.output_dir), "seed": args.seed,
+                      "architecture": args.architecture, "fit_on": args.fit_on,
+                      "fit_rows": int(np.sum(fit))}, sort_keys=True))
 
 
 if __name__ == "__main__":

@@ -1,19 +1,14 @@
 # CrashBench agent instructions
 
-## Current paper action
+## Current authorized work
 
-For any ICLR 2027 planning, writing, figure/table, claim, or new-experiment
-task, first read and follow:
-
-- `docs/iclr27/PUBLICATION_FIRST_RESOLUTION.md`;
-- `docs/iclr27/NON_GLASS_UNSTABLE_PLACEMENT_V1_AUDIT.md`.
-
-The default active objective is the glass-scoped diagnostic manuscript and
-publication package. Older router roadmaps, experiment queues, and
-"exactly one next action" sentences are historical. Unless the user explicitly
-replaces the publication-first action, do not run Quest, collect new outcomes,
-train or tune a router, reopen sequential rescue, or treat the optional broad
-benchmark as a prerequisite for writing.
+Read `docs/CURRENT.md` and `docs/audits/20260906/ROUND1_PLAN.md` first.
+The user authorized first-round repair based on the 2026-09-06 audit, including
+bounded existing-data model comparisons on Quest. This supersedes publication-only
+experiment prohibitions for the specified scope. Do not expand the benchmark or
+open new confirmatory tests. Preserve historical artifacts and source isolation.
+`docs/iclr27/PUBLICATION_FIRST_RESOLUTION.md` and
+`docs/iclr27/NON_GLASS_UNSTABLE_PLACEMENT_V1_AUDIT.md` remain historical references.
 
 For any task that reads, changes, runs, or submits work on Northwestern Quest:
 

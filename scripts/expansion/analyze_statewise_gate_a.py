@@ -16,6 +16,7 @@ ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from crashbench.data.support import source_label_support, aggregate_source_support
 from crashbench.data.utility import option_decision
 from crashbench.governance.gates import Criterion, CriterionClass, GatePolicy, evaluate_gate
 
@@ -94,6 +95,7 @@ def analyze_gate_a(
                 "split_role": rows[0]["split_role"],
                 "complete_blocks": len(rows),
                 "benefit": any(row["benefit"] for row in rows),
+                **source_label_support(row["benefit"] for row in rows),
                 "strict_winners": sorted(winners),
                 "same_risk_flip": has_flip,
             }
@@ -105,7 +107,7 @@ def analyze_gate_a(
         denominator = accepted_count + invalid_count
         task_invalid_rates[task] = invalid_count / denominator if denominator else 1.0
     benefit_one = sum(row["benefit"] for row in source_rows)
-    benefit_zero = len(source_rows) - benefit_one
+    benefit_zero = sum(row["contains_B0"] for row in source_rows)
     exact_rate = sum(row.get("exact_branch_start") is True for row in anchors) / len(anchors) if anchors else 0
     hard = CriterionClass.HARD_VALIDITY
     claim = CriterionClass.CLAIM_SCOPE
@@ -146,7 +148,7 @@ def analyze_gate_a(
         "roles_analyzed": ["development", "train"],
         "calibration_sources_excluded": calibration_sources_excluded,
         "calibration_rows_read": 0,
-        "benefit_zero_sources": benefit_zero,
+        **aggregate_source_support(source_rows),
         "benefit_one_sources": benefit_one,
         "strict_support_sources": {
             option: len(sources) for option, sources in sorted(strict_support.items())
