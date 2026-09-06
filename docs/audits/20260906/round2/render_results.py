@@ -49,3 +49,7 @@ fig.supxlabel('Exposed development: 12 sources / 324 decisions. Bootstrap interv
 args.output_prefix.parent.mkdir(parents=True,exist_ok=True)
 fig.savefig(args.output_prefix.with_suffix('.png'),dpi=180)
 fig.savefig(args.output_prefix.with_suffix('.svg'))
+
+# Normalize serializer whitespace without changing SVG geometry.
+svg = args.output_prefix.with_suffix(".svg")
+svg.write_text("\n".join(line.rstrip() for line in svg.read_text().splitlines()) + "\n")
