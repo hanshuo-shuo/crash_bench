@@ -4,7 +4,12 @@ Status: `AUDIT_REPAIR_ROUND1_DEVELOPMENT`.
 
 The active user-authorized task is the first repair round from the
 [three-branch audit](audits/20260906/PROJECT_REVIEW_ZH.md).
-Follow the [repair plan](audits/20260906/ROUND1_PLAN.md).
+The round is complete; see the [results](audits/20260906/ROUND1_RESULTS_ZH.md)
+and the [repair plan](audits/20260906/ROUND1_PLAN.md).
+Quest job 5627464 completed all 15 fits. Per-option heads improved point utility
+slightly, with uncertainty intervals crossing zero and no Refresh selections.
+The conservative wrapper remains structurally unusable. No follow-on experiment
+is currently running or automatically authorized.
 
 Use D5 train sources for fitting, development for exposed development readout,
 and disjoint calibration sources for the conservative wrapper. Do not use the

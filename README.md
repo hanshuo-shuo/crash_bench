@@ -6,7 +6,7 @@ Current work: `AUDIT_REPAIR_ROUND1_DEVELOPMENT` (2026-09-06).
 本轮依据[三分支审计](docs/audits/20260906/PROJECT_REVIEW_ZH.md)，修正源支持统计、
 option-conditioned outcome prediction 的状态×选项交互，以及开发评估与校准。
 [当前状态](docs/CURRENT.md)和[第一轮计划](docs/audits/20260906/ROUND1_PLAN.md)
-是新的研究入口。
+是新的研究入口。第一轮已完成，见[修复与实验结果](docs/audits/20260906/ROUND1_RESULTS_ZH.md)。
 
 The Option-Conditioned Distributional Utility Router (ODUR) is compared with its
 original additive architecture, independent option heads and DirectQ on the same
