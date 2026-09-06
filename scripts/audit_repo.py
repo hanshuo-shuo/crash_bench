@@ -75,7 +75,7 @@ BANNED_CURRENT_TEXT = (
 )
 REQUIRED_CURRENT_TEXT = {
     ROOT / "README.md": (
-        "CrashBench: Audit Repair Round 1",
+        "CrashBench: Refresh Gain Round 2",
         "option-conditioned outcome prediction",
         "SCOPED_TEST_SCOPE_FAILURE_RELEASE",
         "Knowing When to Intervene",

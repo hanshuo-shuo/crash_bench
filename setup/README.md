@@ -1,3 +1,5 @@
+> Round two is now authorized: [plan](../docs/audits/20260906/round2/PLAN.md), `setup/refresh_gain_round2.sbatch`. The round-one job below is historical.
+
 > Active work, 2026-09-06: [first audit repair round](../docs/audits/20260906/ROUND1_PLAN.md).
 > Submit `setup/audit_repair_round1.sbatch` for the bounded existing-data CPU comparison.
 > Older experiment stop notices below describe their frozen cohorts and do not

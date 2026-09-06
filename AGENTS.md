@@ -2,10 +2,10 @@
 
 ## Current authorized work
 
-Read `docs/CURRENT.md` and `docs/audits/20260906/ROUND1_PLAN.md` first.
-The user authorized first-round repair based on the 2026-09-06 audit, including
+Read `docs/CURRENT.md` and `docs/audits/20260906/round2/PLAN.md` first.
+The user authorized second-round Refresh gain diagnosis and paired-gain learning, including
 bounded existing-data model comparisons on Quest. This supersedes publication-only
-experiment prohibitions for the specified scope. Do not expand the benchmark or
+experiment prohibitions for the specified scope. Round one is completed and preserved. Do not expand the benchmark or
 open new confirmatory tests. Preserve historical artifacts and source isolation.
 `docs/iclr27/PUBLICATION_FIRST_RESOLUTION.md` and
 `docs/iclr27/NON_GLASS_UNSTABLE_PLACEMENT_V1_AUDIT.md` remain historical references.
