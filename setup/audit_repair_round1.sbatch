@@ -12,16 +12,13 @@ set -euo pipefail
 cd "${SLURM_SUBMIT_DIR:-$HOME/crash_bench}"
 export PYTHONNOUSERSITE=1 PYTHONDONTWRITEBYTECODE=1
 export OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 OPENBLAS_NUM_THREADS=2
-repair_git=$(command -v git)
-repair_commit=$("$repair_git" rev-parse HEAD)
-test -z "$("$repair_git" status --porcelain=v1 --untracked-files=all)"
-export CB_REPAIR_GIT_COMMIT="$repair_commit"
+# Quest CPU nodes do not provide the login node's /usr/bin/git.
 module purge
-module load mamba/24.3.0
+module load mamba/24.3.0 git/2.37.2
 source activate "$HOME/crash_bench/envs/openvla"
-# The existing git module is removed by module purge; keep Git available to
-# Python provenance helpers using its resolved binary directory.
-export PATH="$(dirname "$repair_git"):$PATH"
+repair_commit=$(git rev-parse HEAD)
+test -z "$(git status --porcelain=v1 --untracked-files=all)"
+export CB_REPAIR_GIT_COMMIT="$repair_commit"
 repair_data=results/expansion/d5_statewise/e2a5264a802a_fe660c168e72_20260830T105726Z/postprocess_a4b1714
 repair_output="results/repair_round1/${repair_commit:0:12}_${SLURM_JOB_ID}"
 python scripts/expansion/run_round1_repair.py \
