@@ -42,9 +42,11 @@ def main():
     d5 = next((expansion / "d5_statewise").glob("*/postprocess_*/merged"))
     d8 = next((expansion / "d8_benchmark").glob("*/postprocess_*/merged"))
     for label, directory, roles in [("D5_train_development", d5, {"train", "development"}),
-                                    ("D5_development", d5, {"development"}), ("D8_exposed_test", d8, {"test"})]:
+                                    ("D5_development", d5, {"development"}), ("D8_exposed_test", d8, {"confirmatory_id_test"})]:
         anchors = [r for r in read_jsonl(directory / "anchors.jsonl") if r["split_role"] in roles]
         branches = [r for r in read_jsonl(directory / "branches.jsonl") if r["split_role"] in roles]
+        if not anchors or not branches:
+            raise ValueError(f"empty selected role cohort: {label} {roles}")
         evidence["D5_D8"][label] = {"support": support_counts(anchors, branches),
             "inputs_sha256": {str((directory / f).relative_to(ROOT)): sha256_file(directory / f)
                               for f in ("anchors.jsonl", "branches.jsonl")}}

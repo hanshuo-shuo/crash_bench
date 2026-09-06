@@ -146,3 +146,13 @@ def test_development_rejects_refit_and_wrong_calibration_identity(tmp_path):
     model.write_bytes(b"different checkpoint")
     with pytest.raises(ValueError, match="differ from the calibrated"):
         validate_development_model(directory, 0, frozen, ["dev-source"])
+
+
+def test_retrospective_erratum_preserves_nonempty_exposed_test_support():
+    root = Path(__file__).resolve().parents[1]
+    erratum = json.loads((root / "docs/audits/20260906/source_support_erratum.json").read_text())
+    support = erratum["D5_D8"]["D8_exposed_test"]["support"]
+    assert support["source_count"] == support["contains_B0"] == 32
+    assert support["contains_B1"] == support["contains_both"] == 31
+    assert support["entirely_B0"] == 1
+    assert not erratum["test_authorized"]

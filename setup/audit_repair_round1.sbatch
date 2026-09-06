@@ -12,11 +12,16 @@ set -euo pipefail
 cd "${SLURM_SUBMIT_DIR:-$HOME/crash_bench}"
 export PYTHONNOUSERSITE=1 PYTHONDONTWRITEBYTECODE=1
 export OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 OPENBLAS_NUM_THREADS=2
+repair_git=$(command -v git)
+repair_commit=$("$repair_git" rev-parse HEAD)
+test -z "$("$repair_git" status --porcelain=v1 --untracked-files=all)"
+export CB_REPAIR_GIT_COMMIT="$repair_commit"
 module purge
 module load mamba/24.3.0
 source activate "$HOME/crash_bench/envs/openvla"
-repair_commit=$(git rev-parse HEAD)
-test -z "$(git status --porcelain=v1 --untracked-files=all)"
+# The existing git module is removed by module purge; keep Git available to
+# Python provenance helpers using its resolved binary directory.
+export PATH="$(dirname "$repair_git"):$PATH"
 repair_data=results/expansion/d5_statewise/e2a5264a802a_fe660c168e72_20260830T105726Z/postprocess_a4b1714
 repair_output="results/repair_round1/${repair_commit:0:12}_${SLURM_JOB_ID}"
 python scripts/expansion/run_round1_repair.py \
@@ -29,7 +34,7 @@ import json, os, platform, subprocess, sys
 from pathlib import Path
 import numpy, torch
 out = Path(sys.argv[1])
-provenance = dict(git_commit=subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
+provenance = dict(git_commit=os.environ['CB_REPAIR_GIT_COMMIT'],
                  slurm_job_id=os.environ['SLURM_JOB_ID'], hostname=platform.node(),
                  python=sys.version, torch=torch.__version__, numpy=numpy.__version__)
 (out / 'runtime.json').write_text(json.dumps(provenance, indent=2) + '\n')
