@@ -1,4 +1,18 @@
 {
+  "base_catastrophe_lead_steps": {
+    "development": {
+      "count": 32,
+      "median": 57.0,
+      "minimum": 21,
+      "within_first_five_steps": 0
+    },
+    "train": {
+      "count": 66,
+      "median": 51.5,
+      "minimum": 23,
+      "within_first_five_steps": 0
+    }
+  },
   "confirmatory": false,
   "groups": {
     "development/anchor_steps/10": {
@@ -1214,6 +1228,17 @@
   "perfect_risk_oracle_actions": {
     "0": "base_continue",
     "1": "safe_stop"
+  },
+  "perfect_risk_oracle_all_fixed_mappings": {
+    "base_continue|base_continue": 0.39319280697684517,
+    "base_continue|observation_refresh": 0.462604077632733,
+    "base_continue|safe_stop": 0.5640117466941063,
+    "observation_refresh|base_continue": 0.3122102922216718,
+    "observation_refresh|observation_refresh": 0.3816215628775596,
+    "observation_refresh|safe_stop": 0.4830292319389329,
+    "safe_stop|base_continue": -0.47227638247081244,
+    "safe_stop|observation_refresh": -0.4028651118149245,
+    "safe_stop|safe_stop": -0.3014574427535514
   },
   "policies": {
     "AlwaysRefresh": {

@@ -1,6 +1,10 @@
-# Current: paper-oriented investigation, 2026-09-06
+# Current: paper-oriented investigation — complete, 2026-09-06
 
 The user authorized free exploration toward a paper and a comprehensive report.
+The [comprehensive report](audits/20260906/paper_review/COMPREHENSIVE_REPORT_ZH.md)
+is complete. Jobs 5628711 and 5629071 completed. Neutral-repeat and input-replay
+checks found observation/continuation variability requiring repeat-aware evaluation;
+this is not a new method-superiority result or a permanent stop on research.
 Follow [this investigation plan](audits/20260906/paper_review/PLAN.md).
 A bounded training-source neutral-control probe is authorized; no new confirmation
 or D8 tuning is authorized. Historical outcomes remain unchanged.

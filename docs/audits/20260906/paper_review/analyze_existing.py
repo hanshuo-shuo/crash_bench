@@ -60,12 +60,21 @@ def main():
         choices_all[f'{recipe}_500_{mode}']=choose_from_gains(g,blocks[mask],allow_stop=mode=='all')
     choices_all['OracleDiagnostic']={block:max(v,key=lambda k:(v[k]['u0'],k=='base_continue')) for block,v in b.items() if a[block]['split_role']=='development'}
     # Exposed-label oracle restricted to one action per exact binary Base-risk value.
-    risk_actions={}
-    for risk in (0,1):
-        subset=[r for r in dev if b[r['block_id']]['base_continue']['outcome']['catastrophe']==risk]
-        values={o:np.mean([np.mean([r['u0'] for r in subset if r['option_id']==o and r['physical_source_id']==s]) for s in sorted({r['physical_source_id'] for r in subset})]) for o in ['base_continue','observation_refresh','safe_stop']}
-        risk_actions[risk]=max(values,key=values.get)
-    choices_all['PerfectBinaryRiskRestrictedOracle']={block:risk_actions[b[block]['base_continue']['outcome']['catastrophe']] for block in base_choices}
+    risk_policy_values = {}
+    catalog = ('base_continue', 'observation_refresh', 'safe_stop')
+    for low, high in itertools.product(catalog, repeat=2):
+        choices = {block: (high if b[block]['base_continue']['outcome']['catastrophe'] else low) for block in base_choices}
+        risk_policy_values[low + '|' + high] = policy_metrics(dev, choices)['u0']
+    best = max(risk_policy_values, key=risk_policy_values.get).split('|')
+    risk_actions = {0: best[0], 1: best[1]}
+    choices_all['PerfectBinaryRiskRestrictedOracle'] = {block: risk_actions[b[block]['base_continue']['outcome']['catastrophe']] for block in base_choices}
+    report['perfect_risk_oracle_all_fixed_mappings'] = risk_policy_values
+    report['base_catastrophe_lead_steps'] = {}
+    for role in ('train', 'development'):
+        steps = [v['base_continue']['outcome']['option_duration_steps'] for block, v in b.items()
+                 if a[block]['split_role'] == role and v['base_continue']['outcome']['catastrophe']]
+        report['base_catastrophe_lead_steps'][role] = {'count': len(steps), 'minimum': min(steps),
+            'median': float(np.median(steps)), 'within_first_five_steps': sum(n <= 5 for n in steps)}
     report['perfect_risk_oracle_actions']=risk_actions
     for name,choices in choices_all.items():
         metric=policy_metrics(dev,choices);counters=defaultdict(Counter);events=[]
