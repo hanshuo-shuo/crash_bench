@@ -35,3 +35,12 @@ def test_trace_diagnostic_reports_first_divergence_and_length():
     assert d['first_differing_step_0based']['state'] is None
     assert not trace_difference(a,b[:2])['identical']
     assert trace_difference(a,a)['identical']
+
+
+def test_observation_diff_separates_pixels_and_proprio():
+    from scripts.expansion.probe_observation_replay import observation_differences
+    a={'full_image':np.zeros((2,2,3),dtype=np.uint8),'state':np.array([1.,2.])}
+    b={k:v.copy() for k,v in a.items()};b['full_image'][0,0,0]=1
+    d=observation_differences(a,b)
+    assert d['full_image']['changed_elements']==1 and d['full_image']['max_abs']==1
+    assert d['state']['changed_elements']==0

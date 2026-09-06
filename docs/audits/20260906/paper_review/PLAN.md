@@ -27,3 +27,10 @@ in new results/paper_review/<commit>_<job>/, retain input and output hashes.
 Deliver a Chinese comprehensive report, claim/evidence matrix, verified related
 work, concrete reviewer risks, an actionable paper structure and prioritized
 experiments. No automatic permanent NO-GO or claim of publication readiness.
+
+Follow-up justified by probe 5628711: observation hashes diverged before actions
+and flat states during Base repeats. Replay each saved fresh-control bundle
+(task 0 and 2) for 35 steps in three modes: live A, live B, and exact recorded
+policy-input replay A. Log per-field pixel/proprio differences and exact inputs.
+No new physical source or scientific label is introduced. One A100, 30-minute
+cap, same environment; output root includes a new code commit and job ID.
