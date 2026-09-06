@@ -81,8 +81,8 @@ REQUIRED_CURRENT_TEXT = {
         "Knowing When to Intervene",
     ),
     ROOT / "docs/CURRENT.md": (
-        "AUDIT_REPAIR_ROUND1_DEVELOPMENT",
-        "ROUND1_PLAN.md",
+        "REFRESH_GAIN_ROUND2_DEVELOPMENT",
+        "round2/PLAN.md",
     ),
     ROOT / "docs/PAPER_PLAN.md": (
         "Risk detection is not intervention selection",

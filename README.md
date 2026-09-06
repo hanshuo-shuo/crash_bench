@@ -6,7 +6,8 @@ Current work: `REFRESH_GAIN_ROUND2_DEVELOPMENT` (2026-09-06).
 The user authorized [round two](docs/audits/20260906/round2/PLAN.md): diagnose
 Refresh gain learning on real train states and compare paired targets, optimization
 budget, weighting and train-only standardization. Round-one results below remain
-historical development evidence.
+historical development evidence. Round two is complete: see the
+[results and diagnostic figure](docs/audits/20260906/round2/RESULTS_ZH.md).
 
 本轮依据[三分支审计](docs/audits/20260906/PROJECT_REVIEW_ZH.md)，修正源支持统计、
 option-conditioned outcome prediction 的状态×选项交互，以及开发评估与校准。
