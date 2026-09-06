@@ -2,9 +2,9 @@
 
 ## Current authorized work
 
-Read `docs/CURRENT.md` and `docs/audits/20260906/round2/PLAN.md` first.
-The user authorized second-round Refresh gain diagnosis and paired-gain learning, including
-bounded existing-data model comparisons on Quest. This supersedes publication-only
+Read `docs/CURRENT.md` and `docs/audits/20260906/paper_review/PLAN.md` first.
+The user authorized paper-oriented free exploration, problem finding and a comprehensive report, including
+existing-data analysis and the bounded training-source neutral-intervention probe in the plan. This supersedes publication-only
 experiment prohibitions for the specified scope. Round one is completed and preserved. Do not expand the benchmark or
 open new confirmatory tests. Preserve historical artifacts and source isolation.
 `docs/iclr27/PUBLICATION_FIRST_RESOLUTION.md` and

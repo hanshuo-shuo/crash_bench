@@ -1,7 +1,11 @@
-# CrashBench: Refresh Gain Round 2
+# CrashBench: Intervention and Recovery Research
 
 CrashBench studies intervention choice and task recovery from exact robot states.
-Current work: `REFRESH_GAIN_ROUND2_DEVELOPMENT` (2026-09-06).
+Current work: `PAPER_DIRECTION_AUDIT` (2026-09-06).
+
+The user authorized [paper-oriented investigation](docs/audits/20260906/paper_review/PLAN.md),
+including a bounded training-source neutral-control probe and a comprehensive
+research report. Completed development rounds below remain historical evidence.
 
 The user authorized [round two](docs/audits/20260906/round2/PLAN.md): diagnose
 Refresh gain learning on real train states and compare paired targets, optimization
