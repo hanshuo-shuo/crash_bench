@@ -6,6 +6,11 @@ A selection frozen before B evaluation. Entry: `setup/selection_retest.sbatch`.
 No D8 access, new confirmation, extra architecture, or automatic additional budget.
 The completed investigation below remains historical evidence.
 
+Job 5680180 stopped on home quota after 192 A and 139 B branches. The A selection
+was already frozen. Follow the [bounded storage recovery](audits/20260907/selection_retest/RECOVERY.md)
+for the remaining 53 B cells only; output goes to project storage. Do not rerun
+the original full-panel entry or any completed branch.
+
 Active development branch: `codex/odur-repair` (consolidated 2026-09-07).
 It contains all round-one repairs, round-two experiments and the paper audit.
 Continue subsequent work here; create another development branch only when the

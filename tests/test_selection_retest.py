@@ -137,3 +137,17 @@ def test_neutral_closed_loop_and_logger_does_not_add_inference(tmp_path):
         assert sum(len(r['inference']) for r in records) == 2
         paths.append(records)
     assert all(np.array_equal(a['action'], b['action']) for a, b in zip(*paths))
+
+
+def test_resume_only_missing_execution_suffix():
+    from scripts.expansion.resume_selection_retest import missing_cells
+    anchors, b = synthetic('B')
+    execution = [(a['panel_id'], r, o) for i, a in enumerate(anchors) for r in range(4, 8) for o in order(i, r)]
+    lookup = {(r['panel_id'], r['repeat'], r['option']): r for r in b}
+    completed = [lookup[key] for key in execution[:11]]
+    assert missing_cells(anchors, completed) == execution[11:]
+    assert not set(execution[:11]) & set(missing_cells(anchors, completed))
+    assert missing_cells(anchors, b) == []
+    for bad in (completed+[completed[0]], completed[1:], [lookup[execution[12]]]):
+        with pytest.raises(ValueError):
+            missing_cells(anchors, bad)
