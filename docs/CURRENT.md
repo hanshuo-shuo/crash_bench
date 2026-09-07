@@ -1,4 +1,10 @@
-# Current: paper-oriented investigation — complete, 2026-09-06
+# Current: bounded selection retest — 2026-09-07
+
+The user authorized execution of the [training-source selection retest](audits/20260907/selection_retest/PLAN.md)
+on Quest: twelve train sources, at most 384 scored branches, Base/Refresh only,
+A selection frozen before B evaluation. Entry: `setup/selection_retest.sbatch`.
+No D8 access, new confirmation, extra architecture, or automatic additional budget.
+The completed investigation below remains historical evidence.
 
 Active development branch: `codex/odur-repair` (consolidated 2026-09-07).
 It contains all round-one repairs, round-two experiments and the paper audit.

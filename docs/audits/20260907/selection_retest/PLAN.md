@@ -1,6 +1,6 @@
 # 训练来源选择收益复验 — 2026-09-07
 
-状态：执行准备；尚未提交、运行或取得新实验结果。
+状态：采集、冻结、分析入口已实现，提交前测试中；尚无新实验结果。
 起始提交：`659732f60493f08cb4abeda68f39d9ea8e9ac5f4`，分支 `codex/odur-repair`。
 用户本轮明确要求在 Quest 执行有边界的选择收益复验；不授权 D8、
 新确认来源、扩展 benchmark 或新增架构。历史产物保持不变。
@@ -89,7 +89,18 @@ bundle、选项、重复；固定 bootstrap seed=20260907，10000 次。
 不能直接作为本轮入口。现有 `ObservationDelayQueue` 不保存每帧时间戳，
 新入口需要同步的帧时间记录，不能把 observation_index 当完整时间记录。
 旧 `Pi0Policy.reset()` 清空动作队列但不重置 JAX RNG；chunk 边界必须断言。
-尚需实现采集、冻结、分析入口和对应测试，再以干净且已发布提交提交作业。
+入口：`scripts/expansion/selection_retest.py`、`analyze_selection_retest.py`，
+作业：`setup/selection_retest.sbatch`；测试：`tests/test_selection_retest.py`。
+旧探针 job 5628711 的 24 分支耗时 5:05，输入重放 job 5629071 耗时 2:43。
+本轮为完整记录、checkpoint 哈希和来源 bootstrap 留余量，单 A100、8 CPU、
+48 GB、3 小时硬上限；不自动重提失败作业或增加分支预算。
+
+记录时间明确为输入进入软件队列时的模拟时间，并非底层相机曝光时间。
+因此 age 规则只解释软件队列 age，不能声称得到真实传感器端到端延迟。
+旧 bundle 无同步时间侧记录，本清单不复用它们，而从训练 source 保存新锚点。
+完整轨迹按分支 gzip/pickle 流保存；实际 infer 输入、输出 chunk 由原调用旁路记录，
+包括未裁剪 chunk，但不新增推理。真实执行 RNG 在每步保存。
+预锚点终止或事故不替补；最终估计针对有效锚点，并报告排除清单。
 
 首次 `scripts/quest_sync.sh check` 返回 `SSH socket not found: /tmp/quest.sock`。
 用户恢复连接后 check 通过，仓库身份正确。Quest 工作区干净，当前
