@@ -1,7 +1,8 @@
 # 训练来源选择收益复验 — 2026-09-07
 
-状态：作业 5680180 完成 A 后在 B 因 home 配额中断；331 条完整分支已保存。
-只补齐缺失 53 条 B 的工程修复见 [RECOVERY.md](RECOVERY.md)，不重跑完整面板。
+状态：完成，见 [RESULTS_ZH.md](RESULTS_ZH.md)。384 条计分分支全部保存。
+作业 5680180 因 home 配额中断后，5695873 只补齐了缺失的 53 条 B；
+工程修复见 [RECOVERY.md](RECOVERY.md)。不重跑面板，不自动追加实验。
 起始提交：`659732f60493f08cb4abeda68f39d9ea8e9ac5f4`，分支 `codex/odur-repair`。
 用户本轮明确要求在 Quest 执行有边界的选择收益复验；不授权 D8、
 新确认来源、扩展 benchmark 或新增架构。历史产物保持不变。

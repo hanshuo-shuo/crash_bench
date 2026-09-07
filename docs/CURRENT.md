@@ -1,4 +1,11 @@
-# Current: bounded selection retest — 2026-09-07
+# Current: bounded selection retest complete — 2026-09-07
+
+The [completed report](audits/20260907/selection_retest/RESULTS_ZH.md) contains the
+384-branch training panel. Base, frozen A reference and frozen simple period10
+each achieve 64/96 B successes; reference and period10 each reduce protocol
+accidents from 12/96 to 8/96. AlwaysRefresh achieves 61/96 successes.
+No observed task rescue or deployable learned-selection advantage is established.
+No automatic additional experiment is authorized; preserve both raw run roots.
 
 The user authorized execution of the [training-source selection retest](audits/20260907/selection_retest/PLAN.md)
 on Quest: twelve train sources, at most 384 scored branches, Base/Refresh only,
@@ -7,9 +14,9 @@ No D8 access, new confirmation, extra architecture, or automatic additional budg
 The completed investigation below remains historical evidence.
 
 Job 5680180 stopped on home quota after 192 A and 139 B branches. The A selection
-was already frozen. Follow the [bounded storage recovery](audits/20260907/selection_retest/RECOVERY.md)
-for the remaining 53 B cells only; output goes to project storage. Do not rerun
-the original full-panel entry or any completed branch.
+was already frozen. The [bounded storage recovery](audits/20260907/selection_retest/RECOVERY.md)
+completed the remaining 53 B cells in job 5695873. Output is on project storage.
+Do not rerun either entry or any completed branch.
 
 Active development branch: `codex/odur-repair` (consolidated 2026-09-07).
 It contains all round-one repairs, round-two experiments and the paper audit.

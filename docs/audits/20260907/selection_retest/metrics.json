@@ -1,0 +1,919 @@
+{
+  "bootstrap_replicates": 10000,
+  "bootstrap_seed": 20260907,
+  "cross_job_pair_diagnostic": {
+    "bootstrap_replicates": 10000,
+    "bootstrap_seed": 20260907,
+    "excluded_pairs": [
+      [
+        "b17",
+        5
+      ]
+    ],
+    "limits": [
+      "training panel only",
+      "finite-repeat reference is not true oracle",
+      "Risk->BestFixed and DirectQ not run",
+      "residual runtime distribution with fixed continuation",
+      "A/B temporal drift not excluded",
+      "single-pair rescues/harms depend on declared repeat pairing"
+    ],
+    "reference_minus_best_simple": {
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "success_delta": 0.0
+    },
+    "source_counts_by_task": {
+      "libero_spatial:0": 6,
+      "libero_spatial:2": 6
+    },
+    "sources_with_valid_anchors": 12,
+    "table": [
+      {
+        "accident": 0.10526315789473684,
+        "accident_ci95": [
+          0.0,
+          0.22916666666666666
+        ],
+        "accident_delta": -0.021052631578947368,
+        "accident_delta_ci95": [
+          -0.12631578947368421,
+          0.0625
+        ],
+        "control_base_successes": 47,
+        "control_success_retained": 46,
+        "method": "AlwaysRefresh",
+        "n_B_pairs": 95,
+        "paired_harms": 3,
+        "paired_rescues": 0,
+        "path_m": 0.7307645538133134,
+        "path_m_ci95": [
+          0.6952270139174035,
+          0.763052813754455
+        ],
+        "refresh": 1.0,
+        "refresh_ci95": [
+          1.0,
+          1.0
+        ],
+        "steps": 82.50526315789473,
+        "steps_ci95": [
+          77.36424534574468,
+          87.12657894736842
+        ],
+        "success": 0.631578947368421,
+        "success_ci95": [
+          0.5263157894736842,
+          0.75
+        ],
+        "success_delta": -0.031578947368421054,
+        "success_delta_ci95": [
+          -0.07626811594202883,
+          0.0
+        ]
+      },
+      {
+        "accident": 0.12631578947368421,
+        "accident_ci95": [
+          0.0,
+          0.25263157894736843
+        ],
+        "accident_delta": 0.0,
+        "accident_delta_ci95": [
+          0.0,
+          0.0
+        ],
+        "control_base_successes": 47,
+        "control_success_retained": 47,
+        "method": "Base",
+        "n_B_pairs": 95,
+        "paired_harms": 0,
+        "paired_rescues": 0,
+        "path_m": 0.7025708938548922,
+        "path_m_ci95": [
+          0.6486436070094945,
+          0.7562901910283796
+        ],
+        "refresh": 0.0,
+        "refresh_ci95": [
+          0.0,
+          0.0
+        ],
+        "steps": 77.6421052631579,
+        "steps_ci95": [
+          70.2393832236842,
+          84.86342105263158
+        ],
+        "success": 0.6631578947368421,
+        "success_ci95": [
+          0.5319148936170213,
+          0.7916666666666666
+        ],
+        "success_delta": 0.0,
+        "success_delta_ci95": [
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "accident": 0.09473684210526316,
+        "accident_ci95": [
+          0.0,
+          0.2127659574468085
+        ],
+        "accident_delta": -0.031578947368421054,
+        "accident_delta_ci95": [
+          -0.12631578947368421,
+          0.03125
+        ],
+        "control_base_successes": 47,
+        "control_success_retained": 47,
+        "method": "age1",
+        "n_B_pairs": 95,
+        "paired_harms": 2,
+        "paired_rescues": 0,
+        "path_m": 0.7300061688644112,
+        "path_m_ci95": [
+          0.6937160972711959,
+          0.7631153490238651
+        ],
+        "refresh": 0.5052631578947369,
+        "refresh_ci95": [
+          0.5,
+          0.5161290322580645
+        ],
+        "steps": 82.6,
+        "steps_ci95": [
+          77.4265625,
+          87.26315789473684
+        ],
+        "success": 0.6421052631578947,
+        "success_ci95": [
+          0.5263157894736842,
+          0.7660190369540865
+        ],
+        "success_delta": -0.021052631578947368,
+        "success_delta_ci95": [
+          -0.052083333333333336,
+          0.0
+        ]
+      },
+      {
+        "accident": 0.08421052631578947,
+        "accident_ci95": [
+          0.0,
+          0.20833333333333334
+        ],
+        "accident_delta": -0.042105263157894736,
+        "accident_delta_ci95": [
+          -0.12631578947368421,
+          0.0
+        ],
+        "control_base_successes": 47,
+        "control_success_retained": 47,
+        "method": "age3",
+        "n_B_pairs": 95,
+        "paired_harms": 0,
+        "paired_rescues": 0,
+        "path_m": 0.7313184658043174,
+        "path_m_ci95": [
+          0.6951846207353485,
+          0.7635889897197556
+        ],
+        "refresh": 0.3368421052631579,
+        "refresh_ci95": [
+          0.20833333333333334,
+          0.46808510638297873
+        ],
+        "steps": 82.70526315789473,
+        "steps_ci95": [
+          77.61052631578947,
+          87.29166666666667
+        ],
+        "success": 0.6631578947368421,
+        "success_ci95": [
+          0.5319148936170213,
+          0.7916666666666666
+        ],
+        "success_delta": 0.0,
+        "success_delta_ci95": [
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "accident": 0.12631578947368421,
+        "accident_ci95": [
+          0.0,
+          0.25263157894736843
+        ],
+        "accident_delta": 0.0,
+        "accident_delta_ci95": [
+          0.0,
+          0.0
+        ],
+        "control_base_successes": 47,
+        "control_success_retained": 47,
+        "method": "age5",
+        "n_B_pairs": 95,
+        "paired_harms": 0,
+        "paired_rescues": 0,
+        "path_m": 0.7172095738404854,
+        "path_m_ci95": [
+          0.6700605064357655,
+          0.7617023753224031
+        ],
+        "refresh": 0.16842105263157894,
+        "refresh_ci95": [
+          0.041666666666666664,
+          0.3010752688172043
+        ],
+        "steps": 79.85263157894737,
+        "steps_ci95": [
+          73.32622241086587,
+          85.81057565789473
+        ],
+        "success": 0.6631578947368421,
+        "success_ci95": [
+          0.5319148936170213,
+          0.7916666666666666
+        ],
+        "success_delta": 0.0,
+        "success_delta_ci95": [
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "accident": 0.08421052631578947,
+        "accident_ci95": [
+          0.0,
+          0.20833333333333334
+        ],
+        "accident_delta": -0.042105263157894736,
+        "accident_delta_ci95": [
+          -0.12631578947368421,
+          0.0
+        ],
+        "control_base_successes": 47,
+        "control_success_retained": 47,
+        "method": "period10",
+        "n_B_pairs": 95,
+        "paired_harms": 0,
+        "paired_rescues": 0,
+        "path_m": 0.7161189670548317,
+        "path_m_ci95": [
+          0.6645139656151198,
+          0.7620570323312695
+        ],
+        "refresh": 0.3368421052631579,
+        "refresh_ci95": [
+          0.08421052631578947,
+          0.5894736842105263
+        ],
+        "steps": 80.41052631578947,
+        "steps_ci95": [
+          73.22916666666667,
+          86.84214638157894
+        ],
+        "success": 0.6631578947368421,
+        "success_ci95": [
+          0.5319148936170213,
+          0.7916666666666666
+        ],
+        "success_delta": 0.0,
+        "success_delta_ci95": [
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "accident": 0.08421052631578947,
+        "accident_ci95": [
+          0.0,
+          0.20833333333333334
+        ],
+        "accident_delta": -0.042105263157894736,
+        "accident_delta_ci95": [
+          -0.12631578947368421,
+          0.0
+        ],
+        "control_base_successes": 47,
+        "control_success_retained": 47,
+        "method": "A_reference",
+        "n_B_pairs": 95,
+        "paired_harms": 0,
+        "paired_rescues": 0,
+        "path_m": 0.7176856558605725,
+        "path_m_ci95": [
+          0.6659986509840746,
+          0.763673093489272
+        ],
+        "refresh": 0.042105263157894736,
+        "refresh_ci95": [
+          0.0,
+          0.12631578947368421
+        ],
+        "steps": 80.49473684210527,
+        "steps_ci95": [
+          73.37884868421052,
+          86.88450109649122
+        ],
+        "success": 0.6631578947368421,
+        "success_ci95": [
+          0.5319148936170213,
+          0.7916666666666666
+        ],
+        "success_delta": 0.0,
+        "success_delta_ci95": [
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "accident": 0.10526315789473684,
+        "accident_ci95": [
+          0.0,
+          0.22916666666666666
+        ],
+        "accident_delta": -0.021052631578947368,
+        "accident_delta_ci95": [
+          -0.12631578947368421,
+          0.0625
+        ],
+        "control_base_successes": 47,
+        "control_success_retained": 46,
+        "method": "A_best_fixed",
+        "n_B_pairs": 95,
+        "paired_harms": 3,
+        "paired_rescues": 0,
+        "path_m": 0.7307645538133134,
+        "path_m_ci95": [
+          0.6952270139174035,
+          0.763052813754455
+        ],
+        "refresh": 1.0,
+        "refresh_ci95": [
+          1.0,
+          1.0
+        ],
+        "steps": 82.50526315789473,
+        "steps_ci95": [
+          77.36424534574468,
+          87.12657894736842
+        ],
+        "success": 0.631578947368421,
+        "success_ci95": [
+          0.5263157894736842,
+          0.75
+        ],
+        "success_delta": -0.031578947368421054,
+        "success_delta_ci95": [
+          -0.07626811594202883,
+          0.0
+        ]
+      },
+      {
+        "accident": 0.08421052631578947,
+        "accident_ci95": [
+          0.0,
+          0.20833333333333334
+        ],
+        "accident_delta": -0.042105263157894736,
+        "accident_delta_ci95": [
+          -0.12631578947368421,
+          0.0
+        ],
+        "control_base_successes": 47,
+        "control_success_retained": 47,
+        "method": "A_best_simple",
+        "n_B_pairs": 95,
+        "paired_harms": 0,
+        "paired_rescues": 0,
+        "path_m": 0.7161189670548317,
+        "path_m_ci95": [
+          0.6645139656151198,
+          0.7620570323312695
+        ],
+        "refresh": 0.3368421052631579,
+        "refresh_ci95": [
+          0.08421052631578947,
+          0.5894736842105263
+        ],
+        "steps": 80.41052631578947,
+        "steps_ci95": [
+          73.22916666666667,
+          86.84214638157894
+        ],
+        "success": 0.6631578947368421,
+        "success_ci95": [
+          0.5319148936170213,
+          0.7916666666666666
+        ],
+        "success_delta": 0.0,
+        "success_delta_ci95": [
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "accident": 0.08421052631578947,
+        "accident_ci95": [
+          0.0,
+          0.20833333333333334
+        ],
+        "accident_delta": -0.042105263157894736,
+        "accident_delta_ci95": [
+          -0.12631578947368421,
+          0.0
+        ],
+        "control_base_successes": 47,
+        "control_success_retained": 47,
+        "method": "B_posthoc_single_winner",
+        "n_B_pairs": 95,
+        "paired_harms": 0,
+        "paired_rescues": 0,
+        "path_m": 0.7176856558605725,
+        "path_m_ci95": [
+          0.6659986509840746,
+          0.763673093489272
+        ],
+        "refresh": 0.042105263157894736,
+        "refresh_ci95": [
+          0.0,
+          0.12631578947368421
+        ],
+        "steps": 80.49473684210527,
+        "steps_ci95": [
+          73.37884868421052,
+          86.88450109649122
+        ],
+        "success": 0.6631578947368421,
+        "success_ci95": [
+          0.5319148936170213,
+          0.7916666666666666
+        ],
+        "success_delta": 0.0,
+        "success_delta_ci95": [
+          0.0,
+          0.0
+        ]
+      }
+    ]
+  },
+  "excluded_pairs": [],
+  "limits": [
+    "training panel only",
+    "finite-repeat reference is not true oracle",
+    "Risk->BestFixed and DirectQ not run",
+    "residual runtime distribution with fixed continuation",
+    "A/B temporal drift not excluded",
+    "single-pair rescues/harms depend on declared repeat pairing"
+  ],
+  "reference_minus_best_simple": {
+    "ci95": [
+      0.0,
+      0.0
+    ],
+    "success_delta": 0.0
+  },
+  "source_counts_by_task": {
+    "libero_spatial:0": 6,
+    "libero_spatial:2": 6
+  },
+  "sources_with_valid_anchors": 12,
+  "table": [
+    {
+      "accident": 0.10416666666666667,
+      "accident_ci95": [
+        0.0,
+        0.22916666666666666
+      ],
+      "accident_delta": -0.020833333333333332,
+      "accident_delta_ci95": [
+        -0.125,
+        0.0625
+      ],
+      "control_base_successes": 48,
+      "control_success_retained": 47,
+      "method": "AlwaysRefresh",
+      "n_B_pairs": 96,
+      "paired_harms": 3,
+      "paired_rescues": 0,
+      "path_m": 0.7307900007833487,
+      "path_m_ci95": [
+        0.6955483066721959,
+        0.762714160048166
+      ],
+      "refresh": 1.0,
+      "refresh_ci95": [
+        1.0,
+        1.0
+      ],
+      "steps": 82.5,
+      "steps_ci95": [
+        77.3953125,
+        87.07291666666667
+      ],
+      "success": 0.6354166666666666,
+      "success_ci95": [
+        0.53125,
+        0.75
+      ],
+      "success_delta": -0.03125,
+      "success_delta_ci95": [
+        -0.0731770833333331,
+        0.0
+      ]
+    },
+    {
+      "accident": 0.125,
+      "accident_ci95": [
+        0.0,
+        0.25
+      ],
+      "accident_delta": 0.0,
+      "accident_delta_ci95": [
+        0.0,
+        0.0
+      ],
+      "control_base_successes": 48,
+      "control_success_retained": 48,
+      "method": "Base",
+      "n_B_pairs": 96,
+      "paired_harms": 0,
+      "paired_rescues": 0,
+      "path_m": 0.7028820163510994,
+      "path_m_ci95": [
+        0.6494798776360523,
+        0.7560957966182624
+      ],
+      "refresh": 0.0,
+      "refresh_ci95": [
+        0.0,
+        0.0
+      ],
+      "steps": 77.6875,
+      "steps_ci95": [
+        70.33333333333333,
+        84.83359374999999
+      ],
+      "success": 0.6666666666666666,
+      "success_ci95": [
+        0.5416666666666666,
+        0.7916666666666666
+      ],
+      "success_delta": 0.0,
+      "success_delta_ci95": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "accident": 0.09375,
+      "accident_ci95": [
+        0.0,
+        0.20833333333333334
+      ],
+      "accident_delta": -0.03125,
+      "accident_delta_ci95": [
+        -0.125,
+        0.03125
+      ],
+      "control_base_successes": 48,
+      "control_success_retained": 48,
+      "method": "age1",
+      "n_B_pairs": 96,
+      "paired_harms": 2,
+      "paired_rescues": 0,
+      "path_m": 0.7300315072459358,
+      "path_m_ci95": [
+        0.6941129980317426,
+        0.7627076132404652
+      ],
+      "refresh": 0.5,
+      "refresh_ci95": [
+        0.5,
+        0.5
+      ],
+      "steps": 82.59375,
+      "steps_ci95": [
+        77.45833333333333,
+        87.18776041666666
+      ],
+      "success": 0.6458333333333334,
+      "success_ci95": [
+        0.53125,
+        0.7708333333333334
+      ],
+      "success_delta": -0.020833333333333332,
+      "success_delta_ci95": [
+        -0.052083333333333336,
+        0.0
+      ]
+    },
+    {
+      "accident": 0.08333333333333333,
+      "accident_ci95": [
+        0.0,
+        0.20833333333333334
+      ],
+      "accident_delta": -0.041666666666666664,
+      "accident_delta_ci95": [
+        -0.125,
+        0.0
+      ],
+      "control_base_successes": 48,
+      "control_success_retained": 48,
+      "method": "age3",
+      "n_B_pairs": 96,
+      "paired_harms": 0,
+      "paired_rescues": 0,
+      "path_m": 0.7313301344260514,
+      "path_m_ci95": [
+        0.6955039554752438,
+        0.763299567424657
+      ],
+      "refresh": 0.3333333333333333,
+      "refresh_ci95": [
+        0.20833333333333334,
+        0.4583333333333333
+      ],
+      "steps": 82.69791666666667,
+      "steps_ci95": [
+        77.65625,
+        87.21875
+      ],
+      "success": 0.6666666666666666,
+      "success_ci95": [
+        0.5416666666666666,
+        0.7916666666666666
+      ],
+      "success_delta": 0.0,
+      "success_delta_ci95": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "accident": 0.125,
+      "accident_ci95": [
+        0.0,
+        0.25
+      ],
+      "accident_delta": 0.0,
+      "accident_delta_ci95": [
+        0.0,
+        0.0
+      ],
+      "control_base_successes": 48,
+      "control_success_retained": 48,
+      "method": "age5",
+      "n_B_pairs": 96,
+      "paired_harms": 0,
+      "paired_rescues": 0,
+      "path_m": 0.7173682100868426,
+      "path_m_ci95": [
+        0.6705892238489387,
+        0.7613327858136616
+      ],
+      "refresh": 0.16666666666666666,
+      "refresh_ci95": [
+        0.041666666666666664,
+        0.2916666666666667
+      ],
+      "steps": 79.875,
+      "steps_ci95": [
+        73.42708333333333,
+        85.78151041666666
+      ],
+      "success": 0.6666666666666666,
+      "success_ci95": [
+        0.5416666666666666,
+        0.7916666666666666
+      ],
+      "success_delta": 0.0,
+      "success_delta_ci95": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "accident": 0.08333333333333333,
+      "accident_ci95": [
+        0.0,
+        0.20833333333333334
+      ],
+      "accident_delta": -0.041666666666666664,
+      "accident_delta_ci95": [
+        -0.125,
+        0.0
+      ],
+      "control_base_successes": 48,
+      "control_success_retained": 48,
+      "method": "period10",
+      "n_B_pairs": 96,
+      "paired_harms": 0,
+      "paired_rescues": 0,
+      "path_m": 0.7162889637885396,
+      "path_m_ci95": [
+        0.6652911918584223,
+        0.7618288924504594
+      ],
+      "refresh": 0.3333333333333333,
+      "refresh_ci95": [
+        0.08333333333333333,
+        0.5833333333333334
+      ],
+      "steps": 80.42708333333333,
+      "steps_ci95": [
+        73.33307291666667,
+        86.79166666666667
+      ],
+      "success": 0.6666666666666666,
+      "success_ci95": [
+        0.5416666666666666,
+        0.7916666666666666
+      ],
+      "success_delta": 0.0,
+      "success_delta_ci95": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "accident": 0.08333333333333333,
+      "accident_ci95": [
+        0.0,
+        0.20833333333333334
+      ],
+      "accident_delta": -0.041666666666666664,
+      "accident_delta_ci95": [
+        -0.125,
+        0.0
+      ],
+      "control_base_successes": 48,
+      "control_success_retained": 48,
+      "method": "A_reference",
+      "n_B_pairs": 96,
+      "paired_harms": 0,
+      "paired_rescues": 0,
+      "path_m": 0.7178393329192204,
+      "path_m_ci95": [
+        0.6666492477245907,
+        0.7633730558534229
+      ],
+      "refresh": 0.041666666666666664,
+      "refresh_ci95": [
+        0.0,
+        0.125
+      ],
+      "steps": 80.51041666666667,
+      "steps_ci95": [
+        73.46875,
+        86.83333333333333
+      ],
+      "success": 0.6666666666666666,
+      "success_ci95": [
+        0.5416666666666666,
+        0.7916666666666666
+      ],
+      "success_delta": 0.0,
+      "success_delta_ci95": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "accident": 0.10416666666666667,
+      "accident_ci95": [
+        0.0,
+        0.22916666666666666
+      ],
+      "accident_delta": -0.020833333333333332,
+      "accident_delta_ci95": [
+        -0.125,
+        0.0625
+      ],
+      "control_base_successes": 48,
+      "control_success_retained": 47,
+      "method": "A_best_fixed",
+      "n_B_pairs": 96,
+      "paired_harms": 3,
+      "paired_rescues": 0,
+      "path_m": 0.7307900007833487,
+      "path_m_ci95": [
+        0.6955483066721959,
+        0.762714160048166
+      ],
+      "refresh": 1.0,
+      "refresh_ci95": [
+        1.0,
+        1.0
+      ],
+      "steps": 82.5,
+      "steps_ci95": [
+        77.3953125,
+        87.07291666666667
+      ],
+      "success": 0.6354166666666666,
+      "success_ci95": [
+        0.53125,
+        0.75
+      ],
+      "success_delta": -0.03125,
+      "success_delta_ci95": [
+        -0.0731770833333331,
+        0.0
+      ]
+    },
+    {
+      "accident": 0.08333333333333333,
+      "accident_ci95": [
+        0.0,
+        0.20833333333333334
+      ],
+      "accident_delta": -0.041666666666666664,
+      "accident_delta_ci95": [
+        -0.125,
+        0.0
+      ],
+      "control_base_successes": 48,
+      "control_success_retained": 48,
+      "method": "A_best_simple",
+      "n_B_pairs": 96,
+      "paired_harms": 0,
+      "paired_rescues": 0,
+      "path_m": 0.7162889637885396,
+      "path_m_ci95": [
+        0.6652911918584223,
+        0.7618288924504594
+      ],
+      "refresh": 0.3333333333333333,
+      "refresh_ci95": [
+        0.08333333333333333,
+        0.5833333333333334
+      ],
+      "steps": 80.42708333333333,
+      "steps_ci95": [
+        73.33307291666667,
+        86.79166666666667
+      ],
+      "success": 0.6666666666666666,
+      "success_ci95": [
+        0.5416666666666666,
+        0.7916666666666666
+      ],
+      "success_delta": 0.0,
+      "success_delta_ci95": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "accident": 0.08333333333333333,
+      "accident_ci95": [
+        0.0,
+        0.20833333333333334
+      ],
+      "accident_delta": -0.041666666666666664,
+      "accident_delta_ci95": [
+        -0.125,
+        0.0
+      ],
+      "control_base_successes": 48,
+      "control_success_retained": 48,
+      "method": "B_posthoc_single_winner",
+      "n_B_pairs": 96,
+      "paired_harms": 0,
+      "paired_rescues": 0,
+      "path_m": 0.7178393329192204,
+      "path_m_ci95": [
+        0.6666492477245907,
+        0.7633730558534229
+      ],
+      "refresh": 0.041666666666666664,
+      "refresh_ci95": [
+        0.0,
+        0.125
+      ],
+      "steps": 80.51041666666667,
+      "steps_ci95": [
+        73.46875,
+        86.83333333333333
+      ],
+      "success": 0.6666666666666666,
+      "success_ci95": [
+        0.5416666666666666,
+        0.7916666666666666
+      ],
+      "success_delta": 0.0,
+      "success_delta_ci95": [
+        0.0,
+        0.0
+      ]
+    }
+  ]
+}
