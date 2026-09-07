@@ -1,5 +1,10 @@
 # Current: paper-oriented investigation — complete, 2026-09-06
 
+Active development branch: `codex/odur-repair` (consolidated 2026-09-07).
+It contains all round-one repairs, round-two experiments and the paper audit.
+Continue subsequent work here; create another development branch only when the
+user requests it. Dated reports retain their original branch names as provenance.
+
 The user authorized free exploration toward a paper and a comprehensive report.
 The [comprehensive report](audits/20260906/paper_review/COMPREHENSIVE_REPORT_ZH.md)
 is complete. Jobs 5628711 and 5629071 completed. Neutral-repeat and input-replay
