@@ -38,3 +38,16 @@ whether to retain it based on the direction of the result.
 Local test: resume accepts only an exact execution prefix, rejects holes and
 repeated outcomes, and returns only the missing suffix. Existing analysis and
 logger tests also pass (6 tests in this file).
+
+Recovery submitted as job **5695873**, source commit
+`99dc1a9567e0f2af63a203b252c1203dc6d9b7d3`. Original raw output was moved
+intact to project storage with a symlink at the original result path. Project
+quota was checked using `checkproject p33100`: 267 GB / 1024 GB before migration.
+The compute job confirmed all 331 prior trace hashes, 24 bundle hashes, the A
+freeze and original checkpoint hashes before beginning the missing suffix.
+
+Before B completion, the analysis-only diagnostic was implemented to always
+report the full panel and separately exclude both options for `b17`, repeat 5.
+It preserves A selection, uses the same task-stratified source bootstrap, and
+never replaces the primary estimate. Updated complete local suite: 545 passed.
+These analysis changes are not synchronized into the running GPU checkout.

@@ -151,3 +151,20 @@ def test_resume_only_missing_execution_suffix():
     for bad in (completed+[completed[0]], completed[1:], [lookup[execution[12]]]):
         with pytest.raises(ValueError):
             missing_cells(anchors, bad)
+
+
+def test_cross_job_pair_diagnostic_preserves_primary_and_freeze():
+    anchors, a = synthetic('A')
+    _, b = synthetic('B')
+    frozen = freeze(anchors, a)
+    before = copy.deepcopy(frozen)
+    primary = evaluate(anchors, b, frozen, bootstrap=50)
+    diagnostic = evaluate(anchors, b, frozen, bootstrap=50, excluded_pairs=[('b0', 4)])
+    assert primary['table'][0]['n_B_pairs'] == 16
+    assert diagnostic['table'][0]['n_B_pairs'] == 15
+    assert diagnostic['table'][0]['success_delta_ci95'] == [0, 0]
+    assert frozen == before
+    ref = next(r for r in diagnostic['table'] if r['method'] == 'A_reference')
+    assert ref['paired_harms'] == 3
+    with pytest.raises(ValueError):
+        evaluate(anchors, b, frozen, excluded_pairs=[('b0', 100)])

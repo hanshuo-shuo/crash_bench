@@ -12,8 +12,16 @@ if str(ROOT) not in sys.path:
 from scripts.expansion.selection_retest import validate_records, write_json, file_sha256
 
 
-def evaluate(anchors, records, selection, bootstrap=10000):
+def evaluate(anchors, records, selection, bootstrap=10000, excluded_pairs=()):
     validate_records(anchors, records, 'B')
+    excluded_pairs = set(excluded_pairs)
+    valid_pairs = {(a['panel_id'], repeat) for a in anchors for repeat in range(4, 8)}
+    if not excluded_pairs.issubset(valid_pairs):
+        raise ValueError('excluded pair not in B panel')
+    pairs = [(anchor, repeat) for anchor in anchors for repeat in range(4, 8)
+             if (anchor['panel_id'], repeat) not in excluded_pairs]
+    if any(not any(a['panel_id'] == anchor['panel_id'] for a, _ in pairs) for anchor in anchors):
+        raise ValueError('diagnostic may not remove an entire anchor')
     lookup = {(r['panel_id'], r['repeat'], r['option']): r for r in records}
     maps = dict(selection['rules'])
     maps['A_reference'] = selection['reference']
@@ -23,23 +31,22 @@ def evaluate(anchors, records, selection, bootstrap=10000):
     values = []
     for name in names:
         rows = []
-        for anchor in anchors:
+        for anchor, repeat in pairs:
             key = anchor['panel_id']
-            for repeat in range(4, 8):
-                base = lookup[key, repeat, 0]
-                if name == 'B_posthoc_single_winner':
-                    option = max((0, 1), key=lambda o: (lookup[key, repeat, o]['task_success'],
-                                 -lookup[key, repeat, o]['catastrophe'], -o))
-                else:
-                    option = maps[name][key]
-                row = lookup[key, repeat, option]
-                control = anchor['condition'] == 'matched_buffer_control'
-                rows.append([row['task_success'], row['catastrophe'], option, row['steps'], row['path_length_m'],
-                             row['task_success']-base['task_success'], row['catastrophe']-base['catastrophe'],
-                             int(base['task_success'] == 0 and row['task_success'] == 1),
-                             int(base['task_success'] == 1 and row['task_success'] == 0),
-                             int(control and base['task_success'] == 1 and row['task_success'] == 1),
-                             int(control and base['task_success'] == 1)])
+            base = lookup[key, repeat, 0]
+            if name == 'B_posthoc_single_winner':
+                option = max((0, 1), key=lambda o: (lookup[key, repeat, o]['task_success'],
+                             -lookup[key, repeat, o]['catastrophe'], -o))
+            else:
+                option = maps[name][key]
+            row = lookup[key, repeat, option]
+            control = anchor['condition'] == 'matched_buffer_control'
+            rows.append([row['task_success'], row['catastrophe'], option, row['steps'], row['path_length_m'],
+                         row['task_success']-base['task_success'], row['catastrophe']-base['catastrophe'],
+                         int(base['task_success'] == 0 and row['task_success'] == 1),
+                         int(base['task_success'] == 1 and row['task_success'] == 0),
+                         int(control and base['task_success'] == 1 and row['task_success'] == 1),
+                         int(control and base['task_success'] == 1)])
         values.append(rows)
     x = np.asarray(values, dtype=float)
     # Resample the same sources for every method; preserve all anchors and repeats.
@@ -47,7 +54,7 @@ def evaluate(anchors, records, selection, bootstrap=10000):
     task_sources = {}
     indices = {}
     for source in sources:
-        indices[source] = [i*4+r for i, a in enumerate(anchors) if a['physical_source_id'] == source for r in range(4)]
+        indices[source] = [i for i, (a, _) in enumerate(pairs) if a['physical_source_id'] == source]
         task = next(a['task_id'] for a in anchors if a['physical_source_id'] == source)
         task_sources.setdefault(task, []).append(source)
     rng = np.random.default_rng(20260907)
@@ -74,6 +81,7 @@ def evaluate(anchors, records, selection, bootstrap=10000):
     return {'table': table, 'reference_minus_best_simple': contrast,
             'sources_with_valid_anchors': len(sources), 'source_counts_by_task': {k: len(v) for k, v in task_sources.items()},
             'bootstrap_seed': 20260907, 'bootstrap_replicates': bootstrap,
+            'excluded_pairs': sorted(excluded_pairs),
             'limits': ['training panel only', 'finite-repeat reference is not true oracle',
                        'Risk->BestFixed and DirectQ not run', 'residual runtime distribution with fixed continuation',
                        'A/B temporal drift not excluded', 'single-pair rescues/harms depend on declared repeat pairing']}
@@ -111,12 +119,18 @@ def render(result, out):
               '不构成可部署方法或新来源泛化证据；未运行 Risk→BestFixed、DirectQ。宽区间不能解释为无效。',
               '事故为 75 N 协议代理。控制保持及救回/损害依赖相同重复编号的配对；主图报告边际成功率差。',
               '中性控制的分母为 B Base 成功重复数，0/0 时无可评价的保持率。', '']
+    if 'cross_job_pair_diagnostic' in result:
+        contrast = result['cross_job_pair_diagnostic']['reference_minus_best_simple']
+        lines += ['存储中断后 B 分布于两个作业；b17/repeat5 的两选项跨越作业边界。',
+                  f"预声明诊断（仅去掉这对重复）：参考相对简单规则差 {contrast['success_delta']*100:.2f} pp，"
+                  f"95% CI [{contrast['ci95'][0]*100:.2f}, {contrast['ci95'][1]*100:.2f}]。", '']
     (out/'RESULTS_ZH.md').write_text('\n'.join(lines))
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--run-dir', type=Path, required=True)
+    parser.add_argument('--output-dir', type=Path)
     args = parser.parse_args()
     root = args.run_dir
     if json.loads((root/'complete.json').read_text())['status'] != 'COMPLETE':
@@ -130,7 +144,11 @@ def main():
     anchors = json.loads((root/'anchors.json').read_text())
     records = json.loads((root/'B.json').read_text())
     result = evaluate(anchors, records, selection)
-    out = root/'analysis'
+    provenance = json.loads((root/'provenance.json').read_text())
+    if provenance.get('kind') == 'storage_failure_recovery':
+        result['cross_job_pair_diagnostic'] = evaluate(anchors, records, selection,
+                                                      excluded_pairs=[('b17', 5)])
+    out = args.output_dir or root/'analysis'
     out.mkdir(exist_ok=False)
     write_json(out/'metrics.json', result)
     render(result, out)
