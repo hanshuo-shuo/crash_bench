@@ -1,0 +1,58 @@
+{
+  "kind": "recoverability_physical_probe_v1",
+  "parent_run": "results/detour_benefit/a89f755da200_job5791132",
+  "parents": [
+    "e18",
+    "e21",
+    "e27",
+    "e06"
+  ],
+  "matches": [
+    {
+      "positive": "e18",
+      "negative": "e27",
+      "distance_m": 0.06418749567063571
+    },
+    {
+      "positive": "e21",
+      "negative": "e06",
+      "distance_m": 0.11811176338077825
+    }
+  ],
+  "selection": "positives e18/e21; greedy distinct nearest failed fitting glass in metre-valued relative EEF/glass/plate-to-bowl coordinates plus glass radius/height, A failure labels only",
+  "offsets": [
+    0,
+    3,
+    10
+  ],
+  "suffix_horizons": [
+    220,
+    440
+  ],
+  "repeats": [
+    0,
+    1
+  ],
+  "max_scored_branches": 48,
+  "max_prefix_continuations": 4,
+  "max_added_prefix_actions_per_parent": 10,
+  "seed_semantics": "each child exact bundle restored identically for both options and both repeats; no policy sampling change",
+  "option_order": "parent_index+offset+repeat parity",
+  "controller_unchanged": true,
+  "learning": false,
+  "confirmation": false,
+  "physical_hypothesis": "a bounded Base approach changes the state and may enter or leave the fixed-controller completion region; distinguish from mere residual-budget censoring",
+  "unavailable_child": "retain prefix terminal, do not branch after accident/success or replace parent",
+  "input_sha256": {
+    "results/detour_benefit/a89f755da200_job5791132/A.json": "aec6d754a25fd9682c48049a1a63926aff481803b0daf4d35e6b6bb4bf5d4f22",
+    "results/detour_benefit/a89f755da200_job5791132/anchors.json": "d9a4eaec130dc997945644bf067a1b4193461bc3e03d9524f055b029c260ee8a",
+    "results/detour_benefit/a89f755da200_job5791132/config.json": "6b780fab240b9a53e71ce9341006684194b8e8c4a9ac404e6d6cb60b1a78d834",
+    "results/detour_benefit/a89f755da200_job5791132/checkpoint_hashes.json": "839c0a5e2c0a3e8aba6c90b93c830f6cfb3210ad463b45dc1027804381b9e0ac"
+  },
+  "parent_bundle_sha256": {
+    "e18": "b44b15cbead8332bce719c8a693a1a1573958e1814514f1e05b722ecd7229895",
+    "e21": "97389587689f107f062494f94f7fb3ada30abd3e948c112b1e29c5ac1e8639ea",
+    "e27": "7157ffe8772f035d556322c207a0a257f82dcecb438cd968cb37bdbdf4ec77e9",
+    "e06": "f6b781cbd9cc1f49f003c1a1984f2bb000421cd029c7d998bbefa89c50ad4d5b"
+  }
+}

@@ -1,3 +1,10 @@
+# Current: Recoverability physical probe authorized — 2026-09-09
+
+The user requested a very small paper-oriented physical-mechanism experiment from e18/e21.
+[Plan](audits/20260909/recoverability/PLAN.md): four exposed fitting parents, offsets0/3/10,
+at most48 branches and40 added prefix actions; fixed controller, no new model or D8.
+All previous results remain frozen. No automatic further expansion.
+
 # Current: Fixed Detour development complete — 2026-09-09
 
 [Full Chinese report](audits/20260909/detour_benefit_gate/RESULTS_ZH.md).

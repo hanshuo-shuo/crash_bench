@@ -76,7 +76,7 @@ def generate(env,policy,router,row,config,folder):
     anchor['prefix_sha256']=file_sha256(folder/'prefix.pkl.gz');write(folder/'anchor.json',anchor)
     return anchor
 
-def branch(env,policy,row,anchor,config,folder,repeat,option):
+def branch(env,policy,row,anchor,config,folder,repeat,option,audit_controller=False):
     from crashbench.branching.state import restore_exact_state
     from crashbench.recovery import DetourComplete
     from scripts.collect_glass_recovery_pairs import _controller_glass,TARGET,PLATE
@@ -92,21 +92,30 @@ def branch(env,policy,row,anchor,config,folder,repeat,option):
         controller=DetourComplete(_controller_glass(glass),bowl,plate,side=d['side'],lane_margin=d['lane_margin'],transit_z=float(bowl[2]+d['lift_offset']),descend_off=d['descend_offset'],leg_cap=d['leg_cap'],target_name=TARGET,orientation_target=None,path_aligned=True,grasp_xy_offset=d['grasp_xy_offset'],departure_clearance=d['departure_clearance']);controller.engage(obs)
     events=list(context['prefix_events']);start=time.monotonic();name=f'r{repeat}_o{option}'
     # Proposal at the candidate was paid for by both arms, including when R discards it.
-    proposal_cost_due=True;resume_step=None
+    proposal_cost_due=True;resume_step=None;physics=[]
     with gzip.open(folder/(name+'.pkl.gz'),'xb',compresslevel=1) as stream:
         for index in range(anchor['anchor_step'],config['long_H']):
             control=controller is not None and controller.i<len(controller.legs)
             if controller is not None and not control and resume_step is None:resume_step=index
             calls=int(proposal_cost_due);latency=context['proposal_latency'] if proposal_cost_due else 0.;proposal_cost_due=False;po=None
+            if audit_controller:
+                physical={'step':index+1,'controller':bool(control),'stage_before':controller.i if controller is not None else None,'eef':np.asarray(obs['robot0_eef_pos']).tolist(),'bowl':np.asarray(obs[TARGET+'_pos']).tolist(),'plate':np.asarray(obs[PLATE+'_pos']).tolist(),'gripper':np.asarray(obs['robot0_gripper_qpos']).tolist()}
+                if control:
+                    leg=controller.legs[controller.i];physical.update(leg_kind=leg[0],target=list(leg[1]) if leg[0]=='move' else None,target_error=float(np.linalg.norm(np.asarray(leg[1])-obs['robot0_eef_pos'])) if leg[0]=='move' else None,in_leg=controller._in_leg)
             if control:action=np.asarray(controller.step(obs),dtype=np.float32)
             else:
                 action=pending.take()
                 if action is None:
                     action,po,elapsed=measured_act(env,policy,obs,context['instruction']);calls+=1;latency+=elapsed
                 else:po=context['policy_input']
+            if audit_controller:
+                physical['stage_after']=controller.i if controller is not None else None
+                physical['cap_exit']=bool(control and physical['leg_kind']=='move' and physical['stage_after']!=physical['stage_before'] and physical['target_error']>=controller.tol)
+                physics.append(physical)
             obs,event=step(env,obs,action,crash,context['glasses'],index,calls,control,stream,po,latency);events.append(event)
             if event['reason']:break
     record={'episode_id':row['episode_id'],'source':row['source'],'condition':row['condition'],'role':row['role'],'repeat':repeat,'phase':'A' if repeat<2 else 'B','option':option,'policy_seed_override':override,'bundle_id':anchor['bundle_id'],'bundle_sha256':anchor['bundle_sha256'],'events':events,'horizons':{str(h):readout(events,h) for h in HORIZONS},'branch_elapsed_seconds':time.monotonic()-start,'controller_resume_base_step':resume_step,'trace_sha256':file_sha256(folder/(name+'.pkl.gz'))}
+    if audit_controller:record['physics']=physics
     write(folder/(name+'.json'),record);return record
 
 def main():

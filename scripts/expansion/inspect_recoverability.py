@@ -30,10 +30,9 @@ def main():
    data.time=float(flat[0]);data.qpos[:]=flat[1:1+model.nq];data.qvel[:]=flat[1+model.nq:];mujoco.mj_forward(model,data)
    return {'robot0_eef_pos':data.site('gripper0_grip_site').xpos.copy(),'akita_black_bowl_1_pos':data.body('akita_black_bowl_1_main').xpos.copy(),'plate_1_pos':data.body('plate_1_main').xpos.copy()}
   g=geometry(bundle.flat_state)
-  for key in g:
-   if not np.allclose(g[key],obs[key],atol=1e-6):raise ValueError('FK mismatch at anchor: '+e['episode_id']+key)
+  anchor_fk_error={key:float(np.max(np.abs(g[key]-obs[key]))) for key in g}
   glass=ctx['glasses'][0];ctrl=controller(obs,glass,config);ctrl.engage(obs);waypoints=[np.array(x[1]) for x in ctrl.legs if x[0]=='move']
-  initial={'episode':e['episode_id'],'source':e['source'],'anchor_step':e['anchor_step'],'eef_x':float(obs['robot0_eef_pos'][0]),'eef_y':float(obs['robot0_eef_pos'][1]),'eef_z':float(obs['robot0_eef_pos'][2]),'eef_glass_xy':float(np.linalg.norm(obs['robot0_eef_pos'][:2]-np.array(glass['pos'][:2]))),'eef_bowl_xy':float(np.linalg.norm(obs['robot0_eef_pos'][:2]-obs['akita_black_bowl_1_pos'][:2])),'bowl_plate_xy':float(np.linalg.norm(obs['akita_black_bowl_1_pos'][:2]-obs['plate_1_pos'][:2])),'glass_radius':glass['size'][0],'glass_half_height':glass['size'][1],'min_waypoint_x':float(min(x[0] for x in waypoints)),'max_waypoint_y':float(max(x[1] for x in waypoints))}
+  initial={'anchor_fk_max_error':max(anchor_fk_error.values()),'episode':e['episode_id'],'source':e['source'],'anchor_step':e['anchor_step'],'eef_x':float(obs['robot0_eef_pos'][0]),'eef_y':float(obs['robot0_eef_pos'][1]),'eef_z':float(obs['robot0_eef_pos'][2]),'eef_glass_xy':float(np.linalg.norm(obs['robot0_eef_pos'][:2]-np.array(glass['pos'][:2]))),'eef_bowl_xy':float(np.linalg.norm(obs['robot0_eef_pos'][:2]-obs['akita_black_bowl_1_pos'][:2])),'bowl_plate_xy':float(np.linalg.norm(obs['akita_black_bowl_1_pos'][:2]-obs['plate_1_pos'][:2])),'glass_radius':glass['size'][0],'glass_half_height':glass['size'][1],'min_waypoint_x':float(min(x[0] for x in waypoints)),'max_waypoint_y':float(max(x[1] for x in waypoints))}
   stages=[];mismatch=0;maxerror=0.;previous=None
   for r in read_trace(args.run/e['episode_id']/'r0_o1.pkl.gz'):
    if not r['event']['controller_steps']:continue
@@ -45,7 +44,7 @@ def main():
    if ctrl.i!=i:stages[-1]['exit_by_cap']=leg[0]=='move' and distance>=ctrl.tol
   terminal=json.loads((args.run/e['episode_id']/'r0_o1.json').read_text())['horizons']['440']
   rows.append(initial|{'outcome':terminal['reason'],'steps':terminal['steps'],'reconstruction_action_mismatches':mismatch,'max_action_error':maxerror,'final_stage':ctrl.i,'cap_exits':sum(s['exit_by_cap'] for s in stages)})
-  details.append({'episode':e['episode_id'],'stages':stages,'valid_reconstruction':mismatch==0})
+  details.append({'episode':e['episode_id'],'stages':stages,'anchor_fk_errors':anchor_fk_error,'valid_reconstruction':mismatch==0 and max(anchor_fk_error.values())<=1e-6})
  with (args.output/'physical_table.csv').open('x') as f:
   w=csv.DictWriter(f,fieldnames=list(rows[0]),lineterminator='\n');w.writeheader();w.writerows(rows)
  (args.output/'stage_details.json').write_text(json.dumps(details,indent=2)+'\n');print(json.dumps(rows,indent=2))
