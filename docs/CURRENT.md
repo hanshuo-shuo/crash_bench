@@ -1,3 +1,11 @@
+# Current: Fixed Detour benefit development authorized — 2026-09-09
+
+The user explicitly requested the complete bounded fixed-Detour experiment.
+[Asset audit](audits/20260909/detour_benefit_gate/asset_audit.md) and
+[execution contract](audits/20260909/detour_benefit_gate/PLAN.md).
+Sixteen sources, 48 prefixes, at most 384 branches; freeze on A before B.
+No automatic conditional new-source validation, no D8 changes.
+
 # Current: Refresh diagnosis closed; benefit-gate plan drafted — 2026-09-08
 
 The user requested a staged closeout, not further architecture search.

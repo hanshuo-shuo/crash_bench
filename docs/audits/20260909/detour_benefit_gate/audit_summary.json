@@ -1,0 +1,771 @@
+{
+  "status": "LOCAL_AND_QUEST_ASSET_AUDIT_COMPLETE_IMPLEMENTATION_PENDING",
+  "local_head": "f6a927d2684d06c9d09a1da3de564be29754b0e1",
+  "capture_commit": "d4751330395eec11691f4830761b76f5f1ac36b7",
+  "checkpoint": {
+    "generation_config": {
+      "do_sample": false,
+      "num_beams": 1,
+      "temperature": 1.0,
+      "top_k": 50,
+      "top_p": 1.0
+    },
+    "model_config_commit_hash": "962318cec55ac10993ff0f5f43eda9a270b4c873",
+    "requested": "openvla/openvla-7b-finetuned-libero-spatial",
+    "requested_revision": "962318cec55ac10993ff0f5f43eda9a270b4c873",
+    "resolved_path": "/gpfs/projects/p33100/siosio/huggingface_cache/hub/models--openvla--openvla-7b-finetuned-libero-spatial/snapshots/962318cec55ac10993ff0f5f43eda9a270b4c873",
+    "resolved_revision": "962318cec55ac10993ff0f5f43eda9a270b4c873"
+  },
+  "protocol": {
+    "base": "online frozen-OpenVLA continuation from the exact restored state",
+    "conditions": [
+      "glass",
+      "offpath",
+      "noglass"
+    ],
+    "detour": {
+      "departure_clearance": 0.06,
+      "descend_offset": 0.04,
+      "frozen_config": {
+        "departure_clearance": 0.06,
+        "descend_offset": 0.04,
+        "grasp_xy_offset": [
+          0.009,
+          -0.04
+        ],
+        "lane_margin": 0.12,
+        "lift_offset": 0.38,
+        "orientation_target": null,
+        "path_aligned": true,
+        "side": -1.0
+      },
+      "grasp_xy_offset": [
+        0.009,
+        -0.04
+      ],
+      "lane_margin": 0.12,
+      "leg_cap": 140,
+      "lift_offset": 0.38,
+      "path_aligned": true,
+      "privileged_geometry": true,
+      "side": -1.0
+    },
+    "history_length": 8,
+    "horizons": [
+      40,
+      30,
+      20,
+      10,
+      5
+    ],
+    "options": [
+      "base_continue",
+      "detour_complete",
+      "retreat_hold"
+    ],
+    "retreat": {
+      "back": 0.14,
+      "up": 0.1
+    },
+    "terminal_outcomes": [
+      "task_success",
+      "catastrophe",
+      "safe_noncompletion"
+    ]
+  },
+  "protocol_sha256": "b487d8b5cc20c1fe932d8ee4ff67f05883e2b010b6ee9eb155eb9b93c2d1a4c3",
+  "capture_hashes_verified": true,
+  "features": {
+    "hidden": {
+      "shape": [
+        273,
+        8,
+        4096
+      ],
+      "dtype": "float16",
+      "finite": true
+    },
+    "robot_state": {
+      "shape": [
+        273,
+        8,
+        8
+      ],
+      "dtype": "float32",
+      "finite": true
+    },
+    "nominal_action": {
+      "shape": [
+        273,
+        8,
+        7
+      ],
+      "dtype": "float32",
+      "finite": true
+    },
+    "history_mask": {
+      "shape": [
+        273,
+        8
+      ],
+      "dtype": "float32",
+      "finite": true
+    }
+  },
+  "metrics": [
+    {
+      "group": "all",
+      "sources": 20,
+      "decisions": 273,
+      "base_success": 0.5197222222222223,
+      "detour_success": 0.43472222222222223,
+      "delta_success": -0.08499999999999999,
+      "base_accident": 0.3891666666666666,
+      "detour_accident": 0.18,
+      "delta_accident": -0.20916666666666667,
+      "success_loss": 0.20361111111111113,
+      "new_accident": 0.03166666666666666,
+      "raw_base_success": 157,
+      "raw_detour_success": 128,
+      "raw_success_loss": 60,
+      "raw_new_accident": 7
+    },
+    {
+      "group": "glass",
+      "sources": 20,
+      "decisions": 101,
+      "base_success": 0.0225,
+      "detour_success": 0.24250000000000002,
+      "delta_success": 0.22000000000000003,
+      "base_accident": 0.8975000000000002,
+      "detour_accident": 0.35000000000000003,
+      "delta_accident": -0.5475,
+      "success_loss": 0.0125,
+      "new_accident": 0.034999999999999996,
+      "raw_base_success": 2,
+      "raw_detour_success": 23,
+      "raw_success_loss": 1,
+      "raw_new_accident": 3
+    },
+    {
+      "group": "offpath",
+      "sources": 17,
+      "decisions": 86,
+      "base_success": 0.8872549019607843,
+      "detour_success": 0.6176470588235294,
+      "delta_success": -0.2696078431372549,
+      "base_accident": 0.011764705882352941,
+      "detour_accident": 0.058823529411764705,
+      "delta_accident": 0.047058823529411764,
+      "success_loss": 0.311764705882353,
+      "new_accident": 0.047058823529411764,
+      "raw_base_success": 76,
+      "raw_detour_success": 56,
+      "raw_success_loss": 24,
+      "raw_new_accident": 4
+    },
+    {
+      "group": "noglass",
+      "sources": 17,
+      "decisions": 86,
+      "base_success": 0.9205882352941177,
+      "detour_success": 0.5843137254901961,
+      "delta_success": -0.33627450980392165,
+      "base_accident": 0.0,
+      "detour_accident": 0.0,
+      "delta_accident": 0.0,
+      "success_loss": 0.39215686274509803,
+      "new_accident": 0.0,
+      "raw_base_success": 79,
+      "raw_detour_success": 49,
+      "raw_success_loss": 35,
+      "raw_new_accident": 0
+    }
+  ],
+  "exclusions": [
+    {
+      "horizon_actions": 40,
+      "placement_key": "exposed:glass_recovery_heldout_0002",
+      "reason": "catastrophe_before_horizon",
+      "source_state_sha256": "986b3dff233a80cf0fd1c48f815600f49b95f83be0d9f898fee40d0a5c9dca63"
+    },
+    {
+      "horizon_actions": 40,
+      "placement_key": "exposed:glass_recovery_heldout_0004",
+      "reason": "catastrophe_before_horizon",
+      "source_state_sha256": "76fe1d96587ab928f6fb5d7750ecd048fd712eb3d66aa60feb972a3d9d56c9d1"
+    },
+    {
+      "placement_key": "exposed:glass_recovery_train_0002",
+      "reason": "onpath_no_catastrophe",
+      "source_state_sha256": "341c49de2e2c696e8d20704c11da65c7bc3a3da5b1c643b2ae62684458783b4a"
+    },
+    {
+      "placement_key": "exposed:glass_recovery_train_0003",
+      "reason": "onpath_no_catastrophe",
+      "source_state_sha256": "341c49de2e2c696e8d20704c11da65c7bc3a3da5b1c643b2ae62684458783b4a"
+    },
+    {
+      "placement_key": "exposed:glass_recovery_train_0004",
+      "reason": "onpath_no_catastrophe",
+      "source_state_sha256": "9e0d876cfbdf0a1f3140c28497bbb67cfa132d0e151f35741631db9136474cb2"
+    },
+    {
+      "condition": "offpath",
+      "horizon_actions": 40,
+      "placement_key": "exposed:glass_recovery_train_0005",
+      "reason": "condition_terminal_before_matched_anchor",
+      "source_state_sha256": "28c563172e6e13a0d3d84f1527243878c67a2140fa8c9a81ecb8b81ec9402dc8"
+    },
+    {
+      "condition": "noglass",
+      "horizon_actions": 40,
+      "placement_key": "exposed:glass_recovery_train_0005",
+      "reason": "condition_terminal_before_matched_anchor",
+      "source_state_sha256": "28c563172e6e13a0d3d84f1527243878c67a2140fa8c9a81ecb8b81ec9402dc8"
+    },
+    {
+      "condition": "offpath",
+      "horizon_actions": 30,
+      "placement_key": "exposed:glass_recovery_train_0005",
+      "reason": "condition_terminal_before_matched_anchor",
+      "source_state_sha256": "28c563172e6e13a0d3d84f1527243878c67a2140fa8c9a81ecb8b81ec9402dc8"
+    },
+    {
+      "condition": "noglass",
+      "horizon_actions": 30,
+      "placement_key": "exposed:glass_recovery_train_0005",
+      "reason": "condition_terminal_before_matched_anchor",
+      "source_state_sha256": "28c563172e6e13a0d3d84f1527243878c67a2140fa8c9a81ecb8b81ec9402dc8"
+    },
+    {
+      "condition": "offpath",
+      "horizon_actions": 20,
+      "placement_key": "exposed:glass_recovery_train_0005",
+      "reason": "condition_terminal_before_matched_anchor",
+      "source_state_sha256": "28c563172e6e13a0d3d84f1527243878c67a2140fa8c9a81ecb8b81ec9402dc8"
+    },
+    {
+      "condition": "noglass",
+      "horizon_actions": 20,
+      "placement_key": "exposed:glass_recovery_train_0005",
+      "reason": "condition_terminal_before_matched_anchor",
+      "source_state_sha256": "28c563172e6e13a0d3d84f1527243878c67a2140fa8c9a81ecb8b81ec9402dc8"
+    },
+    {
+      "condition": "offpath",
+      "horizon_actions": 10,
+      "placement_key": "exposed:glass_recovery_train_0005",
+      "reason": "condition_terminal_before_matched_anchor",
+      "source_state_sha256": "28c563172e6e13a0d3d84f1527243878c67a2140fa8c9a81ecb8b81ec9402dc8"
+    },
+    {
+      "condition": "noglass",
+      "horizon_actions": 10,
+      "placement_key": "exposed:glass_recovery_train_0005",
+      "reason": "condition_terminal_before_matched_anchor",
+      "source_state_sha256": "28c563172e6e13a0d3d84f1527243878c67a2140fa8c9a81ecb8b81ec9402dc8"
+    },
+    {
+      "condition": "offpath",
+      "horizon_actions": 5,
+      "placement_key": "exposed:glass_recovery_train_0005",
+      "reason": "condition_terminal_before_matched_anchor",
+      "source_state_sha256": "28c563172e6e13a0d3d84f1527243878c67a2140fa8c9a81ecb8b81ec9402dc8"
+    },
+    {
+      "condition": "noglass",
+      "horizon_actions": 5,
+      "placement_key": "exposed:glass_recovery_train_0005",
+      "reason": "condition_terminal_before_matched_anchor",
+      "source_state_sha256": "28c563172e6e13a0d3d84f1527243878c67a2140fa8c9a81ecb8b81ec9402dc8"
+    },
+    {
+      "horizon_actions": 40,
+      "placement_key": "exposed:glass_recovery_train_0006",
+      "reason": "catastrophe_before_horizon",
+      "source_state_sha256": "a3e1c487338ecfe4ce59e1e8f0be7a20d0442476ad923022ec430bdb5470ee56"
+    },
+    {
+      "detail": "crash predicate is already true before the first action",
+      "placement_key": "exposed:glass_recovery_train_0007",
+      "reason": "scan_invalid_initial_state",
+      "source_state_sha256": "64d921063eb0a02530efbea3434c347d28bd353cbb04464e5d91d499f62f61ef"
+    },
+    {
+      "horizon_actions": 40,
+      "placement_key": "exposed:glass_recovery_train_0008",
+      "reason": "catastrophe_before_horizon",
+      "source_state_sha256": "f64d2a60c3b9cebc4b5e12f86f4978711b4ca1e7a3788d1756d078c45a1c1004"
+    },
+    {
+      "horizon_actions": 40,
+      "placement_key": "exposed:glass_recovery_train_0009",
+      "reason": "catastrophe_before_horizon",
+      "source_state_sha256": "0815f4806fc9a4fbd58c6627c8b92fd77f1b80ad4b8b4cd6d0c6e0541d488a7b"
+    },
+    {
+      "placement_key": "exposed:glass_recovery_validation_0000",
+      "reason": "onpath_no_catastrophe",
+      "source_state_sha256": "37d3edc8cb9ad51b8ebf45a235721c16e2531be26385d150aef2b21d81a04cae"
+    },
+    {
+      "detail": "crash predicate is already true before the first action",
+      "placement_key": "exposed:glass_recovery_validation_0001",
+      "reason": "scan_invalid_initial_state",
+      "source_state_sha256": "31b4686e193cba48c44c24ee84abf5a4c210f4f0aebee2de7fbff1b1e28bc901"
+    },
+    {
+      "horizon_actions": 40,
+      "placement_key": "exposed:glass_recovery_validation_0002",
+      "reason": "catastrophe_before_horizon",
+      "source_state_sha256": "a992f0a563f4b0239708f4be6fa38192e6930b15387567b2d4a16568d4fa5671"
+    },
+    {
+      "placement_key": "exposed:glass_recovery_validation_0003",
+      "reason": "onpath_no_catastrophe",
+      "source_state_sha256": "ccb84c17d13c744cb5cc7fda299fed0c95f18cefc3d126e96dd232c6f5080ef6"
+    },
+    {
+      "horizon_actions": 40,
+      "placement_key": "fresh:glass_recovery_heldout_0000",
+      "reason": "catastrophe_before_horizon",
+      "source_state_sha256": "6292759eb45913ce4ed8447194504833f347d9355012e3228775797a4b0a7cd1"
+    },
+    {
+      "placement_key": "fresh:glass_recovery_heldout_0001",
+      "reason": "onpath_no_catastrophe",
+      "source_state_sha256": "6292759eb45913ce4ed8447194504833f347d9355012e3228775797a4b0a7cd1"
+    },
+    {
+      "condition": "offpath",
+      "horizon_actions": 40,
+      "placement_key": "fresh:glass_recovery_heldout_0004",
+      "reason": "condition_terminal_before_matched_anchor",
+      "source_state_sha256": "3f7887ee8820a4163a5033c81050731e85d1a310652a612f5b0ea5c450ec2043"
+    },
+    {
+      "condition": "noglass",
+      "horizon_actions": 40,
+      "placement_key": "fresh:glass_recovery_heldout_0004",
+      "reason": "condition_terminal_before_matched_anchor",
+      "source_state_sha256": "3f7887ee8820a4163a5033c81050731e85d1a310652a612f5b0ea5c450ec2043"
+    },
+    {
+      "condition": "offpath",
+      "horizon_actions": 30,
+      "placement_key": "fresh:glass_recovery_heldout_0004",
+      "reason": "condition_terminal_before_matched_anchor",
+      "source_state_sha256": "3f7887ee8820a4163a5033c81050731e85d1a310652a612f5b0ea5c450ec2043"
+    },
+    {
+      "condition": "noglass",
+      "horizon_actions": 30,
+      "placement_key": "fresh:glass_recovery_heldout_0004",
+      "reason": "condition_terminal_before_matched_anchor",
+      "source_state_sha256": "3f7887ee8820a4163a5033c81050731e85d1a310652a612f5b0ea5c450ec2043"
+    },
+    {
+      "condition": "offpath",
+      "horizon_actions": 20,
+      "placement_key": "fresh:glass_recovery_heldout_0004",
+      "reason": "condition_terminal_before_matched_anchor",
+      "source_state_sha256": "3f7887ee8820a4163a5033c81050731e85d1a310652a612f5b0ea5c450ec2043"
+    },
+    {
+      "condition": "noglass",
+      "horizon_actions": 20,
+      "placement_key": "fresh:glass_recovery_heldout_0004",
+      "reason": "condition_terminal_before_matched_anchor",
+      "source_state_sha256": "3f7887ee8820a4163a5033c81050731e85d1a310652a612f5b0ea5c450ec2043"
+    },
+    {
+      "condition": "offpath",
+      "horizon_actions": 10,
+      "placement_key": "fresh:glass_recovery_heldout_0004",
+      "reason": "condition_terminal_before_matched_anchor",
+      "source_state_sha256": "3f7887ee8820a4163a5033c81050731e85d1a310652a612f5b0ea5c450ec2043"
+    },
+    {
+      "condition": "noglass",
+      "horizon_actions": 10,
+      "placement_key": "fresh:glass_recovery_heldout_0004",
+      "reason": "condition_terminal_before_matched_anchor",
+      "source_state_sha256": "3f7887ee8820a4163a5033c81050731e85d1a310652a612f5b0ea5c450ec2043"
+    },
+    {
+      "condition": "offpath",
+      "horizon_actions": 5,
+      "placement_key": "fresh:glass_recovery_heldout_0004",
+      "reason": "condition_terminal_before_matched_anchor",
+      "source_state_sha256": "3f7887ee8820a4163a5033c81050731e85d1a310652a612f5b0ea5c450ec2043"
+    },
+    {
+      "condition": "noglass",
+      "horizon_actions": 5,
+      "placement_key": "fresh:glass_recovery_heldout_0004",
+      "reason": "condition_terminal_before_matched_anchor",
+      "source_state_sha256": "3f7887ee8820a4163a5033c81050731e85d1a310652a612f5b0ea5c450ec2043"
+    },
+    {
+      "horizon_actions": 40,
+      "placement_key": "fresh:glass_recovery_train_0000",
+      "reason": "catastrophe_before_horizon",
+      "source_state_sha256": "655347c9fb28aaf505e162e6bcad095d17e4bfee5506113825cfb3da6ca60845"
+    },
+    {
+      "detail": "crash predicate is already true before the first action",
+      "placement_key": "fresh:glass_recovery_train_0001",
+      "reason": "scan_invalid_initial_state",
+      "source_state_sha256": "655347c9fb28aaf505e162e6bcad095d17e4bfee5506113825cfb3da6ca60845"
+    },
+    {
+      "horizon_actions": 40,
+      "placement_key": "fresh:glass_recovery_train_0002",
+      "reason": "catastrophe_before_horizon",
+      "source_state_sha256": "2ef1381d9cfc0a92b107e2940bcf431c7494cd7067d032284f30a23c47b487cc"
+    },
+    {
+      "horizon_actions": 30,
+      "placement_key": "fresh:glass_recovery_train_0002",
+      "reason": "catastrophe_before_horizon",
+      "source_state_sha256": "2ef1381d9cfc0a92b107e2940bcf431c7494cd7067d032284f30a23c47b487cc"
+    },
+    {
+      "horizon_actions": 40,
+      "placement_key": "fresh:glass_recovery_train_0003",
+      "reason": "catastrophe_before_horizon",
+      "source_state_sha256": "2ef1381d9cfc0a92b107e2940bcf431c7494cd7067d032284f30a23c47b487cc"
+    },
+    {
+      "horizon_actions": 30,
+      "placement_key": "fresh:glass_recovery_train_0003",
+      "reason": "catastrophe_before_horizon",
+      "source_state_sha256": "2ef1381d9cfc0a92b107e2940bcf431c7494cd7067d032284f30a23c47b487cc"
+    },
+    {
+      "horizon_actions": 40,
+      "placement_key": "fresh:glass_recovery_train_0004",
+      "reason": "catastrophe_before_horizon",
+      "source_state_sha256": "61f6ada542d03d1dd4d75a304f2674efa20660163c54b012b956522e98835cac"
+    },
+    {
+      "horizon_actions": 40,
+      "placement_key": "fresh:glass_recovery_validation_0000",
+      "reason": "catastrophe_before_horizon",
+      "source_state_sha256": "5de3fa5396875480db81793738029227ed357caa91e5d24290ffc5cb0371f908"
+    },
+    {
+      "detail": "crash predicate is already true before the first action",
+      "placement_key": "fresh:glass_recovery_validation_0001",
+      "reason": "scan_invalid_initial_state",
+      "source_state_sha256": "5de3fa5396875480db81793738029227ed357caa91e5d24290ffc5cb0371f908"
+    },
+    {
+      "detail": "crash predicate is already true before the first action",
+      "placement_key": "fresh:glass_recovery_validation_0002",
+      "reason": "scan_invalid_initial_state",
+      "source_state_sha256": "c42d5373619bdca4a0ca31a64ed81ae3940d3f105b13eb475cd0c54fe053bc6e"
+    },
+    {
+      "placement_key": "fresh:glass_recovery_validation_0003",
+      "reason": "onpath_no_catastrophe",
+      "source_state_sha256": "c42d5373619bdca4a0ca31a64ed81ae3940d3f105b13eb475cd0c54fe053bc6e"
+    },
+    {
+      "condition": "offpath",
+      "horizon_actions": 40,
+      "placement_key": "fresh:glass_recovery_validation_0004",
+      "reason": "condition_terminal_before_matched_anchor",
+      "source_state_sha256": "d6796d48077a08484abd1252e6deb387d8b6a10bf445e66c4e6eaa0bde0f7818"
+    },
+    {
+      "condition": "noglass",
+      "horizon_actions": 40,
+      "placement_key": "fresh:glass_recovery_validation_0004",
+      "reason": "condition_terminal_before_matched_anchor",
+      "source_state_sha256": "d6796d48077a08484abd1252e6deb387d8b6a10bf445e66c4e6eaa0bde0f7818"
+    },
+    {
+      "condition": "offpath",
+      "horizon_actions": 30,
+      "placement_key": "fresh:glass_recovery_validation_0004",
+      "reason": "condition_terminal_before_matched_anchor",
+      "source_state_sha256": "d6796d48077a08484abd1252e6deb387d8b6a10bf445e66c4e6eaa0bde0f7818"
+    },
+    {
+      "condition": "noglass",
+      "horizon_actions": 30,
+      "placement_key": "fresh:glass_recovery_validation_0004",
+      "reason": "condition_terminal_before_matched_anchor",
+      "source_state_sha256": "d6796d48077a08484abd1252e6deb387d8b6a10bf445e66c4e6eaa0bde0f7818"
+    },
+    {
+      "condition": "offpath",
+      "horizon_actions": 20,
+      "placement_key": "fresh:glass_recovery_validation_0004",
+      "reason": "condition_terminal_before_matched_anchor",
+      "source_state_sha256": "d6796d48077a08484abd1252e6deb387d8b6a10bf445e66c4e6eaa0bde0f7818"
+    },
+    {
+      "condition": "noglass",
+      "horizon_actions": 20,
+      "placement_key": "fresh:glass_recovery_validation_0004",
+      "reason": "condition_terminal_before_matched_anchor",
+      "source_state_sha256": "d6796d48077a08484abd1252e6deb387d8b6a10bf445e66c4e6eaa0bde0f7818"
+    },
+    {
+      "condition": "offpath",
+      "horizon_actions": 10,
+      "placement_key": "fresh:glass_recovery_validation_0004",
+      "reason": "condition_terminal_before_matched_anchor",
+      "source_state_sha256": "d6796d48077a08484abd1252e6deb387d8b6a10bf445e66c4e6eaa0bde0f7818"
+    },
+    {
+      "condition": "noglass",
+      "horizon_actions": 10,
+      "placement_key": "fresh:glass_recovery_validation_0004",
+      "reason": "condition_terminal_before_matched_anchor",
+      "source_state_sha256": "d6796d48077a08484abd1252e6deb387d8b6a10bf445e66c4e6eaa0bde0f7818"
+    },
+    {
+      "condition": "offpath",
+      "horizon_actions": 5,
+      "placement_key": "fresh:glass_recovery_validation_0004",
+      "reason": "condition_terminal_before_matched_anchor",
+      "source_state_sha256": "d6796d48077a08484abd1252e6deb387d8b6a10bf445e66c4e6eaa0bde0f7818"
+    },
+    {
+      "condition": "noglass",
+      "horizon_actions": 5,
+      "placement_key": "fresh:glass_recovery_validation_0004",
+      "reason": "condition_terminal_before_matched_anchor",
+      "source_state_sha256": "d6796d48077a08484abd1252e6deb387d8b6a10bf445e66c4e6eaa0bde0f7818"
+    }
+  ],
+  "exclusion_counts": {
+    "catastrophe_before_horizon": 14,
+    "condition_terminal_before_matched_anchor": 30,
+    "onpath_no_catastrophe": 7,
+    "scan_invalid_initial_state": 5
+  },
+  "terminal_counts": {
+    "accident": 158,
+    "unrecorded_cap_or_other": 370,
+    "success": 285,
+    "robosuite_episode_horizon": 6
+  },
+  "remote": {
+    "remote_commit": "f67e28457a58c557ecccf98cd7c189d0a12150f9",
+    "identity": "hanshuo-shuo/crash_bench",
+    "state_files": [
+      {
+        "path": "results/glass_recovery_v2/pilot_b_task0_20260811_r5/frontier_placements/states/heldout/libero_state_005.npy",
+        "exists": true,
+        "sha256": "678aa25f84c405228908ba057fed51462f8222237bc2ae3841b916f9578f31c3"
+      },
+      {
+        "path": "results/glass_recovery_v2/pilot_b_task0_20260811_r5/frontier_placements/states/heldout/libero_state_011.npy",
+        "exists": true,
+        "sha256": "cf4b752770a6bd839e14f3e046afa7d6e0a4c60cae40e5ddb061732cce3deb0c"
+      },
+      {
+        "path": "results/glass_recovery_v2/pilot_b_task0_20260811_r5/frontier_placements/states/heldout/libero_state_017.npy",
+        "exists": true,
+        "sha256": "ab6f62276f24f81cf049671209beb645cbddc03abe30dbb6ae5586f381d2ce5f"
+      },
+      {
+        "path": "results/glass_recovery_v2/pilot_b_task0_20260811_r5/frontier_placements/states/heldout/libero_state_022.npy",
+        "exists": true,
+        "sha256": "8be3220613c74b66c7a4baa2507ef0e6baf909fa883b7e68c8b98274ff3b4fd5"
+      },
+      {
+        "path": "results/glass_recovery_v2/pilot_b_task0_20260811_r5/frontier_placements/states/heldout/libero_state_028.npy",
+        "exists": true,
+        "sha256": "f8ae69dfd07b21e6d169bd02983c75d1ab3bce6e7d4fbc61ffe0fd460ae88196"
+      },
+      {
+        "path": "results/glass_recovery_v2/pilot_b_task0_20260811_r5/frontier_placements/states/train/libero_state_002.npy",
+        "exists": true,
+        "sha256": "5a22bed5962664504c91a9c6d1ecec83151f64dcf8a0e86da28be1e2b2e29409"
+      },
+      {
+        "path": "results/glass_recovery_v2/pilot_b_task0_20260811_r5/frontier_placements/states/train/libero_state_019.npy",
+        "exists": true,
+        "sha256": "d37df8f18a8127a6ae8941944c5f6cde78b0dfc8ac43c4f9ef8caa64f309b350"
+      },
+      {
+        "path": "results/glass_recovery_v2/pilot_b_task0_20260811_r5/frontier_placements/states/train/libero_state_024.npy",
+        "exists": true,
+        "sha256": "3b25bede153ddb16c416aab2c89ee55bb07bf36a749c3e2181779b32cfd4e85f"
+      },
+      {
+        "path": "results/glass_recovery_v2/pilot_b_task0_20260811_r5/frontier_placements/states/train/libero_state_026.npy",
+        "exists": true,
+        "sha256": "563b2592b4f8a9f0471ed6559f0a48327efd9453fe216715f4288aab195c6381"
+      },
+      {
+        "path": "results/glass_recovery_v2/pilot_b_task0_20260811_r5/frontier_placements/states/train/libero_state_035.npy",
+        "exists": true,
+        "sha256": "6298b8369c3e5807507727083ba163b67d73b3ec9d5104425611e34589c8bfab"
+      },
+      {
+        "path": "results/glass_recovery_v2/pilot_b_task0_20260811_r5/frontier_placements/states/train/libero_state_038.npy",
+        "exists": true,
+        "sha256": "cf99793ecee0f5fb63c83fb573c54e17584b3128951a3deb88c7d0c008e8295a"
+      },
+      {
+        "path": "results/glass_recovery_v2/pilot_b_task0_20260811_r5/frontier_placements/states/train/libero_state_043.npy",
+        "exists": true,
+        "sha256": "1560660f49230151d894c033c151f19a35c12ce5491d43ee074405821de2d7b1"
+      },
+      {
+        "path": "results/glass_recovery_v2/pilot_b_task0_20260811_r5/frontier_placements/states/train/libero_state_047.npy",
+        "exists": true,
+        "sha256": "b6353fc53c21004739abca8d16d73751fbda09beb13d8cfcf7dd72b934a7f22f"
+      },
+      {
+        "path": "results/glass_recovery_v2/pilot_b_task0_20260811_r5/frontier_placements/states/validation/libero_state_001.npy",
+        "exists": true,
+        "sha256": "dc07820a5a4f658d4a5bf944be479ca58a901d881ecd3b6c84cf0a69da4adffb"
+      },
+      {
+        "path": "results/glass_recovery_v2/pilot_b_task0_20260811_r5/frontier_placements/states/validation/libero_state_012.npy",
+        "exists": true,
+        "sha256": "aa16f2537a0b13f48230767457c8df09882b6a15e7c34ee5cb1296762cc4e2e6"
+      },
+      {
+        "path": "results/glass_recovery_v2/pilot_b_task0_20260811_r5/frontier_placements/states/validation/libero_state_018.npy",
+        "exists": true,
+        "sha256": "a752bf9bca4dfd16d17ca47a59858cfb0c1213a5ef0b2571421925febf874dea"
+      },
+      {
+        "path": "results/glass_recovery_v2/pilot_b_task0_20260811_r5/frontier_placements/states/validation/libero_state_023.npy",
+        "exists": true,
+        "sha256": "052c5365d25f5d275be33a02e74d15802a2920a046d4befaa533ff3fd83db924"
+      },
+      {
+        "path": "results/glass_recovery_v2/pilot_b_task0_20260811_r5/frontier_placements/states/validation/libero_state_029.npy",
+        "exists": true,
+        "sha256": "6524b9ec5f19f61cee6e7824f663847c4b882612389e081f20ef6a3471eca666"
+      },
+      {
+        "path": "results/glass_recovery_v2/pilot_b_fresh_h20_20260812_r2/frontier_placements/states/heldout/libero_state_006.npy",
+        "exists": true,
+        "sha256": "999fd9aba435bcb50bc1db77a46c0beea45e549f737653df06146737bc0ac25e"
+      },
+      {
+        "path": "results/glass_recovery_v2/pilot_b_fresh_h20_20260812_r2/frontier_placements/states/heldout/libero_state_009.npy",
+        "exists": true,
+        "sha256": "105e35bf2d0e4d0fd289dfaaf5e9231bdedc0fc9ac88bc12b06f7b369133c317"
+      },
+      {
+        "path": "results/glass_recovery_v2/pilot_b_fresh_h20_20260812_r2/frontier_placements/states/heldout/libero_state_016.npy",
+        "exists": true,
+        "sha256": "31e3b1bb473aa1eb076723a61d1a2950d00ffb80f6d99ade22e34dddb551ad93"
+      },
+      {
+        "path": "results/glass_recovery_v2/pilot_b_fresh_h20_20260812_r2/frontier_placements/states/train/libero_state_021.npy",
+        "exists": true,
+        "sha256": "f01f698158970b03a97cd0e5d48f1a3a79eb2d0e7fc18ea0b2603e1757407cdd"
+      },
+      {
+        "path": "results/glass_recovery_v2/pilot_b_fresh_h20_20260812_r2/frontier_placements/states/train/libero_state_034.npy",
+        "exists": true,
+        "sha256": "02ed80eefd5c66722a9462f2e846b66325827e8071c216ba0944822ff9265be3"
+      },
+      {
+        "path": "results/glass_recovery_v2/pilot_b_fresh_h20_20260812_r2/frontier_placements/states/train/libero_state_040.npy",
+        "exists": true,
+        "sha256": "17e46e95c50ae8ceb6970a8fb7f86ef0932e7c3183a3ddfda74ecb798ba0943f"
+      },
+      {
+        "path": "results/glass_recovery_v2/pilot_b_fresh_h20_20260812_r2/frontier_placements/states/validation/libero_state_003.npy",
+        "exists": true,
+        "sha256": "5187dd15c07c8e048aa84e3893802111de17692873b5162bcb3168162440c45e"
+      },
+      {
+        "path": "results/glass_recovery_v2/pilot_b_fresh_h20_20260812_r2/frontier_placements/states/validation/libero_state_014.npy",
+        "exists": true,
+        "sha256": "8ae17affe78a798f9711a6016765d16883f2268138556cbadddfb0512ebb36db"
+      },
+      {
+        "path": "results/glass_recovery_v2/pilot_b_fresh_h20_20260812_r2/frontier_placements/states/validation/libero_state_020.npy",
+        "exists": true,
+        "sha256": "4bcef85b47e7296951f6a1467ca57221954d3c96f6ec6a37f60570df5d280e0a"
+      }
+    ],
+    "risk": {
+      "artifact_npz": "router.npz",
+      "artifact_npz_sha256": "46fd264b5258cb1be20a4c16f259025dc6c5ab9650afc75d65742eed16412e69",
+      "feature_contract": {
+        "feature_dimension": 31,
+        "history": "single_frame",
+        "inputs": "hidden_robot_action",
+        "pca_components": 16
+      },
+      "training": {
+        "decision_counts": {
+          "calibration": 96,
+          "development": 106,
+          "train": 71
+        },
+        "l2": 0.01,
+        "model": "three source-balanced linear softmax outcome heads",
+        "outcome_fit": {
+          "converged": true,
+          "iterations": 131,
+          "weighted_cross_entropy_with_l2": 0.29707029566517584
+        },
+        "risk_baseline": "source-balanced binary logistic Base-catastrophe head",
+        "risk_fit": {
+          "converged": true,
+          "iterations": 27,
+          "weighted_cross_entropy_with_l2": 0.20663610961758933
+        },
+        "source_counts": {
+          "calibration": 7,
+          "development": 8,
+          "train": 5
+        }
+      },
+      "path": "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/router.json",
+      "actual_npz_sha256": "46fd264b5258cb1be20a4c16f259025dc6c5ab9650afc75d65742eed16412e69",
+      "manifest_sha256": "757e220bc2e561aa8207ae3778a3021554b3031df2ec3eef376e1e56db938052"
+    },
+    "capture_files": {
+      "capture_manifest.json": "a0a1efad5976bc5661109a161e3ec21112a5a97f993207667cc7abda606f0d60",
+      "decision_features.npz": "3ee68e647ecc68a704d02ac5bd19129ee063e78fe97423a32564ff194e4bb495",
+      "option_rollouts.jsonl": "9f51fe43b8cda6e67a93b70439dbf7c65ce769cfd8e04812230df4e2bfdb9353",
+      "capture_progress.jsonl": "8f041db3d1a60d977b5e062947fe8e7694faad7721d46e965df1c51e0f61f237",
+      "decision_metadata.json": "1e7f701cdb1b9c3eb00d6ae637c722e5a5f0ad55861e5135f0e1d2a1b18f0815"
+    },
+    "dependencies": {
+      "LIBERO": "8f1084e3132a39270c3a13ebe37270a43ece2a01",
+      "openvla": "c8f03f48af692657d3060c19588038c7220e9af9"
+    },
+    "budget": {
+      "task_suite": "libero_spatial",
+      "H": 220,
+      "two_H": 440,
+      "libero_default_horizon": 1000,
+      "runtime_assertion_pending": true
+    },
+    "all_source_array_hashes_verified": true,
+    "unique_physical_sources": 27,
+    "placements": 35,
+    "local_risk_call_benchmark": {
+      "calls": 100,
+      "median_ms": 0.029957969672977924,
+      "p95_ms": 0.048248213715851286,
+      "scope": "warm local CPU full FrozenOutcomeRouter.predict, includes outcome heads; not Quest or robot latency",
+      "extra_vla_calls": 0
+    }
+  },
+  "full_glass_bundle": "historical collector did not persist payload; absent from local and Quest exact capture directory; no proof of independent backup",
+  "ridge_algebra_max_abs_error": 8.326672684688674e-17,
+  "new_rollouts": 0,
+  "new_models_fitted": 0,
+  "planned_capture_source_count": 27,
+  "retained_outcome_source_count": 20
+}

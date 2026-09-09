@@ -1,0 +1,78 @@
+{
+  "status": "NOT_RUNNABLE_PENDING_ASSET_VERIFICATION",
+  "reference_commit": "f6a927d2684d06c9d09a1da3de564be29754b0e1",
+  "backbone": "openvla/openvla-7b-finetuned-libero-spatial",
+  "checkpoint_revision": "962318cec55ac10993ff0f5f43eda9a270b4c873",
+  "development": {
+    "physical_sources": 16,
+    "fitting_sources": 12,
+    "calibration_sources": 4,
+    "conditions": [
+      "glass",
+      "offpath",
+      "noglass"
+    ],
+    "options": [
+      "base_continue",
+      "detour_complete_then_base"
+    ],
+    "repeats_per_option": 4,
+    "repeat_phases": {
+      "A": 2,
+      "B": 2
+    },
+    "scored_branch_cap": 384,
+    "prefix_cap": 48,
+    "max_candidates_per_episode": 1,
+    "retain_no_trigger_and_early_terminal": true
+  },
+  "conditional_validation": {
+    "auto_submit": false,
+    "new_sources": 8,
+    "conditions_per_source": 3,
+    "options": 2,
+    "repeats_per_option": 6,
+    "scored_branch_cap": 288,
+    "prefix_cap": 24
+  },
+  "targets": [
+    "delta_success_without_prior_accident",
+    "delta_accident"
+  ],
+  "model": {
+    "recipe": "source_equal_ridge",
+    "alpha": 1,
+    "pca_components": null,
+    "preprocessing_fit_only": true,
+    "direct_q": "same_two_arm_linear_recipe_is_algebra_sanity_check",
+    "additional_vla_calls_for_features": false
+  },
+  "H": 220,
+  "long_horizon": "2H_from_same_continuous_trajectory",
+  "source_manifest": null,
+  "risk_candidate_artifact": null,
+  "candidate_threshold": null,
+  "pairing_and_seeds": null,
+  "threshold_selection": "four_calibration_sources_only_allow_all_base",
+  "primary_objective": "task_success",
+  "report_constraints_separately": [
+    "accident_change",
+    "success_loss",
+    "normal_control_retention"
+  ],
+  "unresolved": [
+    "checkpoint byte hashes and environment versions",
+    "causal risk artifact and source isolation",
+    "rank-feasible fixed PCA dimension",
+    "new exact bundle and queue contract",
+    "seeds/order schedule",
+    "runner quality checks",
+    "runtime assertion of environment horizon >= settle+440"
+  ],
+  "new_rollouts": 0,
+  "D8_modified": false,
+  "long_horizon_steps": 440,
+  "horizon_origin": "episode task action zero after 10 settle steps; prefixes and intervention consume H/2H",
+  "asset_evidence": "quest_asset_evidence.json",
+  "checkpoint_inventory": "quest_checkpoint_inventory.json"
+}
