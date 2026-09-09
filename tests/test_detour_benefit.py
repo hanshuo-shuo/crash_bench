@@ -78,3 +78,13 @@ def test_full_no_trigger_analysis_preserves_all_denominators(tmp_path):
     metrics=json.loads((tmp_path/'analysis/metrics.json').read_text())
     assert metrics['cost']['prefixes']==48 and metrics['cost']['scored_branches']==0
     assert (tmp_path/'analysis/success_cumulative_curve.csv').read_text().count('\n')==442
+
+def test_trace_diagnosis_ignores_compression_identity_and_finds_first_difference(tmp_path):
+    import gzip,pickle
+    from scripts.expansion.audit_detour_repeat_traces import compare
+    x={'event':{'step':10},'action':np.array([1.]),'state_before':np.array([2.]),'state_after':np.array([3.]),'policy_input':{'image':np.zeros((2,2,3),dtype=np.uint8)}}
+    y=copy.deepcopy(x);y['action'][0]=2
+    for name,r in [('a',x),('b',y)]:
+        with gzip.open(tmp_path/name,'wb') as f:pickle.dump(r,f)
+    d=compare(tmp_path/'a',tmp_path/'b')
+    assert d['action_first_difference']==10 and d['state_before_first_difference'] is None

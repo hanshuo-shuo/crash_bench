@@ -1,5 +1,5 @@
 {
-  "status": "NOT_RUNNABLE_PENDING_ASSET_VERIFICATION",
+  "status": "EXECUTION_COMPLETE_RESULT_REVIEW_PENDING",
   "reference_commit": "f6a927d2684d06c9d09a1da3de564be29754b0e1",
   "backbone": "openvla/openvla-7b-finetuned-libero-spatial",
   "checkpoint_revision": "962318cec55ac10993ff0f5f43eda9a270b4c873",
@@ -42,17 +42,33 @@
   "model": {
     "recipe": "source_equal_ridge",
     "alpha": 1,
-    "pca_components": null,
+    "pca_components": 4,
     "preprocessing_fit_only": true,
     "direct_q": "same_two_arm_linear_recipe_is_algebra_sanity_check",
     "additional_vla_calls_for_features": false
   },
   "H": 220,
   "long_horizon": "2H_from_same_continuous_trajectory",
-  "source_manifest": null,
-  "risk_candidate_artifact": null,
-  "candidate_threshold": null,
-  "pairing_and_seeds": null,
+  "source_manifest": "development_sources.csv",
+  "risk_candidate_artifact": "results/counterfactual_router/fresh_online_2eab4a4a53dc_20260817T080708Z/router.json",
+  "candidate_threshold": 0.3072859857738742,
+  "pairing_and_seeds": {
+    "A": [
+      0,
+      1
+    ],
+    "B": [
+      2,
+      3
+    ],
+    "policy_seed_override": {
+      "0": null,
+      "1": null,
+      "2": 20270902,
+      "3": 20270903
+    },
+    "option_order": "(episode_index+repeat)%2 alternates B/R order"
+  },
   "threshold_selection": "four_calibration_sources_only_allow_all_base",
   "primary_objective": "task_success",
   "report_constraints_separately": [
@@ -61,18 +77,22 @@
     "normal_control_retention"
   ],
   "unresolved": [
-    "checkpoint byte hashes and environment versions",
-    "causal risk artifact and source isolation",
-    "rank-feasible fixed PCA dimension",
-    "new exact bundle and queue contract",
-    "seeds/order schedule",
-    "runner quality checks",
-    "runtime assertion of environment horizon >= settle+440"
+    "retrieve and review completed analysis",
+    "additional existing-trace diagnostics and final Chinese conclusion"
   ],
   "new_rollouts": 0,
   "D8_modified": false,
   "long_horizon_steps": 440,
   "horizon_origin": "episode task action zero after 10 settle steps; prefixes and intervention consume H/2H",
   "asset_evidence": "quest_asset_evidence.json",
-  "checkpoint_inventory": "quest_checkpoint_inventory.json"
+  "checkpoint_inventory": "quest_checkpoint_inventory.json",
+  "execution_config": "configs/detour_benefit/development_v1.json",
+  "job_id": 5791132,
+  "commit": "a89f755da200c853795e429b5ae34944a08f915f",
+  "slurm": {
+    "job_id": 5791132,
+    "state": "COMPLETED",
+    "elapsed": "01:57:42",
+    "exit_code": "0:0"
+  }
 }
