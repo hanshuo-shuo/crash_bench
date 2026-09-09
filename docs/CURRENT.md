@@ -4,7 +4,8 @@ The user authorized the [bounded candidate mechanism plan](audits/20260908/candi
 all nine historical train stale-success candidates plus nine matched-buffer controls,
 Base/Refresh each 8 repeats, A selection/B evaluation, 100/200-step outcomes from
 one continuous branch, at most 288 branches. New full bundles; not old-state replay.
-Entry: `setup/candidate_refresh.sbatch`. No D8 or automatic method-training expansion.
+Entry: `setup/candidate_refresh.sbatch`. [Job 5753957](audits/20260908/candidate_refresh/RUN.md)
+submitted at commit `f67e284`; initially pending. No D8 or automatic method-training expansion.
 
 ## Historical: bounded selection retest complete — 2026-09-07
 
