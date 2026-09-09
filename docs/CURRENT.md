@@ -1,3 +1,11 @@
+# Current: Fixed Detour development complete — 2026-09-09
+
+[Full Chinese report](audits/20260909/detour_benefit_gate/RESULTS_ZH.md).
+Job5791132 completed 48 prefixes/376 branches; no D8 changes or new confirmation.
+Two glass anchors retain A/B task rescue, but AlwaysDetour loses overall success.
+The full benefit gate selects all Base; no additional deployable task gain established.
+Source support and Base repeat variability remain limitations. No automatic validation or architecture search.
+
 # Current: Fixed Detour benefit development authorized — 2026-09-09
 
 The user explicitly requested the complete bounded fixed-Detour experiment.

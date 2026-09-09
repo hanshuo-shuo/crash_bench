@@ -1,3 +1,5 @@
+**Final status: completed and reviewed.** Main job5791132 completed 48 prefixes/376 branches. Trace-audit job5804513 completed 188 repeat pairs in00:01:03, exit0:0. See [Chinese report](RESULTS_ZH.md). No new confirmation submitted.
+
 # Quest execution log
 
 - Main implementation commit: `a89f755da200c853795e429b5ae34944a08f915f`.
@@ -21,3 +23,5 @@
 ## Completed execution, result review pending
 
 Slurm job5791132 is COMPLETED, elapsed01:57:42, exit0:0; batch MaxRSS18913908K. Main analysis files exist on Quest (overall, paired comparisons, per-source, repeat diagnostics, full success curve and Chinese report). The SSH master socket disappeared immediately after this status check; result transfer and the additional existing-trace audit await restored connectivity. No new rollout is needed.
+
+- Result transfer succeeded after reconnection. Frozen choices reproduced independently using A only; all frozen metadata hashes verified. Final report and evidence manifest saved.
