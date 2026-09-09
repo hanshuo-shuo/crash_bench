@@ -1,4 +1,12 @@
-# Current: bounded selection retest complete — 2026-09-07
+# Current: historical-candidate Refresh diagnosis authorized — 2026-09-08
+
+The user authorized the [bounded candidate mechanism plan](audits/20260908/candidate_refresh/PLAN.md):
+all nine historical train stale-success candidates plus nine matched-buffer controls,
+Base/Refresh each 8 repeats, A selection/B evaluation, 100/200-step outcomes from
+one continuous branch, at most 288 branches. New full bundles; not old-state replay.
+Entry: `setup/candidate_refresh.sbatch`. No D8 or automatic method-training expansion.
+
+## Historical: bounded selection retest complete — 2026-09-07
 
 The [completed report](audits/20260907/selection_retest/RESULTS_ZH.md) contains the
 384-branch training panel. Base, frozen A reference and frozen simple period10
