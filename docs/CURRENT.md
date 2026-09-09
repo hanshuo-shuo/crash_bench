@@ -1,3 +1,12 @@
+# Current: Recoverability tiny probe complete — 2026-09-09
+
+[Chinese results](audits/20260909/recoverability/RESULTS_ZH.md). Job5809503 completed
+48 branches / 12 child states / 4 parents. e18/e21 remain fixed-R recoverable at offsets0/3/10;
+neither failed control generates a new recovery success. e27 shifts from timeout to descent accident.
+Equal suffix budgets separate e21 deadline censoring; e18 Base success removes intervention necessity at +10.
+Physical stage evidence is explanatory, not an online predictor or proof of universal irrecoverability.
+No automatic expansion, new model, confirmation or D8 changes.
+
 # Current: Recoverability physical probe authorized — 2026-09-09
 
 The user requested a very small paper-oriented physical-mechanism experiment from e18/e21.

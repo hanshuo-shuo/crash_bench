@@ -39,3 +39,15 @@ def test_instrumentation_leaves_executed_actions_unchanged(tmp_path,monkeypatch,
   record=run.branch(None,None,row,anchor,config,folder,0,option,audit_controller=audit);results.append([x.copy() for x in executed])
   if audit:assert len(record['physics'])==3
  np.testing.assert_array_equal(results[0],results[1])
+
+def test_unavailable_and_fixed_budget_analysis(tmp_path):
+ from scripts.expansion.analyze_recoverability import analyze
+ def write(name,obj):(tmp_path/name).write_text(json.dumps(obj))
+ write('complete.json',{'status':'COMPLETE','scored_branches':4});write('config.json',{'parents':['p'],'offsets':[0,3]})
+ write('children.json',[{'parent':'p','offset':0,'episode_id':'p0','anchor_step':0,'robot_state':[0,0,1,0,0,0,0,0],'bowl':[0,1,0],'glass':{'pos':[0,.5,0]}}]);write('unavailable.json',[{'parent':'p','offset':3,'reason':'prefix_accident'}])
+ records=[]
+ for repeat in (0,1):
+  for option in (0,1):
+   records.append({'episode_id':'p0','parent':'p','offset':0,'repeat':repeat,'option':option,'branch_elapsed_seconds':1.,'events':[{'step':20,'reason':'success' if option else 'accident'}],'suffix_horizons':{str(h):{'calls':1,'steps':20,'controller_steps':20 if option else 0,'success':option,'accident':1-option,'success_step':20 if option else None,'reason':'success' if option else 'accident'} for h in (220,440)},'horizons':{'440':{'success':option}},'physics':[]})
+ write('records.json',records);analyze(tmp_path)
+ findings=json.loads((tmp_path/'analysis/findings.json').read_text());assert len(findings['unavailable'])==1 and findings['new_R_success_cells']==[]
