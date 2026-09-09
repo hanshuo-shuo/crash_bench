@@ -17,3 +17,7 @@ Follow-up must first check `scripts/quest_sync.sh check`, then inspect only this
 job and output root. Confirm 288 branches (or documented exclusions), validate
 freeze and trace hashes, inspect control harms and horizon catch-up, and bring
 back a Chinese interpretation. No automatic extra experiment or method fitting.
+
+Completed: Slurm COMPLETED, exit 0:0, elapsed 00:54:40; all 288 branches and 18
+anchors, no exclusions. Small evidence retrieved to verified_evidence; complete
+metrics recomputed locally. Interpretation: RESULTS_ZH.md.

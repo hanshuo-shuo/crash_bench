@@ -1,11 +1,27 @@
-# Current: historical-candidate Refresh diagnosis authorized — 2026-09-08
+# Current: direct cost-gain learning complete — 2026-09-08
+
+The user authorized existing-data direct benefit learning with eight-source LOSO,
+A-only fitting and B development evaluation, no new rollouts. The fixed paired
+Ridge study is [complete](audits/20260908/direct_cost_learning/RESULTS_ZH.md).
+Source-macro completion-cost differences vs Base: metadata Ridge +0.883,
+observation Ridge +1.102; both increased calls and introduced one new accident.
+The posthoc-development age=1 rule saved 0.813 cost steps / 0.141 calls with no
+observed success loss or new accident. This is not independent confirmation.
+[Protocol and frozen artifacts](audits/20260908/direct_cost_learning/PLAN.md).
+No automatic new experiment or architecture/threshold search is authorized.
+
+## Historical: candidate Refresh diagnosis complete — 2026-09-08
 
 The user authorized the [bounded candidate mechanism plan](audits/20260908/candidate_refresh/PLAN.md):
 all nine historical train stale-success candidates plus nine matched-buffer controls,
 Base/Refresh each 8 repeats, A selection/B evaluation, 100/200-step outcomes from
 one continuous branch, at most 288 branches. New full bundles; not old-state replay.
 Entry: `setup/candidate_refresh.sbatch`. [Job 5753957](audits/20260908/candidate_refresh/RUN.md)
-submitted at commit `f67e284`; initially pending. No D8 or automatic method-training expansion.
+completed at commit `f67e284`: all 288 branches, no exclusions, 54m40s.
+[Results](audits/20260908/candidate_refresh/RESULTS_ZH.md): B stale success Base/Refresh
+23/36 vs 26/36 at 100 steps, 33/36 vs 31/36 at 200. All five 100-step paired
+rescues caught up by Base step 102. Controls all succeed. No stable task-rescue
+or learned-selection advantage established. No automatic experiment expansion.
 
 ## Historical: bounded selection retest complete — 2026-09-07
 
