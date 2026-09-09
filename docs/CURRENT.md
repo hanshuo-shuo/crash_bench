@@ -1,4 +1,19 @@
-# Current: direct cost-gain learning complete — 2026-09-08
+# Current: Refresh diagnosis closed; benefit-gate plan drafted — 2026-09-08
+
+The user requested a staged closeout, not further architecture search.
+[Integrated Refresh results chapter](audits/20260908/refresh_closeout/RESULTS_CHAPTER_ZH.md)
+preserves the deadline curves, repeat variability, positive/negative local effects,
+simple-rule comparisons, LOSO failure and source-support gap. New posthoc checks
+retain all eight sources and do not change frozen models or outcomes.
+
+[Fixed-option benefit-gate development plan](audits/20260908/refresh_closeout/BENEFIT_GATE_PLAN_ZH.md)
+is drafted only: focus on intervention benefit with fixed recovery options and
+choice recipe, strong Risk->BestFixed, success retention, repeat/horizon checks.
+No new fit, Quest job, rollout, confirmation, or architecture search is authorized
+by this closeout. Reopening requires a concrete new mechanism/information rationale.
+The wider task-recovery direction is not closed. All historical artifacts remain.
+
+## Historical: direct cost-gain learning complete — 2026-09-08
 
 The user authorized existing-data direct benefit learning with eight-source LOSO,
 A-only fitting and B development evaluation, no new rollouts. The fixed paired

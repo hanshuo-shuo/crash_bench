@@ -1,5 +1,9 @@
 # Paper plan
 
+> Current writing: [Refresh diagnostic chapter](audits/20260908/refresh_closeout/RESULTS_CHAPTER_ZH.md).
+> Next research proposal: [fixed-option benefit gate](audits/20260908/refresh_closeout/BENEFIT_GATE_PLAN_ZH.md), drafted only.
+> [CURRENT.md](CURRENT.md) governs active scope; all forward queues below are historical.
+
 > **Superseded forward plan (2026-08-30):** This file preserves the historical
 > router-centered paper plan. The canonical active plan is the publication-
 > first glass-scoped diagnostic in

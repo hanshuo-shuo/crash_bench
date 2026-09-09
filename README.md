@@ -1,7 +1,11 @@
 # CrashBench: Intervention and Recovery Research
 
 CrashBench studies intervention choice and task recovery from exact robot states.
-Current work: `PAPER_DIRECTION_AUDIT` (2026-09-06).
+Current work: Refresh evaluation diagnosis closed (2026-09-08).
+See the [integrated results chapter](docs/audits/20260908/refresh_closeout/RESULTS_CHAPTER_ZH.md)
+and [fixed-option benefit-gate plan](docs/audits/20260908/refresh_closeout/BENEFIT_GATE_PLAN_ZH.md).
+The next plan is drafted, not executed; no automatic experiment or architecture search.
+The [current state](docs/CURRENT.md) supersedes the historical work summaries below.
 
 The user authorized [paper-oriented investigation](docs/audits/20260906/paper_review/PLAN.md),
 including a bounded training-source neutral-control probe and a comprehensive
