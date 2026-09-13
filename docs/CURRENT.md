@@ -1,4 +1,14 @@
-# Current: Recoverability tiny probe complete — 2026-09-09
+# Current: Repeatable-value paper development — 2026-09-13
+
+The user requested advancing the ICLR paper from the advisor feedback, with all
+research experiments on Quest. The first step is the [existing-data analysis](audits/20260913/repeat_value/PLAN.md):
+real intervention versus Base/Base pseudo-options, A choice evaluated on B,
+source support, preserved historical references, and complete deadline curves.
+No new rollout or model fit in this entry. Results determine the next paper claim
+and whether a separately specified bounded A/B/C study is justified. Preserve D8
+and historical data. Entry: `setup/repeat_value_analysis.sbatch` (CPU short).
+
+# Historical: Recoverability tiny probe complete — 2026-09-09
 
 [Chinese results](audits/20260909/recoverability/RESULTS_ZH.md). Job5809503 completed
 48 branches / 12 child states / 4 parents. e18/e21 remain fixed-R recoverable at offsets0/3/10;
