@@ -1,4 +1,20 @@
-# Current: Prospective C execution block prepared — 2026-09-13
+# Current: Prospective C complete; repeatable-value paper drafted — 2026-09-13
+
+[Chinese results](audits/20260913/repeat_value/RESULTS_ZH.md). Jobs6240307/6240316
+completed all332 new branches on existing bundles, no new sources or prefixes.
+Refresh one-shot100 gain: A12.50→B3.12→C0.00 pp; full-repeat100 C+2.34 pp comes
+from one deadline-sensitive positive source; at200 C−0.78 pp. Detour full-repeat440:
+A6.25→B4.17→C5.21 pp; e18/e21 retain A/B/C benefit, e15 reappears in C. Calibration
+still lacks C positive-success cells; learned gate remains all Base. Independent
+B forecasts improve some one-shot comparisons but do not improve full-repeat
+source error universally (Refresh100 worse; Detour tied).
+
+The [new manuscript](iclr27/repeatable_value/manuscript.md) distinguishes observed
+rescue, repeatable benefit and deployable selection. Do not recast the results as
+universal inflation, guaranteed better forecasting, or new-source confirmation.
+No automatic further source, skill, model or benchmark expansion. D8 unchanged.
+
+# Historical: Prospective C execution block prepared — 2026-09-13
 
 The completed existing-record analysis, Quest job6240017 at `1b85268`, found
 heterogeneous A-to-B changes: one-shot Refresh at100 fell12.50→3.12 pp, while

@@ -1,0 +1,45 @@
+# Manuscript evidence map
+
+The primary table is `docs/audits/20260913/repeat_value/evidence/overall.csv`, generated
+by Quest job6240017 at commit1b852681342af34ab0fef6b36b96e9ae401c3f96. Input and output
+hashes live in the adjacent provenance.json and manifest.json.
+
+| Manuscript claim | Exact lookup | Interpretation |
+|---|---|---|
+| Refresh one-shot100 gain12.50→3.12pp | panel=candidate_refresh, method=real_one, selection_horizon=100, evaluation_horizon=100, subset=all; A_gain/B_gain | Eight-source-weighted, includes controls, first execution of each arm per block |
+| Refresh full-repeat100 gain7.03→5.47pp | same, method=real_full | Four repetitions per arm; a different frozen choice from real_one |
+| Refresh full-repeat200 gain1.56→0.00pp | method=real_full, both horizons200 | No observed positive selected gain in B under this reference |
+| Detour440 full-repeat6.25→4.17pp | panel=detour, method=real_full, both horizons440, subset=all | Sixteen sources, all48 episodes including the one shared early terminal |
+| Detour440 pseudo gain2.08→0.00pp | same, method=pseudo_one | Arbitrary execution-index pseudo-option; no distinct recovery strategy |
+| Swapped Detour pseudo6.25→2.08pp | same, method=pseudo_one_swapped | Declared orientation sensitivity, not independent replication |
+| Selection retest zero observed success gain | panel=selection_retest, real_full or real_one, both horizons100 | This panel did not reproduce the historical candidate configurations |
+| Two Detour A/B positive sources | per_cell.csv, real_full, horizons440, A_gain>0 and B_gain>0 | e18/e21; distinguish source identity from repeated executions |
+| Freeze gate remains Base | method=historical:BenefitGate, panel=detour | Read original mapping, no new calibration |
+
+Numbers in the paper are percentage points; the machine columns are fractions.
+Raw counts23/36,26/36,33/36,31/36 come from the historical candidate Refresh report,
+not from conversion of the source-weighted table above. The five Base catch-ups at
+101–102 actions and Detour202/432 completion times also retain their original reports.
+
+## C result mapping
+
+The new C scorer writes analysis/overall.csv, per_source.csv and per_cell.csv in
+each fixed run directory. It reads the exact pre-C choices.json and forecasts,
+then adds C outcomes. `error_improvement` is the source-mean squared-error contrast
+(g_A-g_C)^2-(g_B-g_C)^2. Positive favors B; negative favors A. It is not a comparison
+between two learned models, nor a test of new-source generalization.
+
+The primary one-shot diagnostics and full-repeat supporting diagnostics remain
+visible at every predeclared horizon. C is a noisy block; its empirical gain is not
+renamed ground-truth expected value. Any manuscript claim about predictive advantage
+must be supported by these rows after completion, including contrary results.
+
+## Related-work correction carried forward
+
+B2FF's [main text and appendices](https://arxiv.org/html/2606.09258v1) include an
+online-triggered variant. Our earlier abstract-only comparison did not establish
+its full scope; the new manuscript explicitly includes this variant. B2FF also
+requires a foresight-driven policy with an externally settable future-image
+interface, which is not a drop-in setting for our current OpenVLA/ordinary pi0 stacks.
+No runnable official B2FF or CoRe checkpoint package was verified in this turn.
+This is an implementation-status limit, not a claim that no public implementation exists.
