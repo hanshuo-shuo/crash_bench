@@ -76,7 +76,7 @@ def generate(env,policy,router,row,config,folder):
     anchor['prefix_sha256']=file_sha256(folder/'prefix.pkl.gz');write(folder/'anchor.json',anchor)
     return anchor
 
-def branch(env,policy,row,anchor,config,folder,repeat,option,audit_controller=False):
+def branch(env,policy,row,anchor,config,folder,repeat,option,audit_controller=False,phase=None):
     from crashbench.branching.state import restore_exact_state
     from crashbench.recovery import DetourComplete
     from scripts.collect_glass_recovery_pairs import _controller_glass,TARGET,PLATE
@@ -114,7 +114,7 @@ def branch(env,policy,row,anchor,config,folder,repeat,option,audit_controller=Fa
                 physics.append(physical)
             obs,event=step(env,obs,action,crash,context['glasses'],index,calls,control,stream,po,latency);events.append(event)
             if event['reason']:break
-    record={'episode_id':row['episode_id'],'source':row['source'],'condition':row['condition'],'role':row['role'],'repeat':repeat,'phase':'A' if repeat<2 else 'B','option':option,'policy_seed_override':override,'bundle_id':anchor['bundle_id'],'bundle_sha256':anchor['bundle_sha256'],'events':events,'horizons':{str(h):readout(events,h) for h in HORIZONS},'branch_elapsed_seconds':time.monotonic()-start,'controller_resume_base_step':resume_step,'trace_sha256':file_sha256(folder/(name+'.pkl.gz'))}
+    record={'episode_id':row['episode_id'],'source':row['source'],'condition':row['condition'],'role':row['role'],'repeat':repeat,'phase':phase or ('A' if repeat<2 else 'B'),'option':option,'policy_seed_override':override,'bundle_id':anchor['bundle_id'],'bundle_sha256':anchor['bundle_sha256'],'events':events,'horizons':{str(h):readout(events,h) for h in HORIZONS},'branch_elapsed_seconds':time.monotonic()-start,'controller_resume_base_step':resume_step,'trace_sha256':file_sha256(folder/(name+'.pkl.gz'))}
     if audit_controller:record['physics']=physics
     write(folder/(name+'.json'),record);return record
 

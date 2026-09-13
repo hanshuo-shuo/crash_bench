@@ -1,4 +1,18 @@
-# Current: Repeatable-value paper development — 2026-09-13
+# Current: Prospective C execution block prepared — 2026-09-13
+
+The completed existing-record analysis, Quest job6240017 at `1b85268`, found
+heterogeneous A-to-B changes: one-shot Refresh at100 fell12.50→3.12 pp, while
+full-repeat Detour at440 retained6.25→4.17 pp. Pseudo-options also produced
+apparent gains. [Evidence](audits/20260913/repeat_value/evidence/RESULTS.md).
+
+Under the user's paper-development request, the next [bounded C execution block](audits/20260913/repeat_value/C_PLAN.md)
+locks all A choices and A/B forecasts before332 new branches:188 Detour and144
+Refresh, all from existing complete bundles. No new source, prefix, model,
+controller, D8 access or benchmark expansion. Same original horizons. Each panel
+runs in a new Quest process. C tests forecast replication on exposed states;
+it is not independent physical-source confirmation. [Contract](audits/20260913/repeat_value/c_contract.json).
+
+# Historical: Repeatable-value paper development — 2026-09-13
 
 The user requested advancing the ICLR paper from the advisor feedback, with all
 research experiments on Quest. The first step is the [existing-data analysis](audits/20260913/repeat_value/PLAN.md):

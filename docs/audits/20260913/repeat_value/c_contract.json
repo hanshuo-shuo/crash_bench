@@ -1,0 +1,56 @@
+{
+  "schema": 1,
+  "kind": "prospective_execution_block_C_existing_sources",
+  "analysis_commit": "1b852681342af34ab0fef6b36b96e9ae401c3f96",
+  "analysis_job": "6240017",
+  "max_branches": 332,
+  "new_physical_sources": 0,
+  "new_prefixes": 0,
+  "forecast_choices": "docs/audits/20260913/repeat_value/evidence/choices.json",
+  "forecast_table": "docs/audits/20260913/repeat_value/evidence/overall.csv",
+  "input_sha256": {
+    "docs/audits/20260913/repeat_value/evidence/overall.csv": "8a5f3f16ea0f234f48aa5c27dd10672b81ca35ed1b8a7026ca8fde9184cdcca0",
+    "docs/audits/20260913/repeat_value/evidence/per_source.csv": "d0c5888ded7eec35721d30ae324c9eccce4fc39e41df64c10b02478567f1634c",
+    "docs/audits/20260913/repeat_value/evidence/choices.json": "2d15fc6544d99d3c6dcd8b4aa88f8d5bec7d31515fce4f026ec033900e5af76b",
+    "docs/audits/20260909/detour_benefit_gate/evidence/freeze.json": "4f30dcda8a9ad47da085280ffff5c7da5ddde5bc10e34edba11a852e90033089",
+    "configs/detour_benefit/development_v1.json": "31f7ae1c828476d30d632c5aa224c2b3b498dfea780af81b538d83bca9440516",
+    "docs/audits/20260909/detour_benefit_gate/evidence/checkpoint_hashes.json": "839c0a5e2c0a3e8aba6c90b93c830f6cfb3210ad463b45dc1027804381b9e0ac",
+    "docs/audits/20260908/candidate_refresh/verified_evidence/A.json": "cf2e66af84afb3b2e76ee311c739b9080fdefaa05c54e2bea4be348c0d49fb66",
+    "docs/audits/20260908/candidate_refresh/verified_evidence/B.json": "32dc3cd1314cc185ffaff9bdfda2e546fe7f2fc02b9d868f5736f972f69590e4",
+    "docs/audits/20260908/candidate_refresh/verified_evidence/anchors.json": "33698902ae6e1a3615c6b1d8eb6d9ac9f2ac8ac7818d64375a14cfec12fcb7db",
+    "docs/audits/20260908/candidate_refresh/verified_evidence/checkpoint.json": "da940ce94311451ef9f093c1610950f4491d98c59ae38effa8936ff3b319916f",
+    "docs/audits/20260908/candidate_refresh/verified_evidence/freeze.json": "4a75a8e9aafe3eb729b0f4fdce0f2381f42b41f5aa40277a9c18e8d492f51120",
+    "docs/audits/20260909/detour_benefit_gate/evidence/all_terminal_records.csv": "90e7ec0c65ff7eb30d4ecefc30d6ce55447fe3a976dabb6ea42ff628003e4649",
+    "docs/audits/20260909/detour_benefit_gate/evidence/shared_prefix_outcomes.json": "54fb5f927b13993a5449266ebf7cb39b707048f7307daecfc745e51f35be7bec",
+    "docs/audits/20260907/selection_retest/evidence/panel.json": "602dc8bc41a38fbb6887967fe59bba05959fe81fbcf33899dcd3cca938241836",
+    "docs/audits/20260907/selection_retest/evidence/A.json": "da131223c8679ddeadf7854b28e4c1bc203380f370e4db34a9876dc5a7ada608",
+    "docs/audits/20260907/selection_retest/evidence/B.json": "aea54f025e8a5524d8e3e16a21d53d535016ee6f8ab5e20212acafdd30c7dbd4",
+    "docs/audits/20260907/selection_retest/evidence/freeze.json": "d4bfbeb761b870b56737566cc0d8bfc13ec1422a97b97281a4653fa12ff345bf"
+  },
+  "panels": {
+    "detour": {
+      "source_root": "/projects/p33100/siosio/crashbench_detour_benefit/a89f755da200_job5791132",
+      "repeats": [
+        4,
+        5
+      ],
+      "max_branches": 188,
+      "expected_anchors": 48,
+      "checkpoint_manifest": "docs/audits/20260909/detour_benefit_gate/evidence/checkpoint_hashes.json",
+      "historical_anchor_sha256": "d9a4eaec130dc997945644bf067a1b4193461bc3e03d9524f055b029c260ee8a"
+    },
+    "candidate_refresh": {
+      "source_root": "/projects/p33100/siosio/crashbench_candidate_refresh/f67e28457a58_5753957",
+      "repeats": [
+        8,
+        9,
+        10,
+        11
+      ],
+      "max_branches": 144,
+      "expected_anchors": 18,
+      "checkpoint_manifest": "docs/audits/20260908/candidate_refresh/verified_evidence/checkpoint.json",
+      "historical_anchor_sha256": "33698902ae6e1a3615c6b1d8eb6d9ac9f2ac8ac7818d64375a14cfec12fcb7db"
+    }
+  }
+}

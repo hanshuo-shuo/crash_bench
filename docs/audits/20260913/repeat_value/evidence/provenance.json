@@ -1,0 +1,45 @@
+{
+  "commit": "1b852681342af34ab0fef6b36b96e9ae401c3f96",
+  "job": "6240017",
+  "host": "qnode0133",
+  "python": "3.10.20 | packaged by conda-forge | (main, Jun 11 2026, 03:31:56) [GCC 14.3.0]",
+  "input_sha256": {
+    "docs/audits/20260909/detour_benefit_gate/evidence/all_terminal_records.csv": "90e7ec0c65ff7eb30d4ecefc30d6ce55447fe3a976dabb6ea42ff628003e4649",
+    "docs/audits/20260909/detour_benefit_gate/evidence/shared_prefix_outcomes.json": "54fb5f927b13993a5449266ebf7cb39b707048f7307daecfc745e51f35be7bec",
+    "docs/audits/20260909/detour_benefit_gate/evidence/freeze.json": "4f30dcda8a9ad47da085280ffff5c7da5ddde5bc10e34edba11a852e90033089",
+    "docs/audits/20260908/candidate_refresh/verified_evidence/anchors.json": "33698902ae6e1a3615c6b1d8eb6d9ac9f2ac8ac7818d64375a14cfec12fcb7db",
+    "docs/audits/20260908/candidate_refresh/verified_evidence/A.json": "cf2e66af84afb3b2e76ee311c739b9080fdefaa05c54e2bea4be348c0d49fb66",
+    "docs/audits/20260908/candidate_refresh/verified_evidence/B.json": "32dc3cd1314cc185ffaff9bdfda2e546fe7f2fc02b9d868f5736f972f69590e4",
+    "docs/audits/20260908/candidate_refresh/verified_evidence/freeze.json": "4a75a8e9aafe3eb729b0f4fdce0f2381f42b41f5aa40277a9c18e8d492f51120",
+    "docs/audits/20260907/selection_retest/evidence/panel.json": "602dc8bc41a38fbb6887967fe59bba05959fe81fbcf33899dcd3cca938241836",
+    "docs/audits/20260907/selection_retest/evidence/A.json": "da131223c8679ddeadf7854b28e4c1bc203380f370e4db34a9876dc5a7ada608",
+    "docs/audits/20260907/selection_retest/evidence/B.json": "aea54f025e8a5524d8e3e16a21d53d535016ee6f8ab5e20212acafdd30c7dbd4",
+    "docs/audits/20260907/selection_retest/evidence/freeze.json": "d4bfbeb761b870b56737566cc0d8bfc13ec1422a97b97281a4653fa12ff345bf"
+  },
+  "scope": "existing exposed development records; no new rollouts, model fitting, or D8",
+  "bootstrap_draws": 5000,
+  "bootstrap_seed": 20270913,
+  "panels": [
+    {
+      "name": "detour",
+      "cells": 48,
+      "sources": 16,
+      "shared_prefix_outcomes": 1,
+      "actual_branches": 376
+    },
+    {
+      "name": "candidate_refresh",
+      "cells": 18,
+      "sources": 8,
+      "shared_prefix_outcomes": 0,
+      "actual_branches": 288
+    },
+    {
+      "name": "selection_retest",
+      "cells": 24,
+      "sources": 12,
+      "shared_prefix_outcomes": 0,
+      "actual_branches": 384
+    }
+  ]
+}

@@ -260,3 +260,19 @@ def write_csv(path, rows):
         writer = csv.DictWriter(stream, fieldnames=list(rows[0]))
         writer.writeheader()
         writer.writerows(rows)
+
+
+def forecast_comparison(source_rows, bootstrap=5000, seed=20270913):
+    """Paired source-level forecast errors against a noisy future execution block."""
+    x = np.array([[r[k] for k in ['A_gain', 'B_gain', 'C_gain']] for r in source_rows])
+    d = (x[:, 0]-x[:, 2])**2 - (x[:, 1]-x[:, 2])**2
+    draws = np.random.default_rng(seed).integers(0, len(x), (bootstrap, len(x)))
+    result = dict(A_gain=float(x[:, 0].mean()), B_gain=float(x[:, 1].mean()),
+                  C_gain=float(x[:, 2].mean()),
+                  A_source_rmse=float(np.sqrt(np.mean((x[:, 0]-x[:, 2])**2))),
+                  B_source_rmse=float(np.sqrt(np.mean((x[:, 1]-x[:, 2])**2))))
+    for name, values in [('A_minus_C', x[:, 0]-x[:, 2]), ('B_minus_C', x[:, 1]-x[:, 2]),
+                         ('error_improvement', d), ('C_gain', x[:, 2])]:
+        low, high = np.quantile(values[draws].mean(axis=1), [.025, .975])
+        result.update({name: float(values.mean()), name+'_lo': float(low), name+'_hi': float(high)})
+    return result

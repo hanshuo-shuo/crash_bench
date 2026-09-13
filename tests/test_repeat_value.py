@@ -1,7 +1,7 @@
 """Synthetic measurement-contract tests; no benchmark execution or fitted model."""
 import unittest
 from crashbench.repeat_value import (arms, evaluate, freeze_choice, measure_cell,
-                                    source_average, terminal_sample, validate_panel)
+                                    source_average, terminal_sample, validate_panel, forecast_comparison)
 
 
 def cell(name='x', source='s', a_base=(0, 0), a_other=(1, 1), b_base=(0, 0), b_other=(1, 1)):
@@ -13,6 +13,20 @@ def cell(name='x', source='s', a_base=(0, 0), a_other=(1, 1), b_base=(0, 0), b_o
 
 
 class RepeatValueTests(unittest.TestCase):
+    def test_future_block_can_favor_either_forecast(self):
+        favorable = forecast_comparison([dict(A_gain=1, B_gain=0, C_gain=0)], bootstrap=20)
+        unfavorable = forecast_comparison([dict(A_gain=1, B_gain=0, C_gain=1)], bootstrap=20)
+        assert favorable['error_improvement'] == 1
+        assert unfavorable['error_improvement'] == -1
+
+    def test_c_completeness_preserves_shared_prefix(self):
+        from scripts.expansion.run_repeat_value_c import check_records
+        anchors = [dict(episode_id='x', triggered=True), dict(episode_id='early', triggered=False)]
+        records = [dict(episode_id='x', repeat=r, option=o, phase='C') for r in [4, 5] for o in [0, 1]]
+        check_records(anchors, records, [4, 5], 'detour')
+        with self.assertRaises(ValueError):
+            check_records(anchors, records[:-1], [4, 5], 'detour')
+
     def test_stable_real_rescue_survives_separate_execution(self):
         c = cell()
         rows = evaluate(dict(cells=[c]), 'real_full', 20, 20)
