@@ -60,11 +60,8 @@ identified using actual branch outcomes can remain inaccessible to a selector th
 must act using its current observations. Each distinction changes what a positive
 result warrants.
 
-Our evidence comes from two policy interfaces and three development panels. We do
-not aggregate their sources into a larger independent sample: the Refresh panels
-share underlying source pools, and the mechanisms use different clocks and accident
-definitions. Instead, we ask whether the same diagnostic procedure differentiates
-their results. It does: a Refresh panel has deadline-sensitive and repeat-sensitive
+Our evidence comes from two policy interfaces and three development panels.
+The same diagnostic procedure differentiates their results: a Refresh panel has deadline-sensitive and repeat-sensitive
 selection value, a second Refresh panel has no observed task-selection gain, and
 Detour retains several actual rescues while damaging many nominally successful tasks
 when applied indiscriminately.
@@ -140,14 +137,11 @@ deterministic recoverability label, or interpreting a hindsight oracle as the va
 available to an execution-time learner. No claim requires repeating every training
 state, and noisy outcomes can still support learning expected values.
 
-A minimal example explains the negative control. Suppose two independent executions
-of the same policy each succeed with probability q. Calling the more successful
-execution the best option yields an expected apparent gain q(1-q) over the first
-execution, despite there being no distinct intervention. At q=0.5, this is 25
-percentage points; selecting the same execution index on a fresh independent pair
-has zero expected gain. This elementary calculation motivates the control rather
-than providing a new theorem. Our actual blocks need not satisfy the example's
-independence assumptions, so their observed pseudo-value is reported directly.
+Even identical policies can produce positive reused value. For two IID executions
+with success probability q, selecting the better outcome yields expected apparent
+gain q(1-q), or 25 points at q=0.5; a fresh independent pair has zero expected gain.
+Appendix C gives the elementary calculation. Actual runtime blocks need not satisfy
+these IID assumptions, so we report their observed pseudo-value directly.
 
 ## 3. Protocol and evidence
 
@@ -157,11 +151,11 @@ We use [OpenVLA](https://arxiv.org/abs/2406.09246) and
 [pi0](https://arxiv.org/abs/2410.24164) policies in
 [LIBERO](https://arxiv.org/abs/2306.03310) manipulation tasks.
 
-| Panel | Policy and alternative | Physical sources | Decision episodes | Original branches | A/B repeats per arm | Budgets |
-|---|---|---:|---:|---:|---:|---|
-| Candidate Refresh | pi0; one observation-queue refresh | 8 | 18 | 288 | 4 / 4 | 100, 200 suffix actions |
-| Selection retest | pi0; same refresh interface | 12 | 24 | 384 | 4 / 4 | 100 suffix actions |
-| Detour | OpenVLA; fixed structured detour | 16 | 48 | 376 | 2 / 2 | 220, 440 episode actions |
+| Panel / policy | Sources / decisions | A/B repeats per arm | Budgets |
+|---|---:|---:|---|
+| Candidate Refresh / pi0 | 8 / 18 | 4 / 4 | 100, 200 suffix actions |
+| Selection retest / pi0 | 12 / 24 | 4 / 4 | 100 suffix actions |
+| Detour / OpenVLA | 16 / 48 | 2 / 2 | 220, 440 episode actions |
 
 Candidate Refresh comprises all nine historical stale-success configurations and
 nine matched-buffer controls; it is a selected development panel. The selection
@@ -174,7 +168,8 @@ All panels were exposed during earlier development. The new analysis does not
 restore their blind-test status. Detour's recovery controller uses privileged
 geometry and fixed stage targets. Refresh clears a software observation queue and
 requeries the same pi0 policy once; it does not permanently eliminate sensor delay.
-The mechanisms and accident predicates are scoped in the accompanying protocols.
+The Refresh panels share source pools; their sources are not added into a larger
+independent sample. Mechanisms retain their original clocks and accident predicates.
 
 ### 3.2 Real and pseudo-option selection
 
@@ -211,25 +206,17 @@ combining their action counts into one measure of recovery speed.
 
 ### 4.1 Outcome reuse has heterogeneous effects
 
-All gains below are physical-source-weighted safe-task-success percentage points.
-The choice stays fixed between A and B. The table includes all panel conditions.
+All gains are physical-source-weighted safe-task-success percentage points, with
+every condition included. One-shot Refresh at 100 actions changes from 12.50 in A
+to 3.12 in B; full-repeat selection changes from 7.03 to 5.47. At 200 actions,
+the full-repeat gain changes from 1.56 to zero. In contrast, Detour at 440 retains
+6.25 in A and 4.17 in B. The selection-retest panel has zero observed gain.
+Appendix A retains every declared budget and its source interval.
 
-| Panel / budget | Selection repetitions per arm | A gain | B gain | A minus B [95% descriptive interval] |
-|---|---:|---:|---:|---|
-| Candidate Refresh / 100 | 1 | 12.50 | 3.12 | 9.38 [0.00, 28.12] |
-| Candidate Refresh / 100 | 4 | 7.03 | 5.47 | 1.56 [−6.25, 9.38] |
-| Candidate Refresh / 200 | 1 | 3.12 | 0.00 | 3.12 [0.00, 9.38] |
-| Candidate Refresh / 200 | 4 | 1.56 | 0.00 | 1.56 [0.00, 4.69] |
-| Detour / 220 | 2 | 4.17 | 2.08 | 2.08 [0.00, 5.21] |
-| Detour / 440 | 2 | 6.25 | 4.17 | 2.08 [0.00, 5.21] |
-| Selection retest / 100 | 4 | 0.00 | 0.00 | 0.00 [0.00, 0.00] |
-
-The largest listed change is in one-shot short-budget Refresh. Full-repeat
-selection has a smaller change in the same panel, but changing repetition count
-also changes the selected policy, so this comparison is not a universal sample-size
-law. Detour retains positive value, and its full-repeat A-to-B decrease is only
-2.08 points. A claim that all observed recovery value disappears would contradict
-these results.
+These effects are heterogeneous. Increasing repetitions also changes the selected
+policy, so the Refresh comparison is not a universal sample-size law. Detour's
+retained gain directly contradicts an interpretation that all observed recovery
+value disappears on a separate block.
 
 ![Real intervention and same-policy pseudo-options](../../audits/20260913/repeat_value/evidence/real_and_pseudo.png)
 
@@ -446,7 +433,25 @@ successful recovery branch, repeat-disjoint selection benefit, and successful
 deployment answer different questions. Reporting them separately preserves genuine
 recovery examples while making clear which opportunities remain to be learned.
 
-## Appendix A. Complete prospective comparison tables
+## Appendix A. Complete selection and prospective comparison tables
+
+### Original A/B comparisons
+
+The following gains include every panel condition and weight physical sources
+equally. Each choice stays fixed between A and B; the source intervals are
+descriptive development-panel intervals.
+
+| Panel / budget | Selection repetitions per arm | A gain | B gain | A minus B [95% descriptive interval] |
+|---|---:|---:|---:|---|
+| Candidate Refresh / 100 | 1 | 12.50 | 3.12 | 9.38 [0.00, 28.12] |
+| Candidate Refresh / 100 | 4 | 7.03 | 5.47 | 1.56 [−6.25, 9.38] |
+| Candidate Refresh / 200 | 1 | 3.12 | 0.00 | 3.12 [0.00, 9.38] |
+| Candidate Refresh / 200 | 4 | 1.56 | 0.00 | 1.56 [0.00, 4.69] |
+| Detour / 220 | 2 | 4.17 | 2.08 | 2.08 [0.00, 5.21] |
+| Detour / 440 | 2 | 6.25 | 4.17 | 2.08 [0.00, 5.21] |
+| Selection retest / 100 | 4 | 0.00 | 0.00 | 0.00 [0.00, 0.00] |
+
+### Prospective comparisons
 
 These tables retain every originally declared budget and both reference types.
 The one-shot choice uses the first execution of each arm in A and is evaluated

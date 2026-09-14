@@ -131,6 +131,7 @@ def main():
     BUILD.mkdir(parents=True,exist_ok=True)
     source=SOURCE.read_text()
     title=source.splitlines()[0].removeprefix('# ')
+    display_title=inline(title).replace('Evaluating Repeatable',r'Evaluating\\ Repeatable')
     (LATEX/'body.tex').write_text(convert(source))
     wrapper=r'''\documentclass{article}
 \usepackage{iclr2027_conference,times}
@@ -139,7 +140,7 @@ def main():
 \urlstyle{same}
 \renewcommand{\ttdefault}{cmtt}
 \hypersetup{colorlinks=true,allcolors=blue,pdfauthor={},pdftitle={TITLE}}
-\title{TITLE}
+\title{DISPLAYTITLE}
 % The draft uses the official page dimensions and fonts; it is not a submission.
 \author{Anonymous working draft}
 \iclrfinalcopy
@@ -148,7 +149,7 @@ def main():
 \lhead{Working draft in ICLR 2027 format; not submitted}
 \input{body.tex}
 \end{document}
-'''.replace('TITLE',inline(title))
+'''.replace('DISPLAYTITLE',display_title).replace('TITLE',inline(title))
     (LATEX/'main.tex').write_text(wrapper)
     env=dict(os.environ)
     env['TEXMFVAR']=str(ROOT/'tmp/pdfs/texmf-var')
