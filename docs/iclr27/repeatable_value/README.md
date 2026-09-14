@@ -22,13 +22,17 @@ historical glass-only manuscript in the adjacent manuscript/ directory.
 - [Prospective C contract](../../audits/20260913/repeat_value/C_PLAN.md)
 - [C machine freeze](../../audits/20260913/repeat_value/c_contract.json)
 - [Quest provenance](../../audits/20260913/repeat_value/RUN.md)
+- [Completed fresh-source results](../../audits/20260913/fresh_value/RESULTS_ZH.md)
 - [Fresh-source plan](../../audits/20260913/fresh_value/PLAN.md)
 - [External recovery asset assessment](../../audits/20260913/external_recovery/ASSESSMENT_ZH.md)
 - [Claim-to-row mapping](EVIDENCE_MAP.md)
 
 The completed C experiment has 332 branches on saved existing states. It measures subsequent
 execution, not new-source generalization. A/B forecasts and all method choices were
-published before either C job began. No model or recovery controller is refitted.
+published before either C job began. No model or recovery controller is refitted. The subsequent twelve-source fresh-reset
+study completed384 branches: primary440 gain1.39→0→0pp. All36 C cells have
+nonpositive recorded Detour-minus-Base success difference. These unscreened resets
+are reported separately from the historical selected source population.
 
 ## Rendering
 

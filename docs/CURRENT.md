@@ -1,4 +1,31 @@
-# Current: Fresh-source decision probe prepared — 2026-09-13
+# Current: Fresh-source probe complete; paper integration — 2026-09-13
+
+[New-source results](audits/20260913/fresh_value/RESULTS_ZH.md): job6243668 completed
+384 A/B/C branches from twelve fresh resets / 36 conditions / 32 candidates.
+Primary full-repeat440 gain is A1.39→B0→C0 pp; its only A selection is no-glass n05.
+All36 C cells, including A-unselected ones, have nonpositive recorded R-minus-Base
+success difference. C Base/AlwaysDetour are66.67%/27.78%; no-glass91.67%/50.00%.
+AlwaysDetour loses38.89pp [−54.17,−22.22] and adds5.56pp new accidents, despite
+net accident reduction1.39pp. The swapped same-policy control is A8.33→B0→C0pp.
+The real optimism gap is below the predeclared5pp investment heuristic.
+
+Old Detour C+5.21pp and its persistent examples remain valid. The fresh population
+is unscreened and differs from the old success/hazard-screened panel. Four setup
+terminal conditions remain shared outcomes at zero model calls. Do not infer a
+universal skill impossibility, an absence of informative inputs, or a universally
+better B forecast. Joint skill/state support is the sharper next research question.
+The twelve identities are now appended to the exposure ledger; original prefixes
+are preserved. Reproducing the frozen probe requires its recorded2c5e616 commit.
+
+The official ICLR-format draft is complete:9 main pages,13 total, with reviewed
+figures and terminal-state illustrations. Two external SPR interface queries passed
+on H100 (jobs6246660/6246661), zero environment actions; normal/rewind produce
+7x7/8x7 complete action matrices. Normal output has an incomplete trailing fragment,
+retained without fabrication. Scientific performance tables still cover Refresh
+and Detour only. No further source or benchmark expansion is active.
+[Next Pro discussion](audits/20260913/PRO_FOLLOWUP_ZH.md).
+
+# Historical: Fresh-source decision probe prepared — 2026-09-13
 
 The user asked to continue Pro's direction using the completed C findings.
 The [bounded fresh-source plan](audits/20260913/fresh_value/PLAN.md) specifies

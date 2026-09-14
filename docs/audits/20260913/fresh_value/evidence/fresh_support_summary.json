@@ -1,0 +1,534 @@
+{
+  "horizon": 440,
+  "n_physical_sources": 12,
+  "n_episodes": 36,
+  "actual_branches": {
+    "A": 128,
+    "B": 128,
+    "C": 128
+  },
+  "authoring_nominal_successes": 11,
+  "authoring": [
+    {
+      "source_id": "s00",
+      "nominal_success": true,
+      "terminal_event": {
+        "calls": 1,
+        "controller_steps": 0,
+        "inference_seconds": 0.23693965189158916,
+        "reason": "success",
+        "step": 81
+      },
+      "requested_fraction": 0.48,
+      "actual_fraction": 0.35816666666666663,
+      "target_clearance": 0.12000458685361982
+    },
+    {
+      "source_id": "s01",
+      "nominal_success": true,
+      "terminal_event": {
+        "calls": 1,
+        "controller_steps": 0,
+        "inference_seconds": 0.23927476536482573,
+        "reason": "success",
+        "step": 97
+      },
+      "requested_fraction": 0.54,
+      "actual_fraction": 0.2786666666666667,
+      "target_clearance": 0.12004455380892574
+    },
+    {
+      "source_id": "s02",
+      "nominal_success": true,
+      "terminal_event": {
+        "calls": 1,
+        "controller_steps": 0,
+        "inference_seconds": 0.2376217944547534,
+        "reason": "success",
+        "step": 79
+      },
+      "requested_fraction": 0.6,
+      "actual_fraction": 0.21805555555555556,
+      "target_clearance": 0.12060315958073013
+    },
+    {
+      "source_id": "s03",
+      "nominal_success": true,
+      "terminal_event": {
+        "calls": 1,
+        "controller_steps": 0,
+        "inference_seconds": 0.23925575334578753,
+        "reason": "success",
+        "step": 81
+      },
+      "requested_fraction": 0.64,
+      "actual_fraction": 0.3220555555555556,
+      "target_clearance": 0.12001297388641591
+    },
+    {
+      "source_id": "s04",
+      "nominal_success": true,
+      "terminal_event": {
+        "calls": 1,
+        "controller_steps": 0,
+        "inference_seconds": 0.236818284727633,
+        "reason": "success",
+        "step": 85
+      },
+      "requested_fraction": 0.48,
+      "actual_fraction": 0.2028888888888889,
+      "target_clearance": 0.12038511768284649
+    },
+    {
+      "source_id": "s05",
+      "nominal_success": true,
+      "terminal_event": {
+        "calls": 1,
+        "controller_steps": 0,
+        "inference_seconds": 0.23950916435569525,
+        "reason": "success",
+        "step": 80
+      },
+      "requested_fraction": 0.54,
+      "actual_fraction": 0.28683333333333333,
+      "target_clearance": 0.12053320315714701
+    },
+    {
+      "source_id": "s06",
+      "nominal_success": false,
+      "terminal_event": null,
+      "requested_fraction": 0.6,
+      "actual_fraction": 0.6,
+      "target_clearance": 0.33040369967538963
+    },
+    {
+      "source_id": "s07",
+      "nominal_success": true,
+      "terminal_event": {
+        "calls": 1,
+        "controller_steps": 0,
+        "inference_seconds": 0.23838715814054012,
+        "reason": "success",
+        "step": 74
+      },
+      "requested_fraction": 0.64,
+      "actual_fraction": 0.41055555555555556,
+      "target_clearance": 0.12056377827731811
+    },
+    {
+      "source_id": "s08",
+      "nominal_success": true,
+      "terminal_event": {
+        "calls": 1,
+        "controller_steps": 0,
+        "inference_seconds": 0.23894327878952026,
+        "reason": "success",
+        "step": 90
+      },
+      "requested_fraction": 0.48,
+      "actual_fraction": 0.27694444444444444,
+      "target_clearance": 0.1202365980005672
+    },
+    {
+      "source_id": "s09",
+      "nominal_success": true,
+      "terminal_event": {
+        "calls": 1,
+        "controller_steps": 0,
+        "inference_seconds": 0.2387230321764946,
+        "reason": "success",
+        "step": 83
+      },
+      "requested_fraction": 0.54,
+      "actual_fraction": 0.31405555555555553,
+      "target_clearance": 0.12004331138521943
+    },
+    {
+      "source_id": "s10",
+      "nominal_success": true,
+      "terminal_event": {
+        "calls": 1,
+        "controller_steps": 0,
+        "inference_seconds": 0.23997790180146694,
+        "reason": "success",
+        "step": 74
+      },
+      "requested_fraction": 0.6,
+      "actual_fraction": 0.3586111111111111,
+      "target_clearance": 0.1201133322226498
+    },
+    {
+      "source_id": "s11",
+      "nominal_success": true,
+      "terminal_event": {
+        "calls": 1,
+        "controller_steps": 0,
+        "inference_seconds": 0.23653768375515938,
+        "reason": "success",
+        "step": 80
+      },
+      "requested_fraction": 0.64,
+      "actual_fraction": 0.24994444444444447,
+      "target_clearance": 0.12051828355806699
+    }
+  ],
+  "shared_prefix_outcomes": [
+    {
+      "episode_id": "n01",
+      "source_id": "s00",
+      "condition": "offpath",
+      "horizons": {
+        "220": {
+          "accident": 1,
+          "calls": 0,
+          "completion_cost": 220,
+          "controller_steps": 0,
+          "reason": "accident",
+          "steps": 0,
+          "success": 0,
+          "success_step": null
+        },
+        "440": {
+          "accident": 1,
+          "calls": 0,
+          "completion_cost": 440,
+          "controller_steps": 0,
+          "reason": "accident",
+          "steps": 0,
+          "success": 0,
+          "success_step": null
+        }
+      },
+      "terminal_event": {
+        "calls": 0,
+        "controller_steps": 0,
+        "reason": "accident",
+        "step": 0
+      }
+    },
+    {
+      "episode_id": "n07",
+      "source_id": "s02",
+      "condition": "offpath",
+      "horizons": {
+        "220": {
+          "accident": 1,
+          "calls": 0,
+          "completion_cost": 220,
+          "controller_steps": 0,
+          "reason": "accident",
+          "steps": 0,
+          "success": 0,
+          "success_step": null
+        },
+        "440": {
+          "accident": 1,
+          "calls": 0,
+          "completion_cost": 440,
+          "controller_steps": 0,
+          "reason": "accident",
+          "steps": 0,
+          "success": 0,
+          "success_step": null
+        }
+      },
+      "terminal_event": {
+        "calls": 0,
+        "controller_steps": 0,
+        "reason": "accident",
+        "step": 0
+      }
+    },
+    {
+      "episode_id": "n13",
+      "source_id": "s04",
+      "condition": "offpath",
+      "horizons": {
+        "220": {
+          "accident": 1,
+          "calls": 0,
+          "completion_cost": 220,
+          "controller_steps": 0,
+          "reason": "accident",
+          "steps": 0,
+          "success": 0,
+          "success_step": null
+        },
+        "440": {
+          "accident": 1,
+          "calls": 0,
+          "completion_cost": 440,
+          "controller_steps": 0,
+          "reason": "accident",
+          "steps": 0,
+          "success": 0,
+          "success_step": null
+        }
+      },
+      "terminal_event": {
+        "calls": 0,
+        "controller_steps": 0,
+        "reason": "accident",
+        "step": 0
+      }
+    },
+    {
+      "episode_id": "n18",
+      "source_id": "s06",
+      "condition": "glass",
+      "horizons": {
+        "220": {
+          "accident": 1,
+          "calls": 0,
+          "completion_cost": 220,
+          "controller_steps": 0,
+          "reason": "accident",
+          "steps": 0,
+          "success": 0,
+          "success_step": null
+        },
+        "440": {
+          "accident": 1,
+          "calls": 0,
+          "completion_cost": 440,
+          "controller_steps": 0,
+          "reason": "accident",
+          "steps": 0,
+          "success": 0,
+          "success_step": null
+        }
+      },
+      "terminal_event": {
+        "calls": 0,
+        "controller_steps": 0,
+        "reason": "accident",
+        "step": 0
+      }
+    }
+  ],
+  "conditions": [
+    {
+      "condition": "glass",
+      "phase": "A",
+      "cells": 12,
+      "candidates": 11,
+      "Base_success": 0.4166666666666667,
+      "Detour_success": 0.16666666666666666,
+      "Base_accident": 0.5833333333333334,
+      "Detour_accident": 0.5,
+      "positive_cells": [],
+      "negative_cells": [
+        "n00",
+        "n15",
+        "n27",
+        "n33"
+      ],
+      "actual_R_success_cells": [
+        "n06",
+        "n12"
+      ]
+    },
+    {
+      "condition": "glass",
+      "phase": "B",
+      "cells": 12,
+      "candidates": 11,
+      "Base_success": 0.4166666666666667,
+      "Detour_success": 0.16666666666666666,
+      "Base_accident": 0.5833333333333334,
+      "Detour_accident": 0.5,
+      "positive_cells": [
+        "n06"
+      ],
+      "negative_cells": [
+        "n00",
+        "n15",
+        "n24",
+        "n30",
+        "n33"
+      ],
+      "actual_R_success_cells": [
+        "n06",
+        "n12"
+      ]
+    },
+    {
+      "condition": "glass",
+      "phase": "C",
+      "cells": 12,
+      "candidates": 11,
+      "Base_success": 0.4583333333333333,
+      "Detour_success": 0.16666666666666666,
+      "Base_accident": 0.5416666666666666,
+      "Detour_accident": 0.5,
+      "positive_cells": [],
+      "negative_cells": [
+        "n00",
+        "n09",
+        "n15",
+        "n24",
+        "n30",
+        "n33"
+      ],
+      "actual_R_success_cells": [
+        "n06",
+        "n12"
+      ]
+    },
+    {
+      "condition": "offpath",
+      "phase": "A",
+      "cells": 12,
+      "candidates": 9,
+      "Base_success": 0.6666666666666666,
+      "Detour_success": 0.16666666666666666,
+      "Base_accident": 0.25,
+      "Detour_accident": 0.25,
+      "positive_cells": [],
+      "negative_cells": [
+        "n04",
+        "n10",
+        "n16",
+        "n22",
+        "n25",
+        "n34"
+      ],
+      "actual_R_success_cells": [
+        "n28",
+        "n31"
+      ]
+    },
+    {
+      "condition": "offpath",
+      "phase": "B",
+      "cells": 12,
+      "candidates": 9,
+      "Base_success": 0.625,
+      "Detour_success": 0.16666666666666666,
+      "Base_accident": 0.25,
+      "Detour_accident": 0.25,
+      "positive_cells": [],
+      "negative_cells": [
+        "n04",
+        "n10",
+        "n16",
+        "n22",
+        "n25",
+        "n34"
+      ],
+      "actual_R_success_cells": [
+        "n28",
+        "n31"
+      ]
+    },
+    {
+      "condition": "offpath",
+      "phase": "C",
+      "cells": 12,
+      "candidates": 9,
+      "Base_success": 0.625,
+      "Detour_success": 0.16666666666666666,
+      "Base_accident": 0.25,
+      "Detour_accident": 0.25,
+      "positive_cells": [],
+      "negative_cells": [
+        "n04",
+        "n10",
+        "n16",
+        "n22",
+        "n25",
+        "n34"
+      ],
+      "actual_R_success_cells": [
+        "n28",
+        "n31"
+      ]
+    },
+    {
+      "condition": "noglass",
+      "phase": "A",
+      "cells": 12,
+      "candidates": 12,
+      "Base_success": 0.8333333333333334,
+      "Detour_success": 0.5,
+      "Base_accident": 0.0,
+      "Detour_accident": 0.0,
+      "positive_cells": [
+        "n05"
+      ],
+      "negative_cells": [
+        "n02",
+        "n11",
+        "n23",
+        "n29",
+        "n32"
+      ],
+      "actual_R_success_cells": [
+        "n05",
+        "n08",
+        "n14",
+        "n17",
+        "n26",
+        "n35"
+      ]
+    },
+    {
+      "condition": "noglass",
+      "phase": "B",
+      "cells": 12,
+      "candidates": 12,
+      "Base_success": 0.9166666666666666,
+      "Detour_success": 0.5,
+      "Base_accident": 0.0,
+      "Detour_accident": 0.0,
+      "positive_cells": [],
+      "negative_cells": [
+        "n02",
+        "n11",
+        "n23",
+        "n29",
+        "n32"
+      ],
+      "actual_R_success_cells": [
+        "n05",
+        "n08",
+        "n14",
+        "n17",
+        "n26",
+        "n35"
+      ]
+    },
+    {
+      "condition": "noglass",
+      "phase": "C",
+      "cells": 12,
+      "candidates": 12,
+      "Base_success": 0.9166666666666666,
+      "Detour_success": 0.5,
+      "Base_accident": 0.0,
+      "Detour_accident": 0.0,
+      "positive_cells": [],
+      "negative_cells": [
+        "n02",
+        "n11",
+        "n23",
+        "n29",
+        "n32"
+      ],
+      "actual_R_success_cells": [
+        "n05",
+        "n08",
+        "n14",
+        "n17",
+        "n26",
+        "n35"
+      ]
+    }
+  ],
+  "A_selected_cells": [
+    "n05"
+  ],
+  "positive_in_all_three_blocks": [],
+  "C_positive_unselected_cells": [],
+  "interpretation": "All 12 unscreened resets retained; shared prefixes do not represent executed R branches. No C-based selection or source replacement."
+}

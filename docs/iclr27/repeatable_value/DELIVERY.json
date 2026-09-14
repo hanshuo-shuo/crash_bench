@@ -1,25 +1,63 @@
 {
   "date": "2026-09-13",
+  "updated_utc": "2026-09-14T03:55:44.055659+00:00",
   "title": "Beyond Observed Rescue: Evaluating Repeatable Intervention Value in VLA Policies",
-  "pdf_pages": 9,
-  "visual_qa": "All nine rendered pages inspected; full-resolution checks of new result pages; no clipping or overlapping content observed.",
-  "format": "Readable review draft, not the official submission template",
-  "new_branches": 332,
-  "new_physical_sources": 0,
-  "new_prefixes": 0,
+  "pdf_pages": 13,
+  "main_text_pages": 9,
+  "format": "Official ICLR 2027 style; unsubmitted working draft with AI-use and reproducibility statements",
+  "visual_qa": "All13 pages rendered and inspected. Final appendix pagination inspected at100dpi; pages1\u201311 are pixel-identical to their reviewed85dpi renders. No clipping, overlapping content or broken title words observed.",
   "historical_branches_analyzed": 1048,
+  "new_branches": 716,
+  "new_branches_this_continuation": 384,
+  "total_scientific_branches": 1764,
+  "new_physical_sources": 12,
+  "new_prefixes": 36,
+  "nominal_authoring_rollouts": 12,
+  "fresh_population": "Unscreened fresh task0 resets; distinct from historical success/hazard-screened source assets; four shared setup-terminal conditions retained",
   "jobs": {
     "existing_analysis": 6240017,
     "detour_C": 6240307,
     "refresh_C": 6240316,
-    "paper_figure": 6242685
+    "fresh_ABC": 6243668,
+    "conference_figures": 6246664,
+    "terminal_illustrations": 6246667,
+    "spr_prepare": 6246660,
+    "spr_interface": 6246661
   },
-  "C_execution_commit": "bcaeda762d6c00098db81ffe21143d906c4f3f4d",
-  "synthetic_unit_tests_passed": 10,
+  "execution_commits": {
+    "existing_C": "bcaeda762d6c00098db81ffe21143d906c4f3f4d",
+    "fresh_ABC": "2c5e6163a6bc2644072bc7328279d49445814807",
+    "presentation_and_SPR": "6b91cee1d337e0bc28e2f792b8ccac44fe44c868"
+  },
+  "external_interface": {
+    "status": "PASSED",
+    "model_queries": 2,
+    "environment_steps": 0,
+    "new_sources": 0,
+    "gpu": "NVIDIA H100 80GB HBM3",
+    "normal_complete_action_shape": [
+      7,
+      7
+    ],
+    "rewind_complete_action_shape": [
+      8,
+      7
+    ],
+    "normal_incomplete_trailing_fragment": true,
+    "recovery_performance_measured": false
+  },
+  "synthetic_unit_tests_passed_before_fresh_submission": 16,
   "files": {
-    "docs/iclr27/repeatable_value/manuscript.md": "63ec041641517a3d40216fcf9098f3f17c9fb7db6eb25db4c2b39fd19af519bc",
-    "output/pdf/crashbench_repeatable_value_draft.pdf": "8d62cae7cd499ae2c950a0e1e83e81c23bc913db9e39eace92f06091afe0a157",
-    "docs/audits/20260913/repeat_value/RESULTS_ZH.md": "0b384be22c3f9bfd92683db18ca7cc4cf03695f6131e4392e251b913dc2a4e91",
-    "docs/audits/20260913/repeat_value/paper_figure/abc_value.png": "4c5cfe9b0a91b7196cfa983016ece26e049eb4136c3b5e8aa2a1e1bdbbbc9865"
+    "docs/iclr27/repeatable_value/manuscript.md": "87ff07ab10d54e830df3dac58076eb2c6ccfc98ded578246115d084761754c77",
+    "output/pdf/crashbench_repeatable_value_draft.pdf": "57ee43c666b3470ecef0919e25fb8b4fb4682563c82af27ef1c752f01ea128f4",
+    "docs/audits/20260913/fresh_value/RESULTS_ZH.md": "967382348f7becaec6de4c53f5db0159d6661e2f73ca4b99ef7d96a9cd9e2d43",
+    "docs/audits/20260913/fresh_value/evidence/complete.json": "6e4960edf6afb49533f5183d0a473d5d09221409c778e1731ca7e2c58c64e373",
+    "docs/audits/20260913/fresh_value/evidence/REVIEW_MANIFEST.json": "6f8e0efa0dbdcbb4f9b1062c3e53205fdf81962afde1422299a72fb7da524d62",
+    "docs/audits/20260913/fresh_value/EXPOSURE_RECORD.json": "a7824749dabf735603632f6bbf1a96043900727bf586daf2438bc4d73887698e",
+    "docs/audits/20260913/PRO_FOLLOWUP_ZH.md": "7b59886a98287d7e1f38376d1dbe67a117437e1cd75e026ad6d4ddd3307b4063",
+    "docs/audits/20260913/external_recovery/ASSESSMENT_ZH.md": "7feaa96b3cf335ac9292a566de1c30a145635bbeab22240ddc17a62f66e10fcb",
+    "docs/audits/20260913/external_recovery/RUN.json": "e1a37d6ea790e56040d00f1479f04ef9aa6f2d23039bafece25e897e36800a83",
+    "docs/audits/20260913/external_recovery/evidence/spr_preflight/REVIEW_MANIFEST.json": "7fed6dfe3dadf0b12c0161f822d20420a70c7b3cbeee0e9bcd6446ff5a4beff8",
+    "docs/iclr27/repeatable_value/latex/STYLE_SOURCE.json": "7d03262229fc7bb0482317a54a415bc481f31cc4f6221347088e222b68861ac5"
   }
 }

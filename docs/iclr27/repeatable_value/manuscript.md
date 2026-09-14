@@ -1,30 +1,30 @@
 # Beyond Observed Rescue: Evaluating Repeatable Intervention Value in VLA Policies
 
 Working research manuscript, 13 September 2026. Existing A/B analysis and both
-prospectively specified C execution blocks are complete.
+prospectively specified C execution blocks and the twelve-source fresh-reset study are complete.
 This manuscript develops a new synthesis; the historical glass manuscript remains unchanged.
 
 ## Abstract
 
 When a recovery branch succeeds, does it identify an intervention worth repeating?
-We investigate the gap between observed rescue and repeatable intervention value
-in vision-language-action policies. Our evaluation combines saved-state branching,
-same-policy pseudo-options, separate selection and evaluation blocks, and complete
-deadline readouts. We analyze observation refresh for pi0 and a structured detour
-for OpenVLA, then test locked forecasts in 332 new executions of existing states.
-The results distinguish different kinds of recovery evidence. One-shot Refresh
-selection at 100 actions gains 12.50 percentage points on the outcomes used to
-select it, 3.12 points on a separate block, and zero on the prospective block.
-Its remaining full-repeat positive contribution is explained by local acceleration
-across the evaluation deadline. In contrast, full-repeat Detour selection at
-440 actions retains gains of 6.25, 4.17, and 5.21 points across the three blocks,
-including two sources with benefit in every block. The same-policy negative
-control generates apparent gains without a distinct recovery action. Separate-block
-forecasting improves the one-shot comparisons, but does not uniformly improve
-source-level prediction for full-repeat references. These scoped results show why
-observed rescue, repeatable benefit, and deployable selection need distinct evidence:
-some opportunities disappear, some persist, and a single replication can also miss
-an opportunity that reappears later.
+We study the gap between observed rescue and repeatable intervention value in
+vision-language-action policies using saved-state branching, same-policy
+pseudo-options, separate selection and evaluation blocks, and complete deadline
+readouts. We evaluate pi0 observation refresh and OpenVLA structured detour,
+then add 716 prospectively specified branch executions: 332 at existing states
+and 384 from twelve fresh physical reset sources. On existing sources, one-shot
+Refresh selection at 100 actions gains 12.50, 3.12 and zero percentage points
+across selection, estimation and prospective execution blocks. Its remaining
+full-repeat positive contribution reflects acceleration across the deadline.
+Full-repeat Detour selection at 440 actions instead retains 6.25, 4.17 and 5.21
+points, including two persistently beneficial sources. On the unscreened fresh-reset
+population, the corresponding Detour gains are 1.39, zero and zero; no condition
+has a positive recorded success difference in the final block. Same-policy
+pseudo-options nevertheless produce apparent selection gains without introducing
+a recovery action. Separate-block estimation is informative but not uniformly
+more predictive. These results distinguish acceleration, repeated task rescue
+and limited skill-state support, directing attention to different research
+problems before training an intervention selector.
 
 ## 1. Introduction
 
@@ -60,7 +60,7 @@ identified using actual branch outcomes can remain inaccessible to a selector th
 must act using its current observations. Each distinction changes what a positive
 result warrants.
 
-Our evidence comes from two policy interfaces and three development panels.
+Our historical evidence comes from two policy interfaces and three development panels.
 The same diagnostic procedure differentiates their results: a Refresh panel has deadline-sensitive and repeat-sensitive
 selection value, a second Refresh panel has no observed task-selection gain, and
 Detour retains several actual rescues while damaging many nominally successful tasks
@@ -69,7 +69,9 @@ when applied indiscriminately.
 Our contribution is a prospective empirical study of what recovery evidence
 predicts. We lock choices and forecasts before 332 new executions, and find
 opportunities that disappear, opportunities that persist, and one that disappears
-in a replication and returns in the next. This changes the research decision:
+in a replication and returns in the next. We then test the unchanged Detour
+interface in 384 branches from twelve fresh resets, where its earlier selection
+benefit does not carry over to the unscreened population. This changes the research decision:
 deadline-sensitive acceleration calls for an efficiency objective; persistent
 benefit calls for a selector that can identify it; missing benefit support calls
 for examining the recovery skill and state population. The evaluation connects
@@ -378,7 +380,64 @@ estimation block generally improves source-specific value prediction. The useful
 conclusion is empirical: prospective execution distinguishes gains that disappear,
 gains that persist, and opportunities whose evidence varies across small blocks.
 
-## 6. Related work and the contribution boundary
+## 6. Fresh-source transport: completion does not ensure benefit
+
+The existing-state C result left a central question unresolved: does the fixed
+Detour interface offer positive opportunities outside its previously exposed
+sources? We fixed twelve fresh LIBERO-Spatial task-0 resets before any rollout,
+checked their identities against prior exposure records, and retained all twelve.
+Each source supplies on-path, off-path and no-glass conditions. Three separate
+processes collect two executions per arm, with A choices locked before B and
+A/B forecasts locked before C. The primary horizon is 440 absolute episode actions;
+220 is secondary. All 384 branches completed from 32 candidates. Four conditions
+terminate during setup before any model call and remain shared outcomes.
+
+The primary two-repeat reference gains 1.39 points in A and zero in B and C.
+Its only selected state is no-glass n05: Detour succeeds in every block, while
+Base changes from one of two successes in A to two of two in B and C. The initial
+advantage therefore identifies no repeated need for intervention. B predicts the
+zero C gain, but the real-reference A-to-C difference is smaller than the
+predeclared five-point investment heuristic. The zero C interval records identical
+observed source contributions; it does not certify zero population opportunity.
+
+We also inspect both arms at all 36 conditions, including states A did not select.
+None has positive recorded success difference in C. On-path Detour completes at
+two sources, but Base also completes in both C repeats at those states. A positive
+B difference at n06 likewise returns to zero in C. Thus successful recovery
+execution and incremental task benefit remain distinct even among the new sources.
+
+| Condition | C Base success | C AlwaysDetour success | Success difference |
+|---|---:|---:|---:|
+| On-path glass | 45.83% | 16.67% | -29.17 pp |
+| Off-path glass | 62.50% | 16.67% | -45.83 pp |
+| No glass | 91.67% | 50.00% | -41.67 pp |
+| All conditions | 66.67% | 27.78% | -38.89 pp |
+
+AlwaysDetour's aggregate C difference has descriptive source interval
+[-54.17,-22.22] points, with 38.89 points of lost Base successes and 5.56 points
+of new accidents. Its net accident rate falls by 1.39 points, illustrating why
+accident reduction alone cannot stand in for task benefit. The frozen strong risk
+reference loses 9.72 points; the learned gate remains Base at 66.67% success.
+
+![Fresh-source choices and all on-path contributions](figures/fresh_value.png)
+
+Figure 4. Primary two-repeat and predeclared one-shot/pseudo-option references
+at 440 actions, with all three conditions retained. Right: the raw
+Detour-minus-Base difference for every on-path source. C contains no positive
+cell. These are unscreened fresh resets, separate from the historical source pool.
+
+The pseudo-options retain the evaluation concern: the two fixed index orientations
+produce A gains of 2.78 and 8.33 points, but both score zero in C. Nevertheless,
+this experiment does not show a large real-intervention optimism effect. Eleven
+of twelve nominal authoring runs succeed, and no-glass Base remains strong; the
+sharper next question is the joint coverage of the recovery skill and state
+population. The fresh population was not success/hazard screened like the
+historical panel, so the cross-panel difference cannot be attributed solely to
+source novelty, measurement or controller quality. The result supports changing
+the next research investment, rather than proving universal irrecoverability or
+insufficient execution-time information.
+
+## 7. Related work and the contribution boundary
 
 [SAFE](https://arxiv.org/abs/2506.09937) develops failure detection using internal
 VLA features. Our question concerns the consequences of alternative actions after
@@ -419,10 +478,12 @@ interval. The intended empirical contribution is to demonstrate when these issue
 change recovery conclusions and to test the predictive usefulness of the resulting
 evaluation on subsequent executions.
 
-## 7. Limitations and implications
+## 8. Limitations and implications
 
-The evidence is deliberately scoped. Sources are few and previously exposed,
-candidate Refresh configurations were historically selected, and Detour is a
+The evidence is deliberately scoped. Original panels contain few, previously
+exposed sources; candidate Refresh configurations were historically selected.
+The twelve fresh resets form a different, unscreened development population.
+Detour is a
 privileged structured controller in one task family. Runtime blocks may differ
 systematically; their variation cannot be attributed to IID policy noise alone.
 Neither a fixed controller's failure nor a low diagnostic reference value proves
@@ -526,7 +587,9 @@ invented repeated branches.
 
 The historical analysis uses 1,048 actual branches: 376 Detour, 288 candidate
 Refresh and 384 selection-retest branches. The prospective existing-state C block
-adds 332 actual branches: 188 Detour and 144 candidate Refresh. Reading one branch
+adds 332 actual branches: 188 Detour and 144 candidate Refresh. The fresh-reset
+study adds 384 branches, 36 evaluation prefixes and twelve nominal authoring
+rollouts; the branch total across these studies is 1,764. Reading one branch
 at two deadlines does not create a second experiment. The two Refresh panels share
 source pools and are not added together as independent sources.
 
@@ -544,8 +607,32 @@ The full-repeat Refresh 100-action contrast is -0.01758 with descriptive interva
 [-0.00521,0.00521]. C has finite repetitions, so these comparisons assess prediction
 of a new execution block rather than error against known expected treatment values.
 
+For the fresh-source primary reference at 440 actions, A/B source RMSE is
+4.81/0.00 points and D is 0.0023148, with interval [0,0.0069444]. The difference
+arises solely from n05. Its aggregate A-to-C gap of 1.39 points is below the
+predeclared five-point investment heuristic.
+
 The elementary same-policy example in Section 2 assumes two IID Bernoulli(q)
 executions. The only positive reused difference occurs when the first fails and
 the second succeeds, with probability (1-q)q. A fresh independent pair has mean
 zero difference for the frozen index choice. The empirical pseudo-option control
 requires no claim that actual GPU executions satisfy this toy IID model.
+
+## Appendix D. Terminal-state illustrations
+
+These posthoc illustrations use three historical fitting sources from the
+existing-state Detour C block. They show the two Base repeats and one Detour
+repeat; the second Detour repeat also succeeds in each case. We reconstruct each
+image from its logged terminal simulator state and original scene XML, verifying
+that the restored physical state is unchanged. No policy query or environment
+action is executed. These images illustrate recorded states; they are not asserted
+to reproduce the original camera pixels seen by the policy. Accident labels come
+from the recorded predicate, not a visual judgment about glass damage.
+
+![Three historical terminal-state examples](figures/terminal_examples.png)
+
+Figure 5. e15 illustrates variable Base outcomes; e18 and e21 retain benefit in
+all three blocks. The e18 second Base repeat reaches the deadline without task
+completion. e21 requires a long recovery trajectory. These selected illustrations
+explain patterns whose support is quantified in the full source tables; they do
+not supply additional independent sources.

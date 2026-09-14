@@ -77,6 +77,8 @@ def convert(markdown):
                 result.append(r'\bibliography{references}\bibliographystyle{iclr2027_conference}')
                 result.append(r'\clearpage\appendix');appendix=True
             title=re.sub(r'^Appendix\s+[A-Z]\.?\s*','',title)
+            if appendix and title=='Terminal-state illustrations':
+                result.append(r'\clearpage')
             result.append(r'\section{'+inline(title)+'}');i+=1;continue
         if line.startswith('### '):
             title=re.sub(r'^\d+\.\d+\s*','',line[4:])
@@ -112,8 +114,11 @@ def convert(markdown):
             # Prefer the version rendered at conference-column size when available.
             replacement=SOURCE.parent/'figures'/path.name
             if replacement.exists():path=replacement
+            if path.parent==SOURCE.parent/'figures' and path.with_suffix('.pdf').exists():
+                path=path.with_suffix('.pdf')
             rel=os.path.relpath(path,LATEX)
-            result += [r'\begin{figure}[tb]\centering',
+            placement='!ht' if path.stem=='terminal_examples' else 'tb'
+            result += [r'\begin{figure}['+placement+r']\centering',
                 r'\includegraphics[width=\linewidth]{'+rel+'}',
                 r'\caption{'+inline(text)+'}',r'\end{figure}'];continue
         para=[line];i+=1
@@ -132,7 +137,7 @@ def main():
     BUILD.mkdir(parents=True,exist_ok=True)
     source=SOURCE.read_text()
     title=source.splitlines()[0].removeprefix('# ')
-    display_title=inline(title).replace('Evaluating Repeatable',r'Evaluating\\ Repeatable')
+    display_title=inline(title).replace(': ',r':\\ ').replace('Value in',r'Value\\ in')
     (LATEX/'body.tex').write_text(convert(source))
     wrapper=r'''\documentclass{article}
 \usepackage{iclr2027_conference,times}

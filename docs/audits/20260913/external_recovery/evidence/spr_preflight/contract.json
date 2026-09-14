@@ -1,0 +1,223 @@
+{
+  "kind": "external_spr_interface_preflight",
+  "code_repository": "https://github.com/TingjunDai/SPRVLA",
+  "code_revision": "d57e4b81ebdcacea574b68be29d61ba04cdc7051",
+  "code_files": {
+    "experiments/libero/run_libero_eval_vllm.py": {
+      "sha256": "f8785337c4711f5f40fe5961a788f06587f366117d252b89c60b6fec1c90f4fb",
+      "bytes": 31762
+    },
+    "experiments/libero/sprvla.py": {
+      "sha256": "72f2da77c1d2a3145765221fa3b22dae569a7d715a48fa46a4876be93dc80681",
+      "bytes": 75951
+    },
+    "experiments/libero/libero_utils.py": {
+      "sha256": "1b6f840aa114ea7acaec4d879501fd661173d14e1de63ddc4313972dc8184c47",
+      "bytes": 4473
+    },
+    "experiments/libero/robot_utils.py": {
+      "sha256": "6b9813cc9a963e286f5537420bb2d9fb1fc3ab88e037996a16f6490148293cdc",
+      "bytes": 1462
+    }
+  },
+  "model_id": "SPRVLA/libero_spatial",
+  "model_revision": "13e02cf4d1e8cfc77c5fffbd8502289d853fcf07",
+  "model_files": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "52373fe24473b1aa44333d318f578ae6bf04b49b",
+      "size": 1570
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "6241ba7c371b08d8469cb2a7220396533c23686f",
+      "size": 484
+    },
+    {
+      "rfilename": "added_tokens.json",
+      "blobId": "852aa59a623ea806d4c8fb598ceba5fe0aeef65a",
+      "size": 12920
+    },
+    {
+      "rfilename": "chat_template.jinja",
+      "blobId": "90161ea1b72db2c989222c796471ace0698185c8",
+      "size": 676
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "c463db6dc749bb30806814ce704eca36d654f483",
+      "size": 6905
+    },
+    {
+      "rfilename": "configuration_sprvla.py",
+      "blobId": "b2603a4caac343852eea6df631a3067528e7233a",
+      "size": 12527
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "a5192321333d2fbd63426a7da821fe53034d60b4",
+      "size": 117
+    },
+    {
+      "rfilename": "image_processing_sprvla.py",
+      "blobId": "cd686a330c562b4db5b36b07ea4febbff158c76b",
+      "size": 36688
+    },
+    {
+      "rfilename": "merges.txt",
+      "blobId": "31349551d90c7606f325fe0f11bbb8bd5fa0d7c7",
+      "size": 1671853
+    },
+    {
+      "rfilename": "model-00001-of-00004.safetensors",
+      "blobId": "bc9b0d25e004b44e71a38ff341ec21060bf9981c",
+      "size": 4878581216,
+      "lfs": {
+        "sha256": "11e297f1db946a27d1fdf01c85cd3e860532ebacd094a229a5f750ad1b31151f",
+        "size": 4878581216,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00002-of-00004.safetensors",
+      "blobId": "171cf13ffdeefdf78a7c3180e66719b33982f72c",
+      "size": 4932745864,
+      "lfs": {
+        "sha256": "66b1ad37e8b851f66b765b9a26044c553c2a36dd3ac1d11a72c84351d6ab5130",
+        "size": 4932745864,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00003-of-00004.safetensors",
+      "blobId": "abf1923cc33cff08828f9190afdce27372929082",
+      "size": 4994552920,
+      "lfs": {
+        "sha256": "428332755a1d1ff52e6c54e7b38fd1abf0896813605f2c072479542a4bb964a6",
+        "size": 4994552920,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00004-of-00004.safetensors",
+      "blobId": "e4435596f129e6b47675825a531d733695e5146b",
+      "size": 1433042592,
+      "lfs": {
+        "sha256": "eb2326cd9db900fd6d17d9d5f720cbb0f5f96c3bbba27ae888c093c4414bc4aa",
+        "size": 1433042592,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model.safetensors.index.json",
+      "blobId": "dbdf78b1145207c55963b05f43e29d2c29bb2d9f",
+      "size": 67198
+    },
+    {
+      "rfilename": "model.yaml",
+      "blobId": "b5455d94e030d6ed5364219cc9a3273fc3cbfd28",
+      "size": 4735
+    },
+    {
+      "rfilename": "modeling_sprvla.py",
+      "blobId": "8d48bbfd1f58bd4471a9280e84efe07daf995e6b",
+      "size": 93970
+    },
+    {
+      "rfilename": "preprocessor_config.json",
+      "blobId": "45640185e826d6c2a6936bdeb16905828ab5c70d",
+      "size": 620
+    },
+    {
+      "rfilename": "processing_sprvla.py",
+      "blobId": "5b86a0b18a351ced63d5b1787d15506a14e45cec",
+      "size": 17749
+    },
+    {
+      "rfilename": "processor_config.json",
+      "blobId": "f5cc0b876ba07d3dfb93f2ec7afeb0db09b8c864",
+      "size": 369
+    },
+    {
+      "rfilename": "special_tokens_map.json",
+      "blobId": "ebb21632ced114b74e2eca8d974fba87ac288a5e",
+      "size": 42537
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "4a88f01f409a795935ec9c3aebb23260d0e10cdb",
+      "size": 11500226,
+      "lfs": {
+        "sha256": "70522ad61c51fe8b137105665e222eea81d787e5603c75641b02ba5480628ad6",
+        "size": 11500226,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "c6f235446ae8506815ff67d92f0672573dcec106",
+      "size": 86337
+    },
+    {
+      "rfilename": "vocab.json",
+      "blobId": "4783fe10ac3adce15ac8f358ef5462739852c569",
+      "size": 2776833
+    }
+  ],
+  "tokenizer_id": "Qwen/Qwen2-7B",
+  "tokenizer_revision": "453ed1575b739b5b03ce3758b23befdb0967f40e",
+  "tokenizer_files": [
+    {
+      "rfilename": "LICENSE",
+      "blobId": "6634c8cc3133b3848ec74b9f275acaaa1ea618ab",
+      "size": 11343
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "ae477f8df742839e77c615d11b0b1783f6ec2164",
+      "size": 664
+    },
+    {
+      "rfilename": "merges.txt",
+      "blobId": "20024bfe7c83998e9aeaf98a0cd6a2ce6306c2f0",
+      "size": 1671839
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "33ea6c72ebb92a237fa2bdf26c5ff16592efcdae",
+      "size": 7028015
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "f4b55f917af273d0dc98b67ec249f6445dd385f5",
+      "size": 1289
+    },
+    {
+      "rfilename": "vocab.json",
+      "blobId": "4783fe10ac3adce15ac8f358ef5462739852c569",
+      "size": 2776833
+    }
+  ],
+  "asset_root": "/projects/p33100/siosio/crashbench_external_recovery/sprvla",
+  "source_bundle": "/projects/p33100/siosio/crashbench_detour_benefit/a89f755da200_job5791132/e18/bundle.pkl",
+  "source_anchor": "e18",
+  "new_sources": 0,
+  "environment_steps": 0,
+  "max_model_queries": 2,
+  "max_new_tokens": 512,
+  "temperature": 0,
+  "purpose": "Verify official learned policy and rewind instruction produce parseable action chunks on an existing saved observation; no recovery-performance claim",
+  "requirements": [
+    "vllm==0.8.5",
+    "transformers==4.52.1",
+    "numpy<2",
+    "pillow",
+    "einops",
+    "accelerate",
+    "sentencepiece",
+    "opencv-python-headless<4.12"
+  ],
+  "cpu_hours_cap": 1,
+  "gpu_minutes_cap": 35,
+  "source_bundle_sha256": "b44b15cbead8332bce719c8a693a1a1573958e1814514f1e05b722ecd7229895"
+}

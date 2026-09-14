@@ -1,0 +1,38 @@
+{
+  "status": "INTERFACE_PREFLIGHT_PASSED",
+  "execution_commit": "6b91cee1d337e0bc28e2f792b8ccac44fe44c868",
+  "prepare_job": 6246660,
+  "prepare_elapsed": "00:06:42",
+  "prepare_exit": "0:0",
+  "inference_job": 6246661,
+  "inference_elapsed": "00:01:38",
+  "inference_exit": "0:0",
+  "inference_max_rss_kib": 25448948,
+  "gpu": "NVIDIA H100 80GB HBM3",
+  "output": "/projects/p33100/siosio/crashbench_external_recovery/6b91cee1d337_spr_20260914T030724Z",
+  "account": "p33100",
+  "partition": "gengpu",
+  "resource_adjustment": {
+    "when": "before model execution while job pending",
+    "original_gpu_request": "gpu:a100:1",
+    "effective_gpu_request": "gpu:1",
+    "original_minutes": 35,
+    "effective_minutes": 15,
+    "cpus": 8,
+    "memory_gb": 64,
+    "reason": "Use an earlier compatible GPU slot for the bounded interface check; within original one-GPU/35-minute cap"
+  },
+  "model_queries": 2,
+  "new_sources": 0,
+  "environment_steps": 0,
+  "recovery_performance_measured": false,
+  "normal_action_shape": [
+    7,
+    7
+  ],
+  "rewind_action_shape": [
+    8,
+    7
+  ],
+  "output_boundary": "Normal generation has seven complete actions plus an unclosed trailing action fragment; no action was fabricated and no environment action was executed."
+}
