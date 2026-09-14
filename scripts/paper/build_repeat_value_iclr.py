@@ -20,6 +20,7 @@ CITES = {
     'sharma25a':'sharma2025decision', '2309.10874':'vincent2023guarantees',
     '2603.09292':'dai2026spr', '2406.09246':'kim2024openvla',
     '2410.24164':'black2024pi0', '2306.03310':'liu2023libero',
+    '2606.07723':'chen2026volo',
 }
 
 

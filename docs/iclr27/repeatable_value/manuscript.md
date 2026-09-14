@@ -403,6 +403,12 @@ structured geometric detour. Availability of an external model is distinct from
 a completed replication; the present performance tables contain our two evaluated
 interfaces.
 
+[VoLoAgent](https://arxiv.org/abs/2606.07723) combines VLA execution with VLM
+monitoring and physical grasp/place tools, and evaluates the resulting orchestration
+system. Such systems motivate testing stronger external recovery mechanisms.
+Our saved-state comparisons ask a narrower question: the incremental value of a
+fixed intervention relative to continued Base execution at a declared decision state.
+
 The statistical ideas behind sample splitting and cautious policy improvement are
 also established. [Decision-Point Guided Safe Policy Improvement](https://proceedings.mlr.press/v258/sharma25a.html)
 studies improvement where data support is sufficient, and
