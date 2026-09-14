@@ -1,4 +1,15 @@
-# Current: Prospective C complete; repeatable-value paper drafted — 2026-09-13
+# Current: Fresh-source decision probe prepared — 2026-09-13
+
+The user asked to continue Pro's direction using the completed C findings.
+The [bounded fresh-source plan](audits/20260913/fresh_value/PLAN.md) specifies
+12 fresh task-0 reset sources, 36 condition episodes, and at most 432 A/B/C
+paired branches. Freeze A choices before B; freeze A/B forecasts before C.
+All execution is on Quest, with unchanged OpenVLA, Detour, trigger, historical
+gates and absolute episode budgets. No D8 outcomes or benchmark expansion.
+Fresh resets are not nominal-success/hazard screened; report this population
+separately from the historical panel. Entry: `setup/fresh_value.sbatch`.
+
+# Historical: Prospective C complete; repeatable-value paper drafted — 2026-09-13
 
 [Chinese results](audits/20260913/repeat_value/RESULTS_ZH.md). Jobs6240307/6240316
 completed all332 new branches on existing bundles, no new sources or prefixes.
