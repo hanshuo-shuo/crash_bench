@@ -28,7 +28,7 @@ an opportunity that reappears later.
 
 ## 1. Introduction
 
-A robot is about to continue an unsuccessful manipulation. A recovery routine takes
+A robot reaches a difficult manipulation state. A recovery routine takes
 over and completes the task. This is a valuable demonstration: the alternative
 controller can accomplish something the observed continuation did not. To decide
 whether a future robot should intervene in that state, however, the relevant quantity
@@ -69,12 +69,16 @@ selection value, a second Refresh panel has no observed task-selection gain, and
 Detour retains several actual rescues while damaging many nominally successful tasks
 when applied indiscriminately.
 
-The contribution is an empirical evaluation procedure and a measured distinction
-between kinds of intervention evidence. The selection-bias principle itself is
-established, and our experiments do not propose a new superior recovery policy.
-The central practical question is whether an evaluation provides a useful forecast
-of subsequent intervention benefit. We test that question with 332 prospective C
-executions on saved states, keeping all prior choices and predictions fixed.
+Our contribution is a prospective empirical study of what recovery evidence
+predicts. We lock choices and forecasts before 332 new executions, and find
+opportunities that disappear, opportunities that persist, and one that disappears
+in a replication and returns in the next. This changes the research decision:
+deadline-sensitive acceleration calls for an efficiency objective; persistent
+benefit calls for a selector that can identify it; missing benefit support calls
+for examining the recovery skill and state population. The evaluation connects
+observed outcomes to these different next steps. Sample splitting and selection
+bias are established statistical ideas; the empirical question is whether they
+change the conclusion about a particular VLA intervention.
 
 ## 2. Intervention value and its measurement
 
@@ -99,6 +103,21 @@ improve a safety objective while leaving this task-success difference unchanged.
 We consequently report accident outcomes, lost Base successes, and new accidents
 alongside success gain. We do not collapse these outcomes into a freely selected
 utility coefficient.
+
+Two idealized quantities clarify the learning problem. With full state access,
+the positive intervention opportunity is Omega; with only the execution-time
+input X, the available opportunity is Omega_X:
+
+\[
+\Omega=E_s[\max(0,\Delta_R(s,h))],\qquad
+\Omega_X=E_X[\max(0,E[\Delta_R(s,h)\mid X])],\qquad \Omega_X\leq\Omega.
+\]
+
+The standard ordering of these quantities separates benefit support from the
+ability to recognize it. Our finite-repetition reference estimates neither
+quantity exactly. Its role is diagnostic: a failed learned selector alone cannot
+tell us whether the fixed recovery has little value, the available inputs hide
+that value, or the learner fails to use informative inputs.
 
 For diagnostic choice, let delta_A(s) select R only when its mean success in
 execution block A exceeds Base's; ties retain Base. We measure the same fixed choice
@@ -133,6 +152,10 @@ independence assumptions, so their observed pseudo-value is reported directly.
 ## 3. Protocol and evidence
 
 ### 3.1 Frozen panels
+
+We use [OpenVLA](https://arxiv.org/abs/2406.09246) and
+[pi0](https://arxiv.org/abs/2410.24164) policies in
+[LIBERO](https://arxiv.org/abs/2306.03310) manipulation tasks.
 
 | Panel | Policy and alternative | Physical sources | Decision episodes | Original branches | A/B repeats per arm | Budgets |
 |---|---|---:|---:|---:|---:|---|
@@ -239,6 +262,8 @@ raw execution counts, distinct from the source-weighted selection table above.
 All five positive paired conversions at 100 have a Base continuation that succeeds
 at action 101 or 102. The shorter deadline measures a completion-time advantage
 for these cases; it does not establish rescue from persistent inability to complete.
+This acceleration is measured in environment actions. A practical latency objective
+would also need to account for Refresh's additional inference cost.
 
 The selected policy also changes its apparent value under this check. Keeping the
 same one-shot A choice from the 100-action budget, its B gain changes from +3.12
@@ -292,17 +317,12 @@ historical frozen references remain visible.
 
 ### 5.1 Refresh: a prospective check changes the value estimate
 
-The Refresh C job completed all 144 branches in 27 minutes 18 seconds. The one-shot
+The Refresh C block completed all 144 branches. The one-shot
 100-action reference progresses from 12.50 points in A to 3.12 in B to 0.00 in C.
 The full-repeat reference retains 2.34 points at 100 actions, but reaches -0.78 at 200.
 Choices and forecasts were fixed before this new execution block.
 
-| Reference / budget | A gain | B gain | C gain | Source RMSE A / B |
-|---|---:|---:|---:|---:|
-| One-shot / 100 | 12.50 | 3.12 | 0.00 | 25.00 / 19.76 |
-| Four repeats / 100 | 7.03 | 5.47 | 2.34 | 15.93 / 20.73 |
-| One-shot / 200 | 3.12 | 0.00 | 0.00 | 8.84 / 0.00 |
-| Four repeats / 200 | 1.56 | 0.00 | -0.78 | 6.63 / 2.21 |
+The complete budget-by-reference table is in Appendix A.
 
 The two reference types use their stated number of observations per arm in each
 block; they differ in both selection and evaluation, not just in the precision of
@@ -313,7 +333,7 @@ has interval [-2.34,0.00].
 Forecast accuracy is mixed. B is closer than A to C for the one-shot 100 reference,
 including source-level prediction error. For the four-repeat 100 reference, B's
 aggregate value is closer, but its source-level RMSE is higher. The predeclared
-squared-error improvement contrast is -0.01758, with descriptive interval
+squared-error improvement contrast is -0.01758 in squared probability units, with descriptive interval
 [-0.04883,0.01367]. Thus separating a single estimation block does not establish
 a generally better forecast of source-specific value. The third block is useful
 because it can expose this failure rather than assume the forecast improved.
@@ -347,12 +367,7 @@ The C success rates are 69.79% for the fixed A reference and 64.58% for Base;
 the gain has a descriptive source interval of [0.00, 11.46] points. The selected
 reference has no observed lost Base success or new accident in C.
 
-| Reference / budget | A gain | B gain | C gain | Source RMSE A / B |
-|---|---:|---:|---:|---:|
-| One-shot / 220 | 4.17 | 2.08 | 2.08 | 8.33 / 0.00 |
-| Two repeats / 220 | 4.17 | 2.08 | 3.12 | 4.17 / 4.17 |
-| One-shot / 440 | 6.25 | 4.17 | 4.17 | 8.33 / 0.00 |
-| Two repeats / 440 | 6.25 | 4.17 | 5.21 | 4.17 / 4.17 |
+Figure 3 retains both budgets and both reference types; Appendix A gives their values.
 
 The constructive cases remain e18 and e21: both have positive benefit in A, B,
 and C. Detour's C executions finish at 202 and 432 episode actions respectively.
@@ -394,6 +409,13 @@ studies inference-time recovery through counterfactual realignment. A direct
 comparison would need to align recovery permissions, physical costs and accident
 definitions, rather than compare unmatched success rates.
 
+[See, Plan, Rewind](https://arxiv.org/abs/2603.09292) learns a brief retraction
+operation and uses progress anomalies to trigger it. It offers a concrete external
+mechanism for testing whether our observations extend beyond queue refresh and a
+structured geometric detour. Availability of an external model is distinct from
+a completed replication; the present performance tables contain our two evaluated
+interfaces.
+
 The statistical ideas behind sample splitting and cautious policy improvement are
 also established. [Decision-Point Guided Safe Policy Improvement](https://proceedings.mlr.press/v258/sharma25a.html)
 studies improvement where data support is sufficient, and
@@ -423,3 +445,96 @@ The practical implication of the current evidence is nevertheless concrete. A
 successful recovery branch, repeat-disjoint selection benefit, and successful
 deployment answer different questions. Reporting them separately preserves genuine
 recovery examples while making clear which opportunities remain to be learned.
+
+## Appendix A. Complete prospective comparison tables
+
+These tables retain every originally declared budget and both reference types.
+The one-shot choice uses the first execution of each arm in A and is evaluated
+using the first execution in B/C. The full-repeat choice uses all repetitions in
+each block. They are different choices with different finite-sample C targets.
+All means and RMSE values are source-weighted percentage points. Sources overlap
+across blocks; the execution count is not the independent sample size.
+
+### Candidate Refresh
+
+| Reference / budget | A gain | B gain | C gain | Source RMSE A / B |
+|---|---:|---:|---:|---:|
+| One-shot / 100 | 12.50 | 3.12 | 0.00 | 25.00 / 19.76 |
+| Four repeats / 100 | 7.03 | 5.47 | 2.34 | 15.93 / 20.73 |
+| One-shot / 200 | 3.12 | 0.00 | 0.00 | 8.84 / 0.00 |
+| Four repeats / 200 | 1.56 | 0.00 | -0.78 | 6.63 / 2.21 |
+
+### Structured Detour
+
+| Reference / budget | A gain | B gain | C gain | Source RMSE A / B |
+|---|---:|---:|---:|---:|
+| One-shot / 220 | 4.17 | 2.08 | 2.08 | 8.33 / 0.00 |
+| Two repeats / 220 | 4.17 | 2.08 | 3.12 | 4.17 / 4.17 |
+| One-shot / 440 | 6.25 | 4.17 | 4.17 | 8.33 / 0.00 |
+| Two repeats / 440 | 6.25 | 4.17 | 5.21 | 4.17 / 4.17 |
+
+The candidate Refresh full-repeat C success differences have descriptive source
+intervals [-4.69,13.28] at 100 suffix actions and [-2.34,0.00] at 200. Detour's
+full-repeat C difference at 440 absolute episode actions has interval [0.00,11.46].
+Intervals use 5,000 paired physical-source bootstrap draws. A zero endpoint or
+zero interval does not certify a population property.
+
+## Appendix B. What the branches preserve
+
+The saved decision bundle contains the simulator state and exact scene XML,
+controller and observable runtime state, policy continuation, delivered
+observations, queued or pending actions, and declared RNG state. The branch
+restoration order reconstructs the model and simulator, restores controller and
+policy continuation, restores RNG, and restores the saved observation boundary.
+Actual subsequent policy inputs and actions are retained. Matching this boundary
+does not imply identical future pixels or arithmetic across executions.
+
+OpenVLA proposes a nominal action before the frozen risk check. Both options pay
+for that proposal. Base executes it once; an accepted Detour discards it and
+executes recovery actions, then returns to Base if the recovery routine finishes.
+The first eligible risk crossing uses threshold 0.3072859857738742 before action
+index 220. The original strong risk reference uses threshold 0.5285060506311258.
+The learned gate keeps its historical all-Base threshold; no retrospective tuning
+is applied in the prospective blocks.
+
+The Detour controller is a fixed position-control state machine conditioned on
+privileged glass, bowl and plate geometry. Its stage sequence, side, lane margin,
+height offsets and leg caps remain frozen. This permits a controlled study of a
+specific alternative, but not a claim that all physically feasible recoveries
+were tested. Refresh clears a software observation-delay queue and requeries the
+unchanged pi0 policy once. Future sensor delay remains active.
+
+Safe success requires task completion before a recorded accident and within the
+specified budget. Accident has precedence if success and accident coincide.
+Off-path and no-glass episodes remain in the Detour denominator; matched-buffer
+controls remain in Refresh. An episode that terminates before a candidate is
+available supplies one shared prefix outcome to every policy comparison, without
+invented repeated branches.
+
+## Appendix C. Execution units and forecast comparison
+
+The historical analysis uses 1,048 actual branches: 376 Detour, 288 candidate
+Refresh and 384 selection-retest branches. The prospective existing-state C block
+adds 332 actual branches: 188 Detour and 144 candidate Refresh. Reading one branch
+at two deadlines does not create a second experiment. The two Refresh panels share
+source pools and are not added together as independent sources.
+
+For each fixed reference, source-level forecast comparison uses
+
+\[
+D=E_j[(g_{A,j}-g_{C,j})^2-(g_{B,j}-g_{C,j})^2].
+\]
+
+A positive D favors B's prediction of the new block; a negative D favors A.
+These squared-error contrasts use unscaled success probabilities, whereas the
+displayed gains and RMSE use percentage points.
+The full-repeat Refresh 100-action contrast is -0.01758 with descriptive interval
+[-0.04883,0.01367]. Detour's full-repeat 440-action contrast is zero with interval
+[-0.00521,0.00521]. C has finite repetitions, so these comparisons assess prediction
+of a new execution block rather than error against known expected treatment values.
+
+The elementary same-policy example in Section 2 assumes two IID Bernoulli(q)
+executions. The only positive reused difference occurs when the first fails and
+the second succeeds, with probability (1-q)q. A fresh independent pair has mean
+zero difference for the frozen index choice. The empirical pseudo-option control
+requires no claim that actual GPU executions satisfy this toy IID model.

@@ -12,7 +12,8 @@ historical glass-only manuscript in the adjacent manuscript/ directory.
 2. Same-policy pseudo-options reveal what outcome reuse can manufacture.
 3. Repeat-disjoint evaluation and complete deadline curves distinguish different gains.
 4. Frozen forecasts are tested in a new C execution block.
-5. Retained recovery opportunities and execution-time learned selection remain distinct.
+5. Fresh-reset source transport tests whether old opportunities reappear.
+6. Retained recovery opportunities and execution-time learned selection remain distinct.
 
 ## Evidence entry points
 
@@ -21,6 +22,8 @@ historical glass-only manuscript in the adjacent manuscript/ directory.
 - [Prospective C contract](../../audits/20260913/repeat_value/C_PLAN.md)
 - [C machine freeze](../../audits/20260913/repeat_value/c_contract.json)
 - [Quest provenance](../../audits/20260913/repeat_value/RUN.md)
+- [Fresh-source plan](../../audits/20260913/fresh_value/PLAN.md)
+- [External recovery asset assessment](../../audits/20260913/external_recovery/ASSESSMENT_ZH.md)
 - [Claim-to-row mapping](EVIDENCE_MAP.md)
 
 The completed C experiment has 332 branches on saved existing states. It measures subsequent
@@ -29,11 +32,17 @@ published before either C job began. No model or recovery controller is refitted
 
 ## Rendering
 
-`scripts/paper/build_repeat_value_pdf.py` renders the Markdown into the review PDF.
-It uses reportlab, Pillow, a local TeX installation for two equations, Poppler,
-and DejaVu fonts; paths presently match this macOS workspace. It is a review format,
-not the official conference submission template. Experimental figures are generated
-on Quest by the corresponding analysis entry points.
+`scripts/paper/build_repeat_value_iclr.py` renders the Markdown through the official
+ICLR 2027 LaTeX style. The unchanged official files, citation database and style
+provenance live in `latex/`. The header marks this as an unsubmitted working draft.
+The current PDF contains main text, references and appendices; verify the main-text
+page separately from total PDF pages. The required AI-use statement records the
+actual assistance and pending human-author review.
+
+`build_repeat_value_pdf.py` remains the historical reportlab review builder.
+Use the ICLR builder for the current draft. Experimental figures are generated on
+Quest by `scripts/paper/render_iclr_value_figures.py`; no scientific analyses run
+in the local PDF builder.
 
 Before sharing an updated PDF, re-render and visually inspect every page. Temporary
 equation and page images live under tmp/pdfs/ and are ignored. The PDF is a generated
