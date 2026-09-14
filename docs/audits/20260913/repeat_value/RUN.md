@@ -28,3 +28,13 @@ Detour job6240307 completed:1h1m29s, exit0:0, all188 branches. C.json and analys
 manifest hashes verified after retrieval, preserved in c_detour/. Batch MaxRSS
 18501996K (Detour) and18928604K (Refresh). Total allocated GPU elapsed88m47s,
 approximately1.48 A100 GPU hours. Neither original source root was overwritten.
+
+Final paper figure: CPU job6242685, commit a11b5072c4371f9c49e7466dd5ff50260d912e0c,
+COMPLETED,19 seconds, exit0:0. Output results/repeat_value/paper_a11b5072c437_6242685,
+hash-verified reviewed copy in paper_figure/. It presents the precomputed fixed
+A/B/C cells and intervals, with no new outcome, model or scoring rule.
+
+Delivery: completed9-page English review PDF, editable manuscript, Chinese results,
+full evidence tables and all execution provenance. All9 pages visually checked;
+local file links validated. Official ICLR submission formatting remains separate
+from this readable research draft.
