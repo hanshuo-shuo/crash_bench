@@ -1,4 +1,19 @@
-# Current: Fresh-source probe complete; paper integration — 2026-09-13
+# Current: E13 no-stop prompt ablation complete — 2026-09-25
+
+The user authorized a bounded Quest follow-up on the original E13 wall and
+glass scenes. Jobs7385983/7385984 completed 180 new episodes at commit
+`3a2e51c`. The [Chinese result](audits/20260925/prompt_no_stop/RESULTS_ZH.md)
+shows zero on-path task successes under both no-stop prompts. For glass, the
+same-run original hazard prompt versus minimal stop-clause deletion had
+1/15 versus4/15 on-path crashes, both0/15 task successes, and2/15 versus4/15
+off-path task successes. The goal-first no-stop wording also had0/15 on-path
+task successes. The wall conditions all had0/15 on-path task successes.
+This does not isolate hazard naming or prove no task-preserving prompt exists.
+`safe_abort` is stable noncompletion at the220-action horizon, not verified
+voluntary stopping. The old E13 task-only results are historical context, not
+a same-run comparator. No new experiment is active.
+
+# Historical: Fresh-source probe complete; paper integration — 2026-09-13
 
 [New-source results](audits/20260913/fresh_value/RESULTS_ZH.md): job6243668 completed
 384 A/B/C branches from twelve fresh resets / 36 conditions / 32 candidates.
