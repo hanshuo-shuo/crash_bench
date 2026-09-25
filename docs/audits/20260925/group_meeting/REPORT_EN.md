@@ -11,7 +11,7 @@ Here, **Base** means continuing the original VLA policy. **Detour** is our fixed
 | 1. Path placement | Wall: **15/15** crashes on path, **0/33** clearly off path | Obstacle position matters causally in this setup. |
 | 2. Readable warning | OpenVLA wall probe **0.998 AUC** at T−5; no final-window retreat in **25/25** wall runs | A warning signal is readable, but safe action does not follow automatically. |
 | 3. Guard versus steering | Guard: **15/15 → 0/15** crashes; final-layer steering: **100%** crashes at all six tested strengths | Reading a direction and steering with it are different operations. |
-| 4. Common safety baselines | End-effector filter changed **551/700** actions, yet **15/15** runs crashed | A filter can be active and still protect the wrong robot geometry. |
+| 4. Safety baselines and prompts | Naming the glass cut crashes **9/15 → 2/15**, but task success **5/15 → 0/15**; the end-effector filter still crashed **15/15** | Fewer crashes can come from stopping rather than finishing. |
 | 5. Repeat variability | Same saved state and same option: **12/12** action traces differed; **1/12** outcomes differed | One branch outcome is a noisy value label. |
 | 6. Deadline effect | Refresh **26/36 vs 23/36** Base at 100 steps; **31/36 vs 33/36** at 200 | A fixed cutoff can reverse the apparent winner. |
 | 7. Weak comparator | Risk and intervention benefit disagree in only **19/273** decisions; simple Risk→Detour utility **0.211** versus learned router **0.194** | A strong simple baseline changes the method claim. |
@@ -57,13 +57,26 @@ The most informative mechanism checks are: steer at middle layers, steer along a
 
 ### 4. Simple safety methods often fail or only stop the task
 
-On the early 15-run wall comparison, a generic “move slowly, avoid collisions” instruction still gave **15/15** crashes. A Qwen visual monitor asked for a stop on **124/202** steps and still had **7/15** crashes. An end-effector-point safety filter changed **551/700** actions and still had **15/15** crashes. A full-distal-arm oracle stop prevented all 15 crashes, but all 15 runs ended as safe aborts.
+We tested three prompts on matched on-path hazards and off-path controls: the original task instruction; a generic “move slowly, avoid collisions” prefix; and a prompt that explicitly named the **red wall** or **blue glass** and told the robot not to touch it. Each cell has five scenes and three repeats. The original task instruction did not ask the robot to avoid the added hazard.
+
+| Hazard and prompt | On-path crashes | On-path task successes | On-path safe stops | Off-path task successes |
+|---|---:|---:|---:|---:|
+| Wall, original task | 15/15 | 0/15 | 0/15 | 2/15 |
+| Wall, generic caution | 15/15 | 0/15 | 0/15 | 2/15 |
+| Wall, name the red wall | **13/15** | **0/15** | 2/15 | **0/15** |
+| Glass, original task | 9/15 | 5/15 | 0/15 | 11/15 |
+| Glass, generic caution | 9/15 | 3/15 | 2/15 | 14/15 |
+| Glass, name the blue glass | **2/15** | **0/15** | **13/15** | **4/15** |
+
+So the generic caution prompt did not reduce crashes. Naming the glass did change behavior sharply, but it mostly made the robot stop: no on-path glass task was completed, and even the safe off-path glass controls lost task success. The wall-specific prompt had a smaller crash reduction and still no task success. The [full prompt matrix](../../../../results/ANALYSIS_careful_prompt.md) also reports off-path crashes and safe stops; these controls are important when judging any apparent safety gain.
+
+In a separate early wall-baseline comparison, a Qwen visual monitor asked for a stop on **124/202** steps and still had **7/15** crashes. An end-effector-point safety filter changed **551/700** actions and still had **15/15** crashes. A full-distal-arm oracle stop prevented all 15 crashes, but all 15 runs ended as safe aborts.
 
 The immediate engineering question is where the contact happened. Earlier tall-wall detours implicated a forearm/elbow region, while this filter constrained only the end-effector point. Record the first contacting link on the five wall geometries, then compare that link with each filter's protected geometry. This is a concrete bridge to testing stronger safety layers; it is not evidence that AEGIS or KNOWS would fail, since neither was run in this comparison.
 
 ![Safety baseline outcomes on the wall set](../../../../results/safety_baseline_analysis/fig_policy_comparison.png)
 
-*Figure: crash rate, not task success. The companion [outcome composition](../../../../results/safety_baseline_analysis/fig_outcomes_and_interventions.png) shows that the zero-crash oracle stop also gave zero task completions.* Data: [baseline summary](../../../../results/safety_baseline_analysis/combined_summary.json), [prompt follow-up](../../../../results/ANALYSIS_careful_prompt.md). A hazard-specific prompt later reduced glass crashes but also produced **0/15** glass task completions, another example of the safety/completion tradeoff.
+*Figure: the separate early wall-baseline comparison, showing crash rate rather than task success. The companion [outcome composition](../../../../results/safety_baseline_analysis/fig_outcomes_and_interventions.png) shows that the zero-crash oracle stop also gave zero task completions.* Data: [baseline summary](../../../../results/safety_baseline_analysis/combined_summary.json), [matched prompt follow-up](../../../../results/ANALYSIS_careful_prompt.md), and its [raw prompt tables](../../../../results/careful_prompt/combined_summary.json).
 
 ## Four negative or boundary results
 
