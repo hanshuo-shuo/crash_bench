@@ -212,6 +212,18 @@ def test_careful_prompt_conditions_are_fixed_and_hazard_specific():
     assert base in wall and base in glass
     templates = prompt_templates_for_report()
     assert templates["hazard_specific"]["wall"] != templates["hazard_specific"]["glass"]
+    for hazard in ("wall", "glass"):
+        original = compose_instruction(hazard, "hazard_specific", base)
+        no_stop = compose_instruction(hazard, "hazard_specific_no_stop", base)
+        goal_first = compose_instruction(
+            hazard, "hazard_specific_goal_first_no_stop", base
+        )
+        assert no_stop == original.replace(
+            "stop before it or move around it", "move around it"
+        )
+        assert goal_first.startswith(base + ". ")
+        assert "move around it and continue the task" in goal_first
+        assert "stop before it" not in no_stop + goal_first
 
 
 def test_careful_prompt_summary_separates_treatment_and_control():
