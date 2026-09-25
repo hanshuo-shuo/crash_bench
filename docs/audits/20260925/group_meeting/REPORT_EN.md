@@ -110,6 +110,8 @@ The problem had two sides. **Good examples were hard to make, and even the scrip
 
 **August 13–29: Learning which option to pick, not how to move**
 
+Predicting that the Base policy may fail does not reveal whether intervention will help, which intervention to use, or whether safety comes at the cost of abandoning the task. 
+
 Next, I made the problem simpler. Instead of learning new movements, I gave the robot three fixed options:
 
 - Base: keep running OpenVLA.
