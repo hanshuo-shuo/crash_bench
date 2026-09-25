@@ -1,10 +1,12 @@
 # CrashBench: eight results worth taking forward
 
-## The short version
+## In Short
 
-Our robot often runs into an obstacle that lies on its path. Its hidden state can warn us about the coming crash, and an outside controller can use that warning to stop the robot. But stopping is much easier than going around the obstacle and finishing the task. There is also a measurement problem: even from the same saved state, another run can take a different path or reach a different outcome. So I think the next paper should separate **detecting danger**, **avoiding an accident**, **finishing the task**, and **showing that the gain repeats**.
+Our robot often crashes into obstacles that lie directly along its path. We found that the model's hidden state can often signal this risk before the collision happens, and an external controller can use that signal to stop the robot in time. But stopping the robot is the easy part. A much harder question is whether it can avoid the obstacle and still complete the task.
 
-Here, **Base** means continuing the original VLA policy. **Detour** is our fixed scripted attempt to go around the obstacle and finish. **Retreat** moves away and holds still; a safe stop is **not** task success. A probe's “T−10” score predicts a crash *within* ten steps; the recovery table's T−10 state was saved about ten actions before a recorded collision. These are different measurements. Unless stated otherwise, counts below are observed episodes or saved decisions, not independent robot tasks.
+
+
+
 
 | Result | Best number to remember | What it tells us |
 |---|---|---|
@@ -17,25 +19,26 @@ Here, **Base** means continuing the original VLA policy. **Detour** is our fixed
 | 7. Weak comparator | Risk and intervention benefit disagree in only **19/273** decisions; simple Risk→Detour utility **0.211** versus learned router **0.194** | A strong simple baseline changes the method claim. |
 | 8. Recovery window | Detour finishes **7/23** at T−20 and T−10, then **4/23** at T−5 | The available recovery action is a bottleneck, even when risk is detectable. |
 
-## Four positive results
 
 ### 1. The obstacle causes a crash when it crosses the path
 
-We kept the wall type and task fixed and moved the wall. The five on-path wall geometries crashed in all 15 repeats. Eleven clearly off-path geometries had no crashes in 33 repeats. Intermediate positions gave intermediate crash rates. The same on-path/clear-off-path direction appears separately in OpenVLA, OFT, and π0: each model had **5/5** on-path crashes and **0/10** clear-control crashes. With a movable glass, the matched comparison was **30/50** on-path crashes and **0/50** off path; across five along-path positions, the crash counts were **0, 1, 9, 10, 10** out of ten.
+When we moved the wall while keeping the task fixed, crashes depended strongly on whether the wall was actually on the robot's path. On-path walls caused frequent or consistent crashes, while clearly off-path walls caused almost none. The same pattern appeared in OpenVLA, OFT, and π0, and also held in the movable-glass setup.
 
-This is our cleanest evidence that the robot's path, rather than the mere sight of an obstacle, drives this failure. It is still one task and a small set of obstacle geometries. I would keep the result and spend little new rollout budget on it. A cheap next analysis is to align wall and no-wall actions *before* impact and show when their paths first split.
+Since this result is already quite clear, we probably do not need many more rollouts here. A useful low-cost follow-up is to compare wall and no-wall trajectories before impact and identify when their actions first begin to diverge.
 
-![Wall clearance and observed crash outcomes](../../../../setup/figures/fig_clearance_vs_crash.png)
+And I find a more natrual benchmark saying the samilar thing but they did it in a more natrual way.
+https://huggingface.co/datasets/THURCSCT/SafeLIBERO
 
-*Figure: wall clearance against the recorded nominal path. The 15/15 and 0/33 comparison uses the clear end of the sweep; transition walls are not included in the 0/33 denominator.* Data: [wall analysis](../../../../results/ANALYSIS_ood_control.md), [three-model summary](../../../../results/path3_oft_summary.json), [glass table](../../../../results/ANALYSIS_glass.md). Clips: [wall crash GIF](../../../../setup/figures/witness_crash.gif), [glass strike GIF](../../../../setup/figures/gif_objcol_onpath.gif).
+<img width="1780" height="1176" alt="image" src="https://github.com/user-attachments/assets/1878ff7a-175c-4a71-a71c-7b5ad2c48974" />
+
 
 ### 2. The warning is in the model, but the actions keep moving toward the wall
 
-A linear probe trained on frozen OpenVLA hidden states separates near-crash wall frames at T−5 with **0.998 ROC-AUC**; OFT gives **0.903**, and a glass-specific OpenVLA probe gives **0.944**. At T−10 the wall and glass scores are **1.000** and **0.929**. The wall probe scores visible, clearly off-path walls about as low as no-wall scenes. That check matters: it points to collision risk on this path, rather than simply detecting a red wall in the image.
+A simple linear probe can read crash risk from the VLA's hidden state surprisingly well. For wall collisions, OpenVLA reaches 0.998 AUC at T−5 and 1.000 at T−10; OFT reaches 0.903, and the glass probe reaches about 0.94. Importantly, visible walls that are clearly off the robot's path receive low risk scores, similar to no-wall scenes. So the probe seems to capture whether the current path is dangerous, rather than just whether a wall is visible.
 
-The behavior tells a different story. In 25 matched wall episodes, there was **no sustained end-effector retreat in the final pre-impact window**; near-impact commands became more wall-directed in **22/25**. This is evidence of a representation-to-action gap in these captures. It does not show that the robot has a human concept of danger or that *all* possible avoidance motions are absent.
+But the policy does not act on this signal. In 22/25 wall episodes, the final commands before impact actually moved more toward the wall, with no clear retreat behavior. This gives us a useful representation–action gap: the hidden state contains predictive information about the crash, but that information is not being turned into avoidance behavior.
 
-Cross-obstacle transfer is weak. A wall-trained probe gets only **0.359 AUC** on glass; a probe trained on both hazards gets **0.888**. A useful next question is which part of the signal is shared. Earlier lead times also matter: a T−5 alarm may be enough to stop but too late to finish a detour.
+The signal also does not transfer well across obstacle types. A probe trained only on walls gets just 0.359 AUC on glass, while training on both wall and glass improves this to 0.888. This suggests that much of the current risk signal is obstacle-specific rather than fully general. A key next question is what part of the representation is shared across hazards, and whether earlier warnings give enough time not just to stop, but to detour and finish the task.
 
 ![Pre-impact behavior, probe AUC, and off-path control](../../../../setup/figures/fig_selfreport_probe.png)
 
@@ -43,17 +46,23 @@ Cross-obstacle transfer is weak. A wall-trained probe gets only **0.359 AUC** on
 
 ### 3. An outside guard stops the crash; pushing the probe direction does not
 
-When the wall probe triggered a scripted Retreat-and-Hold controller, crashes fell from **15/15 to 0/15**, mean peak wall force fell from **321.7 N to 0**, and the guard did not trigger in **22** benign rollouts from this fitted wall family. That is a real, scoped safety result. The robot stopped; it did not complete the task.
+When the wall probe detected danger, we switched to a simple scripted Retreat-and-Hold controller. 
 
-We also tried subtracting the probe's “crash direction” from OpenVLA's final hidden readout. All six tested strengths still had **100%** wall crashes. The hook did change actions, but the direction's action-token logit norm was only **0.742**, versus **7.688** over the full vocabulary. That is a norm ratio, **not** a measured angle or proof that every steering direction fails. It suggests that a direction useful for *reading* risk is a poor knob for *controlling* this action head.
+This worked well for stopping crashes: the crash rate dropped from 15/15 to 0/15, and the mean peak wall force dropped from 321.7 N to 0. 
 
-The main guard has an important failure case. In a later new-wall/new-task study, the Base policy had **0/50** crashes, while the guard stopped **50/50** otherwise safe episodes. That study had only 12 positive training frames from one wall and no positive calibration or held-out frames. It tests false interventions on safe scenes; it cannot test crash prevention on new hazards. A small stop-action LoRA offers a second lead: on two unseen walls, crashes fell from **6/6 to 1/6**, but it produced safe aborts rather than task completion and had costs on controls.
+So this is a clear safety result, but only in a limited setting. The robot avoided the crash by stopping; it did not finish the task.
 
-The most informative mechanism checks are: steer at middle layers, steer along a direction learned from *backward versus forward actions*, and compare the action readout before and after the stop-action LoRA. Then test a held-out wall online and try the guard on OFT.
+We also tried directly steering OpenVLA's hidden representation. Specifically, we subtracted the probe's “crash direction” from the model's final hidden readout. This did change the actions, but all six steering strengths still resulted in 100% wall crashes. One clue is that this direction had a relatively small effect on the action tokens: its action-token logit norm was only 0.742, compared with 7.688 over the full vocabulary.  
+
+**I think that It simply suggests that a direction that is useful for detecting risk may not be a good direction for controlling the action head.** This might be a point that can be researched deeper.
+
+
+**A small stop-action LoRA gives us another promising signal.** I make oracle data from the safe garud and fintuing the model using lora. On two unseen walls, crashes dropped from 6/6 to 1/6. Also as we expected, the model mostly became safer by aborting the task rather than completing it, and the intervention also hurt some control cases. 
+
+I'm not sure if such thing should be digged deeper here: try steering at middle layers instead of only the final layer, learn a steering direction from backward versus forward actions rather than crash labels, and compare the action readout before and after the stop-action LoRA. After that, the most important test is to run the method online on a held-out wall and see whether the same guard idea also works with OFT.
 
 ![Probe-triggered guard and peak contact force](../../../../setup/figures/fig_intervention.png)
 
-*Figure: the scoped wall guard. The figure's force panel plots individual impacts; the stated 321.7 N is the treatment mean in the frozen intervention summary.* Data: [guard analysis](../../../../results/ANALYSIS_intervention.md), [steering sweep and diagnostic](../../../../results/ANALYSIS_steering.md), [new-wall guard audit](../../../archive/REPORT.md), [LoRA evaluation](../../../../results/oracle_recovery/report_assets/analysis_summary.json). Clips: [crash](../../../../setup/figures/witness_crash.gif) and [safe abort](../../../../setup/figures/witness_safe_abort.gif). See the [steering figure](../../../../setup/figures/fig_steering.png); its “orthogonal” title is informal, while the measured result is the norm ratio above.
 
 ### 4. Simple safety methods often fail or only stop the task
 
@@ -78,99 +87,20 @@ The immediate engineering question is where the contact happened. Earlier tall-w
 
 *Figure: the separate early wall-baseline comparison, showing crash rate rather than task success. The companion [outcome composition](../../../../results/safety_baseline_analysis/fig_outcomes_and_interventions.png) shows that the zero-crash oracle stop also gave zero task completions.* Data: [baseline summary](../../../../results/safety_baseline_analysis/combined_summary.json), [matched prompt follow-up](../../../../results/ANALYSIS_careful_prompt.md), and its [raw prompt tables](../../../../results/careful_prompt/combined_summary.json).
 
-## Four negative or boundary results
 
-### 5. The same saved state does not guarantee the same rollout
 
-In an engineering check with six new anchors, running the same option twice from the same saved bundle gave different action and physical-state traces in **12/12** pairs; **1/12** pairs even ended in a different outcome class. In two fresh-control checks, the live camera streams differed before actions did. For task 0, step 1 differed by only **three wrist-camera channel values**, each by at most **1/255**; the actions first split at step 10. Replaying the *entire exact input stream* made actions and states match for 35 steps. This locates an upstream input difference in those checks; it does not prove that three pixels alone caused a changed outcome. Across processes, an initial action difference of about **0.0013** remains unexplained.
+Early August: From stopping to finishing the task
+My first safety intervention could stop the robot before a collision, but it did not finish the pick-and-place task. So I tried to build a recovery behavior.
+I started with the wall. A scripted path could move the gripper around it, but the robot’s elbow still hit the wall. Lowering the wall made one complete recovery possible, but I could not collect a large, reliable set of recoverable wall examples.
+I then switched to a glass cup that the robot could potentially go around. With the glass on the path, OpenVLA hit it in 30 out of 50 runs; with the glass moved aside, it hit it in 0 out of 50.
+I tried to learn both when to take over and what action to take. I saved simulator states and kept an example only if three things held: Base crashed exactly 20 actions later, a controller with access to the true scene geometry completed the task from the same state, and Base completed the matched off-path task. Only 3 of 15 candidates passed this screen. That left just one training state and two development states. The controller completed the task in six repeats on those two development states, but the learned alarm and action head did not pass their checks, so I did not run the full learned recovery system online.
+My bottleneck was both data and control: recoverable examples were hard to produce, and even the scripted recovery was not reliable across scenes.
 
-Old nominally neutral Base/Refresh controls show different terminal labels in **17/432** training decisions and **10/216** development decisions. Two Base runs treated as fake alternatives can create an apparent **2.78- to 8.33-point** gain on a selection block, although the corresponding later fresh-source C gain is zero. A one-shot Refresh “win” shrank from **+12.50 points in A**, to **+3.12 in B**, to **0 in C** at 100 steps. But the real, two-repeat Detour reference retained **+6.25, +4.17, +5.21** points across A/B/C at 440 steps. The lesson is to measure repeatability, **not** to declare every observed rescue fake.
+## August 13–29: Learn the choice, not the actions
+I then simplified the problem. I kept three fixed options: continue OpenVLA (Base), use a scripted path around the obstacle (Detour), or move back and hold (Retreat).
+I used saved states to run all three options from the same starting point and record whether each one finished the task, crashed, or stopped safely without finishing. I trained a small router on those branch outcomes to choose an option. This is supervised learning from counterfactual rollouts; the router does not learn the recovery actions themselves.
+At a preselected point 20 steps before a Base collision, the router had a promising result: 87.5% task success on 24 matched decisions from eight source states. But it struggled when it had to find the right moment by itself during an episode. Later, a simple rule—detect risk and use the fixed Detour—was also as good as or slightly better than the router on the stronger comparison.
 
-| Frozen choice, different execution blocks | A gain | B gain | C gain | Scope |
-|---|---:|---:|---:|---|
-| One-shot Refresh, 100-step cutoff | +12.50 pp | +3.12 pp | 0.00 pp | Eight old physical sources; C uses new executions of old bundles. |
-| Two-repeat Detour, 440-step cutoff | +6.25 pp | +4.17 pp | +5.21 pp | Sixteen old physical sources; real local rescue persists. |
-| Swapped Base/Base pseudo-options, 440-step cutoff | +8.33 pp | 0.00 pp | 0.00 pp | Twelve fresh sources; no intervention was applied. |
+### Problems:
+So I have three open problems: make the recovery option reliable, detect the useful intervention window online, and show that learned selection adds value beyond a simple risk-based rule.
 
-The next study should estimate the outcome-flip rate and a practical repeat budget on OpenVLA and π0 across several tasks, while tracing rendering, inference, and closed-loop amplification separately. A small positive difference should not be promoted before it clears a same-policy repeat control.
-
-![Repeated-start divergence and exact input replay](../../../audits/20260906/paper_review/audit_figure.png)
-
-*Figure: new engineering anchors and the replay trace. Panel D is about old Refresh accounting, not the 273 glass decisions.* Data: [paper audit](../../../audits/20260906/paper_review/COMPREHENSIVE_REPORT_ZH.md), [A/B/C repeats](../../../audits/20260913/repeat_value/RESULTS_ZH.md), [fresh-source pseudo-options](../../../audits/20260913/fresh_value/RESULTS_ZH.md). See the [real-versus-pseudo plot](../../../iclr27/repeatable_value/figures/real_and_pseudo.png).
-
-### 6. The deadline can change the apparent winner
-
-In the Refresh candidate panel, the same 36 B executions per option look different depending on the cutoff:
-
-| Post-anchor action limit | Base task successes | Refresh task successes | Refresh minus Base |
-|---:|---:|---:|---:|
-| 100 | 23/36 | 26/36 | +3/36 (+8.3 pp) |
-| 200 | 33/36 | 31/36 | −2/36 (−5.6 pp) |
-
-All five 100-step paired “rescues” had Base complete at step **101 or 102**. Refresh sometimes made the robot a little faster near the cutoff; it did not establish that Base could never finish. Future comparisons should show success as a function of the action budget and keep accident, safe-stop, and completion outcomes separate.
-
-![Refresh success as the cutoff changes](../../../audits/20260908/candidate_refresh_assessment/deadline_curve.png)
-
-*Figure: the B block, nine stale configurations from eight physical sources, four executions per option. The curves come from continued trajectories, not separate 100- and 200-step runs.* Data: [candidate Refresh results](../../../audits/20260908/candidate_refresh/RESULTS_ZH.md).
-
-### 7. In this corpus, risk is a strong shortcut for intervention
-
-The 273 saved decisions come from **20 physical source states** in one glass-recovery task family. The binary questions “Does Base have an accident?” and “Would any available intervention improve the recorded utility?” disagree in only **19** decisions:
-
-| Base accident? | No intervention benefit | Intervention benefit | Total |
-|---|---:|---:|---:|
-| No | 172 | 9 | 181 |
-| Yes | 10 | 82 | 92 |
-| **Total** | **182** | **91** | **273** |
-
-In the held-out development slice, Base crashed in **40/42** on-path-glass decisions. A simple “if risky, use the best fixed option” rule reached **0.211** source-averaged utility; the learned Outcome Router reached **0.194**. The old **+45.83-point task-success** result compared the router with Risk→Retreat, a weak comparator because Retreat gives up the task. This is a useful example of why a strong simple baseline belongs in the first result table.
-
-This does *not* mean risk always determines the right action. The 19 disagreements are real, and some same-risk states prefer different options. The current corpus has thin support for learning those distinctions, especially across independent tasks. After SafeLIBERO is connected, first ask whether states with the same risk genuinely need different actions. If they do not, a choice model has little room to help.
-
-Data: [risk/benefit table](../../../../results/iclr27/risk_value_decoupling_dc48ff317dad_20260829T154351Z/risk_benefit_crosstab.csv), [strong-baseline audit](../../../iclr27/BASELINE_AUDIT_RESULT.md), [same-risk witnesses](../../../../results/iclr27/risk_value_decoupling_dc48ff317dad_20260829T154351Z/same_risk_different_decision_witnesses.csv). The [risk-to-benefit figure (PDF)](../../../../results/iclr27/risk_value_decoupling_dc48ff317dad_20260829T154351Z/figure_risk_benefit_flow.pdf) is a paper-ready visual.
-
-### 8. A warning is useful only if there is a recovery action that can still work
-
-I newly tabulated the existing [273-decision labels](../../../../results/iclr27/option_support_audit_787623226de0_20260829T112149Z/decision_labels.csv) by glass decision horizon. These are repeated saved decisions from roughly 20 sources, **not** 101 independent trials. The number of eligible states changes by horizon, especially at T−40.
-
-| Start the fixed option | Decisions / sources | Detour completes | Detour has an accident | Detour safely does not finish | Retreat has an accident |
-|---|---:|---:|---:|---:|---:|
-| T−40 | 11 / 9 | 1/11 | 2/11 | 8/11 | 3/11 |
-| T−30 | 21 / 19 | 4/21 | 3/21 | 14/21 | 3/21 |
-| T−20 | 23 / 20 | **7/23** | 6/23 | 10/23 | 3/23 |
-| T−10 | 23 / 20 | **7/23** | 10/23 | 6/23 | 4/23 |
-| T−5 | 23 / 20 | 4/23 | **14/23** | 5/23 | **7/23** |
-
-At T−20 or T−10, the fixed Detour finishes only about three in ten recorded branches. At T−5, it finishes four and crashes in fourteen. Much earlier, it mostly avoids an accident but times out without finishing. This helps explain why an alarm plus a stop can look good while an alarm plus task recovery still struggles. The wall/glass probe AUCs at T−10 come from **different captures**, so they do not directly prove that a deployable warning fires early enough in these saved glass decisions. The conclusion is about **this Detour and this corpus**, not the best possible recovery controller.
-
-There is a concrete reason to call this a **fixed-skill limitation**. [DetourComplete](../../../../crashbench/recovery.py) follows hand-written end-effector waypoints around a glass position supplied to it, then uses timed grasp, lift, carry, and release stages. It does not plan collision-free motion for the whole arm or verify that the grasp succeeded before moving on. A stage can advance after its 140-action cap even when its waypoint was not reached. In a small direct-trace audit, e27/e06 stalled about 6–7 cm short of pre-grasp targets; moving e27 later cleared those targets but led to an accident during descent. Yet e18/e21 did complete, so the skill is narrow, not wholly broken. On twelve fresh sources, even with **no glass**, Base completed **91.67%** of C runs versus **50.00%** for AlwaysDetour. [Stage audit](../../../audits/20260909/recoverability/RESULTS_ZH.md); [fresh-source comparison](../../../audits/20260913/fresh_value/RESULTS_ZH.md).
-
-This does not establish that the *high-level selector* is solved. Its learned development utility was **0.194**, below the simple Risk→Detour rule's **0.211**, and a sequential router missed **2/2** known T−20 recovery opportunities. The fairest claim is that limited recovery-skill coverage is a major bottleneck **alongside** unresolved choice and timing. [Strong-baseline audit](../../../iclr27/BASELINE_AUDIT_RESULT.md); [sequential result](../../../../results/P2_SEQUENTIAL_FIRST_CROSSING_DEV_20260819.md).
-
-![Observed Detour and Retreat outcomes by saved decision horizon](recovery_window.png)
-
-*New descriptive figure, rebuilt without rollouts from the frozen decision labels. Exact counts and source support are in [recovery_window_counts.csv](recovery_window_counts.csv); the [R script](make_recovery_window.R) reproduces both. The plotted horizon groups reuse sources and should not be read as independent error bars.* Two [historical glass recovery clips](../../../archive/glass_recovery_20260812/report_assets/glass_recovery_progress_20260812/heldout_0000_oracle_recovery.gif) ([second clip, copied from Quest](media/heldout_0004_oracle_recovery.gif)) show task completion with **a different, oracle-timed controller**; they are not examples from the Detour-rate table above. The copied GIF matches its Quest source SHA-256 `4eab83fc15a41aa33ede50ea2057072aa21af13e451aa6668cfcc2e6109b49db`.
-
-## What I would do next
-
-| Order | Smallest useful next step | Decision it answers |
-|---:|---|---|
-| 1 | Review existing evaluation literature, then repeat Base and each option from the same saved states on OpenVLA and π0; report source-level outcome flips, pseudo-option gains, and deadline curves. | How large a method gain is distinguishable from repeat-run variability? |
-| 2 | Revisit five tall-wall failures and log the **first contacting robot link** and the filter's protected geometry. Then test a strong public filter on matched valid hazards. | Did the end-effector-only constraint miss forearm/elbow contact? |
-| 3 | Use middle-layer and action-aligned steering on a small frozen wall set; compare with the existing stop-action LoRA. | Is the risk signal disconnected only at the final readout, or deeper in the policy? |
-| 4 | Re-label existing glass hidden states at T−20/T−30 before collecting more; require several wall sources before making a cross-wall early-warning claim. | Is the warning early enough to support task completion? |
-| 5 | After SafeLIBERO works, look for matched states with the **same risk but different best actions**. | Is there enough option ambiguity for a learned selector? |
-
-**Quest asset check on September 25:** the raw hidden files still exist in the verified CrashBench checkout at `results/selfreport/hidden.npz` (31 MB), `results/selfreport_oft/hidden.npz` (4.2 MB), and `results/selfreport_glass/hidden.npz` (49 MB), with matching `meta.json` files. They are absent from the local Git checkout. The existing glass metadata has T−20/T−30 pre-impact frames from five scenario IDs, so a first glass re-label can likely reuse those files. Early on-path wall coverage is uneven and dominated by one long d62 rollout; it cannot support a broad cross-wall claim by itself. No raw files were copied or changed for this report.
-
-For now, I would pause new E16/ODUR selector variants, P3 recovery-window classifiers, and hand-tuning of our scripted Detour. The evaluation and contact-geometry questions have clearer tests. SafeLIBERO/AEGIS integration can proceed alongside the first two checks.
-
-## How I would position this against nearby work
-
-- [AEGIS and SafeLIBERO](https://arxiv.org/abs/2512.11891) provide a stronger published safety benchmark and CBF-based filter; [KNOWS](https://arxiv.org/abs/2606.09749) reads policy attention and also uses a CBF filter. Their papers model an end-effector assembly/ellipsoid in the safety constraint. Our end-effector-point null is **not** a test of either method. A measured forearm-contact case would motivate a direct, fair full-arm-geometry comparison.
-- [SAFE](https://arxiv.org/abs/2506.09937), [Adaptive Safety Probing](https://openreview.net/pdf?id=LPomBkh92H), and [SALSA](https://arxiv.org/abs/2606.10495) already study useful internal signals or representation-to-behavior gaps. Our most specific mechanism question is whether a *readable collision direction* can actually control actions at different layers and across hazards.
-- [ROEP](https://www.mdpi.com/1424-8220/26/15/4757) already includes repeated-run noise-floor checks for VLA evaluation. We should not claim to be first to notice rollout variability. Our sharper potential contribution is the **same serialized state**, the **tiny camera-to-action divergence trace**, the **pseudo-option selection gain**, and how those change recovery claims. This is a positioning hypothesis to test against the full evaluation literature.
-
-## A closing line for the meeting
-
-> “The robot often has an early warning, and I can make it stop. What I cannot yet count on is a recovery action that finishes the task, or a single rollout that tells me reliably whether that action helped. My next experiments test those two bottlenecks directly.”
