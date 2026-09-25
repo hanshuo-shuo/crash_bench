@@ -138,3 +138,6 @@ More generally testing on this method: When the router had to find the right mom
 - SafeLIBERO: Build only one thing at a time which is the meaement. I need to located where the problem is. My main lesson is that I built every layer myself: the hazard scenes, the recovery behavior, and the evaluation. When something failed, I couldn't tell which layer caused it.
 
 - Based on my failure mode, my question is this: when the baseline safety method prevents a collision, does it actually rescue the task, just stop the robot, step in when it wasn't needed, or just get lucky?
+- unnecessary intervention or even harmful intervention.
+- to be more precise: I want to know intervention benefit.
+- Does this framing make more sense.
