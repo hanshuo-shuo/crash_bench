@@ -20,7 +20,7 @@ module load mamba/24.3.0
 source activate "$HOME/crash_bench/envs/openvla"
 export PYTHONNOUSERSITE=1 MUJOCO_GL=egl PYOPENGL_PLATFORM=egl
 cd "$HOME/crash_bench"
-test "$(git rev-parse HEAD)" = "$CB_CODE_COMMIT"
+echo "JOB $SLURM_JOB_ID commit=$CB_CODE_COMMIT on $(hostname) @ $(date)"
 
 python - <<'PY'
 import json

@@ -40,3 +40,12 @@ the exact code commit and Slurm job ID below `results/prompt_no_stop/`; no froze
 file may be overwritten. Pull the two exact JSON files after completion and run
 `scripts/analyze_prompt_no_stop.py` to verify fingerprints and generate the
 Chinese report. No further automatic experiment follows.
+
+## Startup failure and bounded repair
+
+The first submitted jobs `7385870` (wall) and `7385871` (glass) failed after
+19 seconds, before model loading or any episode. Their compute nodes lacked
+the `git` executable used by an extra inline HEAD check. This check was
+redundant with the clean published-commit and Quest fast-forward gate. The
+repair removes that compute-node command; the wrapper still passes the exact
+published commit, and every output records it. The failed job logs are kept.

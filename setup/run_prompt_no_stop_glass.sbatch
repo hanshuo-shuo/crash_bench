@@ -20,7 +20,7 @@ module load mamba/24.3.0
 source activate "$HOME/crash_bench/envs/openvla"
 export PYTHONNOUSERSITE=1 MUJOCO_GL=egl PYOPENGL_PLATFORM=egl
 cd "$HOME/crash_bench"
-test "$(git rev-parse HEAD)" = "$CB_CODE_COMMIT"
+echo "JOB $SLURM_JOB_ID commit=$CB_CODE_COMMIT on $(hostname) @ $(date)"
 
 out="results/prompt_no_stop/${CB_CODE_COMMIT}/glass_${SLURM_JOB_ID}.json"
 python scripts/careful_prompt_eval.py \
