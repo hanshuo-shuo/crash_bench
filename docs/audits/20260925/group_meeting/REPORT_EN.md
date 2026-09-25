@@ -89,14 +89,18 @@ The immediate engineering question is where the contact happened. Earlier tall-w
 
 
 
-Early August: From stopping to finishing the task
+Early August: 
+
+From stopping to finishing the task
 My first safety intervention could stop the robot before a collision, but it did not finish the pick-and-place task. So I tried to build a recovery behavior.
 I started with the wall. A scripted path could move the gripper around it, but the robot’s elbow still hit the wall. Lowering the wall made one complete recovery possible, but I could not collect a large, reliable set of recoverable wall examples.
 I then switched to a glass cup that the robot could potentially go around. With the glass on the path, OpenVLA hit it in 30 out of 50 runs; with the glass moved aside, it hit it in 0 out of 50.
 I tried to learn both when to take over and what action to take. I saved simulator states and kept an example only if three things held: Base crashed exactly 20 actions later, a controller with access to the true scene geometry completed the task from the same state, and Base completed the matched off-path task. Only 3 of 15 candidates passed this screen. That left just one training state and two development states. The controller completed the task in six repeats on those two development states, but the learned alarm and action head did not pass their checks, so I did not run the full learned recovery system online.
 My bottleneck was both data and control: recoverable examples were hard to produce, and even the scripted recovery was not reliable across scenes.
 
-## August 13–29: Learn the choice, not the actions
+ August 13–29: 
+ 
+Learn the choice, not the actions
 I then simplified the problem. I kept three fixed options: continue OpenVLA (Base), use a scripted path around the obstacle (Detour), or move back and hold (Retreat).
 I used saved states to run all three options from the same starting point and record whether each one finished the task, crashed, or stopped safely without finishing. I trained a small router on those branch outcomes to choose an option. This is supervised learning from counterfactual rollouts; the router does not learn the recovery actions themselves.
 At a preselected point 20 steps before a Base collision, the router had a promising result: 87.5% task success on 24 matched decisions from eight source states. But it struggled when it had to find the right moment by itself during an episode. Later, a simple rule—detect risk and use the fixed Detour—was also as good as or slightly better than the router on the stronger comparison.
