@@ -89,7 +89,8 @@ The immediate engineering question is where the contact happened. Earlier tall-w
 
 
 
-uly to mid-August: From stopping the robot to finishing the task
+**July to mid-August: From stopping the robot to finishing the task**
+
 
 My first safety fix could stop the robot before it crashed. But then the robot never finished its job, which was to pick up a bowl and put it on a plate. So I tried to build a way for the robot to avoid the crash and still finish.
 
@@ -97,31 +98,41 @@ I started with the wall. I wrote a scripted path that moved the gripper around t
 
 So I switched to a glass cup, which the robot can go around. When the glass was on the robot's path, OpenVLA hit it in 30 of 50 runs. When I moved the glass to the side, it hit it 0 times in 50 runs.
 
-Next, I tried to train a model to learn two things: when to take over from OpenVLA, and what to do after taking over. To get training examples, I saved the simulator at a moment before a crash. I only kept that moment if three things were true:
+Next, I tried to train a model to learn two things: **when to take over from OpenVLA**, and **what to do after taking over**. To get training examples, I saved the simulator at a moment before a crash. I only kept that moment if three things were true:
 
-OpenVLA crashed exactly 20 steps later.
-A scripted controller that knows the exact positions of the objects could finish the task from that same moment.
-With the glass moved to the side, OpenVLA finished the task without crashing.
+- OpenVLA crashed exactly N steps later. (like 20)
+- A scripted controller that knows the exact positions of the objects could finish the task from that same moment.
+- With the glass moved to the side, OpenVLA finished the task without crashing.
 
 Only 3 of 15 candidates passed. That gave me one scene to train on and two to test on. The scripted controller finished the task in all 6 runs on the two test scenes (3 runs each). But the learned alarm never went off at the right time, and the learned actions failed my accuracy check. So I never tested the full learned system on the robot.
 
-The problem had two sides. Good examples were hard to make, and even the scripted recovery failed in many scenes.
+The problem had two sides. **Good examples were hard to make, and even the scripted recovery failed in many scenes.**
 
-August 13–29: Learning which option to pick, not how to move
+**August 13–29: Learning which option to pick, not how to move**
 
 Next, I made the problem simpler. Instead of learning new movements, I gave the robot three fixed options:
 
-Base: keep running OpenVLA.
-Detour: follow a scripted path around the obstacle, then finish the task. This script also uses the true object positions.
-Retreat: move back and stay still. This is safe, but the task never gets done.
+- Base: keep running OpenVLA.
+- Detour: follow a scripted path around the obstacle, then finish the task. This script also uses the true object positions.
+- Retreat: move back and stay still. This is safe, but the task never gets done.
 
-I saved the simulator at a given moment and ran all three options from that exact same moment. For each option, I recorded whether it finished the task, crashed, or did neither. Then I trained a small model, called the router, to predict these outcomes and pick the best option. The router looks at a compressed version of OpenVLA's internal state, the robot's position, and the action OpenVLA was about to take. It only picks an option; it does not learn any movements.
+I saved the simulator at a given moment and ran all three options from that exact same moment. For each option, I recorded whether it finished the task, crashed, or did neither. 
+
+**Then I trained a small model, called the router, to predict these outcomes and pick the best option.**: The router looks at a compressed version of OpenVLA's internal state, the robot's position, and the action OpenVLA was about to take. It only picks an option; it does not learn any movements.
 
 When I let the router choose 20 steps before OpenVLA would have crashed, the results looked promising. I tested it on 8 new scenes, each with the glass on the path, off to the side, or removed, for 24 decisions in total. The router finished the task 87.5% of the time. A simple rule that always retreats when it senses danger finished only 41.7% of the time.
 
+<img width="1696" height="656" alt="image" src="https://github.com/user-attachments/assets/532e1652-ccdf-4d1a-8777-b71847b4adea" />
+
+
 But there were two catches.
 
-First, I picked that 20-step moment because I already knew when the crash would happen. When the router had to find the right moment on its own during a run, it did poorly. In one test, it never switched away from OpenVLA at all.
+First, I picked that 20-step moment because I already knew when the crash would happen. 
 
-Second, the retreat rule was easy to beat, because retreating always gives up on the task. So I compared the router with a better simple rule: "if you sense danger, take the Detour." On a small development set, that rule did about as well as the router, or slightly better (a score of 0.211 versus 0.194).
+More generally testing on this method: When the router had to find the right moment on its own during a run, it did poorly. In one test, it never switched away from OpenVLA at all.
 
+
+## MY PLAN
+- SafeLIBERO: Build only one thing at a time which is the meaement. I need to located where the problem is. My main lesson is that I built every layer myself: the hazard scenes, the recovery behavior, and the evaluation. When something failed, I couldn't tell which layer caused it.
+
+- Based on my failure mode, my question is this: when the baseline safety method prevents a collision, does it actually rescue the task, just stop the robot, step in when it wasn't needed, or just get lucky?
