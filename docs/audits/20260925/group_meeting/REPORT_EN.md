@@ -131,7 +131,7 @@ But there were two catches.
 
 First, I picked that 20-step moment because I already knew when the crash would happen. 
 
-More generally testing on this method: When the router had to find the right moment on its own during a run, it did poorly. In one test, it never switched away from OpenVLA at all.
+More generally testing on this method: When the router had to find the right moment on its own during a run, it did poorly. (remove the oracle timing) In one test, it never switched away from OpenVLA at all.
 
 
 ## MY PLAN
