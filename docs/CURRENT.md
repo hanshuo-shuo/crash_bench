@@ -51,3 +51,13 @@ imports and CUDA access passed. This pinned GroundingDINO distribution uses
 pure PyTorch deformable attention, so a custom _C extension is not required.
 Next: one nominal episode and one initial-image export; then the matching full
 AEGIS episode after the private OpenRouter credential is configured.
+
+## First nominal run complete; AEGIS credential pending
+
+Nominal job 7531968 completed at d2a3f4f, 4m07s, exit 0: Spatial/I/task0/episode0,
+300 actions, collision proxy at zero-based action16, no task success. The 300-frame
+video and structured record are in [FIRST_RUN.md](reproduction/FIRST_RUN.md).
+Image preparation job 7532212 completed in 54s, exit 0; the earlier pending
+7531970 was cancelled before execution to use a smaller image-only allocation.
+OpenRouter setup has now been requested from the user through the private helper.
+No API request or full AEGIS episode has run yet.
