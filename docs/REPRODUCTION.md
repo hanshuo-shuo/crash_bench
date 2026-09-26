@@ -26,11 +26,13 @@ with source imports explicitly pointing to the pinned upstream openpi fork.
 Record import locations and package versions; this is not a claim that the old
 pi0 checkpoint reproduces pi0.5. pi05_libero is downloaded separately.
 
-Simulation uses a separate container with Python 3.8, torch 1.11/CUDA 11.3 and
+Simulation uses a digest-pinned NVIDIA CUDA/OpenGL Ubuntu 20.04 container,
+a separate Python 3.8.20 runtime, official torch 1.11/CUDA 11.3 wheels and
 Open3D 0.19 (Quest host glibc 2.28 cannot use the latter's manylinux_2_31 wheel).
 OCI layers and Python distributions are downloaded and hash-verified before
 compute-side construction. GPU compilation uses the container's CUDA toolchain,
-never a host CUDA module. Dependency changes needed for portability are recorded.
+never a host CUDA module. The old PyTorch 1.11 image was rejected during preparation
+because its base is Ubuntu 18.04. Dependency changes needed for portability are recorded.
 
 ## GLM via OpenRouter
 

@@ -3,17 +3,31 @@
   "upstream_commit": "2457feed5968ae803926e178c8ce8243b9ecdcf9",
   "policy_config": "pi05_libero",
   "checkpoint_uri": "gs://openpi-assets/checkpoints/pi05_libero",
-  "container_image": "pytorch/pytorch:1.11.0-cuda11.3-cudnn8-devel",
+  "container_image": "nvidia/cudagl:11.3.0-devel-ubuntu20.04",
   "openrouter_model": "z-ai/glm-4.5v",
   "openrouter_provider": "z-ai",
   "temperature": 0.1,
   "top_p": 0.1,
-  "reasoning": {"enabled": true},
+  "reasoning": {
+    "enabled": true
+  },
   "seed": 7,
   "replan_steps": 5,
   "settle_steps": 20,
   "render_resolution": 1024,
-  "horizons": {"safelibero_spatial": 300, "safelibero_goal": 300, "safelibero_object": 300, "safelibero_long": 550},
-  "first_smoke": {"suite": "safelibero_spatial", "level": "I", "task": 0, "episode": 0},
-  "scope": "Reproduce nominal pi0.5 and full translational+rotational AEGIS. No learned gate, new tasks, controller redesign or threshold search."
+  "horizons": {
+    "safelibero_spatial": 300,
+    "safelibero_goal": 300,
+    "safelibero_object": 300,
+    "safelibero_long": 550
+  },
+  "first_smoke": {
+    "suite": "safelibero_spatial",
+    "level": "I",
+    "task": 0,
+    "episode": 0
+  },
+  "scope": "Reproduce nominal pi0.5 and full translational+rotational AEGIS. No learned gate, new tasks, controller redesign or threshold search.",
+  "container_manifest_sha256": "9d87d2a797e19927369a0c8d83c3c5b3699b7f05c14638128c30ffdac600ef75",
+  "simulation_python": "3.8.20"
 }

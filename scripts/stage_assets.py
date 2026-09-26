@@ -62,7 +62,9 @@ def stage_oci():
         data = get(base + '/manifests/' + match[0]['digest'], headers).read()
         manifest = json.loads(data)
     digest = hashlib.sha256(data).hexdigest()
-    layout = ASSETS / 'oci/pytorch'
+    if digest != CFG['container_manifest_sha256']:
+        raise RuntimeError('Container digest changed; refusing mutable tag')
+    layout = ASSETS / 'oci/cudagl-ubuntu2004'
     blobdir = layout / 'blobs/sha256'
     blobdir.mkdir(parents=True, exist_ok=True)
     (blobdir / digest).write_bytes(data)
@@ -142,12 +144,42 @@ def stage_python():
     return {'distributions':distributions,'omitted':omitted,'deviation':'opencv-python-headless at the same version replaces GUI OpenCV; torch/vision come from pinned container; openpi-client comes from pinned source.'}
 
 
+def stage_torch():
+    import html
+    import re
+    entries=[]
+    for package,version in [('torch','1.11.0'),('torchvision','0.12.0'),('torchaudio','0.11.0')]:
+        filename=f'{package}-{version}+cu113-cp38-cp38-linux_x86_64.whl'
+        index=f'https://download.pytorch.org/whl/cu113/{package}/'
+        content=get(index).read().decode()
+        links=[html.unescape(x) for x in re.findall(r'href="([^"]+)"',content)]
+        matches=[urllib.parse.urljoin(index,x) for x in links if urllib.parse.unquote(urllib.parse.urlsplit(x).path).endswith('/'+filename)]
+        if len(matches)!=1:raise RuntimeError('No unique official CUDA 11.3 wheel: '+filename)
+        parsed=urllib.parse.urlsplit(matches[0]);expected=parsed.fragment.removeprefix('sha256=')
+        if len(expected)!=64:raise RuntimeError('Missing published wheel checksum')
+        url=urllib.parse.urlunsplit(parsed._replace(fragment=''))
+        entries.append(download(url,ASSETS/'wheelhouse'/filename,expected))
+        print('Torch wheel verified',filename,flush=True)
+    return entries
+
+
 def main():
     ASSETS.mkdir(parents=True, exist_ok=True)
     manifest_path = ASSETS / 'staging.json'
     state = json.loads(manifest_path.read_text()) if manifest_path.exists() else {'config':CFG,'stages':{}}
     if state['config'] != CFG:
-        raise RuntimeError('Existing asset root belongs to a different configuration')
+        old = state['config']
+        allowed = {'container_image','container_manifest_sha256','simulation_python'}
+        if any(old.get(k)!=CFG.get(k) for k in set(old)|set(CFG) if k not in allowed):
+            raise RuntimeError('Existing asset root belongs to a different scientific configuration')
+        backup = manifest_path.with_name('staging_before_container_correction.json')
+        if backup.exists():raise RuntimeError('Unexpected repeated container migration')
+        shutil.copyfile(manifest_path,backup)
+        state['config']=CFG
+        state['stages'].pop('oci',None)
+        if 'python' in state['stages']:
+            state['stages']['python']['deviation']='Same-version headless OpenCV; official CUDA 11.3 torch wheels staged separately; openpi-client from pinned source.'
+        manifest_path.write_text(json.dumps(state,indent=2)+'\n')
     UPSTREAM.parent.mkdir(parents=True, exist_ok=True)
     if not UPSTREAM.exists():
         subprocess.run(['git','clone','--filter=blob:none','--no-checkout',CFG['upstream_url'],str(UPSTREAM)],check=True)
@@ -180,6 +212,13 @@ def main():
         # Config is stored in the pinned PyPI source distribution in a later stage.
         save('groundingdino',weights)
     if 'python' not in state['stages']:save('python',stage_python())
+    if 'runtime' not in state['stages']:
+        env = dict(os.environ, UV_PYTHON_INSTALL_DIR=str(ASSETS/'python'))
+        subprocess.run(['/projects/p33100/siosio/bin/uv','python','install',CFG['simulation_python']],env=env,check=True)
+        executables=list((ASSETS/'python').glob('cpython-3.8.20-*/bin/python3.8'))
+        if len(executables)!=1:raise RuntimeError('Ambiguous Python runtime')
+        save('runtime',{'python':str(executables[0]),'version':CFG['simulation_python']})
+    if 'torch' not in state['stages']:save('torch',stage_torch())
     if 'oci' not in state['stages']:save('oci',stage_oci())
     print('ALL ASSETS STAGED',manifest_path,flush=True)
 
