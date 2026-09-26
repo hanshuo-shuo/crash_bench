@@ -12,7 +12,8 @@ not scientific noncompletion labels.
 
 First smoke is Spatial/I/task0/episode0. It is exposed engineering data. No full
 1600-episode sweep is launched automatically before the nominal and AEGIS smoke
-are checked. No learned selector or new controller is part of this reproduction.
+are checked. Both are now checked, and the user explicitly authorized the full
+two-arm run under the $5 OpenRouter budget; see reproduction/BATCH_RUN.md. No learned selector or new controller is part of this reproduction.
 
 ## Quest execution
 
@@ -76,3 +77,11 @@ of exact-state branching is made by these reproduction scripts.
 4. Fill the matching perception response cache and run full AEGIS smoke.
 5. Review videos, failures, action scaling, metric records and resource use before
    preparing a fixed baseline evaluation matrix. Preserve all failed attempts.
+
+For the full matrix, the API request sets max_tokens=16384 (the pinned provider's
+advertised native ceiling), and routing price caps of $0.60/M input and $1.80/M
+output tokens, with zero separately priced request/image fees. Truncated or
+wrong-provider responses stop the batch and are never used as obstacles. Each
+run executes the upstream episode loop 0..49 without resetting the policy server
+between episodes. Explicit env.close() is added after the final outcome/video
+record to release EGL before interpreter teardown; no action or scoring changes.

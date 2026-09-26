@@ -43,3 +43,21 @@ This prompts invisibly and writes only ~/.config/crashbench/openrouter.key with
 mode 600. Do not paste the key into chat. The bounded login-node API worker can
 then serve the exact image requests exported by the offline AEGIS GPU process.
 It is capped at two API requests during initial reproduction.
+
+## Authorized full two-arm matrix
+
+After smoke acceptance and budget-guard tests:
+
+```bash
+scripts/quest_sync.sh push
+scripts/quest_sync.sh exec 'bash setup/submit_safelibero_full.sh'
+```
+
+The wrapper records both Slurm array IDs, starts a bounded network worker in the
+project's crashbench tmux session, verifies readiness and releases the held arrays.
+First run: Spatial/I/task0, nominal and AEGIS, 50 episodes each. Remaining cells
+are dependent on both first cells completing. At most two GPUs run concurrently.
+Do not launch a second batch or sync source while this one is active. Review
+`results/safelibero_batches/<batch>/status.json`, `budget.json`, and any STOP.json.
+The full matrix replaces the initial worker's two-call limit with a durable $5
+ledger and at most 1600 API requests. See ../docs/reproduction/BATCH_RUN.md.

@@ -10,6 +10,7 @@ from pathlib import Path
 import subprocess
 import sys
 import time
+from api_budget import atomic_json
 
 ROOT=Path(__file__).resolve().parents[1]
 UPSTREAM=ROOT/'third_party/vlsa-aegis'
@@ -52,6 +53,8 @@ def adapt_source(source, mode):
     source=source.replace('logging.error(f"Caught exception: {e}")','raise RuntimeError("Upstream runtime failure; no scientific label") from e')
     source=replace_once(source,'            # Log current results\n',
         '            _record_episode(task_id, episode_idx, bool(done), bool(collide_flag), int(t + 1 if done else t), int(collide_time), bool(flag_safety_control), str(video_path))\n            # Log current results\n')
+    source=replace_once(source,'    logging.info(f"Total success rate: {float(total_successes) / float(total_episodes)}")',
+        '    env.close()  # Release EGL before interpreter teardown; after all episode outcomes.\n    logging.info(f"Total success rate: {float(total_successes) / float(total_episodes)}")')
     return source
 
 def main():
@@ -63,8 +66,9 @@ def main():
     p.add_argument('--level',choices=['I','II'],default='I')
     p.add_argument('--task',type=int,default=0)
     p.add_argument('--episode',type=int,default=0)
+    p.add_argument('--episode-count',type=int,default=1)
     args=p.parse_args()
-    if args.suite not in CFG['horizons'] or not 0<=args.task<4 or not 0<=args.episode<50:
+    if args.suite not in CFG['horizons'] or not 0<=args.task<4 or not 0<=args.episode<50 or not 1<=args.episode_count<=50-args.episode:
         p.error('Invalid official benchmark cell')
     args.output.mkdir(parents=True,exist_ok=False)
     assets=Path(os.environ.get('CB_ASSETS','/projects/p33100/siosio/crashbench_safelibero'))
@@ -81,16 +85,21 @@ def main():
         bert=link_offline_bert(args.output,assets)
     from openrouter_perception import export_request,read_response
     import utils
+    perception_requests=[]
     def perception(image,instruction,suite):
         import matplotlib
         matplotlib.use('Agg')
         import matplotlib.pyplot as plt
         buf=io.BytesIO();plt.imsave(buf,image,format='png')
-        directory=export_request(buf.getvalue(),instruction,suite,assets/'perception_cache')
+        cache=Path(os.environ.get('CB_PERCEPTION_CACHE',str(assets/'perception_cache')))
+        directory=export_request(buf.getvalue(),instruction,suite,cache,budgeted=bool(os.environ.get('CB_BATCH_ROOT')))
         (args.output/'perception_request.json').write_text(json.dumps({'directory':str(directory),'request_sha256':directory.name},indent=2)+'\n')
+        perception_requests.append({'episode':args.episode+len(perception_requests),'request_sha256':directory.name})
+        temp=args.output/'perception_requests.tmp';temp.write_text(json.dumps(perception_requests,indent=2)+'\n');temp.replace(args.output/'perception_requests.json')
         if args.mode=='prepare':raise PerceptionPrepared(str(directory))
         deadline=time.monotonic()+300
         while not (directory/'response.json').exists() and time.monotonic()<deadline:
+            if os.environ.get('CB_BATCH_ROOT') and (Path(os.environ['CB_BATCH_ROOT'])/'STOP.json').exists():raise RuntimeError('Batch stopped by budget or infrastructure guard')
             time.sleep(2)
         if not (directory/'response.json').exists():raise RuntimeError('Perception cache missing after 300 seconds; fill exported request on the networked host: '+str(directory))
         return read_response(directory)
@@ -102,19 +111,21 @@ def main():
     def record(task,episode,success,collision,steps,collision_time,safety_enabled,video):
         row={'task':task,'episode':episode,'success':success,'collision':collision,'safe_success':success and not collision,'steps':steps,'collision_time_upstream_zero_based':collision_time if collision else None,'safety_enabled':safety_enabled,'video':video}
         records.append(row)
-        (args.output/'episodes.json').write_text(json.dumps(records,indent=2)+'\n')
+        temp=args.output/'episodes.tmp';temp.write_text(json.dumps(records,indent=2)+'\n');temp.replace(args.output/'episodes.json')
+        print(json.dumps({'completed_episode':episode,'success':success,'collision':collision,'steps':steps}),flush=True)
     actual_commit=(UPSTREAM/'.git/HEAD').read_text().strip()
     if actual_commit.startswith('ref:'):raise RuntimeError('Upstream must be at the pinned detached commit')
     if actual_commit!=CFG['upstream_commit']:raise RuntimeError('Upstream commit mismatch')
     metadata={'mode':args.mode,'suite':args.suite,'level':args.level,'task':args.task,'episode':args.episode,'seed':CFG['seed'],'upstream_commit':actual_commit,'source_sha256':EXPECTED_SOURCE_SHA256,'code_commit':os.environ.get('CB_CODE_COMMIT'),'slurm_job':os.environ.get('SLURM_JOB_ID'),'config':CFG,'started_unix':time.time(),'python':sys.version,'status':'started'}
     if bert:metadata['bert']=bert
-    (args.output/'manifest.json').write_text(json.dumps(metadata,indent=2)+'\n')
+    metadata['episode_indices']=list(range(args.episode,args.episode+args.episode_count))
+    atomic_json(args.output/'manifest.json',metadata)
     namespace={'__name__':'safelibero_upstream_adapter','__file__':str(UPSTREAM/'main/main_aegis.py'),'_record_episode':record}
     try:
         exec(compile(patched,str(UPSTREAM/'main/main_aegis.py'),'exec'),namespace)
-        settings=namespace['Args'](host='127.0.0.1',port=args.port,task_suite_name=args.suite,safety_level=args.level,task_index=[args.task],episode_index=[args.episode],video_out_path=str(args.output/'videos'),seed=CFG['seed'],replan_steps=CFG['replan_steps'],num_steps_wait=CFG['settle_steps'])
+        settings=namespace['Args'](host='127.0.0.1',port=args.port,task_suite_name=args.suite,safety_level=args.level,task_index=[args.task],episode_index=metadata['episode_indices'],video_out_path=str(args.output/'videos'),seed=CFG['seed'],replan_steps=CFG['replan_steps'],num_steps_wait=CFG['settle_steps'])
         namespace['eval_libero'](settings)
-        if len(records)!=1:raise RuntimeError('Incomplete evaluation; expected exactly one episode')
+        if [r['episode'] for r in records]!=metadata['episode_indices']:raise RuntimeError('Incomplete evaluation; episode identities differ')
         metadata['status']='complete'
     except PerceptionPrepared as e:
         if args.mode!='prepare':raise
@@ -123,7 +134,7 @@ def main():
         metadata['status']='failed';metadata['error']=str(e);raise
     finally:
         metadata['finished_unix']=time.time()
-        (args.output/'manifest.json').write_text(json.dumps(metadata,indent=2)+'\n')
+        atomic_json(args.output/'manifest.json',metadata)
     print(json.dumps(metadata,indent=2))
 
 if __name__=='__main__':main()

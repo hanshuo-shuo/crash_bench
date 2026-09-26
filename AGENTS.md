@@ -27,3 +27,12 @@ baseline reproduction within $5/week and preserve $95 for their method. This
 smoke batch has used two calls ($0.00279368); no more paid calls in this batch.
 Before any bulk API worker, inspect usage metadata, estimate the batch and add
 a spend guard. No provider-side key cap has been configured by this task.
+
+Full-run authorization (2026-09-26): the user now authorized starting the full
+nominal pi0.5 / full AEGIS official matrix, subject to $5 OpenRouter spending for
+this reproduction (including earlier smoke calls). Use setup/submit_safelibero_full.sh
+only after publishing and syncing. See docs/reproduction/BATCH_RUN.md. The batch
+uses at most two GPUs and stops its own arrays on budget or infrastructure failure.
+While its arrays are active, do not change or sync the Quest source checkout:
+queued jobs require the exact frozen commit. Read the batch receipt/status under
+results/safelibero_batches/; do not infer progress from this static document.

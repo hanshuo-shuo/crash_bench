@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 MODE="${1:?nominal, prepare or aegis}"
+shift
 cd "${SLURM_SUBMIT_DIR:-$HOME/crash_bench}"
 A=/projects/p33100/siosio/crashbench_safelibero
 UP="$PWD/third_party/vlsa-aegis"
@@ -9,7 +10,9 @@ test -f "$A/envs/aegis_sim/READY.json"
 export CB_ASSETS="$A" PYTHONNOUSERSITE=1 PYTHONDONTWRITEBYTECODE=1
 module load git/2.37.2
 export CB_CODE_COMMIT="$(git rev-parse HEAD)"
-RUN="$A/runs/${MODE}_${CB_CODE_COMMIT:0:12}_${SLURM_JOB_ID}"
+if [ -n "${CB_EXPECTED_COMMIT:-}" ]; then test "$CB_CODE_COMMIT" = "$CB_EXPECTED_COMMIT"; fi
+test -z "$(git status --porcelain=v1 --untracked-files=all)"
+RUN="${CB_RUN_ROOT:-$A/runs/${MODE}_${CB_CODE_COMMIT:0:12}_${SLURM_JOB_ID}}"
 test ! -e "$RUN"
 mkdir -p "$RUN"
 module purge
@@ -37,10 +40,13 @@ else:raise RuntimeError('Policy server did not become ready')
 PY
 fi
 export SINGULARITYENV_CB_ASSETS="$A" SINGULARITYENV_CB_CODE_COMMIT="$CB_CODE_COMMIT"
+if [ -n "${CB_BATCH_ROOT:-}" ]; then
+ export SINGULARITYENV_CB_BATCH_ROOT="$CB_BATCH_ROOT" SINGULARITYENV_CB_PERCEPTION_CACHE="$CB_BATCH_ROOT/perception_cache"
+fi
 export SINGULARITYENV_MUJOCO_GL=egl SINGULARITYENV_PYOPENGL_PLATFORM=egl
 export SINGULARITYENV_TRANSFORMERS_CACHE="$A/huggingface/hub" SINGULARITYENV_HF_HUB_CACHE="$A/huggingface/hub"
 export SINGULARITYENV_HF_HOME="$HF_HOME" SINGULARITYENV_HF_HUB_OFFLINE=1 SINGULARITYENV_TRANSFORMERS_OFFLINE=1
 export SINGULARITYENV_PYTHONNOUSERSITE=1 SINGULARITYENV_PYTHONDONTWRITEBYTECODE=1
 export SINGULARITYENV_PYTHONPATH="$UP/safelibero:$UP/openpi/packages/openpi-client/src"
 singularity exec --nv --bind "/projects,/home,$PWD:$PWD" "$A/containers/aegis-py38.sif" \
- "$A/envs/aegis_sim/bin/python" scripts/run_safelibero.py --mode "$MODE" --port "$PORT" --output "$RUN/evaluation" 2>&1 | tee "$RUN/evaluation.log"
+ "$A/envs/aegis_sim/bin/python" -u scripts/run_safelibero.py --mode "$MODE" --port "$PORT" --output "$RUN/evaluation" "$@" 2>&1 | tee "$RUN/evaluation.log"

@@ -78,3 +78,13 @@ $0.00279368 in response-reported charges; the second includes provider cache
 credit. The bounded worker has exited; no further paid call is authorized for
 this smoke batch. No full sweep has started. A future bulk worker needs a cost
 estimate and spend guard before activation; no provider-side key cap is claimed.
+
+## Full baseline run authorized
+
+The user authorized proceeding with the complete two-arm official matrix under
+a $5 OpenRouter reproduction budget. The single-pair smoke acceptance is complete.
+The launcher and durable budget guard are implemented and covered by 17 tests.
+See [BATCH_RUN.md](reproduction/BATCH_RUN.md) for protocol and submission. Actual
+submission IDs and current progress live in the batch receipt and status JSON
+under `results/safelibero_batches/`; this paragraph does not claim completion.
+Keep the Quest source commit frozen while queued/running arrays depend on it.
