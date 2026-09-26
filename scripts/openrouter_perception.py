@@ -46,6 +46,10 @@ def fill(directory):
     request=json.loads((directory/'request.json').read_text())
     if request_hash(request)!=directory.name:raise RuntimeError('Request hash mismatch')
     key=os.environ.get('OPENROUTER_API_KEY')
+    credential=Path.home()/'.config/crashbench/openrouter.key'
+    if not key and credential.is_file():
+        if credential.stat().st_mode & 0o077:raise RuntimeError('Credential file must have mode 600')
+        key=credential.read_text().strip()
     if not key:raise RuntimeError('OPENROUTER_API_KEY is required in this networked process; never put it in Git or logs')
     req=urllib.request.Request('https://openrouter.ai/api/v1/chat/completions',data=json.dumps(request).encode(),headers={'Authorization':'Bearer '+key,'Content-Type':'application/json'},method='POST')
     with urllib.request.urlopen(req,timeout=180) as response:result=json.load(response)
@@ -58,6 +62,26 @@ def fill(directory):
     tmp=directory/'response.tmp';tmp.write_text(json.dumps(record,indent=2)+'\n');tmp.replace(directory/'response.json')
     return read_response(directory)
 
+def watch(cache, after, timeout, max_requests):
+    deadline=time.monotonic()+timeout
+    completed=0
+    while time.monotonic()<deadline:
+        for request in sorted(Path(cache).glob('*/request.json')):
+            if request.stat().st_mtime < after or (request.parent/'response.json').exists():continue
+            result=fill(request.parent)
+            print(json.dumps({'request_sha256':request.parent.name,'obstacle':result}),flush=True)
+            completed+=1
+            if completed>=max_requests:return
+        time.sleep(2)
+    if not completed:raise RuntimeError('No new request arrived before worker deadline; no API call was made')
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('request_directory');args=p.parse_args()
-    print(fill(args.request_directory))
+    p=argparse.ArgumentParser();p.add_argument('request_directory',nargs='?')
+    p.add_argument('--watch-dir');p.add_argument('--after',type=float,default=time.time())
+    p.add_argument('--timeout',type=int,default=600);p.add_argument('--max-requests',type=int,default=1)
+    args=p.parse_args()
+    if args.watch_dir:
+        if args.max_requests<1 or args.max_requests>2:p.error('Initial reproduction worker is capped at two API requests')
+        watch(args.watch_dir,args.after,args.timeout,args.max_requests)
+    elif args.request_directory:print(fill(args.request_directory))
+    else:p.error('Provide one request directory or --watch-dir')

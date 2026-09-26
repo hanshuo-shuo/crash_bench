@@ -45,8 +45,11 @@ alone does not prove identical server weights or outputs.
 The compute node exports the exact PNG input and request metadata. An authorized
 networked process sends only this simulator image and instruction to OpenRouter.
 Cache the complete response with model/provider, request hash and timestamp.
-Re-evaluation refuses cache misses rather than inventing an obstacle or replacing
-the VLM. No API call is made without a configured key. Keys never enter manifests.
+The AEGIS process can pause for up to 300 seconds at this original pre-action
+perception boundary while a bounded login-node worker fills the exact request.
+Simulation does not advance during that wait. This also handles harmless render
+differences between preparation and evaluation without reusing a mismatched image.
+A missing response at the deadline fails the run; no obstacle is invented. No API call is made without a configured key. Keys never enter manifests.
 
 ## Minimal adapters
 

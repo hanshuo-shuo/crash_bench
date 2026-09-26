@@ -5,8 +5,10 @@ ENV="$A/envs/aegis_sim"
 test ! -e "$ENV/READY.json"
 mkdir -p "$A/envs" "$A/tmp/build"
 export TMPDIR="$A/tmp/build"
-RUNTIME=$(find "$A/python" -path "*/bin/python3.8" -type f -print -quit)
-test -n "$RUNTIME"
+RUNTIMES=("$A"/python/cpython-3.8.20-*/bin/python3.8)
+test "${#RUNTIMES[@]}" -eq 1
+RUNTIME="${RUNTIMES[0]}"
+test -x "$RUNTIME"
 if [ ! -x "$ENV/bin/python" ]; then "$RUNTIME" -m venv "$ENV"; fi
 P="$ENV/bin/python"
 "$P" -m pip install --no-index --find-links "$A/wheelhouse" --no-deps pip==24.3.1 setuptools==75.3.0 wheel==0.45.1

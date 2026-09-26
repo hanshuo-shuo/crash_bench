@@ -36,3 +36,10 @@ and digest-pinned Ubuntu 20.04 CUDA/OpenGL OCI layers are now staged and verifie
 Container build job 7531634 failed before conversion: this Singularity version
 expects oci:/directory without a :tag suffix. The corrected entry is being retried.
 No benchmark episode has completed yet.
+
+Container job 7531722 completed in 2m38s, exit 0: actual container glibc 2.31,
+Ubuntu 20.04 and nvcc 11.3 verified. Its CPU fingerprint pass verified 72 scene
+and model files (13,581,301,854 bytes), stored as verified_7531722.json.
+Next stage: compile/check the isolated simulation environment on one A100.
+The OpenRouter adapter can wait at the original pre-action perception boundary
+while a bounded login-node worker fills the exact image request.

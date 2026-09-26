@@ -74,7 +74,10 @@ def main():
         directory=export_request(buf.getvalue(),instruction,suite,assets/'perception_cache')
         (args.output/'perception_request.json').write_text(json.dumps({'directory':str(directory),'request_sha256':directory.name},indent=2)+'\n')
         if args.mode=='prepare':raise PerceptionPrepared(str(directory))
-        if not (directory/'response.json').exists():raise RuntimeError('Perception cache missing; fill exported request on the networked host: '+str(directory))
+        deadline=time.monotonic()+300
+        while not (directory/'response.json').exists() and time.monotonic()<deadline:
+            time.sleep(2)
+        if not (directory/'response.json').exists():raise RuntimeError('Perception cache missing after 300 seconds; fill exported request on the networked host: '+str(directory))
         return read_response(directory)
     utils.obstacle_detection=perception
     source=(UPSTREAM/'main/main_aegis.py').read_text()

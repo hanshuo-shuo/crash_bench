@@ -30,3 +30,16 @@ These stages are checked individually; do not submit downstream work with missin
 artifacts. Baseline score collection is not authorized to hide installation failures.
 
 Local checks: `python3 -m unittest discover -s tests -v` and `git diff --check`.
+
+## Private OpenRouter configuration (when requested)
+
+In your own Quest terminal, run:
+
+```bash
+/projects/p33100/siosio/envs/openpi/bin/python ~/crash_bench/scripts/configure_openrouter_key.py
+```
+
+This prompts invisibly and writes only ~/.config/crashbench/openrouter.key with
+mode 600. Do not paste the key into chat. The bounded login-node API worker can
+then serve the exact image requests exported by the offline AEGIS GPU process.
+It is capped at two API requests during initial reproduction.

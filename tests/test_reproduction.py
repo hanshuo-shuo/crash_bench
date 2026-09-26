@@ -55,7 +55,7 @@ class ReproductionContract(unittest.TestCase):
     def test_missing_key_never_sends_a_request(self):
         with tempfile.TemporaryDirectory() as tmp:
             directory=perception.export_request(b'png','task','safelibero_spatial',tmp)
-            with patch.dict('os.environ',{},clear=True), patch('urllib.request.urlopen') as network:
+            with patch.dict('os.environ',{},clear=True), patch.object(perception.Path,'home',return_value=Path(tmp)/'home'), patch('urllib.request.urlopen') as network:
                 with self.assertRaises(RuntimeError):perception.fill(directory)
                 network.assert_not_called()
 
