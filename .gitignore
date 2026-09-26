@@ -1,109 +1,11 @@
-# 环境与第三方代码(放 home,但不进 git)
-# 注意:锚定到根目录,否则会误伤代码目录 crashbench/envs/
-/envs/
 /third_party/
-
-# slurm 日志
+/envs/
+/results/
+/outputs/
+/.presentation_build/
+/.env*
 *.log
-setup/*_*.log
-
-# python
 __pycache__/
 *.pyc
-.ipynb_checkpoints/
-*.egg-info/
-
-# eval 产物(大文件/中间渲染不进 git;pilot.json 等结果 json 仍可提交)
-results/*.mp4
-results/**/*.mp4
-results/pilot_videos/
-# env-collision 场景的中间渲染(可由 authoring 脚本重生;精选图在 setup/figures/)
-results/phase1_env_collision/
-# OOD-control 中间渲染 + 一次性诊断帧(精选图在 setup/figures/)
-results/phase1_ood_control/
-results/phase1_ood_control_v2/
-results/phase1_ood_control_v3/
-results/diag/
-results/ood_control_videos/
-results/phase1_ood_control_v4/
-results/phase1_ood_control_v5/
-results/phase2_witness/
-# self-report probe: big activation dumps (figures + probe_summary.json are kept)
-results/selfreport/hidden.npz
-results/selfreport/meta.json
-# glass self-report probe: same — big activation dumps ignored, summary + figure kept
-results/selfreport_glass/hidden.npz
-results/selfreport_glass/meta.json
-# Phase 2-④ no-wall: bulk intermediate renders (recon.json kept; curated frames in setup/figures/)
-results/phase2_recon/*.png
-results/phase2_nowall/
-results/nowall_videos/
-# Phase 2-④ object-collision: bulk renders/videos (curated frames in setup/figures/)
-results/phase2_obj_collision/
-results/objcol_videos/
-# Category 2 glass prototype: bulk renders/videos (curated fig setup/figures/fig_glass.png,
-# per-episode data kept in results/glass_prototype.json)
-results/phase2_glass/
-results/glass_videos/
-# Phase 2-④ no-wall: negative-result throwaway scenarios (regenerable via the build scripts)
-/scenarios_nowall/
-/scenarios_objcol/
-/scenarios_grasp/
-# scenarios_glass/ is tracked: it is the frozen object-collision dose-response study.
-# It is reported separately from the wall corridor study; it is not a selected-band headline.
-# Phase 2-④ grasp_instability: bulk renders/videos (snapshot_state + recon.json + json kept)
-results/grasp/frames/
-results/grasp/grasped_lift.png
-results/grasp_videos/
-results/grasp/build/
-# Path 3 probe fit (OFT / π0): big activation dumps ignored; figures + probe_summary.json + probe_T5.npz kept
-results/selfreport_oft/hidden.npz
-results/selfreport_oft/meta.json
-results/selfreport_pi0/hidden.npz
-results/selfreport_pi0/meta.json
-results/selfreport_pi0_ae/hidden.npz
-results/selfreport_pi0_ae/meta.json
-# Provenance-complete P0 runs contain lossless float32 activations and per-episode traces.
-# Keep the immutable run directory off Git; copy only reviewed summaries into a separately
-# named tracked result and add a manifest entry after analysis.
-/results/p0_runs/
-results/phase2_task_witness/*.gif
-# Glass recovery runs contain rendered frames, activations, and checkpoints.
-# Promote only reviewed summaries after the smoke/full run is complete.
-/results/glass_recovery_v1/
-/results/glass_recovery_v2/
-# Exact-state option rollouts contain raw temporal activations and branch logs.
-# Promote only reviewed aggregate summaries after analysis.
-/results/counterfactual_router/
-# Quest phase-2 audits are immutable run directories pulled for review.  Keep
-# them from dirtying the remote checkout; reviewed artifacts may be force-added.
-/results/iclr27/baseline_audit_*/
-/results/iclr27/option_support_audit_*/
-/results/iclr27/support_crossfit_*/
-/results/iclr27/advantage_router_resolver_*/
-# Disposable non-glass authoring screens retain exact states, traces, and
-# validation media. Reviewed summaries can be promoted explicitly after the
-# single frozen run; the immutable run itself must not dirty Quest.
-/results/iclr27/non_glass_option_ambiguity_screen_*/
-/results/iclr27/.non_glass_screen_freeze_*/
-# Rebuilt DOCX reports are disposable outputs; dated frozen copies live in
-# docs/archive/preliminary_reports/ and must never be overwritten by builders.
-/results/generated_reports/
-
-# macOS metadata and additive repair experiment outputs.
+.pytest_cache/
 .DS_Store
-/results/repair_round1/
-
-/results/repair_round2/
-
-/results/paper_review/
-
-# Bounded fixed-Detour raw bundles and trajectories; promote reviewed summaries only.
-/results/detour_benefit/
-
-# Raw selector contexts and new repeat-value analysis runs; reviewed evidence lives in docs.
-/results/direct_cost_learning/
-/results/repeat_value/
-/results/prompt_no_stop/
-/results/recoverability_hidden_probe/
-/tmp/pdfs/

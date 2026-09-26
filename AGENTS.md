@@ -1,31 +1,23 @@
-# CrashBench agent instructions
+# CrashBench / SafeLIBERO agent instructions
 
-## Current authorized work
+Read docs/CURRENT.md and docs/REPRODUCTION.md first.
 
-Read `docs/CURRENT.md` and `docs/audits/20260906/paper_review/PLAN.md` first.
-The user authorized paper-oriented free exploration, problem finding and a comprehensive report, including
-existing-data analysis and the bounded training-source neutral-intervention probe in the plan. This supersedes publication-only
-experiment prohibitions for the specified scope. Round one is completed and preserved. Do not expand the benchmark or
-open new confirmatory tests. Preserve historical artifacts and source isolation.
-`docs/iclr27/PUBLICATION_FIRST_RESOLUTION.md` and
-`docs/iclr27/NON_GLASS_UNSTABLE_PLACEMENT_V1_AUDIT.md` remain historical references.
+On 2026-09-26 the user authorized keeping the eight results in retained/,
+archiving other CrashBench work, and starting reproduction of nominal pi0.5
+and full AEGIS on the unchanged public SafeLIBERO benchmark. The user has an
+OpenRouter API key and wants to be notified when it is needed. Never print,
+commit or place that key in a job log. Do not silently substitute another VLM.
 
-For any task that reads, changes, runs, or submits work on Northwestern Quest:
+The old experiment plans live on codex/archive-crashbench-20260926 and are
+historical, not an active run queue. No new learned intervention, controller,
+benchmark task, confirmatory study or threshold search is authorized.
 
-1. Read and follow `QUEST_WORKFLOW.md` and the “从本机直接提交到 Quest” section of
-   `setup/README.md` before using SSH.
-2. The user establishes `/tmp/quest.sock`; then run `scripts/quest_sync.sh check` before any
-   other remote command.
-3. Treat `$HOME/crash_bench` with GitHub repository `hanshuo-shuo/crash_bench` as the only
-   valid Quest checkout. Never infer project identity from the socket name, and never touch
-   another project's directory or tmux session.
-4. For one sbatch file, use `scripts/quest_sync.sh submit setup/<job>.sbatch`. For a maintained
-   `setup/submit_*.sh` pipeline, first use `scripts/quest_sync.sh push`, then run the wrapper
-   through `scripts/quest_sync.sh exec`.
-5. Submit only a clean, tested, published Git commit and keep the Quest checkout clean. Stop
-   and report any mismatch or divergence; never repair it with force pull, hard reset, or a
-   source-tree rsync.
-6. Use Slurm account `p33100`; use `gengpu` for GPU work and `short` only for CPU jobs. Never
-   perform compute-heavy work on the login node.
-7. Do not overwrite frozen results. New runs need a new output path and recorded commit,
-   configuration, seed/repeat, and Slurm provenance.
+Before any Quest SSH use read QUEST_WORKFLOW.md and setup/README.md, then run
+scripts/quest_sync.sh check. Only $HOME/crash_bench / hanshuo-shuo/crash_bench is
+the valid project checkout. Do not touch another project's files or jobs.
+Submit only a clean, tested, published commit through scripts/quest_sync.sh.
+Use account p33100, GPU partition gengpu, CPU partition short. No heavy work on
+login nodes; only downloads, Git and lightweight checks there. Compute nodes
+are offline: stage assets first. Never force pull, hard reset or rsync source.
+Keep historical raw results recoverable. Every new run needs a unique output
+root, code/upstream commit, configuration, seed and Slurm provenance.
