@@ -21,7 +21,7 @@ TARGET="$A/containers/aegis-py38.sif"
 test ! -e "$TARGET"
 PARTIAL="$TARGET.build_$SLURM_JOB_ID.partial"
 /projects/p33100/siosio/envs/openpi/bin/python -c 'import json,sys; s=json.load(open(sys.argv[1])); assert "oci" in s["stages"]' "$A/staging.json"
-singularity build "$PARTIAL" "oci:$A/oci/cudagl-ubuntu2004:aegis"
+singularity build "$PARTIAL" "oci:$A/oci/cudagl-ubuntu2004"
 singularity exec "$PARTIAL" /bin/bash -c 'ldd --version | head -1; cat /etc/os-release; nvcc --version'
 mv "$PARTIAL" "$TARGET"
 sha256sum "$TARGET" > "$TARGET.sha256"

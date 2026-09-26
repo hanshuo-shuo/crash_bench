@@ -19,4 +19,4 @@ export SINGULARITYENV_TORCH_CUDA_ARCH_LIST=8.0
 export SINGULARITYENV_MAX_JOBS=4
 export SINGULARITYENV_PYTHONNOUSERSITE=1
 export SINGULARITYENV_PIP_NO_INDEX=1
-singularity exec --nv --bind /projects,/home "$A/containers/aegis-py38.sif" bash setup/build_sim_env.sh
+singularity exec --nv --bind "/projects,/home,$PWD:$PWD" "$A/containers/aegis-py38.sif" bash setup/build_sim_env.sh

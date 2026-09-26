@@ -41,5 +41,5 @@ export SINGULARITYENV_MUJOCO_GL=egl SINGULARITYENV_PYOPENGL_PLATFORM=egl
 export SINGULARITYENV_HF_HOME="$HF_HOME" SINGULARITYENV_HF_HUB_OFFLINE=1 SINGULARITYENV_TRANSFORMERS_OFFLINE=1
 export SINGULARITYENV_PYTHONNOUSERSITE=1 SINGULARITYENV_PYTHONDONTWRITEBYTECODE=1
 export SINGULARITYENV_PYTHONPATH="$UP/safelibero:$UP/openpi/packages/openpi-client/src"
-singularity exec --nv --bind /projects,/home "$A/containers/aegis-py38.sif" \
+singularity exec --nv --bind "/projects,/home,$PWD:$PWD" "$A/containers/aegis-py38.sif" \
  "$A/envs/aegis_sim/bin/python" scripts/run_safelibero.py --mode "$MODE" --port "$PORT" --output "$RUN/evaluation" 2>&1 | tee "$RUN/evaluation.log"

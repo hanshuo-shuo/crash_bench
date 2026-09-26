@@ -31,5 +31,8 @@ The first archive job 7531195 failed before changing files because Git was absen
 from the compute node PATH; explicit git/2.37.2 module loading fixed startup.
 
 Model checkpoint, tokenizer, BERT and GroundingDINO downloads are complete.
-Python distributions, the standalone runtime and the Ubuntu 20.04 CUDA/OpenGL
-container are being staged. No benchmark episode has completed yet.
+All Python distributions, standalone Python 3.8.20, official torch/cu113 wheels
+and digest-pinned Ubuntu 20.04 CUDA/OpenGL OCI layers are now staged and verified.
+Container build job 7531634 failed before conversion: this Singularity version
+expects oci:/directory without a :tag suffix. The corrected entry is being retried.
+No benchmark episode has completed yet.
