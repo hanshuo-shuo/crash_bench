@@ -12,7 +12,7 @@ test -x "$RUNTIME"
 if [ ! -x "$ENV/bin/python" ]; then "$RUNTIME" -m venv "$ENV"; fi
 P="$ENV/bin/python"
 "$P" -m pip install --no-index --find-links "$A/wheelhouse" --no-deps pip==24.3.1 setuptools==75.3.0 wheel==0.45.1
-"$P" -m pip install --no-index --find-links "$A/wheelhouse" --no-deps numpy==1.22.4 torch==1.11.0+cu113 torchvision==0.12.0+cu113 torchaudio==0.11.0+cu113
+"$P" -m pip install --no-index --find-links "$A/wheelhouse" --no-deps numpy==1.22.4 pillow==10.4.0 typing-extensions==4.12.2 torch==1.11.0+cu113 torchvision==0.12.0+cu113 torchaudio==0.11.0+cu113
 "$P" -m pip install --no-index --find-links "$A/wheelhouse" --no-deps --no-build-isolation -r "$A/simulation-requirements.txt"
 "$P" - <<'PY'
 import json,os,pathlib,shutil,importlib.metadata as m

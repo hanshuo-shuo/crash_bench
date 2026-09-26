@@ -43,3 +43,11 @@ and model files (13,581,301,854 bytes), stored as verified_7531722.json.
 Next stage: compile/check the isolated simulation environment on one A100.
 The OpenRouter adapter can wait at the original pre-action perception boundary
 while a bounded login-node worker fills the exact image request.
+
+GPU environment job 7531842 completed in 3m13s, exit 0. Python 3.8 /
+torch 1.11.0+cu113 / NumPy 1.22.4 / MuJoCo 3.2.3 / robosuite 1.4.1 /
+cvxpy 1.5.2 / OSQP 1.0.5 / Open3D 0.19.0 / groundingdino-py 0.4.0
+imports and CUDA access passed. This pinned GroundingDINO distribution uses
+pure PyTorch deformable attention, so a custom _C extension is not required.
+Next: one nominal episode and one initial-image export; then the matching full
+AEGIS episode after the private OpenRouter credential is configured.

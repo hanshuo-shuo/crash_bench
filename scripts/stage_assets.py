@@ -206,6 +206,13 @@ def main():
         revision=HfApi().model_info('bert-base-uncased').sha
         path=snapshot_download('bert-base-uncased',revision=revision,cache_dir=str(ASSETS/'huggingface/hub'),allow_patterns=['config.json','pytorch_model.bin','tokenizer.json','tokenizer_config.json','vocab.txt'])
         save('bert',{'path':path,'revision':revision})
+    # Older Transformers resolves the literal model name through refs/main even offline.
+    bert = state['stages']['bert']
+    reference = Path(bert['path']).parent.parent/'refs/main'
+    reference.parent.mkdir(parents=True,exist_ok=True)
+    if reference.exists() and reference.read_text().strip()!=bert['revision']:
+        raise RuntimeError('BERT cache revision drift')
+    reference.write_text(bert['revision'])
     if 'groundingdino' not in state['stages']:
         gd=ASSETS/'GroundingDINO'
         weights=download('https://github.com/IDEA-Research/GroundingDINO/releases/download/v0.1.0-alpha/groundingdino_swint_ogc.pth',gd/'groundingdino_swint_ogc.pth')
@@ -213,7 +220,7 @@ def main():
         save('groundingdino',weights)
     if 'python' not in state['stages']:save('python',stage_python())
     if 'runtime' not in state['stages']:
-        env = dict(os.environ, UV_PYTHON_INSTALL_DIR=str(ASSETS/'python'))
+        env = dict(os.environ, UV_PYTHON_INSTALL_DIR=str(ASSETS/'python'), UV_PYTHON_BIN_DIR=str(ASSETS/'bin'))
         subprocess.run(['/projects/p33100/siosio/bin/uv','python','install',CFG['simulation_python']],env=env,check=True)
         executables=list((ASSETS/'python').glob('cpython-3.8.20-*/bin/python3.8'))
         if len(executables)!=1:raise RuntimeError('Ambiguous Python runtime')

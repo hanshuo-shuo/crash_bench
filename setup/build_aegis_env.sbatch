@@ -19,4 +19,5 @@ export SINGULARITYENV_TORCH_CUDA_ARCH_LIST=8.0
 export SINGULARITYENV_MAX_JOBS=4
 export SINGULARITYENV_PYTHONNOUSERSITE=1
 export SINGULARITYENV_PIP_NO_INDEX=1
+export SINGULARITYENV_PIP_CACHE_DIR="$A/pip_cache"
 singularity exec --nv --bind "/projects,/home,$PWD:$PWD" "$A/containers/aegis-py38.sif" bash setup/build_sim_env.sh
