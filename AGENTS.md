@@ -21,3 +21,9 @@ login nodes; only downloads, Git and lightweight checks there. Compute nodes
 are offline: stage assets first. Never force pull, hard reset or rsync source.
 Keep historical raw results recoverable. Every new run needs a unique output
 root, code/upstream commit, configuration, seed and Slurm provenance.
+
+Budget update (2026-09-26): the user has $100/week for OpenRouter alone. Plan
+baseline reproduction within $5/week and preserve $95 for their method. This
+smoke batch has used two calls ($0.00279368); no more paid calls in this batch.
+Before any bulk API worker, inspect usage metadata, estimate the batch and add
+a spend guard. No provider-side key cap has been configured by this task.
