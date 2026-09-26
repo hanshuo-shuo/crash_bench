@@ -12,6 +12,7 @@ set -euo pipefail
 cd "${SLURM_SUBMIT_DIR:-$HOME/crash_bench}"
 A=/projects/p33100/siosio/crashbench_safelibero
 module purge
+module load git/2.37.2
 module load singularityce/4.3.1-gcc-8.5.0
 export SINGULARITY_CACHEDIR="$A/singularity_cache"
 export SINGULARITY_TMPDIR="$A/tmp/container_$SLURM_JOB_ID"

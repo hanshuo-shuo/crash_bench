@@ -85,7 +85,8 @@ def main():
         row={'task':task,'episode':episode,'success':success,'collision':collision,'safe_success':success and not collision,'steps':steps,'collision_time_upstream_zero_based':collision_time if collision else None,'safety_enabled':safety_enabled,'video':video}
         records.append(row)
         (args.output/'episodes.json').write_text(json.dumps(records,indent=2)+'\n')
-    actual_commit=subprocess.check_output(['git','-C',str(UPSTREAM),'rev-parse','HEAD'],text=True).strip()
+    actual_commit=(UPSTREAM/'.git/HEAD').read_text().strip()
+    if actual_commit.startswith('ref:'):raise RuntimeError('Upstream must be at the pinned detached commit')
     if actual_commit!=CFG['upstream_commit']:raise RuntimeError('Upstream commit mismatch')
     metadata={'mode':args.mode,'suite':args.suite,'level':args.level,'task':args.task,'episode':args.episode,'seed':CFG['seed'],'upstream_commit':actual_commit,'source_sha256':EXPECTED_SOURCE_SHA256,'code_commit':os.environ.get('CB_CODE_COMMIT'),'slurm_job':os.environ.get('SLURM_JOB_ID'),'config':CFG,'started_unix':time.time(),'python':sys.version,'status':'started'}
     (args.output/'manifest.json').write_text(json.dumps(metadata,indent=2)+'\n')

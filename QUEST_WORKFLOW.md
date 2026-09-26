@@ -127,7 +127,7 @@ scripts/quest_sync.sh pull-result results/<path>
 ```
 
 显卡型号、显存、时间和内存按具体实验决定。环境、缓存和 checkpoint 的现行安排见
-[`cluster.md`](cluster.md)，当前实验入口见 [`setup/README.md`](setup/README.md)。不得覆盖
+[`docs/REPRODUCTION.md`](docs/REPRODUCTION.md)，当前实验入口见 [`setup/README.md`](setup/README.md)。不得覆盖
 `results/` 中已经冻结的结果；重跑必须使用新的输出目录。
 
 ## 结束连接（可选）

@@ -5,6 +5,7 @@ cd "${SLURM_SUBMIT_DIR:-$HOME/crash_bench}"
 A=/projects/p33100/siosio/crashbench_safelibero
 UP="$PWD/third_party/vlsa-aegis"
 export CB_ASSETS="$A" PYTHONNOUSERSITE=1 PYTHONDONTWRITEBYTECODE=1
+module load git/2.37.2
 export CB_CODE_COMMIT="$(git rev-parse HEAD)"
 RUN="$A/runs/${MODE}_${CB_CODE_COMMIT:0:12}_${SLURM_JOB_ID}"
 test ! -e "$RUN"

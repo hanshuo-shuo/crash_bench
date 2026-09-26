@@ -60,3 +60,26 @@ class ReproductionContract(unittest.TestCase):
                 network.assert_not_called()
 
 if __name__=='__main__':unittest.main()
+
+class ArchiveSafety(unittest.TestCase):
+    def test_external_relative_links_survive_and_result_is_verified(self):
+        import archive_legacy_outputs as archive
+        with tempfile.TemporaryDirectory() as temp:
+            base=Path(temp);src=base/'work/results';src.mkdir(parents=True)
+            (base/'work/data').write_text('external immutable data')
+            (src/'raw.json').write_text('{"success":false}')
+            (src/'link').symlink_to('../data')
+            target=base/'store/results';target.parent.mkdir()
+            archive.archive_one(src,target)
+            self.assertFalse(src.exists())
+            self.assertEqual((target/'link').read_text(),'external immutable data')
+            self.assertEqual((target/'raw.json').read_text(),'{"success":false}')
+    def test_copy_corruption_cannot_remove_original(self):
+        import archive_legacy_outputs as archive
+        with tempfile.TemporaryDirectory() as temp:
+            base=Path(temp);src=base/'original';src.write_text('irreplaceable')
+            target=base/'archive'
+            def corrupt(a,b):Path(b).write_text('corrupt')
+            with patch.object(archive.shutil,'copy2',side_effect=corrupt):
+                with self.assertRaises(AssertionError):archive.archive_one(src,target)
+            self.assertEqual(src.read_text(),'irreplaceable')

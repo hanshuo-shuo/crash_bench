@@ -10,4 +10,5 @@
 #SBATCH --output=cb_archive_%j.log
 set -euo pipefail
 cd "${SLURM_SUBMIT_DIR:-$HOME/crash_bench}"
+module load git/2.37.2
 python3 scripts/archive_legacy_outputs.py
