@@ -15,6 +15,10 @@ Detour failure does not imply Base failure, intervention necessity, failure of
 other recovery skills, or physical impossibility. One realization is a noisy
 binary observation, not a repeat-estimated recoverability probability.
 
+The original collector/entry at d475133 uses maximum suffix budgets of220 Base,
+900 Detour and80 Retreat actions (with earlier terminal/controller exits). These
+are option-specific, not an equal-deadline intervention-benefit experiment.
+
 The sealed job9288681 capture contains 273 decisions from20 sources:
 101 glass,86 offpath and86 noglass, at T−40/30/20/10/5 where available. Its
 4096-dimensional hidden state is stored as eight causal frames. The primary

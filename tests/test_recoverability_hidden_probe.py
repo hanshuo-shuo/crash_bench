@@ -1,10 +1,13 @@
 """Synthetic checks of scientific leakage boundaries and metric semantics."""
 import unittest
+import json
+from pathlib import Path
+import tempfile
 import numpy as np
 
 from scripts.analysis.recoverability_hidden_probe import (
     binary_metrics, bootstrap_comparison, fit_logistic, fold_indices, predict,
-    source_weights,
+    source_weights, fit_suite, summarize,
 )
 from scripts.train_minimal_counterfactual_router import fit_frame_pca
 
@@ -72,6 +75,39 @@ class RecoverabilityProbeTests(unittest.TestCase):
         self.assertLess(result["left_auc"]["valid_repeats"], 100)
         with self.assertRaises(ValueError):
             bootstrap_comparison(rows, rows[::-1], 2, 7)
+
+    def test_synthetic_fit_artifacts_and_analysis_remain_joined(self):
+        rng = np.random.default_rng(3)
+        n = 12
+        sources = np.repeat(["a", "b", "c"], 4)
+        conditions = np.tile(["glass", "glass", "noglass", "offpath"], 3)
+        splits = np.repeat(["train", "calibration", "development"], 4)
+        metadata = [{"decision_id": str(i), "source_state_sha256": str(sources[i]),
+                     "condition": str(conditions[i]), "split": str(splits[i]),
+                     "horizon_actions": 5, "placement_key": str(sources[i])} for i in range(n)]
+        outcomes = np.tile(["task_success", "catastrophe", "safe_noncompletion"], (n, 1))
+        outcomes[::2, 0] = "catastrophe"
+        outcomes[1::3, 1] = "task_success"
+        data = {"sources": sources, "conditions": conditions, "splits": splits,
+                "horizons": np.full(n, 5), "metadata": metadata, "outcomes": outcomes,
+                "arrays": {"hidden": rng.normal(size=(n, 8, 20)),
+                           "robot_state": rng.normal(size=(n, 8, 8)),
+                           "nominal_action": rng.normal(size=(n, 8, 7))}}
+        config = {"regimes": ["pooled_loso"], "feature_sets": ["hidden", "prior"],
+                  "targets": ["base_crash", "detour_success", "base_success"],
+                  "pca_components": 3, "seed": 7, "l2": .01}
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory)
+            predictions = fit_suite(data, config, output)
+            self.assertEqual(len(predictions), n * 7)
+            inverse = [r for r in predictions if r["feature"] == "inverse_risk_hidden"]
+            self.assertEqual(len(inverse), n)
+            self.assertTrue(all(r["y"] == r["detour_success"] for r in inverse))
+            metrics = summarize(predictions, output)
+            self.assertTrue(metrics)
+            self.assertTrue((output / "models.npz").is_file())
+            for fold in json.loads((output / "folds.json").read_text()):
+                self.assertFalse(set(fold["train_sources"]) & set(fold["test_sources"]))
 
 
 if __name__ == "__main__":
