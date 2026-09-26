@@ -4,6 +4,8 @@ MODE="${1:?nominal, prepare or aegis}"
 cd "${SLURM_SUBMIT_DIR:-$HOME/crash_bench}"
 A=/projects/p33100/siosio/crashbench_safelibero
 UP="$PWD/third_party/vlsa-aegis"
+test -f "$A/VERIFIED.json"
+test -f "$A/envs/aegis_sim/READY.json"
 export CB_ASSETS="$A" PYTHONNOUSERSITE=1 PYTHONDONTWRITEBYTECODE=1
 module load git/2.37.2
 export CB_CODE_COMMIT="$(git rev-parse HEAD)"

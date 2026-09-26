@@ -15,3 +15,21 @@ THU-RCSCT/vlsa-aegis 2457feed5968ae803926e178c8ce8243b9ecdcf9.
 
 Preparation/smoke results are not benchmark reproduction results. Do not train
 an intervention gate or change the benchmark while establishing these baselines.
+
+## Completed cleanup
+
+Main now contains 59 byte-identical selected evidence files, the user's selected
+narrative and reproduction tooling. Four redundant public branches were deleted
+only after ancestry verification; GitHub retains main and the dedicated archive.
+
+Quest archive job 7531231 completed in 3m04s at ae2406c, exit 0. It verified and
+archived 8323 legacy result entries plus 127 logs under
+/projects/p33100/siosio/crashbench_archive/20260926/. Ten leftover grasp-authoring
+files were separately verified there. Original source/project-data symlinks remain
+resolvable. Existing shared model environments and other projects were not deleted.
+The first archive job 7531195 failed before changing files because Git was absent
+from the compute node PATH; explicit git/2.37.2 module loading fixed startup.
+
+Model checkpoint, tokenizer, BERT and GroundingDINO downloads are complete.
+Python distributions, the standalone runtime and the Ubuntu 20.04 CUDA/OpenGL
+container are being staged. No benchmark episode has completed yet.

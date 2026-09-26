@@ -26,3 +26,6 @@ singularity exec "$PARTIAL" /bin/bash -c 'ldd --version | head -1; cat /etc/os-r
 mv "$PARTIAL" "$TARGET"
 sha256sum "$TARGET" > "$TARGET.sha256"
 printf 'commit=%s job=%s\n' "$(git rev-parse HEAD)" "$SLURM_JOB_ID" > "$TARGET.build.txt"
+
+export CB_ASSETS="$A"
+/projects/p33100/siosio/envs/openpi/bin/python scripts/verify_assets.py
