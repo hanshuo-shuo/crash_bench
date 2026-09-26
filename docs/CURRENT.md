@@ -1,13 +1,24 @@
-# Current: Fixed-Detour hidden-state probe prepared — 2026-09-25
+# Current: Fixed-Detour hidden-state probe complete — 2026-09-25
 
-The user requested a Quest first step on whether existing hidden states predict
-fixed Detour task completion, compared to Base catastrophe detection.
-[Frozen plan](audits/20260925/recoverability_probe/PLAN.md): the sealed273-decision,
-20-source historical capture (101 glass plus172 controls), source-disjoint
-logistic probes, glass-only and historical-split sensitivities, no new rollout,
-source, controller, D8 access or confirmatory test. Entry:
-`setup/recoverability_hidden_probe.sbatch`. Single-execution Detour failure must
-not be relabeled physical irrecoverability. Analysis and fitting run on Quest.
+[Chinese result](audits/20260925/recoverability_probe/RESULTS_ZH.md): Quest job
+7454767 completed at published commit `7801087aa253`, elapsed29s, exit0.
+On the sealed273-decision/20-source corpus, source-weighted LOSO hidden-probe
+AUC is0.745 for Base catastrophe and0.626 for Detour task completion. Detour
+AUC on101 glass decisions is0.528 [0.351,0.700]; glass-only fitting gives0.576
+[0.414,0.731]. Its<0.1 scores include3 actual Detour successes among29 flagged
+states. No reliable glass recoverability detector or stopping rule established.
+
+These are single-execution, skill-relative labels under original option-specific
+budgets (Base220/Detour900), not physical irrecoverability or equal-budget benefit.
+23 glass successes come from7 sources. Preserve weak/heterogeneous source support,
+OOF prior-ranking caveats, and historical split sensitivity. No new rollouts,
+VLA inference, D8 access, source expansion or confirmatory tests occurred.
+
+The user explicitly authorized the separate `codex/recoverability-probe` branch
+and clean managed worktree to preserve divergent manuscript edits. This task's
+published code and report live there. The original desktop checkout and user
+edits remain intact; see the [run record](audits/20260925/recoverability_probe/RUN.md).
+No experiment is active. Next-step recommendations are not an additional run.
 
 # Historical: E13 no-stop prompt ablation complete — 2026-09-25
 
