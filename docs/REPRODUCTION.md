@@ -59,6 +59,9 @@ identical environment initialization, preprocessing, horizons and scoring.
 The AEGIS adapter replaces only the network perception call with its exact-input
 cache and makes swallowed infrastructure exceptions fail loudly. It records every
 completed episode in JSON. These changes are auditable against pinned source hashes.
+For Transformers 4.21's older offline loader, each AEGIS run exposes the verified
+BERT snapshot through a local `bert-base-uncased` directory symlink. No model bytes
+or GroundingDINO model settings change; the snapshot revision is recorded.
 
 Before later statewise benefit work, continuation capture must include simulator,
 controller, client action queue, server JAX RNG and AEGIS internal state. No claim

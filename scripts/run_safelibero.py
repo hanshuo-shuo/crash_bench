@@ -19,6 +19,18 @@ EXPECTED_SOURCE_SHA256='8491b9381dd0d6dbd1ba9bd0360db7c93a932d7e5913e517b4f2291a
 
 class PerceptionPrepared(Exception):pass
 
+def link_offline_bert(output, assets):
+    # Transformers 4.21 predates the Hub snapshot cache layout. A local directory
+    # lets its unchanged from_pretrained('bert-base-uncased') load the same bytes.
+    staged=json.loads((assets/'staging.json').read_text())['stages']['bert']
+    snapshot=Path(staged['path'])
+    if snapshot.name!=staged['revision']:
+        raise RuntimeError('BERT snapshot revision mismatch')
+    for name in ['config.json','pytorch_model.bin','tokenizer.json','tokenizer_config.json','vocab.txt']:
+        if not (snapshot/name).is_file():raise RuntimeError('Missing staged BERT file: '+name)
+    (output/'bert-base-uncased').symlink_to(snapshot,target_is_directory=True)
+    return staged
+
 def replace_once(source, old, new):
     if source.count(old)!=1:raise RuntimeError('Upstream adapter anchor changed: '+old[:70])
     return source.replace(old,new,1)
@@ -63,7 +75,10 @@ def main():
     os.environ['LIBERO_CONFIG_PATH']=str(config_dir)
     sys.path[:0]=[str(ROOT/'scripts'),str(UPSTREAM/'main'),str(UPSTREAM/'safelibero'),str(UPSTREAM/'openpi/packages/openpi-client/src')]
     os.chdir(args.output)
-    if args.mode=='aegis':(args.output/'GroundingDINO').symlink_to(assets/'GroundingDINO',target_is_directory=True)
+    bert=None
+    if args.mode=='aegis':
+        (args.output/'GroundingDINO').symlink_to(assets/'GroundingDINO',target_is_directory=True)
+        bert=link_offline_bert(args.output,assets)
     from openrouter_perception import export_request,read_response
     import utils
     def perception(image,instruction,suite):
@@ -92,6 +107,7 @@ def main():
     if actual_commit.startswith('ref:'):raise RuntimeError('Upstream must be at the pinned detached commit')
     if actual_commit!=CFG['upstream_commit']:raise RuntimeError('Upstream commit mismatch')
     metadata={'mode':args.mode,'suite':args.suite,'level':args.level,'task':args.task,'episode':args.episode,'seed':CFG['seed'],'upstream_commit':actual_commit,'source_sha256':EXPECTED_SOURCE_SHA256,'code_commit':os.environ.get('CB_CODE_COMMIT'),'slurm_job':os.environ.get('SLURM_JOB_ID'),'config':CFG,'started_unix':time.time(),'python':sys.version,'status':'started'}
+    if bert:metadata['bert']=bert
     (args.output/'manifest.json').write_text(json.dumps(metadata,indent=2)+'\n')
     namespace={'__name__':'safelibero_upstream_adapter','__file__':str(UPSTREAM/'main/main_aegis.py'),'_record_episode':record}
     try:

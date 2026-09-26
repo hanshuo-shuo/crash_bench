@@ -11,7 +11,7 @@ THU-RCSCT/vlsa-aegis 2457feed5968ae803926e178c8ce8243b9ecdcf9.
   .git/crashbench-archive/20260926/local-worktree.tar and private stash
   3f0b0978ad884db576ce8e15949c83dbb621c60c. These have not been published.
 - Run protocol and engineering deviations: REPRODUCTION.md.
-- OpenRouter GLM-4.5V key is user-owned and not yet configured by this task.
+- OpenRouter GLM-4.5V key is privately configured by the user; first call succeeded.
 
 Preparation/smoke results are not benchmark reproduction results. Do not train
 an intervention gate or change the benchmark while establishing these baselines.
@@ -61,3 +61,12 @@ Image preparation job 7532212 completed in 54s, exit 0; the earlier pending
 7531970 was cancelled before execution to use a smaller image-only allocation.
 OpenRouter setup has now been requested from the user through the private helper.
 No API request or full AEGIS episode has run yet.
+
+## AEGIS startup compatibility correction
+
+The user's private key is configured. The first GLM-4.5V call succeeded via Z.AI
+and returned `blue moka pot` for the exact prepared input. Response metadata is
+cached under the request hash; no secret is in this repository.
+AEGIS job 7533307 at 5fcbbdf failed in 3m13s before any episode action: Transformers
+4.21 could not resolve BERT's newer Hub cache layout offline. The next run provides
+a local directory alias to the same verified BERT snapshot, with no model change.

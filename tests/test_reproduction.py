@@ -37,6 +37,20 @@ class ReproductionContract(unittest.TestCase):
     def test_unreviewed_upstream_change_fails_closed(self):
         original=(ROOT/'tests/fixtures/main_aegis_upstream.txt').read_text()
         with self.assertRaises(RuntimeError):runner.adapt_source(original+'\n','aegis')
+    def test_offline_bert_alias_resolves_verified_snapshot_and_rejects_missing_files(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);snapshot=root/'snapshots/revision';snapshot.mkdir(parents=True)
+            output=root/'evaluation';output.mkdir()
+            staged={'path':str(snapshot),'revision':'revision'}
+            (root/'staging.json').write_text(json.dumps({'stages':{'bert':staged}}))
+            for name in ['config.json','pytorch_model.bin','tokenizer.json','tokenizer_config.json','vocab.txt']:
+                (snapshot/name).write_text(name)
+            runner.link_offline_bert(output,root)
+            self.assertEqual((output/'bert-base-uncased/config.json').read_text(),'config.json')
+            (snapshot/'pytorch_model.bin').unlink()
+            another=root/'other';another.mkdir()
+            with self.assertRaises(RuntimeError):runner.link_offline_bert(another,root)
+            self.assertFalse((another/'bert-base-uncased').exists())
     def test_cache_identity_includes_image_prompt_and_suite(self):
         baseline=perception.make_request(b'png','put bowl on plate','safelibero_spatial')
         for image,prompt,suite in [(b'other','put bowl on plate','safelibero_spatial'),(b'png','different task','safelibero_spatial'),(b'png','put bowl on plate','safelibero_long')]:
