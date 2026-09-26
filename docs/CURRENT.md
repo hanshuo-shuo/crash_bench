@@ -1,4 +1,15 @@
-# Current: E13 no-stop prompt ablation complete — 2026-09-25
+# Current: Fixed-Detour hidden-state probe prepared — 2026-09-25
+
+The user requested a Quest first step on whether existing hidden states predict
+fixed Detour task completion, compared to Base catastrophe detection.
+[Frozen plan](audits/20260925/recoverability_probe/PLAN.md): the sealed273-decision,
+20-source historical capture (101 glass plus172 controls), source-disjoint
+logistic probes, glass-only and historical-split sensitivities, no new rollout,
+source, controller, D8 access or confirmatory test. Entry:
+`setup/recoverability_hidden_probe.sbatch`. Single-execution Detour failure must
+not be relabeled physical irrecoverability. Analysis and fitting run on Quest.
+
+# Historical: E13 no-stop prompt ablation complete — 2026-09-25
 
 The user authorized a bounded Quest follow-up on the original E13 wall and
 glass scenes. Jobs7385983/7385984 completed 180 new episodes at commit
