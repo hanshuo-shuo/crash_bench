@@ -61,3 +61,17 @@ Do not launch a second batch or sync source while this one is active. Review
 `results/safelibero_batches/<batch>/status.json`, `budget.json`, and any STOP.json.
 The full matrix replaces the initial worker's two-call limit with a durable $5
 ledger and at most 1600 API requests. See ../docs/reproduction/BATCH_RUN.md.
+
+## Recover a stopped batch
+
+After verifying that its arrays have terminated and publishing/syncing the
+transport-only repair, run:
+
+```bash
+scripts/quest_sync.sh exec 'bash setup/submit_safelibero_full.sh --recover-from 20260926T233314Z_af6ac874d168'
+```
+
+This creates a NEW batch root and reuses only hash-verified complete cells.
+Partial cells start again from episode 0; their old records are preserved and
+excluded from the new aggregate. All old charges/reservations carry into the same
+$5 cap. A recovery must never be implemented by deleting STOP.json or the ledger.

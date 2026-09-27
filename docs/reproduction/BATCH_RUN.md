@@ -35,9 +35,10 @@ upstream successful episode's zero-based t counter.
 contains partial counts/rates; `COMPLETE.json` requires all 64 cells / 3200
 records. `STOP.json` records a budget, network or infrastructure stop. Failed
 jobs are not scored as scientific failure outcomes. The worker cancels only its
-two recorded array IDs on failure. Automatic retries are disabled to avoid
-hidden charges or silently changing the server RNG sequence. Preserve failed
-attempts and plan any recovery from their recorded progress.
+two recorded array IDs on failure. The original launch stopped on the first transport error. The recovery below
+permits one budget-reserved retry for selected transient HTTP errors. Simulator
+steps and policy RNG do not advance while waiting for perception. Preserve all
+failed attempts; incomplete cells restart from episode 0 during recovery.
 
 ## $5 OpenRouter budget
 
@@ -78,3 +79,39 @@ network call, durable unsettled charges, exclusive locking, provider price/conte
 changes, truncated response rejection and cancellation scoped to our arrays.
 Shell syntax and diff whitespace checks passed. The first full cells remain the
 runtime acceptance check for the multi-episode path.
+
+## Recovery after the first external API interruption
+
+The original batch's 852nd API attempt returned HTTP 520; the guard stopped
+arrays 7536588/7536589. There were 851 valid responses, $1.60775168 confirmed
+including the earlier smoke, and one unresolved $0.10 hold. Both the ledger and
+the original STOP.json remain unchanged. This was not a model/controller outcome.
+
+The recovery launcher accepts `--recover-from <batch-name>` only for a stopped
+batch with no active Slurm jobs. It verifies that evaluator, model configuration,
+server wrapper, prompt construction and response interpretation are unchanged.
+Completed cells are inherited by explicit manifest/episode SHA256 references;
+unknown mixed revisions still fail. Cells 0..47 supply 2400 completed episodes.
+The interrupted 43+7 episodes from cells 48/49 stay available as historical raw
+records and are excluded from the new primary aggregate. Cells 48..63 restart
+from episode 0, preserving upstream per-cell policy-server RNG history. No
+success/failure outcome influences recovery selection. Final coverage remains
+3200 unique official episodes; historical execution count includes the replay.
+
+The same exact-image requests may reuse valid Z.AI/GLM-4.5V stop responses from
+the parent cache. Reuse records the original directory and response SHA256. A
+changed pixel/prompt/request setting requires a fresh response. No charged or
+reserved parent ledger entry is reset, forgiven or double-counted. This leaves
+$3.29224832 uncommitted before the first new recovery call.
+
+Only HTTP 408/429/500/502/503/504/520..524 permit a second attempt, after a ten
+second pause. The first uncertain charge retains its reservation, and the second
+attempt reserves separately before networking. Retry stops before the request
+if the $5 ceiling would be crossed. Non-HTTP errors, invalid/truncated responses,
+missing usage cost, and price changes still stop. Two failed HTTP attempts stop
+the batch. The guard bounds spending conservatively; it cannot claim a failed
+request was free without billing evidence. The key/account limit is unchanged.
+
+22 tests cover recovery exclusion, inherited-result mutation, exact-cache reuse,
+retained retry reservations, budget rejection before a second request, and the
+two-attempt maximum, in addition to the original source and matrix contracts.

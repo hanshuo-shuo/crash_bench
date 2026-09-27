@@ -88,3 +88,26 @@ See [BATCH_RUN.md](reproduction/BATCH_RUN.md) for protocol and submission. Actua
 submission IDs and current progress live in the batch receipt and status JSON
 under `results/safelibero_batches/`; this paragraph does not claim completion.
 Keep the Quest source commit frozen while queued/running arrays depend on it.
+
+## HTTP 520 interruption and recovery — 2026-09-27
+
+Batch `20260926T233314Z_af6ac874d168` stopped after an OpenRouter HTTP 520.
+All its Slurm arrays are terminal. All nominal cells and AEGIS cells 32..47
+completed: 48 cells / 2400 episodes. Cells 48 and 49 retain 43 and 7 completed
+episodes respectively, but those partial cells will be rerun from episode 0 to
+preserve each cell's upstream policy RNG sequence. Original artifacts remain
+untouched; the recovery summary excludes the 50 superseded partial records.
+
+Confirmed API cost including smoke is $1.60775168; one failed request retains
+a $0.10 reservation because no billable response was received. Recovery carries
+$1.70775168 against the SAME $5 ceiling, schedules only cells 48..63 (800 new
+episode executions), and inherits completed records through checked hashes.
+Exact input/response cache entries are reusable without another paid call.
+Scientific source, configuration and perception prompt/settings must be identical
+to the parent before the recovery launcher accepts its records.
+
+The transport now permits one additional attempt only for selected transient
+HTTP errors, with a separate $0.10 reservation for each attempt. Unknown charges
+remain reserved; invalid model/content, missing cost and budget errors still
+stop immediately. Two failed HTTP attempts stop the batch. 22 local checks pass.
+The recovery launch receipt/status is authoritative for whether work has resumed.

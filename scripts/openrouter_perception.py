@@ -46,7 +46,7 @@ def read_response(directory):
     if not isinstance(text,str) or not text.strip():raise RuntimeError('Empty obstacle response')
     return text.replace('<|begin_of_box|>','').replace('<|end_of_box|>','').strip()
 
-def fill(directory, budget=None):
+def fill(directory, budget=None, attempt=1):
     directory=Path(directory)
     if (directory/'response.json').exists():return read_response(directory)
     request=json.loads((directory/'request.json').read_text())
@@ -57,10 +57,11 @@ def fill(directory, budget=None):
         if credential.stat().st_mode & 0o077:raise RuntimeError('Credential file must have mode 600')
         key=credential.read_text().strip()
     if not key:raise RuntimeError('OPENROUTER_API_KEY is required in this networked process; never put it in Git or logs')
-    if budget is not None:budget.reserve(directory.name,request)
+    budget_key=directory.name if attempt==1 else directory.name+':attempt'+str(attempt)
+    if budget is not None:budget.reserve(budget_key,request)
     req=urllib.request.Request('https://openrouter.ai/api/v1/chat/completions',data=json.dumps(request).encode(),headers={'Authorization':'Bearer '+key,'Content-Type':'application/json'},method='POST')
     with urllib.request.urlopen(req,timeout=180) as response:result=json.load(response)
-    if budget is not None:budget.settle(directory.name,result)
+    if budget is not None:budget.settle(budget_key,result)
     if 'error' in result:raise RuntimeError('OpenRouter returned an API error; no cache accepted')
     record={'request_sha256':directory.name,'created_unix':time.time(),'endpoint':'https://openrouter.ai/api/v1/chat/completions','response':result}
     # Validate before atomic publication; a failed call must not become a cached obstacle.
