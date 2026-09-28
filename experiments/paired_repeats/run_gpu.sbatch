@@ -27,6 +27,13 @@ export HF_HOME="$CB_ASSETS/huggingface" HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1
 export OPENPI_DATA_HOME="$CB_ASSETS/openpi_assets"
 export PYTHONPATH="$CB_UPSTREAM/openpi/src:$CB_UPSTREAM/openpi/packages/openpi-client/src"
 export XLA_PYTHON_CLIENT_PREALLOCATE=false
+# Path.resolve() in the launcher produces /gpfs/projects/... . Binding /projects
+# and the source child alone does not make that canonical output parent writable.
+CONTAINER_BINDS="/projects,/home,$ROOT:$ROOT:rw,$SOURCE:$SOURCE:ro"
+# Check the real output mount before paying the policy model startup cost.
+singularity exec --nv --bind "$CONTAINER_BINDS" "$CB_ASSETS/containers/aegis-py38.sif" \
+ "$CB_ASSETS/envs/aegis_sim/bin/python" -c \
+ 'import sys,tempfile; f=tempfile.TemporaryFile(dir=sys.argv[1]); f.write(b"mount-check"); f.flush(); f.close(); print("Container output write check passed:", sys.argv[1], flush=True)' "$ROOT"
 PORT=$((20000 + SLURM_JOB_ID % 30000))
 SERVER_PID=""
 trap 'if [ -n "$SERVER_PID" ]; then kill "$SERVER_PID" 2>/dev/null || true; wait "$SERVER_PID" 2>/dev/null || true; fi' EXIT
@@ -50,6 +57,6 @@ export SINGULARITYENV_TRANSFORMERS_CACHE="$CB_ASSETS/huggingface/hub" SINGULARIT
 export SINGULARITYENV_HF_HOME="$HF_HOME" SINGULARITYENV_HF_HUB_OFFLINE=1 SINGULARITYENV_TRANSFORMERS_OFFLINE=1
 export SINGULARITYENV_PYTHONNOUSERSITE=1 SINGULARITYENV_PYTHONDONTWRITEBYTECODE=1
 export SINGULARITYENV_PYTHONPATH="$CB_UPSTREAM/safelibero:$CB_UPSTREAM/openpi/packages/openpi-client/src"
-singularity exec --nv --bind "/projects,/home,$SOURCE:$SOURCE" "$CB_ASSETS/containers/aegis-py38.sif" \
+singularity exec --nv --bind "$CONTAINER_BINDS" "$CB_ASSETS/containers/aegis-py38.sif" \
  "$CB_ASSETS/envs/aegis_sim/bin/python" -u experiments/paired_repeats/execute.py "$STAGE" "$ROOT" --port "$PORT" \
  2>&1 | tee "$ROOT/evaluation_${STAGE}.log"
