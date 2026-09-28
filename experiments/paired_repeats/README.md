@@ -1,10 +1,12 @@
 # π0.5 / full AEGIS 配对重复实验
 
-**当前状态（2026-09-28）：原复现3200集已完成；自检7647815因容器结果目录只读，
-启动后84秒失败，实际完成0集。三项自检均尚未执行，正式600次未启动。**
-本地已修正 `/gpfs/projects/...` 根目录的读写绑定，并加入模型加载前的实际写入检查；
-通过12项配对测试和Shell语法检查。用户已授权重跑三项自检；使用新的发布提交和结果根目录，
-容器写入与运行检查通过与否以新作业日志为准；正式600次仍未启动。
+**当前状态（2026-09-28）：原复现3200集已完成；修复后的自检7733916全部通过。**
+60状态×300步无位移超1mm；每状态3次新环境的qpos完全一致；4次冒烟无退出、配对首个
+策略chunk一致、视频解码及抽帧目检正常，两次VLM均识别正确。动作差阈值冻结为1e-6：
+最大数值误差7.77e-16，最小实际修改0.00508。冒烟耗时分别87.25/125.01/20.57/34.71秒。
+首次自检7647815的只读目录失败保留；修复提交b2587a3通过实际容器写入与全部自检。
+用户现授权只提交正式600次并更新实验usage limit。新控制快照只更新预算与调度；
+GPU沿用b2587a3科学源码且按文件哈希核对，旧源码和自检证据不覆盖。
 本目录是独立流水线；现有 `scripts/`、`setup/`、上游源码、复现作业及其结果均不修改。
 最新执行状态只读新实验根目录的 `plan.json`、`self_checks.json`、`STOP.json`、`progress.json`。
 
@@ -23,15 +25,19 @@ episode 0、1，各方法一次，核对 RNG 回执、qpos 和首个策略 chunk
 冻结小阈值；不根据成功率挑阈值。冒烟不混入正式结果。
 
 复跑：先运行 `python3 -m unittest discover -s experiments/paired_repeats -p 'test_*.py' -v`
-及既有 `tests/`（当前共 34 项通过），发布 clean commit 到 `codex/paired-repeats`。
+及既有 `tests/`，发布 clean commit 到 `codex/paired-repeats`。
 Quest 先 `scripts/quest_sync.sh check`。通过 `scripts/quest_sync.sh exec` 只 fetch 发布提交、
 `git archive <commit>` 到新的 `/projects/p33100/siosio/crashbench_safelibero/paired_repeats/<唯一ID>/source`，
 根目录写 `SOURCE_COMMIT`；**不 merge/sync 活跃 checkout**。
 从归档用 OpenPI Python 执行 `experiments/paired_repeats/launch.py checks <新根>`。
 脚本校验归档每个文件等于发布提交，自检作业依赖原复现数组结束，使用 p33100/gengpu 单 GPU。
-三项通过、目检视频、冻结阈值后用同一脚本 `launch.py full <根>`；它再次检查原数组终止、
-最新复现 COMPLETE、自检证据哈希和 review。新旧 API 消费合计仍限 $5，每请求预留 $.10，
-未知消费保留；302 次新 VLM 调用按已观测首笔 $.0018084 估约 $.54614，不保证一定够用。
+三项通过、目检视频、冻结阈值后，把新的控制快照归档到 `<根>/control/<提交>/`，执行
+该快照的 `submit_reviewed_full.py <根>`。它核验科学代码逐文件不变、原数组终止、
+最新复现 COMPLETE、自检证据哈希和review，备份旧账本后只提交一次正式作业。
+本次经用户授权把本地总上限从$5改为**$65**，仍保留历史费用及未知预留、每尝试预留$.10、
+每run最多两次HTTP尝试、同一VLM与价格上界。已占用$3.79918268，加300×2×$.10为
+$63.79918268，预算边界覆盖该保守值；按本次冒烟均价实际预估新增$0.5544。
+key原有$100额度未变，查询时剩余$78.44。作业时限48h；外部服务与硬件故障仍可能停止。
 密钥已私下配置，只在网络 worker 读取；每次 AEGIS run 新调用 GLM-4.5V/Z.AI，不复用回答。
 
 每 run 保存 `row.json`、逐步原动作/QP 输出/位移 `steps.jsonl`、qpos、RNG 回执、视频、

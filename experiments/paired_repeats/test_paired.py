@@ -173,4 +173,49 @@ class GateTests(unittest.TestCase):
         self.assertIs(vlm_correct('red_coffee_mug_obstacle_1','blue moka pot'),False)
         self.assertIsNone(vlm_correct('moka_pot_obstacle_1','small blue metallic object'))
 
+class UpdatedBudgetTests(unittest.TestCase):
+    def test_new_ceiling_does_not_change_original_baseline_limit(self):
+        import api_budget
+        from paired_budget import PairedBudget
+        from openrouter_perception import make_request
+        with tempfile.TemporaryDirectory() as tmp:
+            budget=PairedBudget(tmp,'63.79918268','65.00');budget.refresh_prices=lambda:None
+            try:
+                request=make_request(b'png','task','safelibero_spatial',budgeted=True)
+                budget.reserve('last-permitted-attempt',request)
+                self.assertEqual(str(budget.committed()),'63.89918268')
+                self.assertEqual(str(api_budget.LIMIT),'5.00')
+                self.assertEqual(budget.state['limit_usd'],'65.00')
+            finally:budget.close()
+
+    def test_custom_ceiling_still_stops_before_network(self):
+        from paired_budget import PairedBudget
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);budget=PairedBudget(root,'64.91','65.00');budget.refresh_prices=lambda:None
+            d=export_request(b'png','task','safelibero_spatial',root/'run',budgeted=True)
+            try:
+                with patch.dict('os.environ',{'OPENROUTER_API_KEY':'test-only'}),patch('urllib.request.urlopen') as network:
+                    with self.assertRaises(RuntimeError):fresh_fill(d,budget,'run')
+                    network.assert_not_called()
+            finally:budget.close()
+
+    def test_limit_mismatch_or_unapproved_increase_is_rejected(self):
+        from paired_budget import PairedBudget
+        with tempfile.TemporaryDirectory() as tmp:
+            budget=PairedBudget(tmp,'3.79918268','5.00');budget.close()
+            with self.assertRaises(RuntimeError):PairedBudget(tmp,limit='65.00')
+            with self.assertRaises(RuntimeError):PairedBudget(tmp,limit='65.01')
+
+    def test_unknown_charge_remains_reserved_on_new_guard(self):
+        from paired_budget import PairedBudget
+        from openrouter_perception import make_request
+        with tempfile.TemporaryDirectory() as tmp:
+            budget=PairedBudget(tmp,'3.79918268','65.00');budget.refresh_prices=lambda:None
+            budget.reserve('attempt',make_request(b'png','task','safelibero_spatial',budgeted=True))
+            with self.assertRaises(RuntimeError):budget.settle('attempt',{'usage':{}})
+            budget.close()
+            with self.assertRaises(RuntimeError):PairedBudget(tmp,limit='65.00')
+            ledger=json.loads((Path(tmp)/'budget.json').read_text())
+            self.assertEqual(ledger['calls']['attempt']['reserved_usd'],'0.10')
+
 if __name__=='__main__':unittest.main()

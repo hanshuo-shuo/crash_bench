@@ -1,4 +1,4 @@
-"""A fresh paid VLM request per AEGIS run, conserving the original $5 ledger."""
+"""Fresh VLM calls with conserved charges and an explicit experiment ceiling."""
 import argparse
 from decimal import Decimal
 import json
@@ -8,7 +8,8 @@ import subprocess
 import sys
 import time
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]/'scripts'))
-from api_budget import Budget, atomic_json
+from api_budget import atomic_json
+from paired_budget import PairedBudget
 
 def prior_spend(assets, exclude):
     known = Decimal('0'); reserved = Decimal('0')
@@ -88,7 +89,8 @@ def main(root, stage):
             previous = json.loads((root/'budget.json').read_text())
             if Decimal(previous['initial_spent_usd']) != known+reserved:
                 raise RuntimeError('Other reproduction spend changed after checks')
-        budget = Budget(root, str(known+reserved))
+        budget = PairedBudget(root, str(known+reserved), plan.get('api_limit_usd','5.00'))
+        atomic_json(root/('WORKER_READY_'+stage+'.json'), {'unix':time.time(),'limit_usd':str(budget.limit)})
         # Prices and key are needed only if the first two self-checks pass.
         while time.monotonic() < deadline:
             if (root/'STOP.json').exists():
