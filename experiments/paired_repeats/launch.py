@@ -84,9 +84,13 @@ def launch(root, stage):
     plan['jobs'][stage]=job; atomic_json(root/'plan.json',plan)
     worker = shlex.join([PYTHON,'-u',str(SOURCE/'experiments/paired_repeats/api_worker.py'),str(root),stage])+' > '+shlex.quote(str(root/('api_'+stage+'.log')))+' 2>&1'
     try:
-        subprocess.run(['tmux','new-window','-d','-t','crashbench','-n','paired_'+stage,'-c',str(checkout),worker],check=True)
+        exists = subprocess.run(['tmux','has-session','-t','=crashbench'],capture_output=True).returncode == 0
+        tmux = (['tmux','new-window','-d','-t','crashbench','-n','paired_'+stage] if exists else
+                ['tmux','new-session','-d','-s','crashbench','-n','paired_'+stage])
+        subprocess.run(tmux+['-c',str(checkout),worker],check=True)
         subprocess.run(['scontrol','release',job],check=True)
-    except BaseException:
+    except BaseException as error:
+        atomic_json(root/'STOP.json',{'stage':'submission_'+stage,'reason':type(error).__name__+': '+str(error),'unix':time.time()})
         subprocess.run(['scancel',job],check=False)
         raise
     print(json.dumps({'root':str(root),'stage':stage,'job':job,'baseline_dependencies':active,'live_checkout_unchanged':cmd(['git','rev-parse','HEAD'])},indent=2))
