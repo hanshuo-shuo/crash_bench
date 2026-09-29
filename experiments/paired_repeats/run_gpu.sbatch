@@ -11,10 +11,12 @@
 set -euo pipefail
 ROOT="${CB_PAIRED_ROOT:?}"
 SOURCE="$ROOT/source"
+SCIENCE="${CB_SCIENCE_SOURCE:-$SOURCE}"
+ENTRYPOINT="${CB_EVAL_ENTRYPOINT:-$SOURCE/experiments/paired_repeats/execute.py}"
 STAGE="${CB_PAIRED_STAGE:?}"
 cd "$SOURCE"
 sha256sum --quiet -c "$ROOT/source.sha256"
-export CB_CODE_COMMIT="$(cat "$ROOT/SOURCE_COMMIT")"
+export CB_CODE_COMMIT="${CB_SCIENCE_COMMIT:-$(cat "$ROOT/SOURCE_COMMIT")}"
 export CB_ASSETS=/projects/p33100/siosio/crashbench_safelibero
 export CB_UPSTREAM="$HOME/crash_bench/third_party/vlsa-aegis"
 test -f "$CB_ASSETS/VERIFIED.json"
@@ -30,6 +32,12 @@ export XLA_PYTHON_CLIENT_PREALLOCATE=false
 # Path.resolve() in the launcher produces /gpfs/projects/... . Binding /projects
 # and the source child alone does not make that canonical output parent writable.
 CONTAINER_BINDS="/projects,/home,$ROOT:$ROOT:rw,$SOURCE:$SOURCE:ro"
+if [ "$SCIENCE" != "$SOURCE" ]; then
+ CONTAINER_BINDS="$CONTAINER_BINDS,$SCIENCE:$SCIENCE:ro"
+fi
+if [ -n "${CB_PARENT_RESULTS:-}" ]; then
+ CONTAINER_BINDS="$CONTAINER_BINDS,$CB_PARENT_RESULTS:$CB_PARENT_RESULTS:ro"
+fi
 # Check the real output mount before paying the policy model startup cost.
 singularity exec --nv --bind "$CONTAINER_BINDS" "$CB_ASSETS/containers/aegis-py38.sif" \
  "$CB_ASSETS/envs/aegis_sim/bin/python" -c \
@@ -37,7 +45,7 @@ singularity exec --nv --bind "$CONTAINER_BINDS" "$CB_ASSETS/containers/aegis-py3
 PORT=$((20000 + SLURM_JOB_ID % 30000))
 SERVER_PID=""
 trap 'if [ -n "$SERVER_PID" ]; then kill "$SERVER_PID" 2>/dev/null || true; wait "$SERVER_PID" 2>/dev/null || true; fi' EXIT
-/projects/p33100/siosio/envs/openpi/bin/python experiments/paired_repeats/serve_seeded.py \
+/projects/p33100/siosio/envs/openpi/bin/python "$SCIENCE/experiments/paired_repeats/serve_seeded.py" \
  --port "$PORT" --checkpoint "$CB_ASSETS/openpi_assets/openpi-assets/checkpoints/pi05_libero" > "$ROOT/policy_${STAGE}.log" 2>&1 &
 SERVER_PID=$!
 /projects/p33100/siosio/envs/openpi/bin/python - "$PORT" "$SERVER_PID" <<'PY'
@@ -58,5 +66,5 @@ export SINGULARITYENV_HF_HOME="$HF_HOME" SINGULARITYENV_HF_HUB_OFFLINE=1 SINGULA
 export SINGULARITYENV_PYTHONNOUSERSITE=1 SINGULARITYENV_PYTHONDONTWRITEBYTECODE=1
 export SINGULARITYENV_PYTHONPATH="$CB_UPSTREAM/safelibero:$CB_UPSTREAM/openpi/packages/openpi-client/src"
 singularity exec --nv --bind "$CONTAINER_BINDS" "$CB_ASSETS/containers/aegis-py38.sif" \
- "$CB_ASSETS/envs/aegis_sim/bin/python" -u experiments/paired_repeats/execute.py "$STAGE" "$ROOT" --port "$PORT" \
+ "$CB_ASSETS/envs/aegis_sim/bin/python" -u "$ENTRYPOINT" "$STAGE" "$ROOT" --port "$PORT" \
  2>&1 | tee "$ROOT/evaluation_${STAGE}.log"

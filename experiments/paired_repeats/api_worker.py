@@ -10,6 +10,7 @@ import time
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]/'scripts'))
 from api_budget import atomic_json
 from paired_budget import PairedBudget
+from slurm_monitor import read_job_state, FAILED_STATES
 
 def prior_spend(assets, exclude):
     known = Decimal('0'); reserved = Decimal('0')
@@ -91,6 +92,8 @@ def main(root, stage):
                 raise RuntimeError('Other reproduction spend changed after checks')
         budget = PairedBudget(root, str(known+reserved), plan.get('api_limit_usd','5.00'))
         atomic_json(root/('WORKER_READY_'+stage+'.json'), {'unix':time.time(),'limit_usd':str(budget.limit)})
+        last_slurm_check=0
+        completed_without_receipt_since=None
         # Prices and key are needed only if the first two self-checks pass.
         while time.monotonic() < deadline:
             if (root/'STOP.json').exists():
@@ -100,16 +103,28 @@ def main(root, stage):
             for request in sorted((root/stage).glob('requests/*/*/request.json')):
                 if (request.parent/'response.json').exists():
                     continue
-                expected_max = 2 if stage == 'checks' else 302
+                expected_max = plan.get('max_fresh_vlm_calls',2 if stage == 'checks' else 302)
+                if not isinstance(expected_max,int) or not 0 < expected_max <= 302:
+                    raise RuntimeError('Invalid planned VLM call ceiling')
                 logical = {key.rsplit(':',1)[0] if ':attempt' not in key else key.rsplit(':',2)[0] for key in budget.state['calls']}
                 if len(logical) >= expected_max:
                     raise RuntimeError('Paired per-stage request bound reached')
                 name = request.parent.parent.name
                 fresh_fill(request.parent,budget,stage+'/'+name)
                 atomic_json(root/'api_status.json',{'committed_usd':str(budget.committed()),'attempts':len(budget.state['calls']),'last_run':name})
-            state = subprocess.check_output(['sacct','-X','-n','-P','-j',job,'--format=JobIDRaw,State'],text=True)
-            if any(s in state for s in ['FAILED','TIMEOUT','OUT_OF_MEMORY','CANCELLED','NODE_FAIL','PREEMPTED','BOOT_FAIL']):
-                raise RuntimeError('Paired GPU job failed: '+state.strip())
+            if time.monotonic()-last_slurm_check >= 60:
+                observed=read_job_state(job)
+                atomic_json(root/'slurm_monitor.json',dict(observed,job=job,checked_unix=time.time()))
+                if observed['state'] in FAILED_STATES:
+                    raise RuntimeError('Verified paired GPU job failure: '+observed['state'])
+                if observed['state']=='COMPLETED':
+                    if completed_without_receipt_since is None:
+                        completed_without_receipt_since=time.monotonic()
+                    elif time.monotonic()-completed_without_receipt_since>120:
+                        raise RuntimeError('Compute completed but no result-completion receipt appeared')
+                else:
+                    completed_without_receipt_since=None
+                last_slurm_check=time.monotonic()
             time.sleep(5)
         raise RuntimeError('Seven-day experiment deadline')
     except BlockingIOError:
