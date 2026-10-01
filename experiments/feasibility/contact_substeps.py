@@ -74,8 +74,13 @@ def audit(root, case_file):
                     body = int(model.geom_bodyid[other])
                     category = ('robot' if other in robot_geoms else
                                 ('target' if other in target_geoms else 'other_dynamic'))
-                    if category == 'other_dynamic' and model.body_mass[body] == 0:
-                        continue  # Static support surfaces are not protected-body impacts.
+                    if category == 'other_dynamic':
+                        ancestor = body; moving = False
+                        while ancestor:
+                            moving = moving or int(model.body_dofnum[ancestor]) > 0
+                            ancestor = int(model.body_parentid[ancestor])
+                        if not moving:
+                            continue  # Static support bodies may have positive mass but no DOFs.
                     events.append({'action': cursor['action'], 'substep': cursor['substep'],
                                    'simulation_time': float(sim_data.time), 'category': category,
                                    'geom_pair': [model.geom_id2name(g) for g in pair],
