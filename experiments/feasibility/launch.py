@@ -12,7 +12,7 @@ def launch(root,stage):
  if git(['remote','get-url','origin']) not in ['git@github.com:hanshuo-shuo/crash_bench.git','https://github.com/hanshuo-shuo/crash_bench.git']:raise RuntimeError('Wrong project')
  if git(['status','--porcelain=v1','--untracked-files=all']):raise RuntimeError('Dirty live checkout')
  commit=(root/'SOURCE_COMMIT').read_text().strip()
- if git(['rev-parse','origin/codex/feasibility'])!=commit:raise RuntimeError('Unpublished commit')
+ if subprocess.run(['git','merge-base','--is-ancestor',commit,'origin/codex/feasibility'],cwd=checkout).returncode:raise RuntimeError('Commit is not reachable on published branch')
  checks=[]
  for relative in git(['ls-tree','-r','--name-only',commit]).splitlines():
   expected=subprocess.check_output(['git','show',commit+':'+relative],cwd=checkout)
