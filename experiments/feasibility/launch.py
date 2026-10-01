@@ -23,6 +23,13 @@ def launch(root,stage):
  if prior and (not stage.startswith('branch_') or stage in prior['jobs']):raise RuntimeError('Existing stage cannot be resubmitted')
  preflight=root/'PREFLIGHT.json'
  if not preflight.exists() or json.loads(preflight.read_text()).get('status')!='passed':raise RuntimeError('CPU preflight not passed')
+ preflight_data=json.loads(preflight.read_text())
+ if preflight_data['code_commit']!=commit:
+  inheritance=json.loads((root/'PREFLIGHT_INHERITED.json').read_text())
+  if inheritance['preflight_sha256']!=hashlib.sha256(preflight.read_bytes()).hexdigest():raise RuntimeError('Inherited CPU report changed')
+  for relative,value in inheritance['validated_sources'].items():
+   if hashlib.sha256((SOURCE/relative).read_bytes()).hexdigest()!=value:raise RuntimeError('CPU validated source changed: '+relative)
+  if set(inheritance['validated_sources'])!={'experiments/feasibility/'+f+'.py' for f in ['preflight','geometry','protocol','serve']}:raise RuntimeError('Incomplete preflight inheritance')
  # Restrict inspection to this project's recorded job IDs; other projects are untouched.
  jobs=[]
  for p in (ASSETS/'batches').glob('*/batch.json'):jobs+=json.loads(p.read_text()).get('slurm_arrays',[])

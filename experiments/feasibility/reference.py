@@ -3,12 +3,16 @@ import numpy as np
 from scipy.spatial.transform import Rotation
 class Reference:
  def __init__(self,state,variant='center'):
-  self.state=state;self.variant=variant;self.phase='clear_height';self.phase_steps=0;self.grasp=None;self.offset=None;self.attached=False
+  self.state=state;self.variant=variant;self.phase='clear_height';self.phase_steps=0;self.grasp=None;self.offset=None;self.attached=False;self.high=None
  def step(self,env,obs):
   self.phase_steps+=1
   eef=np.asarray(obs['robot0_eef_pos']);obj=np.asarray(obs[self.state['target']+'_pos']);goal=np.asarray(obs[self.state['goal']+'_pos'])
   # Fixed high transit plane; no object/obstacle reset or simulator state writes.
-  high=max(float(obj[2]),float(goal[2]))+.26
+  if self.high is None:
+   from geometry import active_obstacle,object_points
+   points,_=object_points(env,active_obstacle(env,obs))
+   self.high=max(float(obj[2])+.26,float(goal[2])+.26,float(points[:,2].max())+.12)
+  high=self.high
   grasp=obj.copy()
   grasp[2]+= .025 if 'bowl' in self.state['target'] else .015
   if self.variant=='rim' and 'bowl' in self.state['target']:grasp[1]-=.035

@@ -30,3 +30,10 @@ AEGIS内部变量与观察。检查点0/50/150/250，仅未碰撞且未成功者
 所有仿真、模型、图表生成都在p33100/gengpu单A100作业中，输出及Slurm provenance独立保存。
 末尾自动生成report/REPORT.md、CSV、统计JSON、静态PNG、HTML。全实验可能需要数小时；
 参考不成功时不分叉，不把此情况当不可行。失败根保留STOP和全部原始记录，新修复用新根。
+
+CPU预检可仅在preflight/geometry/protocol/serve四文件字节不变时继承；报告原commit、原job及hash
+保留，PREFLIGHT_INHERITED.json记录验证的源文件hash，launcher重新核验。参考方法和报告改动
+不使已完成的几何/动作范围测量失效。参考提升平面固定为障碍碰撞几何最高点+0.12m，并不改变
+控制动作范围。原生重复推理完整差异及首个原生chunk另存，不声称解释了旧11对差异的来源。
+完整运行拆成initial（304次）及按有资格状态的branch_<状态>阶段，单GPU顺序运行。
+policy_cache按完整输入hash与JAX RNG保存受控输出；跨阶段继续原生推理并记录差异。
