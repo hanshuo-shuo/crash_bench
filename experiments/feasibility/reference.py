@@ -3,7 +3,7 @@ import numpy as np
 from scipy.spatial.transform import Rotation
 class Reference:
  def __init__(self,state,variant='center'):
-  self.state=state;self.variant=variant;self.phase='approach';self.phase_steps=0;self.grasp=None;self.offset=None;self.attached=False
+  self.state=state;self.variant=variant;self.phase='clear_height';self.phase_steps=0;self.grasp=None;self.offset=None;self.attached=False
  def step(self,env,obs):
   self.phase_steps+=1
   eef=np.asarray(obs['robot0_eef_pos']);obj=np.asarray(obs[self.state['target']+'_pos']);goal=np.asarray(obs[self.state['goal']+'_pos'])
@@ -14,7 +14,8 @@ class Reference:
   if self.variant=='rim' and 'bowl' in self.state['target']:grasp[1]-=.035
   if self.variant=='side':grasp[2]-=.025
   grip=-1.
-  if self.phase=='approach':target=np.array([grasp[0],grasp[1],high]);orientation=Rotation.from_euler('xyz',[np.pi,0,0]).as_matrix()
+  if self.phase=='clear_height':target=np.array([eef[0],eef[1],high]);orientation=Rotation.from_euler('xyz',[np.pi,0,0]).as_matrix()
+  elif self.phase=='approach':target=np.array([grasp[0],grasp[1],high]);orientation=Rotation.from_euler('xyz',[np.pi,0,0]).as_matrix()
   elif self.phase=='descend':target=grasp;orientation=Rotation.from_euler('xyz',[np.pi,0,0]).as_matrix()
   elif self.phase=='close':target=self.grasp;grip=1.;orientation=Rotation.from_euler('xyz',[np.pi,0,0]).as_matrix()
   elif self.phase=='lift':target=np.array([eef[0],eef[1],high]);grip=1.;orientation=self.orientation
@@ -23,7 +24,8 @@ class Reference:
    target=goal.copy();target[2]+=(.06 if 'plate' in self.state['goal'] else .12)+(self.offset[2] if self.offset is not None else .05);grip=1.;orientation=self.orientation
   elif self.phase=='release':target=self.place.copy();orientation=self.orientation
   else:target=np.array([eef[0],eef[1],high]);orientation=self.orientation
-  if self.phase in ['approach','descend'] and (np.linalg.norm(target-eef)<.012 or self.phase_steps>=60):
+  if self.phase=='clear_height' and (abs(eef[2]-high)<.012 or self.phase_steps>=45):self.phase='approach';self.phase_steps=0
+  elif self.phase in ['approach','descend'] and (np.linalg.norm(target-eef)<.012 or self.phase_steps>=60):
    if self.phase=='approach':self.phase='descend'
    else:self.phase='close';self.grasp=eef.copy()
    self.phase_steps=0

@@ -32,7 +32,10 @@ def launch(root,stage):
  plan={'code_commit':commit,'upstream_commit':'2457feed5968ae803926e178c8ce8243b9ecdcf9','source':str(SOURCE),'stage':stage,'jobs':{},'max_gpus':1,'API_calls':0,'live_checkout_commit':git(['rev-parse','HEAD']),'created_unix':time.time()}
  atomic_json(root/'plan.json',plan)
  env=os.environ.copy();env.update(CB_DIAGNOSTIC_ROOT=str(root),CB_DIAGNOSTIC_STAGE=stage)
- job=subprocess.check_output(['sbatch','--parsable','--output='+str(root/'slurm_%j.log'),str(SOURCE/'experiments/feasibility/run_gpu.sbatch')],env=env,cwd=checkout,text=True).strip().split(';')[0]
+ args=['sbatch','--parsable','--output='+str(root/'slurm_%j.log')]
+ if stage=='smoke':args+=['--time=01:00:00']
+ args+=[str(SOURCE/'experiments/feasibility/run_gpu.sbatch')]
+ job=subprocess.check_output(args,env=env,cwd=checkout,text=True).strip().split(';')[0]
  if not job.isdigit():raise RuntimeError('Invalid job receipt')
  plan['jobs'][stage]=job;atomic_json(root/'plan.json',plan);print(json.dumps(plan,indent=2))
 if __name__=='__main__':

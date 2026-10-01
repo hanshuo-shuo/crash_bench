@@ -173,7 +173,9 @@ class Runner:
    pending.update(obstacle_l1_m=disp,success=bool(done));trace.write(json.dumps(pending)+'\n');trace.flush()
   def caught(error,t):
    if isinstance(error,InfrastructureError):raise error
-   row['exited']=True;row['exit_reason']=type(error).__name__+': '+str(error)
+   if not (isinstance(error,NameError) and str(error)=="name 'a' is not defined"):
+    raise InfrastructureError('Unexpected execution error: '+type(error).__name__+': '+str(error)) from error
+   row['exited']=True;row['exit_reason']='upstream_qp_infeasible_undefined_a'
   def finish(done,collided,video):
    if bool(collided)!=row['collided'] or bool(done)!=row['success']:raise InfrastructureError('Scoring disagreement')
    import imageio

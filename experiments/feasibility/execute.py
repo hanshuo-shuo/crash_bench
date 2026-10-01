@@ -12,11 +12,10 @@ def execute(root,port,stage):
   rows.append(row);atomic_json(root/'rows.json',rows)
   atomic_json(root/'progress.json',{'stage':stage,'completed_runs':len(rows),'last_run':row['run_id'],'updated_unix':time.time()})
  # First run shared seeds through all arms; store every mismatched native inference rather than discard.
- for state in STATES:
+ for state in ([STATES[0],STATES[3]] if stage=='smoke' else STATES):
   for condition in CONDITIONS:record(runner.run(state,0,condition))
   for variant in ['center','rim','side']:
    record(runner.run(state,0,'reference',name=state['id']+'_screen_'+variant,variant=variant))
-  if stage=='smoke' and state['id']=='object_00':break
  atomic_json(root/'SMOKE_COMPLETE.json',{'rows':len(rows),'initial_observation_and_chunk_gate':'passed','no_paid_API_calls':True})
  if stage=='smoke':return
  # New policy seeds; same fixed geometry and caption, no cherry-picking repeats.
