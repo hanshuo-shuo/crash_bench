@@ -55,6 +55,28 @@ def report(root):
     bt.append(dict(state=state['id'],step=step,budget=budget,**counts))
     table.append('|%s|%d|%s|%s|%s|%s|%s|%s|'%(state['id'],step,budget,*[counts[c] for c in ['raw']+CANDIDATES]))
  if not branches:table+=['','没有满足分叉前提的状态，或分叉阶段尚未执行。不能把缺少续接结果写成候选失败。']
+ if branches:
+  bs=sorted({r['state'] for r in branches});fig,axes=plt.subplots(len(bs),2,figsize=(11,3*len(bs)),squeeze=False)
+  for i,sid in enumerate(bs):
+   for j,budget in enumerate(['remaining','equal300']):
+    values=np.full((len(CANDIDATES)+1,len(CHECKPOINTS)),np.nan)
+    for a,c in enumerate(['raw']+CANDIDATES):
+     for b,step in enumerate(CHECKPOINTS):
+      g=[r for r in branches if r['state']==sid and r['condition']==c and r['branch_step']==step and r['extra_budget']==(0 if budget=='remaining' else step)]
+      if g:values[a,b]=sum(r['safe_success'] for r in g)/len(g)
+    ax=axes[i,j];ax.imshow(values,vmin=0,vmax=1,cmap='YlGnBu');ax.set_xticks(range(len(CHECKPOINTS)));ax.set_xticklabels(CHECKPOINTS);ax.set_yticks(range(len(CANDIDATES)+1));ax.set_yticklabels(['raw']+CANDIDATES);ax.set_title(sid+' / '+budget);ax.set_xlabel('Common-prefix checkpoint / actions')
+  fig.tight_layout();fig.savefig(out/'continuation_opportunities.png',dpi=180);plt.close(fig)
+ fig,axes=plt.subplots(len(STATES),3,figsize=(10,3.1*len(STATES)))
+ for i,state in enumerate(STATES):
+  choices=[next((r for r in initial if r['state']==state['id'] and r['condition']=='raw'),None),next((r for r in initial if r['state']==state['id'] and r['condition']=='identity_geometry'),None),next((r for r in initial if r['state']==state['id'] and r['condition']=='reference' and r['validation'] and r['safe_success']),None)]
+  for j,record in enumerate(choices):
+   ax=axes[i,j];ax.axis('off');ax.set_title(state['id']+' / '+['raw AEGIS','identity + geometry','validated witness'][j],fontsize=9)
+   if record:
+    images=sorted((root/'runs'/record['run_id']).glob('frame_*.jpg'))
+    if images:ax.imshow(plt.imread(images[-1]));ax.text(.01,.01,'safe success='+str(record['safe_success']),transform=ax.transAxes,color='white',bbox=dict(facecolor='black',alpha=.6),fontsize=8)
+   else:ax.text(.5,.5,'No validated witness yet' if j==2 else 'Pending',ha='center')
+ fig.tight_layout();fig.savefig(out/'execution_examples.jpg',dpi=120);plt.close(fig)
+
  discrepancies=[]
  for p in (root/'runs').glob('*/policy.jsonl'):
   for l in p.read_text().splitlines():
@@ -83,7 +105,7 @@ def report(root):
  (out/'statistics.json').write_text(json.dumps({'initial':stats,'branches':bt,'decision':decision,'native_discrepancies':discrepancies},ensure_ascii=False,indent=2))
  import html
  text=html.escape('\n'.join(table))
- (out/'report.html').write_text('<!doctype html><meta charset="utf-8"><title>安全未完成诊断</title><style>body{font:16px system-ui;max-width:1200px;margin:40px auto;line-height:1.6}img{max-width:100%}pre{white-space:pre-wrap}</style><h1>安全未完成状态的可行性见证与受控续接实验</h1><img src="perception_conditions.png"><img src="safety_traces.png"><pre>'+text+'</pre>')
+ (out/'report.html').write_text('<!doctype html><meta charset="utf-8"><title>安全未完成诊断</title><style>body{font:16px system-ui;max-width:1200px;margin:40px auto;line-height:1.6}img{max-width:100%}pre{white-space:pre-wrap}</style><h1>安全未完成状态的可行性见证与受控续接实验</h1><img src="perception_conditions.png"><img src="safety_traces.png"><img src="execution_examples.jpg"><pre>'+text+'</pre>')
  return stats
 if __name__=='__main__':
  import sys

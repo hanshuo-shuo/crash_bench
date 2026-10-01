@@ -45,7 +45,9 @@ class ControlledPolicy:
     if file:
      temporary=file.with_suffix('.tmp.npz');np.savez(temporary,actions=actions,rng_after=after);temporary.replace(file)
    raw['diagnostic']={'input_sha256':ih,'rng_before':before,'rng_after':after,'request_index':self.n,
-    'run_id':self.run,'output_replayed':replayed,'native_output_linf_difference':difference}
+    'run_id':self.run,'output_replayed':replayed,'native_output_linf_difference':difference,
+    'native_chunk_sha256':hashlib.sha256(actions.tobytes()).hexdigest()}
+   if self.n==1 or difference>0:raw['diagnostic']['native_actions']=actions.tolist()
    return raw
 
 def main():

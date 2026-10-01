@@ -149,6 +149,7 @@ class Runner:
      if 'diagnostic' in result:
       info=result['diagnostic'];inferences.write(json.dumps(info)+'\n');inferences.flush()
       if info['request_index']==1:
+       row['native_first_chunk_sha256']=info['native_chunk_sha256']
        ch=np.asarray(result['actions']);row['first_chunk_sha256']=array_hash(ch);np.save(directory/'first_action_chunk.npy',ch)
        key=(state['id'],seed)
        if key in self.first_chunks and self.first_chunks[key]!=row['first_chunk_sha256']:raise InfrastructureError('Controlled first chunk differs')
