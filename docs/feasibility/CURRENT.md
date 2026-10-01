@@ -78,12 +78,16 @@ GPU活跃时自动审批两次拒绝在Quest checkout建立results symlink；不
   官方1mm评分保持不变；需要区分代理下安全与无受保护机器人/目标接触。Spat9/15主分叉资格仍按预先冻结官方代理协议，不声称更强安全可行性或真实可行性衰退。
 
 最终增强分析准备根：
-`/projects/p33100/siosio/crashbench_safelibero/feasibility/20261001T225559Z_analysis_865399bbbbb5/`。
-源865399bbbbb5，ANALYSIS_READY=prepared_not_submitted，输入supplements.json包含两个完整接触审计和south25失败筛查。
+`/projects/p33100/siosio/crashbench_safelibero/feasibility/20261001T230540Z_analysis_c53449c82618/`。
+源c53449c82618，ANALYSIS_READY=prepared_not_submitted，输入supplements.json包含两个完整接触审计和south25失败筛查。
 analysis/protocol/runtime/reference/serve/adapter/geometry/observation_control/execute与主327源码逐字节一致。
 只在主根COMPLETE且所有批准分叉完整、Slurm成功终止后，提交该archive的interpret.sbatch：CB_ANALYSIS_ROOT为分析根、CB_ANALYSIS_TARGET为主根；生成四类结果图、oracle库/最佳固定候选/预算图、接触见证图及中文判断证据表。
 旧`20261001T221937Z_analysis_5324285a96aa`未提交，已标SUPERSEDED保留原source，不使用。
-15项机制/分析/衔接测试通过；新图表必须在Quest生成并实际QA后取回。
+旧865分析根亦未提交并已SUPERSEDED保留；接触图重排布局，实际数据不变。15项机制/分析/衔接测试通过；新图表必须在Quest生成并实际QA后取回。
 
 SSH master曾短暂断开，旧命令最终返回Slurm/审计结果，随后socket消失；通过非交互BatchMode重新建立同一/tmp/quest.sock，quest_sync check通过。不重启任何作业、不删结果，不需用户密码或Duo。
 Goal保持active：完整initial、批准分叉、最终图文表与研究建议仍未完成。
+
+阶段性接触图报告：8197299 COMPLETED/0:0/22s，旧图轴标签重叠不交付；已提交修正布局8197680，根20261001T230540Z_contact_report_c53449c82618。读取实际Slurm/REPORT_COMPLETE后，查看PNG并只读取回本地，不能将阶段性报告当最终研究完成。
+
+8197680实际COMPLETED/0:0，18s；修正接触图已实际查看，标签清楚。图/中文报告/CSV/JSON及manifest仅只读取回results/feasibility/contact_screen_20261001，四个导出文件SHA256逐一匹配；PNG为22c6d67b7f1fadad7340312e66f6bc36069f186d0e604f1bc32a3198db4441f5。该报告只含单次筛查，不是最终目标完成。最终分析准备根现为20261001T230540Z_analysis_c53449c82618；旧865未提交且SUPERSEDED保留。
