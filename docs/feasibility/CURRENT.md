@@ -56,3 +56,34 @@
 
 GPU活跃时自动审批两次拒绝在Quest checkout建立results symlink；不能重试。可只读SSH/base64明确结果路径保存本地副本并比SHA，不变更Quest checkout或源档案。
 已取回旧证据`results/feasibility/prior_20261001/`与像素探针`results/feasibility/observation_audit_20261001/`，都不是本轮完整新结果。全部失败根、旧源码与历史raw结果保留可恢复。
+
+## 子步接触与安全语义审计（2026-10-01后续）
+
+- 主initial8189966最后实际核验RUNNING/qgpu2004，已73/304；依赖控制器8192029 PENDING/Dependency。不是完成。
+- 子步回放**8193808 COMPLETED/0:0，2m20s**，根
+  `20261001T222534Z_substep_contacts_5966839c2245`。三Spatial/rim及Spatial9/15联合几何AEGIS。
+  qpos/qvel/ctrl在0与全部已存检查点逐字节匹配，最大位移和任务结果精确复现。
+  Spatial9/15 rim虽然官方代理安全，仍有link5酒瓶接触，分别在4、5个动作内出现。
+  Spatial3 rim的1.067mm不安全完成也有5个接触动作。不能声称这些是无受保护接触的见证。
+  原596审计把桌面支撑标为other_dynamic；原始JSON保留，报告只解释robot/target。
+  后续afdebc改按祖先DOF排除静态支撑，不改机器人/目标计数，不重写旧结果。
+- 单一固定合法放置补试**8194623 COMPLETED/0:0，2m19s**，根
+  `20261001T223433Z_south25_afdebc06fb29`。只改本地规划waypoint负Y25mm，未改真实对象/任务。
+  三Spatial都未完成，且有link5酒瓶接触；没有再搜索偏移或评分阈值。失败不能证不可行。
+- Object接触回放**8196196 COMPLETED/0:0，2m07s**，根
+  `20261001T224312Z_object_contacts_afdebc06fb29`。Object0/2/5 center参考全部完成，所有子步无机器人/目标-酒瓶接触，仍是单次筛查，新重复验证在主initial中。
+  Object0联合几何AEGIS在动作263的子步中有link5接触，动作端点旧回放漏检；位移1.373mm。
+  支撑酒瓶的box_small_base接触不算机器人/目标接触。每个保存检查点物理数组完全复现。
+- 这些接触与末端单椭球代理覆盖不足的机制一致，但没有单独排除离散控制、跟踪误差等因素。
+  官方1mm评分保持不变；需要区分代理下安全与无受保护机器人/目标接触。Spat9/15主分叉资格仍按预先冻结官方代理协议，不声称更强安全可行性或真实可行性衰退。
+
+最终增强分析准备根：
+`/projects/p33100/siosio/crashbench_safelibero/feasibility/20261001T225559Z_analysis_865399bbbbb5/`。
+源865399bbbbb5，ANALYSIS_READY=prepared_not_submitted，输入supplements.json包含两个完整接触审计和south25失败筛查。
+analysis/protocol/runtime/reference/serve/adapter/geometry/observation_control/execute与主327源码逐字节一致。
+只在主根COMPLETE且所有批准分叉完整、Slurm成功终止后，提交该archive的interpret.sbatch：CB_ANALYSIS_ROOT为分析根、CB_ANALYSIS_TARGET为主根；生成四类结果图、oracle库/最佳固定候选/预算图、接触见证图及中文判断证据表。
+旧`20261001T221937Z_analysis_5324285a96aa`未提交，已标SUPERSEDED保留原source，不使用。
+15项机制/分析/衔接测试通过；新图表必须在Quest生成并实际QA后取回。
+
+SSH master曾短暂断开，旧命令最终返回Slurm/审计结果，随后socket消失；通过非交互BatchMode重新建立同一/tmp/quest.sock，quest_sync check通过。不重启任何作业、不删结果，不需用户密码或Duo。
+Goal保持active：完整initial、批准分叉、最终图文表与研究建议仍未完成。
