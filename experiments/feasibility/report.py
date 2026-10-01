@@ -2,7 +2,8 @@
 import csv,json,math
 from collections import defaultdict
 from pathlib import Path
-from protocol import STATES,CONDITIONS,CANDIDATES,CHECKPOINTS
+from protocol import STATES,CONDITIONS,CANDIDATES,CHECKPOINTS,BRANCH_CONDITIONS
+from analysis import validate_rows,paired_effect,continuation_comparisons
 
 def report(root):
  import matplotlib
@@ -11,6 +12,8 @@ def report(root):
  import numpy as np
  root=Path(root);out=root/'report';out.mkdir(exist_ok=True)
  rows=json.loads((root/'rows.json').read_text());initial=[r for r in rows if r['branch_step'] is None]
+ quality=validate_rows(rows,require_initial_complete=(root/'INITIAL_COMPLETE.json').exists())
+ effects={s['id']:[paired_effect(rows,s['id'],a,b) for a,b in [('raw','identity'),('raw','geometry'),('identity','identity_geometry'),('geometry','identity_geometry')]] for s in STATES}
  fields=sorted(set(k for r in rows for k in r))
  with (out/'runs.csv').open('w',newline='') as f:
   w=csv.DictWriter(f,fieldnames=fields);w.writeheader();w.writerows(rows)
@@ -26,13 +29,22 @@ def report(root):
   groups={c:[r for r in initial if r['state']==state['id'] and r['condition']==c] for c in ['raw','identity','geometry','identity_geometry']}
   ref=[r for r in initial if r['state']==state['id'] and r['condition']=='reference' and r['validation']]
   table.append('|%s|%s|%s|%s|%s|%s|'%(state['id'],*[count(groups[c]) for c in groups],count(ref)))
-  stats.append({'state':state['id'],'role':state['role'],**{c:{'safe_success':sum(r['safe_success'] for r in v),'n':len(v),'safe_noncompletion':sum(not r['success'] and not r['collided'] for r in v)} for c,v in groups.items()},'reference':{'safe_success':sum(r['safe_success'] for r in ref),'n':len(ref)}})
- matrix=np.array([[sum(r['safe_success'] for r in initial if r['state']==s['id'] and r['condition']==c)/max(1,sum(r['state']==s['id'] and r['condition']==c for r in initial)) for c in CONDITIONS] for s in STATES])
- fig,ax=plt.subplots(figsize=(10,5));im=ax.imshow(matrix,vmin=0,vmax=1,cmap='YlGnBu')
+  stats.append({'state':state['id'],'role':state['role'],**{c:{'safe_success':sum(r['safe_success'] for r in v),'n':len(v),'safe_noncompletion':sum(not r['success'] and not r['collided'] for r in v)} for c,v in groups.items()},'reference':{'safe_success':sum(r['safe_success'] for r in ref),'n':len(ref)},'paired_effects':effects[state['id']]})
+ table+=['','身份与几何的配对效果分别如下；单位是相同策略种子的安全完成净增次数，正值为增加，负值为减少。只作小诊断集描述。','',
+ '|状态|原→仅身份|原→仅几何|仅身份→两项|仅几何→两项|','|---|---:|---:|---:|---:|']
+ for state in STATES:
+  e=effects[state['id']]
+  table.append('|%s|%s|'%(state['id'],'|'.join('%+d/%d'%(x['net_count'],x['paired_n']) if x['paired_n'] else '未执行' for x in e)))
+ matrix=np.full((len(STATES),len(CONDITIONS)),np.nan)
+ for i,state in enumerate(STATES):
+  for j,c in enumerate(CONDITIONS):
+   g=[r for r in initial if r['state']==state['id'] and r['condition']==c]
+   if g:matrix[i,j]=sum(r['safe_success'] for r in g)/len(g)
+ fig,ax=plt.subplots(figsize=(10,5));cmap=plt.get_cmap('YlGnBu').copy();cmap.set_bad('#e5e5e5');im=ax.imshow(matrix,vmin=0,vmax=1,cmap=cmap)
  ax.set_xticks(range(len(CONDITIONS)));ax.set_xticklabels(CONDITIONS);ax.set_yticks(range(len(STATES)));ax.set_yticklabels([s['id'] for s in STATES])
  for i,s in enumerate(STATES):
   for j,c in enumerate(CONDITIONS):
-   g=[r for r in initial if r['state']==s['id'] and r['condition']==c];ax.text(j,i,count(g),ha='center',va='center',color='white' if matrix[i,j]>.6 else 'black')
+   g=[r for r in initial if r['state']==s['id'] and r['condition']==c];ax.text(j,i,count(g),ha='center',va='center',color='white' if np.isfinite(matrix[i,j]) and matrix[i,j]>.6 else 'black')
  fig.colorbar(im,ax=ax,label='Observed safe completion fraction (diagnostic only)');ax.set_title('Fixed initial-state perception conditions');fig.tight_layout();fig.savefig(out/'perception_conditions.png',dpi=180);plt.close(fig)
  fig,axes=plt.subplots(2,4,figsize=(13,6),sharex=True)
  for ax,state in zip(axes.flat,STATES):
@@ -44,27 +56,27 @@ def report(root):
   ax.axhline(1,color='black',ls=':',lw=1);ax.set_title(state['id']);ax.set_yscale('symlog',linthresh=1);ax.set_ylabel('Obstacle L1 displacement / mm');ax.set_xlabel('Executed action')
  axes.flat[0].legend(fontsize=8);fig.tight_layout();fig.savefig(out/'safety_traces.png',dpi=180);plt.close(fig)
  branches=[r for r in rows if r['branch_step'] is not None];bt=[]
- table+=['','## 同前缀续接','', '下表为安全完成次数/执行次数。remaining是原300步总上限；equal300是每检查点给相同300步续接预算。两者均保留失败、碰撞及原AEGIS预算对照。','', '|状态|检查点|预算|原AEGIS|参考|原策略|释放5步|提升后原策略|','|---|---:|---|---:|---:|---:|---:|---:|']
+ table+=['','## 同前缀续接','', '下表为安全完成次数/执行次数。remaining是原300步总上限；equal300是每检查点给相同300步续接预算。全部分叉来自问题B身份+几何受控的AEGIS前缀，二者均保留失败、碰撞及感知受控AEGIS预算对照。','', '|状态|检查点|预算|感知受控AEGIS|参考|原策略|释放5步|提升后原策略|','|---|---:|---|---:|---:|---:|---:|---:|']
  for state in STATES:
   for step in CHECKPOINTS:
    for extra in sorted(set([0,step])):
     g=[r for r in branches if r['state']==state['id'] and r['branch_step']==step and r['extra_budget']==extra]
     if not g:continue
-    counts={c:count([r for r in g if r['condition']==c]) for c in ['raw']+CANDIDATES}
+    counts={c:count([r for r in g if r['condition']==c]) for c in BRANCH_CONDITIONS}
     budget='remaining' if extra==0 else 'equal300'
     bt.append(dict(state=state['id'],step=step,budget=budget,**counts))
-    table.append('|%s|%d|%s|%s|%s|%s|%s|%s|'%(state['id'],step,budget,*[counts[c] for c in ['raw']+CANDIDATES]))
+    table.append('|%s|%d|%s|%s|%s|%s|%s|%s|'%(state['id'],step,budget,*[counts[c] for c in BRANCH_CONDITIONS]))
  if not branches:table+=['','没有满足分叉前提的状态，或分叉阶段尚未执行。不能把缺少续接结果写成候选失败。']
  if branches:
   bs=sorted({r['state'] for r in branches});fig,axes=plt.subplots(len(bs),2,figsize=(11,3*len(bs)),squeeze=False)
   for i,sid in enumerate(bs):
    for j,budget in enumerate(['remaining','equal300']):
     values=np.full((len(CANDIDATES)+1,len(CHECKPOINTS)),np.nan)
-    for a,c in enumerate(['raw']+CANDIDATES):
+    for a,c in enumerate(BRANCH_CONDITIONS):
      for b,step in enumerate(CHECKPOINTS):
       g=[r for r in branches if r['state']==sid and r['condition']==c and r['branch_step']==step and r['extra_budget']==(0 if budget=='remaining' else step)]
       if g:values[a,b]=sum(r['safe_success'] for r in g)/len(g)
-    ax=axes[i,j];ax.imshow(values,vmin=0,vmax=1,cmap='YlGnBu');ax.set_xticks(range(len(CHECKPOINTS)));ax.set_xticklabels(CHECKPOINTS);ax.set_yticks(range(len(CANDIDATES)+1));ax.set_yticklabels(['raw']+CANDIDATES);ax.set_title(sid+' / '+budget);ax.set_xlabel('Common-prefix checkpoint / actions')
+    ax=axes[i,j];ax.imshow(values,vmin=0,vmax=1,cmap='YlGnBu');ax.set_xticks(range(len(CHECKPOINTS)));ax.set_xticklabels(CHECKPOINTS);ax.set_yticks(range(len(CANDIDATES)+1));ax.set_yticklabels(BRANCH_CONDITIONS);ax.set_title(sid+' / '+budget);ax.set_xlabel('Common-prefix checkpoint / actions')
   fig.tight_layout();fig.savefig(out/'continuation_opportunities.png',dpi=180);plt.close(fig)
  fig,axes=plt.subplots(len(STATES),3,figsize=(10,3.1*len(STATES)))
  for i,state in enumerate(STATES):
@@ -77,13 +89,25 @@ def report(root):
    else:ax.text(.5,.5,'No validated witness yet' if j==2 else 'Pending',ha='center')
  fig.tight_layout();fig.savefig(out/'execution_examples.jpg',dpi=120);plt.close(fig)
 
- discrepancies=[]
+ comparisons={state['id']:continuation_comparisons(rows,state['id']) for state in STATES}
+ table+=['','## 时间与预算拆分','',
+ '早期与后期只比较同一重复、后期仍未碰撞且所有固定候选已执行的共同前缀。未执行项不记失败；这里的机会只指有限候选中至少一个提供安全完成见证。','',
+ '|状态|后期检查点|相同前缀种子数|早期见证（300续接步）|后期见证（300续接步）|只加预算带来的见证增益|','|---|---:|---:|---:|---:|---:|']
+ for sid,items in comparisons.items():
+  for x in items:
+   table.append('|%s|%d|%d|%d|%d|%d/%d|'%(sid,x['checkpoint'],len(x['same_surviving_prefix_repeats']),x['early_any_candidate_witness'],x['late_any_candidate_witness'],x['extra_budget_gains'],len(x['budget_matched_repeats'])))
+ discrepancies=[];native_first5=[]
  for p in (root/'runs').glob('*/policy.jsonl'):
   for l in p.read_text().splitlines():
    r=json.loads(l)
-   if r['native_output_linf_difference']>0:discrepancies.append(r)
+   if r['native_output_linf_difference']>0:discrepancies.append({k:v for k,v in r.items() if k!='native_actions'})
+   if r['request_index']==1 and 'native_actions' in r:
+    controlled=np.load(p.parent/'first_action_chunk.npy',allow_pickle=False);native=np.asarray(r['native_actions'])
+    native_first5.append({'run_id':r['run_id'],'full_chunk_linf':float(np.max(abs(native-controlled))),
+                         'executed_first5_linf':float(np.max(abs(native[:5]-controlled[:5])))})
  table+=['','## 执行可比性与解释边界','',
- '全部已完成条件均通过首观察与受控首chunk相等检查；原生同输入推理非零差异记录数：%d，最大L∞=%g。'%(len(discrepancies),max([x['native_output_linf_difference'] for x in discrepancies] or [0])),
+ '全部已完成条件均通过初始物理状态、控制器、动作队列、观察和随机状态配对核验；原生同输入推理非零差异记录数：%d，最大L∞=%g。'%(len(discrepancies),max([x['native_output_linf_difference'] for x in discrepancies] or [0])),
+ '首个实际执行的5-action chunk原生/受控最大L∞=%g；全预测chunk里未执行部分的差异单独记录，不能仅凭全chunk哈希差异声称已执行动作混杂。'%max([x['executed_first5_linf'] for x in native_first5] or [0]),
  '续接前缀比较模拟器state/qpos/qvel/ctrl/warmstart、controller、marker、动作队列、策略RNG、Python/NumPy RNG、AEGIS状态与观察。任何不一致都停止，不删除后重新选结果。',
  '参考验证用10个新策略种子；参考自身确定性，因此不是10个独立物理扰动样本，不能由10/10或4/5认证高概率成功。找到一次安全动作执行是可行性见证；找不到见证仍是未知。','',
  '## 路线判断','', '|证据|研究决策|','|---|---|',
@@ -92,20 +116,41 @@ def report(root):
  '|早期见证，等额续接预算下后期机会仍下降|方向一可加强；仍须区分参考能力与真实不可行|',
  '|见证未找到且有限候选失败|未知；不训练无解分类器|']
  decision=[]
+ pending=[sid for sid in json.loads((root/'BRANCH_GATE.json').read_text()).get('eligible_states',[]) if not (root/('branch_'+sid+'_COMPLETE.json')).exists()] if (root/'BRANCH_GATE.json').exists() and not (root/'COMPLETE.json').exists() else []
  for s in stats:
   if s['role']!='diagnostic':continue
   corrected=s['identity_geometry'];raw=s['raw'];ref=s['reference']
-  if corrected['n'] and corrected['safe_success']>corrected['n']/2 and corrected['safe_success']>raw['safe_success']:route='感知/椭球代理优先'
+  identity=s['identity'];geometry=s['geometry']
+  if identity['n'] and identity['safe_success']>identity['n']/2 and identity['safe_success']>raw['safe_success']:
+   route='身份修正后多数完成；优先身份/感知机制'
+  elif geometry['n'] and geometry['safe_success']>geometry['n']/2 and geometry['safe_success']>raw['safe_success']:
+   route='仅几何修正后多数完成；优先几何/代理表示机制'
+  elif corrected['n'] and corrected['safe_success']>corrected['n']/2 and corrected['safe_success']>raw['safe_success']:
+   route='仅联合修正后多数完成；保留身份×几何交互，不能合并归因'
   elif ref['n'] and ref['safe_success'] and corrected['safe_noncompletion']:
-   successes=[r for r in branches if r['state']==s['state'] and r['safe_success'] and r['condition']!='raw']
-   route='已有见证；续接出现有效候选，需按重复与等预算检验方向二/一' if successes else '已有见证但固定续接尚无有效证据；保留未知'
-  else:route='未获得独立安全见证；可行性未知'
+   successes=[r for r in branches if r['state']==s['state'] and r['safe_success'] and r['condition']!='aegis']
+   late_loss=any(x['same_surviving_prefix_repeats'] and x['opportunity_losses']>x['opportunity_gains'] for x in comparisons[s['state']])
+   if s['state'] in pending:
+    route='已有独立见证、控制感知后仍安全未完成；受控分叉尚待完成'
+   elif late_loss:
+    route='等额续接预算下后期有限候选机会下降：方向一可加强，但固定专家能力与真实不可行尚未区分'
+   elif successes:
+    route='固定候选存在有效续接：方向二候选证据；选择或介入时机的取舍仍需看各候选重复结果'
+   else:
+    route='已有独立见证，但有限候选尚无有效续接；不能推为真实不可行'
+  elif ref['n']:
+   route='固定参考搜索未找到独立安全见证：可行性未知；不训练无解分类器'
+  else:
+   route='独立参考新验证未完成，暂不作路线判断'
   decision.append({'state':s['state'],'decision':route});table.append('\n- %s：%s。'%(s['state'],route))
  (out/'REPORT.md').write_text('\n'.join(table)+'\n')
- (out/'statistics.json').write_text(json.dumps({'initial':stats,'branches':bt,'decision':decision,'native_discrepancies':discrepancies},ensure_ascii=False,indent=2))
+ (out/'statistics.json').write_text(json.dumps({'initial':stats,'branches':bt,'decision':decision,'quality':quality,'paired_effects':effects,
+  'time_budget_comparisons':comparisons,'pending_branch_states':pending,'native_first_chunk_comparison':native_first5,'native_discrepancies':discrepancies,
+  'method_exits':[r['run_id'] for r in rows if r['exited']], 'api_calls':0},ensure_ascii=False,indent=2))
  import html
  text=html.escape('\n'.join(table))
- (out/'report.html').write_text('<!doctype html><meta charset="utf-8"><title>安全未完成诊断</title><style>body{font:16px system-ui;max-width:1200px;margin:40px auto;line-height:1.6}img{max-width:100%}pre{white-space:pre-wrap}</style><h1>安全未完成状态的可行性见证与受控续接实验</h1><img src="perception_conditions.png"><img src="safety_traces.png"><img src="execution_examples.jpg"><pre>'+text+'</pre>')
+ continuation_image='<img src="continuation_opportunities.png">' if branches else ''
+ (out/'report.html').write_text('<!doctype html><meta charset="utf-8"><title>安全未完成诊断</title><style>body{font:16px system-ui;max-width:1200px;margin:40px auto;line-height:1.6}img{max-width:100%}pre{white-space:pre-wrap}</style><h1>安全未完成状态的可行性见证与受控续接实验</h1><img src="perception_conditions.png"><img src="safety_traces.png"><img src="execution_examples.jpg">'+continuation_image+'<pre>'+text+'</pre>')
  return stats
 if __name__=='__main__':
  import sys

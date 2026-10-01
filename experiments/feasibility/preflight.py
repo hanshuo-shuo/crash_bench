@@ -1,5 +1,5 @@
 """CPU Slurm audit only: no renderer, no model inference, no benchmark labels."""
-import hashlib,json,os,random,sys
+import hashlib,json,os,pickle,random,sys
 from pathlib import Path
 import numpy as np
 from protocol import STATES,independent_caption
@@ -8,6 +8,7 @@ BASE=Path(__file__).resolve().parents[2]
 sys.path.insert(0,str(BASE/'scripts'))
 from api_budget import atomic_json
 from serve import ControlledPolicy,digest
+from analysis import execution_digest
 
 def server_check():
  class Random:
@@ -31,6 +32,23 @@ def server_check():
  assert digest(obs)!=digest(dict(obs,**{'observation/state':np.array([1.,3.])}))
  return {'passed':True,'native_calls':p.calls,'controlled_output_exact':True,'native_discrepancy_recorded':True}
 
+def physical_snapshot(env,obs):
+ from runtime import array_hash,serialize
+ d,m=env.sim.data,env.sim.model
+ marker=m.body_name2id('eef_marker')
+ random.seed(7);np.random.seed(7)
+ payload={'sim_state_sha256':array_hash(env.get_sim_state()),'qpos_sha256':array_hash(d.qpos),
+  'qvel_sha256':array_hash(d.qvel),'ctrl_sha256':array_hash(d.ctrl),'warmstart_sha256':array_hash(d.qacc_warmstart),
+  'applied_force_sha256':array_hash(d.qfrc_applied),'external_force_sha256':array_hash(d.xfrc_applied),
+  'mocap_pos_sha256':array_hash(d.mocap_pos),'mocap_quat_sha256':array_hash(d.mocap_quat),'act_sha256':array_hash(d.act),
+  'marker_position':serialize(m.body_pos[marker]),'marker_quaternion':serialize(m.body_quat[marker]),
+  'controller':serialize({k:v for k,v in vars(env.robots[0].controller).items() if isinstance(v,(np.ndarray,float,int,bool,str,list,tuple,type(None)))}),
+  'action_queue':[],'policy_rng':{'scope':'CPU preflight: no policy inference'},
+  'python_rng':hashlib.sha256(pickle.dumps(random.getstate())).hexdigest(),
+  'numpy_rng':hashlib.sha256(pickle.dumps(np.random.get_state())).hexdigest(),
+  'observation':{k:array_hash(v) for k,v in obs.items() if isinstance(v,np.ndarray)}}
+ return execution_digest(payload)
+
 def main(root):
  root=Path(root);upstream=Path(os.environ['CB_UPSTREAM']);benchmark_root=upstream/'safelibero/libero/libero'
  config=root/'preflight_libero_config';config.mkdir()
@@ -50,10 +68,20 @@ def main(root):
    obstacle=active_obstacle(env,obs)
    if state['target']+'_pos' not in obs or state['goal']+'_pos' not in obs:raise RuntimeError('Missing reference target/goal '+str(state))
    p,R,axes,points,info=verified_ellipsoid(env,obstacle)
+   fingerprints=[physical_snapshot(env,obs)]
+   for repetition in [1,2]:
+    random.seed(7);np.random.seed(7)
+    clone=ControlEnv(bddl_file_name=Path(get_libero_path('bddl_files'))/task.problem_folder/task.bddl_file,use_camera_obs=False,has_offscreen_renderer=False,camera_depths=False)
+    try:
+     clone.seed(7);clone.reset();other=clone.set_init_state(task_suite.get_task_init_states(state['task'])[state['episode']])
+     for _ in range(20):other,_,_,_=clone.step([0.]*6+[-1.])
+     fingerprints.append(physical_snapshot(clone,other))
+    finally:clone.close()
+   if len(set(fingerprints))!=1:raise RuntimeError('Fresh CPU simulator/controller/force state differs: '+state['id'])
    controller=env.robots[0].controller
    output_min=np.asarray(controller.output_min);output_max=np.asarray(controller.output_max)
    if not np.allclose(output_max[:3],.05) or not np.allclose(output_max[3:],.5):raise RuntimeError('Reference action inversion does not match native OSC scale')
-   result['states'].append({'id':state['id'],'task_description':task.language,'obstacle':obstacle,'correct_caption':independent_caption(obstacle),'target_pos':obs[state['target']+'_pos'].tolist(),'goal_pos':obs[state['goal']+'_pos'].tolist(),'ellipsoid':dict(info,p=p.tolist(),R=R.tolist(),axes=axes.tolist()),'controller_output_min':output_min.tolist(),'controller_output_max':output_max.tolist(),'controller_control_delta':bool(controller.use_delta) if hasattr(controller,'use_delta') else getattr(controller,'control_delta',None),'action_spec':[np.asarray(x).tolist() for x in env.env.action_spec]})
+   result['states'].append({'id':state['id'],'task_description':task.language,'obstacle':obstacle,'correct_caption':independent_caption(obstacle),'target_pos':obs[state['target']+'_pos'].tolist(),'goal_pos':obs[state['goal']+'_pos'].tolist(),'ellipsoid':dict(info,p=p.tolist(),R=R.tolist(),axes=axes.tolist()),'controller_output_min':output_min.tolist(),'controller_output_max':output_max.tolist(),'controller_control_delta':bool(controller.use_delta) if hasattr(controller,'use_delta') else getattr(controller,'control_delta',None),'action_spec':[np.asarray(x).tolist() for x in env.env.action_spec],'fresh_physics_fingerprints':fingerprints,'scope':'three fresh no-render CPU environments; GPU observation/policy gate remains required'})
    atomic_json(root/'PREFLIGHT.json',result)
   finally:env.close()
  result['status']='passed';atomic_json(root/'PREFLIGHT.json',result)

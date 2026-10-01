@@ -1,15 +1,17 @@
 """Stages have fail-closed evidence gates; every attempt stays recoverable."""
 import argparse,json,os,sys,time
 from pathlib import Path
-from protocol import STATES,CONDITIONS,CANDIDATES,CHECKPOINTS,REPEATS,VALIDATION_REPEATS,branch_eligible
+from protocol import STATES,CONDITIONS,CANDIDATES,CHECKPOINTS,REPEATS,VALIDATION_REPEATS,branch_eligible,BRANCH_BASELINE,BRANCH_CONDITIONS
 from runtime import Runner,InfrastructureError
 from api_budget import atomic_json
+from analysis import validate_rows
 
 def execute(root,port,stage):
  if (root/'STOP.json').exists():raise RuntimeError('Stopped root is immutable; use a new root')
  runner=Runner(root,port);rows=json.loads((root/'rows.json').read_text()) if stage.startswith('branch_') else []
  branch_only=stage.startswith('branch_')
  def record(row):
+  validate_rows(rows+[row])
   rows.append(row);atomic_json(root/'rows.json',rows)
   atomic_json(root/'progress.json',{'stage':stage,'completed_runs':len(rows),'last_run':row['run_id'],'updated_unix':time.time()})
  if not branch_only:
@@ -34,6 +36,7 @@ def execute(root,port,stage):
    # Validate the fixed selected reference on fresh seeded executions; this is not probability certification.
    for repeat in range(VALIDATION_REPEATS):
     record(runner.run(state,repeat,'reference',name=state['id']+'_validate_%02d'%repeat,variant=variant,validation=True))
+  validate_rows(rows,require_initial_complete=True)
   atomic_json(root/'INITIAL_COMPLETE.json',{'rows':len(rows),'reference_variants':reference_variants})
   eligible=[]
   for state in STATES:
@@ -45,7 +48,9 @@ def execute(root,port,stage):
    'screening_only':True})
   if stage=='initial':
    from report import report
-   report(root);return
+   report(root)
+   if not eligible:atomic_json(root/'COMPLETE.json',{'runs':len(rows),'eligible_states':[],'finished_unix':time.time(),'scope':'initial diagnostic complete; no qualifying branch states'})
+   return
  else:
   if not (root/'INITIAL_COMPLETE.json').exists() or not (root/'BRANCH_GATE.json').exists():raise RuntimeError('Initial evidence incomplete')
   reference_variants=json.loads((root/'INITIAL_COMPLETE.json').read_text())['reference_variants']
@@ -53,15 +58,15 @@ def execute(root,port,stage):
   requested=stage[len('branch_'):]
   eligible=[s for s in STATES if s['id']==requested and s['id'] in approved]
  for state in eligible:
-  # Prefix is frozen raw AEGIS; require a noncollided, unsuccessful base prefix for each seed.
+  # Prefix uses the same frozen corrected identity/geometry as question B; require a noncollided, unsuccessful base prefix for each seed.
   for repeat in range(REPEATS):
-   base=next(r for r in rows if r['state']==state['id'] and r['repeat']==repeat and r['condition']=='raw')
+   base=next(r for r in rows if r['state']==state['id'] and r['repeat']==repeat and r['condition']==BRANCH_BASELINE)
    if base['success']:continue
    for step in CHECKPOINTS:
     cp=root/'runs'/base['run_id']/('checkpoint_%03d.json'%step)
     if not cp.exists() or json.loads(cp.read_text())['collided']:continue
     for extra in sorted(set([0,step])):
-     for candidate in ['raw']+CANDIDATES:
+     for candidate in BRANCH_CONDITIONS:
       name='%s_r%02d_t%03d_b%03d_%s'%(state['id'],repeat,step,extra,candidate)
       record(runner.run(state,repeat,candidate,name=name,variant=reference_variants[state['id']],branch=step,extra=extra))
  receipt={'runs':len(rows),'eligible_states':[s['id'] for s in eligible],'finished_unix':time.time()}
@@ -69,7 +74,9 @@ def execute(root,port,stage):
   atomic_json(root/(stage+'_COMPLETE.json'),receipt)
   approved=json.loads((root/'BRANCH_GATE.json').read_text())['eligible_states']
   if all((root/('branch_'+s+'_COMPLETE.json')).exists() for s in approved):atomic_json(root/'COMPLETE.json',receipt)
- else:atomic_json(root/'COMPLETE.json',receipt)
+ else:
+  for state in eligible:atomic_json(root/('branch_'+state['id']+'_COMPLETE.json'),receipt)
+  atomic_json(root/'COMPLETE.json',receipt)
  from report import report
  report(root)
 

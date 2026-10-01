@@ -12,6 +12,8 @@ STATES = [
 ]
 CONDITIONS=['nominal','raw','identity','geometry','identity_geometry']
 CANDIDATES=['reference','nominal','release5','lift_then_nominal']
+BRANCH_BASELINE='identity_geometry'
+BRANCH_CONDITIONS=['aegis']+CANDIDATES
 CHECKPOINTS=[0,50,150,250]
 REPEATS=5
 VALIDATION_REPEATS=10
