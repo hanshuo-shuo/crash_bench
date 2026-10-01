@@ -26,13 +26,20 @@ def serialize(v):
 class Runner:
  def __init__(self,root,port):
   self.root=Path(root);self.port=port;self.upstream=Path(os.environ['CB_UPSTREAM']);self.assets=Path(os.environ['CB_ASSETS']);self.detector=None
-  config=self.root/'libero_config';config.mkdir()
+  config=self.root/'libero_config';config.mkdir(exist_ok=True)
   benchmark=self.upstream/'safelibero/libero/libero'
   (config/'config.yaml').write_text(json.dumps({'benchmark_root':str(benchmark),'bddl_files':str(benchmark/'bddl_files'),'init_states':str(benchmark/'init_files'),'assets':str(benchmark/'assets'),'datasets':str(self.upstream/'safelibero/libero/datasets')}))
   os.environ['LIBERO_CONFIG_PATH']=str(config)
   sys.path[:0]=[str(self.upstream/'main'),str(self.upstream/'safelibero'),str(self.upstream/'openpi/packages/openpi-client/src')]
   self.source=(self.upstream/'main/main_aegis.py').read_text();self.patched=adapt(self.source)
   self.first_inputs={};self.first_chunks={}
+  if (self.root/'rows.json').exists():
+   for r in json.loads((self.root/'rows.json').read_text()):
+    key=(r['state'],r['seed'])
+    for memo,field in [(self.first_inputs,'initial_policy_input_sha256'),(self.first_chunks,'first_chunk_sha256')]:
+     if field in r:
+      if key in memo and memo[key]!=r[field]:raise InfrastructureError('Previously recorded pairing mismatch')
+      memo[key]=r[field]
 
  def run(self,state,repeat,condition,name=None,variant='center',branch=None,extra=0,validation=False):
   started=time.monotonic();seed=seed_for(state,repeat,validation)
@@ -115,7 +122,7 @@ class Runner:
     'numpy_rng':hashlib.sha256(pickle.dumps(np.random.get_state())).hexdigest(),
     'aegis':{k:serialize(ctx.get(k)) for k in ['p1','R1','Q1_diag','p2','R2','Q2_diag','z_fixed','flag_safety_control']},
     'observation':{k:array_hash(v) for k,v in obs.items() if isinstance(v,np.ndarray)},'collided':row['collided']}
-   # RNG outside the simulator is logged; detector construction uses NumPy and is not part of action execution.
+   # Python/NumPy states are reset identically after frozen perception and compared here.
    equality_fields=['sim_state_sha256','qpos_sha256','qvel_sha256','ctrl_sha256','warmstart_sha256','marker_position','marker_quaternion','controller','action_queue','policy_rng','python_rng','numpy_rng','aegis','observation']
    payload['execution_fingerprint']=hashlib.sha256(json.dumps({k:payload[k] for k in equality_fields},sort_keys=True).encode()).hexdigest()
    atomic_json(directory/('checkpoint_%03d.json'%t),payload)

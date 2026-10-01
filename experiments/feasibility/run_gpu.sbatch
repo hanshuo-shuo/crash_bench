@@ -31,7 +31,7 @@ BINDS="/projects,/home,$ROOT:$ROOT:rw,$SOURCE:$SOURCE:ro"
 PORT=$((20000 + SLURM_JOB_ID % 30000))
 SERVER_PID=""
 trap 'if [ -n "$SERVER_PID" ]; then kill "$SERVER_PID" 2>/dev/null || true; wait "$SERVER_PID" 2>/dev/null || true; fi' EXIT
-/projects/p33100/siosio/envs/openpi/bin/python "$SOURCE/experiments/feasibility/serve.py" --port "$PORT" --checkpoint "$CB_ASSETS/openpi_assets/openpi-assets/checkpoints/pi05_libero" > "$ROOT/policy.log" 2>&1 &
+/projects/p33100/siosio/envs/openpi/bin/python "$SOURCE/experiments/feasibility/serve.py" --cache "$ROOT/policy_cache" --port "$PORT" --checkpoint "$CB_ASSETS/openpi_assets/openpi-assets/checkpoints/pi05_libero" > "$ROOT/policy_${STAGE}.log" 2>&1 &
 SERVER_PID=$!
 /projects/p33100/siosio/envs/openpi/bin/python - "$PORT" "$SERVER_PID" <<'PY'
 import os,socket,sys,time
@@ -47,4 +47,4 @@ export SINGULARITYENV_HF_HOME="$HF_HOME" SINGULARITYENV_HF_HUB_OFFLINE=1 SINGULA
 export SINGULARITYENV_TRANSFORMERS_CACHE="$CB_ASSETS/huggingface/hub" SINGULARITYENV_HF_HUB_CACHE="$CB_ASSETS/huggingface/hub"
 export SINGULARITYENV_PYTHONNOUSERSITE=1 SINGULARITYENV_PYTHONDONTWRITEBYTECODE=1
 export SINGULARITYENV_PYTHONPATH="$CB_UPSTREAM/safelibero:$CB_UPSTREAM/openpi/packages/openpi-client/src"
-singularity exec --nv --bind "$BINDS" "$CB_ASSETS/containers/aegis-py38.sif" "$CB_ASSETS/envs/aegis_sim/bin/python" -u "$SOURCE/experiments/feasibility/execute.py" "$STAGE" "$ROOT" --port "$PORT" 2>&1 | tee "$ROOT/evaluation.log"
+singularity exec --nv --bind "$BINDS" "$CB_ASSETS/containers/aegis-py38.sif" "$CB_ASSETS/envs/aegis_sim/bin/python" -u "$SOURCE/experiments/feasibility/execute.py" "$STAGE" "$ROOT" --port "$PORT" 2>&1 | tee "$ROOT/evaluation_${STAGE}.log"

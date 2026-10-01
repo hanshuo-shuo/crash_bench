@@ -1,13 +1,13 @@
 """Small exposed mechanism diagnostic; no training or benchmark performance claim."""
 import hashlib
 STATES = [
- {'id':'spatial_03','suite':'safelibero_spatial','level':'I','task':1,'episode':3,'role':'diagnostic','target':'black_bowl_1','goal':'plate_1','caption':'black wine bottle'},
- {'id':'spatial_09','suite':'safelibero_spatial','level':'I','task':1,'episode':9,'role':'diagnostic','target':'black_bowl_1','goal':'plate_1','caption':'black wine bottle'},
- {'id':'spatial_15','suite':'safelibero_spatial','level':'I','task':1,'episode':15,'role':'diagnostic','target':'black_bowl_1','goal':'plate_1','caption':'black wine bottle'},
+ {'id':'spatial_03','suite':'safelibero_spatial','level':'I','task':1,'episode':3,'role':'diagnostic','target':'akita_black_bowl_1','goal':'plate_1','caption':'black wine bottle'},
+ {'id':'spatial_09','suite':'safelibero_spatial','level':'I','task':1,'episode':9,'role':'diagnostic','target':'akita_black_bowl_1','goal':'plate_1','caption':'black wine bottle'},
+ {'id':'spatial_15','suite':'safelibero_spatial','level':'I','task':1,'episode':15,'role':'diagnostic','target':'akita_black_bowl_1','goal':'plate_1','caption':'black wine bottle'},
  {'id':'object_00','suite':'safelibero_object','level':'I','task':2,'episode':0,'role':'diagnostic','target':'milk_1','goal':'basket_1','caption':'black wine bottle'},
  {'id':'object_02','suite':'safelibero_object','level':'I','task':2,'episode':2,'role':'diagnostic','target':'milk_1','goal':'basket_1','caption':'black wine bottle'},
  {'id':'object_05','suite':'safelibero_object','level':'I','task':2,'episode':5,'role':'diagnostic','target':'milk_1','goal':'basket_1','caption':'black wine bottle'},
- {'id':'control_spatial_01','suite':'safelibero_spatial','level':'I','task':1,'episode':1,'role':'control','target':'black_bowl_1','goal':'plate_1','caption':'white storage box'},
+ {'id':'control_spatial_01','suite':'safelibero_spatial','level':'I','task':1,'episode':1,'role':'control','target':'akita_black_bowl_1','goal':'plate_1','caption':'white storage box'},
  {'id':'control_objectII_02','suite':'safelibero_object','level':'II','task':1,'episode':2,'role':'control','target':'chocolate_pudding_1','goal':'basket_1','caption':'yellow rectangular book'},
 ]
 CONDITIONS=['nominal','raw','identity','geometry','identity_geometry']
