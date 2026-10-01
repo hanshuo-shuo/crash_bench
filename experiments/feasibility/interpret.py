@@ -61,6 +61,7 @@ def generate(target, output, supplement_file=None):
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
+    from matplotlib.colors import ListedColormap
     import numpy as np
 
     target, output = Path(target).resolve(), Path(output).resolve()
@@ -170,12 +171,16 @@ def generate(target, output, supplement_file=None):
             values = np.array([[x['source_success'], x['source_safe_success'],
                                 x['completed_without_robot_target_protected_contact']] for x in screened], dtype=float)
             fig, ax = plt.subplots(figsize=(8, 4.5))
-            ax.imshow(values, vmin=0, vmax=1, cmap='YlGn')
+            ax.imshow(values, vmin=0, vmax=1, cmap=ListedColormap(['#f7ecd0', '#b4d9c7']), aspect='auto')
             ax.set_xticks(range(3)); ax.set_xticklabels(['Task completed', 'Official displacement\nproxy safe completion',
                                                        'Completed without robot/target\ncontact with protected obstacle'], fontsize=9)
             ax.set_yticks(range(len(screened))); ax.set_yticklabels([x['state'] for x in screened])
             for i in range(len(screened)):
-                for j in range(3): ax.text(j, i, 'Yes' if values[i,j] else 'No', ha='center', va='center')
+                for j in range(3): ax.text(j, i, 'Yes' if values[i,j] else 'No', ha='center', va='center', color='#17382d')
+            ax.set_xticks(np.arange(-.5, 3, 1), minor=True)
+            ax.set_yticks(np.arange(-.5, len(screened), 1), minor=True)
+            ax.grid(which='minor', color='white', linewidth=1.5)
+            ax.tick_params(which='minor', bottom=False, left=False)
             ax.set_title('Independent reference evidence: score and physical contacts differ')
             fig.tight_layout(); fig.savefig(output / 'protected_contact_evidence.png', dpi=180); plt.close(fig)
     if alternatives:

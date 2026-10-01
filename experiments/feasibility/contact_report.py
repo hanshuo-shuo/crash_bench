@@ -26,6 +26,7 @@ def main(root):
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
+    from matplotlib.colors import ListedColormap
     import numpy as np
     root = Path(root)
     config = json.loads((root / 'inputs.json').read_text())
@@ -49,12 +50,16 @@ def main(root):
     values = np.asarray([[r['task_complete'], r['official_proxy_safe_complete'],
                           r['complete_without_robot_target_protected_contact']] for r in screen], dtype=float)
     fig, ax = plt.subplots(figsize=(9, 4.8))
-    ax.imshow(values, vmin=0, vmax=1, cmap='YlGn')
+    ax.imshow(values, vmin=0, vmax=1, cmap=ListedColormap(['#f7ecd0', '#b4d9c7']), aspect='auto')
     ax.set_xticks(range(3)); ax.set_xticklabels(['Task completed', 'Official displacement\nproxy safe completion',
                                                'Completed without robot/target\ncontact with protected obstacle'], fontsize=9)
     ax.set_yticks(range(len(screen))); ax.set_yticklabels([r['state'] for r in screen])
     for i in range(len(screen)):
-        for j in range(3): ax.text(j, i, 'Yes' if values[i,j] else 'No', ha='center', va='center')
+        for j in range(3): ax.text(j, i, 'Yes' if values[i,j] else 'No', ha='center', va='center', color='#17382d')
+    ax.set_xticks(np.arange(-.5, 3, 1), minor=True)
+    ax.set_yticks(np.arange(-.5, len(screen), 1), minor=True)
+    ax.grid(which='minor', color='white', linewidth=1.5)
+    ax.tick_params(which='minor', bottom=False, left=False)
     ax.set_title('Screening reference trajectories (one execution per state)')
     fig.tight_layout(); fig.savefig(out / 'contact_witnesses.png', dpi=180); plt.close(fig)
     text = ['# 阶段性接触核验：不能把位移代理通过等同于无受保护接触', '',
