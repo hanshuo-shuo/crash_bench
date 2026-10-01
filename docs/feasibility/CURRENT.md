@@ -111,3 +111,17 @@ d641a740242083246cb0d6797680b484203b474369c88d6c1bdae6fc81169b84。
 后续仍必须完成8186026实际模型/视频审查、304次initial、符合资格的感知受控同前缀分叉及
 最终新图文表/路线判断。7项新协议分析测试、22复现、27配对测试通过（新数据尚未完成）。
 Goal保持active；不能把本次观察失配诊断或提交作业当作整体实验完成。
+
+## 后续完整阶段已准备（仍未提交）
+
+发布0ec56db9f869a1eadc487f7ebe271caf96b4ce1e增加完整分叉schedule/coverage验证，已到达却缺失
+的checkpoint会报错；未到达/已碰撞/基线已完成的跳过均列原因。COMPLETE在report导出后写，
+report/REPORT_COMPLETE.json记录每个图表/CSV/JSON的SHA256。8项新协议测试通过。
+
+准备根：`/projects/p33100/siosio/crashbench_safelibero/feasibility/20261001T211455Z_initial_ready_0ec56db9f869/`。
+INITIAL_READY.status=prepared_not_submitted；继承8185435 preflight，四文件byte-identical及报告hash
+已核验，source所有文件逐字节等于Git发布提交。**尚无initial Slurm作业**。
+必须先核验8186026终止成功、16条及输入/物理配对门、视频正常，再通过该root/source/launch.py
+initial提交304次。冻结8186026的a7fd556 archive不变；Quest main/d220358 clean。
+本轮最后8186026在squeue可见且PENDING/Resources，属于对已确认live句柄的verified wait，
+不是终止或失联；不因调度时间推迟取消/重启，不mark goal complete。
