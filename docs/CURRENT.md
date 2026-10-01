@@ -122,3 +122,12 @@ scope for this diagnostic. See [feasibility/CURRENT.md](feasibility/CURRENT.md) 
 smoke is submitted, not complete. New outputs have unique immutable roots and
 frozen published source archives; Quest's live main checkout is unchanged. The
 mechanism experiment freezes prior initial VLM answers and makes no new API calls.
+
+The first new feasibility smoke 8170183 stopped on a real first-observation RGB
+mismatch before its AEGIS action. The pixel probe found one 224-RGB pixel differing
+by one gray level despite matched recorded physics/RNG; its before/after perception
+images agree. The failed root is preserved. An explicit same-physical/render-state
+RGB control retains native variants, and the passing eight-state CPU preflight
+8185435 supports new GPU smoke 8186026, currently queued. The mechanism fork now
+uses the perception-controlled identity+geometry AEGIS prefix. Consult the latest
+feasibility receipt/status rather than these static timestamps.

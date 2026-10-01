@@ -66,3 +66,48 @@ PRIOR_REPORT.md与prior_outcomes.png；PNG SHA256两边一致为
 无需Quest checkout结果软链接；不要将这类只读输出复制误称源目录同步。
 截至本轮末8170183仍PENDING，Slurm预计15:44:50 Chicago；未产生新科学episode。
 Goal保持active，完整initial/条件branch与新图文结论均未完成，不mark complete。
+
+## 实际发现与新作业 — 2026-10-01 后续
+
+- **8170183已终止**：Slurm FAILED/1:0，6m05s，qgpu2006。仅spatial03/nominal完成，
+  新feasibility-v1 seed948064852、300步、碰撞action60、最大L1=.1252346m、未完成；raw在
+  第一策略输入之前失败。STOP为First policy observation differs across conditions，不能当raw科学失败。
+  原根所有文件保留；raw第一输入没有被旧程序保存，但checkpoint与检测PNG均存在。
+- CPU探针8179539完成；源b1e00d5，根
+  `/projects/p33100/siosio/crashbench_safelibero/feasibility/20261001T193750Z_observation_audit_b1e00d5c3cf1/`。
+  记录的sim/qpos/qvel/ctrl/warmstart/controller/队列/RNG/marker一致，仅agent/back RGB不同。
+  raw检测PNG的感知前图像与raw checkpoint感知后图像逐字节一致，排除本次感知阶段图像修改。
+  缩放224后agentview仅1像素/3通道差1灰度级，mean absolute=1.9929847e-5。
+  这定位本轮失配，不能宣称解释旧600行的11对全部来源。
+- 旧加强CPU预检8179541通过八状态各三个新环境，完整物理/控制器/力状态指纹相同。
+- 新预检**8185435 COMPLETED/0:0，2m12s**，源码a7fd556ac7fbf9d6a5754a168fb3e98d21371cc6。
+  验证RGB模板同状态复用/异状态分离/原生变体保存、模型渲染签名属性、目标抓持检查接口、
+  8×3 fresh no-render环境物理指纹与几何包含性/普通动作范围。
+- **新GPU冒烟8186026**，16次，当前PENDING，最后squeue估计17:45:41 Chicago；不是完成时间。
+  新根`/projects/p33100/siosio/crashbench_safelibero/feasibility/20261001T204139Z_rgb_control_a7fd556ac7fb/`。
+  读plan/progress/STOP/slurm_8186026.log/SMOKE_COMPLETE判断实际执行；其source archive不能修改。
+  旧live Quest main/d220358保持clean。
+
+### 协议修正（最终按实际源码执行）
+
+- 阶段三前缀改为**identity_geometry感知受控AEGIS**，候选基线名aegis。问题B与分叉共享
+  同一正确身份/已验证仿真几何，不再换回raw几何。原始raw仍作为问题B的单独条件。
+- 初始和每个策略查询/检查点增加明确RGB控制：只在完整sim/力/相机/渲染模型/非RGB观测
+  精确签名相同时共享第一次真实RGB采样。原生哈希/差异/变体NPZ留存；不同状态不复用。
+  这是机制诊断的共同观测控制，不是部署系统性能，也不通过删重复解决失配。
+- 所有env返回的观测立即复制为自有数组；感知前后观测哈希再次核验。全预测chunk与实际
+  执行前5动作单独分析；相同输入的原生infer仍执行并保留与控制输出的差异。
+- 报告分开配对身份/几何效果；同300步suffix早晚比较只用同种子、后期未碰撞的共同前缀。
+  特权参考与普通有限干预候选分开计。只有特权参考成功不能支持学习普通候选选择器。
+- 固定参考补偿夹持物体的XY偏移；从中途已抓住目标时保留夹爪/姿态并继续运输；未抓持时
+  先保持当前姿态提高，再在安全高位转到抓取姿态。改动在任何参考新成功结果产生前冻结。
+- 每run最终manifest现在保留完整configuration；第一输入不匹配时也保存输入；参考命令限
+  原native action_spec，并保存reference_actions.npy。视频完整解码/shape/帧数检查恢复。
+
+本地取回只读证据在`results/feasibility/observation_audit_20261001/`：OBSERVATION_PROBE.json及
+initial_rgb_difference.png；PNG两边SHA256为
+d641a740242083246cb0d6797680b484203b474369c88d6c1bdae6fc81169b84。
+
+后续仍必须完成8186026实际模型/视频审查、304次initial、符合资格的感知受控同前缀分叉及
+最终新图文表/路线判断。7项新协议分析测试、22复现、27配对测试通过（新数据尚未完成）。
+Goal保持active；不能把本次观察失配诊断或提交作业当作整体实验完成。
