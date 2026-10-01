@@ -57,7 +57,7 @@ def evidence(rows):
     return result
 
 
-def generate(target, output):
+def generate(target, output, supplement_file=None):
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
@@ -71,8 +71,41 @@ def generate(target, output):
     approved = json.loads((target / 'BRANCH_GATE.json').read_text())['eligible_states']
     coverage = {s: validate_branch_coverage(target, rows, s) for s in approved}
     data = evidence(rows)
+    contact_rows = []; alternatives = []; supplement_hashes = {}
+    if supplement_file is not None:
+        supplemental = json.loads(Path(supplement_file).read_text())
+        for path in supplemental.get('contact_roots', []):
+            folder = Path(path)
+            if not (folder / 'CONTACT_SUBSTEPS_COMPLETE.json').is_file():
+                raise RuntimeError('Contact audit incomplete: ' + str(folder))
+            file = folder / 'CONTACT_SUBSTEPS.json'
+            supplement_hashes[str(file)] = hashlib.sha256(file.read_bytes()).hexdigest()
+            for item in json.loads(file.read_text()):
+                if not item['replay_verified'] or 0 not in item['exact_physics_verified_checkpoints']:
+                    raise RuntimeError('Contact replay unverified')
+                source = Path(item['source_root']) / 'runs' / item['run_id'] / 'row.json'
+                if hashlib.sha256(source.read_bytes()).hexdigest() != item['source_row_sha256']:
+                    raise RuntimeError('Contact source row changed')
+                robot = [e for e in item['events'] if e['category'] == 'robot']
+                target_events = [e for e in item['events'] if e['category'] == 'target']
+                contact_rows.append({k: item[k] for k in ['run_id', 'state', 'source_safe_success',
+                    'source_success', 'source_proxy_max_l1_m', 'exact_physics_verified_checkpoints', 'slurm_job']})
+                contact_rows[-1].update(robot_contact_actions=sorted(set(e['action'] for e in robot)),
+                    target_contact_actions=sorted(set(e['action'] for e in target_events)),
+                    robot_contact_samples=len(robot), target_contact_samples=len(target_events),
+                    completed_without_robot_target_protected_contact=item['source_success'] and not robot and not target_events,
+                    robot_body_pairs=sorted(set(tuple(e['body_pair']) for e in robot)))
+        for path in supplemental.get('alternative_roots', []):
+            folder = Path(path)
+            if not (folder / 'ALTERNATIVE_SCREEN_COMPLETE.json').is_file():
+                raise RuntimeError('Alternative screen incomplete')
+            file = folder / 'rows.json'
+            supplement_hashes[str(file)] = hashlib.sha256(file.read_bytes()).hexdigest()
+            alternatives.extend(json.loads(file.read_text()))
     output.mkdir(exist_ok=False)
     (output / 'decision_evidence.json').write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n')
+    (output / 'contact_evidence.json').write_text(json.dumps({'contact_replays': contact_rows,
+        'post_contact_fixed_alternative': alternatives}, ensure_ascii=False, indent=2) + '\n')
     summary = []
     table = ['# 安全未完成诊断：最终决策证据', '',
              '八个预先指定的暴露状态，六个诊断、两个历史安全对照。计数只描述本诊断集；不估计总体性能或认证成功概率。',
@@ -100,7 +133,8 @@ def generate(target, output):
     with (output / 'outcome_categories.csv').open('w', newline='') as file:
         writer = csv.DictWriter(file, fieldnames=list(summary[0]))
         writer.writeheader(); writer.writerows(summary)
-    table += ['', '上表省略的不安全完成与不安全未完成均在outcome_categories.csv及下图单独报告。',
+    table += ['', '本文主矩阵的“安全”沿用官方障碍L1位移代理；接触核验是额外机制证据，未改变1mm边界。',
+              '上表省略的不安全完成与不安全未完成均在outcome_categories.csv及下图单独报告。',
               '固定库“至少一个”是事后存在性见证，需要oracle选中；不是已实现选择器的成功率。最佳单一候选同时报告，避免把候选库上界当作部署能力。', '',
               '|状态|后期检查点|共同幸存种子|参考早→晚（同300续接步）|普通库早→晚（同300续接步）|只加预算增益／损失|',
               '|---|---:|---:|---:|---:|---:|']
@@ -120,6 +154,37 @@ def generate(target, output):
               '|早期有见证；同预算、同幸存种子下后期见证减少|方向一证据；限定于固定参考／有限候选能力，不能声称真实不可行|',
               '|找不到独立见证；或现有候选库没有有效续接|未知或候选库不足；不训练无解分类器，不堆选择模块|', '',
               '本表是证据约束，具体研究建议须结合各状态计数与轨迹审查。不得把四种结果都包装成同一成功论文。']
+    if contact_rows:
+        table += ['', '## 官方代理与实际受保护障碍接触分开', '',
+                  '只读回放所有保存动作；在每个原MuJoCo积分步后读取接触，不增加积分或改写状态。初始及已存检查点的qpos/qvel/ctrl逐字节核验，官方最大位移和任务结果复现。',
+                  '下表动作数是存在接触的不同动作数；多个几何对或子步不计成多次独立碰撞。与桌面的支撑接触不在机器人／目标接触计数中。', '',
+                  '|轨迹|官方代理安全完成|最大位移/mm|机器人接触动作数|目标物体接触动作数|完成且无上述受保护接触|',
+                  '|---|---|---:|---:|---:|---|']
+        for x in contact_rows:
+            table.append('|%s|%s|%.6f|%d|%d|%s|' % (x['run_id'], x['source_safe_success'],
+                x['source_proxy_max_l1_m'] * 1000, len(x['robot_contact_actions']),
+                len(x['target_contact_actions']), x['completed_without_robot_target_protected_contact']))
+        table += ['', 'Spatial9/15的rim参考通过官方位移代理，但记录到了robot0_link5与酒瓶接触；不能据此声称无受保护接触的安全可行性，更不能用这类早期见证声称强安全的真实可行性衰退。普通续接计数也仍仅是官方代理下的结果，未逐条完成接触审计。']
+        screened = [x for x in contact_rows if '_screen_' in x['run_id']]
+        if screened:
+            values = np.array([[x['source_success'], x['source_safe_success'],
+                                x['completed_without_robot_target_protected_contact']] for x in screened], dtype=float)
+            fig, ax = plt.subplots(figsize=(8, 4.5))
+            ax.imshow(values, vmin=0, vmax=1, cmap='YlGn')
+            ax.set_xticks(range(3)); ax.set_xticklabels(['Task completed', 'Official displacement\nproxy safe completion',
+                                                       'Completed without robot/target\ncontact with protected obstacle'], fontsize=9)
+            ax.set_yticks(range(len(screened))); ax.set_yticklabels([x['state'] for x in screened])
+            for i in range(len(screened)):
+                for j in range(3): ax.text(j, i, 'Yes' if values[i,j] else 'No', ha='center', va='center')
+            ax.set_title('Independent reference evidence: score and physical contacts differ')
+            fig.tight_layout(); fig.savefig(output / 'protected_contact_evidence.png', dpi=180); plt.close(fig)
+    if alternatives:
+        table += ['', '## 接触发现后的单一固定补试', '',
+                  'rim_south25只把规划中的盘内放置waypoint向负Y偏25mm，未移动真实盘、障碍或对象，仍经原7D动作。三个Spatial状态均未完成且有机器人-酒瓶接触；没有再调参数或评分边界。此失败不证明不存在安全路径。', '',
+                  '|状态|完成|官方代理安全完成|最大位移/mm|接触样本数|', '|---|---|---|---:|---:|']
+        for x in alternatives:
+            table.append('|%s|%s|%s|%.6f|%d|' % (x['state'], x['success'], x['official_safe_success'],
+                         x['max_obstacle_l1_m'] * 1000, x['contact_samples']))
     (output / 'DECISION_EVIDENCE.md').write_text('\n'.join(table) + '\n')
 
     categories = ['safe_complete', 'safe_incomplete', 'unsafe_complete', 'unsafe_incomplete']
@@ -161,11 +226,11 @@ def generate(target, output):
     provenance = {'target_root': str(target), 'scientific_commit': (target / 'SOURCE_COMMIT').read_text().strip(),
                   'analysis_commit': os.environ.get('CB_ANALYSIS_COMMIT'), 'slurm_job': os.environ.get('SLURM_JOB_ID'),
                   'input_rows_sha256': hashlib.sha256((target / 'rows.json').read_bytes()).hexdigest(),
-                  'quality': quality, 'coverage': coverage,
+                  'quality': quality, 'coverage': coverage, 'supplement_files_sha256': supplement_hashes,
                   'files_sha256': {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in output.iterdir()}}
     (output / 'INTERPRET_COMPLETE.json').write_text(json.dumps(provenance, indent=2) + '\n')
 
 
 if __name__ == '__main__':
     import sys
-    generate(sys.argv[1], sys.argv[2])
+    generate(sys.argv[1], sys.argv[2], sys.argv[3] if len(sys.argv) > 3 else None)

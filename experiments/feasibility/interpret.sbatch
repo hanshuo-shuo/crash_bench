@@ -19,4 +19,6 @@ module load singularityce/4.3.1-gcc-8.5.0
 export SINGULARITYENV_CB_ANALYSIS_COMMIT="$CB_ANALYSIS_COMMIT"
 export SINGULARITYENV_SLURM_JOB_ID="$SLURM_JOB_ID"
 export SINGULARITYENV_PYTHONNOUSERSITE=1 SINGULARITYENV_PYTHONDONTWRITEBYTECODE=1
-singularity exec --bind "/projects,/home,$ROOT:$ROOT:rw,$SOURCE:$SOURCE:ro,$TARGET:$TARGET:ro" /projects/p33100/siosio/crashbench_safelibero/containers/aegis-py38.sif /projects/p33100/siosio/crashbench_safelibero/envs/aegis_sim/bin/python -u "$SOURCE/experiments/feasibility/interpret.py" "$TARGET" "$ROOT/report"
+ARGS=("$SOURCE/experiments/feasibility/interpret.py" "$TARGET" "$ROOT/report")
+if [ -f "$ROOT/supplements.json" ]; then ARGS+=("$ROOT/supplements.json"); fi
+singularity exec --bind "/projects,/home,$ROOT:$ROOT:rw,$SOURCE:$SOURCE:ro,$TARGET:$TARGET:ro" /projects/p33100/siosio/crashbench_safelibero/containers/aegis-py38.sif /projects/p33100/siosio/crashbench_safelibero/envs/aegis_sim/bin/python -u "${ARGS[@]}"
