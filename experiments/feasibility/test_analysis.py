@@ -77,3 +77,25 @@ class AnalysisTests(unittest.TestCase):
         self.assertEqual(result['opportunity_losses'], 0)
 
 if __name__ == '__main__': unittest.main()
+
+class CoverageTests(unittest.TestCase):
+    def test_reached_missing_checkpoint_is_error_unreached_and_collision_are_explicit(self):
+        import json
+        import tempfile
+        from analysis import branch_schedule, validate_branch_coverage
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            bases = [row('identity_geometry', repeat=r, success=(r > 0)) for r in range(5)]
+            bases[0]['end_step'] = 80
+            directory = root / 'runs' / bases[0]['run_id']; directory.mkdir(parents=True)
+            (directory / 'checkpoint_000.json').write_text(json.dumps({'collided': False}))
+            with self.assertRaises(ValueError): branch_schedule(root, bases, STATES[0]['id'])
+            (directory / 'checkpoint_050.json').write_text(json.dumps({'collided': True}))
+            expected, skipped = branch_schedule(root, bases, STATES[0]['id'])
+            self.assertEqual(len(expected), len(BRANCH_CONDITIONS))
+            self.assertIn('prefix_already_collided', [r['reason'] for r in skipped])
+            self.assertEqual(sum(r['reason'] == 'prefix_not_reached' for r in skipped), 2)
+            completed = [row(c, 0, step=0) for c in BRANCH_CONDITIONS]
+            with self.assertRaises(ValueError): validate_branch_coverage(root, bases + completed[:-1], STATES[0]['id'])
+            result = validate_branch_coverage(root, bases + completed, STATES[0]['id'])
+            self.assertEqual(result['completed_runs'], len(BRANCH_CONDITIONS))

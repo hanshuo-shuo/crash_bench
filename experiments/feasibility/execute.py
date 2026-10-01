@@ -4,7 +4,7 @@ from pathlib import Path
 from protocol import STATES,CONDITIONS,CANDIDATES,CHECKPOINTS,REPEATS,VALIDATION_REPEATS,branch_eligible,BRANCH_BASELINE,BRANCH_CONDITIONS
 from runtime import Runner,InfrastructureError
 from api_budget import atomic_json
-from analysis import validate_rows
+from analysis import validate_rows,branch_schedule,validate_branch_coverage
 
 def execute(root,port,stage):
  if (root/'STOP.json').exists():raise RuntimeError('Stopped root is immutable; use a new root')
@@ -57,28 +57,26 @@ def execute(root,port,stage):
   approved=json.loads((root/'BRANCH_GATE.json').read_text())['eligible_states']
   requested=stage[len('branch_'):]
   eligible=[s for s in STATES if s['id']==requested and s['id'] in approved]
+  if not eligible:raise RuntimeError('Requested state has no independent witness/failure branch authorization')
  for state in eligible:
-  # Prefix uses the same frozen corrected identity/geometry as question B; require a noncollided, unsuccessful base prefix for each seed.
-  for repeat in range(REPEATS):
-   base=next(r for r in rows if r['state']==state['id'] and r['repeat']==repeat and r['condition']==BRANCH_BASELINE)
-   if base['success']:continue
-   for step in CHECKPOINTS:
-    cp=root/'runs'/base['run_id']/('checkpoint_%03d.json'%step)
-    if not cp.exists() or json.loads(cp.read_text())['collided']:continue
-    for extra in sorted(set([0,step])):
-     for candidate in BRANCH_CONDITIONS:
-      name='%s_r%02d_t%03d_b%03d_%s'%(state['id'],repeat,step,extra,candidate)
-      record(runner.run(state,repeat,candidate,name=name,variant=reference_variants[state['id']],branch=step,extra=extra))
+  cases,skipped=branch_schedule(root,rows,state['id'])
+  atomic_json(root/('branch_'+state['id']+'_SCHEDULE.json'),{'expected_runs':len(cases),'skipped_prefixes':skipped,'prefix_condition':BRANCH_BASELINE})
+  for sid,repeat,step,extra,candidate in sorted(cases):
+   name='%s_r%02d_t%03d_b%03d_%s'%(sid,repeat,step,extra,candidate)
+   record(runner.run(state,repeat,candidate,name=name,variant=reference_variants[sid],branch=step,extra=extra))
+  coverage=validate_branch_coverage(root,rows,state['id'])
+  atomic_json(root/('branch_'+state['id']+'_COVERAGE.json'),coverage)
  receipt={'runs':len(rows),'eligible_states':[s['id'] for s in eligible],'finished_unix':time.time()}
  if branch_only:
   atomic_json(root/(stage+'_COMPLETE.json'),receipt)
   approved=json.loads((root/'BRANCH_GATE.json').read_text())['eligible_states']
-  if all((root/('branch_'+s+'_COMPLETE.json')).exists() for s in approved):atomic_json(root/'COMPLETE.json',receipt)
+  all_done=all((root/('branch_'+s+'_COMPLETE.json')).exists() for s in approved)
  else:
   for state in eligible:atomic_json(root/('branch_'+state['id']+'_COMPLETE.json'),receipt)
-  atomic_json(root/'COMPLETE.json',receipt)
+  all_done=True
  from report import report
  report(root)
+ if all_done:atomic_json(root/'COMPLETE.json',dict(receipt,report_manifest=str(root/'report/REPORT_COMPLETE.json')))
 
 def main():
  p=argparse.ArgumentParser();p.add_argument('stage',choices=['smoke','full','initial']+['branch_'+s['id'] for s in STATES if s['role']=='diagnostic']);p.add_argument('root',type=Path);p.add_argument('--port',type=int,required=True);a=p.parse_args();root=a.root.resolve()

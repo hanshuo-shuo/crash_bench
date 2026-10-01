@@ -157,6 +157,10 @@ def report(root):
  text=html.escape('\n'.join(table))
  continuation_image='<img src="continuation_opportunities.png">' if branches else ''
  (out/'report.html').write_text('<!doctype html><meta charset="utf-8"><title>安全未完成诊断</title><style>body{font:16px system-ui;max-width:1200px;margin:40px auto;line-height:1.6}img{max-width:100%}pre{white-space:pre-wrap}</style><h1>安全未完成状态的可行性见证与受控续接实验</h1><img src="perception_conditions.png"><img src="safety_traces.png"><img src="execution_examples.jpg">'+continuation_image+'<pre>'+text+'</pre>')
+ from api_budget import atomic_json
+ import hashlib,time
+ exported={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in out.iterdir() if p.is_file() and p.name!='REPORT_COMPLETE.json'}
+ atomic_json(out/'REPORT_COMPLETE.json',{'files_sha256':exported,'row_count':len(rows),'quality':quality,'created_unix':time.time()})
  return stats
 if __name__=='__main__':
  import sys

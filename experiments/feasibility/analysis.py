@@ -139,3 +139,44 @@ def continuation_comparisons(rows, state_id):
                         'extra_budget_gains': budget_gains, 'extra_budget_losses': budget_losses,
                         'scope': 'ordinary intervention candidates exclude privileged reference; conditional on noncollided common prefixes, not true infeasibility'})
     return records
+
+def branch_schedule(root, rows, state_id):
+    """Derive every authorized fork from actual corrected-AEGIS checkpoints."""
+    from pathlib import Path
+    from protocol import CHECKPOINTS
+    root = Path(root)
+    bases = {r['repeat']: r for r in rows if r['state'] == state_id
+             and r['condition'] == BRANCH_BASELINE and r['branch_step'] is None and not r['validation']}
+    if set(bases) != set(range(REPEATS)):
+        raise ValueError('Corrected AEGIS base coverage incomplete')
+    expected = set()
+    skipped = []
+    for repeat, base in sorted(bases.items()):
+        if base['success']:
+            skipped.append({'repeat': repeat, 'reason': 'corrected_aegis_completed', 'source': base['run_id']})
+            continue
+        for step in CHECKPOINTS:
+            path = root / 'runs' / base['run_id'] / ('checkpoint_%03d.json' % step)
+            if not path.exists():
+                if step <= base['end_step']:
+                    raise ValueError('Reached checkpoint missing: ' + str(path))
+                skipped.append({'repeat': repeat, 'step': step, 'reason': 'prefix_not_reached', 'source': base['run_id']})
+                continue
+            snapshot = json.loads(path.read_text())
+            if snapshot['collided']:
+                skipped.append({'repeat': repeat, 'step': step, 'reason': 'prefix_already_collided', 'source': base['run_id']})
+                continue
+            for extra in sorted({0, step}):
+                for condition in BRANCH_CONDITIONS:
+                    expected.add((state_id, repeat, step, extra, condition))
+    return expected, skipped
+
+def validate_branch_coverage(root, rows, state_id):
+    expected, skipped = branch_schedule(root, rows, state_id)
+    actual = {(r['state'], r['repeat'], r['branch_step'], r['extra_budget'], r['condition'])
+              for r in rows if r['state'] == state_id and r['branch_step'] is not None}
+    if actual != expected:
+        raise ValueError('Continuation coverage incomplete/unexpected: missing %d, extra %d' %
+                         (len(expected - actual), len(actual - expected)))
+    return {'expected_runs': len(expected), 'completed_runs': len(actual), 'skipped_prefixes': skipped,
+            'prefix_condition': BRANCH_BASELINE}
