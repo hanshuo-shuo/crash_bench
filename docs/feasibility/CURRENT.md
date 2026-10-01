@@ -47,9 +47,22 @@ Quest live checkout仍是main/d22035816647321b8c9c44674efb76273916db95，clean�
    比较原300步总预算与每检查点300步suffix。持久policy_cache支持跨Slurm阶段相同受控输出。
 6. 本轮成果生成report/REPORT.md、runs.csv、statistics.json、perception_conditions.png、
    safety_traces.png、execution_examples.jpg、符合资格才有continuation_opportunities.png、HTML。
-   将明确results路径symlink到对应output/report再quest_sync pull-result；检查图/表/视频并分析四路判断。
+   活跃GPU时自动审批禁止在Quest checkout创建结果symlink，已实际拒绝两次，不能再试。
+   使用只读SSH读取确切report文件并保存本地results副本；GPU终止后才可结果链接/pull-result。
+   只读取回已通过自动审批，PNG来源/副本SHA256相等；不修改任何Quest源文件或目录。
+   检查图/表/视频并分析四路判断。
    独立参考10次新seed验证仍属确定性sim同状态重复，不能认证高成功概率或真实不可行。
 7. 仅当研究和最终图文表交付全部完成时mark goal complete；GPU排队不应标完成。
 
 任何Quest操作先读QUEST_WORKFLOW、setup/README并quest_sync.sh check。冻结根源码来自已发布
 codex/feasibility。不得在login运行模型/仿真/绘图；轻量Git、结果metadata及Slurm查询可以。
+
+## 既有证据已交付（仍不是本轮新结果）
+
+8170378输出report已生成并只读取回本地results/feasibility/prior_20261001/，其中
+PRIOR_REPORT.md与prior_outcomes.png；PNG SHA256两边一致为
+62bdcde2823458e399be7ece46ab83b0137d2ebea37d22ac405625b123e2bfcf。
+取回新图表可通过quest_sync.sh exec base64 <明确run/report文件>仅远程读，再本地解码，
+无需Quest checkout结果软链接；不要将这类只读输出复制误称源目录同步。
+截至本轮末8170183仍PENDING，Slurm预计15:44:50 Chicago；未产生新科学episode。
+Goal保持active，完整initial/条件branch与新图文结论均未完成，不mark complete。
