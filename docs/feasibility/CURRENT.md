@@ -13,6 +13,12 @@
 - 同根CPU合法命令回放 **8189617 COMPLETED/0:0**，2m10s：四条轨迹的最大障碍位移和任务结果逐条复现。Spatial3/rim参考和identity_geometry都记录到robot0_link5与酒瓶接触。Object0两条在动作端点没有记录到机器人/目标接触；不能据此排除物理子步接触。
 - 旧准备根`20261001T211455Z_initial_ready_0ec56db9f869`未提交且已被新根替代，不能启动。
 
+已提交CPU依赖衔接 **8192029**，afterany:8189966。控制器源7a1e69eec4b8，独立根
+`/projects/p33100/siosio/crashbench_safelibero/feasibility/20261001T221249Z_controller_7a1e69eec4b8/`。
+先检查前置Slurm COMPLETED/0:0、INITIAL_COMPLETE、BRANCH_GATE与STOP，再逐一调用完整根原327提交的归档launcher；每个branch结束后依赖触发下一个。没有资格就不提交；缺失证据、失败、重复尝试即停。
+读取控制器SUBMITTED.json、receipts/*.json、CONTROLLER_STOP_*.json与controller日志确定新句柄。
+控制器不执行仿真/分析，仅短CPU任务提交；运行中的initial与后续branch源码完全不改。
+
 ## 已验证烟测
 
 烟测 **8186026 COMPLETED/0:0**，15m31s，qgpu2005，16/16行、全部视频解码/帧数与初始物理/观察/首chunk配对门通过。源a7fd556ac7fb，根
