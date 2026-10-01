@@ -15,7 +15,7 @@ INTERVENTION_CANDIDATES=['nominal','release5','lift_then_nominal']
 CANDIDATES=['reference']+INTERVENTION_CANDIDATES
 BRANCH_BASELINE='identity_geometry'
 BRANCH_CONDITIONS=['aegis']+CANDIDATES
-CHECKPOINTS=[0,50,150,250]
+CHECKPOINTS=[0,27,77,152,252]
 REPEATS=5
 VALIDATION_REPEATS=10
 CAPTIONS={'wine_bottle':'black wine bottle','white_storage_box':'white storage box','red_coffee_mug':'red coffee mug','yellow_book':'yellow rectangular book','moka_pot':'blue moka pot','milk':'red milk carton'}
@@ -25,4 +25,4 @@ def seed_for(state, repeat, validation=False):
 def independent_caption(obstacle):
  return CAPTIONS[obstacle.split('_obstacle')[0]]
 def branch_eligible(reference, aegis):
- return any(r['safe_success'] for r in reference) and any(not r['success'] and not r['collided'] for r in aegis)
+ return any(r['safe_success'] for r in reference) and any(not (r['success'] and not r['collided']) for r in aegis)

@@ -42,10 +42,10 @@ def report(root):
    g=[r for r in initial if r['state']==state['id'] and r['condition']==c]
    if g:matrix[i,j]=sum(r['safe_success'] for r in g)/len(g)
  fig,ax=plt.subplots(figsize=(10,5));cmap=plt.get_cmap('YlGnBu').copy();cmap.set_bad('#e5e5e5');im=ax.imshow(matrix,vmin=0,vmax=1,cmap=cmap)
- ax.set_xticks(range(len(CONDITIONS)));ax.set_xticklabels(CONDITIONS);ax.set_yticks(range(len(STATES)));ax.set_yticklabels([s['id'] for s in STATES])
+ ax.set_xticks(range(len(CONDITIONS)));ax.set_xticklabels(['Pi0.5','AEGIS','ID','Geometry','ID + Geometry'],rotation=20,ha='right');ax.set_yticks(range(len(STATES)));ax.set_yticklabels([s['id'] for s in STATES])
  for i,s in enumerate(STATES):
   for j,c in enumerate(CONDITIONS):
-   g=[r for r in initial if r['state']==s['id'] and r['condition']==c];ax.text(j,i,count(g),ha='center',va='center',color='white' if np.isfinite(matrix[i,j]) and matrix[i,j]>.6 else 'black')
+   g=[r for r in initial if r['state']==s['id'] and r['condition']==c];ax.text(j,i,count(g) if g else 'N/A',ha='center',va='center',color='white' if np.isfinite(matrix[i,j]) and matrix[i,j]>.6 else 'black')
  fig.colorbar(im,ax=ax,label='Observed safe completion fraction (diagnostic only)');ax.set_title('Fixed initial-state perception conditions');fig.tight_layout();fig.savefig(out/'perception_conditions.png',dpi=180);plt.close(fig)
  fig,axes=plt.subplots(2,4,figsize=(13,6),sharex=True)
  for ax,state in zip(axes.flat,STATES):
@@ -133,11 +133,11 @@ def report(root):
    route='仅几何修正后多数完成；优先几何/代理表示机制'
   elif corrected['n'] and corrected['safe_success']>corrected['n']/2 and corrected['safe_success']>raw['safe_success']:
    route='仅联合修正后多数完成；保留身份×几何交互，不能合并归因'
-  elif ref['n'] and ref['safe_success'] and corrected['safe_noncompletion']:
+  elif ref['n'] and ref['safe_success'] and corrected['safe_success']<corrected['n']:
    successes=[r for r in branches if r['state']==s['state'] and r['safe_success'] and r['condition'] in INTERVENTION_CANDIDATES]
    late_loss=any(x['same_surviving_prefix_repeats'] and x['reference_early_witness']>x['reference_late_witness'] and x['opportunity_losses']>x['opportunity_gains'] for x in comparisons[s['state']])
    if s['state'] in pending:
-    route='已有独立见证、控制感知后仍安全未完成；受控分叉尚待完成'
+    route='已有独立见证、控制感知后仍未安全完成；受控分叉尚待完成'
    elif late_loss:
     route='等额续接预算下后期有限候选机会下降：方向一可加强，但固定专家能力与真实不可行尚未区分'
    elif successes:

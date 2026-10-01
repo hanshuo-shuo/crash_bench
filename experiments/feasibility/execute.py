@@ -44,7 +44,7 @@ def execute(root,port,stage):
    aegis=[r for r in rows if r['state']==state['id'] and r['condition']=='identity_geometry']
    if state['role']=='diagnostic' and branch_eligible(reference,aegis):eligible.append(state)
   atomic_json(root/'BRANCH_GATE.json',{'eligible_states':[s['id'] for s in eligible],
-   'rule':'at least one independent validation safe witness AND corrected identity+geometry AEGIS observed safe noncompletion; report all counts',
+   'rule':'at least one independent validation safe witness AND corrected identity+geometry AEGIS observed failure of safe completion; include unsafe completion/failure; report all counts',
    'screening_only':True})
   if stage=='initial':
    from report import report

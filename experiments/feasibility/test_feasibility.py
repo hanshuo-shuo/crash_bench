@@ -10,9 +10,11 @@ class FeasibilityTests(unittest.TestCase):
   for s in protocol.STATES:
    screening={protocol.seed_for(s,r) for r in range(5)};validation={protocol.seed_for(s,r,True) for r in range(10)}
    self.assertFalse(screening&validation)
- def test_branch_gate_needs_independent_witness_and_safe_noncompletion(self):
+ def test_branch_gate_needs_independent_witness_and_any_safe_completion_failure(self):
   self.assertFalse(protocol.branch_eligible([{'safe_success':False}],[{'success':False,'collided':False}]))
-  self.assertFalse(protocol.branch_eligible([{'safe_success':True}],[{'success':False,'collided':True}]))
+  self.assertTrue(protocol.branch_eligible([{'safe_success':True}],[{'success':False,'collided':True}]))
+  self.assertTrue(protocol.branch_eligible([{'safe_success':True}],[{'success':True,'collided':True}]))
+  self.assertFalse(protocol.branch_eligible([{'safe_success':True}],[{'success':True,'collided':False}]))
   self.assertTrue(protocol.branch_eligible([{'safe_success':True}],[{'success':False,'collided':False}]))
  def test_adapter_preserves_original_qp_scoring_and_has_no_state_write(self):
   original=(Path(__file__).resolve().parents[2]/'tests/fixtures/main_aegis_upstream.txt').read_text();source=adapt(original);ast.parse(source)

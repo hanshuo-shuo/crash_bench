@@ -152,8 +152,8 @@ def branch_schedule(root, rows, state_id):
     expected = set()
     skipped = []
     for repeat, base in sorted(bases.items()):
-        if base['success']:
-            skipped.append({'repeat': repeat, 'reason': 'corrected_aegis_completed', 'source': base['run_id']})
+        if base['safe_success']:
+            skipped.append({'repeat': repeat, 'reason': 'corrected_aegis_safely_completed', 'source': base['run_id']})
             continue
         for step in CHECKPOINTS:
             path = root / 'runs' / base['run_id'] / ('checkpoint_%03d.json' % step)
