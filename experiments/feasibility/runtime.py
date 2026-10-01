@@ -8,6 +8,7 @@ from protocol import independent_caption,seed_for,CHECKPOINTS,BRANCH_BASELINE
 from reference import Reference
 from serve import digest
 from analysis import execution_digest
+from observation_control import RGBControl,render_model_signature,scene_signature
 BASE=Path(__file__).resolve().parents[2]
 sys.path.insert(0,str(BASE/'scripts'))
 from api_budget import atomic_json
@@ -37,6 +38,7 @@ class Runner:
   sys.path[:0]=[str(self.upstream/'main'),str(self.upstream/'safelibero'),str(self.upstream/'openpi/packages/openpi-client/src')]
   self.source=(self.upstream/'main/main_aegis.py').read_text();self.patched=adapt(self.source)
   self.asset_manifest_hash=hashlib.sha256((self.assets/'VERIFIED.json').read_bytes()).hexdigest()
+  self.rgb_control=RGBControl(self.root/'controlled_rgb')
   self.first_inputs={};self.first_chunks={};self.first_execution={}
   if (self.root/'rows.json').exists():
    for r in json.loads((self.root/'rows.json').read_text()):
@@ -57,6 +59,7 @@ class Runner:
    'horizon_actions':300+extra,'policy_seed':seed,'policy':'pi05_libero','condition':condition,'reference_variant':variant,
    'branch_step':branch,'extra_budget':extra,'validation':validation,'asset_manifest_sha256':self.asset_manifest_hash,
    'perception':'frozen prior repeat0 caption; state/condition-frozen initial geometry','api_calls':0,
+   'observation_control':'exact physical/render-scene RGB templates; native RGB variants retained',
    'controlled_inference':'native infer with exact-input/exact-RNG common output replay; native differences retained'}
   atomic_json(directory/'manifest.json',dict(row,status='started',configuration=configuration))
   envs=[];clients=[];initial={};pending={};frames=[];trace=(directory/'steps.jsonl').open('w');inferences=(directory/'policy.jsonl').open('w')
@@ -79,6 +82,9 @@ class Runner:
    qpos=np.asarray(env.sim.data.qpos,dtype='<f8').copy();np.save(directory/'settled_qpos.npy',qpos)
    row['qpos_sha256']=array_hash(qpos);row['settled_qvel_sha256']=array_hash(env.sim.data.qvel)
    initial['obs']=obs
+   before={k:array_hash(v) for k,v in obs.items() if isinstance(v,np.ndarray)}
+   control=self.rgb_control.apply(obs,[k for k in obs if k.endswith('_image')],scene_signature(env,obs),'full',directory/'native_initial_rgb.npz')
+   row['initial_native_observation_hashes']=before;row['initial_rgb_control']=control
    initial['settled_observation_hashes']={k:array_hash(v) for k,v in obs.items() if isinstance(v,np.ndarray)}
    np.savez_compressed(directory/'settled_observation.npz',**{k:v for k,v in obs.items() if isinstance(v,np.ndarray)})
    robot=env.robots[0];control=robot.controller
@@ -127,6 +133,9 @@ class Runner:
   def checkpoint(ctx):
    t=ctx['t'];env=ctx['env'];obs=ctx['obs'];initial['obs']=obs
    if t not in CHECKPOINTS and t!=branch:return
+   if t:
+    control=self.rgb_control.apply(obs,[k for k in obs if k.endswith('_image')],scene_signature(env,obs),'full',directory/('native_checkpoint_rgb_%03d.npz'%t))
+    atomic_json(directory/('rgb_control_%03d.json'%t),control)
    snap=clients[0].infer({'__diagnostic_snapshot__':True})
    robot=env.robots[0]
    control=serialize({k:v for k,v in vars(robot.controller).items() if isinstance(v,(np.ndarray,float,int,bool,str,list,tuple,type(None)))})
@@ -163,6 +172,9 @@ class Runner:
      raise InfrastructureError('Full execution checkpoint differs after replay')
     row['prefix_verified']=True;row['checkpoint_fingerprint']=payload['execution_fingerprint']
   def element(data,t):
+   signature=scene_signature(initial['env'],initial['latest_obs'])
+   control=self.rgb_control.apply(data,['observation/image','observation/wrist_image'],signature,'policy',directory/('native_policy_rgb_%03d.npz'%t))
+   atomic_json(directory/('policy_rgb_control_%03d.json'%t),dict(control,step=t))
    if t==0:
     key=(state['id'],seed);ih=digest(data)
     row['initial_policy_input_sha256']=ih
@@ -245,9 +257,16 @@ class Runner:
     # Own every returned array before later GPU/library work can touch camera buffers.
     original_step=env.step;original_init=env.set_init_state
     def step(action):
+     signature=render_model_signature(env.sim.model)
      observation,reward,done,info=original_step(action)
-     return owned_observation(observation),reward,done,info
-    def initialize(value):return owned_observation(original_init(value))
+     observation=owned_observation(observation);observation['_render_model_signature']=signature
+     initial['latest_obs']=observation
+     return observation,reward,done,info
+    def initialize(value):
+     signature=render_model_signature(env.sim.model)
+     observation=owned_observation(original_init(value));observation['_render_model_signature']=signature
+     initial['latest_obs']=observation
+     return observation
     env.step=step;env.set_init_state=initialize
     return env,description
    ns['_get_libero_env']=get_env

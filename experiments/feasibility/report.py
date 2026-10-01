@@ -2,7 +2,7 @@
 import csv,json,math
 from collections import defaultdict
 from pathlib import Path
-from protocol import STATES,CONDITIONS,CANDIDATES,CHECKPOINTS,BRANCH_CONDITIONS
+from protocol import STATES,CONDITIONS,CANDIDATES,CHECKPOINTS,BRANCH_CONDITIONS,INTERVENTION_CANDIDATES
 from analysis import validate_rows,paired_effect,continuation_comparisons
 
 def report(root):
@@ -20,6 +20,7 @@ def report(root):
  stats=[];table=['# 安全未完成状态：可行性见证与受控续接诊断','',
  '这是8个预先固定状态的机制诊断，其中6个诊断、2个正常对照。不是总体性能评估。',
  '身份与几何分开控制；初始VLM文字取自既有repeat0回答并冻结，不是完整部署评价。无新增API调用。',
+ '相同完整物理/渲染状态共用RGB模板，原生像素变体保留；这是受控机制实验的共同观测，不是部署评估。',
  '首策略输入和RNG严格配对；共同输入/RNG的原生推理结果仍执行并记录，控制输出复用首次结果。',
  '参考方法使用特权物体位置规划，但所有物理动作仍是同一机器人7D OSC/gripper；仅在官方初始化时加载官方初始状态。',
  '几何条件使用全碰撞网格顶点/保守基本形状包围，数值验证单椭球包含性。它仍保留AEGIS椭球代理局限。','',
@@ -91,11 +92,16 @@ def report(root):
 
  comparisons={state['id']:continuation_comparisons(rows,state['id']) for state in STATES}
  table+=['','## 时间与预算拆分','',
- '早期与后期只比较同一重复、后期仍未碰撞且所有固定候选已执行的共同前缀。未执行项不记失败；这里的机会只指有限候选中至少一个提供安全完成见证。','',
- '|状态|后期检查点|相同前缀种子数|早期见证（300续接步）|后期见证（300续接步）|只加预算带来的见证增益|','|---|---:|---:|---:|---:|---:|']
+ '早期与后期只比较同一重复、后期仍未碰撞且所有固定候选已执行的共同前缀。未执行项不记失败；这里的有限候选不含特权参考，特权参考的早/晚见证另计。','',
+ '|状态|后期检查点|共同种子数|参考早/晚见证|有限候选早/晚见证|仅加预算增益|','|---|---:|---:|---:|---:|---:|']
  for sid,items in comparisons.items():
   for x in items:
-   table.append('|%s|%d|%d|%d|%d|%d/%d|'%(sid,x['checkpoint'],len(x['same_surviving_prefix_repeats']),x['early_any_candidate_witness'],x['late_any_candidate_witness'],x['extra_budget_gains'],len(x['budget_matched_repeats'])))
+   table.append('|%s|%d|%d|%d/%d|%d/%d|%d/%d|'%(sid,x['checkpoint'],len(x['same_surviving_prefix_repeats']),x['reference_early_witness'],x['reference_late_witness'],x['early_any_candidate_witness'],x['late_any_candidate_witness'],x['extra_budget_gains'],len(x['budget_matched_repeats'])))
+ rgb_records=[]
+ for p in (root/'runs').glob('*/policy_rgb_control_*.json'):
+  v=json.loads(p.read_text())
+  if any(x['changed_pixels'] for x in v['differences'].values()):rgb_records.append(dict(v,run_id=p.parent.name))
+ table+=['','同物理/渲染状态的策略RGB变体记录%d条；原生变体及每次差异统计均保存，图像没有通过删重复来配对。'%len(rgb_records)]
  discrepancies=[];native_first5=[]
  for p in (root/'runs').glob('*/policy.jsonl'):
   for l in p.read_text().splitlines():
@@ -128,8 +134,8 @@ def report(root):
   elif corrected['n'] and corrected['safe_success']>corrected['n']/2 and corrected['safe_success']>raw['safe_success']:
    route='仅联合修正后多数完成；保留身份×几何交互，不能合并归因'
   elif ref['n'] and ref['safe_success'] and corrected['safe_noncompletion']:
-   successes=[r for r in branches if r['state']==s['state'] and r['safe_success'] and r['condition']!='aegis']
-   late_loss=any(x['same_surviving_prefix_repeats'] and x['opportunity_losses']>x['opportunity_gains'] for x in comparisons[s['state']])
+   successes=[r for r in branches if r['state']==s['state'] and r['safe_success'] and r['condition'] in INTERVENTION_CANDIDATES]
+   late_loss=any(x['same_surviving_prefix_repeats'] and x['reference_early_witness']>x['reference_late_witness'] and x['opportunity_losses']>x['opportunity_gains'] for x in comparisons[s['state']])
    if s['state'] in pending:
     route='已有独立见证、控制感知后仍安全未完成；受控分叉尚待完成'
    elif late_loss:
@@ -137,7 +143,7 @@ def report(root):
    elif successes:
     route='固定候选存在有效续接：方向二候选证据；选择或介入时机的取舍仍需看各候选重复结果'
    else:
-    route='已有独立见证，但有限候选尚无有效续接；不能推为真实不可行'
+    route='已有独立见证，但有限普通候选尚无有效续接；特权参考单独成功不支持学习选择器，也不能推为真实不可行'
   elif ref['n']:
    route='固定参考搜索未找到独立安全见证：可行性未知；不训练无解分类器'
   else:
@@ -145,7 +151,7 @@ def report(root):
   decision.append({'state':s['state'],'decision':route});table.append('\n- %s：%s。'%(s['state'],route))
  (out/'REPORT.md').write_text('\n'.join(table)+'\n')
  (out/'statistics.json').write_text(json.dumps({'initial':stats,'branches':bt,'decision':decision,'quality':quality,'paired_effects':effects,
-  'time_budget_comparisons':comparisons,'pending_branch_states':pending,'native_first_chunk_comparison':native_first5,'native_discrepancies':discrepancies,
+  'time_budget_comparisons':comparisons,'pending_branch_states':pending,'rgb_native_variants':rgb_records,'native_first_chunk_comparison':native_first5,'native_discrepancies':discrepancies,
   'method_exits':[r['run_id'] for r in rows if r['exited']], 'api_calls':0},ensure_ascii=False,indent=2))
  import html
  text=html.escape('\n'.join(table))

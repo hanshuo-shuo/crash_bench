@@ -55,7 +55,7 @@ class AnalysisTests(unittest.TestCase):
         data = []
         for repeat in [0, 1]:
             for c in BRANCH_CONDITIONS:
-                data.append(row(c, repeat, c == 'reference', step=0))
+                data.append(row(c, repeat, c in ['reference','nominal'], step=0))
         # Only repeat0 has a late safe checkpoint; repeat1 must not enlarge early denominator.
         for extra in [0, 250]:
             for c in BRANCH_CONDITIONS:
@@ -66,6 +66,11 @@ class AnalysisTests(unittest.TestCase):
         self.assertEqual(result['late_any_candidate_witness'], 0)
         self.assertEqual(result['opportunity_losses'], 1)
         self.assertEqual(result['extra_budget_gains'], 0)
+        privileged_only=[dict(r,safe_success=(r['condition']=='reference'),success=(r['condition']=='reference')) for r in data]
+        only=continuation_comparisons(privileged_only,STATES[0]['id'])[0]
+        self.assertEqual(only['early_any_candidate_witness'],0)
+        self.assertEqual(only['late_any_candidate_witness'],0)
+        self.assertEqual(only['reference_late_witness'],1)
         incomplete = [r for r in data if not (r['branch_step'] == 250 and r['extra_budget'] == 250 and r['condition'] == 'reference')]
         result = continuation_comparisons(incomplete, STATES[0]['id'])[0]
         self.assertEqual(result['same_surviving_prefix_repeats'], [])

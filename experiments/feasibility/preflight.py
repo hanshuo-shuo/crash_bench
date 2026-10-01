@@ -9,6 +9,7 @@ sys.path.insert(0,str(BASE/'scripts'))
 from api_budget import atomic_json
 from serve import ControlledPolicy,digest
 from analysis import execution_digest
+from observation_control import render_model_signature,scene_signature,RGBControl
 
 def server_check():
  class Random:
@@ -57,6 +58,15 @@ def main(root):
  sys.path[:0]=[str(upstream/'main'),str(upstream/'safelibero')]
  from libero.libero import benchmark,get_libero_path
  from libero.libero.envs.env_wrapper import ControlEnv
+ from tempfile import TemporaryDirectory
+ with TemporaryDirectory(dir=root) as tmp:
+  controller=RGBControl(tmp);a={'image':np.zeros((2,2,3),dtype=np.uint8)}
+  first=controller.apply(a,['image'],'a'*64,'unit',Path(tmp)/'native_first.npz')
+  b={'image':np.ones((2,2,3),dtype=np.uint8)};second=controller.apply(b,['image'],'a'*64,'unit',Path(tmp)/'native_variant.npz')
+  assert np.array_equal(a['image'],b['image']) and second['differences']['image']['changed_pixels']==4
+  assert Path(second['native_variant_saved']).exists()
+  c={'image':np.ones((2,2,3),dtype=np.uint8)};third=controller.apply(c,['image'],'b'*64,'unit',Path(tmp)/'native_other.npz')
+  assert (c['image']==1).all() and not third['reused']
  result={'job':os.environ['SLURM_JOB_ID'],'code_commit':os.environ['CB_CODE_COMMIT'],'server':server_check(),'states':[]}
  for state in STATES:
   task_suite=benchmark.get_benchmark_dict()[state['suite']](safety_level=state['level']);task=task_suite.get_task(state['task'])
@@ -67,7 +77,10 @@ def main(root):
    for _ in range(20):obs,_,_,_=env.step([0.]*6+[-1.])
    obstacle=active_obstacle(env,obs)
    if state['target']+'_pos' not in obs or state['goal']+'_pos' not in obs:raise RuntimeError('Missing reference target/goal '+str(state))
+   held=bool(env.env._check_grasp(env.robots[0].gripper,env.env.objects_dict[state['target']]))
    p,R,axes,points,info=verified_ellipsoid(env,obstacle)
+   obs['_render_model_signature']=render_model_signature(env.sim.model)
+   render_scene=scene_signature(env,obs)
    fingerprints=[physical_snapshot(env,obs)]
    for repetition in [1,2]:
     random.seed(7);np.random.seed(7)
@@ -81,7 +94,7 @@ def main(root):
    controller=env.robots[0].controller
    output_min=np.asarray(controller.output_min);output_max=np.asarray(controller.output_max)
    if not np.allclose(output_max[:3],.05) or not np.allclose(output_max[3:],.5):raise RuntimeError('Reference action inversion does not match native OSC scale')
-   result['states'].append({'id':state['id'],'task_description':task.language,'obstacle':obstacle,'correct_caption':independent_caption(obstacle),'target_pos':obs[state['target']+'_pos'].tolist(),'goal_pos':obs[state['goal']+'_pos'].tolist(),'ellipsoid':dict(info,p=p.tolist(),R=R.tolist(),axes=axes.tolist()),'controller_output_min':output_min.tolist(),'controller_output_max':output_max.tolist(),'controller_control_delta':bool(controller.use_delta) if hasattr(controller,'use_delta') else getattr(controller,'control_delta',None),'action_spec':[np.asarray(x).tolist() for x in env.env.action_spec],'fresh_physics_fingerprints':fingerprints,'scope':'three fresh no-render CPU environments; GPU observation/policy gate remains required'})
+   result['states'].append({'id':state['id'],'task_description':task.language,'obstacle':obstacle,'correct_caption':independent_caption(obstacle),'target_pos':obs[state['target']+'_pos'].tolist(),'goal_pos':obs[state['goal']+'_pos'].tolist(),'ellipsoid':dict(info,p=p.tolist(),R=R.tolist(),axes=axes.tolist()),'controller_output_min':output_min.tolist(),'controller_output_max':output_max.tolist(),'controller_control_delta':bool(controller.use_delta) if hasattr(controller,'use_delta') else getattr(controller,'control_delta',None),'action_spec':[np.asarray(x).tolist() for x in env.env.action_spec],'reference_grasp_held_at_initial':held,'render_scene_signature':render_scene,'fresh_physics_fingerprints':fingerprints,'scope':'three fresh no-render CPU environments; GPU observation/policy gate remains required'})
    atomic_json(root/'PREFLIGHT.json',result)
   finally:env.close()
  result['status']='passed';atomic_json(root/'PREFLIGHT.json',result)

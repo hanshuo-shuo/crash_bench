@@ -11,7 +11,8 @@ STATES = [
  {'id':'control_objectII_02','suite':'safelibero_object','level':'II','task':1,'episode':2,'role':'control','target':'chocolate_pudding_1','goal':'basket_1','caption':'yellow rectangular book'},
 ]
 CONDITIONS=['nominal','raw','identity','geometry','identity_geometry']
-CANDIDATES=['reference','nominal','release5','lift_then_nominal']
+INTERVENTION_CANDIDATES=['nominal','release5','lift_then_nominal']
+CANDIDATES=['reference']+INTERVENTION_CANDIDATES
 BRANCH_BASELINE='identity_geometry'
 BRANCH_CONDITIONS=['aegis']+CANDIDATES
 CHECKPOINTS=[0,50,150,250]

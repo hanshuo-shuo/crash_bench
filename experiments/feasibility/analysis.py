@@ -2,7 +2,7 @@
 import hashlib
 import json
 from collections import defaultdict
-from protocol import STATES, CONDITIONS, CANDIDATES, REPEATS, VALIDATION_REPEATS, seed_for, BRANCH_CONDITIONS, BRANCH_BASELINE
+from protocol import STATES, CONDITIONS, CANDIDATES, REPEATS, VALIDATION_REPEATS, seed_for, BRANCH_CONDITIONS, BRANCH_BASELINE, INTERVENTION_CANDIDATES
 
 INITIAL_COMMON_FIELDS = [
     'sim_state_sha256', 'qpos_sha256', 'qvel_sha256', 'ctrl_sha256',
@@ -119,21 +119,23 @@ def continuation_comparisons(rows, state_id):
         early = late = gains = losses = 0
         for repeat in repeats:
             a, b = complete[(0, 0, repeat)], complete[(step, step, repeat)]
-            x = any(a[c]['safe_success'] for c in CANDIDATES)
-            y = any(b[c]['safe_success'] for c in CANDIDATES)
+            x = any(a[c]['safe_success'] for c in INTERVENTION_CANDIDATES)
+            y = any(b[c]['safe_success'] for c in INTERVENTION_CANDIDATES)
             early += x; late += y; gains += not x and y; losses += x and not y
         remaining = sorted({r for s, b, r in complete if s == step and b == 0}
                            & {r for s, b, r in complete if s == step and b == step})
         budget_gains = budget_losses = 0
         for repeat in remaining:
             a, b = complete[(step, 0, repeat)], complete[(step, step, repeat)]
-            x = any(a[c]['safe_success'] for c in CANDIDATES)
-            y = any(b[c]['safe_success'] for c in CANDIDATES)
+            x = any(a[c]['safe_success'] for c in INTERVENTION_CANDIDATES)
+            y = any(b[c]['safe_success'] for c in INTERVENTION_CANDIDATES)
             budget_gains += not x and y; budget_losses += x and not y
-        records.append({'checkpoint': step, 'same_surviving_prefix_repeats': repeats,
+        reference_early=sum(complete[(0,0,r)]['reference']['safe_success'] for r in repeats)
+        reference_late=sum(complete[(step,step,r)]['reference']['safe_success'] for r in repeats)
+        records.append({'reference_early_witness':reference_early,'reference_late_witness':reference_late,'checkpoint': step, 'same_surviving_prefix_repeats': repeats,
                         'equal_suffix_actions': 300, 'early_any_candidate_witness': early,
                         'late_any_candidate_witness': late, 'opportunity_losses': losses,
                         'opportunity_gains': gains, 'budget_matched_repeats': remaining,
                         'extra_budget_gains': budget_gains, 'extra_budget_losses': budget_losses,
-                        'scope': 'fixed candidate set; conditional on noncollided common prefixes, not true infeasibility'})
+                        'scope': 'ordinary intervention candidates exclude privileged reference; conditional on noncollided common prefixes, not true infeasibility'})
     return records
