@@ -111,3 +111,14 @@ HTTP errors, with a separate $0.10 reservation for each attempt. Unknown charges
 remain reserved; invalid model/content, missing cost and budget errors still
 stop immediately. Two failed HTTP attempts stop the batch. 22 local checks pass.
 The recovery launch receipt/status is authoritative for whether work has resumed.
+
+## New mechanism diagnostic authorized — 2026-10-01
+
+The user explicitly authorized **安全未完成状态的可行性见证与受控续接实验** on Quest,
+including a fixed privileged reference and finite ordinary-action continuations,
+but no training. This narrow authorization supersedes the earlier reproduction-only
+scope for this diagnostic. See [feasibility/CURRENT.md](feasibility/CURRENT.md) and
+`experiments/feasibility/README.md`. Eight-state CPU preflight passed; the new GPU
+smoke is submitted, not complete. New outputs have unique immutable roots and
+frozen published source archives; Quest's live main checkout is unchanged. The
+mechanism experiment freezes prior initial VLM answers and makes no new API calls.
