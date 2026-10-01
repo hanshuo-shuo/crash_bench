@@ -25,9 +25,9 @@ def launch(root,stage):
  for p in (ASSETS/'batches').glob('*/batch.json'):jobs+=json.loads(p.read_text()).get('slurm_arrays',[])
  for p in (ASSETS/'paired_repeats').glob('*/plan.json'):jobs+=list(json.loads(p.read_text()).get('jobs',{}).values())
  for p in (ASSETS/'feasibility').glob('*/plan.json'):jobs+=list(json.loads(p.read_text()).get('jobs',{}).values())
+ queued=set(subprocess.check_output(['squeue','-h','-u',os.environ['USER'],'-o','%A'],text=True).split())
  for job in jobs:
-  output=subprocess.check_output(['squeue','-h','-j',str(job),'-o','%i'],text=True).strip()
-  if output:raise RuntimeError('Recorded CrashBench job active: '+str(job))
+  if str(job) in queued:raise RuntimeError('Recorded CrashBench job active: '+str(job))
  (root/'source.sha256').write_text('\n'.join(checks)+'\n')
  plan={'code_commit':commit,'upstream_commit':'2457feed5968ae803926e178c8ce8243b9ecdcf9','source':str(SOURCE),'stage':stage,'jobs':{},'max_gpus':1,'API_calls':0,'live_checkout_commit':git(['rev-parse','HEAD']),'created_unix':time.time()}
  atomic_json(root/'plan.json',plan)
