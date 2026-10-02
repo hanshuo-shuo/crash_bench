@@ -96,7 +96,7 @@ Goal保持active：完整initial、批准分叉、最终图文表与研究建议
 
 主initial的六诊断状态各五个策略种子的五条件已完成；六诊断全部条件的安全完成均为0/5。身份为no-op；几何修正带来部分不安全完成，没有恢复安全完成。两正常对照的条件已在前224次中完成；参考十次新验证仍在继续，不把这部分描述成全304已完成。
 主根PRE_BRANCH_CHECKPOINT_AUDIT.json与PRE_BRANCH_CHECKPOINT_AUDIT_OBJECT.json记录实际前缀覆盖。
-Spatial9/15潜在各125个分叉案例，只存在未触发官方碰撞代理的0/27/77步；152/252在已不安全结束之后，不执行、不计失败。
+Spatial9/15潜在各125个分叉案例，只存在未触发官方碰撞代理的0/27/77步；152/252有的未到达，有的到达时已经碰撞，不执行、不计失败。
 Object0潜在205个案例：repeat1的152已碰撞、252未到达；Object2/5各225个案例且五个检查点完整。早晚比较Object0晚期用四个共同幸存重复，不把缺少的一次当失败。
 六诊断的所有30个corrected基线均未恰好在计划检查点终止，原schedule的终止边界不影响这批数据；实际branch_schedule校验通过，没有“已到达却缺失”的检查点。
 这些是覆盖核验，未构成分叉资格授权；必须等INITIAL_COMPLETE和BRANCH_GATE。按当前可复现筛查预期五资格状态，但不得以预期替代实际门。独立参考十次验证未完成前不自行提交。
@@ -108,3 +108,14 @@ Object0潜在205个案例：repeat1的152已碰撞、252未到达；Object2/5各
 最新准备分析根为`/projects/p33100/siosio/crashbench_safelibero/feasibility/20261002T010021Z_analysis_8b0b7d5ed879/`，ANALYSIS_READY=prepared_not_submitted；输入supplements同前。9项实验模块与主327字节相同，仅最终后处理增加审计与图。旧c534分析根保留SUPERSEDED，不提交旧版。
 只等全部批准branch完成、主根COMPLETE/全部实际Slurm成功，再提交此analysis archive的interpret.sbatch；全部新图表必须实际查看并校验副本SHA。
 参考验证阶段有完整动作NPY；已核验Spat3十次0/10、Spat9十次10/10，各自只有一个动作tape hash，因此是确定性同状态的fresh执行重复，不是十个独立物理扰动或高概率认证。Spatial9/15无受保护接触安全仍未知，官方代理见证的接触问题不能被验证次数遮盖。
+
+## Initial完整与首个实际分叉（2026-10-01 Chicago / 10-02 UTC）
+
+Initial8189966实际COMPLETED/0:0，3h18m09s。304/304、120个配对组、视频/首观察/首chunk/完整初始执行状态门通过，原生同输入/RNG推理差异0，原生RGB变体206条保留。正式BRANCH_GATE为Spatial9/15与Object0/2/5；Spat3固定center新验证0/10，其他七状态选定参考10/10，仍是确定性重复不是概率认证。
+已保存主根initial_report_snapshot，7个文件逐一SHA验证；只读SCP取回本地results/feasibility/initial_304_20261001，7文件SHA一致，三个图已实际查看。整图上的safe字样都是官方L1代理，Spatial9/15参考仍有实际link5接触，须同时看contact_screen报告，不可解释成更强安全。
+旧控制器8192029 FAILED/1:0/6s，计算节点没有git，失败在launcher检查前，未提交任何分叉；主根无STOP，304结果完好。日志与旧source保留。
+修复仅控制器SBATCH加载git/2.37.2，源f9d43272d624，独立根
+`/projects/p33100/siosio/crashbench_safelibero/feasibility/20261002T012402Z_controller_f9d43272d624/`。
+控制器8211864实际COMPLETED/0:0/21s，提交**branch_spatial_09 GPU8211895**及继任CPU**8211896**（afterany:8211895），receipt8211864.json完整。新控制器根替代旧root，别等旧8192029。
+8211895已实际RUNNING/qgpu0403，第一t0/aegis控制与t0/lift_then_nominal已完成且前缀核验通过；源仍为主327冻结archive。Spatial9 schedule实际125，缺失/碰撞10条分别记录理由，不能把它们计作候选失败。
+首个未干预AEGIS全轨迹复现审计FIRST_UNCHANGED_AEGIS_CONTROL_AUDIT.json在主根；不是只验证初始哈希。后续仍须全部5批准状态分叉、全部共同预算轨迹审计与最终8b分析图文表，再作研究建议与mark goal complete。
