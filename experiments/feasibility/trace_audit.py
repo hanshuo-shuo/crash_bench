@@ -50,8 +50,7 @@ def audit(root, rows):
             base = initial[(state, repeat)]
             for row in group.values():
                 a, b = trace(base), trace(row)
-                length = min(len(a), len(b))
-                compare_common_trace(a[:length], b[:length], base['run_id'] + ' vs ' + row['run_id'])
+                length = compare_common_trace(a, b, base['run_id'] + ' vs ' + row['run_id'])
                 if row['extra_budget'] == 0 and (len(a) != len(b) or
                         (base['success'], base['collided']) != (row['success'], row['collided'])):
                     raise RuntimeError('Unchanged AEGIS control outcome differs')
