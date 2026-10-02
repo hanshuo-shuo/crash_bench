@@ -121,3 +121,9 @@ Initial8189966实际COMPLETED/0:0，3h18m09s。304/304、120个配对组、视�
 首个未干预AEGIS全轨迹复现审计FIRST_UNCHANGED_AEGIS_CONTROL_AUDIT.json在主根；不是只验证初始哈希。后续仍须全部5批准状态分叉、全部共同预算轨迹审计与最终8b分析图文表，再作研究建议与mark goal complete。
 
 Spatial9首个重复的0/27步完整候选预算对比已形成；主根EARLY_COMMON_TRAJECTORY_AUDIT.json核验5个两预算共同轨迹对、3个未干预AEGIS控制，全记录字段完全一致。仅这批局部核验，不代替全905个计划分叉或最终预算审计。初始REPORT七文件已只读SCP取回本地并逐一SHA匹配；不用在Quest checkout建结果symlink，直接读输出SCP已通过自动审批。
+
+## Spatial9分叉完整与后继实际提交（2026-10-02 UTC）
+
+8211895实际COMPLETED/0:0，1h09m48s；主根branch_spatial_09_COMPLETE.json与rows.json确认125个分叉，累计429，STOP不存在。五个重复中，reference在t0/t27均官方代理安全完成5/5，在t77为4/5；原剩余预算与300步续接预算计数一致。普通候选只有lift_then_nominal在t77为2/5，两预算相同；其余普通候选及未干预AEGIS在全部可用检查点均0/5。2/5不足以称稳定有效或高概率认证；完整共同轨迹审计及逐条物理接触审计尚未完成，不能由官方代理结果推出更强无接触安全。
+
+继任控制器8211896实际COMPLETED/0:0，12s，receipt确认提交branch_spatial_15 GPU **8217077**及其afterany控制器 **8217078**。最新实际队列8217077 PENDING/Priority，8217078 PENDING/Dependency。不要等待已完成的Spatial9句柄，也不要以静态文档猜后继进度。仍须Spatial15与Object0/2/5、完整预算轨迹审计、最新8b分析图文表与最终研究判断。Goal仍active；不改变主327科学源或Quest live checkout。
