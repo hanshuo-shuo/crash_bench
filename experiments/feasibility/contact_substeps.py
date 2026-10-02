@@ -97,6 +97,15 @@ def audit(root, case_file):
                     expected_physics = np.load(snapshot)
                     for key in ['qpos', 'qvel', 'ctrl']:
                         if not np.array_equal(expected_physics[key], getattr(sim_data, key)):
+                            a, b = expected_physics[key], np.asarray(getattr(sim_data, key)).copy()
+                            mismatch = {'run_id': name, 'checkpoint': checkpoint_step, 'field': key,
+                                        'expected': a.tolist(), 'actual': b.tolist(),
+                                        'expected_shape': list(a.shape), 'actual_shape': list(b.shape),
+                                        'max_abs_difference': float(np.max(np.abs(a-b))) if a.shape == b.shape else None,
+                                        'joint_names': list(model.joint_names),
+                                        'joint_qpos_addresses': model.jnt_qposadr.tolist(),
+                                        'slurm_job': os.environ['SLURM_JOB_ID']}
+                            (root / 'PHYSICS_MISMATCH.json').write_text(json.dumps(mismatch, indent=2) + '\n')
                             raise RuntimeError('Contact replay physics mismatch at %s/%d/%s' %
                                                (name, checkpoint_step, key))
                     verified_checkpoints.append(checkpoint_step)
