@@ -219,3 +219,10 @@ c35未提交分析supplements已加入两根，contact roots现在18个，SHA **
 Object0全部五重复官方代理计数：参考0/27/77步5/5，两预算相同；152/252步原剩余预算0/4，同300续接预算4/4。普通候选只有release5在t0为1/5（repeat3），nominal在152/252同300续接各1/4（均repeat2，已核验有接触）；其余普通候选以及未干预AEGIS全检查点全预算0。后期参考的短预算失败由增加时间恢复，不能据此说机会随时间下降；最终仍需强接触条件同组预算全轨迹审计。
 剩余合格同300续接代理成功共10条（reference9、release5一条），全来自repeat3/4；repeat3/252此前实际已接触，不列入强恢复子集，原行保留。源6cd/reset_forward=true已提交新唯一根 **20261002T065302Z_object00_remaining_suffix_contacts_6cd022f87faa**，CPU **8244439**（10案例），SUBMITTED.json。目前仅提交，须实际Slurm/CONTACT receipt后并入c35最新18-root manifest并保留旧版本；不要把一条release5代理成功当无接触成功或高成功概率。
 仍待Object2/5完整、所有合格代理成功（含aegis预算对照）的接触核验、全common-trace预算审计、c35实际图QA、最终具体判断表；Goal active。
+
+## Object0完整成功续接接触审计
+
+8244439实际COMPLETED/0:0/4m25s，剩余10条source row SHA/保存检查点qpos/qvel/ctrl/任务/最大位移全部核验，renderer reset-forward=true。根20261002T065302Z_object00_remaining_suffix_contacts_6cd022f87faa/AUDIT_COMPLETE.json存Slurm与raw SHA。
+c35准备分析已并入该根，contact roots现19个，supplements SHA **8f24e7d9a021f57da69cd940f6bf7b5301f543fe8f62b9fb71ae248996e8a36f**，旧输入保留supplements_before_object00_complete.json，变更hash存SUPPLEMENT_UPDATE_object00_complete.json；仍未提交报告。
+Object0所有合格同300续接的代理成功接触未知数0。固定参考同时通过代理和无机器人／目标-障碍接触：0/27/77各5/5、152步4/4、252步3/3（排除repeat3已有接触，原行保留）。没有固定参考同预算的机会下降证据；原剩余预算晚期0/4的失败不能当作真实不可行或窗口衰退。普通库只有release5/t0/repeat3一例满足上述接触条件，1/5，不是稳定候选或概率认证；nominal/152、252的两代理成功均有接触，不能混入强安全续接。未干预AEGIS所有预算仍0。
+末次实际Object2 GPU8243879 RUNNING/qgpu0403/11m23s，累计770；CPU继任8243880 Dependency。仍需Object2/5全部分叉与成功接触审计，完整共用轨迹/严格前缀配对预算核验，最终图QA/图文判断表。Goal active，主327冻结。
