@@ -71,6 +71,8 @@ def generate(target, output, supplement_file=None):
     quality = validate_rows(rows, require_initial_complete=True)
     approved = json.loads((target / 'BRANCH_GATE.json').read_text())['eligible_states']
     coverage = {s: validate_branch_coverage(target, rows, s) for s in approved}
+    from trace_audit import audit as audit_traces
+    trace_quality = audit_traces(target, rows)
     data = evidence(rows)
     contact_rows = []; alternatives = []; supplement_hashes = {}
     if supplement_file is not None:
@@ -105,6 +107,7 @@ def generate(target, output, supplement_file=None):
             alternatives.extend(json.loads(file.read_text()))
     output.mkdir(exist_ok=False)
     (output / 'decision_evidence.json').write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n')
+    (output / 'COMMON_TRAJECTORY_AUDIT.json').write_text(json.dumps(trace_quality, indent=2) + '\n')
     (output / 'contact_evidence.json').write_text(json.dumps({'contact_replays': contact_rows,
         'post_contact_fixed_alternative': alternatives}, ensure_ascii=False, indent=2) + '\n')
     summary = []
@@ -148,6 +151,7 @@ def generate(target, output, supplement_file=None):
                 v['extra_budget_gains'], v['extra_budget_losses']))
     table += ['', '早晚只比较同一重复且后期尚未碰撞的前缀。不存在的检查点不记失败；碰撞后缺失说明安全窗口已关闭，不能当作“未碰撞但不可恢复”。',
               '相同预算下固定参考失败仍不能证明真实不可行；专家抓取/运输能力不足与物理不可行尚须分开。普通库没有成功，也不能由特权参考成功推出该库选择学习值得做。', '',
+              '预算比较额外核验较短执行的全部已记录字段与较长执行的共同部分完全相同；未干预AEGIS预算对照也与原corrected轨迹一致。审计不通过时不导出预算解释。', '',
               '## 四种结果的研究判断约束', '',
               '|实际证据模式|允许的研究判断|', '|---|---|',
               '|单独身份或几何修正后多数安全完成且有配对增益|优先感知／代理表示，注明是哪一个因子及交互|',
@@ -228,10 +232,39 @@ def generate(target, output, supplement_file=None):
         axes.flat[0].legend(loc='lower left', fontsize=8)
         fig.tight_layout(); fig.savefig(output / 'time_and_budget.png', dpi=180); plt.close(fig)
 
+        # A separate change plot uses the same surviving seed cohort at early and late times.
+        fig, axes = plt.subplots(len(eligible), 2, figsize=(12, 3.2 * len(eligible)), squeeze=False)
+        for pair, x in zip(axes, eligible):
+            comparable = [v for v in x['time_budget'] if v['same_surviving_prefix_repeats']]
+            steps = [v['checkpoint'] for v in comparable]
+            n = np.asarray([len(v['same_surviving_prefix_repeats']) for v in comparable], dtype=float)
+            expert = np.asarray([v['reference_late_witness'] - v['reference_early_witness'] for v in comparable])
+            ordinary = np.asarray([v['late_any_candidate_witness'] - v['early_any_candidate_witness'] for v in comparable])
+            pair[0].plot(steps, expert / n, 'o-', color='#855ba2', label='Privileged reference')
+            pair[0].plot(steps, ordinary / n, 's-', color='#26866f', label='Ordinary library existence (oracle)')
+            for step, count in zip(steps, n): pair[0].text(step, 1.03, 'n=%d' % count, ha='center', fontsize=8)
+            pair[0].set_title(x['state'] + ': matched early-to-late change')
+            pair[0].set_ylabel('(Late - early witnesses) / matched n')
+            budget = [v for v in x['time_budget'] if v['budget_matched_repeats']]
+            ticks = np.arange(len(budget))
+            bn = np.asarray([len(v['budget_matched_repeats']) for v in budget], dtype=float)
+            pair[1].bar(ticks - .18, [v['extra_budget_gains'] for v in budget] / bn, width=.35, color='#4374ae', label='Gain from extra time')
+            pair[1].bar(ticks + .18, -np.asarray([v['extra_budget_losses'] for v in budget]) / bn, width=.35, color='#b77030', label='Loss (audited common trace)')
+            pair[1].set_xticks(ticks); pair[1].set_xticklabels([v['checkpoint'] for v in budget])
+            for tick, count in zip(ticks, bn): pair[1].text(tick, 1.03, 'n=%d' % count, ha='center', fontsize=8)
+            pair[1].set_title(x['state'] + ': remaining vs 300-action suffix')
+            pair[1].set_ylabel('Budget-only witness change / matched n')
+            for ax in pair:
+                ax.axhline(0, color='#555555', linewidth=.8); ax.set_ylim(-1.1, 1.16)
+                ax.set_xlabel('Later checkpoint / actions')
+        axes[0,0].legend(fontsize=8, loc='lower left'); axes[0,1].legend(fontsize=8, loc='lower left')
+        fig.tight_layout(); fig.savefig(output / 'matched_time_budget_changes.png', dpi=180); plt.close(fig)
+
     provenance = {'target_root': str(target), 'scientific_commit': (target / 'SOURCE_COMMIT').read_text().strip(),
                   'analysis_commit': os.environ.get('CB_ANALYSIS_COMMIT'), 'slurm_job': os.environ.get('SLURM_JOB_ID'),
                   'input_rows_sha256': hashlib.sha256((target / 'rows.json').read_bytes()).hexdigest(),
-                  'quality': quality, 'coverage': coverage, 'supplement_files_sha256': supplement_hashes,
+                  'quality': quality, 'coverage': coverage, 'common_trace_quality': trace_quality,
+                  'supplement_files_sha256': supplement_hashes,
                   'files_sha256': {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in output.iterdir()}}
     (output / 'INTERPRET_COMPLETE.json').write_text(json.dumps(provenance, indent=2) + '\n')
 
