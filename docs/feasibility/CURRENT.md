@@ -1,5 +1,23 @@
 # 安全未完成状态的可行性见证与受控续接实验
 
+## 最终交付完成（2026-10-02）
+
+本goal实验、分析、图文表与具体研究判断已全部完成。完整1209行（initial304；Spatial9/15各125；Object0为205；Object2/5各225），六主GPU阶段均COMPLETED/0:0。科学源327冻结，上游2457feed5968ae803926e178c8ce8243b9ecdcf9；0训练、0新增API。下文保留过程和旧失败记录，不是新运行队列。
+
+最终唯一Quest交付根：`/projects/p33100/siosio/crashbench_safelibero/feasibility/20261002T135314Z_final_delivery_1209`。本地副本：`results/feasibility/final_1209_20261002/`。主报告RESEARCH_DECISION.md及HTML、research_decisions.csv，附完整evidence/execution/case_review三个目录。FINAL_DELIVERY_MANIFEST共39文件；manifest SHA `8af364bc12985d86dae6adf7ccb81ca9e9d024de6398c11eb57d44bb836732e2`；39文件本地/Quest逐一SHA一致，13图实际视觉QA，HTML三表五图及全部相对链接核验。报告已用open_in_codex排队显示。
+
+完整后处理源c35未改。首次8274556 FAILED/1:0/1m26s，仅提交参数将/projects解析成/gpfs/projects，容器内接触来源匹配失败；原行与输入完好。新唯一根 `20261002T132915Z_analysis_pathfix_c35fe9e57764` 用完全相同源码和29-root输入修正目标路径，**8274894 COMPLETED/0:0/1m25s**。不要使用旧失败根的report路径。以后CB_ANALYSIS_TARGET必须保持/projects逻辑路径，不在提交主机解析为/gpfs别名。RECOVERY记录及失败日志保留。
+
+全共同轨迹审计通过：390预算对、181未干预AEGIS对照、120初始配对组、103分叉前缀组。29接触根完整，95条合格同300步proxy成功均有回放，成功接触未知数0；46条短预算复用仅为相同完整轨迹的审计转移，不增加独立试验数。原rows SHA `58ae9d29810b780a108c391a12085a001d3d70343ecf6ba52f27e33d71ace0cc`，最终supplements SHA `9311df2e2eb3a6c57b69976ad5724ddcb414c8ea7e5a8e660aec8a814ff412fb`。
+
+Object5最终GPU **8259539 COMPLETED/0:0/3h14m02s**，控制器 **8259540 COMPLETED/0:0/12s**，receipt=all_scientific_stages_complete。补齐接触根：repeat1 `20261002T112548Z_object_05_repeat1_suffix_contacts_6cd022f87faa`，8264569 completed2m；repeat2 `20261002T120633Z_object_05_repeat2_suffix_contacts_6cd022f87faa`，8267007 completed1m39s；repeat3 `20261002T124621Z_object_05_repeat3_suffix_contacts_6cd022f87faa`，8271625 completed2m38s；repeat4 `20261002T131942Z_object_05_repeat4_suffix_contacts_6cd022f87faa`，8274149 completed2m23s；均0:0且原保存物理检查点、row SHA通过。
+
+案例图文源f2041f49eb0af2d1ec12172a27d7b3eb441a2265，根 `20261002T110710Z_case_review_f2041f49eb0a`，**8275291 COMPLETED/0:0/17s**。读取25条Object5同300步reference轨迹、剔除前缀、导出动作前观察摘要／阶段CSV和repeat0实际三帧；不运行新仿真。28项本地及Quest检查通过，九科学模块仍与327逐字节相同。
+
+研究判断：Object5额外接触条件下、同300续接预算、同组早晚参考t152为5→3，t252为4→1（repeat1此前已接触，原行保留），支持加强方向一的固定专家相对能力诊断，真实无解未知；r0晚期目标侧倒，末端运输而目标未随行。Object0/2参考同预算保持能力，晚期原剩余预算失败不能当机会衰退。普通库唯一额外接触合格成功Object0/release5/t0为1/5，未达到方向二所需稳定候选依据；Spatial9/15直接初始reference虽proxy10/10均有接触，t77组合前缀+reference分别1/2与4/5；Spatial3初始reference0/10，未分叉，不等于候选全失败。身份/几何修正未恢复六诊断的安全完成；Spatial联合修正后发生不安全完成，不能把所有状态称安全未完成。
+
+完整原生差异如实保留：995条RGB变体，25124条原生数值非零记录，全预测chunk最大L∞2.033041，首个实际5-action提案最大差异0.0037389，905个分叉的原生首chunk非零。可比性来自显式共同输入/RNG提案回放与实际完整执行配对，不能声称原生差异自然消失；结论限于受控机制条件。十次确定性参考fresh执行不认证高概率。原始raw、全部旧失败根和历史保留结果都可恢复。Quest live d22035816647321b8c9c44674efb76273916db95仍clean；此goal没有后继训练或实验任务。
+
 用户于2026-10-01明确授权本诊断，全部仿真、推理、分析与绘图在Quest执行；无训练、阈值搜索或新任务。六个诊断状态为Spatial I/task1的3、9、15与Object I/task2的0、2、5；正常对照为Spatial I/task1的1与Object II/task1的2。不是总体评估或概率认证。
 
 ## 最新作业（必须读取实际receipt/status）

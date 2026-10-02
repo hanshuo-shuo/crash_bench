@@ -1,4 +1,35 @@
-# Current — SafeLIBERO reproduction, 2026-09-26
+# Current — SafeLIBERO reproduction and diagnostic findings, 2026-10-02
+
+## Latest authorized diagnostic complete
+
+The user's 2026-10-01 feasibility-witness / controlled-continuation goal is
+complete: 1209 Quest executions (304 initial, 905 forks), all six scientific GPU
+stages COMPLETED/0:0, no training and zero new API calls. The public benchmark
+and original physical robot capabilities remain fixed. The historical
+reproduction scope below is separate from this explicitly authorized diagnosis.
+
+Read [feasibility/CURRENT.md](feasibility/CURRENT.md) for exact source, Slurm and
+output provenance. Final Chinese report, figures and CSV are saved locally in
+`results/feasibility/final_1209_20261002/RESEARCH_DECISION.md` and on Quest in
+`/projects/p33100/siosio/crashbench_safelibero/feasibility/20261002T135314Z_final_delivery_1209/`.
+All 39 delivered files match their Quest hashes; 13 images were visually checked.
+
+Object5 has a matched, equal-budget decline of the fixed reference (5→3 at
+t152, 4→1 at t252); this is expert-relative ability evidence, not proof of true
+infeasibility. Object0/2 reference failures at late checkpoints are explained by
+the tested remaining-time budget. The ordinary library has only one contact-
+qualified success (Object0 release5/t0, 1/5), so it does not yet support direction
+two. Geometry corrections produce unsafe completion in Spatial cases; direct
+Spatial9/15 reference witnesses pass the displacement proxy but have physical
+contacts. Native numeric differences remain recorded and controlled through
+common-proposal replay; no inconsistent repetitions were discarded.
+
+The full-budget/common-trajectory audit passed 390 pairs and 181 unchanged-AEGIS
+controls. Final report job8274894 and case-review job8275291 completed successfully;
+the earlier report-only path-alias failure8274556 remains recoverable. Quest live
+checkout remains clean at d22035816647321b8c9c44674efb76273916db95. No further
+training, new candidates, threshold search or follow-on experiment is queued by
+this completed goal.
 
 The user authorized keeping eight useful CrashBench results, archiving the rest,
 and starting nominal pi0.5-LIBERO and full AEGIS on public SafeLIBERO. Scientific
