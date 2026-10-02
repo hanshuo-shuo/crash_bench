@@ -29,8 +29,14 @@ def audit(root, case_file):
     sys.path[:0] = [str(upstream / 'main'), str(upstream / 'safelibero')]
     from libero.libero import benchmark, get_libero_path
     from libero.libero.envs.env_wrapper import ControlEnv
+    reset_forward = {'calls': 0, 'scope': 'legacy headless initialization'}
+    if config.get('replay_renderer_reset_forward', False):
+        from robosuite.environments.base import MujocoEnv
+        from reset_forward import replay_renderer_reset_forward
+        reset_forward = replay_renderer_reset_forward(MujocoEnv)
     results = []
     for name in config['run_ids']:
+        reset_calls_before = reset_forward['calls']
         directory = target / 'runs' / name
         expected = json.loads((directory / 'row.json').read_text())
         state = next(s for s in STATES if s['id'] == expected['state'])
@@ -123,6 +129,8 @@ def audit(root, case_file):
                       'replay_success': bool(done), 'replay_verified': verified, 'contact_sample_counts': counts,
                       'body_pairs': sorted(set(tuple(e['body_pair']) for e in events)),
                       'events': events, 'slurm_job': os.environ['SLURM_JOB_ID'],
+                      'renderer_reset_forward_replayed': bool(config.get('replay_renderer_reset_forward', False)),
+                      'initialization_forward_calls': reset_forward['calls'] - reset_calls_before,
                       'scope': 'auxiliary integration-step contact audit; official action-end displacement scoring unchanged'}
             results.append(result)
             (root / 'CONTACT_SUBSTEPS.json').write_text(json.dumps(results, indent=2) + '\n')
