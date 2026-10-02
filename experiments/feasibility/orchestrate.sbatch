@@ -13,5 +13,8 @@ TARGET="${CB_FEASIBILITY_TARGET:?}"
 PREDECESSOR="${CB_FEASIBILITY_PREDECESSOR:?}"
 cd "$CONTROLLER/source"
 sha256sum --quiet -c "$CONTROLLER/source.sha256"
+module purge
+module load git/2.37.2
+git --version
 export PYTHONNOUSERSITE=1 PYTHONDONTWRITEBYTECODE=1
 /projects/p33100/siosio/envs/openpi/bin/python "$CONTROLLER/source/experiments/feasibility/orchestrate.py" "$TARGET" "$CONTROLLER" "$PREDECESSOR"
