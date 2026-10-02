@@ -177,3 +177,13 @@ ObjectII对照旧接触job8221208 FAILED/1:0/42s，初始化qpos不相同，未�
 
 最新最终分析准备根 **20261002T031841Z_analysis_0ca3e13f0c32**，源0ca3e13f0c32d2f7acfef3fff84e18cd1bac5cf7（Quest23项通过，九科学模块等于327）。36e准备根已SUPERSEDED。0ca准备根仍未提交，输入已用11个统一新根替换旧112接触输入；旧supplements原文保存在supplements_before_renderer_forward.json，变更映射保存在SUPPLEMENT_UPDATE_renderer_forward.json，新SHA7493ee2ba67ec753fbbb726941239fd365bc82fbda7df14eafb3c2af30a8c646。其SOURCE不变，不另归档分析源。
 仍须等待全部三Object分叉；全部共同预算/未干预轨迹审计；11个统一接触job成功与全部112receipt；无先前接触前缀中代理安全候选／参考的保存动作接触回放（用源6cd、reset_forward=true，新根）。把新续接contact roots加入未提交分析输入，保留前版manifest并更新SHA。最后提交0ca的interpret.sbatch、实际查看全部新图、只读取回并验SHA、写具体判断表。未知接触不能充当稳定恢复证据，不能凭现有半程结果mark goal complete。Goal仍active，无需用户输入。
+
+## 统一112回放完整与Spatial剩余成功续接核验
+
+统一11个作业已实际全部COMPLETED/0:0，112/112接触receipt和原保存检查点qpos/qvel/ctrl逐字节核验、任务/位移复现全部通过；每例renderer_reset_forward_replayed=true。batch/AUDIT_COMPLETE.json存全部实际Slurm状态与11个CONTACT_SUBSTEPS.json SHA256。不是只查看SUBMITTED或以missing句柄推断完成。
+末次主Object0 GPU8226877实际RUNNING/qgpu0403/16m23s，累计573；8226880 PENDING/Dependency，主无STOP。后续只按最新Slurm与progress/receipt判断，不以此静态记录猜进度。
+
+已根据完整两个Spatial分叉和统一25条前缀接触记录，提交所有剩余25条“无先前机器人／目标-障碍接触前缀、官方代理安全完成、同300步续接预算”的Spatial参考／普通候选轨迹回放。此前已精确审计的t77/repeat2参考不重复计数；此前已接触的分叉保留原结果、不进入强安全恢复子集。实际25条全是reference，因为所有合格普通候选没有代理安全成功。
+batch：`/projects/p33100/siosio/crashbench_safelibero/feasibility/20261002T043023Z_spatial_suffix_contacts_6cd022f87faa`。
+三个源6cd/reset_forward=true独立根：20261002T043033Z_spatial_suffix_contacts_chunk0 **8229645**（10）；20261002T043034Z_spatial_suffix_contacts_chunk1 **8229646**（10）；20261002T043037Z_spatial_suffix_contacts_chunk2 **8229649**（5，afterany8229645）。两个CPU链，主GPU与其源码不变。以上仅SUBMITTED，仍须读实际Slurm/完整接触receipt。
+完成后把这三个新root加入0ca未提交分析supplements，保存之前manifest和变更SHA；Object三个状态完成后，同样覆盖每个合格且代理成功的同300步续接，未知接触不能当作成功或失败。预算/原AEGIS全轨迹审计与最终图文表仍未完成，Goal active。
