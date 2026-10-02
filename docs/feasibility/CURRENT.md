@@ -161,3 +161,19 @@ Spatial15五条首接触109..114，0/27/77此前均无上述接触。Object0 rep
 
 末次8221117已COMPLETED/0:0/3m38s，其余只按sacct真实状态判断；不把afterany队列当完成。8221116 RUNNING/5m17s，8221197 RUNNING/1m31s。主8217077 RUNNING/qgpu0402/34m25s，累计478，继任8217078仍Dependency。
 分析增加initial_reference_contacts逐条要求全部80审计，不由单条筛查外推；官方代理与同时无受保护机器人／目标接触的完成计数分开，确定性重复不认证概率。新增初始接触缺失/不一致门测试，共23项本地通过；仍不更改九个实验核心模块。最终报告补reference_contact_validation.csv/png并嵌入结果、预算及接触图。36e准备分析根尚未提交，将由下一新发布后处理archive替换；最终必须加入本表八根并验证全部COMPLETED/接触receipt，不能提交缺少80逐条核验门的旧分析源码。
+
+## Spatial15完整、Object0实际启动与统一初始化回放
+
+8217077实际COMPLETED/0:0，1h21m；Spatial15全部125分叉完成，主累计554。0/27/77每点的参考均官方代理安全完成5/5；普通三候选与未干预AEGIS全部0/5，两预算计数相同，全部方法退出0。不能将特权参考成功当作普通库选择学习证据。继任8217078实际COMPLETED/0:0/19s，receipt确认branch_object_00 GPU **8226877**及CPU继任 **8226880**。末次8226877 RUNNING/qgpu0403/2m41s，8226880 PENDING/Dependency；主无STOP。
+
+旧初始参考接触链七状态COMPLETED，六诊断计数：Spatial3无完成；Spatial9/15各代理安全10/10但全部有机器人或目标与障碍接触；Object0/2/5各10/10同时通过代理和无上述接触。它们仍是固定初始状态确定性参考重复，不能认证概率。
+ObjectII对照旧接触job8221208 FAILED/1:0/42s，初始化qpos不相同，未生成安全失败标签；诊断8223887 FAILED/1:0/36s保留PHYSICS_MISMATCH.json，最大差1.2281842209915794e-15。原robosuite离屏renderer构造在base._reset_internal中额外做一次sim.forward，旧headless遗漏。源6cd022f87faa394d3859d9c1cf0ce0801fc11a74增加可选reset_forward.py，复现原调用位置，无积分/状态写入或门放宽；25项测试通过，九科学模块仍与327字节相同。
+单例8225458 COMPLETED/0:0/51s，根20261002T034402Z_controlII_reset_forward_6cd022f87faa：0/27/77/152的qpos/qvel/ctrl逐字节复现，完成且无机器人／目标-障碍接触。初始化forward计数2（构造和硬reset各一次）。
+
+因此统一重核验全部80参考+25原前缀+7个Spatial9续接，共112案例，两个CPU串行链。实际batch receipt：
+`/projects/p33100/siosio/crashbench_safelibero/feasibility/20261002T035124Z_renderer_forward_batch_6cd022f87faa/SUBMITTED.json`。
+11作业：8226198、8226200、8226202、8226245、8226248、8226251、8226252、8226254、8226255、8226257、8226258。每根独立SOURCE_COMMIT/source.sha256/cases/SUBMITTED，replay_renderer_reset_forward=true，旧70完成回放和全部失败记录保留，不只重跑或删除不一致重复。
+实际8226198 COMPLETED/0:0/3m26s，ControlII十次全部严格检查点复现、代理安全完成且无上述接触；8226200 COMPLETED/0:0/5m13s，Spatial9十二案例全部严格复现，无上述接触完成仍只有t77/repeat2参考一例。其他统一job按真实Slurm/receipt判断，尚未全部完成。
+
+最新最终分析准备根 **20261002T031841Z_analysis_0ca3e13f0c32**，源0ca3e13f0c32d2f7acfef3fff84e18cd1bac5cf7（Quest23项通过，九科学模块等于327）。36e准备根已SUPERSEDED。0ca准备根仍未提交，输入已用11个统一新根替换旧112接触输入；旧supplements原文保存在supplements_before_renderer_forward.json，变更映射保存在SUPPLEMENT_UPDATE_renderer_forward.json，新SHA7493ee2ba67ec753fbbb726941239fd365bc82fbda7df14eafb3c2af30a8c646。其SOURCE不变，不另归档分析源。
+仍须等待全部三Object分叉；全部共同预算/未干预轨迹审计；11个统一接触job成功与全部112receipt；无先前接触前缀中代理安全候选／参考的保存动作接触回放（用源6cd、reset_forward=true，新根）。把新续接contact roots加入未提交分析输入，保留前版manifest并更新SHA。最后提交0ca的interpret.sbatch、实际查看全部新图、只读取回并验SHA、写具体判断表。未知接触不能充当稳定恢复证据，不能凭现有半程结果mark goal complete。Goal仍active，无需用户输入。
