@@ -143,3 +143,21 @@ Spatial15五条首接触109..114，0/27/77此前均无上述接触。Object0 rep
 
 最新分析准备根已实际创建：`/projects/p33100/siosio/crashbench_safelibero/feasibility/20261002T025810Z_analysis_36e1f2dca1e8`，源36e1f2dca1e834f425296be1f30a62b4da3f2b4c，22项测试在Quest轻量预检再通过，九科学模块逐字节等于主327。supplements已加入上述三完整接触根，SHA256=e5cee5c75d04146b49c886a30e3bc8b675e1c873216cc2eadd7f171c1f92b952。ANALYSIS_READY仍prepared_not_submitted；旧8b准备根已SUPERSEDED，原source/input保留。
 末次实际8217077 RUNNING/qgpu0402/20m55s，累计459条；8217078 PENDING/Dependency。最终在所有批准分叉完成且Slurm成功后，优先核验无先前接触前缀中的代理安全续接（CPU保存动作回放，无新增推理/策略/API），再把完整接触证据加入准备分析输入并提交interpret.sbatch。未知续接接触不能代替研究决定所需的稳定无接触续接证据。Goal仍active，完整Object三状态、全部预算轨迹审计、实际新图QA、最终判断表未完成。
+
+## 初始参考80次新验证的完整接触回放（2026-10-02 UTC）
+
+已用源36e1f2dca1e8提交全部80条保存动作回放，两个CPU串行链（每个任务2核、4GB、10分钟），无GPU/推理/API。每个根有SOURCE_COMMIT、source.sha256、cases.json、SUBMITTED.json；同一已完成原row的SHA固定，不改变主327实验源码。
+
+|状态|新接触根（共同feasibility目录）|作业|afterany前驱|
+|---|---|---:|---:|
+|Spatial3|20261002T030622Z_initial_ref_contacts_spatial_03|8221116|无|
+|Spatial9|20261002T030623Z_initial_ref_contacts_spatial_09|8221117|无|
+|Spatial15|20261002T030625Z_initial_ref_contacts_spatial_15|8221192|8221116|
+|Object0|20261002T030628Z_initial_ref_contacts_object_00|8221197|8221117|
+|Object2|20261002T030630Z_initial_ref_contacts_object_02|8221198|8221192|
+|Object5|20261002T030633Z_initial_ref_contacts_object_05|8221203|8221197|
+|对照Spatial1|20261002T030636Z_initial_ref_contacts_control_spatial_01|8221207|8221198|
+|对照ObjectII2|20261002T030638Z_initial_ref_contacts_control_objectII_02|8221208|8221203|
+
+末次8221117已COMPLETED/0:0/3m38s，其余只按sacct真实状态判断；不把afterany队列当完成。8221116 RUNNING/5m17s，8221197 RUNNING/1m31s。主8217077 RUNNING/qgpu0402/34m25s，累计478，继任8217078仍Dependency。
+分析增加initial_reference_contacts逐条要求全部80审计，不由单条筛查外推；官方代理与同时无受保护机器人／目标接触的完成计数分开，确定性重复不认证概率。新增初始接触缺失/不一致门测试，共23项本地通过；仍不更改九个实验核心模块。最终报告补reference_contact_validation.csv/png并嵌入结果、预算及接触图。36e准备分析根尚未提交，将由下一新发布后处理archive替换；最终必须加入本表八根并验证全部COMPLETED/接触receipt，不能提交缺少80逐条核验门的旧分析源码。

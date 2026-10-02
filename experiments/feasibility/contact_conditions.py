@@ -1,6 +1,6 @@
 """Keep official-proxy eligibility separate from prior protected contacts."""
 from pathlib import Path
-from protocol import BRANCH_BASELINE, CHECKPOINTS, REPEATS, INTERVENTION_CANDIDATES
+from protocol import BRANCH_BASELINE, CHECKPOINTS, REPEATS, INTERVENTION_CANDIDATES, STATES, VALIDATION_REPEATS
 
 
 def merge_replays(records):
@@ -77,4 +77,32 @@ def continuation_contact_counts(rows, contacts, target, eligibility):
                            'completed_without_protected_contact': len(without_contact),
                            'unknown_contact_successes': len(successes) - len(audited),
                            'scope': 'conditional on physically untouched prefixes; unknown is not failure'})
+    return result
+
+
+def initial_reference_contacts(rows, contacts, target, states=None, repeats=range(VALIDATION_REPEATS)):
+    """Require a physical replay for each fresh validation, rather than extrapolating."""
+    states = [s['id'] for s in STATES] if states is None else states
+    target = str(Path(target).resolve())
+    audits = {c['run_id']: c for c in contacts if str(Path(c['source_root']).resolve()) == target}
+    selected = [r for r in rows if r['state'] in states and r['condition'] == 'reference'
+                and r['branch_step'] is None and r['validation']]
+    expected = {(state, repeat) for state in states for repeat in repeats}
+    if len(selected) != len(expected) or {(r['state'], r['repeat']) for r in selected} != expected:
+        raise RuntimeError('Fresh reference validation coverage incomplete')
+    for row in selected:
+        if row['run_id'] not in audits:
+            raise RuntimeError('Fresh reference contact replay missing: ' + row['run_id'])
+        contact = audits[row['run_id']]
+        if (contact['source_success'], contact['source_safe_success']) != (row['success'], row['safe_success']):
+            raise RuntimeError('Reference contact replay outcome disagrees')
+    result = []
+    for state in states:
+        group = [r for r in selected if r['state'] == state]
+        result.append({'state': state, 'n': len(group),
+                       'task_complete': sum(r['success'] for r in group),
+                       'official_proxy_safe_complete': sum(r['safe_success'] for r in group),
+                       'both_safe_complete': sum(r['safe_success'] and
+                            audits[r['run_id']]['completed_without_robot_target_protected_contact'] for r in group),
+                       'scope': 'each fresh execution replayed; fixed initial state and deterministic reference, not probability certification'})
     return result

@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 from protocol import STATES, CONDITIONS, BRANCH_CONDITIONS, INTERVENTION_CANDIDATES, CHECKPOINTS
 from analysis import validate_rows, validate_branch_coverage, continuation_comparisons
-from contact_conditions import merge_replays, prefix_eligibility, continuation_contact_counts
+from contact_conditions import merge_replays, prefix_eligibility, continuation_contact_counts, initial_reference_contacts
 
 
 def outcome_counts(rows):
@@ -114,14 +114,17 @@ def generate(target, output, supplement_file=None):
     contact_rows = merge_replays(contact_rows)
     physical_prefixes = prefix_eligibility(rows, contact_rows, target, approved)
     physical_continuations = continuation_contact_counts(rows, contact_rows, target, physical_prefixes)
+    reference_contacts = initial_reference_contacts(rows, contact_rows, target)
     output.mkdir(exist_ok=False)
     (output / 'decision_evidence.json').write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n')
     (output / 'COMMON_TRAJECTORY_AUDIT.json').write_text(json.dumps(trace_quality, indent=2) + '\n')
     (output / 'contact_evidence.json').write_text(json.dumps({'contact_replays': contact_rows,
         'post_contact_fixed_alternative': alternatives, 'prefix_eligibility': physical_prefixes,
-        'continuation_counts': physical_continuations}, ensure_ascii=False, indent=2) + '\n')
+        'continuation_counts': physical_continuations,
+        'fresh_reference_validation': reference_contacts}, ensure_ascii=False, indent=2) + '\n')
     for filename, records in [('prefix_contact_eligibility.csv', physical_prefixes),
-                              ('continuation_contact_counts.csv', physical_continuations)]:
+                              ('continuation_contact_counts.csv', physical_continuations),
+                              ('reference_contact_validation.csv', reference_contacts)]:
         if records:
             with (output / filename).open('w', newline='') as file:
                 writer = csv.DictWriter(file, fieldnames=list(records[0]))
@@ -155,6 +158,7 @@ def generate(target, output, supplement_file=None):
         writer.writeheader(); writer.writerows(summary)
     table += ['', '本文主矩阵的“安全”沿用官方障碍L1位移代理；接触核验是额外机制证据，未改变1mm边界。',
               '上表省略的不安全完成与不安全未完成均在outcome_categories.csv及下图单独报告。',
+              '![完整结果类别](outcome_categories.png)', '',
               '固定库“至少一个”是事后存在性见证，需要oracle选中；不是已实现选择器的成功率。最佳单一候选同时报告，避免把候选库上界当作部署能力。', '',
               '|状态|后期检查点|共同幸存种子|参考早→晚（同300续接步）|普通库早→晚（同300续接步）|只加预算增益／损失|',
               '|---|---:|---:|---:|---:|---:|']
@@ -166,6 +170,8 @@ def generate(target, output, supplement_file=None):
                 v['early_any_candidate_witness'], v['late_any_candidate_witness'],
                 v['extra_budget_gains'], v['extra_budget_losses']))
     table += ['', '早晚只比较同一重复且后期尚未碰撞的前缀。不存在的检查点不记失败；碰撞后缺失说明安全窗口已关闭，不能当作“未碰撞但不可恢复”。',
+              '![官方代理下的续接时间与预算](time_and_budget.png)', '',
+              '![相同幸存重复与预算比较](matched_time_budget_changes.png)', '',
               '相同预算下固定参考失败仍不能证明真实不可行；专家抓取/运输能力不足与物理不可行尚须分开。普通库没有成功，也不能由特权参考成功推出该库选择学习值得做。', '',
               '预算比较额外核验较短执行的全部已记录字段与较长执行的共同部分完全相同；未干预AEGIS预算对照也与原corrected轨迹一致。审计不通过时不导出预算解释。', '',
               '## 四种结果的研究判断约束', '',
@@ -176,6 +182,26 @@ def generate(target, output, supplement_file=None):
               '|找不到独立见证；或现有候选库没有有效续接|未知或候选库不足；不训练无解分类器，不堆选择模块|', '',
               '本表是证据约束，具体研究建议须结合各状态计数与轨迹审查。不得把四种结果都包装成同一成功论文。']
     if contact_rows:
+        table += ['', '## 初始参考新重复的逐条接触核验', '',
+                  '80条新参考执行均逐条保存动作回放，不从单条筛查轨迹外推接触结果。下面最后一列安全完成要求官方位移代理通过且整段无机器人／目标与受保护障碍接触。',
+                  '仍是固定物理初始状态、确定性参考的重复；计数不是高成功概率认证。', '',
+                  '|状态|新重复n|任务完成|官方代理安全完成|同时通过无上述接触条件的安全完成|',
+                  '|---|---:|---:|---:|---:|']
+        for x in reference_contacts:
+            table.append('|%s|%d|%d|%d|%d|' % (x['state'], x['n'], x['task_complete'],
+                x['official_proxy_safe_complete'], x['both_safe_complete']))
+        table += ['', '![初始参考新重复与接触核验](reference_contact_validation.png)', '']
+        values = np.array([[x['task_complete'], x['official_proxy_safe_complete'], x['both_safe_complete']]
+                           for x in reference_contacts])
+        fig, ax = plt.subplots(figsize=(10, 5.2))
+        ax.imshow(values, vmin=0, vmax=10, cmap='YlGn', aspect='auto')
+        ax.set_xticks(range(3)); ax.set_xticklabels(['Task completed', 'Official proxy safe completion',
+                                                   'Proxy safe + no robot/target\ncontact with protected obstacle'], fontsize=9)
+        ax.set_yticks(range(len(reference_contacts))); ax.set_yticklabels([x['state'] for x in reference_contacts])
+        for i, x in enumerate(reference_contacts):
+            for j in range(3): ax.text(j, i, '%d/%d' % (values[i,j], x['n']), ha='center', va='center', color='#17382d')
+        ax.set_title('Fresh deterministic reference repetitions: each trajectory contact-audited')
+        fig.tight_layout(); fig.savefig(output / 'reference_contact_validation.png', dpi=180); plt.close(fig)
         table += ['', '## 检查点的位移代理资格与实际先前接触', '',
                   '保留全部官方代理资格下的原始分叉，不用接触核验删除重复或掩盖观察／随机状态差异。以下是独立的安全语义核验：只有此前无机器人／目标-障碍接触的前缀，才能支持无上述接触的安全恢复判断。',
                   '接触门只覆盖正式初始化和20步空转之后的执行，不声称核验了更早的初始化过程。', '',
@@ -193,6 +219,7 @@ def generate(target, output, supplement_file=None):
                 x['completed_without_protected_contact'], x['unknown_contact_successes']))
         table += ['', '上表全部使用相同300步续接预算。未知接触不能当作无接触成功，也不计成失败；特权参考与普通候选分开。',
                   '原官方代理早晚／预算图仍完整保留，但涉及此前已接触前缀的点，不能直接解释成未碰撞状态下的安全可行性变化。', '']
+        table += ['![检查点资格与先前接触](prefix_contact_eligibility.png)', '']
         fig, axes = plt.subplots(1, 2, figsize=(11, 4.5), sharey=True)
         for ax, field, title in zip(axes, ['official_proxy_eligible_repeats', 'no_prior_protected_contact_repeats'],
                 ['Official displacement-proxy eligibility', 'No prior robot/target contact with obstacle']):

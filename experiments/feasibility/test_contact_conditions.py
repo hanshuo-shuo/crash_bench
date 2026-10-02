@@ -1,5 +1,5 @@
 import unittest
-from contact_conditions import merge_replays, prefix_eligibility, continuation_contact_counts
+from contact_conditions import merge_replays, prefix_eligibility, continuation_contact_counts, initial_reference_contacts
 
 
 class ContactConditionTests(unittest.TestCase):
@@ -49,6 +49,21 @@ class ContactConditionTests(unittest.TestCase):
         self.assertEqual(result[0]['replay_jobs'], ['1', '2'])
         with self.assertRaises(RuntimeError):
             merge_replays([a, self.contact('base0', target=[10])])
+
+    def test_initial_validation_requires_every_replay_and_keeps_proxy_contact_distinct(self):
+        rows = [dict(state='spatial_09', repeat=r, run_id='validation%d' % r, condition='reference',
+                     branch_step=None, validation=True, success=True, safe_success=True) for r in range(2)]
+        contacts = [dict(self.contact('validation%d' % r, completed=r == 1),
+                         source_success=True, source_safe_success=True) for r in range(2)]
+        result = initial_reference_contacts(rows, contacts, '/tmp/diagnostic', ['spatial_09'], range(2))[0]
+        self.assertEqual(result['task_complete'], 2)
+        self.assertEqual(result['official_proxy_safe_complete'], 2)
+        self.assertEqual(result['both_safe_complete'], 1)
+        with self.assertRaises(RuntimeError):
+            initial_reference_contacts(rows, contacts[:1], '/tmp/diagnostic', ['spatial_09'], range(2))
+        contacts[0]['source_success'] = False
+        with self.assertRaises(RuntimeError):
+            initial_reference_contacts(rows, contacts, '/tmp/diagnostic', ['spatial_09'], range(2))
 
 
 if __name__ == '__main__':
