@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 from protocol import STATES, CONDITIONS, BRANCH_CONDITIONS, INTERVENTION_CANDIDATES, CHECKPOINTS
 from analysis import validate_rows, validate_branch_coverage, continuation_comparisons
+from contact_conditions import merge_replays, prefix_eligibility, continuation_contact_counts
 
 
 def outcome_counts(rows):
@@ -89,6 +90,7 @@ def generate(target, output, supplement_file=None):
                 source = Path(item['source_root']) / 'runs' / item['run_id'] / 'row.json'
                 if hashlib.sha256(source.read_bytes()).hexdigest() != item['source_row_sha256']:
                     raise RuntimeError('Contact source row changed')
+                source_row = json.loads(source.read_text())
                 robot = [e for e in item['events'] if e['category'] == 'robot']
                 target_events = [e for e in item['events'] if e['category'] == 'target']
                 contact_rows.append({k: item[k] for k in ['run_id', 'state', 'source_safe_success',
@@ -97,7 +99,11 @@ def generate(target, output, supplement_file=None):
                     target_contact_actions=sorted(set(e['action'] for e in target_events)),
                     robot_contact_samples=len(robot), target_contact_samples=len(target_events),
                     completed_without_robot_target_protected_contact=item['source_success'] and not robot and not target_events,
-                    robot_body_pairs=sorted(set(tuple(e['body_pair']) for e in robot)))
+                    robot_body_pairs=sorted(set(tuple(e['body_pair']) for e in robot)),
+                    source_root=str(Path(item['source_root']).resolve()),
+                    source_row_sha256=item['source_row_sha256'],
+                    condition=source_row['condition'], branch_step=source_row['branch_step'],
+                    repeat=source_row['repeat'], extra_budget=source_row['extra_budget'])
         for path in supplemental.get('alternative_roots', []):
             folder = Path(path)
             if not (folder / 'ALTERNATIVE_SCREEN_COMPLETE.json').is_file():
@@ -105,11 +111,21 @@ def generate(target, output, supplement_file=None):
             file = folder / 'rows.json'
             supplement_hashes[str(file)] = hashlib.sha256(file.read_bytes()).hexdigest()
             alternatives.extend(json.loads(file.read_text()))
+    contact_rows = merge_replays(contact_rows)
+    physical_prefixes = prefix_eligibility(rows, contact_rows, target, approved)
+    physical_continuations = continuation_contact_counts(rows, contact_rows, target, physical_prefixes)
     output.mkdir(exist_ok=False)
     (output / 'decision_evidence.json').write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n')
     (output / 'COMMON_TRAJECTORY_AUDIT.json').write_text(json.dumps(trace_quality, indent=2) + '\n')
     (output / 'contact_evidence.json').write_text(json.dumps({'contact_replays': contact_rows,
-        'post_contact_fixed_alternative': alternatives}, ensure_ascii=False, indent=2) + '\n')
+        'post_contact_fixed_alternative': alternatives, 'prefix_eligibility': physical_prefixes,
+        'continuation_counts': physical_continuations}, ensure_ascii=False, indent=2) + '\n')
+    for filename, records in [('prefix_contact_eligibility.csv', physical_prefixes),
+                              ('continuation_contact_counts.csv', physical_continuations)]:
+        if records:
+            with (output / filename).open('w', newline='') as file:
+                writer = csv.DictWriter(file, fieldnames=list(records[0]))
+                writer.writeheader(); writer.writerows(records)
     summary = []
     table = ['# 安全未完成诊断：最终决策证据', '',
              '八个预先指定的暴露状态，六个诊断、两个历史安全对照。计数只描述本诊断集；不估计总体性能或认证成功概率。',
@@ -160,6 +176,37 @@ def generate(target, output, supplement_file=None):
               '|找不到独立见证；或现有候选库没有有效续接|未知或候选库不足；不训练无解分类器，不堆选择模块|', '',
               '本表是证据约束，具体研究建议须结合各状态计数与轨迹审查。不得把四种结果都包装成同一成功论文。']
     if contact_rows:
+        table += ['', '## 检查点的位移代理资格与实际先前接触', '',
+                  '保留全部官方代理资格下的原始分叉，不用接触核验删除重复或掩盖观察／随机状态差异。以下是独立的安全语义核验：只有此前无机器人／目标-障碍接触的前缀，才能支持无上述接触的安全恢复判断。',
+                  '接触门只覆盖正式初始化和20步空转之后的执行，不声称核验了更早的初始化过程。', '',
+                  '|状态|检查点|官方代理可分叉重复数|其中此前已接触的重复|此前无上述接触重复数|',
+                  '|---|---:|---:|---|---:|']
+        for x in physical_prefixes:
+            table.append('|%s|%d|%d|%s|%d|' % (x['state'], x['checkpoint'],
+                len(x['official_proxy_eligible_repeats']), str(x['prior_protected_contact_repeats']),
+                len(x['no_prior_protected_contact_repeats'])))
+        table += ['', '|状态|检查点|候选|无先前接触n|其中官方代理安全完成|已核验无上述接触完成|接触尚未知的代理成功|',
+                  '|---|---:|---|---:|---:|---:|---:|']
+        for x in physical_continuations:
+            table.append('|%s|%d|%s|%d|%d|%d|%d|' % (x['state'], x['checkpoint'], x['condition'],
+                x['no_prior_contact_n'], x['no_prior_contact_proxy_safe_complete'],
+                x['completed_without_protected_contact'], x['unknown_contact_successes']))
+        table += ['', '上表全部使用相同300步续接预算。未知接触不能当作无接触成功，也不计成失败；特权参考与普通候选分开。',
+                  '原官方代理早晚／预算图仍完整保留，但涉及此前已接触前缀的点，不能直接解释成未碰撞状态下的安全可行性变化。', '']
+        fig, axes = plt.subplots(1, 2, figsize=(11, 4.5), sharey=True)
+        for ax, field, title in zip(axes, ['official_proxy_eligible_repeats', 'no_prior_protected_contact_repeats'],
+                ['Official displacement-proxy eligibility', 'No prior robot/target contact with obstacle']):
+            matrix = np.array([[len(next(x for x in physical_prefixes if x['state'] == state and x['checkpoint'] == step)[field])
+                                for step in CHECKPOINTS] for state in approved])
+            ax.imshow(matrix, vmin=0, vmax=5, cmap='YlGn', aspect='auto')
+            ax.set_xticks(range(len(CHECKPOINTS))); ax.set_xticklabels(CHECKPOINTS)
+            ax.set_yticks(range(len(approved))); ax.set_yticklabels(approved)
+            for i in range(len(approved)):
+                for j in range(len(CHECKPOINTS)):
+                    ax.text(j, i, str(matrix[i,j]), ha='center', va='center', color='#17382d')
+            ax.set_xlabel('Checkpoint / executed actions'); ax.set_title(title, fontsize=10)
+        fig.suptitle('Fork checkpoint counts: retained records, separate contact criterion')
+        fig.tight_layout(); fig.savefig(output / 'prefix_contact_eligibility.png', dpi=180); plt.close(fig)
         table += ['', '## 官方代理与实际受保护障碍接触分开', '',
                   '只读回放所有保存动作；在每个原MuJoCo积分步后读取接触，不增加积分或改写状态。初始及已存检查点的qpos/qvel/ctrl逐字节核验，官方最大位移和任务结果复现。',
                   '下表动作数是存在接触的不同动作数；多个几何对或子步不计成多次独立碰撞。与桌面的支撑接触不在机器人／目标接触计数中。', '',

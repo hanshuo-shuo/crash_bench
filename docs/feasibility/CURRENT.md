@@ -127,3 +127,16 @@ Spatial9首个重复的0/27步完整候选预算对比已形成；主根EARLY_CO
 8211895实际COMPLETED/0:0，1h09m48s；主根branch_spatial_09_COMPLETE.json与rows.json确认125个分叉，累计429，STOP不存在。五个重复中，reference在t0/t27均官方代理安全完成5/5，在t77为4/5；原剩余预算与300步续接预算计数一致。普通候选只有lift_then_nominal在t77为2/5，两预算相同；其余普通候选及未干预AEGIS在全部可用检查点均0/5。2/5不足以称稳定有效或高概率认证；完整共同轨迹审计及逐条物理接触审计尚未完成，不能由官方代理结果推出更强无接触安全。
 
 继任控制器8211896实际COMPLETED/0:0，12s，receipt确认提交branch_spatial_15 GPU **8217077**及其afterany控制器 **8217078**。最新实际队列8217077 PENDING/Priority，8217078 PENDING/Dependency。不要等待已完成的Spatial9句柄，也不要以静态文档猜后继进度。仍须Spatial15与Object0/2/5、完整预算轨迹审计、最新8b分析图文表与最终研究判断。Goal仍active；不改变主327科学源或Quest live checkout。
+
+## 完整前缀接触核验与Spatial9续接安全语义（2026-10-02 UTC）
+
+8217077随后实际RUNNING/qgpu0402，最新已439条；8217078仍Dependency。额外三项只读动作回放CPU均实际COMPLETED/0:0，源8b0b7d5ed879，所有qpos/qvel/ctrl保存检查点精确、位移和任务结果复现：
+- 8217537，4m44s，`20261002T024159Z_spatial09_fork_contacts_8b0b7d5ed879`：Spatial9全部五corrected前缀、t77五参考及两个代理安全lift_then_nominal。
+- 8217703，4m33s，`20261002T024412Z_prefix_contacts_spatial15_object00`：Spatial15/Object0全部十corrected前缀。
+- 8217706，4m39s，`20261002T024414Z_prefix_contacts_object02_object05`：Object2/5全部十corrected前缀。
+
+全部25条corrected基线现有完整子步机器人／目标-障碍接触证据。Spatial9首接触动作各为76、77、116、73、116，因此t77五个官方代理可分叉中只有repeat2/4此前无上述接触。两个lift代理成功repeat1/3早在前缀中有目标-障碍接触，整段都不是无接触安全恢复；不能凭2/5推进候选选择。t77 reference的repeat2是完整合法前缀+特权参考后缀无上述接触完成，动作回放精确复现；repeat4未完成。它是具体复合轨迹见证，不是从初始独立rim参考的高概率认证。
+
+Spatial15五条首接触109..114，0/27/77此前均无上述接触。Object0 repeat1首接触140（152已被官方代理门排除），repeat3首接触249但252官方代理仍合格，因此252四个代理可分叉只有三个无先前接触。Object2五条整段无上述接触。Object5 repeat1首接触204，252代理五个可分叉只有四个无先前接触。
+
+全部原矩阵和原分叉保留；最终补列严格前缀资格和未知续接接触数，不删除重复来声称观察/RNG混杂已排除。contact_conditions.py与新增四项语义测试，连同既有18项共22项通过，新增严格前缀CSV/图及续接接触计数。主实验九模块与327保持不变；仅后处理更新。旧8b分析根尚未提交，需使用后续新发布分析archive并加入这三完整contact roots；不能再提交缺少严格前缀区分的旧8b最终分析。所有新数值分析与绘图仍在Quest CPU作业执行。
