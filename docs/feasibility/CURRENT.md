@@ -91,3 +91,12 @@ Goal保持active：完整initial、批准分叉、最终图文表与研究建议
 阶段性接触图报告：8197299 COMPLETED/0:0/22s，旧图轴标签重叠不交付；已提交修正布局8197680，根20261001T230540Z_contact_report_c53449c82618。读取实际Slurm/REPORT_COMPLETE后，查看PNG并只读取回本地，不能将阶段性报告当最终研究完成。
 
 8197680实际COMPLETED/0:0，18s；修正接触图已实际查看，标签清楚。图/中文报告/CSV/JSON及manifest仅只读取回results/feasibility/contact_screen_20261001，四个导出文件SHA256逐一匹配；PNG为22c6d67b7f1fadad7340312e66f6bc36069f186d0e604f1bc32a3198db4441f5。该报告只含单次筛查，不是最终目标完成。最终分析准备根现为20261001T230540Z_analysis_c53449c82618；旧865未提交且SUPERSEDED保留。
+
+## 分叉前实际检查点覆盖（仍需等待新参考验证）
+
+主initial的六诊断状态各五个策略种子的五条件已完成；六诊断全部条件的安全完成均为0/5。身份为no-op；几何修正带来部分不安全完成，没有恢复安全完成。两正常对照及参考十次新验证仍在完整阶段继续，不把这部分描述成全304已完成。
+主根PRE_BRANCH_CHECKPOINT_AUDIT.json与PRE_BRANCH_CHECKPOINT_AUDIT_OBJECT.json记录实际前缀覆盖。
+Spatial9/15潜在各125个分叉案例，只存在未触发官方碰撞代理的0/27/77步；152/252在已不安全结束之后，不执行、不计失败。
+Object0潜在205个案例：repeat1的152已碰撞、252未到达；Object2/5各225个案例且五个检查点完整。早晚比较Object0晚期用四个共同幸存重复，不把缺少的一次当失败。
+六诊断的所有30个corrected基线均未恰好在计划检查点终止，原schedule的终止边界不影响这批数据；实际branch_schedule校验通过，没有“已到达却缺失”的检查点。
+这些是覆盖核验，未构成分叉资格授权；必须等INITIAL_COMPLETE和BRANCH_GATE。按当前可复现筛查预期五资格状态，但不得以预期替代实际门。独立参考十次验证未完成前不自行提交。
