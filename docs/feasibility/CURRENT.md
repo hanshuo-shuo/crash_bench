@@ -195,3 +195,9 @@ batch：`/projects/p33100/siosio/crashbench_safelibero/feasibility/20261002T0430
 从原初始状态出发的完整合法“受控AEGIS前缀+特权参考后缀”已形成无上述接触完成轨迹（Spatial9一例、Spatial15四例），并由独立保存动作回放复现；它们有别于初始直接固定rim参考（新验证10/10均有接触），不得混称为同一个初始参考方法的成功率。也不能由特权参考成功推出普通候选选择学习有效。Spatial证据没有显示无上述接触的早期参考机会随时间下降；未到达/已碰撞的更晚检查点不记失败。
 统一112最新读取八状态的逐条参考接触计数：Spatial3代理及强接触条件均0/10；Spatial9/15代理各10/10、强条件各0/10；Object0/2/5及两个正常对照均同时通过代理与无上述接触10/10。仍是确定性固定状态重复，不是物理扰动或概率认证。
 末次主Object0 8226877 RUNNING/qgpu0403/39m42s，累计599，继任8226880 Dependency。仍待Object三状态全部完成及其合格成功续接接触审计；最终全部共同轨迹/预算审计；图文表实际渲染QA和研究判断。Goal active。
+
+## 接触条件下的配对预算分析补全
+
+新增contact_qualified_view仅生成派生分析视图，原rows/评分不变；按同一无先前接触重复比较早晚同300步续接。预算短轨迹只有在已通过完整共同记录审计、完整动作数相同、完整初始执行指纹相同且长轨迹有接触核验时，才转移接触结果；不是新的独立试验。缺少任何合格代理成功（包括未干预AEGIS预算对照）的接触核验即停止最终导出。三项新语义测试后共28项通过；九科学模块仍逐字节等于327。
+最终新增physical_time_budget.json/csv、contact_time_budget.png，分别列固定参考、普通候选库oracle与未干预AEGIS的预算效果；早晚参考/普通库仅同一幸存且此前无机器人／目标-障碍接触的重复。physical_libraries同时报告最佳单一候选与库存在性上界，不把privileged reference当普通候选。源0ca准备分析尚未提交，将由下一新发布后处理archive替换，必须保留其最新supplements（SHA9739ca0c0e17fba28e17cdf86bc027fc85e20082924a41dafd955cae398e9641）全部16个contact roots及alternative输入。
+剩余Object成功续接接触回放须覆盖所有BRANCH_CONDITIONS，包括aegis（同300步续接预算），不限于reference/三个普通候选；仍只在此前无上述接触的前缀且代理安全完成中核验，原不合格行保留。原剩余预算成功可用上述完整同轨迹审计转移，否则需单独回放，不能放宽门。Goal仍active，不改变活跃Quest科学源。

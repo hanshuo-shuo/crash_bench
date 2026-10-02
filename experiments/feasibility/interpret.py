@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 from protocol import STATES, CONDITIONS, BRANCH_CONDITIONS, INTERVENTION_CANDIDATES, CHECKPOINTS
 from analysis import validate_rows, validate_branch_coverage, continuation_comparisons
-from contact_conditions import merge_replays, prefix_eligibility, continuation_contact_counts, initial_reference_contacts
+from contact_conditions import merge_replays, prefix_eligibility, continuation_contact_counts, initial_reference_contacts, contact_qualified_view
 
 
 def outcome_counts(rows):
@@ -116,16 +116,37 @@ def generate(target, output, supplement_file=None):
     physical_prefixes = prefix_eligibility(rows, contact_rows, target, approved)
     physical_continuations = continuation_contact_counts(rows, contact_rows, target, physical_prefixes)
     reference_contacts = initial_reference_contacts(rows, contact_rows, target)
+    physical_view = contact_qualified_view(rows, contact_rows, target, physical_prefixes, trace_quality)
+    physical_time = []
+    indexed = {(r['state'], r['repeat'], r['branch_step'], r['extra_budget'], r['condition']): r
+               for r in physical_view['rows']}
+    for state in approved:
+        for comparison in continuation_comparisons(physical_view['rows'], state):
+            step = comparison['checkpoint']
+            for condition in ['aegis', 'reference']:
+                cohort = comparison['budget_matched_repeats']
+                before = [indexed[(state, r, step, 0, condition)]['safe_success'] for r in cohort]
+                after = [indexed[(state, r, step, step, condition)]['safe_success'] for r in cohort]
+                comparison[condition + '_budget_gains'] = sum(not a and b for a,b in zip(before,after))
+                comparison[condition + '_budget_losses'] = sum(a and not b for a,b in zip(before,after))
+            physical_time.append(dict(comparison, state=state,
+                scope='same untouched surviving repeats; proxy plus no protected robot/target contact; fixed reference ability, not true infeasibility'))
+    physical_libraries = [dict(finite_library(physical_view['rows'], state, step, step), state=state, checkpoint=step)
+                          for state in approved for step in CHECKPOINTS]
     output.mkdir(exist_ok=False)
     (output / 'decision_evidence.json').write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n')
     (output / 'COMMON_TRAJECTORY_AUDIT.json').write_text(json.dumps(trace_quality, indent=2) + '\n')
+    (output / 'physical_time_budget.json').write_text(json.dumps({'comparisons': physical_time,
+        'libraries': physical_libraries, 'contact_audit_aliases': physical_view['audit_aliases'],
+        'scope': physical_view['scope']}, indent=2) + '\n')
     (output / 'contact_evidence.json').write_text(json.dumps({'contact_replays': contact_rows,
         'post_contact_fixed_alternative': alternatives, 'prefix_eligibility': physical_prefixes,
         'continuation_counts': physical_continuations,
         'fresh_reference_validation': reference_contacts}, ensure_ascii=False, indent=2) + '\n')
     for filename, records in [('prefix_contact_eligibility.csv', physical_prefixes),
                               ('continuation_contact_counts.csv', physical_continuations),
-                              ('reference_contact_validation.csv', reference_contacts)]:
+                              ('reference_contact_validation.csv', reference_contacts),
+                              ('physical_time_budget.csv', physical_time)]:
         if records:
             with (output / filename).open('w', newline='') as file:
                 writer = csv.DictWriter(file, fieldnames=list(records[0]))
@@ -220,6 +241,50 @@ def generate(target, output, supplement_file=None):
                 x['completed_without_protected_contact'], x['unknown_contact_successes']))
         table += ['', '上表全部使用相同300步续接预算。未知接触不能当作无接触成功，也不计成失败；特权参考与普通候选分开。',
                   '原官方代理早晚／预算图仍完整保留，但涉及此前已接触前缀的点，不能直接解释成未碰撞状态下的安全可行性变化。', '']
+        table += ['## 无先前接触子集的配对时间与预算', '',
+                  '下面早晚使用同一幸存重复、同300步续接预算，并要求整段同时通过官方代理和无机器人／目标-障碍接触条件。未干预AEGIS额外预算单列，避免把加时间的效果当作介入收益。',
+                  '短预算成功轨迹仅在完整记录字段/动作数及完整初始执行指纹都相同时复用已核验长预算接触结果；这些是审计转移，不增加独立试验数。缺少成功续接接触证据即停止最终导出。', '',
+                  '|状态|后期检查点|同一无先前接触n|参考早→晚|普通库早→晚|加预算：AEGIS增益/损失|加预算：参考增益/损失|加预算：普通库增益/损失|',
+                  '|---|---:|---:|---:|---:|---:|---:|---:|']
+        for x in physical_time:
+            table.append('|%s|%d|%d|%d→%d|%d→%d|%d/%d|%d/%d|%d/%d|' % (
+                x['state'], x['checkpoint'], len(x['same_surviving_prefix_repeats']),
+                x['reference_early_witness'], x['reference_late_witness'],
+                x['early_any_candidate_witness'], x['late_any_candidate_witness'],
+                x['aegis_budget_gains'], x['aegis_budget_losses'],
+                x['reference_budget_gains'], x['reference_budget_losses'],
+                x['extra_budget_gains'], x['extra_budget_losses']))
+        table += ['', '![接触条件下的同组时间与预算比较](contact_time_budget.png)', '',
+                  '参考或有限库机会下降只能支持该专家／候选能力随状态变化，仍不能证明物理无解。所有原始记录及官方代理图保留。', '']
+        fig, axes = plt.subplots(len(approved), 2, figsize=(12, 3.2 * len(approved)), squeeze=False)
+        for pair, state in zip(axes, approved):
+            matched = [x for x in physical_time if x['state'] == state and x['same_surviving_prefix_repeats']]
+            steps = [x['checkpoint'] for x in matched]
+            n = np.asarray([len(x['same_surviving_prefix_repeats']) for x in matched], dtype=float)
+            pair[0].plot(steps, np.asarray([x['reference_late_witness'] - x['reference_early_witness'] for x in matched]) / n,
+                         'o-', color='#855ba2', label='Privileged reference')
+            pair[0].plot(steps, np.asarray([x['late_any_candidate_witness'] - x['early_any_candidate_witness'] for x in matched]) / n,
+                         's-', color='#26866f', label='Ordinary library existence (oracle)')
+            for step, count in zip(steps,n): pair[0].text(step, 1.03, 'n=%d' % count, ha='center', fontsize=8)
+            pair[0].set_title(state + ': matched no-contact opportunity change')
+            pair[0].set_ylabel('(Late - early witnesses) / matched n')
+            budget = [x for x in physical_time if x['state'] == state and x['budget_matched_repeats']]
+            bs = [x['checkpoint'] for x in budget]
+            bn = np.asarray([len(x['budget_matched_repeats']) for x in budget], dtype=float)
+            for gain, loss, marker, color, label in [
+                ('aegis_budget_gains','aegis_budget_losses','o','#4374ae','Unchanged AEGIS'),
+                ('reference_budget_gains','reference_budget_losses','s','#855ba2','Privileged reference'),
+                ('extra_budget_gains','extra_budget_losses','x','#26866f','Ordinary library (oracle)')]:
+                pair[1].plot(bs, np.asarray([x[gain]-x[loss] for x in budget]) / bn,
+                             marker+'-', color=color, label=label)
+            for step,count in zip(bs,bn): pair[1].text(step, 1.03, 'n=%d' % count, ha='center', fontsize=8)
+            pair[1].set_title(state + ': remaining vs 300-action suffix')
+            pair[1].set_ylabel('Budget-only witness change / matched n')
+            for ax in pair:
+                ax.axhline(0, color='#555555', linewidth=.8); ax.set_ylim(-1.1,1.16)
+                ax.set_xlabel('Later checkpoint / executed actions')
+        axes[0,0].legend(fontsize=8, loc='lower left'); axes[0,1].legend(fontsize=8, loc='lower left')
+        fig.tight_layout(); fig.savefig(output / 'contact_time_budget.png', dpi=180); plt.close(fig)
         table += ['![检查点资格与先前接触](prefix_contact_eligibility.png)', '']
         fig, axes = plt.subplots(1, 2, figsize=(11, 4.5), sharey=True)
         for ax, field, title in zip(axes, ['official_proxy_eligible_repeats', 'no_prior_protected_contact_repeats'],

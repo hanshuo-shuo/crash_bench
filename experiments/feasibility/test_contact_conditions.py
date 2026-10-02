@@ -1,5 +1,5 @@
 import unittest
-from contact_conditions import merge_replays, prefix_eligibility, continuation_contact_counts, initial_reference_contacts
+from contact_conditions import merge_replays, prefix_eligibility, continuation_contact_counts, initial_reference_contacts, contact_qualified_view
 
 
 class ContactConditionTests(unittest.TestCase):
@@ -64,6 +64,60 @@ class ContactConditionTests(unittest.TestCase):
         contacts[0]['source_success'] = False
         with self.assertRaises(RuntimeError):
             initial_reference_contacts(rows, contacts, '/tmp/diagnostic', ['spatial_09'], range(2))
+
+    def test_budget_contact_alias_requires_entire_trace_and_identical_initial_state(self):
+        remaining = dict(self.fork(0), run_id='remaining', extra_budget=0,
+                         end_step=100, initial_execution_fingerprint='initial')
+        extended = dict(remaining, run_id='extended', extra_budget=77)
+        contact = dict(self.contact('extended', completed=True), source_success=True, source_safe_success=True)
+        gate = [dict(state='spatial_09', checkpoint=77, no_prior_protected_contact_repeats=[0])]
+        quality = dict(status='passed', budget_pairs=[dict(remaining='remaining', extended='extended', verified_common_actions=100)])
+        result = contact_qualified_view([remaining, extended], [contact], '/tmp/diagnostic', gate, quality)
+        self.assertTrue(all(r['safe_success'] for r in result['rows']))
+        self.assertEqual(len(result['audit_aliases']), 1)
+        self.assertTrue(remaining['safe_success'])
+        extended['initial_execution_fingerprint'] = 'different'
+        with self.assertRaises(RuntimeError):
+            contact_qualified_view([remaining, extended], [contact], '/tmp/diagnostic', gate, quality)
+        extended['initial_execution_fingerprint'] = 'initial'
+        quality['budget_pairs'][0]['verified_common_actions'] = 99
+        with self.assertRaises(RuntimeError):
+            contact_qualified_view([remaining, extended], [contact], '/tmp/diagnostic', gate, quality)
+
+    def test_physical_view_preserves_original_proxy_success_and_excludes_touched_prefix(self):
+        row = self.fork(0)
+        contact = dict(self.contact(row['run_id'], target=[80]), source_success=True, source_safe_success=True)
+        gate = [dict(state='spatial_09', checkpoint=77, no_prior_protected_contact_repeats=[0])]
+        quality = dict(status='passed', budget_pairs=[])
+        result = contact_qualified_view([row], [contact], '/tmp/diagnostic', gate, quality)
+        self.assertFalse(result['rows'][0]['safe_success'])
+        self.assertTrue(row['safe_success'])
+        with self.assertRaises(RuntimeError):
+            contact_qualified_view([row], [], '/tmp/diagnostic', gate, quality)
+        gate[0]['no_prior_protected_contact_repeats'] = []
+        self.assertEqual(contact_qualified_view([row], [], '/tmp/diagnostic', gate, quality)['rows'], [])
+
+    def test_matched_physical_time_comparison_uses_late_untouched_cohort(self):
+        from analysis import continuation_comparisons
+        from protocol import BRANCH_CONDITIONS
+        rows = []; contacts = []
+        for step in [0, 77]:
+            for repeat in range(2):
+                for condition in BRANCH_CONDITIONS:
+                    safe = condition == 'reference' and step == 0
+                    row = dict(self.fork(repeat, condition, safe), branch_step=step,
+                               extra_budget=step, run_id='%d_%d_%s' % (step, repeat, condition))
+                    rows.append(row)
+                    if safe:
+                        contacts.append(dict(self.contact(row['run_id'], completed=True),
+                                             source_success=True, source_safe_success=True))
+        gates = [dict(state='spatial_09', checkpoint=0, no_prior_protected_contact_repeats=[0,1]),
+                 dict(state='spatial_09', checkpoint=77, no_prior_protected_contact_repeats=[1])]
+        view = contact_qualified_view(rows, contacts, '/tmp/diagnostic', gates, dict(status='passed', budget_pairs=[]))
+        comparison = continuation_comparisons(view['rows'], 'spatial_09')[0]
+        self.assertEqual(comparison['same_surviving_prefix_repeats'], [1])
+        self.assertEqual(comparison['reference_early_witness'], 1)
+        self.assertEqual(comparison['reference_late_witness'], 0)
 
 
 if __name__ == '__main__':

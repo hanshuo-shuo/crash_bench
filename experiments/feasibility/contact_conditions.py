@@ -1,6 +1,6 @@
 """Keep official-proxy eligibility separate from prior protected contacts."""
 from pathlib import Path
-from protocol import BRANCH_BASELINE, CHECKPOINTS, REPEATS, INTERVENTION_CANDIDATES, STATES, VALIDATION_REPEATS
+from protocol import BRANCH_BASELINE, BRANCH_CONDITIONS, CHECKPOINTS, REPEATS, INTERVENTION_CANDIDATES, STATES, VALIDATION_REPEATS
 
 
 def merge_replays(records):
@@ -58,7 +58,7 @@ def continuation_contact_counts(rows, contacts, target, eligibility):
     for item in eligibility:
         state, step = item['state'], item['checkpoint']
         admitted = set(item['no_prior_protected_contact_repeats'])
-        for condition in ['reference'] + list(INTERVENTION_CANDIDATES):
+        for condition in BRANCH_CONDITIONS:
             selected = [r for r in rows if r['state'] == state and r['branch_step'] == step
                         and r['extra_budget'] == step and r['condition'] == condition]
             if not selected:
@@ -78,6 +78,44 @@ def continuation_contact_counts(rows, contacts, target, eligibility):
                            'unknown_contact_successes': len(successes) - len(audited),
                            'scope': 'conditional on physically untouched prefixes; unknown is not failure'})
     return result
+
+
+def contact_qualified_view(rows, contacts, target, eligibility, trace_quality):
+    """Read-only analysis view; same full audited trajectory can share a contact audit."""
+    if trace_quality.get('status') != 'passed':
+        raise RuntimeError('Common trajectory audit required before physical budget comparisons')
+    target = str(Path(target).resolve())
+    audits = {c['run_id']: c for c in contacts if str(Path(c['source_root']).resolve()) == target}
+    admitted = {(g['state'], g['checkpoint']): set(g['no_prior_protected_contact_repeats']) for g in eligibility}
+    by_id = {r['run_id']: r for r in rows}
+    pairs = {p['remaining']: p for p in trace_quality['budget_pairs']}
+    view = []; aliases = []
+    for row in rows:
+        step = row['branch_step']
+        if step is None or row['repeat'] not in admitted.get((row['state'], step), set()):
+            continue
+        physical_success = False
+        if row['safe_success']:
+            name = row['run_id']
+            if name not in audits:
+                pair = pairs.get(name)
+                extended = by_id[pair['extended']] if pair else None
+                if not (pair and extended['run_id'] in audits and extended['safe_success']
+                        and row['end_step'] == extended['end_step'] == pair['verified_common_actions']
+                        and row.get('initial_execution_fingerprint')
+                        and row['initial_execution_fingerprint'] == extended.get('initial_execution_fingerprint')):
+                    raise RuntimeError('Successful contact-qualified continuation audit missing: ' + name)
+                aliases.append({'remaining': name, 'contact_audit_run': extended['run_id'],
+                                'full_identical_actions': row['end_step'],
+                                'scope': 'audit transfer for identical full execution, not another independent trial'})
+                name = extended['run_id']
+            contact = audits[name]
+            if not contact['source_success'] or not contact['source_safe_success']:
+                raise RuntimeError('Successful contact replay source outcome disagrees')
+            physical_success = bool(contact['completed_without_robot_target_protected_contact'])
+        view.append(dict(row, safe_success=physical_success))
+    return {'rows': view, 'audit_aliases': aliases,
+            'scope': 'derived view only; original rows unchanged; official proxy plus no robot/target protected contact'}
 
 
 def initial_reference_contacts(rows, contacts, target, states=None, repeats=range(VALIDATION_REPEATS)):
