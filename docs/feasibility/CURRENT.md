@@ -204,3 +204,11 @@ batch：`/projects/p33100/siosio/crashbench_safelibero/feasibility/20261002T0430
 
 最新最终分析准备根实际已创建：**20261002T050841Z_analysis_c35fe9e57764**，源c35fe9e5776498aeb8c27b8355ae5a0688151166。Quest28项轻量测试通过，九科学模块逐字节等于主327；完整16 contact roots和alternative输入从0ca复制，SHA仍9739ca0c0e17fba28e17cdf86bc027fc85e20082924a41dafd955cae398e9641。0ca未提交根已SUPERSEDED并保留原source/inputs；不要再提交旧0ca分析。C35 ANALYSIS_READY仍prepared_not_submitted。
 末次实际主Object0 8226877 RUNNING/qgpu0403/1h09m58s，累计644；8226880 PENDING/Dependency。其后两Object尚未开始。后续接触补充与manifest SHA更新都在新c35准备分析根，原输入版须保留。主全部完成、全部成功续接接触核验与common-trace通过后才提交c35/interpret.sbatch；图形仍未实际生成QA，具体研究判断仍未完成。Goal active。
+
+## Object0已完整前三个重复的成功续接接触证据
+
+完整repeat0/1/2的分叉分别45/25/45；按预定规则选所有此前无机器人／目标-障碍接触且代理安全完成的同300步续接，含未干预AEGIS如有成功，实际15条（reference13、nominal2）。不据三重复作全状态判断。两nominal均来自repeat2的152/252步，不是两个独立重复。
+batch `20261002T060522Z_object00_first3_suffix_contacts_6cd022f87faa`：根20261002T060532Z_object00_first3_suffix_chunk0 job **8239088 COMPLETED/0:0/5m17s**，10条；根20261002T060535Z_object00_first3_suffix_chunk1 job **8239090 COMPLETED/0:0/2m58s**，5条。源6cd/reset_forward=true，15条保存检查点严格复现且任务/位移复现，原row SHA逐一匹配；batch/AUDIT_COMPLETE保存Slurm及raw文件SHA。
+13个reference均同时通过代理及无机器人／目标-障碍接触；两个nominal代理成功都接触了障碍（152步案例77个子步样本、252步案例10个，不能当77/10次独立碰撞）。所以前三个完整重复里尚无普通候选强接触条件下成功见证；剩余两个重复仍需完整核验。
+c35未提交分析supplements已加入两根，contact roots现在18个，SHA **74be3a96f995d6dac3452a2a0dcd0a7525e986fe662be2996d19e92d22271751**。旧输入保留supplements_before_object00_first3.json，变更及hash存SUPPLEMENT_UPDATE_object00_first3.json，ANALYSIS_READY仍prepared_not_submitted。
+末次主8226877 RUNNING/qgpu0403/2h15m23s，累计721（进入repeat4），继任8226880 Dependency。等Object0 COMPLETE/Slurm完成后，补audit剩余repeat3/4的所有合格代理成功（所有BRANCH_CONDITIONS）；通过新的18-root配置或两新root查已审计run_ids，避免重复计数。仍须Object2/5全阶段、全部common-trace/物理预算审计、实际图QA和具体判断表。Goal active。
