@@ -254,3 +254,14 @@ Object2官方代理计数：0/27/77的reference两预算均5/5；152/252原剩�
 Object2全部25条合格同300步成功续接接触审计齐全、未知成功接触数0；各检查点同时通过代理及无上述接触5/5。这不是高概率认证，特权reference成功也不是普通库选择能力。完整common-trajectory与budget-alias审计仍待最终CPU分析。
 
 c35准备分析contact roots现 **24**，supplements SHA `d25d74e68a99b27b14cc11f498054a6fdab943100aebf3b48c535ccf69fe9aae`；旧输入及每次hash更新均保留。分析仍未提交。尚须Object5、其所有合格代理成功接触审计、最终全轨迹/配对预算门、Quest实际图QA和具体研究决策表。Goal active。
+
+## Object5 初个重复及补充帧图分析准备
+
+8259539最后核验RUNNING/qgpu0204/1h18m43s，累计1073；repeat1最后一条release5尚未完成。8259540仍Dependency。Object5仍须全225条，不据此提前定路线。
+
+repeat0全部45条已完整。reference的0/27/77两预算均安全完成；152/252即使同300步续接也安全未完成，分别完整执行到452/552，不是方法退出。普通候选与AEGIS没有安全完成。早期三个成功接触根 `20261002T105550Z_object_05_repeat0_suffix_contacts_6cd022f87faa`，**8262731 COMPLETED/0:0/1m27s**，全部保存检查点、row SHA、任务和位移通过，无机器人／目标接触保护障碍。
+c35准备分析已并入，contact roots现 **25**，supplements SHA `321fd7a49b6b764e062aaa41fb91212503114763f6f9b52f3ff2a4a3a1dd8114`；旧输入保留，仍未提交。
+
+实际查看repeat0三个Quest原始帧（初始reference完成228动作、corrected前缀150动作、t152 reference续接至452未完成），只读SCP保存本地 `results/feasibility/object05_case_review/`，三个SHA与Quest匹配。后期奶盒在画面边缘侧倒，reference末端空手走完运输／释放而目标未跟随。这提示固定参考抓取／保持能力变化，不能判真实不可行；原阶段日志包含prefix，任何阶段分析必须剔除step<=branch_step并注明位置是动作前观察。
+
+补充只读轨迹／帧图工具源 **f2041f49eb0af2d1ec12172a27d7b3eb441a2265**，本地及Quest28项检查通过，九科学模块仍与主327逐字节相同。准备根 `20261002T110710Z_case_review_f2041f49eb0a`，REVIEW_READY=prepared_not_submitted；不运行新仿真或修改主源。只在主COMPLETE及c35全common-trajectory audit通过后提交case_review.sbatch（CB_REVIEW_ROOT此根，CB_REVIEW_TARGET主根，CB_REVIEW_INTERPRETED为c35/report），导出全部25条Object5同300步reference运动摘要、阶段CSV、repeat0曲线及实际三帧图；新图必须实际QA。Goal active，正式研究判断仍待其余重复。
