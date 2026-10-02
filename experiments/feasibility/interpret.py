@@ -64,6 +64,7 @@ def generate(target, output, supplement_file=None):
     import matplotlib.pyplot as plt
     from matplotlib.colors import ListedColormap
     import numpy as np
+    count_cmap = ListedColormap(['#f7ecd0', '#e3ecd5', '#c7e1cc', '#b4d9c7'])
 
     target, output = Path(target).resolve(), Path(output).resolve()
     if not (target / 'COMPLETE.json').is_file() or (target / 'STOP.json').exists():
@@ -194,7 +195,7 @@ def generate(target, output, supplement_file=None):
         values = np.array([[x['task_complete'], x['official_proxy_safe_complete'], x['both_safe_complete']]
                            for x in reference_contacts])
         fig, ax = plt.subplots(figsize=(10, 5.2))
-        ax.imshow(values, vmin=0, vmax=10, cmap='YlGn', aspect='auto')
+        ax.imshow(values, vmin=0, vmax=10, cmap=count_cmap, aspect='auto')
         ax.set_xticks(range(3)); ax.set_xticklabels(['Task completed', 'Official proxy safe completion',
                                                    'Proxy safe + no robot/target\ncontact with protected obstacle'], fontsize=9)
         ax.set_yticks(range(len(reference_contacts))); ax.set_yticklabels([x['state'] for x in reference_contacts])
@@ -225,7 +226,7 @@ def generate(target, output, supplement_file=None):
                 ['Official displacement-proxy eligibility', 'No prior robot/target contact with obstacle']):
             matrix = np.array([[len(next(x for x in physical_prefixes if x['state'] == state and x['checkpoint'] == step)[field])
                                 for step in CHECKPOINTS] for state in approved])
-            ax.imshow(matrix, vmin=0, vmax=5, cmap='YlGn', aspect='auto')
+            ax.imshow(matrix, vmin=0, vmax=5, cmap=count_cmap, aspect='auto')
             ax.set_xticks(range(len(CHECKPOINTS))); ax.set_xticklabels(CHECKPOINTS)
             ax.set_yticks(range(len(approved))); ax.set_yticklabels(approved)
             for i in range(len(approved)):
