@@ -212,3 +212,10 @@ batch `20261002T060522Z_object00_first3_suffix_contacts_6cd022f87faa`：根20261
 13个reference均同时通过代理及无机器人／目标-障碍接触；两个nominal代理成功都接触了障碍（152步案例77个子步样本、252步案例10个，不能当77/10次独立碰撞）。所以前三个完整重复里尚无普通候选强接触条件下成功见证；剩余两个重复仍需完整核验。
 c35未提交分析supplements已加入两根，contact roots现在18个，SHA **74be3a96f995d6dac3452a2a0dcd0a7525e986fe662be2996d19e92d22271751**。旧输入保留supplements_before_object00_first3.json，变更及hash存SUPPLEMENT_UPDATE_object00_first3.json，ANALYSIS_READY仍prepared_not_submitted。
 末次主8226877 RUNNING/qgpu0403/2h15m23s，累计721（进入repeat4），继任8226880 Dependency。等Object0 COMPLETE/Slurm完成后，补audit剩余repeat3/4的所有合格代理成功（所有BRANCH_CONDITIONS）；通过新的18-root配置或两新root查已审计run_ids，避免重复计数。仍须Object2/5全阶段、全部common-trace/物理预算审计、实际图QA和具体判断表。Goal active。
+
+## Object0完整与Object2实际启动
+
+主GPU8226877实际COMPLETED/0:0/2h48m05s，Object0全部205分叉，主累计759，branch_object_00_COMPLETE存在，STOP不存在。控制器8226880实际COMPLETED/0:0/21s，receipt提交branch_object_02 GPU **8243879**与继任CPU **8243880**；末次8243879 RUNNING/qgpu0403/2m53s，8243880 Dependency。不要再等已完成的Object0句柄。
+Object0全部五重复官方代理计数：参考0/27/77步5/5，两预算相同；152/252步原剩余预算0/4，同300续接预算4/4。普通候选只有release5在t0为1/5（repeat3），nominal在152/252同300续接各1/4（均repeat2，已核验有接触）；其余普通候选以及未干预AEGIS全检查点全预算0。后期参考的短预算失败由增加时间恢复，不能据此说机会随时间下降；最终仍需强接触条件同组预算全轨迹审计。
+剩余合格同300续接代理成功共10条（reference9、release5一条），全来自repeat3/4；repeat3/252此前实际已接触，不列入强恢复子集，原行保留。源6cd/reset_forward=true已提交新唯一根 **20261002T065302Z_object00_remaining_suffix_contacts_6cd022f87faa**，CPU **8244439**（10案例），SUBMITTED.json。目前仅提交，须实际Slurm/CONTACT receipt后并入c35最新18-root manifest并保留旧版本；不要把一条release5代理成功当无接触成功或高成功概率。
+仍待Object2/5完整、所有合格代理成功（含aegis预算对照）的接触核验、全common-trace预算审计、c35实际图QA、最终具体判断表；Goal active。
