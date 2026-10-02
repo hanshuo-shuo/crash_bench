@@ -100,3 +100,11 @@ Spatial9/15潜在各125个分叉案例，只存在未触发官方碰撞代理的
 Object0潜在205个案例：repeat1的152已碰撞、252未到达；Object2/5各225个案例且五个检查点完整。早晚比较Object0晚期用四个共同幸存重复，不把缺少的一次当失败。
 六诊断的所有30个corrected基线均未恰好在计划检查点终止，原schedule的终止边界不影响这批数据；实际branch_schedule校验通过，没有“已到达却缺失”的检查点。
 这些是覆盖核验，未构成分叉资格授权；必须等INITIAL_COMPLETE和BRANCH_GATE。按当前可复现筛查预期五资格状态，但不得以预期替代实际门。独立参考十次验证未完成前不自行提交。
+
+## 最终预算解释的额外核验
+
+源8b0b7d5ed879新增trace_audit.py；18项机制/分析/审计测试通过。最终分析必须核对每对原剩余预算/300步续接预算在共同部分的全部记录字段相同；未干预AEGIS也须与原corrected轨迹共同部分相同，不能提前停止。违背即不导出预算解释，不删除不一致重复。
+新增matched_time_budget_changes.png只用同一幸存重复比较早/晚，另列额外预算增益/损失；原时间曲线保留为条件描述图。
+最新准备分析根为`/projects/p33100/siosio/crashbench_safelibero/feasibility/20261002T010021Z_analysis_8b0b7d5ed879/`，ANALYSIS_READY=prepared_not_submitted；输入supplements同前。9项实验模块与主327字节相同，仅最终后处理增加审计与图。旧c534分析根保留SUPERSEDED，不提交旧版。
+只等全部批准branch完成、主根COMPLETE/全部实际Slurm成功，再提交此analysis archive的interpret.sbatch；全部新图表必须实际查看并校验副本SHA。
+参考验证阶段有完整动作NPY；已核验Spat3十次0/10、Spat9十次10/10，各自只有一个动作tape hash，因此是确定性同状态的fresh执行重复，不是十个独立物理扰动或高概率认证。Spatial9/15无受保护接触安全仍未知，官方代理见证的接触问题不能被验证次数遮盖。
