@@ -226,3 +226,15 @@ Object0全部五重复官方代理计数：参考0/27/77步5/5，两预算相同
 c35准备分析已并入该根，contact roots现19个，supplements SHA **8f24e7d9a021f57da69cd940f6bf7b5301f543fe8f62b9fb71ae248996e8a36f**，旧输入保留supplements_before_object00_complete.json，变更hash存SUPPLEMENT_UPDATE_object00_complete.json；仍未提交报告。
 Object0所有合格同300续接的代理成功接触未知数0。固定参考同时通过代理和无机器人／目标-障碍接触：0/27/77各5/5、152步4/4、252步3/3（排除repeat3已有接触，原行保留）。没有固定参考同预算的机会下降证据；原剩余预算晚期0/4的失败不能当作真实不可行或窗口衰退。普通库只有release5/t0/repeat3一例满足上述接触条件，1/5，不是稳定候选或概率认证；nominal/152、252的两代理成功均有接触，不能混入强安全续接。未干预AEGIS所有预算仍0。
 末次实际Object2 GPU8243879 RUNNING/qgpu0403/11m23s，累计770；CPU继任8243880 Dependency。仍需Object2/5全部分叉与成功接触审计，完整共用轨迹/严格前缀配对预算核验，最终图QA/图文判断表。Goal active，主327冻结。
+
+## Object2 前两个重复的接触证据（仍在运行）
+
+Object2 GPU **8243879** 最后只读核验 RUNNING/qgpu0403/1h56m06s，主累计 **892/1209**，第三重复尚未完整；继任 **8243880** Dependency。不要用本条静态进度替代实际 progress/receipt，也不要重启作业。
+
+- repeat0 的45条分叉完整；所有合格同300续接代理成功只有 reference 的0/27/77/152/252五条。
+  接触根 `20261002T075840Z_object02_repeat0_suffix_contacts_6cd022f87faa`，CPU **8250639 COMPLETED/0:0/2m50s**。
+- repeat1同样45条完整、五条reference成功。接触根 `20261002T081327Z_object_02_repeat1_suffix_contacts_6cd022f87faa`，CPU **8251820 COMPLETED/0:0/2m17s**。
+- 两根均源6cd022f87faa，reset-forward=true；每条row SHA、保存检查点物理数组、任务与位移核验通过，十条均无机器人／目标-保护障碍接触。两重复不构成高概率认证，也不能将特权参考当成普通候选库的能力。
+- c35准备分析已并入两根，contact roots现 **21**，最新supplements SHA `268a7ab7c0397461d83aa219138ece993b48b1f80491a111bdadfc5af964e1d3`。旧manifest及每次更新hash保留，分析仍未提交。
+
+仍须Object2剩余重复、Object5全阶段、全部合格成功轨迹（包含aegis预算对照）的接触核验、全共同轨迹审计、Quest绘图与实际视觉QA、最终具体研究判断；Goal active。科学主327与Quest live d220源码保持冻结。
