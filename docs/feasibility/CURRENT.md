@@ -187,3 +187,11 @@ ObjectII对照旧接触job8221208 FAILED/1:0/42s，初始化qpos不相同，未�
 batch：`/projects/p33100/siosio/crashbench_safelibero/feasibility/20261002T043023Z_spatial_suffix_contacts_6cd022f87faa`。
 三个源6cd/reset_forward=true独立根：20261002T043033Z_spatial_suffix_contacts_chunk0 **8229645**（10）；20261002T043034Z_spatial_suffix_contacts_chunk1 **8229646**（10）；20261002T043037Z_spatial_suffix_contacts_chunk2 **8229649**（5，afterany8229645）。两个CPU链，主GPU与其源码不变。以上仅SUBMITTED，仍须读实际Slurm/完整接触receipt。
 完成后把这三个新root加入0ca未提交分析supplements，保存之前manifest和变更SHA；Object三个状态完成后，同样覆盖每个合格且代理成功的同300步续接，未知接触不能当作成功或失败。预算/原AEGIS全轨迹审计与最终图文表仍未完成，Goal active。
+
+## Spatial完整接触续接证据已并入
+
+8229645/8229646/8229649实际全部COMPLETED/0:0，3m48s/3m23s/2m15s，25条均严格检查点复现且reset_forward=true；batch/AUDIT_COMPLETE.json保存实际状态与raw文件SHA。0ca准备分析supplements已加入三root，旧输入保留为supplements_before_spatial_suffix.json，SUPPLEMENT_UPDATE_spatial_suffix.json存映射和hash，新SHA **9739ca0c0e17fba28e17cdf86bc027fc85e20082924a41dafd955cae398e9641**。ANALYSIS_READY仍未提交。
+完整同300步续接、此前无机器人／目标-障碍接触子集：Spatial9参考在0/27步分别0/5、0/5同时通过代理和无上述接触；77步为1/2（五个官方代理分叉只有两个此前无接触）。Spatial15参考在0/27步各0/5，77步为4/5；五个前缀此前均无上述接触。全部成功续接已审计，未知接触数0。所有合格普通候选的代理安全完成都是0，因此没有普通库强安全恢复见证。4/5只描述本诊断重复，不认证高成功概率。
+从原初始状态出发的完整合法“受控AEGIS前缀+特权参考后缀”已形成无上述接触完成轨迹（Spatial9一例、Spatial15四例），并由独立保存动作回放复现；它们有别于初始直接固定rim参考（新验证10/10均有接触），不得混称为同一个初始参考方法的成功率。也不能由特权参考成功推出普通候选选择学习有效。Spatial证据没有显示无上述接触的早期参考机会随时间下降；未到达/已碰撞的更晚检查点不记失败。
+统一112最新读取八状态的逐条参考接触计数：Spatial3代理及强接触条件均0/10；Spatial9/15代理各10/10、强条件各0/10；Object0/2/5及两个正常对照均同时通过代理与无上述接触10/10。仍是确定性固定状态重复，不是物理扰动或概率认证。
+末次主Object0 8226877 RUNNING/qgpu0403/39m42s，累计599，继任8226880 Dependency。仍待Object三状态全部完成及其合格成功续接接触审计；最终全部共同轨迹/预算审计；图文表实际渲染QA和研究判断。Goal active。
