@@ -119,3 +119,5 @@ Initial8189966实际COMPLETED/0:0，3h18m09s。304/304、120个配对组、视�
 控制器8211864实际COMPLETED/0:0/21s，提交**branch_spatial_09 GPU8211895**及继任CPU**8211896**（afterany:8211895），receipt8211864.json完整。新控制器根替代旧root，别等旧8192029。
 8211895已实际RUNNING/qgpu0403，第一t0/aegis控制与t0/lift_then_nominal已完成且前缀核验通过；源仍为主327冻结archive。Spatial9 schedule实际125，缺失/碰撞10条分别记录理由，不能把它们计作候选失败。
 首个未干预AEGIS全轨迹复现审计FIRST_UNCHANGED_AEGIS_CONTROL_AUDIT.json在主根；不是只验证初始哈希。后续仍须全部5批准状态分叉、全部共同预算轨迹审计与最终8b分析图文表，再作研究建议与mark goal complete。
+
+Spatial9首个重复的0/27步完整候选预算对比已形成；主根EARLY_COMMON_TRAJECTORY_AUDIT.json核验5个两预算共同轨迹对、3个未干预AEGIS控制，全记录字段完全一致。仅这批局部核验，不代替全905个计划分叉或最终预算审计。初始REPORT七文件已只读SCP取回本地并逐一SHA匹配；不用在Quest checkout建结果symlink，直接读输出SCP已通过自动审批。
