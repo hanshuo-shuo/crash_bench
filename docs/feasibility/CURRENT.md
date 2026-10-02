@@ -238,3 +238,19 @@ Object2 GPU **8243879** 最后只读核验 RUNNING/qgpu0403/1h56m06s，主累计
 - c35准备分析已并入两根，contact roots现 **21**，最新supplements SHA `268a7ab7c0397461d83aa219138ece993b48b1f80491a111bdadfc5af964e1d3`。旧manifest及每次更新hash保留，分析仍未提交。
 
 仍须Object2剩余重复、Object5全阶段、全部合格成功轨迹（包含aegis预算对照）的接触核验、全共同轨迹审计、Quest绘图与实际视觉QA、最终具体研究判断；Goal active。科学主327与Quest live d220源码保持冻结。
+
+## Object2 完整及 Object5 实际启动
+
+**8243879 COMPLETED/0:0/3h16m38s**，Object2全部225条分叉完整，主累计984。控制器 **8243880 COMPLETED/0:0/20s**；其receipt提交 **Object5 GPU8259539** 与 afterany继任 **8259540**。末次8259539实际RUNNING/qgpu0204/13m01s，累计998/1209，8259540 Dependency；以后须读取实际进度，不等旧Object2句柄。
+
+Object2官方代理计数：0/27/77的reference两预算均5/5；152/252原剩余预算0/5、同300步续接5/5。所有普通候选与未干预AEGIS全部0。reference晚期失败可被时间预算解释，尚无同预算机会下降证据。
+
+新增已完成接触根（各五条，均reference 0/27/77/152/252，源6cd/reset-forward=true、全部保存检查点与row SHA通过、无机器人／目标-障碍接触）：
+
+- `20261002T084620Z_object_02_repeat2_suffix_contacts_6cd022f87faa`，**8254481 COMPLETED/0:0/2m52s**。
+- `20261002T092458Z_object_02_repeat3_suffix_contacts_6cd022f87faa`，**8257220 COMPLETED/0:0/3m11s**。
+- `20261002T100635Z_object_02_repeat4_suffix_contacts_6cd022f87faa`，**8259632 COMPLETED/0:0/2m31s**。
+
+Object2全部25条合格同300步成功续接接触审计齐全、未知成功接触数0；各检查点同时通过代理及无上述接触5/5。这不是高概率认证，特权reference成功也不是普通库选择能力。完整common-trajectory与budget-alias审计仍待最终CPU分析。
+
+c35准备分析contact roots现 **24**，supplements SHA `d25d74e68a99b27b14cc11f498054a6fdab943100aebf3b48c535ccf69fe9aae`；旧输入及每次hash更新均保留。分析仍未提交。尚须Object5、其所有合格代理成功接触审计、最终全轨迹/配对预算门、Quest实际图QA和具体研究决策表。Goal active。
