@@ -10,6 +10,7 @@ import numpy as np
 import baseline as b
 from certificate import certify, classify, inscribed_radius
 from fixtures import slit, cage
+from validation import verify_steps, verify_certificate
 r, d = b.r, b.d
 P = json.loads((Path(__file__).parent/'mechanism_protocol.json').read_text())
 
@@ -54,12 +55,33 @@ class Audit(d.Audit):
         self.samples.write(json.dumps(r.clean(row))+'\n'); self.total_samples += 1
         return row
 
+    def endpoint(self,obs,ref,action=None,queue=(),rng=None):
+        def pose(data):
+            return dict(target=np.asarray(data.body_xpos[self.target_id]).copy(),
+                site_position=np.asarray(data.site_xpos[self.site]).copy(),
+                site_rotation=np.asarray(data.site_xmat[self.site]).reshape(3,3).copy(),site_size=self.site_size.copy())
+        native=bool(self.env.check_success()); cached=pose(self.env.sim.data)
+        if native!=r.previous.predicate(cached['target'],cached['site_position'],cached['site_rotation'],cached['site_size']):
+            raise RuntimeError('Native predicate mismatch')
+        dd=self.forward();self.sample(dd,'endpoint_synchronized',True);synced=pose(dd)
+        synchronized=r.previous.predicate(synced['target'],synced['site_position'],synced['site_rotation'],synced['site_size'])
+        fixed=r.inside(synced['target'],*self.fixed_goal)
+        snapshot=r.capture(self.env,ref,queue,rng)
+        for key in r.ARRAYS:self.physics[key].append(snapshot['arrays'][key])
+        self.physics['sim_state'].append(snapshot['sim_state']);self.physics['time'].append(snapshot['time'])
+        self.controllers.write(json.dumps(r.clean({k:v for k,v in snapshot.items() if k not in ['arrays','sim_state']}))+'\n')
+        row=dict(step=self.step,action=action,native_success=native,synchronized_success=bool(synchronized),
+            fixed_goal_success=bool(fixed),contract_success=bool(native and synchronized and fixed),
+            safe_history=self.safe,safe_success=bool(native and synchronized and fixed and self.safe),
+            reference_phase=ref.phase,physics_sha256=r.statehash(snapshot),native_pose=cached,synchronized_pose=synced)
+        self.steps.write(json.dumps(r.clean(row))+'\n');self.steps.flush();return r.clean(row)
+
 
 def verify(directory):
     geo=json.loads((directory/'geometry.json').read_text())
     rho=json.loads((directory/'MATERIAL_BALL.json').read_text())['rho']
     actors=set(geo['robot']+geo['target']); obstacles=set(geo['protected'])|{x['id'] for x in geo['boxes']}
-    prev=None; safe=True; n=0
+    prev=None; safe=True; n=0; endpoint_flags=[]
     with gzip.open(directory/'samples.jsonl.gz','rt') as stream:
         for line in stream:
             row=json.loads(line); n+=1; hits=[]; ball=[]
@@ -75,10 +97,17 @@ def verify(directory):
             safe &= not bool(contact or hits or ball)
             if hits!=row['sweep_hits'] or ball!=row['material_cube_hits'] or safe!=row['safe_history']:
                 raise RuntimeError('Persisted safety audit mismatch')
+            if row['phase']=='endpoint_synchronized':endpoint_flags.append(safe)
     result=json.loads((directory/'summary.json').read_text())
     if n!=result['samples'] or safe!=result['safe_history']:raise RuntimeError('Incomplete witness record')
     steps=[json.loads(x) for x in (directory/'steps.jsonl').read_text().splitlines()]
-    if any(not r.previous.legal_action(row['action']) for row in steps[1:]):raise RuntimeError('Illegal witness command')
+    if [x['safe_history'] for x in steps]!=endpoint_flags:raise RuntimeError('Step/sample safety mismatch')
+    cert=verify_certificate(geo,json.loads((directory/'MATERIAL_BALL.json').read_text()),
+        json.loads((directory/'fixture.json').read_text()),steps[0],result['initial_valid'],
+        json.loads((directory/'CERTIFICATE.json').read_text()))
+    verify_steps(steps,result,geo['fixed_goal'],cert,P['execution_horizon_T'])
+    with np.load(directory/'physics.npz') as physics:
+        if len(physics['time'])!=len(steps):raise RuntimeError('Missing persisted physics')
     r.write(directory/'VERIFIED.json',dict(passed=True,samples=n,steps=len(steps)-1,
         hashes={x.name:r.sha(x) for x in directory.iterdir() if x.is_file() and x.name!='VERIFIED.json'}))
 
