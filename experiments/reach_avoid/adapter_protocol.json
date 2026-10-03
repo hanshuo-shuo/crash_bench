@@ -1,0 +1,15 @@
+{
+  "study": "RA-2 adapter validation on two development-only states",
+  "label_job": "8416208",
+  "label_root": "/projects/p33100/siosio/crashbench_safelibero/reach_avoid_mechanisms/20261003T173717Z_cpu_80a2c46beaac",
+  "vision_asset": "/projects/p33100/siosio/crashbench_safelibero/reach_avoid_assets/dinov2-small_ed25f3a31f01632728cabb09d1542f84ab7b0056",
+  "vision_revision": "ed25f3a31f01632728cabb09d1542f84ab7b0056",
+  "cases": ["A_slit_open", "A_cage_.020"],
+  "rollouts": 0,
+  "api_calls": 0,
+  "max_gpu_minutes_per_attempt": 15,
+  "repair_budget": 2,
+  "attention_scope": "KNOWS-inspired actual action-query/vision-key mass, density, entropy at initial diffusion t=1. K=1, mean action queries; oracle projected target ellipsoid replaces tracker. Fixed one-based layer12/head3 interpreted as indices11/2. Not official trajectory-level KNOWS reproduction.",
+  "acceptance": "Save traced/native arrays before checks; relative L2 <= .002; actual RGB and input hashes recorded. Other valid features survive an unresolved attention comparison.",
+  "general_vision": "DINOv2-small frozen final mean patch and CLS, concatenate both actual224RGB views, normalize only; same group splits and fitting budget. External encoder comparison is not an information-destruction claim."
+}
