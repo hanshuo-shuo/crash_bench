@@ -1,4 +1,24 @@
-# Current — SafeLIBERO reproduction and diagnostic findings, 2026-10-02
+# Current — SafeLIBERO reproduction and feasibility evidence, 2026-10-03
+
+## Latest authorized evidence pilot
+
+The 2026-10-02 user-authorized implementation and bounded Quest pilot is complete.
+Read [feasibility_contract/CURRENT.md](feasibility_contract/CURRENT.md) for the
+full result, scope limits, failed attempts and Slurm provenance. Five preselected
+held-out layouts have legal contact-safe success witnesses; two correlated exposed
+Object5 checkpoints remain unknown. No nontrivial unreachable-but-legal goal
+negative was certified. Definition-conflict negatives are smoke sanity controls
+only, excluded from the core pilot. This does not complete a general feasibility
+benchmark or a learned judgment method.
+
+Accepted smoke 8350819, external recovery 8351274 and final audit 8351701 all
+COMPLETED/0:0. The ten completed runs in pilot 8350901 were hash-inherited after
+its strict historical-input gate stopped. Every old/failed result remains intact.
+Final report: `results/feasibility_contract/final_20261003/final/REPORT.md`;
+Quest final root `feasibility_contract/20261003T002937Z_final_audit_279264b51e6f`
+under the existing project asset root. Zero GPU/API/training. No further run is queued.
+The historical live-checkout d220 notes below describe the preceding diagnosis;
+the authorized new source was subsequently fast-forwarded through quest_sync.sh.
 
 ## Latest authorized diagnostic complete
 
