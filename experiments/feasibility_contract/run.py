@@ -20,7 +20,7 @@ sys.path.insert(0, str(BASE / 'experiments/feasibility'))
 from reference import Reference
 from geometry import active_obstacle, object_points
 from contract import (CAPS, SMOKE, PILOT, SOURCE_HASHES, UPSTREAM, bounds,
-                      predicate, legal_action, exclusion, decide, witness_at)
+                      predicate, legal_action, exclusion, decide, witness_at, canonical_gripper_command)
 
 ARRAYS = ['qpos', 'qvel', 'ctrl', 'qacc_warmstart', 'qfrc_applied',
           'xfrc_applied', 'mocap_pos', 'mocap_quat', 'act', 'qacc']
@@ -233,16 +233,36 @@ class Audit:
         np.savez_compressed(self.directory/'physics.npz', **{k: np.asarray(v) for k, v in self.physics.items()})
         self.env.sim.step = self.original_step
 
-def compare_historical(env, prefix_dir, t):
+def compare_historical(env, prefix_dir, t, full=False):
     file = prefix_dir/('checkpoint_%03d.npz'%t)
     if not file.exists(): return None
     with np.load(file) as saved:
         for k in ['qpos', 'qvel', 'ctrl']:
             if not np.array_equal(saved[k], np.asarray(getattr(env.sim.data, k))):
                 raise RuntimeError('Historical restore mismatch %d/%s'%(t, k))
-    return dict(step=t, path=str(file), sha256=sha(file), exact_fields=['qpos', 'qvel', 'ctrl'])
+    fields=['qpos','qvel','ctrl']
+    if full:
+        original=json.loads(file.with_suffix('.json').read_text())
+        checks={'warmstart_sha256':'qacc_warmstart','applied_force_sha256':'qfrc_applied',
+                'external_force_sha256':'xfrc_applied','mocap_pos_sha256':'mocap_pos',
+                'mocap_quat_sha256':'mocap_quat','act_sha256':'act'}
+        for field,attr in checks.items():
+            a=np.ascontiguousarray(getattr(env.sim.data,attr))
+            actual=hashlib.sha256(str((a.dtype.str,a.shape)).encode()+a.tobytes()).hexdigest()
+            if actual!=original[field]:raise RuntimeError('Historical full-physics mismatch %d/%s'%(t,attr))
+            fields.append(attr)
+        def normalize(v):
+            if isinstance(v,dict) and set(v)=={'array','dtype'}:return v['array']
+            if isinstance(v,dict):return {k:normalize(x) for k,x in v.items()}
+            if isinstance(v,list):return [normalize(x) for x in v]
+            return v
+        now=numeric_state(env)['controller']
+        for key,value in normalize(original['controller']).items():
+            if now.get(key)!=value:raise RuntimeError('Historical controller mismatch %d/%s'%(t,key))
+        fields.append('arm_controller_saved_fields')
+    return dict(step=t, path=str(file), sha256=sha(file), exact_fields=fields)
 
-def execute(root, state, variant, replay=None):
+def execute(root, state, variant, replay=None, audited_sign_replay=False):
     start = time.monotonic()
     name = state['id']+'_'+variant+('_replay' if replay else '')
     directory = root/'runs'/name; directory.mkdir(parents=True)
@@ -263,17 +283,28 @@ def execute(root, state, variant, replay=None):
         if 'prefix_steps' in state:
             prefix_dir = Path(state['prefix_root'])/'runs'/('object_05_r%02d_identity_geometry'%state['prefix_repeat'])
             commands = [json.loads(line) for line in (prefix_dir/'steps.jsonl').read_text().splitlines()]
-            restore.append(compare_historical(env, prefix_dir, 0))
+            if audited_sign_replay:
+                gripper=env.robots[0].gripper
+                source=Path(inspect.getfile(type(gripper)))
+                if type(gripper).__name__!='PandaGripper' or sha(source)!='a3760a8fc4599fa6f79914304b82466f3c1bda1a945943ca693bb57f00dc59eb':
+                    raise RuntimeError('Unreviewed gripper sign implementation')
+                raw_applied=[dict(step=x['step'],raw=x['output'],applied=canonical_gripper_command(x['output']))
+                             for x in commands[:state['prefix_steps']]]
+                write(directory/'raw_applied_commands.json',dict(source_path=str(source),source_sha256=sha(source),
+                     rule='PandaGripper.format_action uses np.sign(action); gripper clipping preserves sign exactly',
+                     commands=raw_applied))
+            restore.append(compare_historical(env, prefix_dir, 0, full=audited_sign_replay))
             write(directory/'historical_provenance.json', dict(path=str(prefix_dir),
                   commands_sha256=sha(prefix_dir/'steps.jsonl'),
                   original_checkpoint=json.loads((prefix_dir/'checkpoint_252.json').read_text())))
             for t, item in enumerate(commands[:state['prefix_steps']], 1):
-                if not legal_action(item['output']): raise RuntimeError('Illegal historical command')
+                action=canonical_gripper_command(item['output']) if audited_sign_replay else item['output']
+                if not legal_action(action): raise RuntimeError('Illegal historical command')
                 audit.reset_meter(); audit.action_step=t; audit.substep=0
-                obs, _, done, _ = env.step(item['output'])
-                row = audit.endpoint(obs, None, item['output'], done)
+                obs, _, done, _ = env.step(action)
+                row = audit.endpoint(obs, None, action, done)
                 prefix_safe = prefix_safe and row['protected_contact_count'] == 0
-                match = compare_historical(env, prefix_dir, t)
+                match = compare_historical(env, prefix_dir, t, full=audited_sign_replay)
                 if match: restore.append(match)
             if len(commands) < state['prefix_steps']: raise RuntimeError('Incomplete historical prefix')
             prefix_cost = state['prefix_steps']
@@ -360,12 +391,13 @@ def verify_run(directory):
     write(directory/'VERIFIED.json', dict(passed=True, samples=samples, actions=len([r for r in steps if r['step']>0]),
           hashes={p.name:sha(p) for p in directory.iterdir() if p.is_file() and p.name!='VERIFIED.json'}))
 
-def summarize(root, states):
+def summarize(root, states, run_roots=None):
     decisions=[]; execution=[]
     for state in states:
         runs={}
         for variant in ['center', 'side']:
-            directory=root/'runs'/(state['id']+'_'+variant)
+            evidence_root=(run_roots or {}).get(state['id'],root)
+            directory=evidence_root/'runs'/(state['id']+'_'+variant)
             info=json.loads((directory/'summary.json').read_text()); execution.append(info)
             records=[json.loads(l) for l in (directory/'steps.jsonl').read_text().splitlines()
                      if json.loads(l)['stage']=='suffix']
@@ -389,6 +421,7 @@ def summarize(root, states):
                 # as interesting negative pairs.
                 label='unknown'; cert=None
             decisions.append(dict(state=state['id'], layout_group=state['layout_group'], split=state['split'],
+                evidence_root=str((run_roots or {}).get(state['id'],root)),
                 condition=name, cap_m=cap, initially_valid=initial_valid,
                 label=label, certificate=cert, witness_steps=witnesses,
                 certificate_only=decide(False,cert), expert_300=decide(center,None),

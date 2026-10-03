@@ -4,9 +4,17 @@ import random
 import sys
 import unittest
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from contract import bounds, predicate, legal_action, exclusion, decide, witness_at, SMOKE, PILOT, CAPS
+from contract import bounds, predicate, legal_action, exclusion, decide, witness_at, SMOKE, PILOT, CAPS, canonical_gripper_command
 
 class ContractTests(unittest.TestCase):
+    def test_only_sign_preserving_gripper_replay_is_canonicalized(self):
+        for v in [-1.014,-.4,0,.7,1.008]:
+            raw=[.4]*6+[v]; actual=canonical_gripper_command(raw)
+            self.assertTrue(legal_action(actual))
+            self.assertEqual(actual[:6],raw[:6])
+            self.assertEqual((v>0)-(v<0),(actual[6]>0)-(actual[6]<0))
+        for a in [[1.01]*7,[0]*6+[float('nan')]]:
+            with self.assertRaises(ValueError): canonical_gripper_command(a)
     def test_strict_boundary_and_native_z_extension(self):
         R=[[1,0,0],[0,1,0],[0,0,1]]
         self.assertFalse(predicate([0,-.1,0],[0,0,0],R,[.1,.1,.1]))

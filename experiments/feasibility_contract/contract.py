@@ -42,6 +42,12 @@ def predicate(target, site_pos, rotation, size):
 def legal_action(action):
     return len(action) == 7 and all(math.isfinite(x) and -1 <= x <= 1 for x in action)
 
+def canonical_gripper_command(action):
+    """Only for the separately source-audited Panda sign-based gripper replay."""
+    if len(action)!=7 or not all(math.isfinite(x) for x in action) or any(abs(x)>1 for x in action[:6]):
+        raise ValueError('Unsupported historical command')
+    return list(action[:6])+[max(-1.,min(1.,action[6]))]
+
 def exclusion(cap, supported):
     if supported and cap is not None and math.isfinite(cap) and cap <= -1e-6:
         return dict(label='infeasible', rule='strict_In_implies_ingress_gt_zero',

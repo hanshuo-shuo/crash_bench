@@ -17,7 +17,7 @@ SCIENTIFIC=['experiments/feasibility_contract/'+x for x in ['contract.py','run.p
 def call(args): return subprocess.check_output(args,cwd=BASE,text=True).strip()
 def put(path,value): path.write_text(json.dumps(value,indent=2)+'\n')
 
-def main(stage,smoke):
+def main(stage,smoke,parent=None):
     if BASE.resolve() != (Path.home()/'crash_bench').resolve(): raise RuntimeError('Wrong project checkout')
     if call(['git','remote','get-url','origin']) not in ['git@github.com:hanshuo-shuo/crash_bench.git','https://github.com/hanshuo-shuo/crash_bench.git']: raise RuntimeError('Wrong project identity')
     if call(['git','status','--porcelain=v1','--untracked-files=all']):raise RuntimeError('Dirty source')
@@ -35,6 +35,15 @@ def main(stage,smoke):
     active=queued&{str(x) for x in recorded}
     if active:raise RuntimeError('Recorded CrashBench job active: '+str(sorted(active)))
     hashes={p:hashlib.sha256((BASE/p).read_bytes()).hexdigest() for p in SCIENTIFIC}
+    if stage=='external_recovery':
+        if parent is None or parent.parent.resolve()!=(ASSETS/'feasibility_contract').resolve():raise RuntimeError('Wrong parent root')
+        previous=json.loads((parent/'receipt.json').read_text())
+        stop=json.loads((parent/'STOP.json').read_text())
+        if stop.get('reason')!='Illegal historical command':raise RuntimeError('Unsupported recovery')
+        status=call(['sacct','-X','-j',str(previous['job_id']),'--noheader','--parsable2','--format=State,ExitCode']).splitlines()
+        if not status or any(x!='FAILED|1:0' for x in status):raise RuntimeError('Parent must be terminal at the identified input gate')
+        for p in (ASSETS/'feasibility_contract').glob('*/receipt.json'):
+            if json.loads(p.read_text()).get('parent_root')==str(parent):raise RuntimeError('External recovery already submitted; inspect it before further action')
     if stage=='pilot':
         if smoke is None:raise RuntimeError('Smoke root required')
         if smoke.parent.resolve()!=(ASSETS/'feasibility_contract').resolve():raise RuntimeError('Wrong smoke root')
@@ -57,19 +66,22 @@ def main(stage,smoke):
         checks.append(hashlib.sha256(expected).hexdigest()+'  '+p)
     (root/'source.sha256').write_text('\n'.join(checks)+'\n');(root/'SOURCE_COMMIT').write_text(commit+'\n')
     receipt=dict(stage=stage,root=str(root),source=str(source),code_commit=commit,scientific_hashes=hashes,
-          smoke_root=str(smoke) if smoke else None,resources=dict(account='p33100',partition='short',cpus=4,mem_gib=16,
-          time_minutes=15 if stage=='smoke' else 30,gpus=0),api_budget_usd=0,
+          smoke_root=str(smoke) if smoke else None,parent_root=str(parent) if parent else None,
+          resources=dict(account='p33100',partition='short',cpus=4,mem_gib=16,
+          time_minutes=30 if stage=='pilot' else 15,gpus=0),api_budget_usd=0,
           created_unix=time.time(),status='prepared_not_submitted')
     put(root/'receipt.json',receipt)
     env=os.environ.copy();env.pop('OPENROUTER_API_KEY',None)
     env.update(CB_CONTRACT_ROOT=str(root),CB_CONTRACT_STAGE=stage)
+    if parent:env['CB_CONTRACT_PARENT']=str(parent)
+    script='recover_external.sbatch' if stage=='external_recovery' else 'job.sbatch'
     job=subprocess.check_output(['sbatch','--parsable','--time=00:%02d:00'%receipt['resources']['time_minutes'],
-          '--output='+str(root/'slurm_%j.log'),str(source/'experiments/feasibility_contract/job.sbatch')],
+          '--output='+str(root/'slurm_%j.log'),str(source/'experiments/feasibility_contract'/script)],
           cwd=BASE,env=env,text=True).strip().split(';')[0]
     if not job.isdigit():raise RuntimeError('Unparseable Slurm submission receipt')
     receipt.update(job_id=job,status='submitted');put(root/'receipt.json',receipt)
     print(json.dumps(receipt,indent=2))
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('stage',choices=['smoke','pilot']);p.add_argument('--smoke',type=Path)
-    a=p.parse_args();main(a.stage,a.smoke)
+    p=argparse.ArgumentParser();p.add_argument('stage',choices=['smoke','pilot','external_recovery']);p.add_argument('--smoke',type=Path);p.add_argument('--parent',type=Path)
+    a=p.parse_args();main(a.stage,a.smoke,a.parent)
