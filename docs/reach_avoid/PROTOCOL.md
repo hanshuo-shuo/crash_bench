@@ -12,7 +12,9 @@ xy is changed to (0.30, -0.45) m before the ordinary 20 settling commands.
 An invalid initial contact or pose is retained as invalid; coordinates are never
 retuned based on outcomes. Settled horizontal drift must stay within 1 cm per axis
 and normalized orientation drift within .05 rad; only floor support contact is
-allowed. Require floor support, collision-bottom height within 5 mm of floor and
+allowed for the clear condition. The native condition retains its original
+`box_small_base_1_g2` pedestal support. Require contact with the declared support,
+collision-bottom height within 5 mm of that support surface and
 linear speed at most .05 m/s. These are settled-pose checks, not trajectory speed
 bounds. Repair 1 replaces an erroneous pre/post root-z drift gate: official
 initial poses start airborne at z=.15, so legitimate settling moves their roots.
@@ -67,3 +69,11 @@ No native introspection claim follows from privileged training labels.
 Runtime AEGIS is a separate extension: freeze a progress-blockage trigger and
 small alternative menu before results, label that actual state, and distinguish
 judgment utility from rescue gains. A feasible state never licenses unsafe actions.
+
+GPU repair 1 (before execution): the original native bottle rests on its
+existing pedestal, not the floor. Archived initial contacts show approximately
+0.24 mm support penetration. A floor-only validation would reject a legitimate
+native control. The declared native pedestal is now checked by actual geom ID
+and top-surface height; clear placement still requires floor support. All other
+initial contacts remain invalid, and robot/target-to-wine safety is unchanged.
+The queued primary GPU receipt is preserved; replacement uses a new root.

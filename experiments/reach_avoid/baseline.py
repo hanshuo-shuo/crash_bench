@@ -86,17 +86,23 @@ def make(directory, episode, condition, boxes=None, placements=None):
     angle = float(2*np.arccos(np.clip(dot, 0, 1)))
     points, geoms = r.object_points(env, 'wine_bottle_obstacle_1')
     bottle_geoms = {x['geom_id'] for x in geoms}
-    floor_id = env.sim.model.geom_name2id('floor')
-    support = any({int(c.geom1), int(c.geom2)} & bottle_geoms and
-        floor_id in (int(c.geom1), int(c.geom2)) and c.dist <= .001 for c in env.sim.data.contact[:env.sim.data.ncon])
+    support_name = 'floor' if condition == 'clear' else 'box_small_base_1_g2'
+    floor_id = env.sim.model.geom_name2id(support_name)
+    support_distances = [float(c.dist) for c in env.sim.data.contact[:env.sim.data.ncon]
+        if {int(c.geom1), int(c.geom2)} & bottle_geoms and floor_id in (int(c.geom1), int(c.geom2))]
+    support = bool(support_distances and min(support_distances) <= .001 and min(support_distances) >= -.005)
     va = env.sim.model.get_joint_qvel_addr('wine_bottle_obstacle_1_joint0')
     speed = float(np.linalg.norm(env.sim.data.qvel[va[0]:va[0]+3]))
     bottom = float(points[:, 2].min())
+    support_z = 0. if support_name == 'floor' else float(r.geom_points(env.sim.model,env.sim.data,floor_id)[:,2].max())
+    clearance = bottom-support_z
     pose_valid = bool(np.max(np.abs(actual_pose[:2]-requested_pose[:2])) <= .01 and angle <= .05
-        and support and -.005 <= bottom <= .005 and speed <= .05)
+        and support and -.005 <= clearance <= .005 and speed <= .05)
     r.write(directory / 'SETTLED_POSE.json', dict(requested=requested_pose, actual=actual_pose,
         valid=pose_valid, horizontal_tolerance_m=.01, angular_tolerance_rad=.05, angular_drift_rad=angle,
-        floor_support=bool(support), collision_bottom_z=bottom, max_floor_clearance_m=.005,
+        support_contact=bool(support), support_geom=support_name, support_z=support_z,
+        support_contact_distances=support_distances, max_support_penetration_m=.005,
+        collision_bottom_z=bottom, support_clearance=clearance, max_support_clearance_m=.005,
         linear_speed=speed, max_linear_speed=.05,
         repair='Official pose starts airborne. Validate settled physical support instead of pre/post root-z drift.'))
     return env, obs
@@ -143,11 +149,12 @@ def execute(root, episode, condition, kind, port=None):
             a, b = int(contact.geom1), int(contact.geom2)
             if a in audit.protected or b in audit.protected:
                 other = b if a in audit.protected else a
-                if other not in audit.protected and audit.m.geom_id2name(other) != 'floor' and contact.dist <= 0:
+                support_name = 'floor' if condition == 'clear' else 'box_small_base_1_g2'
+                if other not in audit.protected and audit.m.geom_id2name(other) != support_name and contact.dist <= 0:
                     contacts.append(dict(geom=other, name=audit.m.geom_id2name(other), distance=float(contact.dist)))
         initial_valid = bool(audit.safe and not contacts and json.loads((directory/'SETTLED_POSE.json').read_text())['valid'])
         r.write(directory/'INITIAL_VALIDITY.json', dict(valid=initial_valid, unexpected_bottle_contacts=contacts,
-            allowed_support='floor', actor_contact_safe=audit.safe))
+            allowed_support='floor' if condition=='clear' else 'box_small_base_1_g2', actor_contact_safe=audit.safe))
         r.write(directory / 'initial_restore.json', r.capture(env))
         r.picture(directory / 'initial.png', obs)
         if kind == 'reference': ref = r.Reference(r.STATE, 'center')
