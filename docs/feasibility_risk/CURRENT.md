@@ -1,8 +1,16 @@
-# FR-1 / FR-1B — completed bounded study, 2026-10-03
+# FR-1 / FR-1B findings; FR-1C stopped — 2026-10-03
 
-All five Slurm jobs are terminal. No bulk matrix, learned readout, additional
+All seven Slurm jobs are terminal. No bulk matrix, learned readout, additional
 policy rollout, or paid API call is queued. The common-process measurement repair
 completed successfully; within-input invariance and end-anchor checks are exact.
+
+The separately authorized FR-1C fixed-alpha diagnostic stopped after its single
+GPU attempt. CPU job8375743 passed all eight alpha-only/model/state checks;
+GPU job8376030 completed only e10/open/opaque before the first transparent
+image-equality assertion failed. No transparent visibility or feature result
+exists. The failed compared image pair was not saved; root cause is unresolved.
+No retry is authorized this round. See [FR1C_OUTCOME.md](FR1C_OUTCOME.md) and the
+separate two-page addendum; the original seven-page report is unchanged.
 
 Two preselected milk-task initial states (10/11) yielded four safe open/parked-lid
 witnesses and two RE-1 conditional exclusions. All six pi0.5 executions touched
@@ -65,8 +73,9 @@ Immutable run roots under `/projects/p33100/siosio/crashbench_safelibero/`:
 - `feasibility_risk_structural/20261003T060127Z_gpu_be5b79d49e97`
 - `feasibility_risk_structural/20261003T061630Z_gpu_a10eab0de962`
 
-See [FOLLOW_ON_CHOICES.md](FOLLOW_ON_CHOICES.md) for a small render-only opacity
-ablation and its limits. It is a proposal, not an authorized execution queue.
+The small opacity ablation proposed in [FOLLOW_ON_CHOICES.md](FOLLOW_ON_CHOICES.md)
+was subsequently authorized once as FR-1C and stopped as described above.
+That proposal is not an active execution queue.
 The prior provisional 24-jitter scale-up is not justified by these data.
 
 Claude chat critique was submitted but its response was not retrieved after browser
