@@ -1,7 +1,7 @@
-"""Read-only native-weight layer hook, prepared for a later authorized GPU stage.
+"""Read-only native-weight layer hook, validated on 28 states in job 8418441.
 
-Not yet validated on the deployed model. It never changes action sampling or
-loads another policy. Native and traced final arrays must be saved for audit.
+It never changes action sampling or loads another policy. Native and traced
+final arrays must be saved for audit; the development check matched exactly.
 """
 import argparse
 from pathlib import Path

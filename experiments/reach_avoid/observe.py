@@ -19,7 +19,7 @@ NUMERIC=('layers','image_layers','trace_final','native_final','projected_vision'
 def blocked(*args,**kwargs):raise RuntimeError('Initial-only observation stage prohibits stepping')
 
 
-def restore_case(root,case):
+def restore_case(root,case,allow_actions=False):
     from libero.libero.envs.env_wrapper import ControlEnv
     source=Path(P['label_root'])/case
     folder=root/case;folder.mkdir()
@@ -28,8 +28,10 @@ def restore_case(root,case):
     # Native constructor/reset and forward-only restoration, no env commands.
     env=ControlEnv(bddl_file_name=source/'task.bddl',camera_heights=1024,camera_widths=1024,
         use_camera_obs=True,has_offscreen_renderer=True,camera_names=['agentview','robot0_eye_in_hand'],camera_depths=False)
-    env.step=blocked;env.sim.step=blocked
-    env.seed(7);env.reset();env.sim.step=blocked;env.set_init_state(np.load(source/'official_init.npy'))
+    if not allow_actions:env.step=blocked;env.sim.step=blocked
+    env.seed(7);env.reset()
+    if not allow_actions:env.sim.step=blocked
+    env.set_init_state(np.load(source/'official_init.npy'))
     snapshot=json.loads((source/'initial_restore.json').read_text())
     controller=env.robots[0].controller
     for k,v in snapshot['controller'].items():
