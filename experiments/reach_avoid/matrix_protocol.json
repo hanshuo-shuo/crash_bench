@@ -1,0 +1,262 @@
+{
+  "study": "RA-2 grouped constructor-transfer readout",
+  "version": 1,
+  "layouts": [
+    {
+      "id": "L00",
+      "target_xy": [
+        -0.32,
+        -0.46
+      ],
+      "goal_xy": [
+        -0.12,
+        0.28
+      ],
+      "split": "test"
+    },
+    {
+      "id": "L01",
+      "target_xy": [
+        -0.32,
+        -0.46
+      ],
+      "goal_xy": [
+        0.12,
+        0.28
+      ],
+      "split": "train"
+    },
+    {
+      "id": "L02",
+      "target_xy": [
+        -0.32,
+        -0.32
+      ],
+      "goal_xy": [
+        -0.12,
+        0.28
+      ],
+      "split": "validation"
+    },
+    {
+      "id": "L03",
+      "target_xy": [
+        -0.32,
+        -0.32
+      ],
+      "goal_xy": [
+        0.12,
+        0.28
+      ],
+      "split": "test"
+    },
+    {
+      "id": "L04",
+      "target_xy": [
+        -0.2,
+        -0.46
+      ],
+      "goal_xy": [
+        -0.12,
+        0.28
+      ],
+      "split": "train"
+    },
+    {
+      "id": "L05",
+      "target_xy": [
+        -0.2,
+        -0.46
+      ],
+      "goal_xy": [
+        0.12,
+        0.28
+      ],
+      "split": "train"
+    },
+    {
+      "id": "L06",
+      "target_xy": [
+        -0.2,
+        -0.32
+      ],
+      "goal_xy": [
+        -0.12,
+        0.28
+      ],
+      "split": "test"
+    },
+    {
+      "id": "L07",
+      "target_xy": [
+        -0.2,
+        -0.32
+      ],
+      "goal_xy": [
+        0.12,
+        0.28
+      ],
+      "split": "validation"
+    },
+    {
+      "id": "L08",
+      "target_xy": [
+        -0.08,
+        -0.46
+      ],
+      "goal_xy": [
+        -0.12,
+        0.28
+      ],
+      "split": "test"
+    },
+    {
+      "id": "L09",
+      "target_xy": [
+        -0.08,
+        -0.46
+      ],
+      "goal_xy": [
+        0.12,
+        0.28
+      ],
+      "split": "train"
+    },
+    {
+      "id": "L10",
+      "target_xy": [
+        -0.08,
+        -0.32
+      ],
+      "goal_xy": [
+        -0.12,
+        0.28
+      ],
+      "split": "train"
+    },
+    {
+      "id": "L11",
+      "target_xy": [
+        -0.08,
+        -0.32
+      ],
+      "goal_xy": [
+        0.12,
+        0.28
+      ],
+      "split": "train"
+    }
+  ],
+  "group_permutation": [
+    "L04",
+    "L11",
+    "L10",
+    "L01",
+    "L05",
+    "L09",
+    "L02",
+    "L07",
+    "L06",
+    "L00",
+    "L08",
+    "L03"
+  ],
+  "split_seed": 741,
+  "train_constructor": "slit",
+  "heldout_constructor": "cage",
+  "mechanisms": [
+    "slit",
+    "cage"
+  ],
+  "variants": [
+    "open",
+    ".020",
+    ".028",
+    ".034",
+    ".060",
+    ".180",
+    "irrelevant"
+  ],
+  "irrelevant_center_xy": [
+    0.38,
+    0.2
+  ],
+  "bottle_xy": [
+    0.3,
+    -0.45
+  ],
+  "execution_horizon_T": 300,
+  "seed": 7,
+  "action_chunk": 5,
+  "unknown_policy": "Retain all invalid and unknown states; exclude only unknown labels from binary accuracy, never replace groups. Solver failure does not label infeasible.",
+  "failure_endpoint": {
+    "decision_time": "initial state",
+    "positive": [
+      "collision",
+      "safe_timeout"
+    ],
+    "negative": [
+      "safe_completion"
+    ],
+    "exclude": [
+      "invalid"
+    ],
+    "not_short_horizon_collision": true
+  },
+  "readouts": {
+    "pca_max_dimension": 32,
+    "linear_C": [
+      0.01,
+      0.1,
+      1,
+      10
+    ],
+    "mlp_hidden": [
+      32
+    ],
+    "mlp_alpha": [
+      0.001,
+      0.01,
+      0.1,
+      1
+    ],
+    "selection": "validation log loss, never test constructor",
+    "learning_curve_group_counts": [
+      2,
+      4,
+      6
+    ],
+    "bootstrap_repetitions": 2000,
+    "bootstrap_unit": "scene_group",
+    "seed": 713
+  },
+  "failure_probe": {
+    "description": "SAFE-style, not official SAFE reproduction",
+    "feature": "native_final",
+    "architecture": "training-only StandardScaler,PCA<=32,MLP32 logistic output",
+    "solver": "lbfgs",
+    "alpha": 0.1,
+    "max_iter": 500,
+    "seed": 713,
+    "hyperparameter_selection": "none; fixed prospective settings",
+    "stackers": "LogisticRegression C=1; SAFE score alone vs SAFE score plus feasibility score",
+    "training_scores": "leave-one-scene-group-out cross-fitting on train slit groups only; each fold refits transforms; validation selects feasibility layer/head only; no test selection"
+  },
+  "budgets": {
+    "cpu_tasks": 6,
+    "cpu_per_task": 1,
+    "mem_gib": 8,
+    "minutes_per_task": 30,
+    "max_cpu_concurrent": 3,
+    "max_cpu_core_minutes": 180,
+    "max_gpu_concurrent": 1,
+    "gpu_minutes_per_job": 30,
+    "expected_gpu_minutes": [
+      45,
+      70
+    ],
+    "api_calls": 0,
+    "base_model_training": false
+  },
+  "claim": "Exploratory constructor transfer within one sufficient-separator proof family. Four test groups; not independent-mechanism generalization."
+}
