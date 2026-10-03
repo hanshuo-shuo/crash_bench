@@ -55,6 +55,36 @@ def statehash(s):
     value={k:s[k] for k in ['time','arrays','sim_state','controller','environment','gripper_action']}
     return hashlib.sha256(json.dumps(clean(value),sort_keys=True).encode()).hexdigest()
 
+def restore(env,snapshot):
+    """Restore paired initial physics/controller state; never mid-rollout.
+
+    Forward updates synchronized caches; reassigning saved integration arrays
+    afterwards preserves the warm start. Pre-restore differences are retained.
+    """
+    def like(value,current):
+        if isinstance(current,np.ndarray):return np.asarray(value,dtype=current.dtype).reshape(current.shape)
+        if isinstance(current,np.generic):return type(current)(value)
+        if isinstance(current,tuple):return tuple(like(v,c) for v,c in zip(value,current))
+        if isinstance(current,list):return [like(v,c) for v,c in zip(value,current)]
+        return value
+    env.sim.set_state_from_flattened(np.asarray(snapshot['sim_state']))
+    for k,v in snapshot['arrays'].items():
+        dest=np.asarray(getattr(env.sim.data,k));dest[:]=np.asarray(v).reshape(dest.shape)
+    env.sim.forward()
+    for k,v in snapshot['arrays'].items():
+        dest=np.asarray(getattr(env.sim.data,k));dest[:]=np.asarray(v).reshape(dest.shape)
+    ctl=env.robots[0].controller
+    for k,v in snapshot['controller'].items():setattr(ctl,k,like(v,getattr(ctl,k)))
+    for k,v in snapshot['environment'].items():setattr(env.env,k,v)
+    env.robots[0].gripper.current_action=np.asarray(snapshot['gripper_action']).copy()
+    def tuples(v):return tuple(tuples(x) for x in v) if isinstance(v,list) else v
+    random.setstate(tuples(snapshot['python_rng']))
+    nr=snapshot['numpy_rng'];np.random.set_state((nr[0],np.asarray(nr[1],dtype=np.uint32),nr[2],nr[3],nr[4]))
+    env.env._update_observables(force=True)
+    obs=env.env._get_observations()
+    if statehash(capture(env))!=statehash(snapshot):raise RuntimeError('Full canonical state restore mismatch')
+    return obs
+
 def configure(root):
     upstream=Path(os.environ['CB_UPSTREAM']);bench=upstream/'safelibero/libero/libero'
     config=root/'libero_config';config.mkdir(exist_ok=True)
@@ -280,7 +310,15 @@ def execute(root,sealed,kind,port=None,replay=None):
     directory=root/name;directory.mkdir();env=None;audit=None
     queue=collections.deque();rng=None;ref=None;requests=0;illegal=False
     try:
-        env,obs,prompt=make_env(directory,sealed);audit=Audit(env,directory);gate=audit.gate()
+        env,obs,prompt=make_env(directory,sealed)
+        canonical=root/'open_reference/initial_restore.json'
+        if name!='open_reference':
+            before=capture(env);write(directory/'independent_settled_before_restore.json',before)
+            snapshot=json.loads(canonical.read_text());obs=restore(env,snapshot)
+            write(directory/'CANONICAL_RESTORE.json',dict(passed=True,source=str(canonical),sha256=sha(canonical),
+                qpos_linf_before=float(np.max(np.abs(np.asarray(before['arrays']['qpos'])-np.asarray(snapshot['arrays']['qpos'])))),
+                after_state_sha256=statehash(capture(env))))
+        audit=Audit(env,directory);gate=audit.gate()
         initial=capture(env);write(directory/'initial_restore.json',initial)
         picture(directory/'initial.png',obs)
         if kind=='reference':ref=Reference(STATE,'center')

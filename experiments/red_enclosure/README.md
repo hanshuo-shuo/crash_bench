@@ -7,7 +7,7 @@ The old feasibility_contract and 1209 diagnostic artifacts remain unchanged.
 
 Use SafeLIBERO Object/I/task2/init0 (milk into basket), seed 7, original Panda
 7-D OSC action interface and unmodified center Reference. Add world-fixed red
-box colliders around the initial milk, with interior 22 x 22 x 19.5 cm. Walls,
+box colliders around the initial milk, with interior 22 x 24 x 19.5 cm. Walls,
 bottom, task text and all settings match; only the solid roof is added in the
 sealed arm. No new asset, policy training, AEGIS representation, or paid API.
 
@@ -50,7 +50,10 @@ has no feasibility-decision interface, so this measures behavior only.
 Save complete initial/final state, per-action physics/controller/RNG/queue,
 per-integration contacts and point paths, synchronized final object/site poses,
 actions, source/upstream/assets hashes, real images and Slurm provenance.
-Exact reference prefix replay validates restoration. Metrics: 1 independent
+Exact reference prefix replay validates restoration. Later arms restore the
+first open arm's full initial numeric simulator/controller/RNG state; independent
+settled states and their differences are preserved before canonical restoration.
+Metrics: 1 independent
 layout, 2 paired contract states; safe/task completion separately; evidence
 coverage/unknown; consumed actions/inferences/time. No statistical generalization
 or classifier-error rate follows from this calibration pair. No forced binary
@@ -65,3 +68,15 @@ workshop outline from their primary sources. Expert failure != infeasibility
 and geometric enclosure exclusion are established ideas. This experiment is
 calibration for a possible broader witness/certificate/unknown evaluation,
 not evidence of a new general impossibility solver.
+
+Calibration history is not hidden: job 8356324 (4959b50) failed the initial
+geometry-identity gate before actions because a broad name prefix included a
+hidden pre-existing red mug. Job 8356568 (4f00d37) used the original 22 x 22 cm
+opening: the open reference's palm contacted the front wall at action 74; the
+closed reference contacted its lid at action 70 and its conditional certificate
+passed. A strict pair check detected 16.1658 micrometres of separately settled
+milk-x difference. No pi0.5 ran in either attempt. The final authorized fixture
+correction moves the common front inner face 2 cm outward, keeps every other
+dimension and the controller fixed, and uses exact canonical initial restoration.
+All geometry/certificate/initial safety conditions must pass again. If the open
+witness still fails, stop calibration without more geometric search.

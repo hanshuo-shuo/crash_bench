@@ -9,7 +9,7 @@ import xml.etree.ElementTree as ET
 
 CENTER = [-0.17716081610142778, -0.3942955030243276]
 LOWER = [CENTER[0]-.11, CENTER[1]-.11, -.015]
-UPPER = [CENTER[0]+.11, CENTER[1]+.11, .18]
+UPPER = [CENTER[0]+.11, CENTER[1]+.13, .18]
 THICKNESS = .015
 EPS = 1e-9
 STATE = dict(id='milk_e0_enclosure', suite='safelibero_object', level='I',
