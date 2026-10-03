@@ -14,6 +14,7 @@ from run import configure,create_env,Audit,numeric_state,state_digest,write,sha
 from contract import SMOKE
 from geometry import object_points
 import itertools
+from envelope_trace import recorded_rows
 
 ORIGINAL=Path('/projects/p33100/siosio/crashbench_safelibero/feasibility_contract/20261003T001208Z_smoke_0cbf26b9a554/runs/object_I_t2_e0_center')
 MARGIN=.005
@@ -52,16 +53,18 @@ def collide(a,b):return bool(np.all(a[3:]>=b[:3]) and np.all(a[:3]<=b[3:]))
 def main(root):
     configure(root);directory=root/'replay';directory.mkdir()
     state=SMOKE[0];env,obs=create_env(state,directory);audit=Audit(env,state,directory)
-    expected=[json.loads(x) for x in (ORIGINAL/'steps.jsonl').read_text().splitlines() if json.loads(x)['stage']=='suffix']
+    expected=recorded_rows([json.loads(x) for x in (ORIGINAL/'steps.jsonl').read_text().splitlines()])
     if state_digest(numeric_state(env))!=expected[0]['physics_sha256']:raise RuntimeError('Original initial state differs')
     summary=json.loads((ORIGINAL/'summary.json').read_text())
+    if len(expected)-1!=summary['suffix_actions']:raise RuntimeError('Original action count mismatch')
     if not(summary['task_success'] and summary['contact_safe']):raise RuntimeError('Original not a safe success')
     write(root/'source_trace.json',dict(original=str(ORIGINAL),source_summary=summary,
           expected_actions=len(expected)-1,hashes={name:sha(ORIGINAL/name) for name in ['summary.json','steps.jsonl','physics.npz','model.xml','initial_restore.json']}))
     m=env.sim.model
     actors=sorted(g for g in audit.robot|audit.target if m.geom_contype[g] or m.geom_conaffinity[g])
     local={g:local_geometry(m,g) for g in actors}
-    audit.synchronized();d=audit.sync.data
+    initial_sample=audit.synchronized();d=audit.sync.data
+    goal=(initial_sample['lower'],initial_sample['upper'])
     initial_target=np.concatenate([local[g][0]@np.asarray(d.geom_xmat[g]).reshape(3,3).T+d.geom_xpos[g] for g in audit.target])
     # One deterministic height from initial target top, not a wall-hit sweep.
     roof=float(np.ceil((initial_target[:,2].max()+.010)*1000)/1000)
@@ -131,7 +134,7 @@ def main(root):
         for wall in walls:
             if collide(np.asarray(item['bounds']),np.asarray(wall['bounds'])):
                 initial_conflicts.append(dict(geom=item['id'],name=item['name'],body=item['body'],wall=wall['name'],bounds=item['bounds']))
-    row=audit.synchronized();goal=(row['lower'],row['upper'])
+    audit.synchronized()
     goal_disjoint=any(goal[1][i]<lower[i] or goal[0][i]>upper[i] for i in range(3))
     result=dict(original_success_replayed=native,exact_checkpoint_matches=len(expected)-1,
        integrations=audit.total_integrations,actors=[dict(id=g,name=m.geom_id2name(g),vertices=len(local[g][0])) for g in actors],
