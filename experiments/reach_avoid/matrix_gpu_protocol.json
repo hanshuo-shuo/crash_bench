@@ -1,0 +1,21 @@
+{
+  "study": "RA-2 grouped initial readout and policy outcomes",
+  "label_root": "/projects/p33100/siosio/crashbench_safelibero/reach_avoid_matrix_labels/20261003T182027Z_cpu_87c5b06ef2d5",
+  "label_job": "8419904",
+  "vision_asset": "/projects/p33100/siosio/crashbench_safelibero/reach_avoid_assets/dinov2-small_ed25f3a31f01632728cabb09d1542f84ab7b0056",
+  "adapter_root": "/projects/p33100/siosio/crashbench_safelibero/reach_avoid_adapters/20261003T182938Z_gpu_8ad291c87992",
+  "adapter_job": "8420606",
+  "array_tasks": 6,
+  "max_concurrent": 1,
+  "max_minutes_per_task": 30,
+  "expected_total_gpu_minutes": [
+    45,
+    70
+  ],
+  "monitor_checkpoint_gpu_minutes": 60,
+  "rollout_population": "Only independently known feasible/infeasible valid states; all168 states retain initial observations and labels",
+  "attention": "adapter_protocol.json; fixed initial K1 actual action-to-vision; oracle ellipsoid target localization",
+  "dino_pooling": "Primary mean patch across both views, matching own vision tower pooling; concatenated view patch means and CLS retained as secondary",
+  "analysis": "grouped_analysis.py; validation-only layer/head selection; train-group cross-fitting; constant-prior fallback if a failure-training fold has one class, reported explicitly",
+  "no_API_calls": true
+}

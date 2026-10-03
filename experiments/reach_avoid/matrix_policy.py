@@ -23,7 +23,8 @@ class MatrixPolicy(LayerPolicy):
                 images=[obs['observation/image'],obs['observation/wrist_image']]
                 batch=self.vision_processor(images=images,return_tensors='pt',do_resize=False,do_center_crop=False)
                 with self.torch.inference_mode():out=self.vision(**{k:v.to('cuda') for k,v in batch.items()}).last_hidden_state
-                return dict(dino_patch=out[:,1:].mean(1).detach().cpu().numpy().reshape(-1),
+                return dict(dino_patch=out[:,1:].mean((0,1)).detach().cpu().numpy(),
+                    dino_views=out[:,1:].mean(1).detach().cpu().numpy().reshape(-1),
                     dino_cls=out[:,0].detach().cpu().numpy().reshape(-1),metadata=self.vision_asset)
         return super().infer(obs)
 

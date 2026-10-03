@@ -71,7 +71,11 @@ def extract(owner,obs):
     model=owner.policy._model
     sample_rng=owner.jax.random.split(owner.policy._rng)[1]
     noise=owner.jax.random.normal(sample_rng,(1,model.action_horizon,model.action_dim))
-    result=owner.jax.tree.map(lambda x:np.asarray(x[0]),owner.attention_extract(observation,noise))
+    # float32 losslessly represents native bfloat16 values and is supported by
+    # the established websocket codec. Persist server-side before transport.
+    result=owner.jax.tree.map(lambda x:np.asarray(x[0],dtype=np.float32),owner.attention_extract(observation,noise))
+    if owner.directory:
+        np.savez_compressed(owner.directory/('attention_'+before+'_'+digest(obs)+'.npz'),**result)
     difference=result['trace_velocity'].astype(float)-result['native_velocity'].astype(float)
     result['metadata']=dict(input_sha256=digest(obs),rng_before=before,rng_after=owner.key(),timestep=1.,
         action_queries='All native action-horizon queries, mean after per-query vision-only softmax',
