@@ -10,8 +10,15 @@ are exposed; 20/30 are fresh to this construction, not pretrained-unseen. All
 four are development groups, not structural generalization evidence. Only bottle
 xy is changed to (0.30, -0.45) m before the ordinary 20 settling commands.
 An invalid initial contact or pose is retained as invalid; coordinates are never
-retuned based on outcomes. Settled position drift must stay within 1 cm per axis
-and orientation drift within .05 rad; only floor support contact is allowed.
+retuned based on outcomes. Settled horizontal drift must stay within 1 cm per axis
+and normalized orientation drift within .05 rad; only floor support contact is
+allowed. Require floor support, collision-bottom height within 5 mm of floor and
+linear speed at most .05 m/s. These are settled-pose checks, not trajectory speed
+bounds. Repair 1 replaces an erroneous pre/post root-z drift gate: official
+initial poses start airborne at z=.15, so legitimate settling moves their roots.
+The old z>0 obstacle locator also fails on a supported bottle with a below-floor
+freejoint origin; protected identity is now explicitly the wine bottle. Failed
+CPU8414249 ran no research rollout and remains preserved. No xy coordinate changed.
 
 T=300 environment commands, with the original 7D OSC/gripper action bounds.
 No speed bound is inferred from clipping. All robot and target collision geoms

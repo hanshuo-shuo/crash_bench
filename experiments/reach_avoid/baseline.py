@@ -16,6 +16,15 @@ sys.path.insert(0, str(BASE / 'experiments/feasibility_risk'))
 import diagnostic as d
 r = d.r
 P = json.loads((HERE / 'protocol.json').read_text())
+# The protected identity is specified by this study, not inferred from root z.
+# A supported object's freejoint origin can be slightly below the support plane.
+import geometry
+def protected_bottle(env, obs):
+    name = 'wine_bottle_obstacle_1'
+    if name not in env.env.obj_body_id: raise RuntimeError('Missing protected wine bottle')
+    return name
+r.active_obstacle = protected_bottle
+geometry.active_obstacle = protected_bottle
 
 
 def make(directory, episode, condition):
@@ -65,11 +74,24 @@ def make(directory, episode, condition):
         slurm_job=os.environ['SLURM_JOB_ID'], prompt=P['prompt_safe'],
         action_spec=[low, high], execution_horizon_T=P['execution_horizon_T']))
     actual_pose = np.asarray(env.sim.data.qpos[qa[0]:qa[1]]).copy()
-    dot = abs(float(np.dot(actual_pose[3:], requested_pose[3:])))
+    dot = abs(float(np.dot(actual_pose[3:], requested_pose[3:]) /
+        (np.linalg.norm(actual_pose[3:])*np.linalg.norm(requested_pose[3:]))))
     angle = float(2*np.arccos(np.clip(dot, 0, 1)))
-    pose_valid = bool(np.max(np.abs(actual_pose[:3]-requested_pose[:3])) <= .01 and angle <= .05)
+    points, geoms = r.object_points(env, 'wine_bottle_obstacle_1')
+    bottle_geoms = {x['geom_id'] for x in geoms}
+    floor_id = env.sim.model.geom_name2id('floor')
+    support = any({int(c.geom1), int(c.geom2)} & bottle_geoms and
+        floor_id in (int(c.geom1), int(c.geom2)) and c.dist <= .001 for c in env.sim.data.contact[:env.sim.data.ncon])
+    va = env.sim.model.get_joint_qvel_addr('wine_bottle_obstacle_1_joint0')
+    speed = float(np.linalg.norm(env.sim.data.qvel[va[0]:va[0]+3]))
+    bottom = float(points[:, 2].min())
+    pose_valid = bool(np.max(np.abs(actual_pose[:2]-requested_pose[:2])) <= .01 and angle <= .05
+        and support and -.005 <= bottom <= .005 and speed <= .05)
     r.write(directory / 'SETTLED_POSE.json', dict(requested=requested_pose, actual=actual_pose,
-        valid=pose_valid, position_tolerance_m=.01, angular_tolerance_rad=.05, angular_drift_rad=angle))
+        valid=pose_valid, horizontal_tolerance_m=.01, angular_tolerance_rad=.05, angular_drift_rad=angle,
+        floor_support=bool(support), collision_bottom_z=bottom, max_floor_clearance_m=.005,
+        linear_speed=speed, max_linear_speed=.05,
+        repair='Official pose starts airborne. Validate settled physical support instead of pre/post root-z drift.'))
     return env, obs
 
 
