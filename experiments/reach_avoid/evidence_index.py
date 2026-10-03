@@ -15,6 +15,8 @@ def main(cpu,gpu,out):
                 case=layout['id']+'_'+mechanism+'_'+variant
                 label=cpu/('shard_'+str(i//2))/case;policy=gpu/('shard_'+str(i//2))/'output'/case
                 ls=read(label/'summary.json');ps=read(policy/'summary.json');inherited=read(policy/'INHERITED.json')
+                if inherited['label']!=ls['label'] or ps['initial_label']!=ls['label'] or ps['initial_valid']!=ls['initial_valid']:
+                    raise RuntimeError('Inherited label/validity category mismatch: '+case)
                 for name,value in inherited['hashes'].items():
                     if sha(label/name)!=value:raise RuntimeError('Label identity mismatch: '+case+'/'+name)
                 for name,expected in read(label/'VERIFIED.json')['hashes'].items():
@@ -53,6 +55,6 @@ def main(cpu,gpu,out):
     for name,value in [('STATE_TABLE.json',rows),('UNKNOWN_BRACKETS.json',brackets),('EVIDENCE_HASHES.json',hashes)]:
         (out/name).write_text(json.dumps(value,indent=2)+'\n')
     (out/'INDEPENDENT_READBACK_AUDIT.json').write_text(json.dumps(dict(passed=True,states=len(rows),
-        checks='Inherited label identity, saved verifier hashes, recomputed actual-geometry certificates, persisted goal/horizon/label predicates',hashes=len(hashes)),indent=2)+'\n')
+        checks='Inherited label identity and categories, saved verifier hashes, recomputed actual-geometry certificates, persisted goal/horizon/label predicates',hashes=len(hashes)),indent=2)+'\n')
 if __name__=='__main__':
     p=argparse.ArgumentParser();p.add_argument('cpu',type=Path);p.add_argument('gpu',type=Path);p.add_argument('out',type=Path);a=p.parse_args();main(a.cpu,a.gpu,a.out)

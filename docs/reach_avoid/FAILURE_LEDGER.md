@@ -12,9 +12,18 @@ scientific label. No paid API calls or base-model training were performed.
 | 8417233 | GPU completed, 6m39s | All eight baseline cells and matched prompt checks completed. |
 | 8416208 | CPU completed, 24m29s | 28 development states:12 witnessed feasible,8 conditional certified infeasible,8 UNKNOWN; all valid. |
 | 8418441 | GPU completed, 4m34s | 28 initial-only observations; native/traced final pools and end anchor exact; RGB/segmentation alignment passed; no environment commands. |
-| 8419904 | CPU array in progress | Six bounded shards for168 prospectively specified states. Each independently labels its executed geometry/state. |
+| 8419904 | All six CPU shards completed,136m44s total | 168 prospectively specified states:72 feasible,48 conditional infeasible,48 UNKNOWN. Every persisted certificate/goal/horizon check passed independent local readback. |
 | 8420606 | Adapter failed, 3m09s | Actual native action attention computed; WebSocket codec rejected bfloat16 velocity arrays. No rollout. Repair1 converts losslessly tofloat32 and saves arrays server-side before transport. |
 | 8421049 | Adapter repair1 completed, 3m22s | Both development states passed layer and native action-attention audits; no rollout. |
+| 8422120 | GPU array active; inspect live receipts | Immutable465f112 source,168 initial states,120 policy outcomes,max1A100,30min per task. First two shards completed26m56s/23m49s. Initial runtime forecast was too low; explicit amendments raised the matrix cap first to150 then180A100-min total. No conditions or scientific code changed. |
+
+The array's first pending task had a stale dependency after its CPU label job
+aged out of live Slurm records. The dependency was cleared only after matching
+COMPLETED/0:0 accounting and all28 verified label records. The exact before/after
+receipt is DEPENDENCY_REPAIR.json. Pending tasks1–5 were held at the first runtime
+checkpoint and released only after the explicit180min budget approval; the
+FORECAST_HOLD and GPU_BUDGET_AMENDMENT records preserve this history. There was
+no GPU-type substitution or asynchronous verifier change.
 
 Transport/approval history: initial sandbox DNS/socket denial was resolved using
 approved external SSH transport after repository identity checks. Auto-review

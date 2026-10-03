@@ -41,7 +41,7 @@ def package(session, analysis, destination):
     compact = {'summary.json', 'geometry.json', 'fixture.json', 'MATERIAL_BALL.json',
                'CERTIFICATE.json', 'VERIFIED.json', 'INHERITED.json', 'FEATURE_AUDIT.json',
                'initial_restore.json', 'SETTLED_POSE.json', 'steps.jsonl',
-               'VISIBILITY.json', 'attention_cues.json', 'general_vision.json',
+               'VISIBILITY.json', 'ATTENTION_CUES.json', 'general_vision.json',
                'layer_features.json', 'agentview_policy_224.png',
                'robot0_eye_in_hand_policy_224.png'}
     for kind in ('matrix_cpu', 'matrix_gpu'):
