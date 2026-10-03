@@ -35,6 +35,13 @@ def main(stage,smoke,parent=None):
     active=queued&{str(x) for x in recorded}
     if active:raise RuntimeError('Recorded CrashBench job active: '+str(sorted(active)))
     hashes={p:hashlib.sha256((BASE/p).read_bytes()).hexdigest() for p in SCIENTIFIC}
+    if stage=='final_audit':
+        for item in [parent,smoke]:
+            if item is None or item.parent.resolve()!=(ASSETS/'feasibility_contract').resolve():raise RuntimeError('Wrong audit input root')
+            if not json.loads((item/'COMPLETE.json').read_text()).get('passed'):raise RuntimeError('Audit input incomplete')
+            prior=json.loads((item/'receipt.json').read_text())
+            status=call(['sacct','-X','-j',str(prior['job_id']),'--noheader','--parsable2','--format=State,ExitCode']).splitlines()
+            if not status or any(x!='COMPLETED|0:0' for x in status):raise RuntimeError('Audit input job incomplete')
     if stage=='external_recovery':
         if parent is None or parent.parent.resolve()!=(ASSETS/'feasibility_contract').resolve():raise RuntimeError('Wrong parent root')
         previous=json.loads((parent/'receipt.json').read_text())
@@ -68,13 +75,14 @@ def main(stage,smoke,parent=None):
     receipt=dict(stage=stage,root=str(root),source=str(source),code_commit=commit,scientific_hashes=hashes,
           smoke_root=str(smoke) if smoke else None,parent_root=str(parent) if parent else None,
           resources=dict(account='p33100',partition='short',cpus=4,mem_gib=16,
-          time_minutes=30 if stage=='pilot' else 15,gpus=0),api_budget_usd=0,
+          time_minutes=5 if stage=='final_audit' else (30 if stage=='pilot' else 15),gpus=0),api_budget_usd=0,
           created_unix=time.time(),status='prepared_not_submitted')
     put(root/'receipt.json',receipt)
     env=os.environ.copy();env.pop('OPENROUTER_API_KEY',None)
     env.update(CB_CONTRACT_ROOT=str(root),CB_CONTRACT_STAGE=stage)
     if parent:env['CB_CONTRACT_PARENT']=str(parent)
-    script='recover_external.sbatch' if stage=='external_recovery' else 'job.sbatch'
+    if smoke:env['CB_CONTRACT_SMOKE']=str(smoke)
+    script={'external_recovery':'recover_external.sbatch','final_audit':'final_audit.sbatch'}.get(stage,'job.sbatch')
     job=subprocess.check_output(['sbatch','--parsable','--time=00:%02d:00'%receipt['resources']['time_minutes'],
           '--output='+str(root/'slurm_%j.log'),str(source/'experiments/feasibility_contract'/script)],
           cwd=BASE,env=env,text=True).strip().split(';')[0]
@@ -83,5 +91,5 @@ def main(stage,smoke,parent=None):
     print(json.dumps(receipt,indent=2))
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('stage',choices=['smoke','pilot','external_recovery']);p.add_argument('--smoke',type=Path);p.add_argument('--parent',type=Path)
+    p=argparse.ArgumentParser();p.add_argument('stage',choices=['smoke','pilot','external_recovery','final_audit']);p.add_argument('--smoke',type=Path);p.add_argument('--parent',type=Path)
     a=p.parse_args();main(a.stage,a.smoke,a.parent)
