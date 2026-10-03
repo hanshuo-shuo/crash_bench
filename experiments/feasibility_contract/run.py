@@ -370,10 +370,11 @@ def summarize(root, states):
             records=[json.loads(l) for l in (directory/'steps.jsonl').read_text().splitlines()
                      if json.loads(l)['stage']=='suffix']
             runs[variant]=(records, info)
-        caps={'natural_contact_only':None} if 'prefix_steps' in state else CAPS
+        # Goal/safety contradictions are development sanity controls only.
+        caps=CAPS if state['split']=='development_exposed' else {'natural_contact_only':None}
         for name, cap in caps.items():
             started=time.monotonic()
-            cert=exclusion(cap, supported='prefix_steps' not in state)
+            cert=exclusion(cap, supported=state['split']=='development_exposed')
             witnesses={variant:witness_at(rows, cap, 300, info['prefix_contact_safe'])
                        for variant,(rows,info) in runs.items()}
             label=decide(any(v is not None for v in witnesses.values()),cert)

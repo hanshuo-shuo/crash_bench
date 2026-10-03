@@ -1,5 +1,11 @@
 # Feasibility contract pilot (2026-10-02)
 
+**Scope correction before first submission:** ingress-cap contradictions below
+are used ONLY for the development smoke sanity controls. The five-layout / two-
+checkpoint research pilot uses SC-CONTACT-v1, with witnessed-positive or unknown
+labels. No unreachable-but-legal goal negative mechanism has been certified.
+Changing layouts does not make a definitional contradiction a reachability result.
+
 This is a new, explicitly authorized evaluation slice, isolated from the public
 SafeLIBERO reproduction and the completed 1209 executions. It does not train a
 judge or improve a controller. No new API calls or paid resources are used.
@@ -46,14 +52,27 @@ The algebra is independent of quasi-static assumptions and solver penetration.
 The original action-end 1 mm obstacle displacement proxy is reported separately.
 Safety here is a discrete simulator contract, not continuous-time collision proof.
 
-Pairs share all state, history, action, budget and predicate fields except c:
+Development-smoke sanity pairs share all state, history, action, budget and predicate fields except c:
 obvious `(-.05,+.15) m`; near face `(-.005,+.005) m`. Caps are frozen before new
 rollouts. The near positive side is merely a candidate until a legal safe witness
 exists. We do not shift caps or search for a threshold after observing outcomes.
 Failed near pairs remain unknown/incomplete, and the report includes them all.
 
-Natural external states use **SC-CONTACT-v1**, the same protected contact history
+ALL core-pilot states use **SC-CONTACT-v1**, the same protected contact history
 without any ingress rule. They are never assigned a contract-conflict negative.
+
+## Mechanisms rejected before submission
+
+No physical reachability negative is currently certified. A pictured obstruction
+does not exclude three-dimensional routes, manipulations of other bodies or moving
+the receiver. The current public scenes do not provide a verified sealed cavity
+with an immovable receiver and one enumerated exit. MuJoCo soft contact also
+requires a proven penetration bound before rigid-body aperture arguments apply.
+Native OSC command clipping is not a bound on free-object speed or cumulative
+motion, so short-budget failures cannot prove impossibility. We do not modify
+robot capabilities or add a quasi-static model to obtain easier negative labels.
+Thus the core pilot investigates evidence coverage and unknowns, and the central
+nontrivial-infeasibility research requirement remains an explicit open limitation.
 
 ## Units, splits, methods and labels
 
