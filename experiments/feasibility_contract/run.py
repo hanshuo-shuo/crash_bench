@@ -3,6 +3,7 @@ import argparse
 import gzip
 import hashlib
 import inspect
+import importlib
 import json
 import os
 from pathlib import Path
@@ -64,14 +65,13 @@ def configure(root):
           datasets=str(upstream/'safelibero/libero/datasets')))
     os.environ['LIBERO_CONFIG_PATH'] = str(config)
     sys.path[:0] = [str(upstream/'main'), str(upstream/'safelibero')]
-    from libero.libero.envs.objects.site_object import SiteObject
-    from libero.libero.envs.object_states.base_object_states import SiteObjectState
-    from libero.libero.envs.predicates.base_predicates import In
-    from libero.libero.envs.problems.libero_floor_manipulation import Libero_Floor_Manipulation
-    classes = [SiteObject, SiteObjectState, In, Libero_Floor_Manipulation]
+    # register_problem intentionally returns None, replacing its class symbol.
+    # Inspect loaded modules rather than that decorated symbol.
+    modules = [importlib.import_module('libero.libero.envs.'+p[:-3].replace('/','.'))
+               for p in SOURCE_HASHES]
     checked = {}
-    for cls in classes:
-        path = Path(inspect.getfile(cls)).resolve()
+    for module in modules:
+        path = Path(inspect.getfile(module)).resolve()
         relative = str(path.relative_to((bench/'envs').resolve()))
         if relative not in SOURCE_HASHES or sha(path) != SOURCE_HASHES[relative]:
             raise RuntimeError('Unreviewed loaded predicate implementation: '+str(path))
