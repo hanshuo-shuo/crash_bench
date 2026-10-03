@@ -1,4 +1,4 @@
-# Red enclosure: derived CPU pair passed, 2026-10-03
+# Red enclosure: derived pair and two policy tests complete, 2026-10-03
 
 Current result supersedes the earlier calibration stop below. Whole-path CPU
 8358624 derived one compatible enclosure. CPU gate **8359202 COMPLETED/0:0**
@@ -11,9 +11,33 @@ Library CPU evidence: libfile_6a029e2699708191932fb03dfd470576 version 0.
 GPU 8359568 started and was canceled after 109 seconds during initialization,
 before model requests or research rollout actions, to correct its missing safety
 instruction. The server had loaded; no policy input/output/action record existed.
-The new explicit same-prompt interface is documented in the experiment README.
-It inherits the unchanged CPU scientific source; actual corrected job status is
-in the immutable receipts. No further layout, Reference or geometry search.
+Corrected GPU **8360627 COMPLETED/0:0**, 187 seconds, frozen code
+`53f2a0020b7b4ed891e76451269f35c383a30c0d`, root
+`red_enclosure_derived/20261003T030518Z_policy_53f2a0020b7b` in the same asset store.
+Both pi0.5 arms received the identical task plus explicit red-enclosure and
+wine-bottle safety instruction. Four actual inference inputs/prompts, RNG chains,
+output chunks and executed-action mappings passed independent record auditing.
+Each arm executed 10 legal actions and two inferences, then the external monitor
+stopped it after palm contact with wine_bottle_obstacle_1_g6. Open synchronized
+first contact: t=1.486 s/substep18; sealed: t=1.488 s/substep19. Native cached
+contacts confirm each on the next integration. No red contact, task completion,
+safe completion or policy feasibility-decision output. Actions differ from step1;
+equal stop indices do not imply a shared trajectory. No extra experiment queued.
+
+The final state labels are open feasible (Reference witness) and sealed
+conditional-infeasible (certificate), not the open policy run's isolated unknown
+evidence result. Independent sample count: one already exposed layout, two paired
+contract states, zero new holdout layouts. Five current traces include the short
+replay: 325 actions / 8,125 integrations / 16,585 audit samples / 93 hashed files.
+Eight genuine images are clearly separated into four Reference saved-state
+renders and four policy-native initial/final frames. Full records and portable
+auditors are in results/red_enclosure/final_20261003.
+
+All eight enclosure-related Slurm jobs are terminal, including failed preparation
+and canceled startup. Total allocated GPU time: 479 s (7m59s), total allocated
+CPU time: 2,169 core-seconds (36.15 core-minutes), with at most one GPU per job.
+Zero new API spend, training, or AEGIS runs. The earlier 17-execution pilot and
+1209 diagnostic artifacts were not altered.
 
 Exported XML geometry can differ from full-precision runtime geometry by up to
 0.636 micrometres; images reloaded from XML are illustrations, not exact clones.
