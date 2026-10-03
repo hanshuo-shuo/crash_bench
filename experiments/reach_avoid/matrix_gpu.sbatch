@@ -38,7 +38,7 @@ export SINGULARITYENV_PYTHONPATH="$CB_UPSTREAM/safelibero:$CB_UPSTREAM/openpi/pa
 BINDS="/projects,/home,$ROOT:$ROOT:rw,$SOURCE:$SOURCE:ro"
 SIM="$CB_ASSETS/envs/aegis_sim/bin/python"
 CONTAINER="$CB_ASSETS/containers/aegis-py38.sif"
-# Each job records its own initial condition; baseline does not inherit a label.
+# Each shard restores independently labeled initial states; outcomes are new executions.
 export SINGULARITYENV_CB_RED_HEADLESS=0
 PORT=$((20000 + SLURM_JOB_ID % 30000))
 SERVER_PID=""

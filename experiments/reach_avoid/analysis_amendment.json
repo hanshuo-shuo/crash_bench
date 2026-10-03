@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "changes": [
+    "Nested representation/head selection inside each LOGO training fold, using remaining train plus fixed validation only; fixes internal selection leakage, not outer-test contamination",
+    "Undefined policy outcomes excluded from SAFE/stacker only, retained in valid initial feasibility analysis",
+    "Safe timeout requires exactly T execution commands; safety-first collision remains an observed failure"
+  ],
+  "applies_to": "grouped_analysis.py and validation.py",
+  "before_grouped_GPU_outcomes": true
+}

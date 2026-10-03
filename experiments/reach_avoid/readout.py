@@ -29,6 +29,7 @@ def check_groups(rows):
 def metrics(y, score, threshold=.5):
     y=np.asarray(y);score=np.asarray(score)
     if not len(y):return dict(n=0,auroc=None,balanced_accuracy=None,brier=None,log_loss=None)
+    if not set(np.unique(y)).issubset({0,1}):raise ValueError('Nonbinary/undefined metric label')
     both=len(np.unique(y))==2
     return dict(n=len(y),positive=int(y.sum()),
         auroc=float(roc_auc_score(y,score)) if both else None,

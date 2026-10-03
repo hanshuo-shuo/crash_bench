@@ -34,6 +34,7 @@ def verify_steps(steps, summary, fixed_goal, certificate, horizon_T):
     expected_outcome = ('invalid' if not summary['initial_valid'] else 'collision' if not last['safe_history']
         else 'safe_completion' if last['safe_success'] else 'safe_timeout')
     if summary['outcome'] != expected_outcome:raise RuntimeError('Persisted outcome mismatch')
+    if expected_outcome=='safe_timeout' and summary['steps']!=horizon_T:raise RuntimeError('Safe timeout must reach full execution horizon')
 
 
 def verify_certificate(geometry, material, fixture, initial_step, initial_valid, recorded):

@@ -17,7 +17,24 @@ P=json.loads((Path(__file__).parent/'matrix_protocol.json').read_text())
 def save(path,obj):path.write_text(json.dumps(obj,indent=2,allow_nan=False)+'\n')
 
 
+def validate_outcome(summary):
+    outcome=summary['outcome'];steps=summary['steps'];T=summary['execution_horizon_T']
+    if outcome not in ('collision','safe_completion','safe_timeout','invalid','not_run'):
+        raise ValueError('Undefined policy outcome domain')
+    if T!=P['execution_horizon_T'] or not 0<=steps<=T:raise ValueError('Execution horizon mismatch')
+    if outcome=='safe_timeout' and (steps!=T or not summary['safe_history'] or summary['safe_success']):
+        raise ValueError('Safe timeout requires the complete T-step endpoint')
+    if outcome=='collision' and summary['safe_history']:raise ValueError('Collision without safety violation')
+    if outcome=='safe_completion' and not (summary['safe_history'] and summary['safe_success']):
+        raise ValueError('Safe completion endpoint mismatch')
+    if outcome=='not_run' and summary['initial_valid'] and summary['initial_label']!='unknown':
+        raise ValueError('Known valid state missing policy outcome')
+    return ro.failure_target(summary)
+
+
 def fit_fixed(x,y,head):
+    if not len(y):raise ValueError('No defined fitting outcomes')
+    if not set(np.unique(y)).issubset({0,1}):raise ValueError('Nonbinary/undefined fitting label')
     if len(np.unique(y))<2:
         model=DummyClassifier(strategy='prior');model.fit(x,y);return model
     dim=min(P['readouts']['pca_max_dimension'],len(x)-1,x.shape[1])
@@ -28,6 +45,16 @@ def fit_fixed(x,y,head):
 def probability(model,x):
     classes=list(model.classes_)
     return model.predict_proba(x)[:,classes.index(1)] if 1 in classes else np.zeros(len(x))
+
+
+def nested_feasibility_select(features,candidates,fitting,validation,y):
+    records=[];best=None
+    for key in candidates:
+        x=features[key];model,selection=ro.fit_selected(x[fitting],y[fitting],x[validation],y[validation])
+        loss=min(t['validation_log_loss'] for t in selection['trials'])
+        records.append(dict(representation=key,head=selection['selected'],validation_log_loss=loss))
+        if best is None or loss<best[0]:best=(loss,key,model,selection)
+    return best,records
 
 
 def paired_interval(y,first,second,groups,repetitions=2000):
@@ -51,12 +78,14 @@ def load(root):
                 found=list(root.glob('**/output/'+case+'/summary.json'))+list(root.glob('**/shard_*/'+case+'/summary.json'))
                 # Input root contains only GPU results; reject duplicate replicas.
                 if len(found)!=1:raise ValueError(f'Expected one GPU result for {case}, got {found}')
-                folder=found[0].parent;summary=json.loads(found[0].read_text())
+                folder=found[0].parent;summary=json.loads(found[0].read_text());validate_outcome(summary)
+                if summary['outcome'] in ('collision','safe_completion','safe_timeout') and not json.loads((folder/'VERIFIED.json').read_text())['passed']:raise ValueError('Missing verified policy endpoint')
                 feature_audit=json.loads((folder/'FEATURE_AUDIT.json').read_text())
                 if not feature_audit['physics_unchanged']:raise RuntimeError('Changed feature state')
                 label=json.loads((folder/'INHERITED.json').read_text())['label']
                 row=dict(scene_group=layout['id'],split=layout['split'],family=family,variant=variant,case=case,label=label,
                     outcome=summary['outcome'],steps=summary['steps'],initial_valid=summary['initial_valid'],source=str(folder))
+                row.update({k:summary[k] for k in ('execution_horizon_T','safe_history','safe_success','initial_label')})
                 row['failure_target']=ro.failure_target(row)
                 rows.append(row);values={}
                 with np.load(folder/'layer_features.npz') as a:
@@ -76,6 +105,7 @@ def load(root):
 
 def analyze(rows,features,output):
     output.mkdir();ro.check_groups(rows)
+    for row in rows:validate_outcome(row)
     save(output/'MANIFEST.json',dict(rows=rows,protocol=P))
     np.savez_compressed(output/'FEATURES.npz',**features)
     indices={split:np.asarray([i for i,r in enumerate(rows) if r['split']==split and
@@ -121,21 +151,35 @@ def analyze(rows,features,output):
         unknown_counts={s:sum(r['split']==s and r['label']=='unknown' for r in rows) for s in indices},
         claim=P['claim'],decision_time='initial state',unknowns_excluded_only_from_binary_metrics=True))
     save(output/'LEARNING_CURVES.json',curves);np.savez_compressed(output/'TEST_PREDICTIONS.npz',indices=te,y=y[te],**predictions)
+    save(output/'PAIRED_REPRESENTATION_COMPARISONS.json',{key:paired_interval(y[te],predictions[key],predictions[chosen],group[te]) for key in ('own_vision_tower','dino_patch','rgb_pooled_red','visibility','geometry','knows_fixed') if key in predictions})
     # One fixed SAFE-style architecture predicts full-T policy failure.
     safe_head=MLPClassifier(hidden_layer_sizes=(32,),alpha=.1,solver='lbfgs',max_iter=500,random_state=713)
-    safe_x=features['native_final'];feas_x=features[chosen];feas_head=dict(ro.candidates())[selection[chosen]['selected']]
+    safe_x=features['native_final']
+    defined={s:ids[failure[ids]>=0] for s,ids in indices.items()}
+    exclusions={s:[rows[i]['case'] for i in ids if failure[i]<0] for s,ids in indices.items()}
     oof=np.full((len(rows),2),np.nan);folds=[]
     for g in np.unique(group[tr]):
         fitting=tr[group[tr]!=g];held=tr[group[tr]==g]
-        sf=fit_fixed(safe_x[fitting],failure[fitting],safe_head);ff=fit_fixed(feas_x[fitting],y[fitting],feas_head)
-        oof[held,0]=probability(sf,safe_x[held]);oof[held,1]=probability(ff,feas_x[held])
-        folds.append(dict(held_group=str(g),training_groups=np.unique(group[fitting]).tolist(),failure_classes=np.unique(failure[fitting]).tolist(),feasibility_classes=np.unique(y[fitting]).tolist()))
-    safe=fit_fixed(safe_x[tr],failure[tr],safe_head)
+        safe_fitting=fitting[failure[fitting]>=0]
+        sf=fit_fixed(safe_x[safe_fitting],failure[safe_fitting],safe_head)
+        # Nested representation AND head selection: held-group labels never
+        # influence the model, transforms, or selection producing its OOF score.
+        best,nested=nested_feasibility_select(features,candidates,fitting,va,y)
+        _,fold_key,ff,fold_selection=best
+        oof[held,0]=probability(sf,safe_x[held]);oof[held,1]=probability(ff,features[fold_key][held])
+        folds.append(dict(held_group=str(g),training_groups=np.unique(group[fitting]).tolist(),
+            validation_groups=np.unique(group[va]).tolist(),failure_classes=np.unique(failure[safe_fitting]).tolist(),
+            feasibility_classes=np.unique(y[fitting]).tolist(),nested_selected_representation=fold_key,
+            nested_selected_head=fold_selection['selected'],nested_selection_trials=nested))
+    safe=fit_fixed(safe_x[defined['train']],failure[defined['train']],safe_head)
     safe_test=probability(safe,safe_x[te]);safe_val=probability(safe,safe_x[va]);feas_test=predictions[chosen]
     failed_train=tr[failure[tr]==1];failed_test=failure[te]==1
     incremental=dict(primary_feasibility_representation=chosen,decision_time='initial state',folds=folds,
-        safe_failure_probe=ro.metrics(failure[te],safe_test),safe_validation_failure=ro.metrics(failure[va],safe_val),
-        training_failure_classes=np.unique(failure[tr]).tolist(),safe_description=P['failure_probe'],
+        safe_failure_probe=ro.metrics(failure[te][failure[te]>=0],safe_test[failure[te]>=0]),
+        safe_validation_failure=ro.metrics(failure[va][failure[va]>=0],safe_val[failure[va]>=0]),
+        undefined_outcome_exclusions=exclusions,undefined_outcome_exclusion_counts={s:len(v) for s,v in exclusions.items()},
+        training_failure_classes=np.unique(failure[defined['train']]).tolist(),safe_description=P['failure_probe'],
+        raw_safe_score_for_infeasibility=ro.metrics(y[te][failed_test],safe_test[failed_test]),
         failed_train_n=len(failed_train),failed_test_n=int(failed_test.sum()),estimand='Independently infeasible versus witnessed feasible among fixed-policy failures')
     if len(np.unique(y[failed_train]))<2 or len(np.unique(y[te][failed_test]))<2:
         incremental['not_estimable']='Both feasibility labels are required among train and test policy failures; scenes and thresholds were not retuned'
@@ -155,7 +199,7 @@ def analyze(rows,features,output):
     # KNOWS raw success association remains distinct from feasibility fitting.
     knows=features['knows_fixed'][te]
     save(output/'KNOWS_INITIAL.json',dict(scope='Initial K=1 oracle localization adaptation, no trajectory smoothing or official tracker',
-        failure_by_negative_target_mass=ro.metrics(failure[te],1-np.clip(knows[:,0],0,1)),
+        failure_by_negative_target_mass=ro.metrics(failure[te][failure[te]>=0],1-np.clip(knows[failure[te]>=0,0],0,1)),
         target_mass=knows[:,0].tolist(),density=knows[:,1].tolist(),entropy=knows[:,2].tolist(),indices=te.tolist()))
 
 if __name__=='__main__':

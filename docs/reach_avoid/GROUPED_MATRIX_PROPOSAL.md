@@ -64,3 +64,20 @@ Approximate resource proposal: six isolated CPU array tasks, each two layouts,
 state rollouts approximately45-70 A100-min, split into separate immutable jobs
 of at most30min, at most one active GPU. This is a scale-up and needs explicit
 checkpoint review before submission; current tool preparation is not authorization.
+
+Pre-results analysis amendment (2026-10-03, before any grouped GPU rollout): an
+independent statistical audit identified that global validation selection, fitted
+using all train labels, could indirectly leak a held training group's labels into
+its own cross-fitted feasibility score. The implementation now repeats both
+representation and head selection inside each LOGO fold, fitting on only the other
+training groups and selecting on the fixed validation groups. The final model
+still uses all training groups and fixed validation groups; test remains untouched.
+Every fold records its chosen representation/head and the complete selection table.
+
+Undefined policy outcomes (including illegal-command termination at an otherwise
+valid initial state) remain in the initial feasibility analysis but are excluded
+from SAFE fitting, failure metrics and failure-conditioned stackers. Counts and
+case IDs are retained. Explicit domain and endpoint checks require safe timeouts
+to reach all300 execution commands and safe completions to retain safety. No
+partial episode is relabeled as a timeout. These amendments do not change scenes,
+labels, physical executions, split assignment, or the declared estimands.
