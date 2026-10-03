@@ -17,7 +17,9 @@ def audit_run(directory,out):
     from robosuite.utils.binding_utils import MjSim
     sim=MjSim.from_xml_string((directory/'model.xml').read_text())
     sim.set_state_from_flattened(np.asarray(snap['sim_state']))
-    for field in ARRAYS:np.asarray(getattr(sim.data,field))[:]=np.asarray(snap['arrays'][field])
+    for field in ARRAYS:
+        destination=np.asarray(getattr(sim.data,field))
+        destination[:]=np.asarray(snap['arrays'][field]).reshape(destination.shape)
     sim.forward()
     m,d=sim.model,sim.data
     target=m.body_name2id(state['target']+'_main');site=m.site_name2id(state['goal_site'])
