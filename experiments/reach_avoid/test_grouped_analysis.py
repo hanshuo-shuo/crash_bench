@@ -27,4 +27,3 @@ class GroupedIncremental(unittest.TestCase):
         self.assertEqual(records,repeated);self.assertEqual(one[1],two[1])
         np.testing.assert_array_equal(probability(one[2],features[one[1]][held]),probability(two[2],features[two[1]][held]))
 if __name__=='__main__':unittest.main()
-
