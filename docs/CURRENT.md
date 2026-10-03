@@ -1,5 +1,15 @@
 # Current — SafeLIBERO reproduction and feasibility evidence, 2026-10-03
 
+## Latest enclosure calibration: stopped, no model inference
+
+The newly authorized red enclosure calibration finished its bounded attempts.
+Read [red_enclosure/CURRENT.md](red_enclosure/CURRENT.md). The final open Reference
+touched a wall at action 85, so it remains unknown; the sealed RE-1 conditional
+certificate passed. No valid feasible/infeasible pair was completed and pi0.5
+remained blocked by the witness gate. Job 8356882 is terminal; all three attempts
+and their real images are retained. Zero new API calls or training. No further
+geometry search or execution is queued. The earlier pilot below is unchanged.
+
 ## Latest authorized evidence pilot
 
 The 2026-10-02 user-authorized implementation and bounded Quest pilot is complete.
