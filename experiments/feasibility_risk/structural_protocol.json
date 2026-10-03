@@ -1,0 +1,18 @@
+{
+  "study": "FR-1B prospective irrelevant closed-enclosure control",
+  "approved_scope": "One existing layout (milk Object I task2 init10), two new states. No new policy rollout or training.",
+  "variants": ["decoy_open", "decoy_sealed"],
+  "cpu_parent": "/projects/p33100/siosio/crashbench_safelibero/feasibility_risk/20261003T051248Z_cpu_3b76293292d0",
+  "gpu_parent": "/projects/p33100/siosio/crashbench_safelibero/feasibility_risk/20261003T052306Z_gpu_11804f5cc2ad",
+  "geometry_rule": "Translate the complete e10 enclosure without changing dimensions, thickness, colour, or z. Set interior y centre to 0. Outer near-x equals maximum x of measured actor height-slice bounds and initial collision bounds overlapping z[-0.03,0.157] whose x/y bounds are all within [-1,1], plus 0.005 m. Save included/excluded geometry IDs. Independently test translated panels against ALL initial collision bounds including excluded inactive obstacles and all saved full-path height-slice bounds. No search, no post-failure displacement changes.",
+  "expected_outer_near_x_m": 0.18125006807615288,
+  "cpu_actions": "Replay the existing e10 baseline's exact 226 ordinary commands once per variant; stop on first violation or safe success. No new controller, search, or action budget extension.",
+  "initial_state": "Restore complete e10 baseline physics/controller/RNG. Goal, native task and protected wine unchanged.",
+  "labels": "Actual safe witness yields feasible; failure remains unknown. Target outside decoy prevents application of the closed-box exclusion.",
+  "gpu": "Render and extract frozen initial features only in both new states. Repeat saved original e10-open input once to verify feature equivalence across jobs. Zero environment control actions; unexecuted proposal/invariance inferences are explicitly counted.",
+  "cpu_max_minutes": 10,
+  "gpu_max_minutes": 10,
+  "api_calls": 0,
+  "training": false,
+  "scope": "One construction-level relevance by closure contrast. Not held-out feature decoding, not new independent layout, not removal of target-visibility or panel-position shortcuts."
+}
