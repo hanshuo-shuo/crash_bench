@@ -60,7 +60,7 @@ def audit_visibility(env,obs,audit,directory,data):
     # target root lies below the actual lid's footprint, not merely lid count.
     point=np.asarray(audit.forward().body_xpos[audit.target_id]);lid=[b for b in audit.boxes if b['name'] in ('red_z_high','red_parked_lid')]
     lid_over=any(b['lower'][0]<=point[0]<=b['upper'][0] and b['lower'][1]<=point[1]<=b['upper'][1] and point[2]<b['lower'][2] for b in lid)
-    np.savez_compressed(directory/'cue_baselines.npz',rgb_pooled_and_red=np.concatenate(image_features),geometry=np.r_[len(lid),float(lid_over),point,np.asarray(audit.fixed_goal).flatten(),[v for b in audit.boxes for k in ('lower','upper') for v in b[k]]])
+    np.savez_compressed(directory/'cue_baselines.npz',rgb_pooled_and_red=np.concatenate(image_features),geometry=np.r_[len(lid),float(lid_over),point,np.asarray(audit.fixed_goal).flatten(),(np.asarray(lid[0]['lower'])+np.asarray(lid[0]['upper']))/2-point if lid else np.zeros(3)])
     r.write(directory/'VISIBILITY.json',dict(views=reports,physics_unchanged=True,lid_present=bool(lid),privileged_lid_over_target=bool(lid_over),strict_target_goal_lid_visible=bool(lid and any(v['exact_policy_rgb_match'] and all(v['entities'][k]['pixels_224']>=4 for k in ('target','goal','lid')) for v in reports)),scope='Segmentation and geometry diagnose visibility only. Occluded target location cannot be supplied as an input to a visual feature readout. Parked lid controls lid presence, not lid-over-target relation.'))
 
 def math_tan_half(degrees):return np.tan(np.deg2rad(degrees)/2)
