@@ -1,5 +1,17 @@
 # Current — SafeLIBERO reproduction and feasibility evidence, 2026-10-03
 
+## Latest FR-1 / FR-1B study complete
+
+Read [feasibility_risk/CURRENT.md](feasibility_risk/CURRENT.md). The newly authorized
+bounded study produced six actual safe-witness states and two RE-1 conditional
+exclusions in two closely related construction groups. All six tested pi0.5
+executions hit the protected wine bottle. Both irrelevant closed/open enclosure
+controls are safely solvable with the same 226 commands. A common-process feature
+repair passed after preserving one failed cross-job equality check. All five jobs
+are terminal; no readout, bulk matrix, extra rollout or paid API use is queued.
+This supports the existence-versus-policy-risk distinction and a closure control,
+not held-out feasibility decoding, native introspection or broad generalization.
+
 ## Latest enclosure work complete: one certified pair, two policy failures
 
 Whole-path CPU design 8358624 and gate 8359202 both COMPLETED/0:0. The derived

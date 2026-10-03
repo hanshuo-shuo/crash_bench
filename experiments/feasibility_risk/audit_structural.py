@@ -59,7 +59,10 @@ def main(parent_cpu,parent_gpu,cpu,gpu,out):
     for a,b in (('open','sealed'),('decoy_open','decoy_sealed'),('sealed','decoy_sealed'),('open','decoy_open')):
         distances.append(dict(a=a,b=b,**{k:cosine_distance(features[a][k],features[b][k]) for k in features[a]}))
     vectors={k:features['sealed'][k]-features['open'][k] for k in features['open']}
-    alignment={k:1-cosine_distance(vectors[k],features['decoy_sealed'][k]-features['decoy_open'][k]) for k in vectors}
+    alignment={}
+    for k in vectors:
+        distance=cosine_distance(vectors[k],features['decoy_sealed'][k]-features['decoy_open'][k])
+        alignment[k]=None if distance is None else 1-distance
     result=dict(passed=True,rows=rows,audits=audits,total_actions=sum(x['actions'] for x in audits),total_samples=sum(x['samples'] for x in audits),verified_hashes=sum(x['hashes'] for x in audits),cross_job_comparisons=cross,end_anchor_repeat=repeat,identical_initial_physics=True,identical_recorded_actions=True,new_independent_layouts=0,new_policy_rollouts=0,new_policy_risk_labels=0,feature_cosine_distances=distances,closure_displacement_cosine=alignment,scope='One closure by relevance construction contrast; descriptive representation changes only, using only common-process features. No trained readout, held-out accuracy, or native understanding claim. Target visibility and enclosure position remain cues. The certificate initial_contact_and_geometry_safe aggregate is false for the decoy because target-inside fails; the separate initial_safe gate passes. Neither decoy is certified infeasible.')
     out.write_text(json.dumps(result,indent=2)+'\n');print(json.dumps(result,indent=2))
 

@@ -24,11 +24,12 @@ inside the projected target region, keep both raw renders, and report the influe
 map. A pass does not establish full boundary observability or human interpretability.
 
 Extract the same three frozen feature summaries and RGB/red-pixel baselines.
-Reuse two saved opaque inputs (one per original initial state) for exact cross-job
-feature/action equivalence. Use the unchanged extraction audit: 10 inputs total,
-20 feature forward passes and 60 local unexecuted action inferences, zero environment
-actions, zero paid API calls. Suggested cap: one CPU job, 1 core / 8 GiB / 5 min;
-one A100 job, 4 cores / 32 GiB / 10 min. Expected GPU use roughly 3–6 min from the
+Extract opaque and transparent observations together in one frozen process;
+repeat one opaque anchor at the end. Cross-job discrepancies in FR-1B make mixing
+old and new feature values inappropriate for the ablation. Use the unchanged
+extraction audit: 17 inputs total, 34 feature forward passes and 102 local
+unexecuted action inferences, zero environment actions, zero paid API calls. Suggested cap: one CPU job, 1 core / 8 GiB / 5 min;
+one A100 job, 4 cores / 32 GiB / 10 min. Expected GPU use roughly 4–8 min from the
 completed extraction timings; cap failure ends the attempt without scientific tuning.
 
 Predetermine only descriptive contrasts: within-state opaque/transparent distances;
