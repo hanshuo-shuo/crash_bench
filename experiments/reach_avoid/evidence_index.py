@@ -27,10 +27,15 @@ def main(cpu,gpu,out):
                     verified=read(policy/'VERIFIED.json')
                     for name,expected in verified['hashes'].items():
                         if sha(policy/name)!=expected:raise RuntimeError('GPU verified file changed: '+case+'/'+name)
+                violation=ps.get('first_violation') or {}
                 row=dict(case=case,scene_group=layout['id'],split=layout['split'],constructor=mechanism,variant=variant,
                     independent_label=ls['label'],reference_outcome=ls['outcome'],reference_steps=ls['steps'],
                     policy_outcome=ps['outcome'],policy_steps=ps['steps'],initial_valid=ls['initial_valid'],
                     layer_accepted=ps['layer_accepted'],attention_accepted=ps['attention_accepted'],
+                    first_violation_phase=violation.get('phase'),
+                    first_violation_contacts=bool(violation.get('contacts')),
+                    first_violation_actor_crossing=bool(violation.get('hits')),
+                    first_violation_material_cube_crossing=bool(violation.get('material_cube_hits')),
                     cpu_job=read(label.parent/'COMPLETE.json')['job'],gpu_job=read(policy.parent/'COMPLETE.json')['job'])
                 rows.append(row)
                 if variant not in ('open','irrelevant'):numeric.append((float(variant),ls['label']))
