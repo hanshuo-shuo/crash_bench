@@ -1,5 +1,15 @@
 # Red enclosure calibration stopped at the witness gate, 2026-10-03
 
+Latest user steering resumed the minimal-pair objective after this stop: perform
+one short CPU replay of the saved successful original Reference to measure the
+complete hand/finger/arm/target collision envelope before choosing any new
+fixture. `envelope.py` derives roof height from the initial target top + 10 mm,
+then a conservative opening from all height-clipped collision hulls + 5 mm.
+It checks the resulting open walls against the whole replay and closed geometry
+against every original initial collision object. Report incompatibility before
+any alternative. No more local 2 cm wall adjustments or premature A100 gates.
+The outcome below remains the result of the earlier completed calibration.
+
 The user authorized a bounded enclosure pair with the unchanged Reference,
 followed by nominal pi0.5 only after a safe open witness and a closed certificate.
 The final allowed fixture correction still touched a wall. No additional geometry

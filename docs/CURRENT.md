@@ -1,6 +1,16 @@
 # Current — SafeLIBERO reproduction and feasibility evidence, 2026-10-03
 
-## Latest enclosure calibration: stopped, no model inference
+## Latest enclosure work: full-path CPU geometry analysis authorized
+
+After the local-clearance calibration below, the user explicitly resumed the
+minimal-pair objective. The next authorized step replays the existing successful
+227-action original Reference on CPU to measure all robot/target collision hulls,
+derive one opening outside that path, and check initial scene compatibility.
+No further A100 gate run precedes this analysis. Actual job provenance is under
+`red_enclosure_geometry/` in the project asset root. This is not new policy or
+layout sampling; the earlier failed evidence remains intact.
+
+### Earlier calibration stop, no model inference
 
 The newly authorized red enclosure calibration finished its bounded attempts.
 Read [red_enclosure/CURRENT.md](red_enclosure/CURRENT.md). The final open Reference
@@ -8,7 +18,7 @@ touched a wall at action 85, so it remains unknown; the sealed RE-1 conditional
 certificate passed. No valid feasible/infeasible pair was completed and pi0.5
 remained blocked by the witness gate. Job 8356882 is terminal; all three attempts
 and their real images are retained. Zero new API calls or training. No further
-geometry search or execution is queued. The earlier pilot below is unchanged.
+local wall-by-wall search is authorized. The earlier pilot below is unchanged.
 
 ## Latest authorized evidence pilot
 
