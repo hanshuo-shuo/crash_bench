@@ -25,6 +25,14 @@ checkpoint and released only after the explicit180min budget approval; the
 FORECAST_HOLD and GPU_BUDGET_AMENDMENT records preserve this history. There was
 no GPU-type substitution or asynchronous verifier change.
 
+Observed undefined policy endpoint: L04_cage_.020 in8422120_2 proposed motion
+component1.0145729686968326 at command159, outside the declared[-1,1] domain,
+after158 safe commands. The gripper component was clipped by the fixed interface;
+motion components were not. ILLEGAL.json preserves the rejected raw/action arrays.
+The episode remains invalid and is not rerun, clipped retroactively or counted
+as a full-T timeout. Its valid independently certified initial label remains.
+This is a train/cage descriptive cell, outside primary train/slit fitting.
+
 Transport/approval history: initial sandbox DNS/socket denial was resolved using
 approved external SSH transport after repository identity checks. Auto-review
 initially rejected generic commit/push and later source sync while a job was queued.

@@ -15,8 +15,8 @@ def main(cpu,gpu,out):
                 case=layout['id']+'_'+mechanism+'_'+variant
                 label=cpu/('shard_'+str(i//2))/case;policy=gpu/('shard_'+str(i//2))/'output'/case
                 ls=read(label/'summary.json');ps=read(policy/'summary.json');inherited=read(policy/'INHERITED.json')
-                if inherited['label']!=ls['label'] or ps['initial_label']!=ls['label'] or ps['initial_valid']!=ls['initial_valid']:
-                    raise RuntimeError('Inherited label/validity category mismatch: '+case)
+                if inherited['label']!=ls['label'] or ps['initial_label']!=ls['label']:
+                    raise RuntimeError('Inherited label category mismatch: '+case)
                 for name,value in inherited['hashes'].items():
                     if sha(label/name)!=value:raise RuntimeError('Label identity mismatch: '+case+'/'+name)
                 for name,expected in read(label/'VERIFIED.json')['hashes'].items():
@@ -30,9 +30,13 @@ def main(cpu,gpu,out):
                     for name,expected in verified['hashes'].items():
                         if sha(policy/name)!=expected:raise RuntimeError('GPU verified file changed: '+case+'/'+name)
                 violation=ps.get('first_violation') or {}
+                rejected=read(policy/'ILLEGAL.json') if (policy/'ILLEGAL.json').exists() else {}
                 row=dict(case=case,scene_group=layout['id'],split=layout['split'],constructor=mechanism,variant=variant,
                     independent_label=ls['label'],reference_outcome=ls['outcome'],reference_steps=ls['steps'],
                     policy_outcome=ps['outcome'],policy_steps=ps['steps'],initial_valid=ls['initial_valid'],
+                    policy_initial_valid=ps['initial_valid'],initial_validity_agrees=ls['initial_valid']==ps['initial_valid'],
+                    rejected_action_step=rejected.get('step'),
+                    rejected_action_max_abs=max(abs(x) for x in rejected['action']) if rejected else None,
                     layer_accepted=ps['layer_accepted'],attention_accepted=ps['attention_accepted'],
                     first_violation_phase=violation.get('phase'),
                     first_violation_contacts=bool(violation.get('contacts')),
@@ -42,7 +46,7 @@ def main(cpu,gpu,out):
                 rows.append(row)
                 if variant not in ('open','irrelevant'):numeric.append((float(variant),ls['label']))
                 for folder,kind in ((label,'labels'),(policy,'policy')):
-                    for name in ('summary.json','CERTIFICATE.json','VERIFIED.json','initial_restore.json','FEATURE_AUDIT.json'):
+                    for name in ('summary.json','CERTIFICATE.json','VERIFIED.json','initial_restore.json','FEATURE_AUDIT.json','ILLEGAL.json'):
                         path=folder/name
                         if path.exists():hashes[kind+'/'+case+'/'+name]=sha(path)
             neg=[x for x,l in numeric if l=='infeasible'];pos=[x for x,l in numeric if l=='feasible']

@@ -39,7 +39,7 @@ def package(session, analysis, destination):
         add(session / name, 'audits/' + name)
     # The compact per-state records allow independent geometric/goal readback.
     compact = {'summary.json', 'geometry.json', 'fixture.json', 'MATERIAL_BALL.json',
-               'CERTIFICATE.json', 'VERIFIED.json', 'INHERITED.json', 'FEATURE_AUDIT.json',
+               'CERTIFICATE.json', 'VERIFIED.json', 'INHERITED.json', 'FEATURE_AUDIT.json', 'ILLEGAL.json',
                'initial_restore.json', 'SETTLED_POSE.json', 'steps.jsonl',
                'VISIBILITY.json', 'ATTENTION_CUES.json', 'general_vision.json',
                'layer_features.json', 'agentview_policy_224.png',

@@ -29,11 +29,15 @@ def baseline(session,out):
 
 def contact_sheet(session,out):
     cases=['A_slit_open','A_slit_.020','A_slit_.180','A_slit_irrelevant','A_cage_open','A_cage_.020','A_cage_.180','A_cage_irrelevant']
-    canvas=Image.new('RGB',(1120,610),'white');draw=ImageDraw.Draw(canvas)
+    canvas=Image.new('RGB',(1120,664),'white');draw=ImageDraw.Draw(canvas);font=ImageFont.load_default(size=18)
     for i,case in enumerate(cases):
         source=session/'raw/observe_gpu'/case/'agentview_actual.png';im=Image.open(source).convert('RGB').resize((260,260))
-        x=(i%4)*280+10;y=(i//4)*305+30;canvas.paste(im,(x,y));label=read(session/'raw/mechanism_cpu'/case/'summary.json')['label']
-        draw.text((x,y-23),case+' | '+label,fill='black')
+        x=(i%4)*280+10;y=(i//4)*332+56;canvas.paste(im,(x,y));label=read(session/'raw/mechanism_cpu'/case/'summary.json')['label']
+        group,family,variant=case.split('_');shown={'open':'open','irrelevant':'off-target'}.get(variant)
+        if shown is None:shown=f'{float(variant)*1000:.0f} mm gap'
+        draw.text((x,y-50),group+' | '+family.title()+' | '+shown,fill='black',font=font)
+        meaning={'feasible':'Feasible: safe witness','infeasible':'Infeasible under RA-SEP-1','unknown':'UNKNOWN'}[label]
+        draw.text((x,y-27),meaning,fill=COLORS[label],font=font)
     canvas.save(out/'03_visible_constructions.png')
 
 def boundary(session,out):
