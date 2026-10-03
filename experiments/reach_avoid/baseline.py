@@ -27,10 +27,11 @@ r.active_obstacle = protected_bottle
 geometry.active_obstacle = protected_bottle
 
 
-def make(directory, episode, condition):
+def make(directory, episode, condition, boxes=None, placements=None):
     from libero.libero import benchmark, get_libero_path
     from libero.libero.envs.env_wrapper import ControlEnv
     d.setup_layout(episode)
+    if boxes is not None: d.CURRENT_BOXES = boxes
     suite = benchmark.get_benchmark_dict()[P['suite']](safety_level=P['level'])
     task = suite.get_task(P['task'])
     bddl = Path(get_libero_path('bddl_files')) / task.problem_folder / task.bddl_file
@@ -41,6 +42,12 @@ def make(directory, episode, condition):
         camera_names=['agentview', 'robot0_eye_in_hand'], camera_depths=False)
     env.seed(P['seed']); env.reset(); obs = env.set_init_state(initial)
     before = r.capture(env)
+    for name, xy in (placements or {}).items():
+        address = env.sim.model.get_joint_qpos_addr(name+'_joint0')
+        velocity = env.sim.model.get_joint_qvel_addr(name+'_joint0')
+        env.sim.data.qpos[address[0]:address[0]+2] = xy
+        env.sim.data.qvel[velocity[0]:velocity[1]] = 0
+    if placements: env.sim.forward()
     qa = env.sim.model.get_joint_qpos_addr('wine_bottle_obstacle_1_joint0')
     if condition == 'clear':
         joint = 'wine_bottle_obstacle_1_joint0'

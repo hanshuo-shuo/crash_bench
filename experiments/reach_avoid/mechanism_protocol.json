@@ -1,0 +1,63 @@
+{
+  "study": "RA-1 visible separator pilot",
+  "version": 1,
+  "layouts": [
+    {
+      "id": "A",
+      "target_xy": [
+        -0.3,
+        -0.42
+      ],
+      "goal_xy": [
+        -0.1,
+        0.25
+      ]
+    },
+    {
+      "id": "C",
+      "target_xy": [
+        -0.06,
+        -0.42
+      ],
+      "goal_xy": [
+        -0.12,
+        0.3
+      ]
+    }
+  ],
+  "mechanisms": [
+    "slit",
+    "cage"
+  ],
+  "variants": [
+    "open",
+    ".020",
+    ".028",
+    ".034",
+    ".060",
+    ".180",
+    "irrelevant"
+  ],
+  "irrelevant_center_xy": [
+    0.38,
+    0.2
+  ],
+  "bottle_xy": [
+    0.3,
+    -0.45
+  ],
+  "execution_horizon_T": 300,
+  "seed": 7,
+  "groups": "All variants/frames/seeds of a layout grouped. These two are development construction groups, not held-out evidence.",
+  "physical_scope": "Both constructions share the sufficient separator argument. Not yet independent dynamical mechanisms.",
+  "guard": "At each synchronized integration segment, the target root must avoid each fixed red box expanded by the world cube of halfwidth r/sqrt(3)-1e-6, where a root-centered radius-r ball is verified inside an actual target collision box. Whole-body and target contacts with red/wine are also prohibited. Actor geom centers obey original red-box segment guard.",
+  "unknown": "Failure or timeout without certificate is UNKNOWN. Record every case and unresolved gap widths.",
+  "budget": {
+    "cpu_cores": 1,
+    "mem_gib": 8,
+    "minutes": 30,
+    "max_repair_jobs": 2,
+    "api_calls": 0
+  },
+  "no_geometry_tuning_after_results": true
+}
