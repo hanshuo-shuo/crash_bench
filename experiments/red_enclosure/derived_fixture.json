@@ -1,0 +1,199 @@
+{
+  "original_success_replayed": true,
+  "exact_checkpoint_matches": 227,
+  "integrations": 5675,
+  "actors": [
+    {
+      "id": 20,
+      "name": "robot0_link0_collision",
+      "vertices": 102
+    },
+    {
+      "id": 22,
+      "name": "robot0_link1_collision",
+      "vertices": 6271
+    },
+    {
+      "id": 24,
+      "name": "robot0_link2_collision",
+      "vertices": 152
+    },
+    {
+      "id": 29,
+      "name": "robot0_link3_collision",
+      "vertices": 152
+    },
+    {
+      "id": 34,
+      "name": "robot0_link4_collision",
+      "vertices": 152
+    },
+    {
+      "id": 38,
+      "name": "robot0_link5_collision",
+      "vertices": 152
+    },
+    {
+      "id": 56,
+      "name": "robot0_link6_collision",
+      "vertices": 102
+    },
+    {
+      "id": 65,
+      "name": "robot0_link7_collision",
+      "vertices": 102
+    },
+    {
+      "id": 67,
+      "name": "gripper0_hand_collision",
+      "vertices": 102
+    },
+    {
+      "id": 69,
+      "name": "gripper0_finger1_collision",
+      "vertices": 18
+    },
+    {
+      "id": 70,
+      "name": "gripper0_finger1_pad_collision",
+      "vertices": 8
+    },
+    {
+      "id": 72,
+      "name": "gripper0_finger2_collision",
+      "vertices": 18
+    },
+    {
+      "id": 73,
+      "name": "gripper0_finger2_pad_collision",
+      "vertices": 8
+    },
+    {
+      "id": 75,
+      "name": "milk_1_g1",
+      "vertices": 8
+    },
+    {
+      "id": 76,
+      "name": "milk_1_g2",
+      "vertices": 8
+    },
+    {
+      "id": 77,
+      "name": "milk_1_g3",
+      "vertices": 8
+    },
+    {
+      "id": 78,
+      "name": "milk_1_g4",
+      "vertices": 8
+    }
+  ],
+  "design_rule": "roof = ceil(initial target collision top + 10 mm, to 1 mm); 5 mm envelope clearance; 15 mm wall thickness",
+  "roof": 0.142,
+  "bottom": -0.015,
+  "initial_target_bounds": [
+    [
+      -0.20341081897185231,
+      -0.42074552247221686,
+      -1.4531966469548407e-05
+    ],
+    [
+      -0.1509108144611389,
+      -0.3676754809376872,
+      0.13117548584559519
+    ]
+  ],
+  "interior_lower": [
+    -0.21171423110035914,
+    -0.5142023644630276,
+    -0.015
+  ],
+  "interior_upper": [
+    -0.11176533970705599,
+    -0.281160766301782,
+    0.142
+  ],
+  "interior_size": [
+    0.09994889139330315,
+    0.2330415981612456,
+    0.15699999999999997
+  ],
+  "geometry": [
+    {
+      "name": "red_x_low",
+      "bounds": [
+        -0.22671423110035915,
+        -0.5292023644630276,
+        -0.03,
+        -0.21171423110035914,
+        -0.266160766301782,
+        0.15699999999999997
+      ]
+    },
+    {
+      "name": "red_x_high",
+      "bounds": [
+        -0.11176533970705599,
+        -0.5292023644630276,
+        -0.03,
+        -0.09676533970705599,
+        -0.266160766301782,
+        0.15699999999999997
+      ]
+    },
+    {
+      "name": "red_y_low",
+      "bounds": [
+        -0.22671423110035915,
+        -0.5292023644630276,
+        -0.03,
+        -0.09676533970705599,
+        -0.5142023644630276,
+        0.15699999999999997
+      ]
+    },
+    {
+      "name": "red_y_high",
+      "bounds": [
+        -0.22671423110035915,
+        -0.281160766301782,
+        -0.03,
+        -0.09676533970705599,
+        -0.266160766301782,
+        0.15699999999999997
+      ]
+    },
+    {
+      "name": "red_z_low",
+      "bounds": [
+        -0.22671423110035915,
+        -0.5292023644630276,
+        -0.03,
+        -0.09676533970705599,
+        -0.266160766301782,
+        -0.015
+      ]
+    },
+    {
+      "name": "red_z_high",
+      "bounds": [
+        -0.22671423110035915,
+        -0.5292023644630276,
+        0.142,
+        -0.09676533970705599,
+        -0.266160766301782,
+        0.15699999999999997
+      ]
+    }
+  ],
+  "sampled_open_path_conflicts": [],
+  "initial_closed_geometry_conflicts": [],
+  "goal_disjoint": true,
+  "protected_contact_records": 0,
+  "compatible_candidate": true,
+  "scope": "Full convex collision meshes / conservative primitives at every integration; conservative height clipping and component envelope, 5 mm margin. Still requires actual restored safe witness and certificate; not a claim of exact continuous robot swept volume.",
+  "no_new_policy_or_reference_selection": true,
+  "code_commit": "d7f8787b3174689804c7ca2f0e67a1eb16697a9e",
+  "job": "8358624"
+}

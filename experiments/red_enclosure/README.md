@@ -7,7 +7,8 @@ The old feasibility_contract and 1209 diagnostic artifacts remain unchanged.
 
 Use SafeLIBERO Object/I/task2/init0 (milk into basket), seed 7, original Panda
 7-D OSC action interface and unmodified center Reference. Add world-fixed red
-box colliders around the initial milk, with interior 22 x 24 x 19.5 cm. Walls,
+box colliders around the initial milk. The current derived interior is
+9.9949 x 23.3042 x 15.7 cm, with a roof inner face at world z=0.142 m. Walls,
 bottom, task text and all settings match; only the solid roof is added in the
 sealed arm. No new asset, policy training, AEGIS representation, or paid API.
 
@@ -59,7 +60,10 @@ coverage/unknown; consumed actions/inferences/time. No statistical generalizatio
 or classifier-error rate follows from this calibration pair. No forced binary
 baseline, no expansion to near-boundary or new layouts in this authorization.
 
-One A100, 4 CPUs, 32 GiB, 30 minutes, p33100/gengpu. Failed infrastructure keeps
+The derived fixture first gets a 1-CPU / 8-GiB / 10-minute p33100/short gate.
+Only a successful gate permits one A100, 4 CPUs, 32 GiB, 30 minutes,
+p33100/gengpu, for the two policy rollouts and saved-state witness images.
+Failed infrastructure keeps
 its root immutable; a bounded repair needs a new published root. Never rerun
 the historical pilot. Only the launch script submits after clean publication.
 
@@ -80,3 +84,17 @@ correction moves the common front inner face 2 cm outward, keeps every other
 dimension and the controller fixed, and uses exact canonical initial restoration.
 All geometry/certificate/initial safety conditions must pass again. If the open
 witness still fails, stop calibration without more geometric search.
+
+After that stop the user resumed the objective with a corrected design order:
+measure the entire existing successful path before choosing the fixture. CPU
+8358624 (d7f8787) replayed all 227 original actions with exact state hashes, zero
+protected contact and 5,675 integration samples of 17 collision geometries.
+`derived_fixture.json` records its one deterministic design: roof height from
+initial target top + 10 mm rounded upward to 1 mm, then a conservative connected
+height-clipped whole-geometry envelope with 5 mm XY clearance and 15 mm walls.
+No original initial collision object intersects the closed geometry, and no
+sampled actor hull intersects the open walls. This is not a claim of exact
+continuous swept volume: an actual safe reference witness must still pass.
+The reader-only failure 8358309 (42 s, before actions) remains preserved.
+Run `derived_launch.py gate`, then `derived_launch.py policy --gate ROOT` only
+after that gate completes. No new init/controller or wall-by-wall tuning.

@@ -26,6 +26,7 @@ spec=importlib.util.spec_from_file_location('previous_contract',BASE/'experiment
 previous=importlib.util.module_from_spec(spec);spec.loader.exec_module(previous)
 ARRAYS=['qpos','qvel','ctrl','qacc_warmstart','qfrc_applied','xfrc_applied','mocap_pos','mocap_quat','act','qacc']
 SEALED=False
+HEADLESS=os.environ.get('CB_RED_HEADLESS')=='1'
 
 def clean(v):
     if isinstance(v,np.ndarray):return v.tolist()
@@ -99,6 +100,9 @@ def configure(root):
         audited[rel]=dict(path=str(file),sha256=expected)
     write(root/'PREDICATE_SOURCE_AUDIT.json',audited)
     from robosuite.environments.base import MujocoEnv
+    if HEADLESS:
+        from reset_forward import replay_renderer_reset_forward
+        replay_renderer_reset_forward(MujocoEnv)
     original=MujocoEnv._initialize_sim
     def patched(self,xml_string=None):
         return original(self,modify_xml(xml_string or self.model.get_xml(),SEALED))
@@ -115,6 +119,7 @@ def make_env(directory,sealed):
     initial=suite.get_task_init_states(STATE['task'])[STATE['episode']]
     random.seed(7);np.random.seed(7)
     env=ControlEnv(bddl_file_name=bddl,camera_heights=1024,camera_widths=1024,
+          use_camera_obs=not HEADLESS,has_offscreen_renderer=not HEADLESS,
           camera_names=['agentview','robot0_eye_in_hand'],camera_depths=False)
     env.seed(7);env.reset();obs=env.set_init_state(initial)
     for _ in range(20):obs,_,_,_=env.step([0.]*6+[-1.])
@@ -293,6 +298,7 @@ class Audit:
         self.env.sim.step=self.original
 
 def picture(path,obs):
+    if HEADLESS:return
     import imageio
     imageio.imwrite(path,np.ascontiguousarray(obs['agentview_image'][::-1,::-1]))
 

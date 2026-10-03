@@ -8,8 +8,10 @@ import math
 import xml.etree.ElementTree as ET
 
 CENTER = [-0.17716081610142778, -0.3942955030243276]
-LOWER = [CENTER[0]-.11, CENTER[1]-.11, -.015]
-UPPER = [CENTER[0]+.11, CENTER[1]+.13, .18]
+# Derived once from all collision hulls in the original 227-action safe path.
+# See derived_fixture.json and CPU job 8358624, not failed-wall tuning.
+LOWER = [-0.21171423110035914, -0.5142023644630276, -.015]
+UPPER = [-0.11176533970705599, -0.281160766301782, .142]
 THICKNESS = .015
 EPS = 1e-9
 STATE = dict(id='milk_e0_enclosure', suite='safelibero_object', level='I',
