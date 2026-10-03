@@ -41,6 +41,7 @@ class CertificateSafety(unittest.TestCase):
         bounds = [0,0,1,1]
         self.assertTrue(rectangle_covered(bounds, [[0,0,.501,1],[.501,0,1,1]]))
         self.assertFalse(rectangle_covered(bounds, [[0,0,.501,1],[.50100001,0,1,1]]))
+        self.assertFalse(rectangle_covered(bounds, [[0,0,.5,1],[math.nextafter(.5,1.),0,1,1]]))
 
     def test_material_radius_in_actual_box_coordinates(self):
         self.assertAlmostEqual(inscribed_radius([.02625,.02625,.05475],[-.00037,0,-.015]), .02588)

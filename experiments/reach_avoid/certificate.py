@@ -25,10 +25,12 @@ def rectangle_covered(bounds, rectangles):
     x0, y0, x1, y1 = bounds
     if x0 >= x1 or y0 >= y1: raise ValueError('Degenerate face')
     xs = sorted({x0, x1} | {v for r in rectangles for v in (r[0], r[2]) if x0 < v < x1})
-    checks = xs + [(a+b)/2 for a, b in zip(xs, xs[1:])]
-    for x in checks:
+    # Test a rectangle's coverage of the entire partition interval. Computing a
+    # floating midpoint can round to an endpoint and hide a one-ULP open gap.
+    checks = [(x,x) for x in xs] + list(zip(xs,xs[1:]))
+    for left, right in checks:
         intervals = sorted((max(y0, r[1]), min(y1, r[3])) for r in rectangles
-            if r[0] <= x <= r[2] and r[3] >= y0 and r[1] <= y1)
+            if r[0] <= left and r[2] >= right and r[3] >= y0 and r[1] <= y1)
         end = y0
         for lo, hi in intervals:
             if lo > end: return False
