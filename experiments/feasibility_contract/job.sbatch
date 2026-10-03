@@ -19,7 +19,7 @@ export SINGULARITYENV_CB_UPSTREAM="$HOME/crash_bench/third_party/vlsa-aegis"
 export SINGULARITYENV_CB_CODE_COMMIT="$(cat "$ROOT/SOURCE_COMMIT")"
 export SINGULARITYENV_PYTHONNOUSERSITE=1 SINGULARITYENV_PYTHONDONTWRITEBYTECODE=1
 export SINGULARITYENV_OMP_NUM_THREADS=1 SINGULARITYENV_OPENBLAS_NUM_THREADS=1
-export SINGULARITYENV_MUJOCO_GL=osmesa
+export SINGULARITYENV_MUJOCO_GL=glx
 export SINGULARITYENV_PYTHONPATH="$HOME/crash_bench/third_party/vlsa-aegis/safelibero"
 singularity exec --bind "/projects,/home,$ROOT:$ROOT:rw,$SOURCE:$SOURCE:ro" \
  /projects/p33100/siosio/crashbench_safelibero/containers/aegis-py38.sif \
