@@ -36,6 +36,30 @@ def contact_sheet(session,out):
         draw.text((x,y-23),case+' | '+label,fill='black')
     canvas.save(out/'03_visible_constructions.png')
 
+def boundary(session,out):
+    path=session/'CPU_MATRIX_READBACK.json'
+    if not path.exists():return
+    data=read(path);brackets=data['brackets']
+    import collections
+    cells=collections.Counter()
+    for file in (session/'raw/matrix_cpu').glob('shard_*/*/summary.json'):
+        row=read(file)
+        if row['variant'] not in ('open','irrelevant'):cells[(float(row['variant'])*1000,row['label'])]+=1
+    lows=[b['low']*1000 for b in brackets if b['low'] is not None];highs=[b['high']*1000 for b in brackets if b['high'] is not None]
+    fig,ax=plt.subplots(figsize=(9,2.8))
+    if lows and highs:
+        lo=max(lows);hi=min(highs);ax.axvspan(lo,hi,color='#F0E9D5')
+        ax.annotate('',xy=(hi,.68),xytext=(lo,.68),arrowprops=dict(arrowstyle='<->',color='#685C3C'))
+        ax.text((hi+lo)/2,.73,f'{hi-lo:.0f} mm sampled unresolved bracket',ha='center')
+    for label in ('infeasible','unknown','feasible'):
+        values=sorted((gap,n) for (gap,kind),n in cells.items() if kind==label)
+        ax.plot([gap for gap,n in values],[1]*len(values),'o',markersize=10,color=COLORS[label],label=label+' ('+','.join(str(n) for gap,n in values)+' cells)')
+    ax.set(xlim=(10,190),ylim=(.5,1.15),yticks=[],xticks=sorted({gap for gap,label in cells}),xlabel='Declared aperture parameter (mm)',title='Unknown boundary band retained across all 12 layouts and both constructors')
+    ax.legend(loc='upper center',bbox_to_anchor=(.5,-.28),ncol=3,fontsize=8)
+    for side in ('left','right','top'):ax.spines[side].set_visible(False)
+    finish(fig,out/'08_unknown_bracket.png')
+
+
 def readouts(analysis,out):
     result=read(analysis/'READOUT.json');results=result['results'];primary=result['primary_vla_representation']
     fig,axes=plt.subplots(1,2,figsize=(10,3.8),sharey=True)
@@ -74,5 +98,5 @@ def readouts(analysis,out):
 
 if __name__=='__main__':
     p=argparse.ArgumentParser();p.add_argument('session',type=Path);p.add_argument('out',type=Path);p.add_argument('--analysis',type=Path);a=p.parse_args();a.out.mkdir(exist_ok=True,parents=True)
-    baseline(a.session,a.out);contact_sheet(a.session,a.out)
+    baseline(a.session,a.out);contact_sheet(a.session,a.out);boundary(a.session,a.out)
     if a.analysis:readouts(a.analysis,a.out)
