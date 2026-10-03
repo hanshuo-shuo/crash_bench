@@ -1,29 +1,31 @@
 # Current — SafeLIBERO reproduction and feasibility evidence, 2026-10-03
 
-## Active reach-avoid grouped study
+## Reach-avoid grouped study complete
 
-The user explicitly authorized the RA-1/RA-2 extension and shallow readouts after
-the historical studies below. Read [reach_avoid/PROTOCOL.md](reach_avoid/PROTOCOL.md)
-and [reach_avoid/GROUPED_MATRIX_PROPOSAL.md](reach_avoid/GROUPED_MATRIX_PROPOSAL.md).
-Baseline8417233 demonstrated three safe pi0.5 completions and one safe timeout
-under one fixed clear bottle placement, with independent safe witnesses for all
-four states. All four native-placement baseline runs collided.
+Read [reach_avoid/RESULTS.md](reach_avoid/RESULTS.md) and the
+[Chinese executive summary](reach_avoid/RESULTS_ZH.md). All168 states,120 attempted
+policy endpoints and47 representation readouts are complete. Independent labels:
+72 feasible,48 conditional infeasible,48 UNKNOWN. Of72 witnessed-feasible states,
+pi0.5 completed13 and failed59. One invalid endpoint is preserved outside primary
+fitting/evaluation. All study jobs are terminal; no follow-on run is queued.
 
-CPU array8419904 is complete:168 independent initial labels (72 feasible,
-48 conditional infeasible,48 UNKNOWN), with every certificate/goal/horizon
-record checked again locally. GPU array8422120 collects all168 initial feature
-states and120 known-state policy outcomes, max1A100,30min per task. The approved
-matrix cap is180 A100-min including repairs; the earlier45–70min forecast was
-too low. CPU source87c5b06 and GPU/frozen-analysis source465f112 are archived
-immutably. Reporting commits do not change the running jobs. Both constructors
-share one separator proof family; no independent-mechanism or runtime-rescue
-claim is authorized by these observations.
+The frozen validation-selected layer2/MLP did not transfer reliably to held-out
+cage scenes: AUROC.500 on20 known states and.525 on18 failures; all20 predictions
+are below the fixed.5 infeasibility threshold. Adding it to the SAFE-style
+initial-state failure score changes AUROC.4750 to.5375 while Brier/logloss worsen.
+Simple image cues and separately declared width/visibility diagnostics are strong.
+This supports neither useful incremental reach-avoid judgment nor absence of
+relevant VLA information. Four layouts and one separator proof family limit scope.
 
-Read the actual receipts/status in
-`results/reach_avoid/session_20261003/WATCH_LATEST.json` and the corresponding
-`reach_avoid_matrix_gpu/20261003T185040Z_gpu_465f112ea18b` Quest asset root.
-Do not infer current progress from this paragraph. All old roots remain intact;
-zero paid API calls and no base-VLA training are part of this study.
+CPU8419904 and GPU8422120 completed0:0. Matrix GPU allocation153m23s stayed within
+the approved180min cap; CPU labels used136m44s core time. CPU source87c5b06 and
+GPU/frozen-analysis source465f112 are preserved as immutable archives. Zero paid
+API calls. A separate final numerical audit found no discrepancy. The48 UNKNOWN
+states and152mm unresolved bracket remain; there is no runtime AEGIS rescue claim.
+
+Artifacts and delivery receipts are under
+`results/reach_avoid/session_20261003/`; exact terminal accounting and independent
+readback evidence accompany the report. Historical roots below remain intact.
 
 ## Latest FR-1 / FR-1B study complete
 

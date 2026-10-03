@@ -15,7 +15,7 @@ scientific label. No paid API calls or base-model training were performed.
 | 8419904 | All six CPU shards completed,136m44s total | 168 prospectively specified states:72 feasible,48 conditional infeasible,48 UNKNOWN. Every persisted certificate/goal/horizon check passed independent local readback. |
 | 8420606 | Adapter failed, 3m09s | Actual native action attention computed; WebSocket codec rejected bfloat16 velocity arrays. No rollout. Repair1 converts losslessly tofloat32 and saves arrays server-side before transport. |
 | 8421049 | Adapter repair1 completed, 3m22s | Both development states passed layer and native action-attention audits; no rollout. |
-| 8422120 | GPU array active; inspect live receipts | Immutable465f112 source,168 initial states,120 policy outcomes,max1A100,30min per task. First two shards completed26m56s/23m49s. Initial runtime forecast was too low; explicit amendments raised the matrix cap first to150 then180A100-min total. No conditions or scientific code changed. |
+| 8422120 | All six GPU shards COMPLETED/0:0, 153m23s total | Immutable465f112 source; all168 initial states and120 attempted policy endpoints collected (119 defined,1 illegal command). Max1A100,30min per task. Initial runtime forecast was too low; explicit amendments raised the matrix cap first to150 then180A100-min total. No matrix repair job, condition change or scientific source change. |
 
 The array's first pending task had a stale dependency after its CPU label job
 aged out of live Slurm records. The dependency was cleared only after matching
@@ -57,3 +57,7 @@ exercises invalid outcomes and rejects a step1/T300 safe_timeout. All22 reach-av
 tests pass. Existing historical adapter receipts accidentally hash the older
 observe protocol in their protocol_sha256 field; their immutable source archives
 and scientific_hashes remain intact. New launchers hash their actual protocol.
+
+Final grouped outcome counts:72 independently witnessed feasible states produced13 safe completions,44 safe timeouts and15 collisions;48 conditionally certified infeasible states produced31 timeouts,16 collisions and1 invalid endpoint. All48 UNKNOWN states remain observation-only. All31 collision endpoints flagged protected contacts, with no actor-center or material-cube crossing flag. Independent local readback checked168 states and1464 saved hashes. All study GPU allocations, including failed development diagnostics, total174m31s; no paid API calls.
+
+Local analysis retains the fixed500-iteration MLP budget when candidate optimizers warn about nonconvergence. Finite fitted scores and warnings are preserved, with no post-result tuning or retraining-budget extension. The PDF renderer uses existing PyMuPDF after the unavailable workspace runtime and failed Poppler/Homebrew attempts; their local dependency receipts remain intact. A sandbox process-list inspection was denied; progress is read from the authorized execution sessions and persisted receipts.

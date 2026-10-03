@@ -36,6 +36,7 @@ def package(session, analysis, destination, supplement):
     tree(repo / 'experiments/reach_avoid', 'current_reporting_source', {'.py', '.json', '.sbatch'})
     for name in ('PROMPT_SUMMARY.json', 'BASELINE_PAIRED_STATE_AUDIT.json',
                  'CPU_MATRIX_READBACK.json', 'A100_DEVELOPMENT_CROSSJOB_ANCHORS.json',
+                 'PDF_VISUAL_QA.json', 'OBSERVATION_AUDIT.json', 'INDEPENDENT_FINAL_AUDIT.json',
                  'DEVELOPMENT_INPUT_ALIASES.json', 'analysis_requirements.txt',
                  'TERMINAL_ACCOUNTING.json', 'RESULT_SUMMARY.json', 'PRIMARY_OUTPUT_INTEGRITY.json',
                  'ANALYSIS_EXECUTION.jsonl', 'EVIDENCE_READBACK.log', 'GROUPED_ANALYSIS.log',
@@ -94,6 +95,8 @@ its experiments/reach_avoid to PYTHONPATH, and call grouped_analysis.analyze wit
 the rows from MANIFEST.json, all arrays from FEATURES.npz, and a new output Path.
 Set OPENBLAS_NUM_THREADS=1 and OMP_NUM_THREADS=1. Recorded dependencies accompany
 the artifact. No simulator or model weights are needed for the shallow refit.
+The bilingual report renderer uses a CJK TrueType collection via RA_CJK_FONT,
+defaulting to the Mac's STHeiti Light.ttc. This is unrelated to analysis fitting.
 
 compact_raw retains geometry, certificates, saved verifier hashes, per-command
 goal/safety records, feature audits, and actual camera images. Full physics
