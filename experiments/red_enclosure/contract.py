@@ -62,9 +62,13 @@ def modify_xml(xml, sealed):
         ET.SubElement(world,'geom', dict(name=wall['name'],type='box',
               pos=' '.join(format((lo[i]+hi[i])/2,'.17g') for i in range(3)),
               size=' '.join(format((hi[i]-lo[i])/2,'.17g') for i in range(3)),
-              rgba='.85 .025 .035 1', contype='1',conaffinity='1',group='0',
+              rgba='.85 .025 .035 1', contype='1',conaffinity='1',group='1',
               friction='1 .005 .0001',solref='.02 1'))
     return ET.tostring(root,encoding='unicode')
+
+def enclosure_names():
+    """Exact allowlist avoids the existing red_coffee_mug obstacle family."""
+    return {w['name'] for w in walls(True)}
 
 def certify(boxes, material_point_inside_target, initial_target, fixed_goal,
             initial_safe, static_colliders):

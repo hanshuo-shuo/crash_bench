@@ -34,5 +34,12 @@ class ContractTests(unittest.TestCase):
         self.assertIsNone(a.find('.//joint'));self.assertIsNone(a.find('.//freejoint'))
     def test_nonfinite_rejected(self):
         with self.assertRaises(ValueError):segment_box([float('nan'),0,0],[0,0,0],[0,0,0],[1,1,1])
+    def test_existing_red_object_not_wall(self):
+        self.assertNotIn('red_coffee_mug_obstacle_1_g0',enclosure_names())
+        tree=ET.fromstring(modify_xml('<mujoco><worldbody/></mujoco>',True))
+        for geom in tree.findall('.//geom'):
+            self.assertEqual(geom.get('group'),'1')
+            self.assertEqual(geom.get('contype'),'1')
+            self.assertEqual(geom.get('conaffinity'),'1')
 
 if __name__=='__main__':unittest.main()

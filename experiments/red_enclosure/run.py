@@ -15,7 +15,7 @@ import sys
 import time
 import xml.etree.ElementTree as ET
 import numpy as np
-from contract import STATE, LOWER, UPPER, inside, segment_box, modify_xml, certify
+from contract import STATE, LOWER, UPPER, inside, segment_box, modify_xml, certify, enclosure_names
 
 BASE=Path(__file__).resolve().parents[2]
 sys.path.insert(0,str(BASE/'experiments/feasibility'))
@@ -133,7 +133,7 @@ class Audit:
                 if b==robot_root:self.robot.add(g);break
                 b=int(m.body_parentid[b])
         self.actors=self.robot|self.target;self.actor_order=sorted(self.actors)
-        self.red={g for g in range(m.ngeom) if (m.geom_id2name(g) or '').startswith('red_')}
+        self.red={g for g in range(m.ngeom) if m.geom_id2name(g) in enclosure_names()}
         self.boxes=[];self.static=True
         for g in sorted(self.red):
             p=np.asarray(env.sim.data.geom_xpos[g]);s=np.asarray(m.geom_size[g]);r=np.asarray(env.sim.data.geom_xmat[g]).reshape(3,3)
