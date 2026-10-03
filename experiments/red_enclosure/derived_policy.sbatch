@@ -49,6 +49,5 @@ for _ in range(180):
  except OSError:os.kill(int(sys.argv[2]),0);time.sleep(2)
 else:raise RuntimeError('Policy server readiness timeout')
 PY
-singularity exec --nv --bind "$BINDS" "$CONTAINER" "$SIM" -u "$SOURCE/experiments/red_enclosure/run.py" "$ROOT" policy --port "$PORT"
-
 singularity exec --nv --bind "$BINDS" "$CONTAINER" "$SIM" -u "$SOURCE/experiments/red_enclosure/render_saved.py" "$ROOT"
+singularity exec --nv --bind "$BINDS" "$CONTAINER" "$SIM" -u "$SOURCE/experiments/red_enclosure/policy_entry.py" "$ROOT" --port "$PORT"

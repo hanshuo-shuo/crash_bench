@@ -6,6 +6,7 @@ BASE=Path(__file__).resolve().parents[2]
 ASSETS=Path('/projects/p33100/siosio/crashbench_safelibero')
 DESIGN=ASSETS/'red_enclosure_geometry/20261003T022243Z_d7f8787b3174'
 SCI=['experiments/red_enclosure/'+x for x in ['contract.py','run.py','derived_fixture.json']]+['experiments/feasibility/'+x for x in ['reference.py','geometry.py','reset_forward.py','serve.py']]
+POLICY_INTERFACE=['experiments/red_enclosure/'+x for x in ['policy_prompt.py','policy_entry.py']]
 def call(a):return subprocess.check_output(a,cwd=BASE,text=True).strip()
 def put(p,v):p.write_text(json.dumps(v,indent=2)+'\n')
 def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
@@ -27,6 +28,10 @@ def main(stage,gate):
     for p in previous:
         r=json.loads(p.read_text())
         if r['stage']==stage and (r['code_commit']==commit or (p.parent/'COMPLETE.json').exists()):raise RuntimeError('Do not duplicate stage')
+        if stage=='policy' and r['stage']=='policy':
+            if r['job_id']!='8359568' or not (p.parent/'CANCELLED_PROMPT_FIX.json').exists():raise RuntimeError('Unreviewed prior policy attempt')
+            if not call(['sacct','-X','-j',r['job_id'],'--noheader','--parsable2','--format=State']).startswith('CANCELLED'):raise RuntimeError('Earlier policy job not canceled')
+            if any((p.parent/'policy_cache').glob('*.npz')) or any((p.parent/'open_pi05').iterdir()):raise RuntimeError('Earlier policy attempt has execution records; review before rerunning')
     if stage=='policy':
         if not gate or gate.parent.resolve()!=folder.resolve():raise RuntimeError('Wrong gate root')
         receipt=json.loads((gate/'receipt.json').read_text())
@@ -51,6 +56,7 @@ def main(stage,gate):
     resources=dict(account='p33100',partition='short' if stage=='gate' else 'gengpu',gpus=0 if stage=='gate' else 1,
             cpus=1 if stage=='gate' else 4,mem_gib=8 if stage=='gate' else 32,time_minutes=10 if stage=='gate' else 30)
     receipt=dict(stage=stage,root=str(root),code_commit=commit,scientific_hashes=hashes,
+          policy_interface_hashes={p:sha(BASE/p) for p in POLICY_INTERFACE} if stage=='policy' else {},
           design_root=str(DESIGN),gate_root=str(gate) if gate else None,resources=resources,API_calls=0,
           max_policy_rollouts=0 if stage=='gate' else 2,max_actions_each=300,status='prepared')
     put(root/'receipt.json',receipt);env=os.environ.copy();env.pop('OPENROUTER_API_KEY',None);env['CB_RED_ROOT']=str(root)

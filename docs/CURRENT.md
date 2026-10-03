@@ -1,14 +1,22 @@
 # Current — SafeLIBERO reproduction and feasibility evidence, 2026-10-03
 
-## Latest enclosure work: full-path CPU geometry analysis authorized
+## Latest enclosure work: CPU pair verified; explicit policy safety interface
 
-After the local-clearance calibration below, the user explicitly resumed the
-minimal-pair objective. The next authorized step replays the existing successful
-227-action original Reference on CPU to measure all robot/target collision hulls,
-derive one opening outside that path, and check initial scene compatibility.
-No further A100 gate run precedes this analysis. Actual job provenance is under
-`red_enclosure_geometry/` in the project asset root. This is not new policy or
-layout sampling; the earlier failed evidence remains intact.
+Whole-path CPU design 8358624 and gate 8359202 both COMPLETED/0:0. The derived
+opening admits the original Reference's 227-action legal safe success; adding
+only the lid yields a checked RE-1 conditional exclusion. Complete paired initial
+snapshots, model-only-lid comparison and five-action exact replay passed.
+This remains one exposed layout and two synthetic contract states, not holdout
+accuracy or a continuous-body physics proof. See experiments/red_enclosure/README.md.
+
+GPU 8359568 was canceled after 109 seconds during initialization when the missing
+shared red-enclosure safety prompt was identified. Server loaded, but no model
+request or research rollout action occurred; its run directory and cache were
+empty. The corrected interface adds the identical red-enclosure/wine-bottle
+no-contact instruction to both arms without revealing their labels. All CPU
+scientific hashes remain unchanged and the gate is inherited rather than rerun.
+Actual corrected submission/status is in `red_enclosure_derived/*/receipt.json`.
+Do not change or sync the live Quest source while the policy job is active.
 
 ### Earlier calibration stop, no model inference
 

@@ -1,4 +1,25 @@
-# Red enclosure calibration stopped at the witness gate, 2026-10-03
+# Red enclosure: derived CPU pair passed, 2026-10-03
+
+Current result supersedes the earlier calibration stop below. Whole-path CPU
+8358624 derived one compatible enclosure. CPU gate **8359202 COMPLETED/0:0**
+in 114 seconds at code `6b4573427ff63108ed72aca4f298b10ff79d40bf`: open Reference
+safe success at 227 actions; sealed six-assumption RE-1 certificate passed;
+same initial full state, lid-only XML difference, and five-action replay passed.
+Local evidence: results/red_enclosure/final_20261003/derived/20261003T023226Z_gate_6b4573427ff6.
+Library CPU evidence: libfile_6a029e2699708191932fb03dfd470576 version 0.
+
+GPU 8359568 started and was canceled after 109 seconds during initialization,
+before model requests or research rollout actions, to correct its missing safety
+instruction. The server had loaded; no policy input/output/action record existed.
+The new explicit same-prompt interface is documented in the experiment README.
+It inherits the unchanged CPU scientific source; actual corrected job status is
+in the immutable receipts. No further layout, Reference or geometry search.
+
+Exported XML geometry can differ from full-precision runtime geometry by up to
+0.636 micrometres; images reloaded from XML are illustrations, not exact clones.
+Certificate evidence uses source construction and full-precision box records.
+
+## Historical failed clearance calibration (preserved)
 
 Latest user steering resumed the minimal-pair objective after this stop: perform
 one short CPU replay of the saved successful original Reference to measure the

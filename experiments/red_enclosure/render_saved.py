@@ -27,6 +27,7 @@ for name in ['open_reference','sealed_reference']:
         file=out/(name+'_'+label+'.png');imageio.imwrite(file,np.ascontiguousarray(rgb))
         records.append(dict(file=file.name,source=str(run.resolve()/(label+'_restore.json')),time=float(sim.data.time),
             camera='agentview',resolution=[1024,1024],kind='synchronized saved-state render; no integration',
+            precision_scope='Rendered from exported model.xml, whose geometry serialization may round by up to 0.636 micrometres relative to full-precision runtime records. Illustration, not exact-clone or certificate evidence.',
             source_summary=json.loads((run/'summary.json').read_text())))
     del context
     sim.free()
