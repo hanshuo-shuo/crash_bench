@@ -77,3 +77,11 @@ native control. The declared native pedestal is now checked by actual geom ID
 and top-surface height; clear placement still requires floor support. All other
 initial contacts remain invalid, and robot/target-to-wine safety is unchanged.
 The queued primary GPU receipt is preserved; replacement uses a new root.
+
+GPU repair 2: job8416464 completed only native init0 (collision step10),
+then its prompt comparison rejected a transport timing dictionary as numeric.
+All three scientific prompt arrays were saved before failure. The repair uses
+an explicit numeric field allowlist and saves transport metadata separately;
+its mocked WebSocket regression passes. Conditions, model, seed, horizon and
+scientific arrays are unchanged. The replacement reruns the complete eight-cell
+baseline in one process; the earlier partial is preserved as a diagnostic repeat.

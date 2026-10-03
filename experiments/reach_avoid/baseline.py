@@ -121,9 +121,13 @@ def prompt_check(client, data, directory):
                          ('original_duplicate', P['prompt_original'])]:
         request = dict(data, prompt=prompt)
         response = client.infer(dict(request, __ra_prompt_check__=True))
-        arrays = {k: np.asarray(v) for k, v in response.items() if k != 'metadata'}
+        keys=('prefix_final','image_embedding','image_prefix_final','valid_tokens','valid_image_tokens',
+              'actions','tokenized_prompt','tokenized_prompt_mask')
+        arrays = {k:np.asarray(response[k]) for k in keys}
+        if any(value.dtype.kind not in 'biufc' for value in arrays.values()):raise RuntimeError('Non-numeric scientific prompt array')
         np.savez_compressed(folder / (name + '.npz'), **arrays)
-        r.write(folder / (name + '.json'), response['metadata'])
+        r.write(folder / (name + '.json'), dict(response['metadata'],transport_metadata={
+            k:v for k,v in response.items() if k not in keys and k!='metadata'}))
         results.append(arrays)
     contrasts = {}
     for i, name in [(1, 'safety_minus_original'), (2, 'duplicate_minus_original')]:
