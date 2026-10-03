@@ -39,6 +39,7 @@ export SINGULARITYENV_CB_RED_HEADLESS=0
 PORT=$((20000 + SLURM_JOB_ID % 30000))
 SERVER_PID=""
 trap 'if [ -n "$SERVER_PID" ]; then kill "$SERVER_PID" 2>/dev/null || true; wait "$SERVER_PID" 2>/dev/null || true; fi' EXIT
+/projects/p33100/siosio/envs/openpi/bin/python "$SOURCE/experiments/feasibility_risk/provenance.py" "$ROOT"
 /projects/p33100/siosio/envs/openpi/bin/python "$SOURCE/experiments/feasibility_risk/features.py" --cache "$ROOT/policy_cache" --port "$PORT" --checkpoint "$CB_ASSETS/openpi_assets/openpi-assets/checkpoints/pi05_libero" > "$ROOT/policy.log" 2>&1 &
 SERVER_PID=$!
 /projects/p33100/siosio/envs/openpi/bin/python - "$PORT" "$SERVER_PID" <<'PY'
@@ -49,4 +50,5 @@ for _ in range(180):
  except OSError:os.kill(int(sys.argv[2]),0);time.sleep(2)
 else:raise RuntimeError('Policy server readiness timeout')
 PY
-singularity exec --nv --bind "$BINDS" "$CONTAINER" "$SIM" -u "$SOURCE/experiments/feasibility_risk/structural.py" "$ROOT" gpu --gate "${CB_FR_GATE:?}" --port "$PORT"
+singularity exec --nv --bind "$BINDS" "$CONTAINER" "$SIM" -u "$SOURCE/experiments/feasibility_risk/structural.py" "$ROOT" gpu --gate "${CB_FR_GATE:?}" --port "$PORT" --common-process
+/projects/p33100/siosio/envs/openpi/bin/python "$SOURCE/experiments/feasibility_risk/provenance.py" "$ROOT" --verify

@@ -1,0 +1,13 @@
+{
+  "amendment": "FR-1B common-process measurement repair, approved before submission",
+  "failed_job": "8371672",
+  "failed_source": "be5b79d49e9762b68ee8e834629951363c0ce536",
+  "reason": "Identical saved initial input and extraction source produced unequal outputs across two jobs on different nodes. The cause is unresolved. The original exact-equality gate is preserved as failed; no tolerance is tuned.",
+  "missing_evidence": "The failed job saved maximum differences but not returned vectors or content-hashed checkpoint/device/precision receipts, so exact relative/cosine differences for that realization cannot be reconstructed.",
+  "measurement": "Extract all six original saved FR-1 inputs and both decoy inputs within one process/device. Repeat e10/open at end. Two feature passes and same-seed action bracketing per input remain unchanged. Save actual vectors, source input hashes, checkpoint pre/post content hashes, preprocessing/code/precision/device metadata, within-process repeat tests and descriptive cross-job differences.",
+  "order": ["e10/open", "e10/sealed", "e10/parked", "e11/open", "e11/sealed", "e11/parked", "e10/decoy_open", "e10/decoy_sealed", "e10/open_repeat"],
+  "acceptance": "Within-input duplicate features/actions and end-anchor vectors/actions must be exactly unchanged. Cross-job differences are reported without acceptance thresholds. Use only common-process vectors for FR-1B scientific contrasts. No labels affect acceptance or extraction choices.",
+  "physical_scope": "Existing CPU label evidence unchanged; no new environment actions, labels, independent layouts, policy rollouts, readout fitting, or API calls.",
+  "budget": {"gpus": 1, "gpu_type": "a100", "cpus": 4, "memory_gib": 32, "max_minutes": 10, "feature_forwards": 18, "local_unexecuted_action_inferences": 54, "environment_actions": 0},
+  "retry_policy": "Exactly one repair; report terminal outcome even if it fails. No further identical retry."
+}

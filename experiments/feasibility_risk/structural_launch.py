@@ -1,5 +1,5 @@
 """Publish-first, isolated, bounded diagnostic launcher. Never submits bulk."""
-import argparse,hashlib,json,os,subprocess,tarfile,time
+import argparse,ast,hashlib,json,os,subprocess,tarfile,time
 from pathlib import Path
 BASE=Path(__file__).resolve().parents[2]
 ASSETS=Path('/projects/p33100/siosio/crashbench_safelibero')
@@ -28,7 +28,15 @@ def main(stage,gate):
     if stage=='gpu':
         if not gate or gate.parent.resolve()!=FOLDER.resolve():raise RuntimeError('Wrong gate directory')
         old=json.loads((gate/'receipt.json').read_text())
-        if old['scientific_hashes']!=hashes:raise RuntimeError('CPU source changed')
+        differences=[p for p in hashes if old['scientific_hashes'][p]!=hashes[p]]
+        if differences!=['experiments/feasibility_risk/structural.py']:raise RuntimeError('Unexpected CPU source change')
+        # Explicit approved measurement amendment; preserve every function used
+        # by the completed physical label experiment, checked against its archive.
+        def functions(path):return {n.name:ast.dump(n,include_attributes=False) for n in ast.parse(path.read_text()).body if isinstance(n,(ast.FunctionDef,ast.ClassDef))}
+        before=functions(gate/'source/experiments/feasibility_risk/structural.py');after=functions(BASE/'experiments/feasibility_risk/structural.py')
+        for name in ('geometry','DecoyAudit','make','cpu','gpu'):
+            if before[name]!=after[name]:raise RuntimeError('Frozen physical/failed-gate function changed: '+name)
+        if call(['sacct','-X','-j','8371672','--noheader','--parsable2','--format=State,ExitCode'])!='FAILED|1:0':raise RuntimeError('Failed gate provenance differs')
         if not json.loads((gate/'CPU_GATE.json').read_text())['passed']:raise RuntimeError('No valid triplet')
         if call(['sacct','-X','-j',old['job_id'],'--noheader','--parsable2','--format=State,ExitCode'])!='COMPLETED|0:0':raise RuntimeError('CPU job incomplete')
     root=FOLDER/(time.strftime('%Y%m%dT%H%M%SZ',time.gmtime())+'_'+stage+'_'+commit[:12]);root.mkdir(parents=True)
@@ -42,6 +50,7 @@ def main(stage,gate):
         checks.append(hashlib.sha256(data).hexdigest()+'  '+p)
     (root/'source.sha256').write_text('\n'.join(checks)+'\n');(root/'SOURCE_COMMIT').write_text(commit+'\n')
     receipt=dict(stage=stage,root=str(root),code_commit=commit,upstream_commit=upstream,scientific_hashes=hashes,protocol_sha256=sha(BASE/'experiments/feasibility_risk/structural_protocol.json'),gate_root=str(gate) if gate else None,status='prepared',resources=dict(account='p33100',partition='short' if stage=='cpu' else 'gengpu',gpus=0 if stage=='cpu' else 1,cpus=1 if stage=='cpu' else 4,mem_gib=8 if stage=='cpu' else 32,max_minutes=10),API_calls=0)
+    if stage=='gpu':receipt.update(analysis_amendment_sha256=sha(BASE/'experiments/feasibility_risk/structural_amendment.json'),inherited_physical_functions_ast_equal=True,prior_failed_job='8371672')
     put(root/'receipt.json',receipt);env=os.environ.copy();env.pop('OPENROUTER_API_KEY',None);env['CB_FR_ROOT']=str(root)
     if gate:env['CB_FR_GATE']=str(gate)
     job=subprocess.check_output(['sbatch','--parsable','--export=ALL,CB_FR_ROOT='+str(root)+(',CB_FR_GATE='+str(gate) if gate else ''),'--output='+str(root/'slurm_%j.log'),str(source/'experiments/feasibility_risk'/('structural_'+stage+'.sbatch'))],cwd=BASE,env=env,text=True).strip().split(';')[0]

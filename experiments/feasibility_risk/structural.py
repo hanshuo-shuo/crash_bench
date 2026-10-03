@@ -95,16 +95,64 @@ def gpu(root,geo,port):
         finally:env.close()
     return rows
 
-def main(root,stage,gate,port):
+def gpu_common_process(root,geo,port):
+    from openpi_client.websocket_client_policy import WebsocketClientPolicy
+    from visibility import audit_visibility
+    client=WebsocketClientPolicy('127.0.0.1',port)
+    keys=('prefix_final','image_embedding','image_prefix_final','valid_tokens','valid_image_tokens','proposal_actions','action_seed7','proprio','risk_scores')
+    def extract(folder,data,name):
+        folder.mkdir(parents=True,exist_ok=True)
+        np.savez_compressed(folder/'initial_policy_input.npz',**{k:v for k,v in data.items() if k!='prompt'})
+        client.infer({'__paired_reset_rng__':7,'run_id':name})
+        f=client.infer(dict(data,__extract_initial_features__=True))
+        np.savez_compressed(folder/'initial_features.npz',**{k:np.asarray(f[k]) for k in keys})
+        r.write(folder/'FEATURE_AUDIT.json',f['metadata'])
+        if not f['metadata']['passed'] or f['metadata']['feature_repeat_linf']!=0 or f['metadata']['action_before_after_linf']!=0:raise RuntimeError('Within-process extraction invariance failed')
+        if f['metadata']['input_sha256']!=r.digest(data):raise RuntimeError('Extraction input hash mismatch')
+        return f
+    def difference(a,b):
+        a=np.asarray(a,dtype=float).ravel();b=np.asarray(b,dtype=float).ravel();norm=np.linalg.norm(b)
+        return dict(max_absolute=float(np.max(np.abs(a-b))),relative_l2=float(np.linalg.norm(a-b)/norm) if norm else None,cosine_distance=float(1-np.dot(a,b)/(np.linalg.norm(a)*norm)) if norm and np.linalg.norm(a) else None,source_norm=float(norm),new_norm=float(np.linalg.norm(a)))
+    comparisons=[];anchor=None;anchor_input=None
+    for episode in (10,11):
+        for variant in ('open','sealed','parked'):
+            old=GPU/('e%d'%episode)/variant;folder=root/'common_inputs'/('e%d'%episode)/variant
+            with np.load(old/'initial_policy_input.npz') as z:data={k:z[k] for k in z.files}
+            data['prompt']=d.P['policy_prompt'];f=extract(folder,data,'e%d_%s'%(episode,variant))
+            old_audit=json.loads((old/'FEATURE_AUDIT.json').read_text())
+            if old_audit['input_sha256']!=f['metadata']['input_sha256']:raise RuntimeError('Saved input differs from original')
+            with np.load(old/'initial_features.npz') as z:diff={k:difference(f[k],z[k]) for k in ('prefix_final','image_embedding','image_prefix_final','action_seed7','proposal_actions')}
+            record=dict(layout=episode,variant=variant,source=str(old),source_features_sha256=r.sha(old/'initial_features.npz'),input_sha256=f['metadata']['input_sha256'],differences=diff)
+            r.write(folder/'SOURCE_COMPARISON.json',record);comparisons.append(record)
+            if episode==10 and variant=='open':anchor=f;anchor_input=data
+    rows=[]
+    for variant in P['variants']:
+        folder,env,obs,audit,gate=make(root,variant,geo)
+        try:
+            data=r.policy_input(obs,d.P['policy_prompt']);f=extract(folder,data,variant)
+            audit_visibility(env,obs,audit,folder,data);audit.endpoint(obs,None);audit.finish(None)
+            if audit.step!=0 or not audit.safe:raise RuntimeError('Render-only state changed')
+            record=dict(variant=variant,environment_actions=0,feature_audit=f['metadata'],initial_state_sha256=r.statehash(r.capture(env)),input_sha256=r.digest(data))
+            r.write(folder/'RENDER_ONLY_COMPLETE.json',record);rows.append(record)
+        finally:env.close()
+    repeat=extract(root/'common_inputs/e10/open_repeat',anchor_input,'anchor_repeat')
+    checks={k:float(np.max(np.abs(np.asarray(anchor[k])-np.asarray(repeat[k])))) for k in keys}
+    r.write(root/'END_ANCHOR_REPEAT.json',dict(passed=all(x==0 for x in checks.values()),max_absolute=checks))
+    r.write(root/'CROSS_JOB_COMPARISONS.json',dict(rows=comparisons,scope='Descriptive cross-job numerical differences; no tuned tolerance. Scientific FR-1B contrasts use only the current common process. Cause of cross-job differences remains unresolved.'))
+    if any(x!=0 for x in checks.values()):raise RuntimeError('End anchor changed; common-process comparison blocked')
+    return rows
+
+def main(root,stage,gate,port,common_process=False):
     r.configure(root);(root/'e10').mkdir();r.write(root/'protocol.json',P)
     if stage=='cpu':geo=geometry(root)
     else:
         geo=json.loads((gate/'e10/fixture.json').read_text());r.write(root/'e10/fixture.json',geo)
     if not geo['compatible_candidate']:
         r.write(root/'CONSTRUCTION_FAILURE.json',dict(label='unknown',reason='Frozen displacement failed complete-scene/path bounds audit'));r.write(root/'CPU_GATE.json',dict(passed=False));return
-    rows=cpu(root,geo) if stage=='cpu' else gpu(root,geo,port)
+    if common_process:r.write(root/'analysis_amendment.json',json.loads((Path(__file__).parent/'structural_amendment.json').read_text()))
+    rows=cpu(root,geo) if stage=='cpu' else (gpu_common_process(root,geo,port) if common_process else gpu(root,geo,port))
     r.write(root/'COMPLETE.json',dict(rows=rows,stage=stage,code_commit=os.environ['CB_CODE_COMMIT'],job=os.environ['SLURM_JOB_ID'],new_independent_layouts=0,api_calls=0,new_policy_rollouts=0))
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('root',type=Path);p.add_argument('stage',choices=['cpu','gpu']);p.add_argument('--gate',type=Path);p.add_argument('--port',type=int);a=p.parse_args()
-    try:main(a.root,a.stage,a.gate,a.port)
+    p=argparse.ArgumentParser();p.add_argument('root',type=Path);p.add_argument('stage',choices=['cpu','gpu']);p.add_argument('--gate',type=Path);p.add_argument('--port',type=int);p.add_argument('--common-process',action='store_true');a=p.parse_args()
+    try:main(a.root,a.stage,a.gate,a.port,a.common_process)
     except BaseException as e:r.write(a.root/'STOP.json',dict(error=type(e).__name__,reason=str(e)));raise
