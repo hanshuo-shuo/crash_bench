@@ -12,7 +12,7 @@ import zipfile
 from pathlib import Path
 
 
-def package(session, analysis, destination):
+def package(session, analysis, destination, supplement):
     repo = Path(__file__).resolve().parents[2]
     files = {}
     def add(path, name):
@@ -29,25 +29,32 @@ def package(session, analysis, destination):
     tree(session / 'deliverables/evidence', 'evidence')
     tree(session / 'deliverables/tables', 'tables')
     tree(session / 'deliverables/figures', 'figures')
+    tree(session / 'deliverables/layouts', 'layout_evidence')
+    tree(supplement, 'supplemental_nuisance')
     tree(session / 'provenance', 'provenance')
     tree(repo / 'docs/reach_avoid', 'docs', {'.md', '.json'})
     tree(repo / 'experiments/reach_avoid', 'current_reporting_source', {'.py', '.json', '.sbatch'})
     for name in ('PROMPT_SUMMARY.json', 'BASELINE_PAIRED_STATE_AUDIT.json',
                  'CPU_MATRIX_READBACK.json', 'A100_DEVELOPMENT_CROSSJOB_ANCHORS.json',
                  'DEVELOPMENT_INPUT_ALIASES.json', 'analysis_requirements.txt',
-                 'TERMINAL_ACCOUNTING.json', 'RESULT_SUMMARY.json'):
+                 'TERMINAL_ACCOUNTING.json', 'RESULT_SUMMARY.json', 'PRIMARY_OUTPUT_INTEGRITY.json',
+                 'ANALYSIS_EXECUTION.jsonl', 'EVIDENCE_READBACK.log', 'GROUPED_ANALYSIS.log',
+                 'TABULATE_RESULTS.log', 'FINAL_FIGURES.log', 'NUISANCE_DIAGNOSTICS.log',
+                 'LAYOUT_RESULTS.log', 'SUPPLEMENT_FIGURES.log'):
         add(session / name, 'audits/' + name)
     # The compact per-state records allow independent geometric/goal readback.
     compact = {'summary.json', 'geometry.json', 'fixture.json', 'MATERIAL_BALL.json',
                'CERTIFICATE.json', 'VERIFIED.json', 'INHERITED.json', 'FEATURE_AUDIT.json', 'ILLEGAL.json',
                'initial_restore.json', 'SETTLED_POSE.json', 'steps.jsonl',
                'VISIBILITY.json', 'ATTENTION_CUES.json', 'general_vision.json',
-               'layer_features.json', 'agentview_policy_224.png',
+               'layer_features.json', 'ANCHOR.json', 'ALIGNMENT.json', 'agentview_actual.png',
+               'robot0_eye_in_hand_actual.png', 'agentview_policy_224.png',
                'robot0_eye_in_hand_policy_224.png'}
-    for kind in ('matrix_cpu', 'matrix_gpu'):
+    for kind in ('matrix_cpu', 'matrix_gpu', 'baseline_gpu', 'reference_cpu', 'mechanism_cpu', 'observe_gpu', 'adapter_gpu'):
         root = session / 'raw' / kind
         for path in sorted(root.rglob('*')):
-            if path.is_file() and (path.name in compact or path.name in {'receipt.json', 'COMPLETE.json'}):
+            if path.is_file() and (path.name in compact or path.name in {'receipt.json', 'COMPLETE.json'} or
+                                  ('prompt_check' in path.parts and path.suffix=='.npz')):
                 add(path, 'compact_raw/' + kind + '/' + path.relative_to(root).as_posix())
     index = {name: dict(bytes=path.stat().st_size,
         sha256=hashlib.sha256(path.read_bytes()).hexdigest()) for name, path in files.items()}
@@ -64,6 +71,19 @@ evidence/state_outcomes.csv and analysis/INCREMENTAL.json. UNKNOWN labels remain
 in all coverage counts. Binary accuracy excludes them. The two visible obstacle
 constructors share a single sufficient separator proof family; the certificate
 uses declared digital crossing guards and is not unrestricted physical impossibility.
+
+The main presentation is descriptive across all four test layouts; see
+layout_evidence for individual results and paired differences. The original
+bootstrap computations remain unchanged in analysis and are shown only as an
+exploratory appendix, not a reliable nominal-coverage or significance claim.
+The dated reporting_amendment.json preserves this user-approved reporting change.
+supplemental_nuisance contains the separately declared privileged width/target
+segmentation checks, full-variant and numeric-gap populations, and UNKNOWN score
+distributions without accuracy. These never enter primary model selection.
+Every readout is at t=0; later rollout outcomes only define failure targets/subsets.
+The comparison uses a SAFE-style initial-state failure probe, not original SAFE
+temporal detection. Primary numerical file identity is checked before/after the
+supplement in audits/PRIMARY_OUTPUT_INTEGRITY.json.
 
 analysis/FEATURES.npz and MANIFEST.json contain every initial-state feature and
 the fixed split/outcome metadata needed to refit the declared shallow readouts.
@@ -110,5 +130,6 @@ if __name__ == '__main__':
     parser.add_argument('session', type=Path)
     parser.add_argument('analysis', type=Path)
     parser.add_argument('destination', type=Path)
+    parser.add_argument('--supplement', type=Path, required=True)
     args = parser.parse_args()
-    package(args.session, args.analysis, args.destination)
+    package(args.session, args.analysis, args.destination, args.supplement)

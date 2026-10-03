@@ -14,10 +14,12 @@ def num(value):return 'not estimable' if value is None else f'{value:.3f}'
 def interval(value):return 'not estimable' if not value else '['+', '.join(f'{x:.3f}' for x in value)+']'
 
 
-def build(session,analysis,destination):
+def build(session,analysis,destination,supplement):
     result=read(analysis/'READOUT.json');inc=read(analysis/'INCREMENTAL.json');manifest=read(analysis/'MANIFEST.json')
     rows=manifest['rows'];primary=result['primary_vla_representation'];res=result['results'];counts=collections.Counter(r['label'] for r in rows)
     outcomes=collections.Counter(r['outcome'] for r in rows);fig=session/'deliverables/figures'
+    layout_data=read(session/'deliverables/layouts/LAYOUT_COMPARISONS.json')
+    nuisance=read(supplement/'NUISANCE_DIAGNOSTICS.json')
     styles=getSampleStyleSheet();styles.add(ParagraphStyle(name='TitleRA',fontName='Helvetica-Bold',fontSize=26,leading=30,textColor=colors.HexColor('#143E4C'),spaceAfter=16))
     styles.add(ParagraphStyle(name='SubRA',fontSize=13,leading=17,textColor=colors.HexColor('#167D8D'),spaceAfter=12))
     styles.add(ParagraphStyle(name='BodyRA',fontName='Helvetica',fontSize=10.2,leading=14,spaceAfter=9))
@@ -38,9 +40,9 @@ def build(session,analysis,destination):
     p('Reach-avoid feasibility study | pi0.5 | 3 October 2026','SubRA')
     p('<b>Question.</b> Can a frozen policy representation distinguish independently impossible states from solvable states on which that policy fails? The execution horizon is T=300 environment commands, never a solver-compute budget.')
     p(f'<b>Completed evidence.</b> The grouped extension contains {len(rows)} states: {counts["feasible"]} with complete safe witnesses, {counts["infeasible"]} with conditional geometric certificates, and {counts["unknown"]} UNKNOWN. All UNKNOWN cases remain in coverage and are excluded from binary accuracy.')
-    metric=res[primary]['failed_subset'];ci=res[primary]['failed_subset_interval']['interval'];p(f'<b>Primary held-out readout.</b> Validation selected <b>{escape(primary)}</b>. Among fixed-policy failures in the held-out cage construction, infeasibility AUROC is <b>{num(metric["auroc"])}</b> (95% group-bootstrap interval {interval(ci)}) on {metric["n"]} independently labeled states. Four test layout groups support exploratory evidence only.')
+    metric=res[primary]['failed_subset'];p(f'<b>Initial-state readout.</b> Validation selected <b>{escape(primary)}</b>. Among later fixed-policy failures in the held-out cage construction, pooled infeasibility AUROC is <b>{num(metric["auroc"])}</b> on {metric["n"]} independently labeled initial states. The four layout-specific results and paired differences are the main descriptive evidence; no significance claim is made.')
     if 'not_estimable' not in inc:
-        p(f'<b>Incremental test.</b> SAFE-score-only AUROC {num(inc["safe_only"]["auroc"])}; SAFE plus feasibility {num(inc["safe_plus_feasibility"]["auroc"])}. Paired group-bootstrap 95% interval for the AUROC difference: {interval(inc["paired_group_bootstrap"]["delta_auroc_interval"])}.')
+        p(f'<b>Incremental comparison.</b> Using a SAFE-style initial-state failure probe, the score-only stacker has pooled AUROC {num(inc["safe_only"]["auroc"])}; adding feasibility gives {num(inc["safe_plus_feasibility"]["auroc"])}. This compares two initial-time supervised scores, not original SAFE temporal detection.')
     else:p('<b>Incremental test.</b> '+escape(inc['not_estimable']))
     p('<b>Scope.</b> Constructor transfer within one separator proof family. This is not independent-mechanism generalization, unrestricted physical impossibility, native semantic understanding, or an AEGIS rescue result.')
     figure('01_baseline.png')
@@ -67,25 +69,67 @@ def build(session,analysis,destination):
         p('The fixed interface clips the gripper scalar to[-1,1] and rejects nonfinite or out-of-range motion commands before execution. Rejected actions and their step indices are saved in ILLEGAL.json. These stopped prefixes are neither full-T policy failures nor safe timeouts; they are not retried or reinterpreted after observing the result.','SmallRA')
     table([['Split','Layout groups','Primary constructor','Known states','UNKNOWN states'],['Train','6','slit',len(result['indices']['train']),sum(r['split']=='train' and r['family']=='slit' and r['label']=='unknown' for r in rows)],['Validation','2','slit',len(result['indices']['validation']),sum(r['split']=='validation' and r['family']=='slit' and r['label']=='unknown' for r in rows)],['Test','4','cage',len(result['indices']['test']),sum(r['split']=='test' and r['family']=='cage' and r['label']=='unknown' for r in rows)]],[75,85,110,100,125])
     p('All paired fixtures, variants, seeds, frames and renders of a layout stay together. Split seed 741 is fixed. The grid reuses some position components across splits, so these are held-out layout combinations and constructors, not unseen task or component-position generalization. Other constructor/split cells remain descriptive and never select the reported primary model.','SmallRA')
-    page();heading('3. Frozen representations and matched readouts')
+    page();heading('3. Every held-out layout, with paired differences')
+    figure('09_layout_readouts.png')
+    layout_rows=[];difference_rows=[]
+    for layout in layout_data['layouts']:
+        known=layout['metrics']['all_known'];failed=layout['metrics']['defined_failures'];base=known[primary]['auroc']
+        layout_rows.append([layout['scene_group'],str(known[primary]['n'])+'/'+str(failed[primary]['n']),
+            num(base)+' / '+num(failed[primary]['auroc']),num(known['own_vision_tower']['auroc']),
+            num(known['native_final']['auroc']),num(known['dino_patch']['auroc'])])
+        difference_rows.append([layout['scene_group'],*[num(base-known[key]['auroc']) if base is not None and known[key]['auroc'] is not None else 'not estimable'
+            for key in ('own_vision_tower','native_final','dino_patch')]])
+    table([['Layout','n known / failures','Selected native: known / failures','Own vision: known','Final native: known','DINO: known'],*layout_rows],[50,65,130,85,80,85])
+    table([['Layout','Selected minus own vision','Selected minus final native','Selected minus DINO'],*difference_rows],[65,145,145,140])
+    p('The differences above compare AUROC on the same known states within each layout. Corresponding failure-subset comparisons and all simple-cue baselines are retained in layout_paired_differences.csv. Small per-layout sample counts make these descriptive comparisons, not significance tests.','SmallRA')
+    p('With four independent, nondegenerate paired signs, the conventional exhaustive one-sided sign-flip setup has only16 assignments: even all effects in one direction yields minimum p=1/16=0.0625. This arithmetic does not establish those assumptions for this constructed dataset. We make no p&lt;0.05 claim.','SmallRA')
+    page();heading('4. Frozen representations and matched readouts')
     figure('04_layer_readouts.png');figure('05_comparators.png',470)
-    p('Every representation uses training-only standardization and PCA (at most 32 dimensions), four logistic regularization values and four 32-unit MLP regularization values, selected by validation log loss. Linear and nonlinear results and fixed training-group learning curves are saved separately. The primary layer/head is selected without test outcomes. Error bars resample the four test layout groups 2,000 times; they are exploratory, not population precision.','SmallRA')
+    p('Every representation uses training-only standardization and PCA (at most32 dimensions), four logistic regularization values and four32-unit MLP regularization values, selected by validation log loss. Linear and nonlinear results and fixed training-group learning curves are saved separately. The primary layer/head is selected without test outcomes. Pooled scores are descriptive. The original bootstrap calculations are preserved in the exploratory appendix; four clusters do not support reliable nominal coverage.','SmallRA')
     p('Own SigLIP tower output, projected visual tokens, all 18 residual layers (whole-prefix and image-token pools), and normalized final prefix use frozen native weights. DINOv2-small receives the same two actual 224px RGB views with no crop/resize and frozen weights. Primary DINO patch pooling matches the two-view averaging of the own visual tower; this external comparison cannot establish information destruction. Differences between native layers are likewise finite-probe and finite-data results, not proof that information is irretrievably absent.','SmallRA')
-    page();heading('4. Does feasibility add beyond a failure score?')
+    page();heading('5. Added information beyond an initial failure score')
     if 'not_estimable' not in inc:figure('07_incremental.png')
     else:p(escape(inc['not_estimable']))
-    p('The SAFE-style probe is a fixed MLP32 predicting the full-T policy failure endpoint from final native features. It is not an official SAFE reproduction and failure does not mean only short-horizon collision. Both feasibility stackers use identical initial decision time and training failures: a scalar SAFE score alone versus that score plus a feasibility score.')
+    if layout_data['incremental']:
+        table([['Layout','n failures','Initial failure score','Failure + feasibility','Paired AUROC change'],
+            *[[r['scene_group'],r['n'],num(r['initial_failure_score_only_auroc']),num(r['failure_plus_feasibility_auroc']),num(r['paired_delta_auroc'])]
+              for r in layout_data['incremental']]],[65,70,120,120,120])
+    p('The SAFE-style initial-state failure probe is a fixed MLP32 predicting the later full-T policy failure endpoint from t=0 final native features. It is not a faithful reproduction of original SAFE temporal detection, and failure does not mean only short-horizon collision. Both stackers use identical initial decision time and training failures: that scalar failure score alone versus that score plus a feasibility score.')
     p('Training scores use leave-one-layout-group-out cross-fitting. Each fold refits all transforms and repeats feasibility representation AND head selection using only the other train groups and fixed validation groups. Final test remains untouched. An independent audit found and corrected internal selection leakage before any grouped GPU rollout; the issue was not outer-test contamination.')
     if len(inc['training_failure_classes'])<2:p('<b>Failure-probe limitation.</b> The training failure endpoint has only one class. The recorded constant-prior fallback is not a learned discriminative SAFE model; any incremental result must be interpreted against that limited baseline.')
-    p('Undefined policy-outcome exclusions: '+escape(str(inc['undefined_outcome_exclusion_counts']))+'. Exclusion case IDs, fold membership, chosen fold models, raw predictions and paired group-bootstrap intervals are reproducible from the supplied analysis records.')
+    p('Undefined policy-outcome exclusions: '+escape(str(inc['undefined_outcome_exclusion_counts']))+'. Exclusion case IDs, fold membership, chosen fold models and raw predictions are reproducible from the supplied analysis records. Later rollout outcomes define failure targets/subsets only; they never replace the independent t=0 feasibility labels.')
     figure('06_learning_curves.png')
-    page();heading('5. Attention, prompt sensitivity, and interpretation')
+    page();heading('6. Supplemental nuisance diagnostics')
+    p('This supplement was declared at20:56UTC on3 October, after some collection but before any readout fitting. It does not participate in primary representation selection. Nominal aperture is privileged construction metadata; target pixel fractions are privileged segmentation diagnostics. Neither is a same-input visual encoder.')
+    p('The full-variant width feature retains20mm for open/off-target controls, where it is bookkeeping rather than effective global clearance. The numeric-gap subset removes those controls and uses only independently known20/28/180mm states. Both populations use the unchanged train-slit/validation-slit/test-cage groups, the same eight head candidates, validation-only selection and a fixed0.5 threshold.')
+    figure('11_nuisance_diagnostics.png')
+    nuisance_rows=[]
+    for population,short in [('all_known_variants','All variants'),('numeric_gap_variants','Numeric gaps')]:
+        record=nuisance['populations'][population]
+        for name,label in [('nominal_width_only','Width'),('target_visibility_only','Target pixels'),('width_plus_target_visibility','Combined')]:
+            model=record['models'][name]
+            nuisance_rows.append([short,label,model['test']['n'],num(model['test']['auroc']),model['failed_subset']['n'],num(model['failed_subset']['auroc'])])
+    table([['Fitting/evaluation population','Diagnostic','n known','Known AUROC','n failures','Failure-subset AUROC'],*nuisance_rows],[120,90,55,85,55,90])
+    p('The same fitted diagnostic is evaluated on later defined policy failures; no model is selected on that subset of test outcomes. Constructor ID is constant in fitting (slit), so there is no learned cage-category mapping. A training-prior constant reference and descriptive constructor-by-width counts are retained; no classifier is fitted on test-cage labels. Predictive construction cues reveal available shortcuts, not proof that the VLA uses them or understands general feasibility.','SmallRA')
+    page();heading('6b. UNKNOWN coverage and scores, without accuracy')
+    figure('12_unknown_scores.png')
+    for population,short in [('all_known_variants','All-variant scope'),('numeric_gap_variants','Numeric-gap scope')]:
+        coverage=nuisance['populations'][population]['coverage']['test']
+        p(f'<b>{short}.</b> The primary test constructor contains {coverage["known"]} known and {coverage["unknown"]} UNKNOWN initial states ({100*coverage["unknown_fraction"]:.1f}% UNKNOWN in this scope). Scores on UNKNOWN are unverified outputs, not calibrated feasibility probabilities or new labels.')
+    unknown_rows=[]
+    for population,short in [('all_known_variants','All variants'),('numeric_gap_variants','Numeric gaps')]:
+        for name,label in [('nominal_width_only','Width'),('target_visibility_only','Target pixels'),('width_plus_target_visibility','Combined')]:
+            value=nuisance['populations'][population]['models'][name]['primary_test_unknown_scores']
+            unknown_rows.append([short,label,value['n'],num(value['minimum']),num(value['median']),num(value['maximum'])])
+    table([['Fit population','Diagnostic','UNKNOWN n','Minimum score','Median score','Maximum score'],*unknown_rows],[100,100,65,80,75,75])
+    p('All48 UNKNOWN states and their per-case supplemental scores remain in the artifact, with distributions by split, constructor and gap. No UNKNOWN accuracy is computed. The152mm unresolved sampled bracket cannot establish the true feasibility boundary, near-boundary accuracy, or whether the known cases are easy.')
+    page();heading('7. Attention, prompt sensitivity, and interpretation')
     p('The KNOWS-inspired comparator uses actual native action-query/vision-key attention at initial diffusion t=1 with fixed RNG, averaged over action queries and K=1 in time. Target mass, area-normalized density and entropy are recorded. A projected target ellipsoid from simulator geometry replaces the tracker; this is privileged localization and is disclosed. Fixed one-based layer 12 / head 3 is interpreted as array indices11/2. It is an initial-time adaptation, not the paper\'s trajectory-level experiment.')
     p('Native suffix velocity and the traced attention execution agree exactly on both adapter-development states. The native layer trace agrees exactly on 28 earlier initial states; comparison arrays are saved before acceptance checks. Feature extraction never advances environment physics or policy RNG.')
     figure('02_prompt_sensitivity.png')
     p('At each of four fixed clear baseline states, the original instruction, explicit safety sentence and matched original duplicate share scene/state/RNG. Actual token IDs differ at 19 positions; final features and action chunks change, while duplicate arrays match exactly. Action maximum absolute changes are 0.195,0.540,0.851,0.203. These show sensitivity, not comprehension. Finite equality would likewise not prove information absent.')
     p('<b>Claims this study does not support.</b> There are not three independent physical obstruction mechanisms, no train-two/test-third test, no validated runtime AEGIS blockage trigger or state-specific rescue alternatives, and no rescue-improvement or reporting-delay result. Initial feasibility can be lost after motion. Existence of a safe solution never licenses an unsafe action. Hidden labels train external probes; they do not show spontaneous semantic understanding of uncommunicated simulator rules.')
-    page();heading('6. Reproduction, failures, and evidence integrity')
+    page();heading('8. Reproduction, failures, and evidence integrity')
     p('CPU matrix source:87c5b06ef2d5e7b0f21f38350044e9f495097a59; GPU matrix source:465f112ea18bf12204c2c87f1df99c75dd67bd4a. Pinned public upstream:2457feed5968ae803926e178c8ce8243b9ecdcf9. Every job uses an immutable git archive with source hashes, exact protocol, seed 7, T=300 and Slurm provenance. DINO revision:ed25f3a31f01632728cabb09d1542f84ab7b0056.')
     p('Main jobs: baseline CPU8414531 and GPU8417233; development mechanisms8416208; native layer/visibility audit8418441; grouped CPU array8419904; adapter8421049; grouped GPU array8422120. Complete terminal accounting, any repairs and per-case manifests accompany the report. Account p33100; CPU short; GPU gengpu; at most one matrix A100 active. Zero paid API calls; no base-VLA training.')
     p('Recoverable faults were retained: explicit bottle identity/support repair; a pending native-support job cancellation; prompt timing metadata excluded from numeric arrays; bfloat16 WebSocket conversion with server-side array preservation; stale Slurm dependency repaired only after completed accounting and28 verified label records. Historical adapter receipt protocol-hash fields point to the older observer protocol; the full immutable archives and scientific hashes preserve their actual configuration. No failure supplied a scientific label.')
@@ -93,15 +137,21 @@ def build(session,analysis,destination):
     heading('Primary sources and distinct estimands')
     for title,url,desc in [
         ('KNOWS','https://arxiv.org/html/2606.09749v1','Target attention, tracking and a CBF; success association does not establish general goal feasibility.'),
-        ('SAFE','https://arxiv.org/abs/2506.09937','VLA failure prediction; this study uses a declared SAFE-style head, not an official reproduction.'),
+        ('SAFE','https://arxiv.org/abs/2506.09937','VLA failure prediction; this study uses a SAFE-style initial-state failure probe, not a faithful temporal-detection reproduction.'),
         ('ShieldVLA','https://arxiv.org/html/2609.13231v1','Safe operating-region/indefinite safety is distinct from safe goal-reaching.'),
         ('DINOv2-small model','https://huggingface.co/facebook/dinov2-small','Frozen external vision baseline with pinned artifact hashes.')]:
         p(f'<link href="{url}" color="#167D8D">{title}</link>: {escape(desc)}','SmallRA')
-    p('Prepared from saved records. Interpret the numerical readout as a small, controlled constructor-transfer result with explicit UNKNOWN coverage and digital-contract assumptions.','SmallRA')
+    page();heading('Appendix. Original exploratory bootstrap output')
+    p('A user-approved reporting-plan deviation was recorded at21:01UTC on3 October, before readout fitting: the four layout-specific results became the main descriptive presentation, while the preregistered bootstrap output moved here. Original protocol, frozen code and numerical output are preserved. Scenes, splits, labels, fitting and primary model selection did not change.')
+    figure('10_exploratory_bootstrap.png')
+    p('These are the empirical2.5%-97.5% quantiles of2,000 draws resampling four test layout groups, conditional on the fitted models. Four clusters do not support reliable nominal coverage. The quantiles are not used for a significance claim or evidence of population precision.')
+    if 'not_estimable' not in inc:
+        p('Original paired incremental AUROC resampling range: '+interval(inc['paired_group_bootstrap']['delta_auroc_interval'])+'. This remains exploratory even if it excludes zero.')
+    p('Every feasibility readout in this report is at t=0. No initial prediction is applied as current feasibility at deadlock, and there is no intermediate-state extrapolation or temporal training. A later AEGIS stalled-time study would need a prespecified trigger and independent state-specific labels.','SmallRA')
     def footer(canvas,doc):
         canvas.setFont('Helvetica',8);canvas.setFillColor(colors.HexColor('#687B83'));canvas.drawString(48,28,'CrashBench / SafeLIBERO controlled extension | RA-1 / RA-2');canvas.drawRightString(564,28,str(doc.page))
     destination.parent.mkdir(parents=True,exist_ok=True)
     SimpleDocTemplate(str(destination),pagesize=(612,792),rightMargin=48,leftMargin=48,topMargin=43,bottomMargin=45,title='Safe goal-reaching versus policy failure',author='CrashBench research study').build(story,onFirstPage=footer,onLaterPages=footer)
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('session',type=Path);p.add_argument('analysis',type=Path);p.add_argument('destination',type=Path);a=p.parse_args();build(a.session,a.analysis,a.destination)
+    p=argparse.ArgumentParser();p.add_argument('session',type=Path);p.add_argument('analysis',type=Path);p.add_argument('destination',type=Path);p.add_argument('--supplement',type=Path,required=True);a=p.parse_args();build(a.session,a.analysis,a.destination,a.supplement)

@@ -78,14 +78,18 @@ def readouts(analysis,out):
     fig.suptitle('Frozen pi0.5 readouts | primary selected on validation: '+primary,y=1.04)
     finish(fig,out/'04_layer_readouts.png')
     keys=['own_vision_tower','projected_vision',primary,'native_final','dino_patch','rgb_pooled_red','visibility','geometry','knows_fixed']
-    keys=list(dict.fromkeys(keys));fig,ax=plt.subplots(figsize=(9,4.2));vals=[results[k]['test']['auroc'] for k in keys]
+    keys=list(dict.fromkeys(keys));vals=[results[k]['test']['auroc'] for k in keys]
     intervals=[results[k]['auroc_interval']['interval'] for k in keys]
-    ax.barh(range(len(keys)),vals,color='#4266A3',alpha=.8)
-    for i,(v,ci) in enumerate(zip(vals,intervals)):
-        if ci:ax.plot(ci,[i,i],color='black');ax.plot(ci,[i,i],'|',color='black')
-        ax.text(min(v+.02,.94),i,f'{v:.2f}',va='center',fontsize=8)
-    ax.set(yticks=range(len(keys)),yticklabels=keys,xlim=(0,1.03),xlabel='AUROC; 95% scene-group bootstrap interval',title='Constructor transfer; four test groups, exploratory uncertainty');ax.axvline(.5,color='gray',linestyle='--');ax.invert_yaxis()
-    finish(fig,out/'05_comparators.png')
+    for appendix in (False,True):
+        fig,ax=plt.subplots(figsize=(9,4.2));ax.barh(range(len(keys)),vals,color='#4266A3',alpha=.8)
+        for i,(v,ci) in enumerate(zip(vals,intervals)):
+            if appendix and ci:ax.plot(ci,[i,i],color='black');ax.plot(ci,[i,i],'|',color='black')
+            ax.text(min(v+.02,.94),i,f'{v:.2f}',va='center',fontsize=8)
+        ax.set(yticks=range(len(keys)),yticklabels=keys,xlim=(0,1.03),
+            xlabel='AUROC; exploratory 2.5%-97.5% cluster-bootstrap quantiles' if appendix else 'Pooled held-out AUROC (descriptive)',
+            title='Appendix: four clusters do not establish nominal coverage' if appendix else 'Constructor transfer; layout-specific comparisons are primary')
+        ax.axvline(.5,color='gray',linestyle='--');ax.invert_yaxis()
+        finish(fig,out/('10_exploratory_bootstrap.png' if appendix else '05_comparators.png'))
     curves=read(analysis/'LEARNING_CURVES.json');fig,ax=plt.subplots(figsize=(7,3.5))
     for key in [primary,'own_vision_tower','dino_patch','rgb_pooled_red']:
         valid=[p for p in curves[key] if 'test' in p]
@@ -95,12 +99,57 @@ def readouts(analysis,out):
     inc=read(analysis/'INCREMENTAL.json')
     if 'not_estimable' not in inc:
         fig,ax=plt.subplots(figsize=(7,3.6));gs=list(inc['raw_groups']);x=np.arange(len(gs))
-        for offset,key,label,col in [(-.17,'safe_only','SAFE score alone','#8E98A5'),(.17,'safe_plus_feasibility','SAFE + feasibility','#167D8D')]:
+        for offset,key,label,col in [(-.17,'safe_only','Initial failure score alone','#8E98A5'),(.17,'safe_plus_feasibility','Failure score + feasibility','#167D8D')]:
             vals=[inc['raw_groups'][g][key]['auroc'] for g in gs];ax.bar(x+offset,[v if v is not None else np.nan for v in vals],.34,label=label,color=col)
-        ax.set(xticks=x,xticklabels=gs,ylim=(0,1.05),ylabel='Within-group infeasibility AUROC',title='Among policy failures, at the same initial decision time');ax.legend(fontsize=8)
+        ax.set(xticks=x,xticklabels=gs,ylim=(0,1.05),ylabel='Within-group infeasibility AUROC',title='SAFE-style initial-state failure probe\nRetrospective failures; descriptive paired layouts');ax.legend(fontsize=8)
         finish(fig,out/'07_incremental.png')
 
+
+def layout_figure(session,out):
+    path=session/'deliverables/layouts/LAYOUT_COMPARISONS.json'
+    if not path.exists():return
+    data=read(path);primary=data['primary_representation'];layouts=data['layouts']
+    fig,axes=plt.subplots(1,2,figsize=(10,3.6),sharey=True)
+    for ax,population,title in zip(axes,('all_known','defined_failures'),('Known initial labels','Retrospective policy failures')):
+        for key,label,color,marker in [(primary,'Selected native layer','#4266A3','o'),('own_vision_tower','Own vision tower','#167D8D','s'),
+            ('native_final','Final native features','#A46F36','^'),('dino_patch','DINOv2 patches','#7B5695','d')]:
+            ax.plot([r['scene_group'] for r in layouts],[r['metrics'][population][key]['auroc'] for r in layouts],marker+'-',label=label,color=color,alpha=.85)
+        ax.set(title=title,xlabel='Held-out layout',ylim=(0,1.04));ax.axhline(.5,color='gray',linewidth=.6)
+    axes[0].set_ylabel('Within-layout AUROC');axes[0].legend(fontsize=7,loc='lower left')
+    fig.suptitle('All four paired layouts; no significance claim',y=1.04)
+    finish(fig,out/'09_layout_readouts.png')
+
+
+def nuisance(supplement,out):
+    import csv
+    data=read(supplement/'NUISANCE_DIAGNOSTICS.json');names=['nominal_width_only','target_visibility_only','width_plus_target_visibility']
+    labels=['Nominal width','Target pixels','Width + target pixels'];fig,axes=plt.subplots(1,2,figsize=(10,3.6),sharey=True)
+    populations=['all_known_variants','numeric_gap_variants']
+    for ax,population,title in zip(axes,populations,['All known variants','Numeric-gap subset']):
+        models=data['populations'][population]['models'];x=np.arange(3)
+        for offset,key,label,color in [(-.17,'test','All known test states','#4266A3'),(.17,'failed_subset','Defined policy failures','#167D8D')]:
+            ax.bar(x+offset,[models[n][key]['auroc'] for n in names],.34,label=label,color=color)
+        ax.set(xticks=x,xticklabels=labels,ylim=(0,1.04),title=title);ax.tick_params(axis='x',labelsize=8);ax.axhline(.5,color='gray',linewidth=.6)
+    axes[0].set_ylabel('Test-cage AUROC (descriptive)');axes[0].legend(fontsize=7,loc='lower left')
+    fig.suptitle('Supplement: privileged metadata and segmentation diagnostics',y=1.04)
+    finish(fig,out/'11_nuisance_diagnostics.png')
+    with (supplement/'unknown_predictions.csv').open() as stream:rows=list(csv.DictReader(stream))
+    rows=[r for r in rows if r['split']=='test' and r['constructor']=='cage']
+    gs=sorted({r['scene_group'] for r in rows});offsets=dict(zip(gs,np.linspace(-.06,.06,len(gs))))
+    fig,axes=plt.subplots(1,2,figsize=(10,3.6),sharey=True)
+    for ax,population,title in zip(axes,populations,['Fit on all known variants','Fit on numeric-gap subset']):
+        for gap,offset,color in [('.034',-.10,'#4266A3'),('.060',.10,'#B69744')]:
+            selected=[r for r in rows if r['population']==population and r['variant']==gap]
+            ax.scatter([names.index(r['diagnostic'])+offset+offsets[r['scene_group']] for r in selected],
+                [float(r['score']) for r in selected],label=f'{float(gap)*1000:.0f} mm UNKNOWN',color=color,s=24,alpha=.8)
+        ax.set(xticks=range(3),xticklabels=labels,ylim=(-.03,1.03),title=title);ax.tick_params(axis='x',labelsize=8)
+    axes[0].set_ylabel('Infeasibility readout score (unverified)');axes[0].legend(fontsize=7,loc='lower left')
+    fig.suptitle('Eight UNKNOWN test-cage states; score distributions, no accuracy',y=1.04)
+    finish(fig,out/'12_unknown_scores.png')
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('session',type=Path);p.add_argument('out',type=Path);p.add_argument('--analysis',type=Path);a=p.parse_args();a.out.mkdir(exist_ok=True,parents=True)
+    p=argparse.ArgumentParser();p.add_argument('session',type=Path);p.add_argument('out',type=Path);p.add_argument('--analysis',type=Path);p.add_argument('--supplement',type=Path);a=p.parse_args();a.out.mkdir(exist_ok=True,parents=True)
     baseline(a.session,a.out);contact_sheet(a.session,a.out);boundary(a.session,a.out)
     if a.analysis:readouts(a.analysis,a.out)
+    layout_figure(a.session,a.out)
+    if a.supplement:nuisance(a.supplement,a.out)

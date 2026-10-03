@@ -1,0 +1,27 @@
+{
+  "status": "Dated supplemental diagnostic; not part of primary representation selection",
+  "declared_utc": "2026-10-03T20:56:11Z",
+  "authorization": "Parent relayed the user's methodological questions and requested width-only, target-visibility-only, and combined diagnostics on existing data. Primary6/2/4 splits and internal nested OOF remain unchanged.",
+  "data_status_at_declaration": "All CPU labels and first84 GPU initial states collected; no primary or supplemental readout model fitted yet",
+  "new_rollouts": 0,
+  "new_scenes_or_seeds": 0,
+  "primary_analysis_change": false,
+  "inputs": {
+    "nominal_width_only": "Existing privileged geometry feature index6: the constructor aperture parameter in metres. Open and off-target controls retain the predeclared20mm parameter. This is not their effective global route clearance.",
+    "target_visibility_only": "Existing privileged segmentation target pixel fractions in actual agent and wrist views: visibility indices0 and3. No goal/panel pixels or geometry.",
+    "width_plus_target_visibility": "Concatenation of exactly the preceding three scalars"
+  },
+  "populations": {
+    "all_known_variants": "All independently known, initially valid states in the primary designated constructors; open/off-target parameter convention disclosed",
+    "numeric_gap_variants": "Fixed numeric-gap subset, excluding open/off-target controls. Known20/28/180mm states are binary evaluation;34/60mm remain UNKNOWN. This is supplemental subset performance, not a replacement primary test."
+  },
+  "fitting": "Same8 linear/MLP candidates and train-only standardization/PCA as frozen readout.py. Validation log loss selects the head independently for each diagnostic and population. Fixed decision threshold0.5. No test tuning.",
+  "splits": "Unchanged6train slit,2validation slit,4test cage; all paired variants stay with their original scene group",
+  "uncertainty": "2000 test-scene-group bootstrap draws, seed713; appendix-only exploratory4-group resampling ranges, not reliable nominal coverage or significance",
+  "constructor_diagnostic": "Training and validation contain slit only; cage has no learned constructor-category mapping. Record a training-prior constant reference and descriptive within-constructor/width label counts. Never fit a constructor baseline on test labels.",
+  "decision_time": "t=0 only; later outcomes define retrospective failure subsets and never new feasibility labels",
+  "privileged_inputs": "Both nominal aperture metadata and oracle target segmentation fractions are privileged diagnostics, not same-input visual encoders. Width+constructor has no learned cross-constructor effect with a constant training category.",
+  "unknown_reporting": "Retain coverage counts and per-case score distributions for all UNKNOWN states, split by constructor/group/variant; report primary test-cage UNKNOWN separately. Never compute UNKNOWN accuracy or infer their true labels.",
+  "interpretation": "Predictive nuisance cues show dataset shortcuts are available; they do not prove the VLA uses those cues. The152mm unresolved bracket does not establish a true feasibility boundary or that known cases are easy. No native semantic-understanding claim.",
+  "resource_budget": "Local shallow CPU fits only; no GPU or paid API"
+}
