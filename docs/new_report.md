@@ -19,6 +19,9 @@ I will stop expanding the tasks, designing a recovery controller, and changing t
 I then moved to SafeLIBERO, which keeps the original tasks and action space, and reproduced both nominal π0.5 and the full AEGIS (their safety policy) pipeline.
 I evaluated each method on 1,600 episodes. These experiments were completed on September 28 and are separate from the 600 diagnostic reruns discussed later.
 
+Basically, AEGIS: GLM-4.5V selects the obstacle, GroundingDINO localizes it, depth gives a 3D point cloud, AEGIS fits an ellipsoid, and then a CBF-QP safety filter projects the VLA action to a nearby safe action.
+
+So it works more like a safety shield or a brake. It can reduce collisions, but it does not necessarily tell the robot how to recover and finish the task.
 
 | **Full Evaluation — 1,600 Episodes per Method** | **Nominal π0.5** | **Full AEGIS** |
 |---|---:|---:|
