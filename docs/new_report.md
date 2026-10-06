@@ -118,3 +118,5 @@ Next:
 
 state feasibility? action-conditioned recoverability?
 
+Recoverability is relational. It depends not only on the state, but also on the task, safety constraints, available capabilities, and remaining time. So the VLA has to know more than just 
+some probe fitting. Does the model know its own action possibilities well enough to act on that knowledge? I feel like humans have such ability but not vlm/vlas.
