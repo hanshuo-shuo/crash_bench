@@ -13,25 +13,23 @@ def sample_shared_prefix(self, observation, noise, num_steps=10):
     tokens, mask, ar = self.embed_prefix(obs)
     _, cache = self.PaliGemma.llm([tokens, None], mask=make_attn_mask(mask, ar),
                                 positions=jnp.cumsum(mask, axis=1)-1)
-    count = noise.shape[0]
-    # Scanned layers add axis 0; the cache's batch axis is axis 1.
-    cache = jax.tree.map(lambda x: jnp.repeat(x, count, axis=1), cache)
-    obs = jax.tree.map(lambda x: None if x is None else jnp.repeat(x, count, axis=0), obs)
-    mask = jnp.repeat(mask, count, axis=0)
     dt = -1. / num_steps
-
-    def step(carry):
-        x, clock = carry
-        suffix, smask, sar, cond = self.embed_suffix(obs, x, jnp.broadcast_to(clock, count))
-        prefix_attention = jnp.broadcast_to(mask[:, None, :], (count, suffix.shape[1], mask.shape[1]))
-        full_mask = jnp.concatenate([prefix_attention, make_attn_mask(smask, sar)], axis=-1)
-        positions = jnp.sum(mask, axis=-1)[:, None] + jnp.cumsum(smask, axis=-1)-1
-        (_, out), _ = self.PaliGemma.llm([None, suffix], mask=full_mask, positions=positions,
-                                       kv_cache=cache, adarms_cond=[None, cond])
-        return x + dt*self.action_out_proj(out[:, -self.action_horizon:]), clock+dt
-
-    result, _ = jax.lax.while_loop(lambda carry: carry[1] >= -dt/2, step, (noise, 1.))
-    return result
+    def one_sample(sample_noise):
+        # The failed B=8 GEMMs differ numerically from native B=1 BF16 GEMMs.
+        # Map the eight-sample batch with B=1 kernels and a single hoisted KV cache;
+        # do not recompute the prefix and do not reduce M or change precision.
+        def step(carry):
+            x, clock = carry
+            suffix, smask, sar, cond = self.embed_suffix(obs, x, jnp.broadcast_to(clock, 1))
+            prefix_attention = jnp.broadcast_to(mask[:, None, :], (1, suffix.shape[1], mask.shape[1]))
+            full_mask = jnp.concatenate([prefix_attention, make_attn_mask(smask, sar)], axis=-1)
+            positions = jnp.sum(mask, axis=-1)[:, None] + jnp.cumsum(smask, axis=-1)-1
+            (_, out), _ = self.PaliGemma.llm([None, suffix], mask=full_mask, positions=positions,
+                                           kv_cache=cache, adarms_cond=[None, cond])
+            return x + dt*self.action_out_proj(out[:, -self.action_horizon:]), clock+dt
+        result, _ = jax.lax.while_loop(lambda carry: carry[1] >= -dt/2, step, (sample_noise[None, ...], 1.))
+        return result[0]
+    return jax.lax.map(one_sample, noise)
 
 
 class Sampler:
@@ -70,6 +68,7 @@ class Sampler:
         values = self.outputs(raw, obs)
         seconds = time.monotonic()-start
         evidence = {'sample_seeds': seeds, 'samples': len(seeds), 'prefix_prefills': 1,
+                    'suffix_execution': self.cfg['suffix_execution'], 'suffix_kernel_batch_width': 1,
                     'batch_seconds': seconds, 'output_shape': list(values.shape),
                     'normalization_scales': self.scales.tolist()}
         if values.shape != (8, 10, 7) or not np.isfinite(values).all():

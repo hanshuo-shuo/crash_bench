@@ -38,6 +38,13 @@ def launch(root):
     if not job.isdigit(): raise RuntimeError('Invalid Slurm receipt')
     plan=dict(job=job,code_commit=commit,live_checkout_commit=command(['git','rev-parse','HEAD'],checkout),
               campaign_root=str(campaign),configuration=cfg,submitted_unix=time.time())
+    parent = ASSETS/'uncertainty/20261008T035359Z_5e20522082f7'
+    if (parent/'SAMPLING_VALIDATION.json').exists():
+        import json
+        failed=json.loads((parent/'SAMPLING_VALIDATION.json').read_text())
+        if failed['serial_batch_passed'] or not (parent/'STOP.json').exists():
+            raise RuntimeError('Expected retained failed B=8 numeric-gate evidence')
+        plan.update(validation_input_root=str(parent), validation_input_prompt='pick up the black bowl on the ramekin and place it on the plate')
     atomic_json(root/'plan.json',plan)
     worker=shlex.join(['/projects/p33100/siosio/envs/openpi/bin/python','-u',str(source/'analysis/uncertainty/worker.py'),str(root)])+' > '+shlex.quote(str(root/'api_worker.log'))+' 2>&1'
     try:

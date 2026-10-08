@@ -74,6 +74,23 @@ def main():
         raise RuntimeError('Pinned native JAX model required')
     norm_file = a.checkpoint/'assets/physical-intelligence/libero/norm_stats.json'
     wrapped = ObserverPolicy(policy, jax, cfg, a.root, norm_file)
+    # Reuse the failed run's saved initial model input to test the engineering
+    # repair before any new simulator action, without calling a VLM.
+    import json
+    plan = json.loads((a.root/'plan.json').read_text())
+    if plan.get('validation_input_root'):
+        parent = Path(plan['validation_input_root'])
+        file = parent/'runs/timing/infer_001.npz'
+        with np.load(file, allow_pickle=False) as saved:
+            data = {'observation/image': saved['image'], 'observation/wrist_image': saved['wrist_image'],
+                    'observation/state': saved['state'], 'prompt': plan['validation_input_prompt']}
+        from common import scene_id, seed_for, sha
+        scene = cfg['scenes'][0]
+        wrapped.infer({'__uncertainty_reset__': True, 'run_id': 'sampling_probe',
+                       'scene_id': scene_id(scene), 'seed': seed_for(scene,0), 'enabled': True})
+        wrapped.infer(data)
+        atomic_json(a.root/'REPAIR_PROBE.json', dict(passed=True, source_file=str(file), sha256=sha(file),
+                    parent_root=str(parent), no_simulator_actions=True, no_vlm_calls=True))
     atomic_json(a.root/'POLICY_READY.json', dict(checkpoint=str(a.checkpoint),
                 model_action_dim=policy._model.action_dim, action_horizon=policy._model.action_horizon,
                 jax_version=jax.__version__, devices=[str(x) for x in jax.devices()], scales=wrapped.sampler.scales.tolist()))

@@ -66,7 +66,7 @@ class Observer:
                 observer.previous = chunk.copy(); observer.latest = info
                 observer.inferences.append(info); observer.infer_file.write(json.dumps(info)+'\n'); observer.infer_file.flush()
                 np.savez_compressed(observer.directory/('infer_%03d.npz'%info['infer_index']), actions=chunk,
-                    image=data['observation/image'], wrist_image=data['observation/wrist_image'], state=data['observation/state'])
+                    image=data['observation/image'], wrist_image=data['observation/wrist_image'], state=data['observation/state'], prompt=data['prompt'])
                 return result
         return Client()
 
