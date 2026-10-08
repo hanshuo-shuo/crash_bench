@@ -92,3 +92,13 @@ def time_to_crash(step, collision_step):
     if collision_step is None:
         return -1
     return collision_step-step if step <= collision_step else None
+
+
+def remaining_minutes(receipts, ceiling_minutes=30):
+    terminal = {'COMPLETED','FAILED','CANCELLED','TIMEOUT','OUT_OF_MEMORY','NODE_FAIL','BOOT_FAIL','DEADLINE','PREEMPTED','REVOKED'}
+    if any(x['state'].split()[0] not in terminal or int(x['elapsed_seconds']) < 0 for x in receipts):
+        raise RuntimeError('Campaign allocation has unknown or active accounting')
+    used = sum(int(x['elapsed_seconds']) for x in receipts)
+    minutes = (ceiling_minutes*60-used)//60
+    if minutes < 1: raise RuntimeError('Cumulative allocation ceiling exhausted')
+    return minutes, used

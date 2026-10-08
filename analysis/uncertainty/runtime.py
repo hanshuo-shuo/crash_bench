@@ -62,6 +62,8 @@ class Observer:
                     raise Failure('Policy stream identity mismatch')
                 chunk = np.asarray(result['actions'])
                 if chunk.shape != (10, 7): raise Failure('Invalid production action chunk')
+                if observer.spec['diagnostics'] and not info.get('native_action_array_equal'):
+                    raise Failure('Missing per-infer native action invariance evidence')
                 info.update(step=observer.ctx['t']+1, churn=churn(chunk, observer.previous, observer.scales))
                 observer.previous = chunk.copy(); observer.latest = info
                 observer.inferences.append(info); observer.infer_file.write(json.dumps(info)+'\n'); observer.infer_file.flush()
@@ -94,6 +96,7 @@ class Observer:
         self.min_dist, self.pair = self.distance.read()
         if self.spec['method'] == 'nominal' and ctx['t'] and ctx['t'] % 20 == 0:
             self.snapshot(ctx['t'], ctx)
+        self.physics_before = physical_hash(self.env)
 
     def snapshot(self, step, ctx):
         path = self.directory/'snapshots'; path.mkdir(exist_ok=True)
@@ -121,6 +124,12 @@ class Observer:
 
     def candidate(self, raw, applied, t, status):
         if not np.isfinite(raw).all() or not np.isfinite(applied).all(): raise Failure('Nonfinite execution command')
+        queue_equal = bool(np.array_equal(np.asarray(raw), self.previous[t % self.cfg['replan_steps']]))
+        physical_equal = self.physics_before == physical_hash(self.env)
+        if not queue_equal or not physical_equal:
+            atomic_json(self.directory/'ACTION_INVARIANCE_FAILURE.json', dict(step=t+1,
+                        queue_array_equal=queue_equal, physical_before_action_unchanged=physical_equal))
+            raise Failure('Actual queue command or live physics changed before execution')
         applied = np.asarray(applied); controller = self.env.robots[0].controller
         clipped = applied.copy(); clipped[:6] = np.clip(applied[:6], controller.input_min, controller.input_max)
         self.pending = dict(step=t+1, raw=np.asarray(raw).tolist(), proposed=applied.tolist(),
@@ -128,6 +137,7 @@ class Observer:
                             act_norm6=norm(applied, self.scales, 6), act_norm7=norm(applied, self.scales),
                             controller_clipped_norm7=norm(clipped, self.scales), min_dist=self.min_dist,
                             closest_geom_pair=self.pair, infer_index=self.latest['infer_index'],
+                            queue_array_equal=queue_equal, physical_before_action_unchanged=physical_equal,
                             native_seconds=self.latest['native_seconds'], diagnostic_seconds=self.latest['diagnostic_seconds'])
 
     def after(self, obs, done, t):
@@ -217,15 +227,26 @@ class Runner:
                 equal = len(baseline)==len(observer.steps) and all(a[k]==b[k] for a,b in zip(baseline,observer.steps)
                     for k in ['raw','proposed','applied','controller_clipped','physics_after_sha256','success','obstacle_l1_m'])
                 proof = dict(passed=equal, baseline='timing', diagnostic=spec['name'], baseline_actions=len(baseline),
-                             diagnostic_actions=len(observer.steps), equality='exact command values and live physical bytes at every action')
+                             diagnostic_actions=len(observer.steps), acceptance_gate=False,
+                             equality='exact command values and live physical bytes at every action',
+                             first_mismatch_step=next((b['step'] for a,b in zip(baseline,observer.steps)
+                                if any(a[k]!=b[k] for k in ['raw','applied','physics_after_sha256'])),None),
+                             warning=None if equal else 'Fresh environments may differ in RGB rendering; per-infer same-input/RNG invariance is the approved acceptance gate.')
                 atomic_json(self.root/'ROLLOUT_EQUALITY.json', proof)
-                if not equal: raise Failure('No-diagnostic / diagnostic actual rollout equality failed')
+            conditional = dict(passed=all(x.get('native_action_array_equal',False) for x in observer.inferences)
+                               and all(x['queue_array_equal'] and x['physical_before_action_unchanged'] for x in observer.steps),
+                               inferences=len(observer.inferences), actions=observer.executed,
+                               acceptance='strict same-input/RNG native before/after each infer; actual queue commands exact; live physics unchanged before every action')
+            if spec['diagnostics']:
+                atomic_json(observer.directory/'CONDITIONAL_ACTION_EQUALITY.json', conditional)
+                if not conditional['passed']: raise Failure('Conditional action invariance failed')
             status = 'complete'
             result = dict(spec=spec, seed=observer.seed, status=status, actions=observer.executed,
                 outcome=outcome(observer.success, observer.collide), collision_step=observer.collide, success=observer.success,
                 elapsed_seconds=time.monotonic()-started, inferences=len(observer.inferences), exited=observer.exited,
                 native_seconds=sum(x['native_seconds'] for x in observer.inferences),
                 diagnostic_seconds=sum(x['diagnostic_seconds'] for x in observer.inferences),
+                reference_check_seconds=sum(x['reference_check_seconds'] for x in observer.inferences),
                 snapshots=len(list((observer.directory/'snapshots').glob('*.json'))) if (observer.directory/'snapshots').exists() else 0,
                 video=getattr(observer, 'video', None), settled_physics_sha256=observer.settled_hash)
             atomic_json(observer.directory/'RESULT.json', result)
@@ -250,6 +271,11 @@ def main(root, port):
             atomic_json(root/'progress.json', dict(completed=len(results), expected=9, results=results))
             if spec['name']=='timing': atomic_json(root/'TIMING.json', result)
         atomic_json(root/'COMPUTE_COMPLETE.json', dict(completed=9, results=results, slurm_job=os.environ['SLURM_JOB_ID']))
+        proofs=[json.loads((root/'runs'/x['spec']['name']/'CONDITIONAL_ACTION_EQUALITY.json').read_text())
+                for x in results if x['spec']['diagnostics']]
+        atomic_json(root/'CONDITIONAL_ACTION_EQUALITY.json', dict(passed=len(proofs)==8 and all(x['passed'] for x in proofs),
+                    runs=8, inferences=sum(x['inferences'] for x in proofs), actions=sum(x['actions'] for x in proofs),
+                    acceptance=proofs[0]['acceptance']))
     except BaseException as error:
         atomic_json(root/'STOP.json', dict(stage='compute', error=type(error).__name__, reason=str(error),
             slurm_job=os.environ.get('SLURM_JOB_ID'), completed=len(results)))

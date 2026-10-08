@@ -48,6 +48,16 @@ class MetricTests(unittest.TestCase):
         self.assertEqual(len(set(values)),8)
         self.assertNotEqual(values,[common.noise_seed('scene',7,3,i) for i in range(8)])
 
+    def test_repair_allocations_share_cumulative_ceiling(self):
+        receipts=[dict(state='FAILED',elapsed_seconds=361),dict(state='FAILED',elapsed_seconds=362)]
+        minutes,used=common.remaining_minutes(receipts)
+        self.assertEqual((minutes,used),(17,723))
+        self.assertLessEqual(used+minutes*60,1800)
+        with self.assertRaisesRegex(RuntimeError,'unknown or active'):
+            common.remaining_minutes([dict(state='RUNNING',elapsed_seconds=1)])
+        with self.assertRaisesRegex(RuntimeError,'exhausted'):
+            common.remaining_minutes([dict(state='TIMEOUT',elapsed_seconds=1800)])
+
 
 class BudgetTests(unittest.TestCase):
     def request(self):

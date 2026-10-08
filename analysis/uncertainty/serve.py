@@ -33,20 +33,23 @@ class ObserverPolicy:
             native_seconds = time.monotonic()-start; after = self.policy._rng
             self.n += 1
             evidence = dict(run_id=self.run, infer_index=self.n, rng_before=key_before, rng_after=self.key(),
-                            native_seconds=native_seconds, diagnostic_seconds=0., disagreement=None)
+                            native_seconds=native_seconds, diagnostic_seconds=0., reference_check_seconds=0., disagreement=None)
             if self.enabled:
                 seeds = [noise_seed(self.scene, self.seed, self.n, i) for i in range(8)]
                 values, metric, diag = self.sampler.infer(data, seeds, validate=not self.validated)
                 evidence.update(diag, disagreement=metric, diagnostic_seconds=diag['batch_seconds'])
+                # Every infer uses its original input and RNG for a strict native
+                # before/after comparison. Restore the production RNG even on error.
+                self.policy._rng = before
+                checked = time.monotonic()
+                try:
+                    again = self.policy.infer(data)
+                finally:
+                    self.policy._rng = after
+                evidence['reference_check_seconds'] = time.monotonic()-checked
+                evidence['native_action_array_equal'] = bool(np.array_equal(result['actions'], again['actions']))
+                evidence['native_action_max_abs'] = float(np.max(np.abs(result['actions']-again['actions'])))
                 if not self.validated:
-                    # Native production output brackets the diagnostic at the very same RNG/input.
-                    self.policy._rng = before
-                    try:
-                        again = self.policy.infer(data)
-                    finally:
-                        self.policy._rng = after
-                    evidence['native_action_array_equal'] = bool(np.array_equal(result['actions'], again['actions']))
-                    evidence['native_action_max_abs'] = float(np.max(np.abs(result['actions']-again['actions'])))
                     atomic_json(self.root/'SAMPLING_VALIDATION.json', evidence)
                     np.savez_compressed(self.root/'sampling_validation_actions.npz', batch=values,
                                         serial=np.asarray(evidence['serial_actions']), native_before=result['actions'],
@@ -54,6 +57,11 @@ class ObserverPolicy:
                     if not evidence['serial_batch_passed'] or not evidence['native_action_array_equal']:
                         raise RuntimeError('Frozen sampling or native-action equality gate failed; inspect SAMPLING_VALIDATION.json')
                     self.validated = True
+                if not evidence['native_action_array_equal']:
+                    atomic_json(self.root/'NATIVE_INVARIANCE_FAILURE.json', evidence)
+                    np.savez_compressed(self.root/'native_invariance_failure.npz',
+                                        native_before=result['actions'], native_after=again['actions'])
+                    raise RuntimeError('Same-input/RNG native action invariance failed')
             if self.key() != evidence['rng_after']:
                 raise RuntimeError('Production RNG advanced during diagnostics')
             evidence.pop('serial_actions', None)

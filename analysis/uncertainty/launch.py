@@ -5,7 +5,8 @@ import os
 import shlex
 import subprocess
 import time
-from common import ASSETS, atomic_json, config, sha
+from common import ASSETS, atomic_json, config, sha, remaining_minutes
+import json
 
 
 def command(args, checkout):
@@ -32,19 +33,32 @@ def launch(root):
     # No other project jobs are inspected or changed; refuse an already active uncertainty job.
     listing=command(['squeue','-h','-u',os.environ['USER'],'-A','p33100','-o','%i|%j'],checkout)
     if any('cb_uncertainty_smoke' in x for x in listing.splitlines()): raise RuntimeError('Uncertainty job already active')
-    env=os.environ.copy();env['CB_UNCERTAINTY_ROOT']=str(root)
-    job=subprocess.check_output(
-        ['sbatch','--parsable','--hold','--output='+str(root/'slurm_%j.log'),str(source/'analysis/uncertainty/run.sbatch')],env=env,cwd=checkout,text=True).strip().split(';')[0]
-    if not job.isdigit(): raise RuntimeError('Invalid Slurm receipt')
-    plan=dict(job=job,code_commit=commit,live_checkout_commit=command(['git','rev-parse','HEAD'],checkout),
-              campaign_root=str(campaign),configuration=cfg,submitted_unix=time.time())
+    receipts=[]
+    for path in root.parent.glob('*/plan.json'):
+        previous=json.loads(path.read_text())
+        if previous.get('campaign_root')!=str(campaign): continue
+        lines=command(['sacct','-X','-n','-P','-j',previous['job'],
+                       '--format=JobIDRaw,State,ElapsedRaw'],checkout).splitlines()
+        rows=[line.split('|') for line in lines if line.split('|')[0]==previous['job']]
+        if len(rows)!=1 or not rows[0][2].isdigit(): raise RuntimeError('Missing prior allocation accounting')
+        receipts.append(dict(root=str(path.parent),job=previous['job'],state=rows[0][1],elapsed_seconds=int(rows[0][2])))
+    minutes,used=remaining_minutes(receipts,cfg['resources']['minutes'])
     parent = ASSETS/'uncertainty/20261008T035359Z_5e20522082f7'
+    validation_input={}
     if (parent/'SAMPLING_VALIDATION.json').exists():
-        import json
         failed=json.loads((parent/'SAMPLING_VALIDATION.json').read_text())
         if failed['serial_batch_passed'] or not (parent/'STOP.json').exists():
             raise RuntimeError('Expected retained failed B=8 numeric-gate evidence')
-        plan.update(validation_input_root=str(parent), validation_input_prompt='pick up the black bowl on the ramekin and place it on the plate')
+        validation_input=dict(validation_input_root=str(parent), validation_input_prompt='pick up the black bowl on the ramekin and place it on the plate')
+    env=os.environ.copy();env['CB_UNCERTAINTY_ROOT']=str(root)
+    job=subprocess.check_output(
+        ['sbatch','--parsable','--hold','--time=00:%02d:00'%minutes,'--output='+str(root/'slurm_%j.log'),str(source/'analysis/uncertainty/run.sbatch')],env=env,cwd=checkout,text=True).strip().split(';')[0]
+    if not job.isdigit(): raise RuntimeError('Invalid Slurm receipt')
+    plan=dict(job=job,code_commit=commit,live_checkout_commit=command(['git','rev-parse','HEAD'],checkout),
+              campaign_root=str(campaign),configuration=cfg,submitted_unix=time.time(),
+              prior_allocations=receipts,prior_allocation_seconds=used,requested_minutes=minutes,
+              cumulative_ceiling_seconds=cfg['resources']['minutes']*60,
+              cumulative_maximum_seconds=used+minutes*60,**validation_input)
     atomic_json(root/'plan.json',plan)
     worker=shlex.join(['/projects/p33100/siosio/envs/openpi/bin/python','-u',str(source/'analysis/uncertainty/worker.py'),str(root)])+' > '+shlex.quote(str(root/'api_worker.log'))+' 2>&1'
     try:
