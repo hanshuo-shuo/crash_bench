@@ -12,6 +12,17 @@ All full inference tensors are retained for independent reduction. The pinned
 pi05 policy remains image+prompt conditioned; saved continuous state is not input
 to its pi05 suffix. Source work remains confined to this directory.
 
+CPU9257292 reproduced a geometric measurement defect in MuJoCo3.2.3:
+`gripper0_finger2_pad_collision` and `red_coffee_mug_obstacle_1_g6` are disjoint
+OBBs with a positive35.15mm separating-axis gap, yet the native query returns
+−100.48mm at pre-action101; there are no engine contacts. `geometry.py` therefore
+uses exact vertex/face and edge/edge Euclidean distance for separated box pairs,
+and signed minimum-translation SAT depth for overlapping boxes. Other convex
+geometry uses the native collision representation. This only changes the
+diagnostic measurement; official displacement crash, policy/QP/controller actions
+and original dynamics stay fixed. The old smoke's `min_dist` is retained as
+unvalidated measurement evidence and is excluded from Task2 fitting.
+
 User-authorized boundary: one timing rollout, then two scenes × two seeds × nominal/full AEGIS smoke; one A100, 8 CPUs, 64 GB, 30-minute Slurm hard cap. M=8 and the fixed `1e-6` numeric tolerances cannot be changed without returning measured evidence for confirmation. Task 2, a gate and the full 60×10×2 matrix are not submitted by this code.
 
 `config.yaml` is valid YAML written in its JSON subset. Every scientific parameter and spend/resource limit is frozen there. Run roots are immutable and contain a complete published source archive, source file hashes, upstream and code commits, configuration, seeds and Slurm receipt. The existing Quest source checkout is never merged or overwritten.

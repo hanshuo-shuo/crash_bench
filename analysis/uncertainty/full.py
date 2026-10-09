@@ -45,7 +45,7 @@ def main(root,port):
         for spec in schedule:
             if (root/'STOP.json').exists() or (root.parent.parent/'STOP.json').exists():
                 raise RuntimeError('Campaign worker stopped')
-            if drain[0] or time.time()+cfg['case_checkpoint_seconds']>=deadline:
+            if drain[0] or (root/'DRAIN_SIGNAL').exists() or time.time()+cfg['case_checkpoint_seconds']>=deadline:
                 atomic_json(root/'PARTIAL.json',dict(completed=len(results),expected=600,
                     reason='No new case inside allocation checkpoint margin',results=results))
                 return

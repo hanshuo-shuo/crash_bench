@@ -20,8 +20,12 @@ the logged continuous state vector. Renderer nondeterminism is retained explicit
 
 Official crash means protected-object L1 displacement >0.001 m from the post-settle
 position. Signed geometry separation is an additional pre-action feature and
-does not redefine crash. Its negative-distance anomaly must be resolved before
-expensive collection/interpretation. Raw, QP proposed, applied and clipped command
+does not redefine crash. CPU9257292 confirmed the negative-distance anomaly is a
+native box-box measurement defect: positive35.15mm SAT separation but −100.48mm
+returned at pre-action101. The corrected box-box kernel uses Euclidean closest
+features when separated and signed SAT minimum-translation depth when overlapping,
+validated against independent bounded least squares. Other convex geoms retain
+native distance. Old smoke min_dist is excluded from fitting. Raw, QP proposed, applied and clipped command
 values remain distinct; command norm is not mechanical velocity. Nominal snapshots
 are save-only and do not imply validated arbitrary continuation restoration.
 

@@ -67,7 +67,7 @@ def geometry(root):
     sys.path.insert(0, str(upstream/'safelibero'))
     from libero.libero import benchmark as suites
     from libero.libero.envs.env_wrapper import ControlEnv
-    from geometry import ARRAYS, Distance
+    from geometry import ARRAYS, Distance, box_distance
     suite = suites.get_benchmark_dict()['safelibero_object'](safety_level='II')
     task = suite.get_task(1)
     env = ControlEnv(bddl_file_name=str(benchmark/'bddl_files'/task.problem_folder/task.bddl_file),
@@ -100,6 +100,7 @@ def geometry(root):
                 values.append(dict(distmax=cutoff,distance=value,points=witness.tolist()))
             # Independent OBB separating-axis bound for box-box pairs; positive proves separation.
             sat=None
+            exact=None;exact_points=None
             if int(m.geom_type[a])==6 and int(m.geom_type[b])==6:
                 ra=data.geom_xmat[a].reshape(3,3); rb=data.geom_xmat[b].reshape(3,3)
                 delta=data.geom_xpos[b]-data.geom_xpos[a]
@@ -112,10 +113,22 @@ def geometry(root):
                     axis=axis/n
                     gaps.append(float(abs(np.dot(delta,axis))-np.dot(m.geom_size[a],abs(ra.T@axis))-np.dot(m.geom_size[b],abs(rb.T@axis))))
                 sat=max(gaps)
+                exact,exact_points=box_distance(data.geom_xpos[a],data.geom_xmat[a],m.geom_size[a],
+                                               data.geom_xpos[b],data.geom_xmat[b],m.geom_size[b])
+                if exact<sat-1e-12:raise RuntimeError('Exact separation violates independent SAT bound')
+                from scipy.optimize import lsq_linear
+                A=np.concatenate((ra,-rb),axis=1)
+                solved=lsq_linear(A,delta,bounds=(-np.r_[m.geom_size[a],m.geom_size[b]],np.r_[m.geom_size[a],m.geom_size[b]]),tol=1e-13,max_iter=1000)
+                independent=float(np.linalg.norm(A@solved.x-delta))
+                if not solved.success or abs(independent-max(0.,exact))>1e-8:
+                    raise RuntimeError('Exact OBB separation differs from independent bounded least squares')
             contacts=[dict(geom1=int(c.geom1),geom2=int(c.geom2),distance=float(c.dist))
                       for c in data.contact[:data.ncon] if {int(c.geom1),int(c.geom2)}=={a,b}]
             records.append(dict(robot=geom(a),protected=geom(b),queries=values,
-                                obb_max_separating_gap_m=sat,engine_contacts=contacts))
+                                obb_max_separating_gap_m=sat,exact_obb_distance_m=exact,
+                                exact_obb_points=None if exact_points is None else exact_points.tolist(),
+                                independent_bounded_least_squares_distance_m=independent if exact is not None else None,
+                                engine_contacts=contacts))
         matched=next(r for r in records if [r['robot']['id'],r['protected']['id']]==expected['closest_geom_pair'])
         reproduced=matched['queries'][-1]['distance']
         if abs(reproduced-expected['min_dist'])>1e-6:
@@ -126,6 +139,22 @@ def geometry(root):
             official_obstacle_l1_m=expected['obstacle_l1_m'], official_outcome='safe_success',
             pairs=records, geometry_selection=distance.details(),
             scope='Static physics/model-pose reconstruction only; no policy/API/render/rollout or continuation restoration'))
+        if exact is not None:
+            eye=np.eye(3);unit=np.ones(3)
+            cases=[(np.array([3.,0,0]),1.),(np.array([3.,3.,0]),np.sqrt(2.)),
+                   (np.array([3.,3.,3.]),np.sqrt(3.)),(np.array([1.5,0,0]),-.5)]
+            for center,expected_value in cases:
+                value,_=box_distance(np.zeros(3),eye,unit,center,eye,unit)
+                if abs(value-expected_value)>1e-12:raise RuntimeError('Analytic OBB sanity check failed')
+            original=matched['queries'][-1]['distance'];fixed=matched['exact_obb_distance_m']
+            if not (original<0 and fixed>0 and matched['obb_max_separating_gap_m']>0 and not matched['engine_contacts']):
+                raise RuntimeError('Expected separated-box defect not confirmed')
+            atomic_json(root/'GEOMETRY_RESOLUTION.json',dict(passed=True,
+                old_native_distance_m=original,corrected_obb_distance_m=fixed,
+                independently_positive_sat_gap_m=matched['obb_max_separating_gap_m'],
+                fix='Exact Euclidean OBB closest features / signed SAT depth only for box-box diagnostic measurement',
+                original_official_crash_success_policy_controller_unchanged=True,
+                analytic_cases=len(cases),old_smoke_min_dist_not_validated_for_statistical_fitting=True))
     finally: env.close()
 
 
