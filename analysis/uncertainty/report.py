@@ -169,6 +169,9 @@ def render(task2,gate,output):
     paragraph('一维 Platt 仅使用训练行：固定均值/标准差，规范化加权对数损失，加0.5×0.001×slope²惩罚，截距不惩罚；L-BFGS-B 参数冻结。单类或标准差≤1e−12 使用截距常量概率，完整分离由L2保证有限解，优化不收敛即停止，不选择新 fallback。AUROC 原方向、calibrated_AUROC、BA(p≥0.5)和 Brier 分开保留。')
     paragraph('95%区间采用 2,000 次按任务分层的状态 bootstrap，PCG64 seed20261009；使用原先权重乘每次抽中的状态次数，再归一化，保留同状态seed/arm/time，避免重复ID导致重复抽样权重被折叠。区间条件于固定训练拟合、阈值和参考，不包含训练集重采样不确定性；单类等未定义重采样次数明确列出。')
     heading('证据位置与成本')
+    if p3.get('inherited_smoke'):
+        inherited=p3['inherited_smoke']
+        paragraph('Task3前4条完整smoke来自作业 '+inherited['original_gpu_job']+'、提交 '+inherited['original_gate_commit']+'。该作业因容器未只读挂载基线物理证据目录而在验收时退出；原失败记录保留。CPU '+inherited['cpu_reaudit_job']+' 重新核验全部原文件、M8归约、原生动作/RNG、初始物理数组及控制器证据后继承这4条；后续仅执行剩余296条，未重跑或筛选smoke。两阶段命令、采样、几何、评分与阈值代码一致，修复仅涉及挂载、完整轨迹继承及来源记录。失败GPU耗时计入累计预算。')
     paragraph('Task1 采集提交 '+p2['collection_commit']+'；Task2 分析提交 '+p2['analysis_code_commit']+'，Slurm '+str(p2['slurm_job'])+'；Task3 gate 提交 '+p3['gate_commit']+'，作业 '+', '.join(x['job'] for x in p3['gate_gpu_accounting'])+'；本汇总提交 '+str(p3['analysis_code_commit'])+'。')
     paragraph('原采集统计计划 SHA '+p2['collection_source_plan_sha256']+'；最终冻结分析计划 SHA '+p2['analysis_plan_sha256']+'；split SHA '+p2['split_sha256']+'。保留两份统计计划身份，不将事后分析文件伪称为采集时文件。')
     paragraph('Task1 聚合 Parquet SHA '+p2['input_parquet_sha256']+'；完整独立审计覆盖1,200条rollout、54,497次M8诊断和每个Parquet单元；完整来源/上游文件、模型资产、归一化资产及容器 bytes 已核验。Task2紧凑输出可在完整远端审计通过后分析，本地大包传输以各自 DELIVERY_STATUS 与 LOCAL_EVIDENCE_VERIFIED.json 为准。此报告生成于 Quest，不能代替 Mac 本地全量原始证据到达确认。')

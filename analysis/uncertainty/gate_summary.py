@@ -114,6 +114,7 @@ def main(gate_root,output):
         task1_collection_commit=audit['code_commit'],task1_audit_sha256=sha(Path(cfg['audited_input'])/'INDEPENDENT_AUDIT.json'),task1_parquet_sha256=audit['parquet_sha256'],task2_analysis_root=str(analysis),task2_complete_sha256=sha(analysis/'ANALYSIS_COMPLETE.json'),
         gate_shard_parquet_sha256=[r['parquet_sha256'] for r in receipts],gate_complete_sha256=[sha(gate_root/'shards'/str(s)/'COMPLETE.json') for s in [0,1]],analysis_code_commit=os.environ.get('CB_CODE_COMMIT'),slurm_job=os.environ.get('SLURM_JOB_ID'),
         stats_plan_sha256=sha(Path(__file__).parent/'STATS_PLAN.md'),split_sha256=sha(Path(__file__).parent/'split.json'),started_unix=time.time(),final_source_upstream_assets_controller_bytes_verified=True,bootstrap='frozen task-stratified state multiplicities; paired5 seeds/three arms retained; threshold treated as fixed',
+        inherited_smoke=receipts[0].get('inherited_smoke'),recovery_from=plan.get('recovery_from'),recovery_scientific_identity=plan.get('recovery_scientific_identity'),
         stall_proxy='goal not reached at original300-action cap; no mechanical stillness inference',new_vlm_calls=0,raw_remote=str(gate_root)))
     atomic_json(output/'GATE_ANALYSIS_COMPLETE.json',dict(passed=True,gate_rollouts=300,matched_baseline_rollouts=600,test_rollouts_per_arm=90,train_states=42,test_states=18,threshold=cfg['gate_threshold'],new_rollouts=0,api_calls=0,files={p.name:sha(p) for p in output.iterdir() if p.is_file()}))
 

@@ -121,7 +121,13 @@ def main(root,port):
     signal.signal(signal.SIGUSR1,lambda *_:drain.__setitem__(0,True))
     deadline=int(os.environ['CB_ALLOCATION_START'])+cfg['resources']['minutes']*60
     try:
-        for spec in schedule(cfg,plan['shard']):
+        from gate_inheritance import read_inherited
+        results=read_inherited(root,schedule(cfg,plan['shard']))
+        if results:
+            proof,_=check(root,results);proof.update(states=[0,42],repeats=[0,1],new_vlm_calls=0,inherited_smoke=True)
+            atomic_json(root/'GATE_SMOKE_PASS.json',proof)
+            atomic_json(root/'progress.json',dict(completed=len(results),expected=150,results=results,inherited=4))
+        for spec in schedule(cfg,plan['shard'])[len(results):]:
             if (root.parent.parent/'STOP.json').exists():raise RuntimeError('Gate campaign stopped')
             if drain[0] or (root/'DRAIN_SIGNAL').exists() or time.time()+cfg['case_checkpoint_seconds']>=deadline:
                 atomic_json(root/'PARTIAL.json',dict(completed=len(results),expected=150,reason='Whole-case allocation checkpoint margin',results=results));return

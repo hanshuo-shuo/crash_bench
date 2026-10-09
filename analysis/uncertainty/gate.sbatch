@@ -18,6 +18,10 @@ export CB_ALLOCATION_START="$(date +%s)"
 export CB_CODE_COMMIT="$(cat "$PARENT/SOURCE_COMMIT")"
 export CB_ASSETS=/projects/p33100/siosio/crashbench_safelibero
 export CB_UPSTREAM="$(/projects/p33100/siosio/envs/openpi/bin/python -c 'import json,os; print(json.load(open(os.environ["CB_UNCERTAINTY_ROOT"]+"/plan.json"))["upstream_root"])')"
+BASELINE="$(/projects/p33100/siosio/envs/openpi/bin/python -c 'import json,os; print(json.load(open(os.environ["CB_UNCERTAINTY_ROOT"]+"/plan.json"))["configuration"]["collection_root"])')"
+INHERITED_SOURCE="$(/projects/p33100/siosio/envs/openpi/bin/python -c 'import json,os,pathlib; print(json.load(open(pathlib.Path(os.environ["CB_UNCERTAINTY_ROOT"]).parent.parent/"SUBMITTED.json")).get("recovery_from",""))')"
+EXTRA_BIND=""
+if [ -n "$INHERITED_SOURCE" ]; then EXTRA_BIND=",$INHERITED_SOURCE:$INHERITED_SOURCE:ro"; fi
 export PYTHONNOUSERSITE=1 PYTHONDONTWRITEBYTECODE=1
 /projects/p33100/siosio/envs/openpi/bin/python "$SOURCE/analysis/uncertainty/verify_inputs.py" "$ROOT"
 /projects/p33100/siosio/envs/openpi/bin/python "$SOURCE/analysis/uncertainty/gate_threshold.py" "$ROOT"
@@ -59,7 +63,7 @@ export SINGULARITYENV_HF_HOME="$HF_HOME" SINGULARITYENV_TRANSFORMERS_CACHE="$HF_
 export SINGULARITYENV_HF_HUB_OFFLINE=1 SINGULARITYENV_TRANSFORMERS_OFFLINE=1
 export SINGULARITYENV_PYTHONNOUSERSITE=1 SINGULARITYENV_PYTHONDONTWRITEBYTECODE=1
 export SINGULARITYENV_PYTHONPATH="$CB_UPSTREAM/safelibero:$CB_UPSTREAM/openpi/packages/openpi-client/src"
-singularity exec --nv --bind "/projects,/home,$PARENT:$PARENT:rw,$SOURCE:$SOURCE:ro,$CB_UPSTREAM:$CB_UPSTREAM:ro" \
+singularity exec --nv --bind "/projects,/home,$PARENT:$PARENT:rw,$SOURCE:$SOURCE:ro,$CB_UPSTREAM:$CB_UPSTREAM:ro,$BASELINE:$BASELINE:ro$EXTRA_BIND" \
  "$CB_ASSETS/containers/aegis-py38.sif" "$CB_ASSETS/envs/aegis_sim/bin/python" \
  -u "$SOURCE/analysis/uncertainty/gate.py" "$ROOT" --port "$PORT" > "$ROOT/evaluation.log" 2>&1
 /projects/p33100/siosio/envs/openpi/bin/python "$SOURCE/analysis/uncertainty/gate_export.py" "$ROOT"

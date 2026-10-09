@@ -17,6 +17,8 @@ def export(root):
     pq.write_table(pa.Table.from_pylist(rows),out/'rollouts.parquet',compression='zstd')
     if pq.read_table(out/'rollouts.parquet').to_pylist()!=rows:raise RuntimeError('Gate every-cell Arrow readback differs')
     proof.update(complete_matrix_shard=len(results)==150,results=results,parquet_sha256=sha(out/'rollouts.parquet'),source_commit=plan['code_commit'],api_calls=0)
+    if (root/'INHERITED_SMOKE.json').exists():
+        inherited=json.loads((root/'INHERITED_SMOKE.json').read_text());proof['inherited_smoke']={k:inherited[k] for k in ['original_gate_commit','original_gpu_job','cpu_reaudit_job','cpu_reaudit_sha256']};proof['inherited_smoke']['cases']=4
     atomic_json(root/('COMPLETE.json' if len(results)==150 else 'PARTIAL_EXPORTED.json'),proof)
 
 
