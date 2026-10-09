@@ -173,6 +173,30 @@ class FullWorkerTests(unittest.TestCase):
 
 
 class TerminalEvidenceTests(unittest.TestCase):
+    def test_delivery_rejects_traversal_and_symlink_descendants(self):
+        from receive_evidence import checked_paths
+        with self.assertRaisesRegex(ValueError,'Unsafe'):checked_paths([dict(path='../escape',kind='file')],1)
+        with self.assertRaisesRegex(ValueError,'beneath'):checked_paths([dict(path='link',kind='symlink'),dict(path='link/file',kind='file')],1)
+        with self.assertRaisesRegex(ValueError,'Duplicate'):checked_paths([dict(path='a',kind='file')]*2,1)
+
+    def test_delivery_checks_all_regular_bytes_and_preserves_inert_links(self):
+        from receive_evidence import receive
+        import hashlib,io,tarfile
+        with tempfile.TemporaryDirectory() as temp:
+            p=Path(temp);data=b'complete evidence';link='/gpfs/projects/p33100/siosio/crashbench_safelibero/nonexistent_test_asset'
+            manifest=[dict(path='file',kind='file',bytes=len(data),sha256=hashlib.sha256(data).hexdigest()),dict(path='asset',kind='symlink',target=link)]
+            (p/'FILES.json').write_text(json.dumps(manifest))
+            with tarfile.open(p/'evidence.tar','w') as tar:
+                item=tarfile.TarInfo('shard_1/file');item.size=len(data);tar.addfile(item,io.BytesIO(data))
+                item=tarfile.TarInfo('shard_1/asset');item.type=tarfile.SYMTYPE;item.linkname=link;tar.addfile(item)
+            report=dict(passed=True,shard=1,runs=600,actions=1,diagnostic_inferences=1,collection_commit='original',audit_commit='audit',manifest_sha256=common.sha(p/'FILES.json'),archive_sha256=common.sha(p/'evidence.tar'))
+            (p/'SHARD_AUDIT.json').write_text(json.dumps(report));proof=receive(p/'evidence.tar',p/'FILES.json',p/'SHARD_AUDIT.json',p/'delivered')
+            self.assertEqual(proof['regular_files'],1);self.assertEqual((p/'delivered/shard_1/file').read_bytes(),data)
+            self.assertEqual((p/'delivered/shard_1/asset').readlink(),Path(link))
+            with (p/'evidence.tar').open('ab') as stream:stream.write(b'corruption')
+            with self.assertRaisesRegex(ValueError,'hash differs'):receive(p/'evidence.tar',p/'FILES.json',p/'SHARD_AUDIT.json',p/'bad')
+            self.assertFalse((p/'bad').exists())
+
     def test_audit_refuses_running_or_failed_accounting(self):
         from audit_shard import terminal_accounting
         from types import SimpleNamespace
