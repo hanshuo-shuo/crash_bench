@@ -16,7 +16,7 @@ def launch(root,gate,validate=False):
     if Path(__file__).resolve().parents[2]!=source.resolve() or root.parent!=(ASSETS/'uncertainty').resolve() or gate.parent!=(ASSETS/'uncertainty').resolve():raise RuntimeError('Immutable own-project roots required')
     def git(*args):return subprocess.check_output(['git',*args],cwd=checkout)
     commit=(root/'SOURCE_COMMIT').read_text().strip()
-    if git('status','--porcelain') or git('rev-parse','origin/codex/feasibility').decode().strip()!=commit:raise RuntimeError('Clean published summary code required')
+    if git('status','--porcelain') or subprocess.run(['git','merge-base','--is-ancestor',commit,'origin/codex/feasibility'],cwd=checkout).returncode:raise RuntimeError('Clean published summary code required')
     receipt=root/('VALIDATION_SUBMITTED.json' if validate else 'SUBMITTED.json')
     if receipt.exists():raise RuntimeError('Never resubmit a summary stage')
     files=[]

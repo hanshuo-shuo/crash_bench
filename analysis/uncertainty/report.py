@@ -122,6 +122,11 @@ def render(task2,gate,output):
     first=find(completion,arm='pooled',proxy='disagreement',metric='AUROC',stage='first_infer')
     five=find(completion,arm='pooled',proxy='disagreement',metric='AUROC',stage='first_five_landmark')
     paragraph('低 disagreement 对最终安全完成的排序能力为：首次 infer AUROC '+estimate(first)+'；前五次 infer landmark AUROC '+estimate(five)+'。后者只包含 '+five['rollouts']+' 条合格轨迹，条件是到动作 21 尚未在此前碰撞且轨迹覆盖该时点，不能与全部 360 条首次 infer 分析混用。')
+    table(['Task1/2 留出 N=180/臂','CAR 无碰撞率','TSR 原任务成功率','安全完成率'],
+        [[arm]+[estimate(find(outcomes,population='test_primary',arm=arm,metric=m)) for m in ['CAR','TSR','safe_success']] for arm in ['nominal','aegis']])
+    table(['Task1 全60状态 N=600/臂（描述）','CAR 无碰撞率','TSR 原任务成功率','安全完成率'],
+        [[arm]+[estimate(find(outcomes,population='all_states_descriptive',arm=arm,metric=m)) for m in ['CAR','TSR','safe_success']] for arm in ['nominal','aegis']])
+    paragraph('上述 Task1/2 baseline 使用全部10 seed；下面 Task3 baseline 仅取配对 repeat0–4，分母分别为180与90，不能混用。AEGIS 与 nominal 的完成率点估计应与无碰撞率一起读；单臂区间重叠与否不能替代配对差值检验。')
     cut=json.loads((task2/'TRAIN_THRESHOLDS.json').read_text())
     paragraph('固定 gate 阈值来自训练 nominal 在险推理的加权 q90：'+repr(cut['gate_q90'])+'，推理样本数 '+str(cut['inferences'])+'。未搜索其他阈值。gate 在 U 严格大于阈值时，连续五个执行队列动作的七维环境控制命令均置零，然后按原计划 replan。')
     table(['臂（留出 N=90）','CAR 无碰撞率','TSR 原任务成功率','安全完成率','300步目标未完成率'],
@@ -145,6 +150,10 @@ def render(task2,gate,output):
     table(['臂','K动作','低 proxy / 合格碰撞轨迹','比例 [95% CI]','测试碰撞总数','短/不完整窗口排除','无训练成功参考排除'],
         [[r['arm'],r['K_actions'],r['n_low']+'/'+r['eligible'],estimate(r),r['total_test_crash'],r['excluded_incomplete_window'],r['excluded_missing_reference']] for r in failure if r['task']=='pooled' and r['weighting']=='raw_rollout_proportion'])
     paragraph('主统计对每条碰撞轨迹取碰撞动作之前连续 K 个环境动作的 U 均值，不含碰撞动作；与同任务×同臂训练安全成功轨迹、目标达成动作之前 K 动作的加权中位数比较，严格小于才计为低 proxy。缺少完整窗口或训练成功参考即排除，不跨任务、臂或测试集补参考。它描述特定失败前的低分歧，并不证明校准概率高或模型在语义上自信。')
+    references=read(task2/'confident_failure_reference.csv')
+    table(['训练参考任务','臂','K动作','中位数','合格成功轨迹','合格状态'],
+        [[r['task'],r['arm'],r['K_actions'],display(r,'reference_median',6),r['eligible_rollouts'],r['eligible_states']] for r in references])
+    paragraph('Object/I/task2 的 nominal 没有任何训练安全成功参考，结果为NA。该任务 AEGIS 的参考仅有2个状态、4条成功轨迹。低proxy失败区间条件于这些已冻结参考，不包含重新估计小样本训练参考所带来的不确定性，因此不能视为完整参考不确定性区间。')
     paragraph('补充 train nominal q10 统计按失败轨迹最后 K 动作内在险 infer 边界的低 U 比例聚合，和主统计定义不同；原始表为 low_boundary_fraction.csv 与 low_boundary_cases.csv。所有任务分层、各类排除、有效 bootstrap 数及每条轨迹窗口都保存在对应 CSV。')
     heading('时间曲线与 gate 频率')
     figure('at_risk_time_curves','每五个动作一次推理的在险曲线；仅纳入该动作仍可观察且此前未碰撞的轨迹。阴影为固定权重状态 bootstrap 的95%区间。')
