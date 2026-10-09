@@ -77,4 +77,3 @@ Completion is evaluated on individual rollouts; the first-five landmark excludes
 outcomes known before action21. Display calibration bins are ten equal-width
 probability intervals, fixed before fitting. Every eligible/censored denominator
 and bootstrap undefined count is written alongside estimates.
-
