@@ -51,6 +51,9 @@ class PipelineTests(unittest.TestCase):
             self.assertEqual(len(read('completion_metrics.csv')),96)
             self.assertEqual(len(read('confident_failure.csv')),36)
             self.assertEqual(len(read('temporal_curves.csv')),960)
+            outcomes={(r['population'],r['arm'],r['metric']):float(r['value']) for r in read('outcomes.csv')}
+            self.assertEqual(outcomes[('test_primary','aegis','CAR')],1.)
+            self.assertEqual(outcomes[('test_primary','aegis','crash_rate')],0.)
             for row in read('confident_failure_cases.csv'):self.assertEqual(int(row['window_end']),int(row['C'])-1)
             self.assertTrue(any(r['reason']=='short_event_free_incomplete_censored' for r in read('collision_eligibility.csv')))
             self.assertTrue(all(r['eligible']=='False' for r in read('completion_eligibility.csv') if r['stage']=='first_infer' and r['proxy']=='churn'))

@@ -106,6 +106,17 @@
     "new_rollouts": 0,
     "api_calls": 0
   },
+  "task3": {
+    "repeats": [0,1,2,3,4],
+    "resources": {"account": "p33100", "partition": "gengpu", "gpu": "a100:1", "cpus": 8, "memory_gb": 64, "minutes": 360, "workers": 2},
+    "gate_quantile": 0.90,
+    "gate_comparison": "strictly_greater_than_train_nominal_at_risk_q90",
+    "applied_command": "all_seven_environment_command_values_zero_for_current_five_action_queue_then_replan",
+    "prior_smoke_gpu_jobs": ["9085604","9086749","9089140"],
+    "series_ceiling_gpu_seconds": 172800,
+    "stall_proxy": "original_goal_not_reached_at_action_cap; no_mechanical_stillness_claim",
+    "new_vlm_calls": 0
+  },
   "full_collection": {
     "repeats": [0,1,2,3,4,5,6,7,8,9],
     "api_limit_usd": null,

@@ -77,3 +77,6 @@ Completion is evaluated on individual rollouts; the first-five landmark excludes
 outcomes known before action21. Display calibration bins are ten equal-width
 probability intervals, fixed before fitting. Every eligible/censored denominator
 and bootstrap undefined count is written alongside estimates.
+CAR follows the repository's collision-avoidance definition, `1-crash_rate`;
+crash rate is also written explicitly. TSR preserves original success even when
+the rollout also crashed. Safe success requires both success and no crash.

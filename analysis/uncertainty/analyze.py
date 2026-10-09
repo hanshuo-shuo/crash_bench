@@ -249,8 +249,8 @@ class Analysis:
         for population in ['test_primary','all_states_descriptive']:
             for arm in ARMS:
                 runs=[r for r in self.runs if r['arm']==arm and (population!='test_primary' or r['split']=='test')]
-                for name in ['CAR','TSR','safe_success']:
-                    values=[int(r['C'] is not None) if name=='CAR' else r['success'] if name=='TSR' else r['safe_success'] for r in runs]
+                for name in ['CAR','crash_rate','TSR','safe_success']:
+                    values=[int(r['C'] is None) if name=='CAR' else int(r['C'] is not None) if name=='crash_rate' else r['success'] if name=='TSR' else r['safe_success'] for r in runs]
                     rows.append(dict(population=population,arm=arm,metric=name,**self.estimate(runs,values,all_states=population=='all_states_descriptive'),rollouts=len(runs),states=len({r['scene'] for r in runs})))
         write_csv(self.output/'outcomes.csv',rows)
 
