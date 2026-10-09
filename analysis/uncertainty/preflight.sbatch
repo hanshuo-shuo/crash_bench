@@ -15,6 +15,7 @@ export CB_ASSETS=/projects/p33100/siosio/crashbench_safelibero
 export CB_LIVE_UPSTREAM="$HOME/crash_bench/third_party/vlsa-aegis"
 export CB_SMOKE_ROOT="$CB_ASSETS/uncertainty/20261008T042856Z_6ca85c909ebb"
 export PYTHONNOUSERSITE=1 PYTHONDONTWRITEBYTECODE=1
+module load git/2.37.2
 /projects/p33100/siosio/envs/openpi/bin/python - "$ROOT" <<'PY'
 import json,sys,hashlib
 from pathlib import Path

@@ -34,13 +34,19 @@ def config(mode='smoke'):
 def full_schedule(cfg, shard=None):
     manifest = json.loads((Path(__file__).parent/'states.json').read_text())
     if len(manifest['states']) != 60: raise ValueError('Exactly sixty states required')
+    specs=[]
     for index, scene in enumerate(manifest['states']):
         if shard is not None and index % 2 != shard: continue
         for repeat in cfg['repeats']:
             methods = ['nominal','aegis'] if repeat % 2 == 0 else ['aegis','nominal']
             for method in methods:
-                yield dict(name='full_s%02d_r%02d_%s'%(index,repeat,method), scene=scene,
-                           repeat=repeat, method=method, diagnostics=True, state_index=index)
+                specs.append(dict(name='full_s%02d_r%02d_%s'%(index,repeat,method), scene=scene,
+                                  repeat=repeat, method=method, diagnostics=True, state_index=index))
+    # The eight first-stage smoke cases are part of, rather than additional to,
+    # the authorized matrix. Both exposed states belong to shard0.
+    front=[x for x in specs if x['state_index'] in [0,42] and x['repeat'] in [0,1]]
+    yield from front
+    yield from (x for x in specs if x not in front)
 
 
 def scene_id(scene):
