@@ -5,6 +5,8 @@ import json
 from pathlib import Path
 import time
 from common import FIELDS, atomic_json, config, full_schedule, scene_id, seed_for, sha
+from audit_shard import terminal_accounting
+from preflight import stream_sha
 
 
 def audit(collection, output):
@@ -12,6 +14,7 @@ def audit(collection, output):
     import pyarrow as pa
     import pyarrow.parquet as pq
     cfg=config('full');plan=json.loads((collection/'SUBMITTED.json').read_text())
+    accounting=[terminal_accounting(job) for job in plan['jobs']]
     if not (collection/'COLLECTION_COMPLETE.json').exists():raise RuntimeError('Collection not complete')
     expected={x['name']:x for x in full_schedule(cfg)}
     rows=[];results=[];seen=set();inferences=0;maximum_disagreement_error=0.;maximum_churn_error=0.
@@ -19,6 +22,11 @@ def audit(collection, output):
     source_manifest=json.loads((collection/'SOURCE_FILES.json').read_text())
     for item in source_manifest:
         if sha(collection/'source'/item['path'])!=item['sha256']:raise RuntimeError('Source changed after collection')
+    fingerprints=json.loads((collection/'FINGERPRINTS.json').read_text())
+    for item in fingerprints['upstream_files']:
+        if stream_sha(Path(plan['upstream_root'])/item['path'])!=item['sha256']:raise RuntimeError('Frozen upstream changed')
+    for item in fingerprints['assets']+[fingerprints['container']]:
+        if stream_sha(Path(item['path']))!=item['sha256']:raise RuntimeError('Consumed asset/container changed')
     for shard in [0,1]:
         root=collection/'shards'/str(shard);receipt=json.loads((root/'COMPLETE.json').read_text())
         if not receipt['passed'] or receipt['runs']!=600:raise RuntimeError('Incomplete/failed shard')
@@ -108,6 +116,8 @@ def audit(collection, output):
         all_diagnostic_sample_tensors_independently_reduced=True,maximum_disagreement_error=maximum_disagreement_error,
         maximum_churn_error=maximum_churn_error,filter_counts=filter_counts,collection=str(collection),code_commit=plan['code_commit'],
         parquet_sha256=sha(output/'rollouts.parquet'),api=api,task2_fitted=False,
+        terminal_accounting=accounting,audit_commit=(output.parent/'SOURCE_COMMIT').read_text().strip(),
+        upstream_files_rehashed=len(fingerprints['upstream_files']),assets_rehashed=len(fingerprints['assets']),container_rehashed=True,
         official_labels='obstacle L1 displacement>1mm; crash precedence outcome; success retained separately',
         distance='exact OBB box pairs; native other convex collision geoms; old smoke distance excluded',
         interpretation='within3 familiar tasks; image+prompt pi05; sequentialB1 shared-prefix suffix; save-only snapshots; renderer caveat retained')
