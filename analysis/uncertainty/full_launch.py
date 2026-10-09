@@ -25,6 +25,8 @@ def launch(root, preflight):
     fingerprints=json.loads((preflight/'FINGERPRINTS.json').read_text())
     resolution=json.loads((preflight/'GEOMETRY_RESOLUTION.json').read_text())
     if not fingerprints['passed'] or not resolution['passed']:raise RuntimeError('Preflight not accepted')
+    if stream_sha(source/'analysis/uncertainty/geometry.py')!=stream_sha(preflight/'source/analysis/uncertainty/geometry.py'):
+        raise RuntimeError('Distance implementation changed after preflight validation')
     preflight_job=json.loads((preflight/'SUBMITTED.json').read_text())['job']
     accounting=command(['sacct','-X','-n','-P','-j',preflight_job,'--format=JobIDRaw,State,ExitCode'])
     if accounting.splitlines()!=[preflight_job+'|COMPLETED|0:0']:raise RuntimeError('Preflight not confirmed successful')

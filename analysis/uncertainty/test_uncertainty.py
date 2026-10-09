@@ -134,4 +134,42 @@ class AdapterTests(unittest.TestCase):
             self.assertIn('action_plan.extend(action_chunk[: args.replan_steps])',text)
 
 
+class FullWorkerTests(unittest.TestCase):
+    def fake_budget(self,*args):
+        class Fake:
+            path=Path('test_budget.json');state={'calls':{}}
+            def refresh_prices(self):pass
+            def committed(self):return 0
+            def close(self):pass
+        return Fake()
+
+    def root(self,t):
+        root=Path(t)
+        (root/'plan.json').write_text(json.dumps(dict(configuration=common.config('full'),
+            jobs=['10001','10002'],campaign_root=t)))
+        for i in [0,1]:(root/'shards'/str(i)).mkdir(parents=True)
+        return root
+
+    def test_invalid_request_cancels_only_two_recorded_jobs_before_any_call(self):
+        import full_worker
+        with tempfile.TemporaryDirectory() as t:
+            root=self.root(t);p=root/'shards/0/requests/not_authorized/hash';p.mkdir(parents=True)
+            (p/'request.json').write_text('{}')
+            with patch.object(full_worker,'CampaignBudget',side_effect=self.fake_budget),patch.object(full_worker,'fill') as paid,patch.object(full_worker.subprocess,'run') as command:
+                with self.assertRaisesRegex(RuntimeError,'outside frozen'):full_worker.serve(root)
+                paid.assert_not_called()
+                self.assertEqual([x.args[0] for x in command.call_args_list],[['scancel','10001'],['scancel','10002']])
+
+    def test_second_release_requires_retained_eight_case_smoke(self):
+        import full_worker
+        with tempfile.TemporaryDirectory() as t:
+            root=self.root(t)
+            (root/'shards/0/FULL_SMOKE_PASS.json').write_text(json.dumps(dict(passed=True,runs=8)))
+            for i in [0,1]:(root/'shards'/str(i)/'COMPLETE.json').write_text('{}')
+            with patch.object(full_worker,'CampaignBudget',side_effect=self.fake_budget),patch.object(full_worker.subprocess,'run') as command,patch.object(full_worker,'read_job_state',return_value={'state':'COMPLETED'}):
+                full_worker.serve(root)
+                self.assertEqual([x.args[0] for x in command.call_args_list],[['scontrol','release','10002']])
+                self.assertTrue((root/'COLLECTION_COMPLETE.json').exists())
+
+
 if __name__=='__main__':unittest.main()

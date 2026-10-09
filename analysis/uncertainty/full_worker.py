@@ -25,7 +25,9 @@ def serve(root):
         while time.monotonic()<deadline:
             stop=[p for p in (root/'shards').glob('*/STOP.json')]
             if stop: raise RuntimeError('Shard failure: '+stop[0].read_text())
-            if (root/'STOP.json').exists():break
+            if (root/'STOP.json').exists():
+                for job in jobs:subprocess.run(['scancel',job],check=False)
+                break
             smoke=root/'shards/0/FULL_SMOKE_PASS.json'
             if not second_released and smoke.exists():
                 gate=json.loads(smoke.read_text())
