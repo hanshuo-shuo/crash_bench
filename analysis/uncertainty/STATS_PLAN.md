@@ -69,6 +69,17 @@ BA and calibration coefficients. Raw AUROC keeps the predefined direction even
 if a fitted slope reverses. Single-class AUROC is NA; constant scores with both
 classes have AUROC0.5 by the tie convention. Constant-input correlations are NA.
 
+The exact Platt fit minimizes normalized weighted binary log loss plus
+0.5×0.001×b², where b is the slope after train-weighted population mean/std
+standardization; the intercept is unpenalized. Use SciPy L-BFGS-B with an analytic
+gradient, initial slope0 and intercept equal to the logit of clipped weighted
+train prevalence, maxiter1000, maxls50, gtol1e-10 and ftol1e-12. A train std<=1e-12
+or single-class train set uses slope0 and prevalence clipped to[1e-6,1−1e-6], with
+the fallback explicitly reported. Complete separation uses the same fixed L2 fit,
+which has a finite optimum when both classes are present. A nonconvergent fit stops
+analysis and preserves diagnostics; do not switch optimizers or penalties based
+on held-out performance. All parameters are in config.yaml before fitting.
+
 ## Early completion calibration and paired differences
 
 The primary first-five-infer analysis is a prospective landmark immediately before
@@ -97,9 +108,20 @@ Freeze low-disagreement cutoff at the weighted train-nominal at-risk 0.10 quanti
 using the same state/rollout/infer weights. No test quantile or threshold search.
 For failed rollouts, last5/10/20 means ACTIONS preceding and including first crash,
 or final executed action for never-crash safe_incomplete. Use only inference
-boundaries in each window, disclose partial/empty windows, and report low-proxy
-failure frequency and denominators. These event/end-anchored windows and aligned
+boundaries in each window, restricted to the pre-action at-risk set. Define a low
+boundary by disagreement<=the frozen train cutoff. The primary per-rollout value
+is the fraction of its eligible boundaries that are low, then average with equal
+state and eligible-rollout weights. It is not an any-low or mean-proxy indicator.
+Primary denominators are held-out failed rollouts with at least one such boundary;
+report crash and safe_incomplete separately and pooled. Also report total failed,
+eligible/excluded rollout and boundary counts, and windows truncated at action1.
+Train/all-state summaries are descriptive. These event/end-anchored windows and aligned
 time curves are retrospective descriptions, not online forecasting evidence.
+
+The absolute-time primary curves use inference actions1+5j (j=0..59), each proxy
+and arm separately, with only rollouts at risk before that action. At each action,
+average with equal available-state then available-rollout weights and disclose
+both counts. Do not count the five copied action rows as five uncertainty samples.
 
 Use 2,000 fixed-seed initial-state cluster bootstrap replicates, stratified by
 the three tasks; retain every seed, arm and time row together within a sampled
@@ -109,6 +131,13 @@ bootstrap replicates rather than treating them as zeros. Calibration/performance
 intervals bootstrap test states conditional on the fixed train fit; they do not
 include variation from re-fitting the calibration model. Do not bootstrap actions
 as independent samples or choose the most favorable horizon after test evaluation.
+Generate task-stratified draws using NumPy PCG64(seed20261009), sorted task/state
+identities, and the original number of test states per task. Freeze each metric's
+original grouped weights before resampling; multiply them by each state's draw
+multiplicity and normalize. An A,A,B draw must give A twice B's cluster mass.
+Never recompute grouped_weights on duplicated original identities, which collapses
+repeated draws. If a replicate contains no eligible observations or a metric is
+undefined, retain NA and report its count. Use the same draws for paired contrasts.
 
 ## Task 3, authorized fixed zero-command gate
 

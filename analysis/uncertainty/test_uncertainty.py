@@ -199,5 +199,21 @@ class StatisticalRuleTests(unittest.TestCase):
         self.assertIsNone(weighted_auc([0,0],[0.,1.],[.5,.5]))
         self.assertEqual(weighted_quantile([0,1,2],[.5,.25,.25],.9),2.)
 
+    def test_bootstrap_retains_duplicated_cluster_mass(self):
+        from stat_rules import grouped_weights,bootstrap_weights
+        scenes=['A','A','B'];runs=['A0','A0','B0']
+        original=grouped_weights(scenes,runs)
+        self.assertEqual(bootstrap_weights(scenes,original,['A','A','B']),[1/3,1/3,1/3])
+        self.assertEqual(bootstrap_weights(scenes,original,['A','A','A']),[.5,.5,0.])
+        self.assertIsNone(bootstrap_weights(scenes,original,['C']))
+
+    def test_failure_window_fraction_is_per_rollout_and_action_based(self):
+        from stat_rules import failure_window_fraction
+        infos=[{'step':x,'disagreement':u} for x,u in [(1,.1),(6,.2),(11,.3),(16,.1)]]
+        self.assertEqual(failure_window_fraction(infos,12,10,.2),dict(fraction=.5,low=1,boundaries=2,partial=False))
+        self.assertEqual(failure_window_fraction(infos,11,5,.2)['fraction'],0.)
+        self.assertTrue(failure_window_fraction(infos,2,10,.2)['partial'])
+        self.assertIsNone(failure_window_fraction(infos,5,1,.2)['fraction'])
+
 
 if __name__=='__main__':unittest.main()

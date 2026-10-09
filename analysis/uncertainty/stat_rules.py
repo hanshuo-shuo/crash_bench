@@ -22,6 +22,26 @@ def grouped_weights(scene_ids, rollout_ids):
     return [1./len(groups)/len(groups[scene])/groups[scene][run] for scene,run in zip(scene_ids,rollout_ids)]
 
 
+def bootstrap_weights(scene_ids, original_weights, sampled_scenes):
+    """Keep repeated cluster draws; original weights are frozen before resampling."""
+    if len(scene_ids)!=len(original_weights):raise ValueError('Weight length differs')
+    if any(not math.isfinite(w) or w<0 for w in original_weights):raise ValueError('Invalid original weights')
+    multiplicity={}
+    for scene in sampled_scenes:multiplicity[scene]=multiplicity.get(scene,0)+1
+    weights=[float(w)*multiplicity.get(scene,0) for scene,w in zip(scene_ids,original_weights)]
+    total=sum(weights)
+    return [w/total for w in weights] if total>0 else None
+
+
+def failure_window_fraction(inferences, anchor, window, cutoff):
+    """Retrospective per-rollout low-boundary fraction, including event action."""
+    if window<=0 or anchor<1:raise ValueError('Invalid failure window')
+    eligible=[x for x in inferences if max(1,anchor-window+1)<=x['step']<=anchor]
+    low=sum(x['disagreement']<=cutoff for x in eligible)
+    return dict(fraction=low/len(eligible) if eligible else None,low=low,
+                boundaries=len(eligible),partial=anchor<window)
+
+
 def weighted_auc(labels,scores,weights):
     """Weighted pairwise concordance with half credit for every score tie."""
     positive=sum(w for y,w in zip(labels,weights) if y==1)
