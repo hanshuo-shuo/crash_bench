@@ -167,6 +167,9 @@ The user approved two A100 workers, 8 CPUs/64 GB each, at most24h each (48 GPUh)
 and completing the series; on2026-10-09 the user removed the API dollar cap.
 Retain all previous charges, exact prompt/image request hashes, pinned model/Z.AI
 provider, complete usage metadata, and at most one bounded transient retry.
-Unknown charges stop retries until reconciled. No API calls occur in geometry
-preflight. Code/upstream tracked bytes, model/norm/tokenizer/detector assets,
+The frozen collection worker permits one bounded transient HTTP-error retry and
+retains the first attempt's unresolved charge reservation. Other unknown-cost
+failures stop the worker. Any unresolved attempt must be reconciled before final
+billing or the complete audit can pass; do not erase holds or report them as zero.
+No API calls occur in geometry preflight. Code/upstream tracked bytes, model/norm/tokenizer/detector assets,
 container, config, identities, seeds and Slurm receipts are fingerprinted.
