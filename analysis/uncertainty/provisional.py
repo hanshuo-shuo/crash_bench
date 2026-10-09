@@ -95,9 +95,13 @@ def main(task2,output,gate_receipt):
         fig,axes=plt.subplots(1,3,figsize=(12,3.5))
         for ax,task in zip(axes,tasks):
             rows=[r for r in predictions if r['stage']=='first_infer' and r['proxy']=='disagreement' and r['split']=='test' and r['scene'].rsplit('/',1)[0]==task]
+            pooled_values=[-float(r['x']) for r in rows]
+            lo,hi=min(pooled_values),max(pooled_values)
+            if lo==hi:lo,hi=lo-1e-12,hi+1e-12
+            bin_edges=[lo+(hi-lo)*i/12 for i in range(13)]
             for label,color,name in [(0,'#64748b','not safe success'),(1,'#0891b2','safe success')]:
                 values=[-float(r['x']) for r in rows if int(r['y'])==label]
-                if values:ax.hist(values,bins=12,color=color,alpha=.55,label=name+' n='+str(len(values)))
+                if values:ax.hist(values,bins=bin_edges,color=color,alpha=.55,label=name+' n='+str(len(values)))
             ax.set(xlabel='First-infer disagreement',ylabel='Raw rollout count',title=task.replace('safelibero_',''));ax.legend(fontsize=7)
         save(fig,'first_infer_by_task_and_class')
 
@@ -132,7 +136,7 @@ def main(task2,output,gate_receipt):
         [[r['stage'],r['task']+'/'+r['arm'],str(r['rows']),str(r['positive'])+'/'+str(r['negative'])]+[display(r,k) for k in ['AUROC','BA','Brier']] for r in context if r['proxy']=='disagreement' and r['task']!='pooled' and r['arm']!='pooled'])
     p('Object/I测试首次infer仅1/120条安全成功，其中nominal是0/60。该任务AUROC由一个阳性支撑，不适合解释为稳定预测能力。Object/II首次U任务内AUROC=.597，Spatial为.702，低于合并.829。任务类别间的基率和U分布差异会影响合并排序，不能把合并AUROC直接解释为每个任务内都同样有效。')
     image('task_context','事后任务内排序及加权安全完成基率；未新增CI，类别数在表中列出。')
-    image('first_infer_by_task_and_class','首次U按任务与最终类别的原始轨迹数分布；这是计数图，不是重新加权的模型训练。')
+    image('first_infer_by_task_and_class','首次U按任务与最终类别的原始轨迹数分布；同任务两类共用分箱。这是计数图，不是重新加权的模型训练。')
     table(['landmark（合并）','U固定Platt Brier','全局TRAIN类频率常量Brier','任务TRAIN类频率参照Brier'],
         [[stage]+[display(find(context,stage=stage,proxy='disagreement',task='pooled',arm='pooled'),k) for k in ['Brier','global_train_prior_Brier','task_train_prior_Brier']] for stage in ['first_infer','first_five_landmark']])
     p('类频率参照只由对应landmark的TRAIN标签计算，按原等状态/合格轨迹权重、共享两臂；测试标签只用于计算Brier，不决定概率。它是事后背景参照而非新增主模型。首次U Brier=.175优于全局TRAIN常量.239，但未低于任务TRAIN参照.173；前五次分别.191/.240/.176。这使高合并AUROC不能单独作为可迁移、增量安全判断能力的证据。以上均是描述性点估计，未据此调整gate。')
