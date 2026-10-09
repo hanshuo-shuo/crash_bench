@@ -62,6 +62,8 @@ class ObserverPolicy:
                     np.savez_compressed(self.root/'native_invariance_failure.npz',
                                         native_before=result['actions'], native_after=again['actions'])
                     raise RuntimeError('Same-input/RNG native action invariance failed')
+                if self.cfg.get('save_diagnostic_samples'):
+                    result['uncertainty_samples'] = values
             if self.key() != evidence['rng_after']:
                 raise RuntimeError('Production RNG advanced during diagnostics')
             evidence.pop('serial_actions', None)
@@ -77,15 +79,15 @@ def main():
     from openpi.policies import policy_config
     from openpi.training import config as training_config
     from openpi.serving.websocket_policy_server import WebsocketPolicyServer
-    cfg = config(); policy = policy_config.create_trained_policy(training_config.get_config('pi05_libero'), str(a.checkpoint))
+    import json
+    plan = json.loads((a.root/'plan.json').read_text())
+    cfg = plan.get('configuration',config()); policy = policy_config.create_trained_policy(training_config.get_config('pi05_libero'), str(a.checkpoint))
     if policy._is_pytorch_model:
         raise RuntimeError('Pinned native JAX model required')
     norm_file = a.checkpoint/'assets/physical-intelligence/libero/norm_stats.json'
     wrapped = ObserverPolicy(policy, jax, cfg, a.root, norm_file)
     # Reuse the failed run's saved initial model input to test the engineering
     # repair before any new simulator action, without calling a VLM.
-    import json
-    plan = json.loads((a.root/'plan.json').read_text())
     if plan.get('validation_input_root'):
         parent = Path(plan['validation_input_root'])
         file = parent/'runs/timing/infer_001.npz'
@@ -101,6 +103,7 @@ def main():
                     parent_root=str(parent), no_simulator_actions=True, no_vlm_calls=True))
     atomic_json(a.root/'POLICY_READY.json', dict(checkpoint=str(a.checkpoint),
                 model_action_dim=policy._model.action_dim, action_horizon=policy._model.action_horizon,
+                conditioning='image + prompt; pinned pi05 excludes continuous proprio, discrete_state_input=False, extra_delta_transform=False',
                 jax_version=jax.__version__, devices=[str(x) for x in jax.devices()], scales=wrapped.sampler.scales.tolist()))
     WebsocketPolicyServer(wrapped, host='127.0.0.1', port=a.port, metadata=policy.metadata).serve_forever()
 

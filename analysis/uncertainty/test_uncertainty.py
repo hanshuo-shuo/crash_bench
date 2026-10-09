@@ -48,6 +48,22 @@ class MetricTests(unittest.TestCase):
         self.assertEqual(len(set(values)),8)
         self.assertNotEqual(values,[common.noise_seed('scene',7,3,i) for i in range(8)])
 
+    def test_full_identity_shards_and_scene_split(self):
+        cfg=common.config('full'); whole=list(common.full_schedule(cfg))
+        parts=[list(common.full_schedule(cfg,i)) for i in [0,1]]
+        self.assertEqual([len(x) for x in parts],[600,600])
+        self.assertEqual(len({x['name'] for x in whole}),1200)
+        self.assertEqual({x['name'] for x in whole},set(x['name'] for p in parts for x in p))
+        self.assertFalse(set(x['name'] for x in parts[0])&set(x['name'] for x in parts[1]))
+        for p in parts:
+            for a,b in zip(p[::2],p[1::2]):
+                self.assertEqual(common.seed_for(a['scene'],a['repeat']),common.seed_for(b['scene'],b['repeat']))
+                self.assertEqual({a['method'],b['method']},{'nominal','aegis'})
+        split=json.loads((Path(__file__).parent/'split.json').read_text())
+        self.assertEqual((len(split['train']),len(split['test'])),(42,18))
+        self.assertFalse(set(split['train'])&set(split['test']))
+        self.assertTrue(set(split['exposed_smoke_assigned_train'])<=set(split['train']))
+
     def test_repair_allocations_share_cumulative_ceiling(self):
         receipts=[dict(state='FAILED',elapsed_seconds=361),dict(state='FAILED',elapsed_seconds=362)]
         minutes,used=common.remaining_minutes(receipts)
@@ -85,6 +101,19 @@ class BudgetTests(unittest.TestCase):
                 b.settle('a',dict(usage={'cost':.002,'prompt_tokens':100,'completion_tokens':50},model='z-ai/glm-4.5v',provider='Z.AI'))
                 self.assertEqual(str(b.committed()),'0.002')
                 self.assertEqual(b.state['calls']['a']['usage']['prompt_tokens'],100)
+            finally:b.close()
+
+    def test_full_authorization_preserves_ledger_and_removes_dollar_cap(self):
+        with tempfile.TemporaryDirectory() as t:
+            b=CampaignBudget(t);b.refresh_prices=lambda:None
+            b.reserve('old',self.request());b.settle('old',dict(usage={'cost':.002},model='z-ai/glm-4.5v',provider='Z.AI'));b.close()
+            b=CampaignBudget(t,common.config('full'));b.refresh_prices=lambda:None
+            try:
+                self.assertIsNone(b.limit);self.assertEqual(str(b.committed()),'0.002')
+                for i in range(31):b.reserve('full'+str(i),self.request())
+                receipt=json.loads((Path(t)/'API_AUTHORIZATION_CHANGE_20261009.json').read_text())
+                self.assertEqual(receipt['previous_ledger']['calls']['old']['status'],'settled')
+                self.assertEqual(receipt['previous_limit_usd'],'3.00')
             finally:b.close()
 
 

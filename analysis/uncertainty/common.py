@@ -11,7 +11,7 @@ FIELDS = ['scene_id', 'task_id', 'capability', 'seed', 'step', 'disagreement',
           'churn', 'act_norm', 'min_dist', 'crashed', 'time_to_crash', 'outcome']
 
 
-def config():
+def config(mode='smoke'):
     # JSON is a YAML subset. This keeps the simulator's Python 3.8 dependency-free.
     value = json.loads((Path(__file__).parent / 'config.yaml').read_text())
     if (value['samples'], value['horizon'], value['replan_steps'], value['effective_dims']) != (8, 10, 5, 7):
@@ -20,7 +20,27 @@ def config():
         raise ValueError('Resource envelope changed')
     if value['api_limit_usd'] != '3.00' or value['sampling_atol'] != 1e-6 or value['sampling_rtol'] != 1e-6:
         raise ValueError('Budget or numeric gate changed')
+    if mode == 'full':
+        full = value['full_collection']; value = dict(value, **full)
+        if value['resources'] != dict(account='p33100', partition='gengpu', gpu='a100:1', cpus=8, memory_gb=64, minutes=1440, workers=2):
+            raise ValueError('Full resource envelope changed')
+        if value['api_limit_usd'] is not None or value['repeats'] != list(range(10)) or value['max_fresh_calls_per_run_root'] != 600:
+            raise ValueError('Full collection scope changed')
+    elif mode != 'smoke': raise ValueError('Unknown collection mode')
+    value['mode'] = mode
     return value
+
+
+def full_schedule(cfg, shard=None):
+    manifest = json.loads((Path(__file__).parent/'states.json').read_text())
+    if len(manifest['states']) != 60: raise ValueError('Exactly sixty states required')
+    for index, scene in enumerate(manifest['states']):
+        if shard is not None and index % 2 != shard: continue
+        for repeat in cfg['repeats']:
+            methods = ['nominal','aegis'] if repeat % 2 == 0 else ['aegis','nominal']
+            for method in methods:
+                yield dict(name='full_s%02d_r%02d_%s'%(index,repeat,method), scene=scene,
+                           repeat=repeat, method=method, diagnostics=True, state_index=index)
 
 
 def scene_id(scene):

@@ -1,4 +1,16 @@
-# SafeLIBERO action sampling uncertainty: task 1 only
+# SafeLIBERO action sampling uncertainty
+
+2026-10-09 continuation: the user approved the full series and two A100 workers
+for at most24h each, and removed the API dollar cap. The earlier smoke receipts
+and their $3 ledger remain historical evidence. Full collection still has600
+logical VLM requests and bounded retries; no unrelated API/provider is introduced.
+`states.json` freezes the60 identities and `split.json`/`STATS_PLAN.md` freeze
+analysis choices before fitting. CPU `preflight.py` verifies actual upstream/asset
+bytes and reconstructs the saved static geometry anomaly, with zero policy/API
+calls. Do not submit expensive collection until its distance result is understood.
+All full inference tensors are retained for independent reduction. The pinned
+pi05 policy remains image+prompt conditioned; saved continuous state is not input
+to its pi05 suffix. Source work remains confined to this directory.
 
 User-authorized boundary: one timing rollout, then two scenes × two seeds × nominal/full AEGIS smoke; one A100, 8 CPUs, 64 GB, 30-minute Slurm hard cap. M=8 and the fixed `1e-6` numeric tolerances cannot be changed without returning measured evidence for confirmation. Task 2, a gate and the full 60×10×2 matrix are not submitted by this code.
 

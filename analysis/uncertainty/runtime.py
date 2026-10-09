@@ -67,8 +67,14 @@ class Observer:
                 info.update(step=observer.ctx['t']+1, churn=churn(chunk, observer.previous, observer.scales))
                 observer.previous = chunk.copy(); observer.latest = info
                 observer.inferences.append(info); observer.infer_file.write(json.dumps(info)+'\n'); observer.infer_file.flush()
+                diagnostic = {}
+                if observer.cfg.get('save_diagnostic_samples'):
+                    samples = np.asarray(result.pop('uncertainty_samples'))
+                    if samples.shape != (8,10,7): raise Failure('Missing complete diagnostic action samples')
+                    diagnostic = dict(diagnostic_actions=samples, sample_seeds=np.asarray(info['sample_seeds'],dtype='<u4'),
+                                      normalization_scales=np.asarray(info['normalization_scales']))
                 np.savez_compressed(observer.directory/('infer_%03d.npz'%info['infer_index']), actions=chunk,
-                    image=data['observation/image'], wrist_image=data['observation/wrist_image'], state=data['observation/state'], prompt=data['prompt'])
+                    image=data['observation/image'], wrist_image=data['observation/wrist_image'], state=data['observation/state'], prompt=data['prompt'], **diagnostic)
                 return result
         return Client()
 
@@ -82,14 +88,20 @@ class Observer:
     def settled(self, env, obs, t):
         if t != 20: raise Failure('Incomplete settling')
         self.env = env; self.settled_hash = physical_hash(env)
+        self.qpos_hash = hashlib.sha256(np.asarray(env.sim.data.qpos,dtype='<f8').tobytes()).hexdigest()
+        if self.spec['scene'].get('expected_qpos_sha256',self.qpos_hash) != self.qpos_hash:
+            raise Failure('Settled qpos differs from frozen sixty-state manifest')
         np.savez_compressed(self.directory/'settled_state.npz', **{k: np.asarray(getattr(env.sim.data, k)).copy() for k in ARRAYS})
 
     def ready(self, env, obs, obstacle, enabled):
         self.obstacle = obstacle; self.initial = np.asarray(obs[obstacle+'_pos']).copy()
+        if self.spec['scene'].get('expected_obstacle',obstacle) != obstacle:
+            raise Failure('Active obstacle differs from frozen sixty-state manifest')
         self.distance = Distance(env, obstacle, self.cfg['distance_max_m'])
         atomic_json(self.directory/'geometry.json', dict(obstacle=obstacle, robot_geoms=self.distance.robot,
             protected_geoms=self.distance.protected, filter_enabled=bool(enabled), distance_units='m', signed=True,
             live_mutation_check='physics arrays + time + model body poses at every read'))
+        atomic_json(self.directory/'geometry_details.json', self.distance.details())
 
     def before(self, ctx):
         self.ctx = ctx
@@ -136,6 +148,7 @@ class Observer:
                             applied=applied.tolist(), controller_clipped=clipped.tolist(), qp_status=status,
                             act_norm6=norm(applied, self.scales, 6), act_norm7=norm(applied, self.scales),
                             controller_clipped_norm7=norm(clipped, self.scales), min_dist=self.min_dist,
+                            distance_witness=self.distance.witness, distance_native_max_abs=self.distance.native_max_abs,
                             closest_geom_pair=self.pair, infer_index=self.latest['infer_index'],
                             queue_array_equal=queue_equal, physical_before_action_unchanged=physical_equal,
                             native_seconds=self.latest['native_seconds'], diagnostic_seconds=self.latest['diagnostic_seconds'])
@@ -183,8 +196,8 @@ class Observer:
 
 
 class Runner:
-    def __init__(self, root, port):
-        self.root, self.port, self.cfg = root, port, config(); self.detector = None
+    def __init__(self, root, port, cfg=None):
+        self.root, self.port, self.cfg = root, port, cfg or config(); self.detector = None
         self.upstream = Path(os.environ['CB_UPSTREAM']); self.assets = Path(os.environ['CB_ASSETS'])
         path = root/'libero_config'; path.mkdir()
         benchmark = self.upstream/'safelibero/libero/libero'
@@ -196,7 +209,7 @@ class Runner:
 
     def run(self, spec):
         observer = Observer(self, spec); previous = Path.cwd(); os.chdir(observer.directory)
-        started = time.monotonic(); status = 'failed'; envs = []
+        started = time.monotonic(); status = 'failed'; envs = []; module_name = None
         try:
             if spec['method'] == 'aegis':
                 (observer.directory/'GroundingDINO').symlink_to(self.assets/'GroundingDINO', target_is_directory=True)
@@ -206,6 +219,7 @@ class Runner:
             patched = adapt(self.source, spec['method'])
             (observer.directory/'adapted_main_aegis.py').write_text(patched)
             module = types.ModuleType('uncertainty_upstream_'+spec['name']); module.__file__ = str(self.upstream/'main/main_aegis.py')
+            module_name = module.__name__
             sys.modules[module.__name__] = module; ns = vars(module); ns['observer'] = observer
             exec(compile(patched, module.__file__, 'exec'), ns)
             original = ns['_get_libero_env']
@@ -248,13 +262,20 @@ class Runner:
                 diagnostic_seconds=sum(x['diagnostic_seconds'] for x in observer.inferences),
                 reference_check_seconds=sum(x['reference_check_seconds'] for x in observer.inferences),
                 snapshots=len(list((observer.directory/'snapshots').glob('*.json'))) if (observer.directory/'snapshots').exists() else 0,
-                video=getattr(observer, 'video', None), settled_physics_sha256=observer.settled_hash)
+                video=getattr(observer, 'video', None), settled_physics_sha256=observer.settled_hash,
+                settled_qpos_sha256=observer.qpos_hash)
             atomic_json(observer.directory/'RESULT.json', result)
             return result
         finally:
             observer.trace.close(); observer.infer_file.close()
             for env in envs: env.close()
             if hasattr(observer, 'ws'): observer.ws._ws.close()
+            if module_name: sys.modules.pop(module_name,None)
+            observer.ctx = None
+            if 'utils' in sys.modules:
+                sys.modules['utils'].obstacle_detection = None
+            import gc
+            gc.collect()
             os.chdir(previous)
             atomic_json(observer.directory/'manifest.json', dict(status=status, spec=spec, seed=observer.seed,
                 elapsed_seconds=time.monotonic()-started, executed_actions=observer.executed,

@@ -33,5 +33,13 @@
   "api_reserve_per_attempt_usd": "0.10",
   "api_max_attempts_per_request": 2,
   "max_fresh_calls_per_run_root": 4,
-  "resources": {"account": "p33100", "partition": "gengpu", "gpu": "a100:1", "cpus": 8, "memory_gb": 64, "minutes": 30}
+  "resources": {"account": "p33100", "partition": "gengpu", "gpu": "a100:1", "cpus": 8, "memory_gb": 64, "minutes": 30},
+  "full_collection": {
+    "repeats": [0,1,2,3,4,5,6,7,8,9],
+    "api_limit_usd": null,
+    "max_fresh_calls_per_run_root": 600,
+    "save_diagnostic_samples": true,
+    "case_checkpoint_seconds": 180,
+    "resources": {"account": "p33100", "partition": "gengpu", "gpu": "a100:1", "cpus": 8, "memory_gb": 64, "minutes": 1440, "workers": 2}
+  }
 }
