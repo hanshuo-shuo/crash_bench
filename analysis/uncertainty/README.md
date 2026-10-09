@@ -60,3 +60,21 @@ Fresh-environment trajectory equality remains false: before action 11 of the lat
 Local smoke delivery is `analysis/uncertainty/data/rollouts.parquet`, with its metric README, metrics, audit and provenance receipts. Full traces, snapshots, requests/responses and all nine original videos are retained at `results/uncertainty/20261008T042856Z_6ca85c909ebb/` and the immutable Quest root. Data are ignored by Git. M remains8. Full-series authorization followed on2026-10-09; no full outcome is inferred from this smoke.
 
 The original proposal extrapolated1200 rollouts at the slowest smoke duration131.41s to43.8 GPUh, and600 AEGIS calls at the four-call mean to about$1.35. The user subsequently approved2A100×24h and removed the API dollar cap. These remain forecasts from two states; milk, provider latency and richer capture may differ. `full_launch.py` submits two held600-case shards; the first eight matrix cases form the stage smoke, and only a passing retained gate releases shard1. Each inference tensor is independently reduced during export. Cases checkpoint before the480s allocation margin; partial collection is preserved and does not enter primary fitting. Real submission/progress receipts live in unique Quest output roots, not this static document. Live Quest source stays unchanged.
+# Task2 execution
+
+`analyze.py` rejects anything other than the complete, hash-checked1200-case
+independent audit. The first analysis smoke evaluates the two preselected heldout
+states in `config.yaml` at repeats0/1, while using the full frozen train population
+for every calibration/reference. The full pass must reproduce all smoke train
+models, thresholds and reference medians byte-for-byte. No method is tuned from
+smoke or heldout results. `analysis.sbatch` runs on2 CPU/8GB for at most60 minutes,
+with no model inference or API calls.
+
+Metric tables retain the predefined raw-score AUROC as `AUROC`, and also expose
+`calibrated_AUROC` computed from the fixed train-fit probability. This makes any
+slope reversal or probability ties visible. BA/Brier use calibrated probability.
+Completion is evaluated on individual rollouts; the first-five landmark excludes
+outcomes known before action21. Display calibration bins are ten equal-width
+probability intervals, fixed before fitting. Every eligible/censored denominator
+and bootstrap undefined count is written alongside estimates.
+

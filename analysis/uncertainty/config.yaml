@@ -35,6 +35,9 @@
   "max_fresh_calls_per_run_root": 4,
   "resources": {"account": "p33100", "partition": "gengpu", "gpu": "a100:1", "cpus": 8, "memory_gb": 64, "minutes": 30},
   "task2": {
+    "resources": {"account": "p33100", "partition": "short", "cpus": 2, "memory_gb": 8, "minutes": 60},
+    "smoke": {"test_states": ["safelibero_object/I/task2/episode01", "safelibero_object/II/task1/episode00"], "repeats": [0,1], "fit_population": "all_frozen_train_states; heldout_evaluation_limited_to_eight_rollouts; no_method_tuning"},
+    "calibration_bins": 10,
     "split_salt": "uncertainty-split-v1",
     "train_states_per_task": 14,
     "test_states_per_task": 6,
@@ -96,7 +99,7 @@
   },
   "integrity_audit": {
     "delivery": {"attempts": 3, "requests": 64, "buffer_bytes": 32768, "retry_seconds": 5},
-    "resources": {"account": "p33100", "partition": "short", "cpus": 2, "memory_gb": 8, "minutes": 45},
+    "resources": {"account": "p33100", "partition": "short", "cpus": 2, "memory_gb": 8, "minutes": 60},
     "full_resources": {"account": "p33100", "partition": "short", "cpus": 2, "memory_gb": 8, "minutes": 60},
     "package": "uncompressed_tar_preserving_symlinks_without_dereference",
     "fit_experimental_data": false,
