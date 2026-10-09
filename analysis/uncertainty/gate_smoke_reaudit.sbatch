@@ -17,12 +17,13 @@ FAILED="$("$PYTHON" -c 'import json,os;print(json.load(open(os.environ["CB_UNCER
 BASELINE="$("$PYTHON" -c 'import json,os;print(json.load(open(os.environ["CB_UNCERTAINTY_ROOT"]+"/RECOVERY_PLAN.json"))["configuration"]["collection_root"])')"
 UPSTREAM="$("$PYTHON" -c 'import json,os;print(json.load(open(os.environ["CB_UNCERTAINTY_ROOT"]+"/RECOVERY_PLAN.json"))["upstream_root"])')"
 TASK2="$("$PYTHON" -c 'import json,os;print(json.load(open(os.environ["CB_UNCERTAINTY_ROOT"]+"/RECOVERY_PLAN.json"))["analysis_root"]+"/analysis")')"
+ASSET_ALIAS="$(readlink -f /projects/p33100/siosio/crashbench_safelibero)"
 "$PYTHON" -m unittest discover -s "$SOURCE/analysis/uncertainty" -p 'test_gate*.py' -v
 module purge
 module load singularityce/4.3.1-gcc-8.5.0
 export SINGULARITYENV_PYTHONNOUSERSITE=1 SINGULARITYENV_PYTHONDONTWRITEBYTECODE=1
 export SINGULARITYENV_SLURM_JOB_ID="$SLURM_JOB_ID"
-singularity exec --bind "/projects,/home,$ROOT:$ROOT:rw,$SOURCE:$SOURCE:ro,$FAILED:$FAILED:ro,$BASELINE:$BASELINE:ro,$UPSTREAM:$UPSTREAM:ro" \
+singularity exec --bind "/projects,/home,$ASSET_ALIAS:$ASSET_ALIAS:ro,$ROOT:$ROOT:rw,$SOURCE:$SOURCE:ro,$FAILED:$FAILED:ro,$BASELINE:$BASELINE:ro,$UPSTREAM:$UPSTREAM:ro" \
  /projects/p33100/siosio/crashbench_safelibero/containers/aegis-py38.sif \
  /projects/p33100/siosio/crashbench_safelibero/envs/aegis_sim/bin/python \
  "$SOURCE/analysis/uncertainty/gate_recover.py" audit "$ROOT"
