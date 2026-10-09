@@ -173,6 +173,16 @@ class FullWorkerTests(unittest.TestCase):
 
 
 class TerminalEvidenceTests(unittest.TestCase):
+    def test_full_audit_depends_only_on_active_jobs_and_retains_terminal_proof(self):
+        from launch_integrity import remaining_dependencies
+        from types import SimpleNamespace
+        values=[SimpleNamespace(stdout='10001|RUNNING|0:0|12\n'),SimpleNamespace(stdout='10002|COMPLETED|0:0|60\n')]
+        with patch('launch_integrity.subprocess.run',side_effect=values):
+            active,completed=remaining_dependencies(['10001','10002'])
+        self.assertEqual(active,['10001']);self.assertEqual(completed,[dict(job='10002',state='COMPLETED',exit_code='0:0',elapsed_seconds=60)])
+        with patch('launch_integrity.subprocess.run',return_value=SimpleNamespace(stdout='10001|FAILED|1:0|60\n')):
+            with self.assertRaisesRegex(RuntimeError,'failed'):remaining_dependencies(['10001'])
+
     def test_delivery_rejects_traversal_and_symlink_descendants(self):
         from receive_evidence import checked_paths
         with self.assertRaisesRegex(ValueError,'Unsafe'):checked_paths([dict(path='../escape',kind='file')],1)
