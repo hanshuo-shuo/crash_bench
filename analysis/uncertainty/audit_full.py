@@ -15,7 +15,8 @@ def audit(collection, output):
     if not (collection/'COLLECTION_COMPLETE.json').exists():raise RuntimeError('Collection not complete')
     expected={x['name']:x for x in full_schedule(cfg)}
     rows=[];results=[];seen=set();inferences=0;maximum_disagreement_error=0.;maximum_churn_error=0.
-    settled={};source_manifest=json.loads((collection/'SOURCE_FILES.json').read_text())
+    settled={};filter_counts={'aegis_enabled':0,'aegis_native_empty_pointcloud_off':0,'nominal_off':0}
+    source_manifest=json.loads((collection/'SOURCE_FILES.json').read_text())
     for item in source_manifest:
         if sha(collection/'source'/item['path'])!=item['sha256']:raise RuntimeError('Source changed after collection')
     for shard in [0,1]:
@@ -35,8 +36,16 @@ def audit(collection, output):
                     if any(not np.array_equal(v,settled[scene][k]) for k,v in frozen.items()):raise RuntimeError('Paired settled physical arrays differ')
                 else:settled[scene]=frozen
             geometry=json.loads((directory/'geometry.json').read_text())
-            if geometry['obstacle']!=spec['scene']['expected_obstacle'] or geometry['filter_enabled']!=(spec['method']=='aegis'):
-                raise RuntimeError('Active obstacle or AEGIS arm differs')
+            if geometry['obstacle']!=spec['scene']['expected_obstacle']:
+                raise RuntimeError('Active protected obstacle differs')
+            if spec['method']=='nominal':
+                if geometry['filter_enabled']:raise RuntimeError('Nominal unexpectedly enabled QP')
+                filter_counts['nominal_off']+=1
+            else:
+                # Pinned original lines219–221 disable QP when filtered points
+                # are empty. Preserve/report that native perception failure;
+                # requiringTrue would discard a legitimate full-AEGIS outcome.
+                filter_counts['aegis_enabled' if geometry['filter_enabled'] else 'aegis_native_empty_pointcloud_off']+=1
             infos=[json.loads(x) for x in (directory/'inferences.jsonl').read_text().splitlines()]
             steps=[json.loads(x) for x in (directory/'steps.jsonl').read_text().splitlines()]
             r=[json.loads(x) for x in (directory/'rows.jsonl').read_text().splitlines()]
@@ -97,7 +106,7 @@ def audit(collection, output):
     atomic_json(output/'rollouts.json',results)
     report=dict(passed=True,rollouts=len(results),states=len(settled),actions=len(rows),diagnostic_inferences=inferences,
         all_diagnostic_sample_tensors_independently_reduced=True,maximum_disagreement_error=maximum_disagreement_error,
-        maximum_churn_error=maximum_churn_error,collection=str(collection),code_commit=plan['code_commit'],
+        maximum_churn_error=maximum_churn_error,filter_counts=filter_counts,collection=str(collection),code_commit=plan['code_commit'],
         parquet_sha256=sha(output/'rollouts.parquet'),api=api,task2_fitted=False,
         official_labels='obstacle L1 displacement>1mm; crash precedence outcome; success retained separately',
         distance='exact OBB box pairs; native other convex collision geoms; old smoke distance excluded',
