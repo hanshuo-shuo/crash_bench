@@ -18,7 +18,8 @@ def state(job):
     return rows[0]
 
 
-def main(root):
+def main(root,watch_hours=72):
+    if not 1<=watch_hours<=72:raise ValueError('Bounded monitor duration1..72h required')
     jobs={};started=time.time()
     try:
         while True:
@@ -39,7 +40,7 @@ def main(root):
                 receipts=[json.loads((root/'shards'/str(s)/'COMPLETE.json').read_text()) for s in [0,1]]
                 if any(not x['passed'] or x['runs']!=150 for x in receipts):raise RuntimeError('Incomplete300 gate matrix')
                 atomic_json(root/'GATE_COLLECTION_COMPLETE.json',dict(passed=True,runs=300,jobs=jobs,accounting=accounting,actions=sum(x['actions'] for x in receipts),inferences=sum(x['inferences'] for x in receipts),new_vlm_calls=0));return
-            if time.time()-started>24*3600:raise RuntimeError('Bounded gate monitor24h expired')
+            if time.time()-started>watch_hours*3600:raise RuntimeError('Bounded gate monitor expired after%d wall hours'%watch_hours)
             time.sleep(20)
     except BaseException as error:
         atomic_json(root/'STOP.json',dict(error=type(error).__name__,reason=str(error),jobs=jobs,unix=time.time()))
@@ -51,4 +52,4 @@ def main(root):
 
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('root',type=Path);a=p.parse_args();main(a.root.resolve())
+    p=argparse.ArgumentParser();p.add_argument('root',type=Path);p.add_argument('--watch-hours',type=int,default=72);a=p.parse_args();main(a.root.resolve(),a.watch_hours)
