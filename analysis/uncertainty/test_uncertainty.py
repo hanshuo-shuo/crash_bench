@@ -172,6 +172,29 @@ class FullWorkerTests(unittest.TestCase):
                 self.assertTrue((root/'COLLECTION_COMPLETE.json').exists())
 
 
+class TerminalEvidenceTests(unittest.TestCase):
+    def test_audit_refuses_running_or_failed_accounting(self):
+        from audit_shard import terminal_accounting
+        from types import SimpleNamespace
+        for state,exit_code in [('RUNNING','0:0'),('FAILED','1:0'),('COMPLETED','1:0')]:
+            with patch('audit_shard.subprocess.run',return_value=SimpleNamespace(stdout='10001|%s|%s|12\n'%(state,exit_code))):
+                with self.assertRaisesRegex(RuntimeError,'not terminal'):terminal_accounting('10001')
+        with patch('audit_shard.subprocess.run',return_value=SimpleNamespace(stdout='10001|COMPLETED|0:0|12\n')):
+            self.assertEqual(terminal_accounting('10001')['elapsed_seconds'],12)
+
+    def test_audit_requires_full_frozen_case_order_and_commit(self):
+        from audit_shard import validate_receipt
+        import copy
+        specs=list(common.full_schedule(common.config('full'),1))
+        receipt=dict(passed=True,runs=600,complete_matrix_shard=True,source_commit='frozen',results=[dict(spec=s,status='complete') for s in specs])
+        validate_receipt(receipt,specs,'frozen')
+        bad=copy.deepcopy(receipt);bad['results']=bad['results'][:-1]
+        with self.assertRaisesRegex(RuntimeError,'identities'):validate_receipt(bad,specs,'frozen')
+        bad=copy.deepcopy(receipt);bad['results'][0],bad['results'][1]=bad['results'][1],bad['results'][0]
+        with self.assertRaisesRegex(RuntimeError,'identities'):validate_receipt(bad,specs,'frozen')
+        with self.assertRaisesRegex(RuntimeError,'receipt'):validate_receipt(receipt,specs,'different')
+
+
 class StatisticalRuleTests(unittest.TestCase):
     def test_never_crash_postaction_collision_and_censoring(self):
         from stat_rules import collision_target
