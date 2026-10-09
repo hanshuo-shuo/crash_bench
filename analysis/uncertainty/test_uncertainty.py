@@ -215,5 +215,23 @@ class StatisticalRuleTests(unittest.TestCase):
         self.assertTrue(failure_window_fraction(infos,2,10,.2)['partial'])
         self.assertIsNone(failure_window_fraction(infos,5,1,.2)['fraction'])
 
+    def test_requested_confident_failure_mean_excludes_event_and_keeps_duration(self):
+        from stat_rules import pre_event_action_mean,confident_failure_indicator
+        rows=[{'step':t,'disagreement':float(1+(t-1)//5)} for t in range(1,16)]
+        value=pre_event_action_mean(rows,9,5)
+        self.assertTrue(value['eligible']);self.assertEqual((value['start'],value['end']),(4,8))
+        self.assertEqual(value['mean'],1.6)
+        self.assertEqual(confident_failure_indicator(1.6,1.7),1)
+        self.assertEqual(confident_failure_indicator(1.6,1.6),0)
+        self.assertIsNone(confident_failure_indicator(1.6,None))
+
+    def test_requested_confident_failure_rejects_short_or_missing_windows(self):
+        from stat_rules import pre_event_action_mean
+        rows=[{'step':t,'disagreement':.2} for t in range(1,8)]
+        self.assertEqual(pre_event_action_mean(rows,5,5)['reason'],'incomplete_window')
+        self.assertEqual(pre_event_action_mean(rows[:6],8,5)['reason'],'missing_action_rows')
+        rows[4]['disagreement']=None
+        self.assertEqual(pre_event_action_mean(rows,8,5)['reason'],'missing_proxy')
+
 
 if __name__=='__main__':unittest.main()

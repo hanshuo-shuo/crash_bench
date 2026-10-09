@@ -42,6 +42,25 @@ def failure_window_fraction(inferences, anchor, window, cutoff):
                 boundaries=len(eligible),partial=anchor<window)
 
 
+def pre_event_action_mean(rows, event, window, proxy='disagreement'):
+    """Requested complete duration window excludes the collision/success action."""
+    if window<=0 or event<1:raise ValueError('Invalid pre-event window')
+    start=event-window;end=event-1
+    if start<1:return dict(mean=None,eligible=False,reason='incomplete_window',start=start,end=end,actions=max(0,event-1))
+    selected=sorted((x for x in rows if start<=x['step']<=end),key=lambda x:x['step'])
+    if [x['step'] for x in selected]!=list(range(start,event)):
+        return dict(mean=None,eligible=False,reason='missing_action_rows',start=start,end=end,actions=len(selected))
+    values=[x.get(proxy) for x in selected]
+    if any(x is None or not math.isfinite(x) for x in values):
+        return dict(mean=None,eligible=False,reason='missing_proxy',start=start,end=end,actions=len(selected))
+    return dict(mean=sum(values)/window,eligible=True,reason=None,start=start,end=end,actions=window)
+
+
+def confident_failure_indicator(window_mean, reference_median):
+    if window_mean is None or reference_median is None:return None
+    return int(window_mean<reference_median)
+
+
 def weighted_auc(labels,scores,weights):
     """Weighted pairwise concordance with half credit for every score tie."""
     positive=sum(w for y,w in zip(labels,weights) if y==1)

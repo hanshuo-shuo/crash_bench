@@ -104,15 +104,47 @@ estimate of intervention benefit. Do not correlate incompatible denominators.
 
 ## Retrospective confident failure and uncertainty intervals
 
-Freeze low-disagreement cutoff at the weighted train-nominal at-risk 0.10 quantile,
+The requested primary `confident_failure.csv` statistic is the proportion of
+crash rollouts whose mean disagreement over the last K pre-crash ACTIONS is below
+the corresponding safe-success reference median, K in{5,10,20}. For first crash C,
+use exactly actions C−K through C−1, excluding the collision action itself. The
+arithmetic mean uses the saved per-action pre-action proxy, including its held
+values between inferences; this is a duration mean, not K independent uncertainty
+samples. Require the full contiguous K-action window and finite values. Crashes
+with C<=K or missing rows are excluded, with total crash and exclusion counts.
+
+For each task×arm×K, freeze the reference on TRAIN safe-success rollouts only:
+for terminal success action L use exactly L−K through L−1, excluding the terminal
+action. Require the same complete-window rule. Take the equal-state then
+eligible-rollout weighted median of these per-rollout means, using the existing
+cumulative-CDF weighted quantile rule at0.5. This aligns both references to their
+respective terminal event, not to the crash rollout's elapsed time. Do not use
+held-out successes, historical outcomes or another task/arm as a fallback. A
+stratum with no eligible train safe successes has referenceNA and contributes
+no primary classified test crashes; disclose that exclusion.
+
+Classify each eligible TEST crash rollout by mean_disagreement<its task/arm/K
+reference (strictly below; a tie is not confident failure). The primary estimate
+is the requested raw rollout proportion n_low_mean/n_eligible, by arm/K, with
+task-stratum counts also reported. Report the equal-state/eligible-crash-rollout
+weighted fraction separately as a secondary estimate; do not substitute it for
+the raw proportion. Safe_incomplete is excluded from this crash-specific primary
+measure. Store means, reference, indicator and eligibility reason per rollout.
+Bootstrap test states with fixed train reference medians; raw-fraction replicates
+retain draw multiplicities in both numerator and denominator. These intervals
+exclude uncertainty in the train reference, as do the fixed-fit calibration CIs.
+
+The previously specified low-boundary fraction is SUPPLEMENTARY, written as
+`low_boundary_fraction.csv`, and uses a different cutoff and statistic.
+Freeze its low-disagreement cutoff at the weighted train-nominal at-risk 0.10 quantile,
 using the same state/rollout/infer weights. No test quantile or threshold search.
 For failed rollouts, last5/10/20 means ACTIONS preceding and including first crash,
 or final executed action for never-crash safe_incomplete. Use only inference
 boundaries in each window, restricted to the pre-action at-risk set. Define a low
-boundary by disagreement<=the frozen train cutoff. The primary per-rollout value
+boundary by disagreement<=the frozen train cutoff. Its supplementary per-rollout value
 is the fraction of its eligible boundaries that are low, then average with equal
 state and eligible-rollout weights. It is not an any-low or mean-proxy indicator.
-Primary denominators are held-out failed rollouts with at least one such boundary;
+Its denominators are held-out failed rollouts with at least one such boundary;
 report crash and safe_incomplete separately and pooled. Also report total failed,
 eligible/excluded rollout and boundary counts, and windows truncated at action1.
 Train/all-state summaries are descriptive. These event/end-anchored windows and aligned

@@ -73,9 +73,25 @@
       "nonconvergence": "stop_analysis_preserve_diagnostics_no_alternative_fit"
     },
     "low_proxy_comparison": "disagreement_less_than_or_equal_to_frozen_train_q10",
-    "failure_window_primary": "within_rollout_fraction_low_inference_boundaries_then_equal_state_and_eligible_rollout_mean",
-    "failure_window_population": "heldout_failed_rollouts_crash_and_safe_incomplete_separately_and_pooled",
-    "failure_window_eligibility": "at_least_one_preaction_at_risk_inference_boundary_in_anchor_K_plus_1_through_anchor",
+    "confident_failure": {
+      "primary_proxy": "disagreement",
+      "windows_actions": [5,10,20],
+      "crash_window": "exactly_K_executed_actions_C_minus_K_through_C_minus_1",
+      "safe_success_reference_window": "exactly_K_executed_actions_L_minus_K_through_L_minus_1_before_terminal_success",
+      "proxy_mean": "arithmetic_action_time_mean_of_logged_preaction_proxy_including_held_values",
+      "reference_population": "train_only_safe_success_same_task_and_arm",
+      "reference_statistic": "equal_state_then_eligible_rollout_weighted_median_of_rollout_window_means",
+      "comparison": "crash_window_mean_strictly_less_than_corresponding_reference_median",
+      "primary_population": "test_crash_rollouts_with_complete_finite_K_window_and_available_train_reference",
+      "primary_estimate": "raw_low_mean_crash_rollout_count_divided_by_eligible_crash_rollout_count",
+      "supplementary_estimate": "equal_state_then_eligible_crash_rollout_weighted_fraction",
+      "missing_reference": "NA_no_other_arm_task_test_or_historical_fallback",
+      "incomplete_window": "exclude_and_report_count_no_partial_mean",
+      "reference_interval": "test_state_bootstrap_conditional_on_fixed_train_medians"
+    },
+    "failure_window_supplement": "within_rollout_fraction_low_inference_boundaries_then_equal_state_and_eligible_rollout_mean",
+    "failure_window_supplement_population": "heldout_failed_rollouts_crash_and_safe_incomplete_separately_and_pooled",
+    "failure_window_supplement_eligibility": "at_least_one_preaction_at_risk_inference_boundary_in_anchor_K_plus_1_through_anchor",
     "temporal_curve": "mean_preaction_at_risk_proxy_at_steps_1_plus_5j_equal_state_then_available_rollout"
   },
   "full_collection": {
