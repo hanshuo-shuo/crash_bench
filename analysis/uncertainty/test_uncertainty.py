@@ -172,4 +172,32 @@ class FullWorkerTests(unittest.TestCase):
                 self.assertTrue((root/'COLLECTION_COMPLETE.json').exists())
 
 
+class StatisticalRuleTests(unittest.TestCase):
+    def test_never_crash_postaction_collision_and_censoring(self):
+        from stat_rules import collision_target
+        self.assertEqual(collision_target(10,None,300,False,5),0)
+        self.assertEqual(collision_target(10,10,300,False,5),1)
+        self.assertIsNone(collision_target(11,10,300,False,5))
+        self.assertEqual(collision_target(10,14,300,False,5),1)
+        self.assertEqual(collision_target(10,15,300,False,5),0)
+        self.assertIsNone(collision_target(291,None,300,False,40))
+        self.assertEqual(collision_target(141,None,152,True,40),0)
+
+    def test_landmark_rejects_observed_early_crash(self):
+        from stat_rules import first_five_eligible
+        infos=[{'step':x} for x in [1,6,11,16,21]]
+        self.assertFalse(first_five_eligible(infos,16,300))
+        self.assertTrue(first_five_eligible(infos,21,300))
+        self.assertFalse(first_five_eligible(infos[:4],None,18))
+
+    def test_equal_state_and_rollout_weight_not_action_weight(self):
+        from stat_rules import grouped_weights,weighted_auc,weighted_quantile
+        scenes=['A']*3+['B'];runs=['A0','A0','A1','B0']
+        self.assertEqual(grouped_weights(scenes,runs),[.125,.125,.25,.5])
+        self.assertEqual(weighted_auc([0,1],[0.,0.],[.5,.5]),.5)
+        self.assertEqual(weighted_auc([0,1],[0.,1.],[.8,.2]),1.)
+        self.assertIsNone(weighted_auc([0,0],[0.,1.],[.5,.5]))
+        self.assertEqual(weighted_quantile([0,1,2],[.5,.25,.25],.9),2.)
+
+
 if __name__=='__main__':unittest.main()

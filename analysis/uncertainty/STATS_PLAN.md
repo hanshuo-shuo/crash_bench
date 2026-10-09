@@ -66,7 +66,8 @@ for each proxy/h using train only and these weights, without class rebalancing.
 Training mean/std may stabilize fitting; checkpoint action scales are unchanged.
 BA uses calibrated probability >=0.5, fixed in advance. Report test Brier, AUROC,
 BA and calibration coefficients. Raw AUROC keeps the predefined direction even
-if a fitted slope reverses. Single-class/constant-score undefined statistics are NA.
+if a fitted slope reverses. Single-class AUROC is NA; constant scores with both
+classes have AUROC0.5 by the tie convention. Constant-input correlations are NA.
 
 ## Early completion calibration and paired differences
 
@@ -104,7 +105,9 @@ Use 2,000 fixed-seed initial-state cluster bootstrap replicates, stratified by
 the three tasks; retain every seed, arm and time row together within a sampled
 state. 95% intervals are percentile intervals. Temporal curves show available
 state/rollout counts at each point to expose survivor composition. Report undefined
-bootstrap replicates rather than treating them as zeros. Do not bootstrap actions
+bootstrap replicates rather than treating them as zeros. Calibration/performance
+intervals bootstrap test states conditional on the fixed train fit; they do not
+include variation from re-fitting the calibration model. Do not bootstrap actions
 as independent samples or choose the most favorable horizon after test evaluation.
 
 ## Task 3, authorized fixed zero-command gate
