@@ -14,9 +14,10 @@ export PYTHONNOUSERSITE=1 PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=4 OPENBLAS_N
 export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 TOKENIZERS_PARALLELISM=false
 export CB_CODE_COMMIT="$(cat "$CB_VERIFIER_RUN/SOURCE_COMMIT")"
 export PYTHONPATH="$CB_VERIFIER_ASSETS/packages:$CB_VERIFIER_RUN/source"
-for VARIANT in A B; do
+/projects/p33100/siosio/envs/openpi/bin/python -m unittest discover -s verifier_training/tests -v > "$CB_VERIFIER_RUN/unit_tests.txt" 2>&1
+for VARIANT in ${CB_SMOKE_VARIANTS:-A B}; do
  /projects/p33100/siosio/envs/openpi/bin/python -u -m verifier_training.train \
   --variant "$VARIANT" --dataset "$CB_VERIFIER_DATASET" --assets "$CB_VERIFIER_ASSETS" \
-  --config verifier_training/configs/smoke.json --out "$CB_VERIFIER_RUN/$VARIANT"
+  --config "${CB_SMOKE_CONFIG:-verifier_training/configs/smoke.json}" --out "$CB_VERIFIER_RUN/$VARIANT"
 done
 /projects/p33100/siosio/envs/openpi/bin/python -m verifier_training.report "$CB_VERIFIER_RUN"
