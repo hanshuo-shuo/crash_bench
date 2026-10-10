@@ -80,6 +80,9 @@ Only after both arms pass does `report.py` emit training curves, generated outpu
 and proposed120-sample A/B configurations (rank16, LR1e-4, dropout.05, ten epochs,
 300 matched updates at effective batch4). Those files do not launch full training.
 Training-set fit is solely an engineering metric.
+The proposals pin the measured model revision and specify complete-epoch
+shuffling shared by both arms. They do not inherit the eight-example smoke
+early-stop rule. A/B comparisons on these data remain descriptive.
 
 ## Quest execution
 
@@ -95,11 +98,15 @@ inspect AUDIT.json, TOKEN_AUDIT.json and the contact sheets. Invoke `launch smok
 pass. Each launcher archives a published clean source and creates a unique root.
 Do not change frozen archives. Outputs go under the project's verifier_training
 asset root; delivery summaries are copied into results/verifier_training.
+An optional `launch report --assets UNIQUE_ASSETS_ROOT --smoke SMOKE_ROOT`
+creates a new CPU-only report root from completed, passing A/B measurements.
+It preserves the original measurements and records the separate report commit.
 
 ## Scientific data still needed
 
 Independent original scenes/tasks and proof mechanisms; matched label diversity
-within each source; sufficient visual access to label-critical facts; annotated
+within each source and matched visibility/nuisance cues across labels;
+sufficient visual access to label-critical facts; annotated
 relations and action/obstruction explanations grounded in complete evidence;
 ancestry-grouped source holdouts; ambiguity and UNKNOWN handling. Native positives
 and synthetic negatives must not be combined into a source-label shortcut.

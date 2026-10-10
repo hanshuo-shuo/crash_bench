@@ -10,7 +10,7 @@ from .common import *
 def command(*args):return subprocess.check_output(args,text=True).strip()
 
 
-def main(stage,assets,prepared):
+def main(stage,assets,prepared,smoke):
     repo=Path.cwd();require(repo.resolve()==(Path.home()/'crash_bench').resolve(),'Wrong checkout')
     require(not command('git','status','--porcelain'),'Dirty source')
     commit=command('git','rev-parse','HEAD')
@@ -21,6 +21,8 @@ def main(stage,assets,prepared):
         require(prepared is not None and read(prepared/'PREPARED.json')['passed'],'Preparation required')
         require(read(prepared/'dataset/AUDIT.json')['passed'],'Audit failed')
         require(read(prepared/'dataset/TOKEN_AUDIT.json')['passed'],'Token audit failed')
+    if stage=='report':
+        require(smoke is not None and all(read(smoke/v/'RESULT.json')['passed'] for v in ('A','B')), 'Both smokes must pass')
     require((assets/'STAGED.json').is_file(),'Stage downloads before offline compute')
     run=BASE/'verifier_training/runs'/(datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')+'_'+stage+'_'+commit[:12])
     run.mkdir(parents=True,exist_ok=False)
@@ -30,11 +32,12 @@ def main(stage,assets,prepared):
     (run/'source.sha256').write_text(sha(run/'source.tar')+'  '+str(run/'source.tar')+'\n')
     env=dict(os.environ,CB_VERIFIER_RUN=str(run),CB_VERIFIER_ASSETS=str(assets))
     if prepared:env['CB_VERIFIER_DATASET']=str(prepared/'dataset')
+    if smoke:env['CB_VERIFIER_SMOKE']=str(smoke)
     job=subprocess.check_output(['sbatch','--parsable','--output',str(run/'slurm_%j.log'),
-        str(run/'source/verifier_training'/('prepare.sbatch' if stage=='prepare' else 'smoke.sbatch'))],env=env,text=True).strip()
+        str(run/'source/verifier_training'/(stage+'.sbatch'))],env=env,text=True).strip()
     receipt={'stage':stage,'run_root':str(run),'source_commit':commit,'upstream_commit':UPSTREAM,
-             'assets':str(assets),'prepared':str(prepared) if prepared else None,'slurm_job':job,
-             'account':'p33100','partition':'short' if stage=='prepare' else 'gengpu','seed':713,
+             'assets':str(assets),'prepared':str(prepared) if prepared else None,'smoke':str(smoke) if smoke else None,'slurm_job':job,
+             'account':'p33100','partition':'gengpu' if stage=='smoke' else 'short','seed':713,
              'max_gpu_minutes':60 if stage=='smoke' else 0,'api_calls':0,'full_training':False}
     write(run/'RECEIPT.json',receipt)
     local=repo/'results/verifier_training'/run.name;local.mkdir(parents=True,exist_ok=False)
@@ -42,5 +45,5 @@ def main(stage,assets,prepared):
     print(str(local.relative_to(repo)),flush=True);print(job,flush=True)
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('stage',choices=['prepare','smoke']);p.add_argument('--assets',type=Path,required=True);p.add_argument('--prepared',type=Path)
-    a=p.parse_args();main(a.stage,a.assets,a.prepared)
+    p=argparse.ArgumentParser();p.add_argument('stage',choices=['prepare','smoke','report']);p.add_argument('--assets',type=Path,required=True);p.add_argument('--prepared',type=Path);p.add_argument('--smoke',type=Path)
+    a=p.parse_args();main(a.stage,a.assets,a.prepared,a.smoke)
