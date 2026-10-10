@@ -17,6 +17,7 @@ def main(root, out=None):
     import matplotlib.pyplot as plt
     results={v:read(root/v/'RESULT.json') for v in ('A','B')}
     require(all(r['passed'] for r in results.values()),'Both smoke variants must pass')
+    require(all(read(root/v/'PROVENANCE.json').get('input_contract')==INPUT_CONTRACT for v in ('A','B')), 'Incompatible A/B input contracts')
     fig,axes=plt.subplots(1,3,figsize=(12,3.5))
     for v in ('A','B'):
         rows=[json.loads(l) for l in (root/v/'curve.jsonl').read_text().splitlines()]
@@ -35,6 +36,7 @@ def main(root, out=None):
         cfg.update(mode='proposed_supervised_pilot_NOT_LAUNCHED',variant=v,training_samples=120,
             original_source_scenes=1,learning_rate=1e-4,lora_dropout=.05,epochs=10,max_steps=300,
             model_revision=read(root/v/'PROVENANCE.json')['model_revision'],
+            input_contract=INPUT_CONTRACT,
             optimizer='AdamW',weight_decay=0.0,learning_rate_schedule='constant',
             resources={'account':'p33100','partition':'gengpu','gpus':1,'gpu_type':'a100',
                        'cpus':4,'memory_gib':48,'wall_minutes_per_arm':60},

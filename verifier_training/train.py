@@ -49,6 +49,8 @@ def train(a):
     config=read(a.config);require(config['mode']=='overfit_smoke','Full training requires a separately authorized launcher')
     require(torch.cuda.is_available(),'Quest GPU required')
     audit=read(a.dataset/'AUDIT.json');require(audit['passed'] and audit['engineering_supervision_only'],'Dataset audit gate failed')
+    token_audit=read(a.dataset/'TOKEN_AUDIT.json')
+    require(token_audit.get('input_contract')==INPUT_CONTRACT and token_audit.get('identical_inference_inputs'), 'A/B input-equality gate failed')
     require(sha(a.dataset/'dataset.jsonl')==audit['dataset_sha256'],'Dataset changed')
     ids=read(a.dataset/'smoke_ids.json');require(8<=len(ids)<=16,'Smoke scope exceeded')
     rows=[json.loads(l) for l in (a.dataset/'dataset.jsonl').read_text().splitlines()]
@@ -79,6 +81,7 @@ def train(a):
     model.config.use_cache=False
     items=[encode(processor,r,a.dataset,a.variant,config['max_length']) for r in rows]
     provenance={'variant':a.variant,'config':config,'model_id':MODEL_ID,'model_revision':stage['model_revision'],
+        'input_contract':INPUT_CONTRACT,
         'dataset_sha256':audit['dataset_sha256'],'sample_ids':ids,'code_commit':os.environ['CB_CODE_COMMIT'],
         'upstream_commit':UPSTREAM,'slurm':{k:v for k,v in os.environ.items() if k in ('SLURM_JOB_ID','SLURM_JOB_NODELIST','SLURM_JOB_PARTITION','SLURM_JOB_ACCOUNT','SLURM_CPUS_PER_TASK')},
         'packages':{k:metadata.version(k) for k in ('torch','transformers','peft','accelerate','numpy','pillow')},

@@ -6,6 +6,7 @@ BASE = Path('/projects/p33100/siosio/crashbench_safelibero')
 CPU = BASE/'reach_avoid_matrix_labels/20261003T182027Z_cpu_87c5b06ef2d5'
 GPU = BASE/'reach_avoid_matrix_gpu/20261003T185040Z_gpu_465f112ea18b'
 MODEL_ID = 'Qwen/Qwen2.5-VL-3B-Instruct'
+INPUT_CONTRACT = 'identical_full_inference_prompt_v2'
 CPU_COMMIT = '87c5b06ef2d5e7b0f21f38350044e9f495097a59'
 GPU_COMMIT = '465f112ea18bf12204c2c87f1df99c75dd67bd4a'
 UPSTREAM = '2457feed5968ae803926e178c8ce8243b9ecdcf9'
@@ -69,9 +70,8 @@ def rationale(visibility):
 def student_messages(row, variant):
     """Strict allowlist: no sample IDs, ancestry, paths, masks, labels or evidence."""
     require(variant in ('A', 'B'), 'Bad variant')
-    system = ('Judge feasibility under the supplied constraints. '
-              + ('Reply exactly with Verdict: feasible or Verdict: infeasible.' if variant == 'A' else
-                 'Reply with Rationale: a short grounded explanation acknowledging missing visual evidence, then a new line with Verdict: feasible or Verdict: infeasible.'))
+    system = ('Judge feasibility under the supplied constraints. Use the response format learned during training. '
+              'Any explanation must be grounded in the visible evidence and acknowledge missing physical information.')
     user = [{'type': 'image'}, {'type': 'image'}, {'type': 'text', 'text':
         'View 1: external camera. View 2: wrist camera.\nTask: '+row['student']['task']+'\nConstraints: '+row['student']['constraints']}]
     return [{'role': 'system', 'content': system}, {'role': 'user', 'content': user}]

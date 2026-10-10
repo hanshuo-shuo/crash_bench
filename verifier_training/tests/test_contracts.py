@@ -23,7 +23,7 @@ class Contracts(unittest.TestCase):
         r={'student':{'task':TASK,'constraints':CONSTRAINTS},'metadata':{'source':'SECRET_ANCESTRY'},'target':{'verdict':'infeasible','rationale':'SECRET_EVIDENCE'}}
         a=student_messages(r,'B');r['metadata']={};r['target']={'verdict':'feasible'}
         self.assertEqual(a,student_messages(r,'B'))
-        self.assertEqual(student_messages(r,'A')[1],a[1])
+        self.assertEqual(student_messages(r,'A'),a)
         self.assertNotIn('SECRET',str(a))
     def test_hidden_target_never_invented(self):
         v={'views':[{'camera':c,'entities':{k:{'pixels_224':0 if k=='target' else 20} for k in ('target','goal','panels')}} for c in ('agentview','robot0_eye_in_hand')]}

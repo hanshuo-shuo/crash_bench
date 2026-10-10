@@ -2,7 +2,7 @@
 
 Authorized 2026-10-10. This isolated directory adds no behavior to existing
 scientific pipelines. All data export, audits, processor tests and GPU training
-run on Quest. CPU: p33100/short; GPU: p33100/gengpu, one A100, at most 60 minutes
+run on Quest. CPU: p33100/short; GPU: p33100/gengpu, one A100, at most 45 minutes
 per smoke allocation. Zero API calls. No full training job is authorized by the
 launcher. Historical results remain read-only.
 
@@ -32,8 +32,8 @@ Each record has:
 
 `student_messages` is an explicit allowlist. Ancestry, constructor, variant,
 width, privileged geometry, labels, policy results and evidence files do not enter
-student prompts. A and B have identical image/task/constraint inputs and differ
-only in the system output-format instruction and assistant target.
+student prompts. A and B have identical image/task/constraint inputs and have exactly the same full inference prompt, including system text and image tensors.
+Only the supervised assistant target differs.
 
 ## Grounding and observability
 
@@ -59,14 +59,15 @@ An isolated two-wheel overlay uses the existing read-only torch 2.7.1 /
 transformers 4.53.2 runtime. Vision, its merger/projector, embeddings, LM head and
 all base weights are frozen. Only language-layer q/k/v/o and gate/up/down LoRA
 matrices train (rank16, alpha32). BF16, SDPA, microbatch1, accumulation4, seed713,
-LR2e-4, at most120 updates per arm, no dropout for the overfit check.
+LR2e-4, at most240 updates per arm, no dropout for the overfit check.
 
 `data.py` applies the native multimodal chat template; image expansion is handled
 by the processor. The full token prefix must equal the generation prompt. Only
 assistant content and its terminator receive labels; prompt, images and padding
 are -100. Padding is masked by position, not EOS token ID. B trains rationale AND
 verdict under ordinary unweighted mean next-token cross entropy. Causal shifting
-is explicit. Token audit runs over all240 A/B examples before GPU submission.
+is explicit. Token audit runs over all240 A/B examples before GPU submission and requires bitwise
+equal A/B inference token IDs, attention masks, image grids and pixel tensors.
 
 The eight fixed examples span two layouts, both constructors and four positives /
 four negatives. Evaluate greedy outputs on those SAME eight examples every20

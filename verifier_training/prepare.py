@@ -6,6 +6,7 @@ from pathlib import Path
 import subprocess
 import sys
 import zipfile
+import shutil
 from .common import *
 
 
@@ -27,7 +28,16 @@ def main(root,assets):
     env=dict(os.environ,PYTHONPATH=str(packages)+':'+str(root/'source'))
     with (root/'unit_tests.txt').open('w') as log:
         subprocess.run([sys.executable,'-m','unittest','discover','-s','verifier_training/tests','-v'],env=env,stdout=log,stderr=subprocess.STDOUT,check=True)
-    subprocess.run([sys.executable,'-m','verifier_training.export','--out',str(root/'dataset')],env=env,check=True)
+    inherited=os.environ.get('CB_VERIFIER_DATASET')
+    if inherited:
+        source=Path(inherited);audit=read(source/'AUDIT.json')
+        require(audit['passed'] and sha(source/'dataset.jsonl')==audit['dataset_sha256'], 'Inherited dataset changed')
+        shutil.copytree(source,root/'dataset',ignore=shutil.ignore_patterns('TOKEN_AUDIT.json'))
+        require(sha(root/'dataset/dataset.jsonl')==audit['dataset_sha256'], 'Dataset copy changed')
+        write(root/'INHERITED_DATASET.json',{'source':str(source),'dataset_sha256':audit['dataset_sha256'],
+            'audit_sha256':sha(source/'AUDIT.json'),'reason':'Recheck full identical A/B inference inputs; evidence and targets are unchanged'})
+    else:
+        subprocess.run([sys.executable,'-m','verifier_training.export','--out',str(root/'dataset')],env=env,check=True)
     # Real Qwen tokenizer/processor integration catches image expansion and chat boundary errors.
     subprocess.run([sys.executable,'-m','verifier_training.token_audit',str(root/'dataset'),str(assets)],env=env,check=True)
     write(root/'PREPARED.json',{'passed':True,'dataset_sha256':sha(root/'dataset/dataset.jsonl'),
