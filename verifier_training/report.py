@@ -36,6 +36,7 @@ def main(root, out=None):
         cfg.update(mode='proposed_supervised_pilot_NOT_LAUNCHED',variant=v,training_samples=120,
             original_source_scenes=1,learning_rate=1e-4,lora_dropout=.05,epochs=10,max_steps=300,
             model_revision=read(root/v/'PROVENANCE.json')['model_revision'],
+            dataset_sha256=read(root/v/'PROVENANCE.json')['dataset_sha256'],
             input_contract=INPUT_CONTRACT,
             optimizer='AdamW',weight_decay=0.0,learning_rate_schedule='constant',
             resources={'account':'p33100','partition':'gengpu','gpus':1,'gpu_type':'a100',
@@ -45,6 +46,8 @@ def main(root, out=None):
             evaluation='Training fit and grounded generation audit only; no random split accuracy',
             output='binary verdict' if v=='A' else 'grounded observability rationale plus binary verdict',
             approved_for_launch=False,scientific_claim='No cross-source or independent-mechanism generalization')
+        cfg['loss'] = ('Mean assistant-token next-token cross entropy for verdict/format/EOS' if v=='A' else
+                       'Mean assistant-token next-token cross entropy for every rationale, verdict, format and EOS token')
         proposals[v]=cfg;write(out/f'proposed_{v}.json',cfg)
     write(out/'COMPLETE.json',{'passed':True,'smoke':results,'full_training_launched':False,
         'training_root':str(root),'report_code_commit':os.environ.get('CB_CODE_COMMIT'),

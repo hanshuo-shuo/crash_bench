@@ -1,5 +1,7 @@
 # Generative Feasibility Verifier — engineering pilot
 
+Completed results, generated-output locations and attempt history: [RESULTS.md](RESULTS.md).
+
 Authorized 2026-10-10. This isolated directory adds no behavior to existing
 scientific pipelines. All data export, audits, processor tests and GPU training
 run on Quest. CPU: p33100/short; GPU: p33100/gengpu, one A100, at most 45 minutes
@@ -32,7 +34,8 @@ Each record has:
 
 `student_messages` is an explicit allowlist. Ancestry, constructor, variant,
 width, privileged geometry, labels, policy results and evidence files do not enter
-student prompts. A and B have identical image/task/constraint inputs and have exactly the same full inference prompt, including system text and image tensors.
+student prompts. A and B use exactly the same full inference inputs: system text, task,
+constraints and both image tensors.
 Only the supervised assistant target differs.
 
 ## Grounding and observability
@@ -58,28 +61,29 @@ Qwen/Qwen2.5-VL-3B-Instruct is pinned to a resolved Hub commit and file hashes.
 An isolated two-wheel overlay uses the existing read-only torch 2.7.1 /
 transformers 4.53.2 runtime. Vision, its merger/projector, embeddings, LM head and
 all base weights are frozen. Only language-layer q/k/v/o and gate/up/down LoRA
-matrices train (rank16, alpha32). BF16, SDPA, microbatch1, accumulation4, seed713,
-LR2e-4, at most240 updates per arm, no dropout for the overfit check.
+matrices train (rank 16, alpha 32). BF16, SDPA, microbatch 1, accumulation 4, seed 713,
+LR2e-4, at most 240 updates per arm, no dropout for the overfit check.
 
 `data.py` applies the native multimodal chat template; image expansion is handled
 by the processor. The full token prefix must equal the generation prompt. Only
 assistant content and its terminator receive labels; prompt, images and padding
 are -100. Padding is masked by position, not EOS token ID. B trains rationale AND
 verdict under ordinary unweighted mean next-token cross entropy. Causal shifting
-is explicit. Token audit runs over all240 A/B examples before GPU submission and requires bitwise
-equal A/B inference token IDs, attention masks, image grids and pixel tensors.
+is explicit. Token audit runs over all 240 A/B examples before GPU submission
+and requires bitwise-equal A/B inference token IDs, attention masks, image grids
+and pixel tensors.
 
 The eight fixed examples span two layouts, both constructors and four positives /
-four negatives. Evaluate greedy outputs on those SAME eight examples every20
-updates. Each arm must produce all8 exact target outputs and reduce total CE by
-at least75%; B rationale CE must also drop75%. Separate autograd probes require
+four negatives. Evaluate greedy outputs on those SAME eight examples every 20
+updates. Each arm must produce all 8 exact target outputs and reduce total CE by
+at least 75%; B rationale CE must also drop 75%. Separate autograd probes require
 finite, nonzero rationale and verdict losses AND nonzero gradients into LoRA.
 Trainable-name assertions and visual gradient checks enforce freezing; projector
 weights are checked bitwise after optimization. Failed attempts are retained.
 
 Only after both arms pass does `report.py` emit training curves, generated outputs
-and proposed120-sample A/B configurations (rank16, LR1e-4, dropout.05, ten epochs,
-300 matched updates at effective batch4). Those files do not launch full training.
+and proposed 120-sample A/B configurations (rank 16, LR1e-4, dropout .05, ten epochs,
+300 matched updates at effective batch 4). Those files do not launch full training.
 Training-set fit is solely an engineering metric.
 The proposals pin the measured model revision and specify complete-epoch
 shuffling shared by both arms. They do not inherit the eight-example smoke
