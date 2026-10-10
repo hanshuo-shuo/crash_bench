@@ -90,7 +90,12 @@ def label_contract(summary, cert):
                 summary['outcome'] == 'safe_completion' and 0 < summary['steps'] <= 300,
                 'Feasible requires a full safe witness')
     elif summary['label'] == 'infeasible':
+        required_conditions = {'all_six_faces_covered', 'positive_material_ball',
+            'material_geometry_verified', 'actual_obstacles_world_fixed',
+            'initial_contact_safe', 'digital_guard_active',
+            'initial_root_strictly_inside', 'frozen_goal_disjoint'}
         require(cert['contract'] == 'RA-SEP-1' and cert['label'] == 'infeasible' and
+                set(cert['conditions']) == required_conditions and
                 all(cert['conditions'].values()), 'Negative requires checked RA-SEP-1 certificate')
     else:
         raise ValueError('Unknown/invalid cannot enter binary supervision')

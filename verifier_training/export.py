@@ -43,6 +43,7 @@ def export(cpu, gpu, out):
             read(folder/'fixture.json'), steps[0], summary['initial_valid'], cert)
         verify_steps(steps, summary, geometry['fixed_goal'], recomputed, 300)
         obs = gpu/folder.parent.name/'output'/folder.name
+        require(read(obs.parent/'COMPLETE.json')['code_commit'] == GPU_COMMIT, 'Unpinned observation source')
         inherited = read(obs/'INHERITED.json')
         require(inherited['label'] == summary['label'] and inherited['environment_actions'] == 0, 'Bad inherited label')
         for name, expected in inherited['hashes'].items():

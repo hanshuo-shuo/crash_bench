@@ -9,6 +9,9 @@ class Contracts(unittest.TestCase):
         with self.assertRaises(ValueError):label_contract(summary,{'label':'unknown','contract':'RA-SEP-1','conditions':{}})
     def test_unknown_rejected(self):
         with self.assertRaises(ValueError):label_contract({'initial_valid':True,'execution_horizon_T':300,'label':'unknown'}, {})
+    def test_empty_certificate_rejected(self):
+        with self.assertRaises(ValueError):label_contract({'initial_valid':True,'execution_horizon_T':300,'label':'infeasible'},
+            {'contract':'RA-SEP-1','label':'infeasible','conditions':{}})
     def test_positive_requires_witness(self):
         s={'initial_valid':True,'execution_horizon_T':300,'label':'feasible','outcome':'safe_timeout','safe_success':False,'safe_history':True,'steps':300}
         with self.assertRaises(ValueError):label_contract(s,{})

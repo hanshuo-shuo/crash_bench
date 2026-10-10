@@ -1,0 +1,132 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Reach-avoid verifier engineering sample v1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "sample_id",
+    "student",
+    "target",
+    "metadata"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "sample_id": {
+      "type": "string",
+      "pattern": "^ra_[0-9]{3}$"
+    },
+    "student": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "images",
+        "task",
+        "constraints"
+      ],
+      "properties": {
+        "task": {
+          "type": "string"
+        },
+        "constraints": {
+          "type": "string"
+        },
+        "images": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "object",
+            "required": [
+              "camera",
+              "path",
+              "sha256",
+              "width",
+              "height"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "camera": {
+                "enum": [
+                  "agentview",
+                  "robot0_eye_in_hand"
+                ]
+              },
+              "path": {
+                "type": "string"
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "width": {
+                "const": 224
+              },
+              "height": {
+                "const": 224
+              }
+            }
+          }
+        }
+      }
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "verdict",
+        "rationale"
+      ],
+      "properties": {
+        "verdict": {
+          "enum": [
+            "feasible",
+            "infeasible"
+          ]
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "required": [
+        "case",
+        "source_scene",
+        "label_basis",
+        "label_contract",
+        "cpu_code_commit",
+        "gpu_code_commit",
+        "upstream_commit",
+        "cpu_slurm",
+        "gpu_slurm",
+        "seed",
+        "cpu_verified_hashes",
+        "observation_hashes",
+        "visibility",
+        "rationale_grounding"
+      ],
+      "properties": {
+        "source_scene": {
+          "const": "object_I_t2_e0"
+        },
+        "label_basis": {
+          "enum": [
+            "safe_witness",
+            "conditional_RA-SEP-1_certificate"
+          ]
+        },
+        "label_contract": {
+          "const": "RA-SEP-1"
+        },
+        "full_physical_state_observable": {
+          "const": false
+        }
+      }
+    }
+  }
+}
