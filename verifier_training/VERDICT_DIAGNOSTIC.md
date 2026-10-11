@@ -54,3 +54,26 @@ and supervised objective change. The smoke uses the original balanced eight,
 original LR2e-4/dropout0/cap240; the full fit uses original LR1e-4/dropout.05,
 seed713, ten epochs/300 updates and the identical original example order. Both
 start from fresh base weights. No extra decoding or training search is performed.
+
+The completed native diagnosis requires distinguishing decision rules. There are
+nine exact raw class-logit ties. Stored native token argmax gives109/120
+(66/72 feasible,43/48 infeasible); full-verdict sequence scoring gives102/120.
+The native repetition penalty changes42 correct negative token decisions to
+feasible and corrects six positive decisions, yielding73/120. The reporting
+readback uses actual stored token IDs, not Python dictionary order for ties.
+
+The corrected balanced8 smoke passed at140 updates. One fresh, fixed300-update
+full fit completed in job9459482:97/120 verdicts (49/72 feasible,48/48 infeasible),
+104/120 grounded observability templates and96/120 exact full outputs. Its
+joint exact-fit criterion is false. All120 predictions remain unchanged when
+the command budget becomes zero. The primary artifact's legacy-named
+`zero_flips_among_original_feasible` counted23 zero-correct positive-source
+cases that were already predicted infeasible, not actual flips. The separate
+readback reports the actual zero flips and preserves the immutable raw artifact.
+The source reporter is corrected for subsequent use; no checkpoint is retrained.
+
+A final read-only matched-prefix forward pass measures the residual corrected-B
+errors under gold versus actual generated rationale token IDs. It does not create
+an optimizer or alter observations. Final reporting has its own published source
+archive and output root; the trained706fd140 checkpoint and historical scientific
+results remain unchanged.

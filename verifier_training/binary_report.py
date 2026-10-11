@@ -2,6 +2,7 @@
 import csv
 import json
 import math
+import os
 from pathlib import Path
 import shutil
 import statistics
@@ -99,8 +100,9 @@ def deliver(root):
     (dest/'DELIVERY.sha256').write_text(''.join(sha(x)+'  '+str(x.relative_to(dest))+'\n' for x in files))
 
 
-def main(root):
-    receipt=read(root/'RECEIPT.json');campaign=Path(receipt['campaign']);out=root/'report';out.mkdir(exist_ok=False)
+def main(root,output_root=None):
+    output_root=output_root or root
+    receipt=read(root/'RECEIPT.json');campaign=Path(receipt['campaign']);out=output_root/'report';out.mkdir(exist_ok=False)
     full=read(root/'full/RESULT.json');smoke=read(root/'smoke/RESULT.json')
     require(full['passed'] and smoke['passed'],'Missing completed experiments')
     diagnostic=read(root/'diagnostic_summary/SUMMARY.json')
@@ -132,9 +134,17 @@ def main(root):
     ax.set(xlabel='optimizer step',ylabel='training verdict accuracy',ylim=(-.03,1.03),title='Same120 examples; engineering fit only')
     ax.grid(alpha=.25);ax.legend();fig.savefig(out/'training_accuracy.png',dpi=170);plt.close(fig)
     final_loss=read(root/'full/loss_step_0300.json')
+    original=read(root/'full/generations_final.json');zero={x['sample_id']:x for x in read(root/'full/generations_horizon_0.json')}
+    actual_flips=sum(x['expected_verdict']=='feasible' and x['predicted_verdict']=='feasible' and zero[x['sample_id']]['predicted_verdict']=='infeasible' for x in original)
+    zero_correct_positive=sum(x['expected_verdict']=='feasible' and zero[x['sample_id']]['predicted_verdict']=='infeasible' for x in original)
+    zero_readback={'actual_flips_among_original_positive_cases':actual_flips,'zero_correct_among_original_positive_cases':zero_correct_positive,
+        'unchanged_predictions':sum(x['predicted_verdict']==zero[x['sample_id']]['predicted_verdict'] for x in original)}
     summary={'diagnostic':diagnostic,'smoke':smoke,'fixed_full_fit':full,'final_loss_by_class':final_loss['by_class'],
         'parent_A':read(campaign/'A/RESULT.json'),'parent_B':read(campaign/'B/RESULT.json'),
-        'provenance':receipt,'scope':'Engineering only: same120 training cases from one source. No new scientific result.'}
+        'provenance':receipt,'report_source_commit':os.environ.get('CB_CODE_COMMIT'),
+        'zero_command_readback':zero_readback,'scope':'Engineering only: same120 training cases from one source. No new scientific result.'}
+    if (output_root/'review/DECISION_TOKEN_SUMMARY.json').exists():summary['native_argmax_audit']=read(output_root/'review/DECISION_TOKEN_SUMMARY.json')
+    if (output_root/'conditioning/SUMMARY.json').exists():summary['matched_prefix_conditioning']=read(output_root/'conditioning/SUMMARY.json')
     write(out/'SUMMARY.json',summary)
     lines=['# Controlled binary-verdict engineering experiment','',
         'All results are on the same120 training examples from one original source scene. They do not measure generalization.',
@@ -142,16 +152,19 @@ def main(root):
         f"Fixed120 fit: {full['final_score']['verdict_correct']}/120 verdicts; {full['final_score']['exact_full_output']}/120 exact full outputs.",
         f"Class counts: {full['final_score']['by_class']}",
         f"Grounded observability templates: {full['final_score']['rationale_supported_complete']}/120. This is visibility/caveat correctness, not a verified physical justification of the verdict.",
-        f"Zero-command: {full['zero_command_score']['verdict_correct']}/120 infeasible; flips among original feasible cases: {full['zero_flips_among_original_feasible']}/72.",
+        f"Zero-command: {full['zero_command_score']['verdict_correct']}/120 infeasible; actual prediction flips among original feasible-source cases: {actual_flips}/72. Predictions unchanged: {zero_readback['unchanged_predictions']}/120.",
+        f"Zero-command correctness among the72 original feasible-source cases is {zero_correct_positive}/72. The legacy field named zero_flips_among_original_feasible in the immutable training result counted this quantity, not actual prediction changes; the readback above corrects that reporting interpretation.",
         '', 'The only supervised changes are 0=infeasible/1=feasible and two equally weighted, separately normalized loss components. The narrative component includes format and EOS; the verdict component is exactly the single digit. Every assistant token stays supervised.',
         'The backbone, vision/projector freeze, input observations, full-fit LR1e-4/dropout.05/rank16/alpha32/effective batch4/seed713/300 updates and complete-epoch order are unchanged. The full fit starts from the same fresh base, not from the smoke adapter.',
-        '', 'See SUMMARY.json for exact class-specific decisive-token, narrative, format and EOS losses; GENERATED_OUTPUTS.csv for every full/zero output; diagnostic_summary/ALL120_PROBABILITIES.csv for all four scoring modes. Raw diagnostics and gradient attribution are preserved in the two preceding run roots.',
+        '', 'See SUMMARY.json for exact class-specific decisive-token, narrative, format and EOS losses; GENERATED_OUTPUTS.csv for every full/zero output; the training root diagnostic_summary/ALL120_PROBABILITIES.csv for six sequence/prefill scoring modes. The separate review/DECISION_TOKEN_AUDIT.csv uses native first-token argmax and resolves exact ties by the recorded vocabulary token IDs. Raw diagnostics and gradient attribution are preserved in the preceding run roots.',
         '', '![Loss curves](training_curves.png)','![Training verdict accuracy](training_accuracy.png)']
     (out/'REPORT.md').write_text('\n'.join(lines)+'\n')
-    write(root/'COMPLETE.json',{'passed':True,'scientific_generalization_claim':False,'one_fixed_full_fit':True,
+    write(output_root/'COMPLETE.json',{'passed':True,'scientific_generalization_claim':False,'one_fixed_full_fit':True,
+        'training_run':str(root),'report_source_commit':os.environ.get('CB_CODE_COMMIT'),
         'full_exact_fit_criterion':full['exact_fit_criterion'],'report_rows':len(records),'new_simulation':False})
     for path in (Path(receipt['diagnostic']),Path(receipt['prefix_diagnostic']),root):deliver(path)
+    if output_root!=root:deliver(output_root)
 
 if __name__=='__main__':
     import sys
-    main(Path(sys.argv[1]))
+    main(*map(Path,sys.argv[1:]))

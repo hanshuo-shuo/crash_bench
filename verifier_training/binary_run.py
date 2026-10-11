@@ -245,7 +245,8 @@ def train(root,stage):
     write(out/'INVALID_OR_INCONSISTENT.json',[x for x in outputs+zero if not x['verdict_correct'] or not x['format_valid'] or x['rationale_assessment']['status']!='supported_complete'])
     result={'passed':bool(passed) if stage=='smoke' else True,'exact_fit_criterion':bool(passed),'stage':stage,'steps':step,
         'before':baseline['means'],'after':measured['means'],'final_score':score(outputs),'zero_command_score':score(zero),
-        'zero_flips_among_original_feasible':sum(r['target']['verdict']=='feasible' and z['predicted_verdict']=='infeasible' for r,z in zip(rows,zero)),
+        'zero_correct_among_original_feasible':sum(r['target']['verdict']=='feasible' and z['predicted_verdict']=='infeasible' for r,z in zip(rows,zero)),
+        'zero_flips_among_original_feasible':sum(r['target']['verdict']=='feasible' and g['predicted_verdict']=='feasible' and z['predicted_verdict']=='infeasible' for r,g,z in zip(rows,outputs,zero)),
         'gradient_probe':probe,'vision_and_projector_bitwise_unchanged':True,'peak_gpu_gib':torch.cuda.max_memory_allocated()/2**30,
         'elapsed_seconds':time.monotonic()-start,'scientific_generalization_claim':False}
     write(out/'RESULT.json',result);print(json.dumps(result),flush=True)
