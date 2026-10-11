@@ -254,7 +254,8 @@ Delivered [loss curves](../results/verifier_training/20261011T001506Z_engineerin
 [training accuracy curve](../results/verifier_training/20261011T001506Z_engineering_27e7fe7cf4e3/training_accuracy.png),
 [all generated outputs](../results/verifier_training/20261011T001506Z_engineering_27e7fe7cf4e3/outputs.csv),
 [aggregate metrics](../results/verifier_training/20261011T001506Z_engineering_27e7fe7cf4e3/SUMMARY.json),
-and [execution configurations](../results/verifier_training/20261011T001506Z_engineering_27e7fe7cf4e3/execution_B.json)
+and [A execution configuration](../results/verifier_training/20261011T001506Z_engineering_27e7fe7cf4e3/execution_A.json) and
+[B execution configuration](../results/verifier_training/20261011T001506Z_engineering_27e7fe7cf4e3/execution_B.json)
 retain the full measurements. A separate CPU case-review run adds a complete
 verdict-error inventory and the [hash-bound no-image adjudication](manual_reviews/full120_no_image.json)
 without changing the original automatic grades. Its four dedicated tests protect
@@ -262,3 +263,18 @@ the distinction between visibility agreement, wrong verdicts and unparsed prose.
 The original `INVALID_OR_INCONSISTENT.json` is a grammar-review queue, not a
 complete or manually adjudicated error count; use the supplementary case review
 for those decisions.
+
+Supplementary review: Quest CPU job **9447976**, completed / 0:0 in 2s from commit
+`e2dd15257a3cf36a6baca27c6182783a31cd856e`. All four review tests passed on Quest.
+Its 12 delivered files passed SHA-256 readback, covering 1,200 evaluation records
+and all five distinct B output strings across the five conditions. The outputs
+are repeated evaluations of the same 120 labeled states, not 1,200 new data samples.
+
+[Complete reviewed case table](../results/verifier_training/20261011T020257Z_review_e2dd15257a3c/review/ALL_CASES.csv),
+[flagged cases with qualified reasons](../results/verifier_training/20261011T020257Z_review_e2dd15257a3c/review/FLAGGED_CASES.json),
+and [manual no-image review](../results/verifier_training/20261011T020257Z_review_e2dd15257a3c/review/MANUAL_REVIEW.json)
+complete the output audit. Shuffled recipient-label mismatches are explicitly
+qualified rather than miscounted as donor-state classification errors. Both
+text-only conditions are marked underidentified; unknown wording is never
+automatically approved. Local readback also rechecked the dataset hash and all
+240 image hashes. No project jobs remain active for this campaign.
