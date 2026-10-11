@@ -1,5 +1,9 @@
 # Engineering pilot result — 2026-10-10
 
+This is the historical eight-sample smoke report. The later authorized 120-sample
+fit, shortcut diagnostics and scientific-readiness decision are documented in
+[STAGE1_CLOSEOUT.md](STAGE1_CLOSEOUT.md).
+
 Both corrected eight-sample overfit checks passed on Quest. This verifies the
 supervised training path, grounded observation/limitation text generation, and
 binary verdict fitting on the training examples. It establishes no cross-source

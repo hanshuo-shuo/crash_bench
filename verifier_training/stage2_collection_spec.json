@@ -1,0 +1,196 @@
+{
+  "status": "proposal_only_no_simulation_or_collection_launched",
+  "minimum_independent_sources": 12,
+  "minimum_labeled_examples": 96,
+  "minimum_feasible": 48,
+  "minimum_certified_infeasible": 48,
+  "controls": 48,
+  "mechanisms": [
+    {
+      "id": "static_separator",
+      "certificate": "conditional_RA-SEP-1",
+      "verifier_status": "existing"
+    },
+    {
+      "id": "finite_positive_horizon_reachability",
+      "certificate": "verified_conservative_reachable_set_disjoint_from_fixed_goal",
+      "verifier_status": "not_yet_implemented_or_independently_validated",
+      "zero_action_cases_count_toward_scientific_mechanism": false
+    }
+  ],
+  "student_input_contract": "two_RGB_views_plus_task_and_constraints_identical_AB",
+  "architecture_changes": false,
+  "source_slots": [
+    {
+      "planned_slot": "S01",
+      "task_scene_family_slot": 1,
+      "original_source_id": null,
+      "source_selection_status": "not_collected",
+      "future_split": "train",
+      "descendants_per_mechanism": [
+        "feasible",
+        "certified_infeasible",
+        "feasible_irrelevant_control",
+        "infeasible_irrelevant_control"
+      ]
+    },
+    {
+      "planned_slot": "S02",
+      "task_scene_family_slot": 1,
+      "original_source_id": null,
+      "source_selection_status": "not_collected",
+      "future_split": "train",
+      "descendants_per_mechanism": [
+        "feasible",
+        "certified_infeasible",
+        "feasible_irrelevant_control",
+        "infeasible_irrelevant_control"
+      ]
+    },
+    {
+      "planned_slot": "S03",
+      "task_scene_family_slot": 1,
+      "original_source_id": null,
+      "source_selection_status": "not_collected",
+      "future_split": "development",
+      "descendants_per_mechanism": [
+        "feasible",
+        "certified_infeasible",
+        "feasible_irrelevant_control",
+        "infeasible_irrelevant_control"
+      ]
+    },
+    {
+      "planned_slot": "S04",
+      "task_scene_family_slot": 1,
+      "original_source_id": null,
+      "source_selection_status": "not_collected",
+      "future_split": "test",
+      "descendants_per_mechanism": [
+        "feasible",
+        "certified_infeasible",
+        "feasible_irrelevant_control",
+        "infeasible_irrelevant_control"
+      ]
+    },
+    {
+      "planned_slot": "S05",
+      "task_scene_family_slot": 2,
+      "original_source_id": null,
+      "source_selection_status": "not_collected",
+      "future_split": "train",
+      "descendants_per_mechanism": [
+        "feasible",
+        "certified_infeasible",
+        "feasible_irrelevant_control",
+        "infeasible_irrelevant_control"
+      ]
+    },
+    {
+      "planned_slot": "S06",
+      "task_scene_family_slot": 2,
+      "original_source_id": null,
+      "source_selection_status": "not_collected",
+      "future_split": "train",
+      "descendants_per_mechanism": [
+        "feasible",
+        "certified_infeasible",
+        "feasible_irrelevant_control",
+        "infeasible_irrelevant_control"
+      ]
+    },
+    {
+      "planned_slot": "S07",
+      "task_scene_family_slot": 2,
+      "original_source_id": null,
+      "source_selection_status": "not_collected",
+      "future_split": "development",
+      "descendants_per_mechanism": [
+        "feasible",
+        "certified_infeasible",
+        "feasible_irrelevant_control",
+        "infeasible_irrelevant_control"
+      ]
+    },
+    {
+      "planned_slot": "S08",
+      "task_scene_family_slot": 2,
+      "original_source_id": null,
+      "source_selection_status": "not_collected",
+      "future_split": "test",
+      "descendants_per_mechanism": [
+        "feasible",
+        "certified_infeasible",
+        "feasible_irrelevant_control",
+        "infeasible_irrelevant_control"
+      ]
+    },
+    {
+      "planned_slot": "S09",
+      "task_scene_family_slot": 3,
+      "original_source_id": null,
+      "source_selection_status": "not_collected",
+      "future_split": "train",
+      "descendants_per_mechanism": [
+        "feasible",
+        "certified_infeasible",
+        "feasible_irrelevant_control",
+        "infeasible_irrelevant_control"
+      ]
+    },
+    {
+      "planned_slot": "S10",
+      "task_scene_family_slot": 3,
+      "original_source_id": null,
+      "source_selection_status": "not_collected",
+      "future_split": "train",
+      "descendants_per_mechanism": [
+        "feasible",
+        "certified_infeasible",
+        "feasible_irrelevant_control",
+        "infeasible_irrelevant_control"
+      ]
+    },
+    {
+      "planned_slot": "S11",
+      "task_scene_family_slot": 3,
+      "original_source_id": null,
+      "source_selection_status": "not_collected",
+      "future_split": "development",
+      "descendants_per_mechanism": [
+        "feasible",
+        "certified_infeasible",
+        "feasible_irrelevant_control",
+        "infeasible_irrelevant_control"
+      ]
+    },
+    {
+      "planned_slot": "S12",
+      "task_scene_family_slot": 3,
+      "original_source_id": null,
+      "source_selection_status": "not_collected",
+      "future_split": "test",
+      "descendants_per_mechanism": [
+        "feasible",
+        "certified_infeasible",
+        "feasible_irrelevant_control",
+        "infeasible_irrelevant_control"
+      ]
+    }
+  ],
+  "split_rules": [
+    "All common-parent descendants stay together",
+    "Sources chosen before examining outcomes",
+    "Merge shared ancestry before counting independent sources",
+    "Freeze source mapping, hashes and split before optimization",
+    "No use of current object_I_t2_e0 as any of the12 new sources"
+  ],
+  "exclusions": [
+    "UNKNOWN labels",
+    "Unobserved label-critical premises",
+    "Unverified certificates or witnesses",
+    "Rollout failure or uncertainty used as infeasibility",
+    "Native positive and synthetic negative provenance confounding"
+  ],
+  "go_gate": "All source, mechanism, evidence, observability, rationale and split requirements must pass before scientific training"
+}

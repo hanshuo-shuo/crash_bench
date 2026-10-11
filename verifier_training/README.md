@@ -1,12 +1,17 @@
 # Generative Feasibility Verifier — engineering pilot
 
-Completed results, generated-output locations and attempt history: [RESULTS.md](RESULTS.md).
+Current analysis and full-dataset results: [STAGE1_CLOSEOUT.md](STAGE1_CLOSEOUT.md).
+Original eight-sample smoke history: [RESULTS.md](RESULTS.md).
+All-row audit: [OBSERVABILITY_ANALYSIS.md](OBSERVABILITY_ANALYSIS.md).
+Future collection design only: [STAGE2_COLLECTION.md](STAGE2_COLLECTION.md).
 
 Authorized 2026-10-10. This isolated directory adds no behavior to existing
 scientific pipelines. All data export, audits, processor tests and GPU training
-run on Quest. CPU: p33100/short; GPU: p33100/gengpu, one A100, at most 45 minutes
-per smoke allocation. Zero API calls. No full training job is authorized by the
-launcher. Historical results remain read-only.
+run on Quest. CPU: p33100/short; GPU: p33100/gengpu. The user subsequently authorized
+the fixed 120-sample A/B engineering fit and shortcut probes. The original smoke
+launcher stays bounded; `launch_engineering.py` adds separate audit, full-fit,
+diagnostic and report stages. At most two A100 jobs run concurrently. Zero API
+calls. Historical raw results remain read-only.
 
 ## Dataset schema
 
@@ -89,6 +94,15 @@ The proposals pin the measured model revision and specify complete-epoch
 shuffling shared by both arms. They do not inherit the eight-example smoke
 early-stop rule. A/B comparisons on these data remain descriptive.
 
+The authorized full-dataset execution uses those same proposals with an explicit
+authorization/mode change: exactly ten complete epochs, 300 updates, LR1e-4 and
+dropout .05. A/B inference inputs and sample orders remain identical. The all-row
+observability audit explicitly isolates all 120 as engineering-only, preserving
+their evidence-backed labels. A reaches 120/120 training verdicts; B reaches 73/120
+while matching all 120 observation/limitation templates. Full-run `passed` means
+execution/integrity completion; inspect `exact_fit_criterion` and generated scores
+separately. B's full-dataset fit criterion is false. No retuning follows that result.
+
 ## Quest execution
 
 Read QUEST_WORKFLOW.md and setup/README.md, run scripts/quest_sync.sh check,
@@ -106,6 +120,16 @@ asset root; delivery summaries are copied into results/verifier_training.
 An optional `launch report --assets UNIQUE_ASSETS_ROOT --smoke SMOKE_ROOT`
 creates a new CPU-only report root from completed, passing A/B measurements.
 It preserves the original measurements and records the separate report commit.
+
+For the completed full phase, see [ENGINEERING_PROTOCOL.md](ENGINEERING_PROTOCOL.md).
+`launch_engineering audit --assets ... --prepared ... --smoke ...` creates a new
+immutable campaign. Submit `fit --campaign ...` only after its audit/isolation
+gate; `diagnose --campaign ...` and `report --campaign ...` use the completed
+records. The actual campaign also used Slurm `afterok` dependencies to queue
+downstream work safely before predecessors finished; receipts and amendments
+record that schedule. `launch_review CAMPAIGN_ROOT` creates a separate CPU-only
+case review from a clean, tested, published commit. It preserves the original
+automatic grades and adds an exact-input/output-bound manual no-image review.
 
 ## Scientific data still needed
 
