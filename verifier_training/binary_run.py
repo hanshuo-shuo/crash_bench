@@ -33,6 +33,8 @@ def configuration(stage):
         generate_every=20 if stage=='smoke' else 150,
         stopping='Strict 8/8 exact and >=75% component loss reductions by step240' if stage=='smoke' else 'Exactly300 updates /10 epochs; no early stopping',
         initialization='Fresh base and fresh LoRA, never the previous word-verdict or smoke adapter',
+        generation={'do_sample':False,'max_new_tokens':160,'repetition_penalty':1.05,
+                    'reason':'Preserve original native decoding default; raw and processed decision losses both reported'},
         training_samples=8 if stage=='smoke' else 120,
         scientific_claim='Engineering training-pool fit only; one original source scene')
     c.pop('stop_rule',None)
@@ -48,6 +50,9 @@ def context(root):
     done=read(diag/'COMPLETE.json')
     require(done['passed'] and done['weights_bitwise_unchanged'] and done['optimizer_steps']==0,'Read-only diagnostic incomplete')
     require(sha(diag/'COMPLETE.json')==receipt['diagnostic_complete_sha256'],'Diagnostic gate changed')
+    prefix=Path(receipt['prefix_diagnostic'])/'prefix'
+    require(read(prefix/'COMPLETE.json')['passed'] and read(prefix/'COMPLETE.json')['rows']==120,'Native prefix diagnosis incomplete')
+    require(sha(prefix/'COMPLETE.json')==receipt['prefix_complete_sha256'],'Prefix gate changed')
     rows=[json.loads(x) for x in (dataset/'dataset.jsonl').read_text().splitlines()]
     return receipt,campaign,assets,dataset,rows
 
@@ -63,6 +68,8 @@ def input_digest(item):
 def preflight(root):
     receipt,campaign,assets,dataset,rows=context(root)
     out=root/'preflight';out.mkdir(exist_ok=False)
+    from .binary_report import summarize_diagnostics
+    summarize_diagnostics(root)
     with (out/'unit_tests.txt').open('w') as log:
         subprocess.run([sys.executable,'-m','unittest','discover','-s','verifier_training/tests','-v'],stdout=log,stderr=subprocess.STDOUT,check=True)
     p=processor_for(assets);audit=[]
@@ -74,7 +81,8 @@ def preflight(root):
             'original_word_input_sha256':input_digest(old),'prompt_tokens':new[4],
             'assistant_tokens':int(new[1].ne(-100).sum()),'narrative_group_tokens':int(new[2].sum()),
             'binary_tokens':int(new[3].sum()),'digit_token_id':int(new[1][new[3]][0]),
-            'detail_counts':{k:int(v.sum()) for k,v in new[5].items()}})
+                'detail_counts':{k:int(v.sum()) for k,v in new[5].items()},
+                'digits_seen_in_student_prompt':{v:p.tokenizer.encode(v,add_special_tokens=False)[0] in new[0]['input_ids'][0,:new[4]].tolist() for v in ('0','1')}})
     ids=read(dataset/'smoke_ids.json');subset=[r for r in rows if r['sample_id'] in ids]
     require(len(subset)==8 and sum(r['target']['verdict']=='feasible' for r in subset)==4,'Smoke must be original balanced eight')
     write(out/'ENCODINGS.json',audit)
@@ -107,22 +115,48 @@ def generate(model,p,items,rows,condition='original'):
     with torch.no_grad():
         for row,item in zip(rows,items):
             n=item[4];fields={k:(v[:,:n] if k in ('input_ids','attention_mask') else v).to('cuda') for k,v in item[0].items()}
-            generated=model.generate(**fields,max_new_tokens=160,do_sample=False,use_cache=True,pad_token_id=p.tokenizer.pad_token_id)
-            text=p.tokenizer.decode(generated[0,n:],skip_special_tokens=True).strip();pred=parse(text)
+            generated=model.generate(**fields,max_new_tokens=160,do_sample=False,use_cache=True,
+                repetition_penalty=1.05,pad_token_id=p.tokenizer.pad_token_id,
+                return_dict_in_generate=True,output_scores=True,output_logits=True)
+            tokens=generated.sequences[0,n:]
+            text=p.tokenizer.decode(tokens,skip_special_tokens=True).strip();pred=parse(text)
             expected='infeasible' if condition=='horizon_0' else row['target']['verdict']
             grade=score_rationale(text,row,condition)
             expected_text=target(row) if condition=='original' else target(dict(row,target=dict(row['target'],verdict='infeasible')))
+            decision=None
+            if pred is not None:
+                prefix_text=text.rsplit('Verdict: ',1)[0]+'Verdict: '
+                positions=[i for i in range(len(tokens)) if p.tokenizer.decode(tokens[:i],skip_special_tokens=True).lstrip()==prefix_text]
+                require(len(positions)==1,'Cannot identify generated binary decision')
+                at=positions[0];logp=generated.scores[at][0].float().log_softmax(-1)
+                raw_logp=generated.logits[at][0].float().log_softmax(-1)
+                ids={k:p.tokenizer.encode(v,add_special_tokens=False)[0] for k,v in LABEL_TO_DIGIT.items()}
+                norm=torch.tensor([float(logp[ids[c]]) for c in ('infeasible','feasible')]).softmax(0).tolist()
+                decision={'true_class_nll':-float(logp[ids[expected]]),'true_digit':LABEL_TO_DIGIT[expected],
+                    'true_raw_class_nll':-float(raw_logp[ids[expected]]),
+                    'raw_probabilities':{c:float(logp[i].exp()) for c,i in ids.items()},
+                    'binary_normalized':dict(zip(('infeasible','feasible'),norm)),
+                    'prefix_token_ids':tokens[:at].tolist()}
+            eos_id=p.tokenizer.convert_tokens_to_ids('<|im_end|>')
+            eos_losses=[-float(generated.scores[i][0].float().log_softmax(-1)[eos_id]) for i,v in enumerate(tokens) if int(v)==eos_id]
             outputs.append({'sample_id':row['sample_id'],'condition':condition,'generated':text,
                 'predicted_verdict':pred,'expected_verdict':expected,'verdict_correct':pred==expected,
                 'format_valid':pred is not None,'exact_match':text==expected_text,
-                'rationale_assessment':grade,'input_sha256':input_digest(item)})
+                'rationale_assessment':grade,'input_sha256':input_digest(item),
+                'native_decision':decision,'native_generated_eos_nll':eos_losses})
     return outputs
 
 
 def score(outputs):
+    def native(c):
+        values=[x['native_decision']['true_class_nll'] for x in outputs if x['expected_verdict']==c and x['native_decision'] is not None]
+        raw=[x['native_decision']['true_raw_class_nll'] for x in outputs if x['expected_verdict']==c and x['native_decision'] is not None]
+        return {'n_scored':len(values),'mean_nll':sum(values)/len(values) if values else None,
+                'mean_raw_nll':sum(raw)/len(raw) if raw else None}
     return {'n':len(outputs),'verdict_correct':sum(x['verdict_correct'] for x in outputs),
         'by_class':{c:{'n':sum(x['expected_verdict']==c for x in outputs),
-                      'correct':sum(x['expected_verdict']==c and x['verdict_correct'] for x in outputs)} for c in ('feasible','infeasible')},
+                      'correct':sum(x['expected_verdict']==c and x['verdict_correct'] for x in outputs),
+                      'native_decisive_token_loss':native(c)} for c in ('feasible','infeasible')},
         'format_valid':sum(x['format_valid'] for x in outputs),'exact_full_output':sum(x['exact_match'] for x in outputs),
         'rationale_supported_complete':sum(x['rationale_assessment']['status']=='supported_complete' for x in outputs),
         'full_output_supported_and_verdict_correct':sum(x['rationale_assessment']['status']=='supported_complete' and x['verdict_correct'] for x in outputs)}

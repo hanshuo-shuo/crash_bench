@@ -29,3 +29,20 @@ normalized narrative and decisive verdict losses with equal component weights;
 same observations, backbone and frozen vision/projector. A balanced small
 overfit must pass before one fixed all-120 engineering fit. No hyperparameter
 search or scientific generalization claim is authorized by this protocol.
+
+The first all120 diagnostic completed in job9453285 with unchanged weights.
+Teacher-forced sequence classification (107/120) disagreed with the saved greedy
+outputs (73/120), so a second read-only native-prefix check was required. Its
+initial replay assertion stopped job9454018 before training: it compared raw
+model probabilities with processed generation probabilities. Inspection found
+the staged native generation default `repetition_penalty=1.05`. The revised
+diagnostic explicitly reports both scores and replays that processor, including
+whether each decisive class token already occurs in the full input/prefix. The
+failed diagnostic artifact remains recoverable and is not a training result.
+
+The controlled binary fit keeps the same generation penalty1.05 explicitly and
+reports both raw and processed decision losses. Only the requested label tokens
+and supervised objective change. The smoke uses the original balanced eight,
+original LR2e-4/dropout0/cap240; the full fit uses original LR1e-4/dropout.05,
+seed713, ten epochs/300 updates and the identical original example order. Both
+start from fresh base weights. No extra decoding or training search is performed.
