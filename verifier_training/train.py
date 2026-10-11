@@ -1,4 +1,4 @@
-"""Bounded A/B LoRA overfit smoke. Full training intentionally not launched here."""
+"""Original LoRA trainer plus explicitly gated, fixed full-dataset engineering fit."""
 import argparse
 import json
 import math
@@ -15,6 +15,7 @@ from peft import LoraConfig, get_peft_model
 from .common import *
 from .data import encode, collate
 from .loss import masked_losses, gradient_probe
+from .engineering_contract import epoch_orders, parse_verdict
 
 
 def generate(model,processor,items,rows,variant):
@@ -26,11 +27,10 @@ def generate(model,processor,items,rows,variant):
             result=model.generate(**prompt,max_new_tokens=160 if variant=='B' else 12,do_sample=False,use_cache=True,
                                   pad_token_id=processor.tokenizer.pad_token_id)
             text=processor.tokenizer.decode(result[0,n:],skip_special_tokens=True).strip()
-            match=re.fullmatch(r'(?:Rationale: .+\n)?Verdict: (feasible|infeasible)',text,flags=re.S)
-            pred=match.group(1) if match else None
+            pred=parse_verdict(text,variant)
             outputs.append({'sample_id':row['sample_id'],'target':target_text(row,variant),'generated':text,
                             'verdict_correct':pred==row['target']['verdict'],'exact_match':text==target_text(row,variant),
-                            'format_valid':bool(match) and (variant=='A' or text.startswith('Rationale: '))})
+                            'format_valid':pred is not None,'predicted_verdict':pred})
     return outputs
 
 
@@ -46,14 +46,22 @@ def evaluate_loss(model,items):
 
 def train(a):
     out=a.out;out.mkdir(parents=True,exist_ok=False)
-    config=read(a.config);require(config['mode']=='overfit_smoke','Full training requires a separately authorized launcher')
+    config=read(a.config);full=config['mode']=='authorized_full_dataset_engineering'
+    require(full or config['mode']=='overfit_smoke','Unknown training mode')
+    if full:
+        from .engineering_contract import execution_config
+        require(config==execution_config(config),'Fixed full-training configuration changed')
+        require(a.observability is not None,'Observability isolation gate required')
+        obs=read(a.observability)
+        require(obs['passed_for_engineering_only'] and obs['dataset_sha256']==config['dataset_sha256'], 'Observability gate failed')
     require(torch.cuda.is_available(),'Quest GPU required')
     audit=read(a.dataset/'AUDIT.json');require(audit['passed'] and audit['engineering_supervision_only'],'Dataset audit gate failed')
     token_audit=read(a.dataset/'TOKEN_AUDIT.json')
     require(token_audit.get('input_contract')==INPUT_CONTRACT and token_audit.get('identical_inference_inputs'), 'A/B input-equality gate failed')
     require(sha(a.dataset/'dataset.jsonl')==audit['dataset_sha256'],'Dataset changed')
-    ids=read(a.dataset/'smoke_ids.json');require(8<=len(ids)<=16,'Smoke scope exceeded')
     rows=[json.loads(l) for l in (a.dataset/'dataset.jsonl').read_text().splitlines()]
+    ids=[r['sample_id'] for r in rows] if full else read(a.dataset/'smoke_ids.json')
+    require(len(ids)==120 if full else 8<=len(ids)<=16,'Training scope exceeded')
     rows=[r for r in rows if r['sample_id'] in ids]
     require(len(rows)==len(ids),'Missing samples')
     stage=read(a.assets/'STAGED.json')
@@ -89,15 +97,18 @@ def train(a):
         'trainable_names':trainable,'lora_targets':targets,'vision_frozen':True,'projector_frozen':True,
         'token_masks':[{'id':r['sample_id'],'prompt_tokens':i[4],'assistant_tokens':int(i[1].ne(-100).sum()),
                         'rationale_tokens':int(i[2].sum()),'verdict_tokens':int(i[3].sum())} for r,i in zip(rows,items)],
-        'metric_scope':'Exact same eight training examples; memorization/engineering only, no generalization'}
+        'metric_scope':'Exact same training examples; memorization/engineering only, no generalization',
+        'observability_audit_sha256':sha(a.observability) if full else None}
     write(out/'PROVENANCE.json',provenance)
     write(out/'generations_before.json',generate(model,processor,items,rows,a.variant))
     baseline=evaluate_loss(model,items);write(out/'loss_before.json',baseline)
     optimizer=torch.optim.AdamW([p for p in model.parameters() if p.requires_grad],lr=config['learning_rate'],weight_decay=0.)
     log=out/'curve.jsonl';start=time.monotonic();passed=False;probes={}
+    orders=epoch_orders(len(items),config['seed'],config['epochs'],config['effective_batch_size']) if full else None
+    if full:write(out/'TRAINING_ORDER.json',[[rows[i]['sample_id'] for i in order] for order in orders])
     for step in range(1,config['max_steps']+1):
         model.train();optimizer.zero_grad(set_to_none=True)
-        order=np.random.permutation(len(items))[:config['effective_batch_size']]
+        order=orders[step-1] if full else np.random.permutation(len(items))[:config['effective_batch_size']]
         metrics={'total':0.,'rationale':0.,'verdict':0.}
         for j,index in enumerate(order):
             batch,labels,rm,vm=collate([items[index]],processor.tokenizer.pad_token_id)
@@ -112,34 +123,38 @@ def train(a):
         require(torch.isfinite(norm).item(),'Nonfinite gradient')
         optimizer.step()
         entry={'step':step,'elapsed_seconds':time.monotonic()-start,**metrics,'gradient_norm':norm.item()}
+        if full:entry['epoch']=(step*config['effective_batch_size'])/len(items)
         with log.open('a') as f:f.write(json.dumps(entry)+'\n')
         if step%5==0:print(json.dumps(entry),flush=True)
         if step%config['evaluate_every']==0 or step==config['max_steps']:
-            generated=generate(model,processor,items,rows,a.variant)
             measured=evaluate_loss(model,items)
-            write(out/f'generations_step_{step:04d}.json',generated)
             write(out/f'loss_step_{step:04d}.json',measured)
+            if full and step%config['generate_every']!=0 and step!=config['max_steps']:continue
+            generated=generate(model,processor,items,rows,a.variant)
+            write(out/f'generations_step_{step:04d}.json',generated)
             # Deliberately strict: a rationale hallucination/paraphrase cannot silently pass.
             passed=all(g['verdict_correct'] and g['format_valid'] and g['exact_match'] for g in generated)
             passed &= measured['total'] < baseline['total']*.25
             passed &= a.variant=='A' or measured['rationale'] < baseline['rationale']*.25
-            if passed:break
+            if passed and not full:break
     require(all(torch.equal(p,visual_anchor[n]) for n,p in visual if n in visual_anchor),'Projector changed')
     require(all(not p.requires_grad and p.grad is None for n,p in visual),'Visual parameters received gradients')
     model.save_pretrained(out/'adapter');processor.save_pretrained(out/'adapter')
     write(out/'generations_final.json',generated)
-    result={'passed':bool(passed),'steps':step,'train_examples':len(rows),'before':baseline,'after':measured,
+    result={'passed':bool(passed) if not full else True,'exact_fit_criterion':bool(passed),
+        'steps':step,'train_examples':len(rows),'before':baseline,'after':measured,
         'correct_verdicts':sum(g['verdict_correct'] for g in generated),'exact_outputs':sum(g['exact_match'] for g in generated),
         'gradient_probe':probes,'vision_and_projector_frozen':True,'projector_bitwise_unchanged':True,
         'peak_gpu_gib':torch.cuda.max_memory_allocated()/2**30,'elapsed_seconds':time.monotonic()-start,
-        'scientific_generalization_claim':False,'full_training_launched':False}
+        'scientific_generalization_claim':False,'full_training_launched':full}
     write(out/'RESULT.json',result);print(json.dumps(result),flush=True)
-    if not passed:raise RuntimeError('Bounded overfit criteria not met; full training remains gated')
+    if not passed and not full:raise RuntimeError('Bounded overfit criteria not met; full training remains gated')
 
 
 if __name__=='__main__':
     p=argparse.ArgumentParser();p.add_argument('--dataset',type=Path,required=True);p.add_argument('--assets',type=Path,required=True)
     p.add_argument('--config',type=Path,required=True);p.add_argument('--out',type=Path,required=True);p.add_argument('--variant',choices=['A','B'],required=True)
+    p.add_argument('--observability',type=Path)
     a=p.parse_args()
     try:train(a)
     except BaseException as e:
