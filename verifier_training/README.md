@@ -1,6 +1,7 @@
 # Generative Feasibility Verifier — engineering pilot
 
-Current analysis and full-dataset results: [STAGE1_CLOSEOUT.md](STAGE1_CLOSEOUT.md).
+Current diagnosis and controlled correction: [BINARY_CORRECTION_RESULTS.md](BINARY_CORRECTION_RESULTS.md).
+Original full-dataset A/B results: [STAGE1_CLOSEOUT.md](STAGE1_CLOSEOUT.md).
 Original eight-sample smoke history: [RESULTS.md](RESULTS.md).
 All-row audit: [OBSERVABILITY_ANALYSIS.md](OBSERVABILITY_ANALYSIS.md).
 Future collection design only: [STAGE2_COLLECTION.md](STAGE2_COLLECTION.md).
