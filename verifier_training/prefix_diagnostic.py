@@ -9,48 +9,47 @@ import time
 import torch
 from peft import PeftModel
 from transformers import AutoProcessor, Qwen2_5_VLForConditionalGeneration
-from transformers.generation.logits_process import RepetitionPenaltyLogitsProcessor
+from transformers import LogitsProcessor, LogitsProcessorList
 from .common import read,write,require,sha,UPSTREAM
 from .data import encode
 from .engineering_contract import DATA_SHA
 
 
-def advance(model,fields,ids,past=None):
-    n=ids.shape[1]
-    position=torch.arange(n,device='cuda') if past is None else torch.tensor([n-1],device='cuda')
-    inputs=model.prepare_inputs_for_generation(input_ids=ids,past_key_values=past,
-        attention_mask=torch.ones_like(ids),cache_position=position,use_cache=True,
-        pixel_values=fields['pixel_values'],image_grid_thw=fields['image_grid_thw'])
-    return model(**inputs,return_dict=True)
+class ForcedPrefix(LogitsProcessor):
+    """Use native generate/cache; inspect scores before forcing known prefix IDs."""
+    def __init__(self,prompt_n,forced,decision_at):
+        self.prompt_n=prompt_n;self.forced=forced;self.decision_at=decision_at;self.inspected=[]
+
+    def __call__(self,input_ids,scores):
+        step=input_ids.shape[1]-self.prompt_n
+        if step>=self.decision_at:self.inspected.append(scores.detach().clone())
+        if step<len(self.forced):
+            result=torch.full_like(scores,-float('inf'));result[:,self.forced[step]]=0
+            return result
+        return scores
 
 
 def cached_candidates(model,fields,prefix,prompt_n,candidates,eos,penalty):
-    ids=prefix[:,:prompt_n]
-    result=advance(model,fields,ids)
-    for token in prefix[0,prompt_n:]:
-        ids=torch.cat([ids,token.reshape(1,1)],dim=1)
-        result=advance(model,fields,ids,result.past_key_values)
-    first_logits=result.logits[:,-1].float()
-    first=first_logits[0].log_softmax(-1)
-    processor=RepetitionPenaltyLogitsProcessor(penalty)
-    first_processed=processor(ids,first_logits.clone())[0].log_softmax(-1)
-    cache=result.past_key_values; scores={}
+    rationale_ids=prefix[0,prompt_n:].tolist();scores={};first=None;first_processed=None
     for label,tokens in candidates.items():
-        past=copy.deepcopy(cache);current=ids;logp=first;processed=first_processed;nll=[];adjusted=[]
-        for token in tokens+[eos]:
-            nll.append(-float(logp[token]))
-            adjusted.append(-float(processed[token]))
-            if len(nll)==len(tokens)+1:break
-            current=torch.cat([current,torch.tensor([[token]],device='cuda')],dim=1)
-            next_result=advance(model,fields,current,past)
-            past=next_result.past_key_values;raw=next_result.logits[:,-1].float();logp=raw[0].log_softmax(-1)
-            processed=processor(current,raw.clone())[0].log_softmax(-1)
+        forced=ForcedPrefix(prompt_n,rationale_ids+tokens,len(rationale_ids))
+        result=model.generate(**fields,max_new_tokens=len(forced.forced)+1,do_sample=False,use_cache=True,
+            repetition_penalty=penalty,return_dict_in_generate=True,output_logits=True,
+            logits_processor=LogitsProcessorList([forced]))
+        require(result.sequences[0,prompt_n:prompt_n+len(forced.forced)].tolist()==forced.forced,'Native forced prefix changed')
+        require(len(forced.inspected)==len(tokens)+1,'Missing candidate/EOS scores')
+        raw=[result.logits[len(rationale_ids)+i][0].float().log_softmax(-1) for i in range(len(tokens)+1)]
+        processed=[v[0].float().log_softmax(-1) for v in forced.inspected]
+        nll=[-float(v[t]) for v,t in zip(raw,tokens+[eos])]
+        adjusted=[-float(v[t]) for v,t in zip(processed,tokens+[eos])]
+        if first is None:first=raw[0];first_processed=processed[0]
         scores[label]={'token_ids':tokens,'token_nll_including_eos':nll,'decisive_nll':nll[0],
             'continuation_nll_sum':sum(nll[1:-1]),'eos_nll':nll[-1],
             'sequence_logp':-sum(nll[:-1]),'sequence_with_eos_logp':-sum(nll),
             'processed_token_nll_including_eos':adjusted,'processed_decisive_nll':adjusted[0],
             'processed_sequence_logp':-sum(adjusted[:-1]),'processed_sequence_with_eos_logp':-sum(adjusted),
             'first_class_token_seen_in_prefix':tokens[0] in prefix[0].tolist()}
+        del result,forced
     for name in ('sequence_logp','sequence_with_eos_logp','processed_sequence_logp','processed_sequence_with_eos_logp'):
         probs=torch.tensor([scores[k][name] for k in ('feasible','infeasible')],dtype=torch.float64).softmax(0).tolist()
         for k,v in zip(('feasible','infeasible'),probs):scores[k][name+'_binary_normalized']=v

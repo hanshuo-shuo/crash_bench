@@ -55,6 +55,12 @@ def summarize_diagnostics(root):
                 'mean_true_two_candidate_probability':statistics.mean(x['p_'+c+'_two_candidate'] for x in records if x['truth']==c)} for c in ('feasible','infeasible')}}
     gradients=read(parent/'diagnostic/GRADIENTS.json')
     weights={k:statistics.mean(x['component_token_weights'][k] for b in gradients['batches'] for x in b['sample_weights']) for k in gradients['groups']}
+    first_probe=read(Path(receipt['campaign'])/'B/GRADIENT_PROBE.json')
+    first_count=sum(v['tokens'] for v in first_probe.values())
+    initial={k:dict(v,old_objective_weight=v['tokens']/first_count,
+        weighted_per_example_gradient_norm=v['lora_gradient_norm']*v['tokens']/first_count,
+        weighted_first_microbatch_gradient_norm=v['lora_gradient_norm']*v['tokens']/first_count/4)
+        for k,v in first_probe.items()}
     tokenization=read(parent/'diagnostic/TOKENIZATION.json')
     differences=[]
     from transformers import AutoTokenizer
@@ -77,6 +83,8 @@ def summarize_diagnostics(root):
         'old_objective_mean_token_weights':weights,'weighted_gradient':gradients['full_pool_mean_gradient'],
         'gradient_median_batch_norm':{k:statistics.median(b['norms'][k] for b in gradients['batches']) for k in gradients['groups']},
         'gradient_sum_identity_relative_error':gradients['batches'][0]['first_example_sum_identity_relative_error'],
+        'historical_first_training_example_gradient':initial,
+        'historical_gradient_note':'Rescaled actual saved first-example probes. Initial verdict group includes EOS. Norms are not additive; initial total-direction shares were not saved.',
         'diagnostic_complete_sha256':receipt['diagnostic_complete_sha256'],'prefix_complete_sha256':receipt['prefix_complete_sha256']}
     write(output/'SUMMARY.json',summary);table(output/'ALL120_PROBABILITIES.csv',flat)
 

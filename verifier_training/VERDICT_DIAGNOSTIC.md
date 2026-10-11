@@ -40,6 +40,14 @@ diagnostic explicitly reports both scores and replays that processor, including
 whether each decisive class token already occurs in the full input/prefix. The
 failed diagnostic artifact remains recoverable and is not a training result.
 
+Job9454708 also stopped its handwritten-cache equality gate on the first row.
+Those manual replay probabilities are invalid and excluded. Its native raw and
+processed logits already demonstrate the penalty effect, but the complete
+repeat now uses the library's own `generate` path with forced canonical prefix
+IDs, capturing raw logits and processor scores before the forcing operation.
+This removes the unvalidated handwritten cache implementation. Both failed
+attempts leave the original adapter and all scientific results unchanged.
+
 The controlled binary fit keeps the same generation penalty1.05 explicitly and
 reports both raw and processed decision losses. Only the requested label tokens
 and supervised objective change. The smoke uses the original balanced eight,
