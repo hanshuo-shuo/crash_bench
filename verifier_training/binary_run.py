@@ -23,7 +23,7 @@ from .verdict_diagnostic import tensor_digest
 METRICS=('total','rationale','verdict','rationale_text','format','eos')
 
 
-def configuration(stage):
+def configuration(stage, comparison_profile=None):
     source=Path(__file__).parent/'configs'/('smoke.json' if stage=='smoke' else 'proposed_B.json')
     c=read(source)
     c.update(mode='binary_equal_component_'+stage,variant='B_binary',digit_mapping=LABEL_TO_DIGIT,
@@ -38,11 +38,15 @@ def configuration(stage):
         training_samples=8 if stage=='smoke' else 120,
         scientific_claim='Engineering training-pool fit only; one original source scene')
     c.pop('stop_rule',None)
-    return c
+    from .rank_contract import apply_profile
+    return apply_profile(c, comparison_profile)
 
 
 def context(root):
     receipt=read(root/'RECEIPT.json')
+    if receipt.get('comparison_profile'):
+        from .rank_contract import validate_parent
+        validate_parent(receipt)
     campaign=Path(receipt['campaign']);assets=Path(receipt['assets']);dataset=campaign/'dataset'
     require(sha(dataset/'dataset.jsonl')==DATA_SHA,'Dataset changed')
     require(read(campaign/'audit/AUDIT.json')['passed_for_engineering_only'],'Observability isolation missing')
@@ -86,7 +90,17 @@ def preflight(root):
     ids=read(dataset/'smoke_ids.json');subset=[r for r in rows if r['sample_id'] in ids]
     require(len(subset)==8 and sum(r['target']['verdict']=='feasible' for r in subset)==4,'Smoke must be original balanced eight')
     write(out/'ENCODINGS.json',audit)
-    write(root/'smoke_config.json',configuration('smoke'));write(root/'full_config.json',configuration('full'))
+    configs={s:configuration(s,receipt.get('comparison_profile')) for s in ('smoke','full')}
+    if receipt.get('comparison_profile'):
+        from .rank_contract import config_difference
+        parent=Path(receipt['rank16_baseline'])
+        old_audit=read(parent/'preflight/ENCODINGS.json')
+        require(audit==old_audit,'Rank16/rank64 encoded inputs or targets changed')
+        write(out/'RANK_COMPARISON.json',{
+            'config_differences':{s:config_difference(read(parent/(s+'_config.json')),configs[s]) for s in configs},
+            'all120_encoding_records_identical':True,'alpha_over_rank':2,
+            'expected_trainable_parameters':119734272,'baseline':str(parent)})
+    for stage,config in configs.items():write(root/(stage+'_config.json'),config)
     write(out/'COMPLETE.json',{'passed':True,'code_commit':receipt['source_commit'],'slurm_job':os.environ['SLURM_JOB_ID'],
         'examples':120,'paired_old_new_encoding_checks':240,'identical_inputs':True,'dataset_sha256':DATA_SHA,
         'binary_tokens_per_example':1,'smoke_ids':ids,'digit_mapping':LABEL_TO_DIGIT,
@@ -167,7 +181,7 @@ def train(root,stage):
     gate=read(root/'preflight/COMPLETE.json');require(gate['passed'],'Corrected-loss tests not passed')
     require(gate['code_commit']==receipt['source_commit'],'Preflight source changed')
     if stage=='full':require(read(root/'smoke/RESULT.json')['passed'],'Balanced smoke did not pass')
-    config=read(root/(stage+'_config.json'));require(config==configuration(stage),'Fixed config changed')
+    config=read(root/(stage+'_config.json'));require(config==configuration(stage,receipt.get('comparison_profile')),'Fixed config changed')
     require(sha(root/(stage+'_config.json'))==gate['config_sha256'][stage],'Config gate changed')
     if stage=='smoke':rows=[r for r in rows if r['sample_id'] in gate['smoke_ids']]
     out=root/stage;out.mkdir(exist_ok=False)
@@ -186,6 +200,11 @@ def train(root,stage):
         lora_dropout=config['lora_dropout'],target_modules=targets,bias='none',task_type='CAUSAL_LM'))
     trainable=[(n,v) for n,v in model.named_parameters() if v.requires_grad]
     require(all('lora_' in n and 'visual' not in n and 'lm_head' not in n for n,v in trainable),'Unexpected trainable parameters')
+    if receipt.get('comparison_profile'):
+        require(sum(v.numel() for n,v in trainable)==119734272,'Unexpected rank64 parameter count')
+        adapters=[m for m in model.modules() if hasattr(m,'lora_A') and 'default' in m.lora_A]
+        require(len(adapters)==252 and all(m.r['default']==64 and m.lora_alpha['default']==128
+            and m.scaling['default']==2 for m in adapters),'Rank64/scaling/coverage contract failed')
     frozen=[(n,v) for n,v in model.named_parameters() if 'visual' in n]
     require(frozen and any('merger' in n for n,v in frozen),'Projector not found')
     visual_hash=tensor_digest(frozen)
