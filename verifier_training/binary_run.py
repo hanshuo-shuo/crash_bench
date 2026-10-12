@@ -92,12 +92,16 @@ def preflight(root):
     write(out/'ENCODINGS.json',audit)
     configs={s:configuration(s,receipt.get('comparison_profile')) for s in ('smoke','full')}
     if receipt.get('comparison_profile'):
-        from .rank_contract import config_difference
+        from .rank_contract import config_difference, lr_difference, LOW_LR_PROFILE
         parent=Path(receipt['rank16_baseline'])
         old_audit=read(parent/'preflight/ENCODINGS.json')
         require(audit==old_audit,'Rank16/rank64 encoded inputs or targets changed')
+        difference=config_difference
+        if receipt['comparison_profile']==LOW_LR_PROFILE:
+            parent=Path(receipt['rank64_reference']);difference=lr_difference
+            require(audit==read(parent/'preflight/ENCODINGS.json'),'High/low LR encoded inputs or targets changed')
         write(out/'RANK_COMPARISON.json',{
-            'config_differences':{s:config_difference(read(parent/(s+'_config.json')),configs[s]) for s in configs},
+            'config_differences':{s:difference(read(parent/(s+'_config.json')),configs[s]) for s in configs},
             'all120_encoding_records_identical':True,'alpha_over_rank':2,
             'expected_trainable_parameters':119734272,'baseline':str(parent)})
     for stage,config in configs.items():write(root/(stage+'_config.json'),config)

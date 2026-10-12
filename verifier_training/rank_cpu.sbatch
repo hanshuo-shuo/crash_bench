@@ -13,8 +13,12 @@ export PYTHONNOUSERSITE=1 PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=4 OPENBLAS_N
 export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 TOKENIZERS_PARALLELISM=false
 export CB_CODE_COMMIT="$(cat "$CB_VERIFIER_RUN/SOURCE_COMMIT")"
 export PYTHONPATH="$CB_VERIFIER_ASSETS/packages:$CB_VERIFIER_RUN/source"
-if [[ "$CB_BINARY_STAGE" == report ]]; then
-  /projects/p33100/siosio/envs/openpi/bin/python -u -m verifier_training.rank_report "$CB_VERIFIER_RUN"
+if [[ "$CB_BINARY_STAGE" == report || "$CB_BINARY_STAGE" == smoke-report ]]; then
+  if [[ "${CB_RANK_LOWLR:-0}" == 1 ]]; then
+    /projects/p33100/siosio/envs/openpi/bin/python -u -m verifier_training.low_lr_report "$CB_VERIFIER_RUN" "$CB_BINARY_STAGE"
+  else
+    /projects/p33100/siosio/envs/openpi/bin/python -u -m verifier_training.rank_report "$CB_VERIFIER_RUN"
+  fi
 else
   /projects/p33100/siosio/envs/openpi/bin/python -u -m verifier_training.binary_run preflight "$CB_VERIFIER_RUN"
 fi

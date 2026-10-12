@@ -7,6 +7,7 @@ import sys
 from .common import BASE, UPSTREAM, read, write, sha, require
 from .launch import command
 from .rank_contract import PROFILE, BASELINE_NAME, BASELINE_REVIEW_NAME, BASELINE_FILES, validate_parent
+from .rank_contract import LOW_LR_PROFILE, RANK64_REFERENCE_NAME, RANK64_REFERENCE_FILES
 
 
 def submit(root, stage):
@@ -20,10 +21,15 @@ def submit(root, stage):
     if stage in ('conditioning','report'):
         require(read(root/'full/RESULT.json')['passed'],'Full execution incomplete')
     if stage=='report':require(read(root/'conditioning/COMPLETE.json')['passed'],'Conditioning diagnostic incomplete')
-    cpu=stage in ('preflight','report')
+    if stage=='smoke-report':
+        require(receipt['comparison_profile']==LOW_LR_PROFILE,'Smoke report requires lower-LR profile')
+        require(read(root/'smoke/RESULT.json')['passed'] is False,'Expected failed smoke')
+        require(not (root/'full_SUBMISSION.json').exists(),'Full fit already submitted')
+    cpu=stage in ('preflight','report','smoke-report')
     limits={'preflight':'00:15:00','smoke':'00:30:00','full':'01:15:00',
-            'conditioning':'00:15:00','report':'00:15:00'}
-    env=dict(os.environ,CB_VERIFIER_RUN=str(root),CB_BINARY_STAGE=stage,CB_VERIFIER_ASSETS=receipt['assets'])
+            'conditioning':'00:15:00','report':'00:15:00','smoke-report':'00:15:00'}
+    env=dict(os.environ,CB_VERIFIER_RUN=str(root),CB_BINARY_STAGE=stage,CB_VERIFIER_ASSETS=receipt['assets'],
+             CB_RANK_LOWLR='1' if receipt['comparison_profile']==LOW_LR_PROFILE else '0')
     args=['sbatch','--parsable','--time',limits[stage],'--job-name','cb_rank64_'+stage,
           '--output',str(root/(stage+'_%j.log')),
           str(root/'source/verifier_training'/('rank_cpu.sbatch' if cpu else 'rank_gpu.sbatch'))]
@@ -41,12 +47,13 @@ def main():
     commit=command('git','rev-parse','HEAD')
     require('origin/' in command('git','branch','-r','--contains',commit),'Unpublished source')
     stage=sys.argv[1]
-    if stage=='create':
+    if stage in ('create','create-low-lr'):
+        low=stage=='create-low-lr'
         parent=BASE/'verifier_training/runs'/BASELINE_NAME
         old=read(parent/'RECEIPT.json')
         review=BASE/'verifier_training/runs'/BASELINE_REVIEW_NAME
         require(read(review/'conditioning/COMPLETE.json')['passed'],'Baseline conditioning incomplete')
-        root=BASE/'verifier_training/runs'/(datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')+'_rank64_sft_'+commit[:12])
+        root=BASE/'verifier_training/runs'/(datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')+('_rank64_low_lr_' if low else '_rank64_sft_')+commit[:12])
         receipt={key:old[key] for key in ('campaign','assets','diagnostic','prefix_diagnostic',
                  'diagnostic_complete_sha256','prefix_complete_sha256')}
         receipt.update(run_root=str(root),source_commit=commit,upstream_commit=UPSTREAM,
@@ -56,6 +63,12 @@ def main():
             seed=713,scope='One rank64/alpha128 B SFT comparison against corrected rank16/alpha32; same inputs, losses, backbone, frozen vision/projector and 300-step full schedule',
             training_authorization='User: 先继续用sft 先做更高 rank 的 LoRA 对照',
             resource_note='One A100 at a time. Smoke cap30min/full cap75min provide rank64 runtime headroom; no additional updates. No new data, paid API or hyperparameter search.')
+        if low:
+            reference=BASE/'verifier_training/runs'/RANK64_REFERENCE_NAME
+            receipt.update(comparison_profile=LOW_LR_PROFILE,rank64_reference=str(reference),
+                rank64_reference_sha256={name:sha(reference/name) for name in RANK64_REFERENCE_FILES},
+                scope='One fixed quarter-LR comparison at rank64/alpha128. Smoke5e-5 then conditional fresh full2.5e-5; all other settings unchanged',
+                training_authorization='User authorized fixed rank64 with lower LR only, balanced8 gate then one120 fit; no search')
         validate_parent(receipt)
         root.mkdir(exist_ok=False);(root/'source').mkdir()
         with (root/'source.tar').open('wb') as f:subprocess.run(['git','archive',commit],stdout=f,check=True)
@@ -67,7 +80,7 @@ def main():
         write(dest/'RECEIPT.json',receipt)
         submit(root,'preflight')
     else:
-        require(stage in ('smoke','full','conditioning','report'),'Unknown stage')
+        require(stage in ('smoke','full','conditioning','report','smoke-report'),'Unknown stage')
         submit(Path(sys.argv[2]),stage)
 
 
