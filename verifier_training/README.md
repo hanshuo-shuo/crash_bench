@@ -1,6 +1,7 @@
 # Generative Feasibility Verifier — engineering pilot
 
-Current diagnosis and controlled correction: [BINARY_CORRECTION_RESULTS.md](BINARY_CORRECTION_RESULTS.md).
+Latest higher-rank SFT comparison: [RANK64_RESULTS.md](RANK64_RESULTS.md) — the rank64 smoke failed; no new full fit was launched.
+Prior diagnosis and controlled correction: [BINARY_CORRECTION_RESULTS.md](BINARY_CORRECTION_RESULTS.md).
 Original full-dataset A/B results: [STAGE1_CLOSEOUT.md](STAGE1_CLOSEOUT.md).
 Original eight-sample smoke history: [RESULTS.md](RESULTS.md).
 All-row audit: [OBSERVABILITY_ANALYSIS.md](OBSERVABILITY_ANALYSIS.md).
