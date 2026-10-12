@@ -1,6 +1,7 @@
 # Generative Feasibility Verifier — engineering pilot
 
-Latest higher-rank SFT comparison: [RANK64_RESULTS.md](RANK64_RESULTS.md) — the rank64 smoke failed; no new full fit was launched.
+Latest fixed lower-LR rank64 comparison: [LOW_LR_RESULTS.md](LOW_LR_RESULTS.md) — smoke passed, but the120 fit remains97/120 verdicts and92/120 exact outputs.
+Prior higher-rank SFT comparison: [RANK64_RESULTS.md](RANK64_RESULTS.md) — the original-LR rank64 smoke failed; no full fit was launched in that run.
 Prior diagnosis and controlled correction: [BINARY_CORRECTION_RESULTS.md](BINARY_CORRECTION_RESULTS.md).
 Original full-dataset A/B results: [STAGE1_CLOSEOUT.md](STAGE1_CLOSEOUT.md).
 Original eight-sample smoke history: [RESULTS.md](RESULTS.md).
