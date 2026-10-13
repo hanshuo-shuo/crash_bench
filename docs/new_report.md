@@ -101,25 +101,68 @@ Feasible：Codex hard-code controller、motion planner, paper's methods
 <img width="1840" height="466" alt="image" src="https://github.com/user-attachments/assets/f885421b-a6d4-4f8a-ad0a-9115bc811cd2" />
 
 
-- Next, I wanted to test whether the VLA representation actually encodes this notion of feasibility.
+
+
+
+
+2. Can existing VLA representations predict feasibility?
+
+Can the model predict feasibility labels? But I care more about whether the model determine feasibility by reasoning about task constraints?
 
 For positive examples, I required a safe-success witness: an actual trajectory that completes the task without violating the safety constraint.
 For negative examples, I used explicit geometric certificates that rule out any admissible solution under the stated task and safety assumptions.
 
-| **Readout / Baseline** | **Role** | **Held-out AUROC ↑** | **Balanced Acc. ↑** |
+
+
+Challenge 1: Does this task really require a generative verifier?
+
+One surprising result is that a very simple RGB-based baseline achieves an AUROC of 0.979.
+
+It does not use any VLA features or reasoning. It mainly relies on visual statistics and red-obstacle cues.
+
+This suggests that my current feasibility dataset may be too easy and contain visual shortcuts.
+
+
+| **Readout / Baseline** | **Role** | **Held-out AUROC ↑** |
 |---|---|---:|---:|
-| **Pre-selected VLA probe (Layer-2 MLP)** | **Main test** | **0.500** | **0.500** |
-| Final VLA feature | Diagnostic | 0.708 | 0.646 |
-| VLA visual tower | Diagnostic | 0.802 | 0.500 |
-| DINOv2 visual baseline | Visual baseline | 0.833 | 0.708 |
-| RGB + red-cue baseline | Shortcut baseline | **0.979** | 0.625 |
-| Privileged geometry | Oracle baseline | **1.000** | **1.000** |
+| **Pre-selected VLA probe (Layer-2 MLP)** | **Main test** | **0.500** |
+| Final VLA feature | Diagnostic | 0.708 | 
+| RGB + red-cue baseline | Shortcut baseline | **0.979** |
+| Privileged geometry | Oracle baseline | **1.000** |
 
-RGB + red-cue baseline： This is a shortcut baseline. It does not use VLA features at all. It only uses simple statistics from the raw RGB images and red-obstacle cues. Simple visual cues almost perfectly rank the current feasible and infeasible examples, but they do not form a well-calibrated feasibility classifier at the fixed threshold.
+RGB + red-cue baseline: This is a shortcut baseline. It does not use VLA features at all. It only uses simple statistics from the raw RGB images and red-obstacle cues. Simple visual cues almost perfectly rank the current feasible and infeasible examples, but they do not form a well-calibrated feasibility classifier at the fixed threshold.
 
-Next: 
 
-state feasibility? action-conditioned recoverability?
+3. Training a Generative Verifier
 
-Recoverability is relational. It depends not only on the state, but also on the task, safety constraints, available capabilities, and remaining time. So the VLA has to know more than just 
-some probe fitting. Does the model know its own action possibilities well enough to act on that knowledge? I feel like humans have such ability but not vlm/vlas.
+Following our previous discussion and the Generative Verifiers paper, I started training a separate VLM to generate:
+
+A rationale explaining whether the task is feasible.
+
+A final binary verdict: 0 or 1.
+
+For example, the desired output is something like:
+
+```
+Rationale: The object is inside a cage. The opening appears wide enough for the robot’s gripper to reach inside and grasp the object, so the task appears feasible.
+Verdict: 1
+```
+
+I used Qwen2.5-VL-3B with LoRA-SFT or Full-SFT
+
+| What I tested | Main result |
+|---|---|
+| Direct verifier A | **120/120** training verdicts correct |
+| Generative verifier B LORA SFT with self generated rationale| **97/120** training verdicts correct |
+| Generative verifier B LORA SFT with oracle correct generated rationale| **112/120** training verdicts correct |
+| Generative verifier C Full SFT| **75/120** training verdicts correct |
+
+Challenge 2: How do I generate reliable reasoning labels?
+
+It is relatively easy to generate binary feasibility labels using a simulator, a successful trajectory, or a geometric certificate.
+But generating a good explanation is much harder.
+
+For example, even if the simulator tells me that a task is infeasible, how do I turn that into a meaningful reasoning sequence?
+
+- One concern I have is that my current dataset might be too easy. A simple RGB baseline already achieves an AUROC of 0.979, so I'm not sure the model actually needs to reason about feasibility
+- More than just visual correlations' Feasibility dataset and Better reasoning labels
