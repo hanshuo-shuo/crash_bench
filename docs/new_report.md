@@ -124,7 +124,7 @@ This suggests that my current feasibility dataset may be too easy and contain vi
 
 
 | **Readout / Baseline** | **Role** | **Held-out AUROC ↑** |
-|---|---|---:|---:|
+|---|---|---:|
 | **Pre-selected VLA probe (Layer-2 MLP)** | **Main test** | **0.500** |
 | Final VLA feature | Diagnostic | 0.708 | 
 | RGB + red-cue baseline | Shortcut baseline | **0.979** |
