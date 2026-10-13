@@ -166,3 +166,7 @@ For example, even if the simulator tells me that a task is infeasible, how do I 
 
 - One concern I have is that my current dataset might be too easy. A simple RGB baseline already achieves an AUROC of 0.979, so I'm not sure the model actually needs to reason about feasibility
 - More than just visual correlations' Feasibility dataset and Better reasoning labels
+
+
+<img width="982" height="316" alt="image" src="https://github.com/user-attachments/assets/f093a90f-5bbc-449e-b75e-a0c0db758d99" />
+
