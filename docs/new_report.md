@@ -150,12 +150,12 @@ Verdict: 1
 
 I used Qwen2.5-VL-3B with LoRA-SFT or Full-SFT
 
-| What I tested | Main result |
-|---|---|
-| Direct verifier A | **120/120** training verdicts correct |
-| Generative verifier B LORA SFT with self generated rationale| **97/120** training verdicts correct |
-| Generative verifier B LORA SFT with oracle correct generated rationale| **112/120** training verdicts correct |
-| Generative verifier C Full SFT| **75/120** training verdicts correct |
+| Model | Training Method | Correct Verdicts |
+|---|---|---:|
+| **Verifier A (Direct)** | Direct verdict prediction | **120/120** |
+| **Verifier B (Generative)** | LoRA SFT with self-generated rationales | **97/120** |
+| **Verifier B (Generative)** | LoRA SFT with oracle-correct rationales | **112/120** |
+| **Verifier C (Generative)** | Full SFT | **75/120** |
 
 Challenge 2: How do I generate reliable reasoning labels?
 
