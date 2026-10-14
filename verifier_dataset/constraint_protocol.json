@@ -22,5 +22,17 @@
   "rationale_gate": "Observable target/enclosure/destination premises and evidence-backed claims; positive existential evidence comes from the actual trajectory, not RGB alone",
   "scientific_limit": "A controlled constraint-conditioned dataset with one separator mechanism; does not establish a need for generative reasoning or general feasibility prediction",
   "api_calls": 0,
+  "shortcut_screen": {
+    "model_fitting_split": "train",
+    "screening_split": "validation",
+    "test_usage": "No test predictions during dataset screening",
+    "rgb_and_text_auroc_requirement": "Exact 0.5 from paired-input balance",
+    "maximum_validation_joint_statistics_auroc": 0.75,
+    "readouts": "Fixed C=1 logistic regression; fixed 200-tree depth-4 forest, minimum leaf 8",
+    "decision_threshold": 0.5,
+    "source_bootstrap_replicates": 1000,
+    "seed": 1014,
+    "scope": "Practical predeclared dataset screen, not a statistical proof of reasoning or generative-verifier necessity"
+  },
   "scientific_training_allowed": false
 }

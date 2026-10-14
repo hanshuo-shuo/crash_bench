@@ -15,7 +15,10 @@ def certificate(layout,initial,mode):
     material=layout['material'];bounds=layout['a']
     if material['radius']!=sphere_radius(material['geom_type'],material['primitive_size']):
         raise RuntimeError('Unverified material sphere')
-    goal=expanded_point_goal(layout['goal'],material['center_in_root'])
+    if 'rigid_translation_vectors' in material:
+        bound=sum(math.sqrt(sum(v*v for v in xyz)) for xyz in material['rigid_translation_vectors'])+1e-6
+        if material.get('root_offset_norm_upper_bound')!=bound:raise RuntimeError('Unverified material offset bound')
+    goal=expanded_point_goal(layout['goal'],material['center_in_root'],material.get('root_offset_norm_upper_bound'))
     proof=certify(walls(*bounds),*bounds,initial[mode+'_point'],goal,
         material['radius'],initial['safe_history'],True,material['rigid_primitive_verified'],True)
     return dict(contract=CONTRACT,boundary_kind='virtual protected six-face boundary, not a physical collision wall',
@@ -118,11 +121,23 @@ def rows(layout,verification,source,images):
                 rationale=(f'The white-outlined target is enclosed by the {color} boundary, and the green destination is outside. '
                     f'The task protects {color}. Any route out must cross a face of this closed boundary, which the stated material-point rule forbids.')
                 refs=['layout.a','layout.goal','verification.certificates.native','verification.certificates.synchronized']
+                facts=[dict(claim='The selected target is enclosed and the fixed destination is outside',
+                    evidence=['LAYOUT.json#/a','LAYOUT.json#/target','LAYOUT.json#/goal'],input_basis='Actual RGB target/boundary/destination; requires visual review'),
+                    dict(claim='The enclosing boundary is protected',evidence=['student.constraints','metadata.appearance_assignment'],input_basis='Explicit rule and visible boundary color'),
+                    dict(claim='Every admissible center path to the destination crosses a forbidden face',
+                        evidence=['VERIFIED.json#/certificates'],input_basis='Logical consequence of the stated closed-boundary material-point contract; independently checked geometry supplies the label')]
             else:
                 rationale=(f'The white-outlined target is enclosed by the {colors["a"]} boundary, which this task allows it to cross. '
                     f'The protected {color} boundary is separate from the target and destination. '
                     'The enclosing region therefore permits an exit toward the goal; the recorded legal trajectory completes the move while respecting the protected region.')
                 refs=['layout.a','layout.b','layout.goal','verification.witness_end_step','source.raw_trace']
+                facts=[dict(claim='The enclosing boundary is allowed to be crossed',
+                    evidence=['LAYOUT.json#/a','student.constraints','metadata.appearance_assignment'],input_basis='Actual RGB and explicit selected-color rule; requires visual review'),
+                    dict(claim='The protected boundary is separate from the target and destination',
+                    evidence=['LAYOUT.json#/b','LAYOUT.json#/target','LAYOUT.json#/goal'],input_basis='Actual RGB and initial geometry; requires visual review'),
+                    dict(claim='A complete legal safe trajectory satisfies this rule',
+                    evidence=['VERIFIED.json#/witness_end_step','trace/ACTIONS.json','trace/SAMPLES.jsonl.gz'],
+                    input_basis='Privileged teacher label evidence, not visible in the initial image')]
             output.append(dict(schema_version='FD1000-constraint-candidate-v1',
                 student=dict(images=copy.deepcopy(images[assignment]),task=task,constraints=constraints),
                 evidence=dict(feasibility=label,kind='safe_source_suffix_with_virtual_guard' if protected=='b' else 'virtual_material_point_separator',
@@ -131,7 +146,7 @@ def rows(layout,verification,source,images):
                     source_method=source['method'],source_seed=source['seed'],checkpoint=layout['checkpoint'],
                     perception_variant=source.get('perception_variant','native'),goal=layout['native_goal'],
                     category_identical_across_labels=True,appearance_assignment=colors),
-                teacher=dict(rationale_draft=rationale,evidence_refs=refs,
+                teacher=dict(rationale_draft=rationale,evidence_refs=refs,clause_grounding=facts,
                     caveat='Positive existence comes from the actual safe witness; no claim that an RGB image alone proves general robot reachability.'),
                 reasoning_target=None,observability_review='pending',training_eligible=False,split='unassigned'))
     return output

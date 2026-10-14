@@ -108,6 +108,15 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
                 raise RuntimeError('Candidate export prerequisite did not pass')
             if command('sacct','-X','-n','-P','-j',job,'--format=JobIDRaw,State,ExitCode').splitlines()!=[job+'|COMPLETED|0:0']:
                 raise RuntimeError('Export must terminate normally before audit')
+    if stage=='audit-constraints':
+        if not candidate_exports or len(candidate_exports)!=2 or len(set(candidate_exports))!=2:
+            raise RuntimeError('Two distinct completed constraint batch shards required')
+        for parent in candidate_exports:
+            old=read(parent/'RECEIPT.json');job=old['job']
+            if old['stage']!='constraint-batch' or not read(parent/'CONSTRAINT_COMPLETE.json')['passed']:
+                raise RuntimeError('Constraint batch did not complete')
+            if command('sacct','-X','-n','-P','-j',job,'--format=JobIDRaw,State,ExitCode').splitlines()!=[job+'|COMPLETED|0:0']:
+                raise RuntimeError('Constraint collections must terminate normally before audit')
     if stage in ('collect-smoke','collect-cached-smoke','collect-cached-batch'):
         if source_plan is None or not read(source_plan/'source_plan/SUMMARY.json')['passed']:
             raise RuntimeError('Passed broader-source inventory required')
@@ -254,7 +263,10 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
         manifest.update(partition='gengpu',derived_tasks=True,contact_contract='FD1000-SC-CONTACT-v2',
             additional_constraint='FD1000-VIRTUAL-CONSTRAINT-v1',maximum_checkpoints=1 if stage=='constraint-prototype' else 10,
             maximum_virtual_layouts_per_checkpoint=2,api_mode='disabled',max_paid_attempts=0,max_logical_requests=0,
-            same_image_and_target_opposite_safety_rules=True,physical_collision_walls=False,batch_shard=batch_shard)
+            same_image_and_target_opposite_safety_rules=True,physical_collision_walls=False,batch_shard=batch_shard,
+            constraint_protocol_sha256=sha(repo/'verifier_dataset/constraint_protocol.json'),
+            frozen_source_split_sha256=sha(repo/'verifier_dataset/frozen_sources_67.json'),
+            gpu_request='one available gengpu GPU for rendering only; actual model recorded in GPU.json')
         write(root/'CAMPAIGN.json',manifest);write(root/'CASES.json',paired_sources)
         write(root/'INHERITED.json',dict(candidate_audit=str(collection_root),audit_sha256=sha(collection_root/'AUDIT_COMPLETE.json'),
             source_count=len(paired_sources),original_sources_only=True,training_allowed=False,
@@ -283,7 +295,7 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
             from .fixture_visuals import STYLE
             write(root/'VISUAL_GROUNDING.json',dict(style=STYLE,labels_created=False,
                 purpose='Check target visibility and goal grounding while retaining real collision geometry'))
-    if stage=='audit-candidates':write(root/'AUDIT_SOURCES.json',[str(x) for x in candidate_exports])
+    if stage in ('audit-candidates','audit-constraints'):write(root/'AUDIT_SOURCES.json',[str(x) for x in candidate_exports])
     if stage=='design-fixture':
         write(root/'CASES.json',[chosen_design])
         write(root/'INHERITED.json',dict(replay_root=str(replay_smoke),replay_job=proof_job,
@@ -358,7 +370,7 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
         write(root/'EXPORT_SOURCE.json',dict(root=str(replay_smoke),receipt_sha256=sha(replay_smoke/'RECEIPT.json')))
     script='collect.sbatch' if stage in ('collect-smoke','collect-cached-smoke','collect-cached-batch','collect-approved-cache','collect-frozen-perception') else ('cpu.sbatch' if stage in ('inventory','source-plan') else 'replay.sbatch')
     if stage=='export-candidates':script='export.sbatch'
-    if stage=='audit-candidates':script='audit.sbatch'
+    if stage in ('audit-candidates','audit-constraints'):script='audit.sbatch'
     if stage in ('fixture-render','fixture-grounding','paired-render'):script='fixture_render.sbatch'
     if stage=='reciprocal-prototype':script='reciprocal.sbatch'
     if stage in ('constraint-prototype','constraint-batch'):script='constraint.sbatch'
@@ -368,6 +380,7 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
         submit=['sbatch','--parsable','--array=0-7%4','--output='+str(root/'slurm_%A_%a.log')]
     if stage=='paired-screen':submit.append('--time=01:00:00')
     if stage=='constraint-batch':submit.append('--time=04:00:00')
+    if stage=='audit-constraints':submit+=['--time=01:00:00','--mem=16G']
     if stage=='collect-smoke':submit.append('--hold')
     if stage in ('collect-cached-batch','collect-approved-cache','collect-frozen-perception'):submit.append('--time=01:00:00')
     job = subprocess.check_output(submit+[str(root/'source/verifier_dataset'/script)],env=env,text=True).strip().split(';')[0]
@@ -400,7 +413,7 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
 
 
 if __name__ == '__main__':
-    p = argparse.ArgumentParser(); p.add_argument('stage', choices=['inventory','source-plan','replay-smoke','replay-spatial-batch','replay-object-sources','replay-spatial-sources','replay-early-sources','collect-smoke','collect-cached-smoke','collect-cached-batch','collect-approved-cache','collect-frozen-perception','replay-collection','export-candidates','audit-candidates','design-fixture','fixture-smoke','fixture-render','fixture-grounding','audit-request-drift','paired-prototype','paired-screen','paired-render','reciprocal-prototype','constraint-prototype','constraint-batch'])
+    p = argparse.ArgumentParser(); p.add_argument('stage', choices=['inventory','source-plan','replay-smoke','replay-spatial-batch','replay-object-sources','replay-spatial-sources','replay-early-sources','collect-smoke','collect-cached-smoke','collect-cached-batch','collect-approved-cache','collect-frozen-perception','replay-collection','export-candidates','audit-candidates','audit-constraints','design-fixture','fixture-smoke','fixture-render','fixture-grounding','audit-request-drift','paired-prototype','paired-screen','paired-render','reciprocal-prototype','constraint-prototype','constraint-batch'])
     p.add_argument('--inventory',type=Path);p.add_argument('--canonicalize',action='store_true')
     p.add_argument('--limit',type=int,default=12)
     p.add_argument('--source-plan',type=Path)

@@ -20,17 +20,21 @@ def sphere_radius(kind,size):
     return 0.
 
 
-def expanded_point_goal(root_goal,offset):
+def expanded_point_goal(root_goal,offset,norm_upper_bound=None):
     if not all(math.isfinite(float(x)) for x in root_goal[0]+root_goal[1]+offset):
         raise ValueError('Nonfinite material-point goal')
     if any(a>=b for a,b in zip(*root_goal)):
         raise ValueError('Degenerate fixed destination')
     radius=math.sqrt(sum(float(v)**2 for v in offset))
+    if norm_upper_bound is not None:
+        if not math.isfinite(norm_upper_bound) or norm_upper_bound<radius:
+            raise ValueError('Material offset bound is not conservative')
+        radius=float(norm_upper_bound)
     return [[x-radius for x in root_goal[0]],[x+radius for x in root_goal[1]]]
 
 
 def point_certificate(boxes,lower,upper,material,root_goal,initial_safe,static=True):
-    goal=expanded_point_goal(root_goal,material['center_in_root'])
+    goal=expanded_point_goal(root_goal,material['center_in_root'],material.get('root_offset_norm_upper_bound'))
     proof=certify(boxes,lower,upper,material['initial_world_center'],goal,
         material['radius'],initial_safe,static,material['rigid_primitive_verified'],True)
     return dict(contract=CONTRACT,label='conditionally_infeasible' if proof['label']=='infeasible' else 'unknown',
@@ -44,9 +48,10 @@ def material_sphere(env,name):
     import numpy as np
     m,d=env.sim.model,env.sim.data;root=int(env.env.obj_body_id[name]);choices=[]
     for g in sorted(descendants(m,{root})):
-        body=int(m.geom_bodyid[g]);rigid=True
+        body=int(m.geom_bodyid[g]);rigid=True;translations=[np.asarray(m.geom_pos[g]).tolist()]
         while body!=root:
-            rigid &= int(m.body_dofnum[body])==0;body=int(m.body_parentid[body])
+            rigid &= int(m.body_dofnum[body])==0
+            translations.append(np.asarray(m.body_pos[body]).tolist());body=int(m.body_parentid[body])
         if not rigid:continue
         kind=int(m.geom_type[g]);size=np.asarray(m.geom_size[g])
         radius=sphere_radius(kind,size)
@@ -55,7 +60,10 @@ def material_sphere(env,name):
         offset=rotation.T@(center-np.asarray(d.body_xpos[root]))
         choices.append(dict(object=name,geom_name=m.geom_id2name(g),geom_type=kind,
             primitive_size=size.tolist(),radius=radius,center_in_root=offset.tolist(),
-            initial_world_center=center.tolist(),root_name=m.body_id2name(root),rigid_primitive_verified=True))
+            initial_world_center=center.tolist(),root_name=m.body_id2name(root),rigid_primitive_verified=True,
+            rigid_translation_vectors=translations,
+            root_offset_norm_upper_bound=sum(math.sqrt(sum(v*v for v in xyz)) for xyz in translations)+1e-6,
+            offset_bound_basis='Triangle bound over actual fixed body/geom translations, plus one micrometre numerical allowance; independent of current world-coordinate subtraction'))
     if not choices:raise RuntimeError('No verified material sphere in an actual rigid collision primitive')
     return sorted(choices,key=lambda r:(-r['radius'],r['geom_name']))[0]
 

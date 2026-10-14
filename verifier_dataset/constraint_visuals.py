@@ -10,6 +10,14 @@ from .fixture_visuals import edges
 COLORS={'orange':[1.,.45,.02,1.],'purple':[.82,.04,.92,1.]}
 
 
+def prescreen(visibility):
+    counts={entity:max(view['entities'][entity]['pixels_224_nearest'] for view in visibility['assignments'][0])
+            for entity in ('target_object','a','b','goal')}
+    return dict(quantitative_prescreen=counts['target_object']>=24 and all(counts[k]>=12 for k in ('a','b','goal')),
+        maximum_pixels_in_one_view=counts,physical_visibility_approval=False,
+        reason='Pixel counts assist but do not replace visual review')
+
+
 def add(xml):
     tree=ET.fromstring(xml);world=tree.find('worldbody')
     for role,color in [('a','1 .45 .02 1'),('b','.82 .04 .92 1'),('target','1 1 1 1'),('goal','0 .9 .2 1')]:

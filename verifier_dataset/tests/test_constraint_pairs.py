@@ -33,6 +33,14 @@ class ConstraintEvidence(unittest.TestCase):
         self.assertTrue(result['matched_pair']);self.assertEqual(result['witness_commands'],1)
         self.assertTrue(result['blocked_boundary_crossed_by_positive_witness'])
 
+    def test_rotating_offcenter_material_requires_a_conservative_goal_bound(self):
+        from verifier_dataset.paired_geometry import expanded_point_goal
+        goal=[[.45,-.05,0.],[.55,.05,.2]]
+        actual=expanded_point_goal(goal,[.03,.04,0.],.1)
+        for left,right in zip(actual,[[.35,-.15,-.1],[.65,.15,.3]]):
+            for a,b in zip(left,right):self.assertAlmostEqual(a,b)
+        with self.assertRaises(ValueError):expanded_point_goal(goal,[.03,.04,0.],.049)
+
     def test_policy_failure_never_becomes_a_negative(self):
         layout,geometry,samples,actions=self.fixture()
         layout['b']=[[.2,-.1,0.],[.4,.1,.2]]

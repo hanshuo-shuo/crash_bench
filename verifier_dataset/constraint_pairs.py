@@ -146,7 +146,8 @@ def execute(case,maximum):
         for c in candidates:
             option,layout=c['folder'],c['layout'];verification=verify_layout(layout,samples,actions)
             write(option/'VERIFIED.json',verification)
-            chosen=verification['matched_pair'] and layout['checkpoint'] not in selected_steps
+            visibility=constraint_visuals.prescreen(read(option/'VISIBILITY.json'))
+            chosen=verification['matched_pair'] and visibility['quantitative_prescreen'] and layout['checkpoint'] not in selected_steps
             if chosen:
                 selected_steps.add(layout['checkpoint']);records=make_rows(layout,verification,source,c['images'])
                 for row in records:
@@ -157,7 +158,8 @@ def execute(case,maximum):
                 write(option/'CANDIDATES.json',records);all_rows.extend(records)
             write(option/'HASHES.json',{str(p.relative_to(option)):sha(p) for p in option.rglob('*') if p.is_file()})
             outcomes.append(dict(option=str(option),checkpoint=layout['checkpoint'],matched_pair=verification['matched_pair'],
-                selected_first_valid_option=chosen,positive_witness=verification['positive_witness'],conditional_negative=verification['conditional_negative']))
+                selected_first_valid_option=chosen,visibility_prescreen=visibility,
+                positive_witness=verification['positive_witness'],conditional_negative=verification['conditional_negative']))
         write(case/'CANDIDATES.json',all_rows)
         write(case/'COMPLETE.json',dict(passed=True,source=source,rows=outcomes,matched_units=len(selected_steps),
             candidate_rows=len(all_rows),native_trace=check,training_allowed=False,api_calls=0,
@@ -174,6 +176,8 @@ def main(root,case_index=None):
     if not os.environ.get('SLURM_JOB_ID'):raise RuntimeError('Quest compute allocation required')
     maximum=read(root/'CAMPAIGN.json')['maximum_checkpoints']
     if case_index is not None:execute(root/('case_%03d'%case_index),maximum);gc.collect();return
+    device=subprocess.check_output(['nvidia-smi','--query-gpu=name,driver_version','--format=csv,noheader'],text=True).strip()
+    write(root/'GPU.json',dict(devices=device,scope='OpenGL rendering only; no neural policy inference',slurm_job=os.environ['SLURM_JOB_ID']))
     outcomes=[];all_rows=[]
     for index,row in enumerate(read(root/'CASES.json')):
         case=root/('case_%03d'%index);case.mkdir();write(case/'INPUT.json',row)

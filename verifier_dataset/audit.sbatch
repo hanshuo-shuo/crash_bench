@@ -17,6 +17,10 @@ export PYTHONNOUSERSITE=1 PYTHONDONTWRITEBYTECODE=1
 from pathlib import Path
 import sys
 from verifier_dataset.inventory import read
-from verifier_dataset.pool_audit import main
-root=Path(sys.argv[1]);main(root,[Path(x) for x in read(root/'AUDIT_SOURCES.json')])
+root=Path(sys.argv[1])
+if read(root/'CAMPAIGN.json')['stage']=='audit-constraints':
+    from verifier_dataset.constraint_audit import main
+else:
+    from verifier_dataset.pool_audit import main
+main(root,[Path(x) for x in read(root/'AUDIT_SOURCES.json')])
 PY
