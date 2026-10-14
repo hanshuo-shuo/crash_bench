@@ -114,6 +114,8 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
             if command('sacct','-X','-n','-P','-j',job,'--format=JobIDRaw,State,ExitCode').splitlines()!=[job+'|COMPLETED|0:0']:
                 raise RuntimeError('Export must terminate normally before audit')
     if stage=='audit-constraints':
+        from .statistics_assets import ROOT as statistics_root,PACKAGES
+        if read(statistics_root/'STAGED.json')['overlay_packages']!=PACKAGES:raise RuntimeError('Offline statistics assets not staged')
         if not candidate_exports or len(candidate_exports)!=2 or len(set(candidate_exports))!=2:
             raise RuntimeError('Two distinct completed constraint batch shards required')
         dependency_accounting=[]
@@ -260,6 +262,7 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
         authorization='2026-10-14 user: 1000 evidence-backed rows on Quest; train only after audit; API cap $20',
         api_calls=0, api_limit_usd='20.00', account='p33100', partition='short',canonicalize=canonicalize,smoke_limit=limit)
     manifest['contact_contract']=read(repo/'verifier_dataset/protocol.json').get('contact_contract')
+    if stage=='audit-constraints':manifest['statistics_assets_sha256']=sha(statistics_root/'STAGED.json')
     if stage in ('fixture-smoke','fixture-render','fixture-grounding'):
         manifest['contact_contract']='FD1000-fixture-v1 (development-only inherited strict contact and swept-root guard)'
     if stage in ('paired-prototype','paired-screen','paired-render','reciprocal-prototype'):

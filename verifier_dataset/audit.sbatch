@@ -13,6 +13,10 @@ cd "$ROOT/source"
 sha256sum --quiet -c "$ROOT/source.sha256"
 unset OPENROUTER_API_KEY
 export PYTHONNOUSERSITE=1 PYTHONDONTWRITEBYTECODE=1
+if [[ "$CB_FD_STAGE" == audit-constraints ]]; then
+    /projects/p33100/siosio/envs/openpi/bin/python -m verifier_dataset.statistics_assets prepare "$ROOT"
+    export PYTHONPATH="$ROOT/statistics_packages:$ROOT/source"
+fi
 /projects/p33100/siosio/envs/openpi/bin/python -u - "$ROOT" <<'PY'
 from pathlib import Path
 import sys

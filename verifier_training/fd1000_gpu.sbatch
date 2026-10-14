@@ -14,4 +14,6 @@ export PYTHONNOUSERSITE=1 PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=4 OPENBLAS_N
 export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 TOKENIZERS_PARALLELISM=false
 export CB_CODE_COMMIT="$(cat "$CB_VERIFIER_RUN/SOURCE_COMMIT")"
 export PYTHONPATH="$CB_VERIFIER_ASSETS/packages:$CB_VERIFIER_RUN/source"
+/projects/p33100/siosio/envs/openpi/bin/python -m verifier_dataset.statistics_assets prepare "$CB_VERIFIER_RUN"
+export PYTHONPATH="$CB_VERIFIER_RUN/statistics_packages:$PYTHONPATH"
 /projects/p33100/siosio/envs/openpi/bin/python -u -m verifier_training.fd1000_run "$CB_FD_TRAIN_STAGE" "$CB_VERIFIER_RUN"

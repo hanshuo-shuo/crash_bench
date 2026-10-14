@@ -8,6 +8,7 @@ from .common import BASE,UPSTREAM,MODEL_ID,read,write,sha,require
 from .launch import command
 from .launch_verdict_diagnostic import ASSETS
 from .fd1000_contract import configuration
+from verifier_dataset.statistics_assets import ROOT as STATISTICS,PACKAGES
 
 
 def normal(job):
@@ -49,6 +50,7 @@ def main(stage,dataset=None,root=None):
         require(approval.get('passed') is True and approval.get('scientific_training_allowed') is True,'No scientific data acceptance')
         require(sha(dataset/'ACCEPTANCE.json')==read(dataset.parent/'COMPLETE.json')['acceptance_sha256'],'Data acceptance anchor differs')
         require(read(ASSETS/'STAGED.json')['model_id']==MODEL_ID,'Wrong staged VLM; no substitution permitted')
+        require(read(STATISTICS/'STAGED.json')['overlay_packages']==PACKAGES,'Fixed offline statistics dependencies not staged')
         root=BASE/'verifier_training/runs'/(datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')+'_fd1000_'+commit[:12])
         root.mkdir();(root/'source').mkdir()
         with (root/'source.tar').open('wb') as f:subprocess.run(['git','archive',commit],stdout=f,check=True)
@@ -57,6 +59,7 @@ def main(stage,dataset=None,root=None):
         write(root/'config.json',configuration())
         receipt=dict(source_commit=commit,upstream_commit=UPSTREAM,run_root=str(root),dataset=str(dataset),assets=str(ASSETS),
             dataset_acceptance_sha256=sha(dataset/'ACCEPTANCE.json'),assets_stage_sha256=sha(ASSETS/'STAGED.json'),
+            statistics_assets_sha256=sha(STATISTICS/'STAGED.json'),
             configuration_sha256=sha(root/'config.json'),seed=713,api_calls=0,
             authorization='User authorized verifier training only after the 1000-row evidence, grounding and shortcut audit passes',
             scope='Fresh direct/generative language LoRA, three complete epochs, validation checkpoint selection, locked source test once')
