@@ -14,7 +14,7 @@ def command(*args):
     return subprocess.check_output(args, text=True).strip()
 
 
-def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, replay_smoke=None):
+def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, replay_smoke=None, collection_root=None):
     repo = Path.cwd().resolve()
     if repo != (Path.home()/'crash_bench').resolve():
         raise RuntimeError('Wrong project checkout')
@@ -48,9 +48,16 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
     if stage=='export-candidates':
         if replay_smoke is None:raise RuntimeError('Explicit completed replay source required')
         source_receipt=read(replay_smoke/'RECEIPT.json')
-        if source_receipt['stage'] not in ('replay-smoke','replay-spatial-batch'):
+        if source_receipt['stage'] not in ('replay-smoke','replay-spatial-batch','replay-collection'):
             raise RuntimeError('Wrong witness source stage')
         if not source_receipt['canonicalize']:raise RuntimeError('Canonical legal witness required')
+    if stage=='replay-collection':
+        if collection_root is None or not canonicalize:raise RuntimeError('Explicit collection and canonical action replay required')
+        from .collection_evidence import replay_candidates
+        collection_rows,collection_inheritance=replay_candidates(collection_root)
+        source_job=collection_inheritance['source_job']
+        if command('sacct','-X','-n','-P','-j',source_job,'--format=JobIDRaw,State,ExitCode').splitlines()!=[source_job+'|COMPLETED|0:0']:
+            raise RuntimeError('Collection job must finish normally before replay')
     if stage in ('collect-smoke','collect-cached-smoke'):
         if source_plan is None or not read(source_plan/'source_plan/SUMMARY.json')['passed']:
             raise RuntimeError('Passed broader-source inventory required')
@@ -78,6 +85,9 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
     if stage == 'replay-smoke':
         write(root/'CASES.json',read(inventory/'inventory/REPLAY_SMOKE.json')[:limit])
         write(root/'INHERITED.json',dict(inventory=str(inventory),hashes=hashes))
+    if stage=='replay-collection':
+        write(root/'CASES.json',collection_rows)
+        write(root/'INHERITED.json',collection_inheritance)
     if stage=='replay-spatial-batch':
         rows=[r for r in read(inventory/'inventory/CANDIDATES.json') if r['family']=='safelibero_spatial'
               and r['proxy_safe_success'] and r['has_action_tape'] and r['has_settled_state']]
@@ -143,9 +153,10 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
 
 
 if __name__ == '__main__':
-    p = argparse.ArgumentParser(); p.add_argument('stage', choices=['inventory','source-plan','replay-smoke','replay-spatial-batch','collect-smoke','collect-cached-smoke','export-candidates'])
+    p = argparse.ArgumentParser(); p.add_argument('stage', choices=['inventory','source-plan','replay-smoke','replay-spatial-batch','collect-smoke','collect-cached-smoke','replay-collection','export-candidates'])
     p.add_argument('--inventory',type=Path);p.add_argument('--canonicalize',action='store_true')
     p.add_argument('--limit',type=int,default=12)
     p.add_argument('--source-plan',type=Path)
     p.add_argument('--replay-smoke',type=Path)
-    a=p.parse_args();main(a.stage,a.inventory,a.canonicalize,a.limit,a.source_plan,a.replay_smoke)
+    p.add_argument('--collection-root',type=Path)
+    a=p.parse_args();main(a.stage,a.inventory,a.canonicalize,a.limit,a.source_plan,a.replay_smoke,a.collection_root)

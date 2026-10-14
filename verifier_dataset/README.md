@@ -97,6 +97,15 @@ This stage can collect existing-cache sources without authorizing or attempting
 the rejected external request. Both cache hits and misses are unit-tested with
 network access mocked to raise an error.
 
+`replay-collection --collection-root ROOT --canonicalize` consumes only actual
+completed tapes from a terminal cache-only collection. It checks run identities,
+source/collection agreement, code/Slurm provenance and zero paid-worker activity,
+then subjects the tapes to the unchanged strict replay and contact checker.
+Deferred cache misses and policy failures remain UNKNOWN in the inheritance
+receipt. A partial collection may supply complete tapes, but missing sources
+cannot be counted as executed, positive, or infeasible. The existing candidate
+exporter can consume this replay after normal worker/job exits.
+
 After a normal-exit 12-source replay smoke, `replay-spatial-batch --inventory ROOT
 --replay-smoke ROOT --canonicalize` validates the bounded existing Spatial pool
 (124 original proxy-success tapes in the initial inventory), eight CPU shards
