@@ -99,6 +99,7 @@ Local receipts and checksum-verified copies are under
 | Enclosure design v2 | `20261014T074039Z_design-fixture_a33e4f6d9ce2` | `a33e4f6d9ce2` |
 | Failed fixture initialization | `20261014T075122Z_fixture-smoke_f0b6fcfecbca` | `f0b6fcfecbca` |
 | Canonical-state fixture test | `20261014T075535Z_fixture-smoke_0b2769cb21f7` | `0b2769cb21f7` |
+| Actual fixture pixels | `20261014T080229Z_fixture-render_1d5bf196dc63` | `1d5bf196dc63` |
 
 ## Active unaffected work
 
@@ -126,10 +127,37 @@ the original physical trace. The 11,417 recorded native/synchronized contact and
 root-segment checks were independently recomputed. This is one original scene.
 
 The derived mug-only subtask is not an unchanged official benchmark goal. This
-is a mechanism test only: the digital guard, fixed-site goal observability,
-rendered-input equality and appearance matching need explicit treatment before
-scientific admission. A bounded rendering stage is prepared to verify actual
-pixels and evidence-linked teacher facts; it cannot enable training.
+is a mechanism test only: the digital guard, fixed-site goal observability and
+appearance matching need explicit treatment before scientific admission.
+
+Actual rendering **9918416 COMPLETED/0:0**, 2m17s, rebuilt the full-precision
+constructors on one GPU, restored the canonical state and repeated all three
+checks. CPU/GPU labels, action counts and initial physical hashes match. Both
+external and wrist images for closed/full versus closed/mug are **pixel-exact**
+(zero changed pixels). Thus this one scene supports a task-dependent diagnostic
+with identical visual input. It does not establish broad learned reasoning.
+All six native images and 49 delivered metadata/image files are available locally
+with verified hashes. Closed external/wrist and open external were inspected.
+
+The opaque blue enclosure hides the pudding in both closed views; the fixed-world
+goal region also needs explicit task/visual grounding. These premises cannot be
+inferred from the current RGBs merely because the simulator knows them. The
+three evidence-linked `TEACHER_FACTS.json` records are privileged audit notes,
+not student-ready reasoning targets. Target visibility, explicit goal/guard
+presentation and matched appearance controls remain open. No additional
+construction or bulk dataset is accepted on the strength of this diagnostic.
+
+All jobs listed above are now terminal. No GPU, paid API worker or verifier
+training remains active. The current scientific rendering source is
+`1d5bf196dc6306b46b916435ac09e936c8f60356`; each preceding stage retains its own
+frozen archive and provenance.
+
+Seed roles are distinct: `1014` in the campaign receipt is planning/protocol
+metadata; Python, NumPy and environment construction use seed `7`; the inherited
+Long/task3/episode1 action tape was generated with policy seed `2078651807`.
+Fixture validation and rendering replay fixed saved commands and make no fresh
+policy call or claim to restore a learned-policy RNG stream. The saved canonical
+initial physics/controller context and all replay equality checks remain intact.
 
 Local merged index:
 `results/verifier_dataset/20261014T073032Z_audit-candidates_ad9725da5ebf/MERGED_CANDIDATES.jsonl`.
@@ -162,6 +190,10 @@ operation. The historical cache-only roots remain immutable.
    limits. That approval question is pending. **The rejected operation executed
    no paid request and created no collect-smoke job/root.** Do not retry it until
    the missing approval arrives. The key is never copied into source or logs.
+   A newer explicit question offers approval of the concrete 32-request/$6.40
+   review, approval of only the original four-request/$0.80 smoke, or continued
+   offline work. No answer has arrived. Approval of the smaller smoke must not
+   be interpreted as approval of the larger review manifest.
 
 Accepted complete scientific dataset rows: **0**. New matched certified negatives:
 **0** admitted to the scientific dataset; **one** conditional development
