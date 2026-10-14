@@ -73,6 +73,8 @@ def check_saved(folder):
                 previous[mode]=point
             safe &= not bad
             if safe!=row['safe_history']:raise RuntimeError('Persisted safety history mismatch')
+            if count==1 and (row['phase']!='initial' or safe!=geo['initial_safe'] or row['native_root']!=geo['initial_root']):
+                raise RuntimeError('Initial certificate premises disagree with recorded safety')
     if count!=summary['samples'] or safe!=summary['safe_history']:raise RuntimeError('Incomplete safety log')
     if summary['label']=='conditionally_infeasible' and not (summary['task_scope']=='full' and recomputed['label']=='infeasible'):
         raise RuntimeError('Certificate does not apply to this task')

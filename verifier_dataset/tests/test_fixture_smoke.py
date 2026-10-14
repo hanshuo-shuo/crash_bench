@@ -21,7 +21,7 @@ class TaskCertificateScope(unittest.TestCase):
         write(root/'EXECUTED_GEOMETRY.json',geo);write(root/'PUDDING_CERTIFICATE.json',cert)
         write(root/'SUMMARY.json',dict(samples=1,safe_history=True,label='conditionally_infeasible',task_scope=scope))
         with gzip.open(root/'SAMPLES.jsonl.gz','wt') as f:
-            f.write(json.dumps(dict(native_contacts=[],synchronized_contacts=[],native_root=[0.,0.,.1],
+            f.write(json.dumps(dict(phase='initial',native_contacts=[],synchronized_contacts=[],native_root=[0.,0.,.1],
                                     synchronized_root=[0.,0.,.1],safe_history=True))+'\n')
 
     def test_pudding_exclusion_cannot_label_an_unrelated_mug_task(self):
@@ -43,6 +43,16 @@ class TaskCertificateScope(unittest.TestCase):
         self.assertTrue(prohibited_contact(4,3,-.001,dynamic,protected,rigid))
         self.assertFalse(prohibited_contact(1,2,-.001,dynamic,protected,rigid))
         self.assertFalse(prohibited_contact(1,5,-.001,dynamic,protected,rigid))
+
+    def test_saved_check_rejects_protected_object_wall_contact_marked_safe(self):
+        with tempfile.TemporaryDirectory() as name:
+            root=Path(name);self.fixture(root,'full')
+            geo=json.loads((root/'EXECUTED_GEOMETRY.json').read_text());geo['protected']=[1,2]
+            write(root/'EXECUTED_GEOMETRY.json',geo)
+            with gzip.open(root/'SAMPLES.jsonl.gz','wt') as f:
+                f.write(json.dumps(dict(phase='initial',native_contacts=[[1,2,-.001]],synchronized_contacts=[],
+                    native_root=[0.,0.,.1],synchronized_root=[0.,0.,.1],safe_history=True))+'\n')
+            with self.assertRaisesRegex(RuntimeError,'safety history mismatch'):check_saved(root)
 
 
 if __name__=='__main__':unittest.main()
