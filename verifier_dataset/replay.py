@@ -78,7 +78,8 @@ def replay(row, folder, physical_hash, canonicalize=False):
     steps = [json.loads(x) for x in (source/'steps.jsonl').read_text().splitlines()]
     assert_trace(steps, row['actions'])
     random.seed(7); np.random.seed(7)
-    env = None; original_step = None; started = time.monotonic(); contacts = []; saved = []
+    env = None; original_step = None; had_step_override = False; previous_step_override = None
+    started = time.monotonic(); contacts = []; saved = []
     try:
         env = ControlEnv(bddl_file_name=Path(get_libero_path('bddl_files'))/task.problem_folder/task.bddl_file,
                          use_camera_obs=False, has_offscreen_renderer=False, camera_depths=False,
@@ -136,6 +137,8 @@ def replay(row, folder, physical_hash, canonicalize=False):
                     contacts.append(dict(action=counter['action'],substep=counter['substep'],phase=phase,
                                          geom_pair=list(pair),distance=float(contact.dist)))
         sample('initial')
+        had_step_override = 'step' in vars(env.sim)
+        previous_step_override = vars(env.sim).get('step')
         original_step = env.sim.step
         def step_and_sample(*args,**kwargs):
             value = original_step(*args,**kwargs)
@@ -197,7 +200,14 @@ def replay(row, folder, physical_hash, canonicalize=False):
         if env is not None:
             # Remove the environment -> wrapper closure -> bound sim cycle before
             # native MuJoCo destruction. Never accept a shutdown crash as success.
-            if original_step is not None: env.sim.step = original_step
+            if original_step is not None:
+                if had_step_override:
+                    env.sim.step = previous_step_override
+                else:
+                    # Putting the bound method back in the instance dictionary
+                    # creates a sim -> bound method -> sim cycle. Restore the
+                    # original class descriptor instead.
+                    delattr(env.sim,'step')
             env.close()
 
 
