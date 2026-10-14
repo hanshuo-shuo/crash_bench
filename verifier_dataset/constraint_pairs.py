@@ -41,8 +41,11 @@ def layouts(env,goal,step,sample_index,horizon,obstacle,source_id):
     choices=[]
     widths={role:.0012+.0024*int.from_bytes(hashlib.sha256((source_id+'|'+str(step)+'|'+role+'|appearance-v1').encode()).digest()[:8],'big')/2**64
             for role in ('a','b')}
-    for sign in (1,-1):
-        bcenter=(center+goal_center)/2+sign*.25*perpendicular;bcenter[2]=center[2]
+    layout_seed=hashlib.sha256((source_id+'|'+str(step)+'|layout-v1').encode()).digest()
+    offset=.18+.16*int.from_bytes(layout_seed[:8],'big')/2**64
+    signs=(1,-1) if layout_seed[8]%2==0 else (-1,1)
+    for sign in signs:
+        bcenter=(center+goal_center)/2+sign*offset*perpendicular;bcenter[2]=center[2]
         b=[(bcenter-half).tolist(),(bcenter+half).tolist()]
         if not disjoint(a,b) or not disjoint(dest,b):continue
         choices.append(dict(contract=CONTRACT,native_goal=goal,native_obstacle=obstacle,
@@ -51,6 +54,7 @@ def layouts(env,goal,step,sample_index,horizon,obstacle,source_id):
             geometry_source='Current initial geometry only; candidate locations are fixed before inspecting future actions',
             object_receiver_region='Initial receiver XY +/-4 cm, Z -1..25 cm; native On predicate also required',
             render_widths=widths,appearance_note='Boundary stroke widths vary by a fixed source/checkpoint seed, independently of the protected-color query; physics and guard bounds are unchanged',
+            alternate_region_offset_metres=offset,alternate_region_sign=sign,layout_seed_sha256=layout_seed.hex(),
             fixed_virtual_boundaries=True,physical_collision_walls=False))
     return choices
 
