@@ -125,9 +125,17 @@ def main(root,parents):
     write(root/'REJECTED.json',rejected)
     write(root/'ALL_VALID_UNITS.json',units)
     selected=select_units(units,target=250)
-    records=[]
+    records=[];complete_inputs=set();image_splits={}
     for i,unit in enumerate(selected):
         for r in unit:
+            key=json.dumps(dict(images=[im['sha256'] for im in r['student']['images']],
+                task=r['student']['task'],constraints=r['student']['constraints']),sort_keys=True)
+            if key in complete_inputs:raise RuntimeError('Duplicate complete observations inflate the final dataset')
+            complete_inputs.add(key)
+            pair=tuple(im['sha256'] for im in r['student']['images'])
+            if pair in image_splits and image_splits[pair]!=r['split']:raise RuntimeError('Shared image pair crosses frozen source splits')
+            image_splits[pair]=r['split']
+            r['metadata']['screened_student_input_sha256']=hashlib.sha256(key.encode()).hexdigest()
             r['sample_id']='fd1000_%04d'%len(records);r['metadata']['unit_id']='unit_%03d'%i;records.append(r)
     coverage=dict(rows=len(records),physical_checkpoint_units=len(selected),original_sources=len({r['metadata']['source_id'] for r in records}),
         ancestry_groups=len({r['metadata']['ancestry_component'] for r in records}),

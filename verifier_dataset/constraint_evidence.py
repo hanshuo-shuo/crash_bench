@@ -39,6 +39,10 @@ def verify_trace(samples,actions,geometry):
     expected=set(scope['robot'])|{g for values in scope['targets'].values() for g in values}
     if set(geometry['actors'])!=expected or set(geometry['protected'])!=set(scope['protected']):
         raise RuntimeError('Contact actor/protected scope differs from the native identities')
+    material=geometry['material']
+    if material['object']!=geometry['goal_definition']['goal'][1] or samples[0]['native_point']!=material['initial_world_center']:
+        raise RuntimeError('Recorded guard point is not anchored to the selected material geometry')
+    bound=material.get('root_offset_norm_upper_bound',math.sqrt(sum(v*v for v in material['center_in_root'])))
     safe=True;last_pair=(0,0);endpoints=[];integrations=0
     for i,row in enumerate(samples):
         pair=(row['step'],row['substep'])
@@ -54,6 +58,9 @@ def verify_trace(samples,actions,geometry):
             endpoints.append(row['step'])
         else:raise RuntimeError('Unknown sample phase')
         for mode in ('native','synchronized'):
+            point,root=row[mode+'_point'],row[mode+'_root']
+            if not all(math.isfinite(v) for v in point+root) or math.sqrt(sum((a-b)**2 for a,b in zip(point,root)))>bound+1e-9:
+                raise RuntimeError('Material center violates its rigid root-offset bound')
             if evaluate(geometry['goal_definition'],row[mode+'_goal_state'],row[mode+'_goal_contacts'])!=row[mode+'_goal_success']:
                 raise RuntimeError('Invalid persisted native goal formula')
             if row[mode+'_goal_state']['target_position']!=row[mode+'_root']:

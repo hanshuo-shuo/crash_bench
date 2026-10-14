@@ -37,7 +37,7 @@ def validate(root):
     rows=[json.loads(line) for line in (root/'dataset.jsonl').read_text().splitlines()]
     require(len(rows)==1000 and len({r['sample_id'] for r in rows})==1000,'Exactly 1000 distinct records required')
     require(Counter(r['target']['verdict'] for r in rows)=={'feasible':500,'infeasible':500},'Unbalanced final labels')
-    units=defaultdict(list);group_splits=defaultdict(set);images={};source_units=defaultdict(set)
+    units=defaultdict(list);group_splits=defaultdict(set);images={};source_units=defaultdict(set);full_inputs=set()
     for r in rows:
         m=r['metadata'];source=split[m['source_id']]
         require(r['training_eligible'] is True and r['observability_review']=='passed','Unreviewed row cannot train')
@@ -53,6 +53,8 @@ def validate(root):
             require(sha(root/p)==im['sha256'],'Final student image changed');pair.append(im['sha256'])
         key=tuple(pair)
         require(key not in images or images[key]==r['split'],'Shared image pair crosses source splits');images[key]=r['split']
+        full=(key,r['student']['task'],r['student']['constraints'])
+        require(full not in full_inputs,'Repeated complete model input');full_inputs.add(full)
     require(len(units)==250 and len(source_units)>=30 and all(len(v)<=10 for v in source_units.values()),'Source/checkpoint coverage failed')
     require(all(len(v)==1 for v in group_splits.values()),'Ancestry leakage')
     require(len({r['metadata']['task_group'] for r in rows})>=6 and len({r['metadata']['family'] for r in rows})>=3,'Task/family coverage failed')
