@@ -136,6 +136,11 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
         active=command('squeue','-h','-u',os.environ['USER'],'-A','p33100','-p','gengpu','-o','%j|%Z')
         if sum('crash_bench' in x or 'crashbench_safelibero' in x or x.startswith('cb_') for x in active.splitlines())>=2:
             raise RuntimeError('Two CrashBench GPU jobs already active')
+    if stage=='audit-request-drift':
+        if collection_root is None:raise RuntimeError('Explicit approved-cache collection required')
+        old=read(collection_root/'RECEIPT.json');job=old['job']
+        if old['stage']!='collect-approved-cache' or command('sacct','-X','-n','-P','-j',job,'--format=JobIDRaw,State,ExitCode').splitlines()!=[job+'|COMPLETED|0:0']:
+            raise RuntimeError('Approved-cache collection must terminate normally')
     root = ASSETS/'verifier_dataset'/(datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')+'_'+stage+'_'+commit[:12])
     root.mkdir(parents=True, exist_ok=False); (root/'source').mkdir()
     with (root/'source.tar').open('wb') as stream:
@@ -229,6 +234,9 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
             api_mode='paid_guarded' if stage=='collect-smoke' else 'cache_only')
         write(root/'CAMPAIGN.json',manifest)
     env = dict(os.environ, CB_FD_ROOT=str(root), CB_FD_STAGE=stage)
+    if stage=='audit-request-drift':
+        env['CB_FD_COLLECTION']=str(collection_root)
+        write(root/'INHERITED.json',dict(collection_root=str(collection_root),receipt_sha256=sha(collection_root/'RECEIPT.json')))
     if stage=='export-candidates':
         env['CB_FD_REPLAY']=str(replay_smoke)
         write(root/'EXPORT_SOURCE.json',dict(root=str(replay_smoke),receipt_sha256=sha(replay_smoke/'RECEIPT.json')))
@@ -236,6 +244,7 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
     if stage=='export-candidates':script='export.sbatch'
     if stage=='audit-candidates':script='audit.sbatch'
     if stage in ('fixture-render','fixture-grounding'):script='fixture_render.sbatch'
+    if stage=='audit-request-drift':script='request_drift.sbatch'
     submit=['sbatch','--parsable','--output='+str(root/'slurm_%j.log')]
     if stage in ('replay-spatial-batch','replay-object-sources','replay-spatial-sources'):
         submit=['sbatch','--parsable','--array=0-7%4','--output='+str(root/'slurm_%A_%a.log')]
@@ -271,7 +280,7 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
 
 
 if __name__ == '__main__':
-    p = argparse.ArgumentParser(); p.add_argument('stage', choices=['inventory','source-plan','replay-smoke','replay-spatial-batch','replay-object-sources','replay-spatial-sources','collect-smoke','collect-cached-smoke','collect-cached-batch','collect-approved-cache','replay-collection','export-candidates','audit-candidates','design-fixture','fixture-smoke','fixture-render','fixture-grounding'])
+    p = argparse.ArgumentParser(); p.add_argument('stage', choices=['inventory','source-plan','replay-smoke','replay-spatial-batch','replay-object-sources','replay-spatial-sources','collect-smoke','collect-cached-smoke','collect-cached-batch','collect-approved-cache','replay-collection','export-candidates','audit-candidates','design-fixture','fixture-smoke','fixture-render','fixture-grounding','audit-request-drift'])
     p.add_argument('--inventory',type=Path);p.add_argument('--canonicalize',action='store_true')
     p.add_argument('--limit',type=int,default=12)
     p.add_argument('--source-plan',type=Path)
