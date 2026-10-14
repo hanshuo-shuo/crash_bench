@@ -47,6 +47,21 @@ share exactly the same capture. A new prototype and new data audit are required;
 old pixel reviews cannot approve the new images. This is a dataset-development
 revision after a validation failure, not a favorable test result.
 
+V2 prototype **3600572 COMPLETED/0:0**, 2m34s, root
+`20261014T204247Z_constraint-prototype_848bd2503786`: four matched units/16
+candidates, all original physical hashes retained. All 16 selected images and
+72 delivered files were inspected/hash-checked. Review record:
+`reviews/fd1000_camera_v2_prototype.json`. This permits bounded bulk collection,
+not scientific training; the small Object target still needs per-unit review.
+
+The v1 exploratory CPU diagnostic **3601447 COMPLETED/0:0**, 43s, root
+`20261014T205226Z_diagnose-shortcuts_d21fa41e2195`, found validation forest AUROC
+0.978052 using only the original external view and 0.944787 using only the wrist
+view; color-centroid features alone reached 0.984825. Thus fixed positional
+framing affects both original views. The v2 paired views focus on the midpoint
+of both regions and rotate by a fixed source/checkpoint seed. No diagnostic
+scored the locked test or changed the acceptance threshold.
+
 Two source-frozen rendering/replay batches were submitted from published commit
 `e1859532ae9e0155e085f4120c06810219bcc7e9`:
 

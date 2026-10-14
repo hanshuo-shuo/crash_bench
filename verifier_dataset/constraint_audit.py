@@ -31,6 +31,18 @@ def visibility_check(option,layout):
     import numpy as np
     from PIL import Image
     vis=read(option/'VISIBILITY.json');images=read(option/'IMAGES.json')['assignments']
+    if layout.get('camera_scheme')=='balanced_two_overviews_v2':
+        from .constraint_visuals import balanced_poses
+        camera=read(option/'CAMERA.json');views=camera['rendered_views']
+        if camera['camera_scheme']!=layout['camera_scheme'] or camera['native_wrist_used'] or [v['camera'] for v in views]!=['overview_a','overview_b']:
+            raise RuntimeError('Recorded overview camera identities differ')
+        expected=balanced_poses(layout,views[0]['pose']['fovy'])
+        for actual,wanted in zip(views,expected):
+            for key in ('position','rotation','focus','distance','fovy','maximum_projected_abs'):
+                if not np.allclose(actual['pose'][key],wanted[key],rtol=0,atol=1e-12):
+                    raise RuntimeError('Camera pose differs from the label-independent framing rule')
+        for group in images:
+            if [im['camera'] for im in group]!=['overview_a','overview_b']:raise RuntimeError('Student images are not the declared two overviews')
     for camera in range(2):
         a,b=[option/vis['assignments'][assignment][camera]['segmentation_path'] for assignment in (0,1)]
         with np.load(a,allow_pickle=False) as left,np.load(b,allow_pickle=False) as right:
