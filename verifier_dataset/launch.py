@@ -4,14 +4,14 @@ from datetime import datetime, timezone
 import os
 from pathlib import Path
 import subprocess
-from .inventory import ASSETS, sha, write
+from .inventory import ASSETS, sha, write, read
 
 
 def command(*args):
     return subprocess.check_output(args, text=True).strip()
 
 
-def main(stage):
+def main(stage, inventory=None):
     repo = Path.cwd().resolve()
     if repo != (Path.home()/'crash_bench').resolve():
         raise RuntimeError('Wrong project checkout')
@@ -23,6 +23,12 @@ def main(stage):
     commit = command('git', 'rev-parse', 'HEAD')
     if 'origin/' not in command('git', 'branch', '-r', '--contains', commit):
         raise RuntimeError('Source must be published')
+    if stage == 'replay-smoke':
+        if inventory is None or not read(inventory/'inventory/SUMMARY.json')['passed']:
+            raise RuntimeError('Passed inventory required')
+        hashes=read(inventory/'inventory/HASHES.json')
+        for name, expected in hashes.items():
+            if sha(inventory/'inventory'/name)!=expected: raise RuntimeError('Inventory hash changed')
     root = ASSETS/'verifier_dataset'/(datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')+'_'+stage+'_'+commit[:12])
     root.mkdir(parents=True, exist_ok=False); (root/'source').mkdir()
     with (root/'source.tar').open('wb') as stream:
@@ -36,9 +42,12 @@ def main(stage):
         authorization='2026-10-14 user: 1000 evidence-backed rows on Quest; train only after audit; API cap $20',
         api_calls=0, api_limit_usd='20.00', account='p33100', partition='short')
     write(root/'CAMPAIGN.json', manifest)
+    if stage == 'replay-smoke':
+        write(root/'CASES.json',read(inventory/'inventory/REPLAY_SMOKE.json'))
+        write(root/'INHERITED.json',dict(inventory=str(inventory),hashes=hashes))
     env = dict(os.environ, CB_FD_ROOT=str(root), CB_FD_STAGE=stage)
     job = subprocess.check_output(['sbatch', '--parsable', '--output='+str(root/'slurm_%j.log'),
-        str(root/'source/verifier_dataset/cpu.sbatch')], env=env, text=True).strip().split(';')[0]
+        str(root/'source/verifier_dataset'/('cpu.sbatch' if stage=='inventory' else 'replay.sbatch'))], env=env, text=True).strip().split(';')[0]
     if not job.isdigit():
         raise RuntimeError('Invalid Slurm receipt')
     receipt = dict(manifest, job=job)
@@ -49,5 +58,5 @@ def main(stage):
 
 
 if __name__ == '__main__':
-    p = argparse.ArgumentParser(); p.add_argument('stage', choices=['inventory'])
-    main(p.parse_args().stage)
+    p = argparse.ArgumentParser(); p.add_argument('stage', choices=['inventory','replay-smoke'])
+    p.add_argument('--inventory',type=Path);a=p.parse_args();main(a.stage,a.inventory)
