@@ -71,7 +71,7 @@ def body_bounds(env,name):
     return [points.min(0).tolist(),points.max(0).tolist()]
 
 
-def destination(env,goal):
+def destination(env,goal,object_xy_halfwidth=.08):
     """Declare a fixed region from the current receiver, never a future witness."""
     import numpy as np
     m,d=env.sim.model,env.sim.data;predicate,target,receiver=goal
@@ -91,7 +91,9 @@ def destination(env,goal):
         bounds=[(lo-.02).tolist(),(hi+.02).tolist()]
     elif receiver in env.env.obj_body_id and predicate=='on':
         p=np.asarray(d.body_xpos[int(env.env.obj_body_id[receiver])])
-        bounds=[(p+[-.08,-.08,-.01]).tolist(),(p+[.08,.08,.25]).tolist()]
+        if not math.isfinite(object_xy_halfwidth) or object_xy_halfwidth<=0:raise ValueError('Invalid explicit destination size')
+        h=object_xy_halfwidth
+        bounds=[(p+[-h,-h,-.01]).tolist(),(p+[h,h,.25]).tolist()]
     else:raise RuntimeError('Unsupported receiver for fixed destination construction')
     return dict(native_goal=goal,fixed_root_region=bounds,
         region_definition='Declared from initial receiver geometry, held fixed throughout this derived task',

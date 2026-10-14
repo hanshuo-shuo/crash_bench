@@ -10,6 +10,8 @@
   "minimum_native_task_compositions": 6,
   "minimum_families": 3,
   "maximum_checkpoints_per_source": 10,
+  "object_receiver_fixed_xy_halfwidth_metres": 0.04,
+  "object_receiver_region_reason": "Native object-On requires XY distance <3 cm; the displayed fixed initial-receiver box allows 4 cm per axis. It is an explicit extra goal, not an assertion that a movable receiver stays fixed.",
   "construction": "One unchanged native scene/target/goal with two virtual closed regions, two region-color assignments and two safety-rule queries per shared capture",
   "physical_scope": "Noncolliding annotations only; every source action must retain its exact original physical hash and native task outcome",
   "positive_evidence": "Legal actual source action suffix, native contact contract v2, native and synchronized atomic native goal, fixed green goal region and designated virtual material-point guard",

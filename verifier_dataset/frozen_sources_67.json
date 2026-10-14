@@ -1,0 +1,490 @@
+{
+  "version": "FD1000-source-split-v1",
+  "seed": 1014,
+  "rule": "Ancestry grouped, stratified by native task; fixed before any verifier or shortcut readout fit",
+  "exposed_sources_forced_to_train": [
+    "safelibero_goal/I/task0/episode1",
+    "safelibero_long/I/task2/episode1",
+    "safelibero_long/I/task3/episode1",
+    "safelibero_object/I/task2/episode6",
+    "safelibero_spatial/I/task0/episode0"
+  ],
+  "test_usage": "Locked for the final model comparison; validation is used for dataset shortcut screening",
+  "sources": [
+    {
+      "source_id": "safelibero_goal/I/task0/episode1",
+      "task_group": "safelibero_goal/I/task0",
+      "family": "safelibero_goal",
+      "ancestry_component": "ancestry_c2a1f49cb6ac366d",
+      "split": "train"
+    },
+    {
+      "source_id": "safelibero_goal/I/task0/episode4",
+      "task_group": "safelibero_goal/I/task0",
+      "family": "safelibero_goal",
+      "ancestry_component": "ancestry_5d4db04198e1a70b",
+      "split": "test"
+    },
+    {
+      "source_id": "safelibero_goal/I/task0/episode5",
+      "task_group": "safelibero_goal/I/task0",
+      "family": "safelibero_goal",
+      "ancestry_component": "ancestry_e97c2fc682cfe72f",
+      "split": "validation"
+    },
+    {
+      "source_id": "safelibero_goal/I/task0/episode6",
+      "task_group": "safelibero_goal/I/task0",
+      "family": "safelibero_goal",
+      "ancestry_component": "ancestry_94dc3fcd025331a7",
+      "split": "train"
+    },
+    {
+      "source_id": "safelibero_goal/I/task1/episode0",
+      "task_group": "safelibero_goal/I/task1",
+      "family": "safelibero_goal",
+      "ancestry_component": "ancestry_88bc434a5341f514",
+      "split": "train"
+    },
+    {
+      "source_id": "safelibero_goal/I/task1/episode1",
+      "task_group": "safelibero_goal/I/task1",
+      "family": "safelibero_goal",
+      "ancestry_component": "ancestry_30d39a7a3bc9c45f",
+      "split": "test"
+    },
+    {
+      "source_id": "safelibero_goal/I/task1/episode2",
+      "task_group": "safelibero_goal/I/task1",
+      "family": "safelibero_goal",
+      "ancestry_component": "ancestry_82675557f6c6e427",
+      "split": "train"
+    },
+    {
+      "source_id": "safelibero_goal/I/task1/episode4",
+      "task_group": "safelibero_goal/I/task1",
+      "family": "safelibero_goal",
+      "ancestry_component": "ancestry_eb8dff7545007ad0",
+      "split": "validation"
+    },
+    {
+      "source_id": "safelibero_goal/I/task2/episode1",
+      "task_group": "safelibero_goal/I/task2",
+      "family": "safelibero_goal",
+      "ancestry_component": "ancestry_7243060aaaec8d19",
+      "split": "test"
+    },
+    {
+      "source_id": "safelibero_goal/I/task2/episode2",
+      "task_group": "safelibero_goal/I/task2",
+      "family": "safelibero_goal",
+      "ancestry_component": "ancestry_6a90fc697a8e04b2",
+      "split": "validation"
+    },
+    {
+      "source_id": "safelibero_goal/I/task2/episode6",
+      "task_group": "safelibero_goal/I/task2",
+      "family": "safelibero_goal",
+      "ancestry_component": "ancestry_7f337ce56c840127",
+      "split": "train"
+    },
+    {
+      "source_id": "safelibero_goal/I/task2/episode7",
+      "task_group": "safelibero_goal/I/task2",
+      "family": "safelibero_goal",
+      "ancestry_component": "ancestry_308087505f34f773",
+      "split": "train"
+    },
+    {
+      "source_id": "safelibero_goal/I/task3/episode0",
+      "task_group": "safelibero_goal/I/task3",
+      "family": "safelibero_goal",
+      "ancestry_component": "ancestry_32c5f3450e0b6e3a",
+      "split": "train"
+    },
+    {
+      "source_id": "safelibero_goal/I/task3/episode1",
+      "task_group": "safelibero_goal/I/task3",
+      "family": "safelibero_goal",
+      "ancestry_component": "ancestry_9d100949a8ac6b94",
+      "split": "train"
+    },
+    {
+      "source_id": "safelibero_goal/I/task3/episode3",
+      "task_group": "safelibero_goal/I/task3",
+      "family": "safelibero_goal",
+      "ancestry_component": "ancestry_ef07b6e1ecd07e56",
+      "split": "validation"
+    },
+    {
+      "source_id": "safelibero_goal/I/task3/episode4",
+      "task_group": "safelibero_goal/I/task3",
+      "family": "safelibero_goal",
+      "ancestry_component": "ancestry_1d8b4d7ba28a878f",
+      "split": "test"
+    },
+    {
+      "source_id": "safelibero_goal/I/task3/episode5",
+      "task_group": "safelibero_goal/I/task3",
+      "family": "safelibero_goal",
+      "ancestry_component": "ancestry_eb5e42c17ba4cb07",
+      "split": "train"
+    },
+    {
+      "source_id": "safelibero_long/I/task2/episode1",
+      "task_group": "safelibero_long/I/task2",
+      "family": "safelibero_long",
+      "ancestry_component": "ancestry_8d343ebbe4d1d615",
+      "split": "train"
+    },
+    {
+      "source_id": "safelibero_long/I/task2/episode2",
+      "task_group": "safelibero_long/I/task2",
+      "family": "safelibero_long",
+      "ancestry_component": "ancestry_7c29961c63439e2b",
+      "split": "train"
+    },
+    {
+      "source_id": "safelibero_long/I/task2/episode3",
+      "task_group": "safelibero_long/I/task2",
+      "family": "safelibero_long",
+      "ancestry_component": "ancestry_c5f1c8d425a8e2a1",
+      "split": "validation"
+    },
+    {
+      "source_id": "safelibero_long/I/task2/episode5",
+      "task_group": "safelibero_long/I/task2",
+      "family": "safelibero_long",
+      "ancestry_component": "ancestry_3eca53b466032e56",
+      "split": "test"
+    },
+    {
+      "source_id": "safelibero_long/I/task2/episode7",
+      "task_group": "safelibero_long/I/task2",
+      "family": "safelibero_long",
+      "ancestry_component": "ancestry_3bca71c879df44da",
+      "split": "train"
+    },
+    {
+      "source_id": "safelibero_long/I/task3/episode1",
+      "task_group": "safelibero_long/I/task3",
+      "family": "safelibero_long",
+      "ancestry_component": "ancestry_b997e825b5a68087",
+      "split": "train"
+    },
+    {
+      "source_id": "safelibero_long/I/task3/episode3",
+      "task_group": "safelibero_long/I/task3",
+      "family": "safelibero_long",
+      "ancestry_component": "ancestry_b082692bcacf4d2c",
+      "split": "test"
+    },
+    {
+      "source_id": "safelibero_long/I/task3/episode7",
+      "task_group": "safelibero_long/I/task3",
+      "family": "safelibero_long",
+      "ancestry_component": "ancestry_86ad6f6cadb220d6",
+      "split": "validation"
+    },
+    {
+      "source_id": "safelibero_long/I/task3/episode9",
+      "task_group": "safelibero_long/I/task3",
+      "family": "safelibero_long",
+      "ancestry_component": "ancestry_903aed5c235b1e07",
+      "split": "train"
+    },
+    {
+      "source_id": "safelibero_object/I/task2/episode6",
+      "task_group": "safelibero_object/I/task2",
+      "family": "safelibero_object",
+      "ancestry_component": "ancestry_c949fe94dcf5d45f",
+      "split": "train"
+    },
+    {
+      "source_id": "safelibero_object/I/task2/episode8",
+      "task_group": "safelibero_object/I/task2",
+      "family": "safelibero_object",
+      "ancestry_component": "ancestry_13f20947420c0c52",
+      "split": "train"
+    },
+    {
+      "source_id": "safelibero_object/II/task1/episode0",
+      "task_group": "safelibero_object/II/task1",
+      "family": "safelibero_object",
+      "ancestry_component": "ancestry_9a985f85fb51f72c",
+      "split": "test"
+    },
+    {
+      "source_id": "safelibero_object/II/task1/episode10",
+      "task_group": "safelibero_object/II/task1",
+      "family": "safelibero_object",
+      "ancestry_component": "ancestry_d741bb79b1bda39e",
+      "split": "train"
+    },
+    {
+      "source_id": "safelibero_object/II/task1/episode11",
+      "task_group": "safelibero_object/II/task1",
+      "family": "safelibero_object",
+      "ancestry_component": "ancestry_34727e93c31c6aa5",
+      "split": "validation"
+    },
+    {
+      "source_id": "safelibero_object/II/task1/episode12",
+      "task_group": "safelibero_object/II/task1",
+      "family": "safelibero_object",
+      "ancestry_component": "ancestry_675f13d37be7bfe9",
+      "split": "train"
+    },
+    {
+      "source_id": "safelibero_object/II/task1/episode13",
+      "task_group": "safelibero_object/II/task1",
+      "family": "safelibero_object",
+      "ancestry_component": "ancestry_9c34d29e2c8752e5",
+      "split": "train"
+    },
+    {
+      "source_id": "safelibero_object/II/task1/episode14",
+      "task_group": "safelibero_object/II/task1",
+      "family": "safelibero_object",
+      "ancestry_component": "ancestry_7a328fc0c6ad8403",
+      "split": "validation"
+    },
+    {
+      "source_id": "safelibero_object/II/task1/episode15",
+      "task_group": "safelibero_object/II/task1",
+      "family": "safelibero_object",
+      "ancestry_component": "ancestry_d770ca80e4cc2123",
+      "split": "test"
+    },
+    {
+      "source_id": "safelibero_object/II/task1/episode16",
+      "task_group": "safelibero_object/II/task1",
+      "family": "safelibero_object",
+      "ancestry_component": "ancestry_a195fbd3eecb1c65",
+      "split": "train"
+    },
+    {
+      "source_id": "safelibero_object/II/task1/episode18",
+      "task_group": "safelibero_object/II/task1",
+      "family": "safelibero_object",
+      "ancestry_component": "ancestry_152aa3fa805981ef",
+      "split": "train"
+    },
+    {
+      "source_id": "safelibero_object/II/task1/episode19",
+      "task_group": "safelibero_object/II/task1",
+      "family": "safelibero_object",
+      "ancestry_component": "ancestry_9f53e6e581a211e5",
+      "split": "train"
+    },
+    {
+      "source_id": "safelibero_object/II/task1/episode2",
+      "task_group": "safelibero_object/II/task1",
+      "family": "safelibero_object",
+      "ancestry_component": "ancestry_263dc4de255fea27",
+      "split": "validation"
+    },
+    {
+      "source_id": "safelibero_object/II/task1/episode3",
+      "task_group": "safelibero_object/II/task1",
+      "family": "safelibero_object",
+      "ancestry_component": "ancestry_3236c0c8cd7ccc64",
+      "split": "train"
+    },
+    {
+      "source_id": "safelibero_object/II/task1/episode4",
+      "task_group": "safelibero_object/II/task1",
+      "family": "safelibero_object",
+      "ancestry_component": "ancestry_0da04ba45fbb4661",
+      "split": "train"
+    },
+    {
+      "source_id": "safelibero_object/II/task1/episode5",
+      "task_group": "safelibero_object/II/task1",
+      "family": "safelibero_object",
+      "ancestry_component": "ancestry_832c9810647c24a1",
+      "split": "validation"
+    },
+    {
+      "source_id": "safelibero_object/II/task1/episode6",
+      "task_group": "safelibero_object/II/task1",
+      "family": "safelibero_object",
+      "ancestry_component": "ancestry_378d83030e089bd8",
+      "split": "train"
+    },
+    {
+      "source_id": "safelibero_object/II/task1/episode7",
+      "task_group": "safelibero_object/II/task1",
+      "family": "safelibero_object",
+      "ancestry_component": "ancestry_66503de12fa285d6",
+      "split": "train"
+    },
+    {
+      "source_id": "safelibero_object/II/task1/episode8",
+      "task_group": "safelibero_object/II/task1",
+      "family": "safelibero_object",
+      "ancestry_component": "ancestry_90800e9cdf853812",
+      "split": "test"
+    },
+    {
+      "source_id": "safelibero_object/II/task1/episode9",
+      "task_group": "safelibero_object/II/task1",
+      "family": "safelibero_object",
+      "ancestry_component": "ancestry_e3eb2e70ee644850",
+      "split": "test"
+    },
+    {
+      "source_id": "safelibero_spatial/I/task0/episode0",
+      "task_group": "safelibero_spatial/I/task0",
+      "family": "safelibero_spatial",
+      "ancestry_component": "ancestry_d53dd75c8ad3deb3",
+      "split": "train"
+    },
+    {
+      "source_id": "safelibero_spatial/I/task0/episode10",
+      "task_group": "safelibero_spatial/I/task0",
+      "family": "safelibero_spatial",
+      "ancestry_component": "ancestry_6a3f65da453bebd9",
+      "split": "validation"
+    },
+    {
+      "source_id": "safelibero_spatial/I/task0/episode13",
+      "task_group": "safelibero_spatial/I/task0",
+      "family": "safelibero_spatial",
+      "ancestry_component": "ancestry_e0aaf8b69496636a",
+      "split": "test"
+    },
+    {
+      "source_id": "safelibero_spatial/I/task0/episode8",
+      "task_group": "safelibero_spatial/I/task0",
+      "family": "safelibero_spatial",
+      "ancestry_component": "ancestry_722b96447c02e2ad",
+      "split": "train"
+    },
+    {
+      "source_id": "safelibero_spatial/I/task1/episode1",
+      "task_group": "safelibero_spatial/I/task1",
+      "family": "safelibero_spatial",
+      "ancestry_component": "ancestry_da8e11fe7c998a95",
+      "split": "train"
+    },
+    {
+      "source_id": "safelibero_spatial/I/task1/episode10",
+      "task_group": "safelibero_spatial/I/task1",
+      "family": "safelibero_spatial",
+      "ancestry_component": "ancestry_62128ef462437aac",
+      "split": "train"
+    },
+    {
+      "source_id": "safelibero_spatial/I/task1/episode11",
+      "task_group": "safelibero_spatial/I/task1",
+      "family": "safelibero_spatial",
+      "ancestry_component": "ancestry_c99f26bccd0d5214",
+      "split": "train"
+    },
+    {
+      "source_id": "safelibero_spatial/I/task1/episode13",
+      "task_group": "safelibero_spatial/I/task1",
+      "family": "safelibero_spatial",
+      "ancestry_component": "ancestry_e303ea72c5fd3aea",
+      "split": "validation"
+    },
+    {
+      "source_id": "safelibero_spatial/I/task1/episode17",
+      "task_group": "safelibero_spatial/I/task1",
+      "family": "safelibero_spatial",
+      "ancestry_component": "ancestry_e5a96eeffe81fee6",
+      "split": "validation"
+    },
+    {
+      "source_id": "safelibero_spatial/I/task1/episode19",
+      "task_group": "safelibero_spatial/I/task1",
+      "family": "safelibero_spatial",
+      "ancestry_component": "ancestry_7ed57a7a97bd434a",
+      "split": "test"
+    },
+    {
+      "source_id": "safelibero_spatial/I/task1/episode4",
+      "task_group": "safelibero_spatial/I/task1",
+      "family": "safelibero_spatial",
+      "ancestry_component": "ancestry_be06edbf83f498ac",
+      "split": "test"
+    },
+    {
+      "source_id": "safelibero_spatial/I/task1/episode5",
+      "task_group": "safelibero_spatial/I/task1",
+      "family": "safelibero_spatial",
+      "ancestry_component": "ancestry_62f9a38e11628e1f",
+      "split": "train"
+    },
+    {
+      "source_id": "safelibero_spatial/I/task1/episode7",
+      "task_group": "safelibero_spatial/I/task1",
+      "family": "safelibero_spatial",
+      "ancestry_component": "ancestry_6b345eac08aff8bc",
+      "split": "train"
+    },
+    {
+      "source_id": "safelibero_spatial/I/task2/episode0",
+      "task_group": "safelibero_spatial/I/task2",
+      "family": "safelibero_spatial",
+      "ancestry_component": "ancestry_5f6cf379e516ca1c",
+      "split": "test"
+    },
+    {
+      "source_id": "safelibero_spatial/I/task2/episode2",
+      "task_group": "safelibero_spatial/I/task2",
+      "family": "safelibero_spatial",
+      "ancestry_component": "ancestry_804fe0981c3f492b",
+      "split": "validation"
+    },
+    {
+      "source_id": "safelibero_spatial/I/task2/episode3",
+      "task_group": "safelibero_spatial/I/task2",
+      "family": "safelibero_spatial",
+      "ancestry_component": "ancestry_66916ac8ad10a334",
+      "split": "train"
+    },
+    {
+      "source_id": "safelibero_spatial/I/task2/episode6",
+      "task_group": "safelibero_spatial/I/task2",
+      "family": "safelibero_spatial",
+      "ancestry_component": "ancestry_cd7871c5ae60e8c3",
+      "split": "train"
+    },
+    {
+      "source_id": "safelibero_spatial/I/task2/episode7",
+      "task_group": "safelibero_spatial/I/task2",
+      "family": "safelibero_spatial",
+      "ancestry_component": "ancestry_d37246ae91176725",
+      "split": "train"
+    },
+    {
+      "source_id": "safelibero_spatial/I/task3/episode1",
+      "task_group": "safelibero_spatial/I/task3",
+      "family": "safelibero_spatial",
+      "ancestry_component": "ancestry_2fe0d617070820b2",
+      "split": "test"
+    },
+    {
+      "source_id": "safelibero_spatial/I/task3/episode2",
+      "task_group": "safelibero_spatial/I/task3",
+      "family": "safelibero_spatial",
+      "ancestry_component": "ancestry_de83149b6e359892",
+      "split": "validation"
+    },
+    {
+      "source_id": "safelibero_spatial/I/task3/episode7",
+      "task_group": "safelibero_spatial/I/task3",
+      "family": "safelibero_spatial",
+      "ancestry_component": "ancestry_f9d891a35125b7d0",
+      "split": "train"
+    }
+  ],
+  "counts": {
+    "train": 37,
+    "validation": 15,
+    "test": 15
+  },
+  "source_inventory_sha256": "3c50194138068cc9b281962ead1834b5bed0dc9ad95e643e69593a6a49a51936"
+}

@@ -27,7 +27,10 @@ def layouts(env,goal,step,sample_index,horizon,obstacle):
     import numpy as np
     from .paired_inputs import receiver_phrase
     receiver_phrase(goal)  # Unsupported task wording cannot become a label.
-    target=body_bounds(env,goal[1]);dest=destination(env,goal)['fixed_root_region']
+    # Native object-On requires XY distance <3 cm. Declare a fixed 4 cm
+    # half-width around the INITIAL receiver, allowing 1 cm more per axis;
+    # this is an explicit extra goal and never uses the future witness endpoint.
+    target=body_bounds(env,goal[1]);dest=destination(env,goal,object_xy_halfwidth=.04)['fixed_root_region']
     a=[(np.asarray(target[0])+[-.015,-.015,-.02]).tolist(),
        (np.asarray(target[1])+[.015,.015,.015]).tolist()]
     material=material_sphere(env,goal[1]);center=np.mean(a,axis=0);half=(np.asarray(a[1])-a[0])/2
@@ -43,6 +46,7 @@ def layouts(env,goal,step,sample_index,horizon,obstacle):
             checkpoint=step,sample_index=sample_index,remaining_horizon=horizon-step,
             a=a,b=b,target=target,goal=dest,material=material,
             geometry_source='Current initial geometry only; candidate locations are fixed before inspecting future actions',
+            object_receiver_region='Initial receiver XY +/-4 cm, Z -1..25 cm; native On predicate also required',
             fixed_virtual_boundaries=True,physical_collision_walls=False))
     return choices
 
