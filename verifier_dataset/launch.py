@@ -15,7 +15,7 @@ def command(*args):
     return subprocess.check_output(args, text=True).strip()
 
 
-def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, replay_smoke=None, collection_root=None, batch_shard=None, candidate_exports=None, fixture_design=None, drift_roots=None, review_file=None):
+def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, replay_smoke=None, collection_root=None, batch_shard=None, candidate_exports=None, fixture_design=None, drift_roots=None, review_file=None, exclusion_review=None):
     repo = Path.cwd().resolve()
     if repo != (Path.home()/'crash_bench').resolve():
         raise RuntimeError('Wrong project checkout')
@@ -27,6 +27,11 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
     commit = command('git', 'rev-parse', 'HEAD')
     if 'origin/' not in command('git', 'branch', '-r', '--contains', commit):
         raise RuntimeError('Source must be published')
+    if exclusion_review is not None:
+        if stage!='audit-constraints':raise RuntimeError('Visual exclusions apply only during constraint auditing')
+        exclusion_relative=exclusion_review.resolve().relative_to(repo)
+        if exclusion_relative.parts[:2]!=('verifier_dataset','reviews') or command('git','ls-files','--error-unmatch',str(exclusion_relative))!=str(exclusion_relative):
+            raise RuntimeError('Visual exclusions must be a published project record')
     if stage in ('replay-smoke','replay-spatial-batch','replay-object-sources','replay-spatial-sources'):
         if not 1<=limit<=12: raise RuntimeError('Smoke limit must be 1..12')
         if inventory is None or not read(inventory/'inventory/SUMMARY.json')['passed']:
@@ -318,6 +323,8 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
                 purpose='Check target visibility and goal grounding while retaining real collision geometry'))
     if stage in ('audit-candidates','audit-constraints'):write(root/'AUDIT_SOURCES.json',[str(x) for x in candidate_exports])
     if stage=='audit-constraints':write(root/'DEPENDENCY_ACCOUNTING.json',dependency_accounting)
+    if exclusion_review is not None:
+        write(root/'EXCLUSION_REVIEW_SOURCE.json',dict(relative_path=str(exclusion_relative),sha256=sha(exclusion_review)))
     if stage=='design-fixture':
         write(root/'CASES.json',[chosen_design])
         write(root/'INHERITED.json',dict(replay_root=str(replay_smoke),replay_job=proof_job,
@@ -447,4 +454,5 @@ if __name__ == '__main__':
     p.add_argument('--fixture-design',type=Path)
     p.add_argument('--drift-root',type=Path,action='append')
     p.add_argument('--review-file',type=Path)
-    a=p.parse_args();main(a.stage,a.inventory,a.canonicalize,a.limit,a.source_plan,a.replay_smoke,a.collection_root,a.batch_shard,a.candidate_export,a.fixture_design,a.drift_root,a.review_file)
+    p.add_argument('--exclusion-review',type=Path)
+    a=p.parse_args();main(a.stage,a.inventory,a.canonicalize,a.limit,a.source_plan,a.replay_smoke,a.collection_root,a.batch_shard,a.candidate_export,a.fixture_design,a.drift_root,a.review_file,a.exclusion_review)

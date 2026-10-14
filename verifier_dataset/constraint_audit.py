@@ -135,7 +135,13 @@ def main(root,parents):
     write(root/'INHERITED.json',inheritance);write(root/'TRACE_AUDIT.json',trace_checks)
     write(root/'REJECTED.json',rejected)
     write(root/'ALL_VALID_UNITS.json',units)
-    selected=select_units(units,target=250)
+    eligible=units
+    if (root/'EXCLUSION_REVIEW_SOURCE.json').exists():
+        from .constraint_curation import exclude
+        provenance=read(root/'EXCLUSION_REVIEW_SOURCE.json');path=root/'source'/provenance['relative_path']
+        if sha(path)!=provenance['sha256']:raise RuntimeError('Published exclusion review changed')
+        review=read(path);eligible=exclude(units,review);write(root/'EXCLUSION_REVIEW.json',review)
+    selected=select_units(eligible,target=250)
     records=[];complete_inputs=set();image_splits={}
     for i,unit in enumerate(selected):
         for r in unit:
@@ -163,6 +169,7 @@ def main(root,parents):
     shortcut=shortcuts(root,records)
     write(root/'AUDIT_COMPLETE.json',dict(passed=True,stage='evidence_and_visibility_prescreen',coverage=coverage,
         available_valid_units=len(units),frozen_sources_sha256=sha(frozen_path),
+        eligible_after_visual_exclusions=len(eligible),visually_excluded_units=len(units)-len(eligible),
         visual_review_complete=False,shortcut_evaluation_complete=True,shortcut_screen_passed=shortcut['passed'],accepted_training_rows=0,
         scientific_training_allowed=False,api_calls=0,slurm_job=os.environ['SLURM_JOB_ID']))
     write(root/'HASHES.json',{str(p.relative_to(root)):sha(p) for p in root.rglob('*') if p.is_file() and 'source' not in p.relative_to(root).parts
