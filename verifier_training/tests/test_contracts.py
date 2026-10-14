@@ -38,5 +38,11 @@ class Contracts(unittest.TestCase):
     def test_binary_output(self):
         r={'target':{'verdict':'unknown','rationale':'x'}}
         with self.assertRaises(ValueError):target_text(r,'B')
+    def test_two_overviews_are_not_described_as_a_wrist_camera(self):
+        row={'student':{'task':'task','constraints':'rule','images':[{'camera':'overview_a'},{'camera':'overview_b'}]}}
+        text=student_messages(row,'A')[1]['content'][-1]['text']
+        self.assertIn('two opposing external overview cameras',text)
+        self.assertNotIn('wrist',text)
+        self.assertEqual(student_messages(row,'A'),student_messages(row,'B'))
 
 if __name__=='__main__':unittest.main()

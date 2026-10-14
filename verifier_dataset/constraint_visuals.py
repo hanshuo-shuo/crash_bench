@@ -4,6 +4,7 @@ No raster edits or label-dependent captures. Both constraint queries reference
 the very same rendered pixels; the second assignment swaps only region colors.
 """
 import itertools
+import hashlib
 import xml.etree.ElementTree as ET
 from .fixture_visuals import edges
 
@@ -37,7 +38,7 @@ def edge_boxes(bounds,width=.0017):
     return result
 
 
-def overview_pose(rotation,regions,fovy):
+def overview_pose(rotation,regions,fovy,center=None):
     """Fit all declared boxes before either rule query, retaining view angle."""
     import numpy as np
     R=np.asarray(rotation).reshape(3,3)
@@ -45,7 +46,8 @@ def overview_pose(rotation,regions,fovy):
         raise ValueError('Invalid source camera')
     points=np.asarray([corner for bounds in regions for corner in itertools.product(*zip(*bounds))],dtype=float)
     if not np.isfinite(points).all():raise ValueError('Nonfinite declared region')
-    center=points.mean(0);local=(points-center)@R
+    center=points.mean(0) if center is None else np.asarray(center,dtype=float)
+    local=(points-center)@R
     tangent=np.tan(np.radians(fovy)/2)
     distance=max(.5,float(np.max(local[:,2]+np.max(np.abs(local[:,:2]),axis=1)/(tangent*.8))))+.05
     position=center+R[:,2]*distance
@@ -54,6 +56,30 @@ def overview_pose(rotation,regions,fovy):
     return dict(position=position.tolist(),rotation=R.reshape(-1).tolist(),fovy=float(fovy),
         maximum_projected_abs=float(np.max(np.abs(normalized))),
         rule='Fit current target, both virtual regions and destination with 10% image margin; original external view angle; no labels, future actions or selected protected color')
+
+
+def balanced_poses(layout,fovy):
+    """Equal-distance opposing views about the two-region midpoint, before queries."""
+    import numpy as np
+    seed=hashlib.sha256((layout['camera_seed_sha256']+'|paired-overviews-v2').encode()).digest()
+    azimuth=2*np.pi*int.from_bytes(seed[:8],'big')/2**64;elevation=np.radians(55.)
+    center=(np.mean(layout['a'],axis=0)+np.mean(layout['b'],axis=0))/2
+    regions=[layout[k] for k in ('a','b','target','goal')];rotations=[]
+    for angle in (azimuth,azimuth+np.pi):
+        right=np.asarray([-np.sin(angle),np.cos(angle),0.])
+        backward=np.asarray([np.cos(angle)*np.cos(elevation),np.sin(angle)*np.cos(elevation),np.sin(elevation)])
+        rotations.append(np.column_stack((right,np.cross(backward,right),backward)))
+    fitted=[overview_pose(R,regions,fovy,center=center) for R in rotations]
+    distance=max(float(np.linalg.norm(np.asarray(p['position'])-center)) for p in fitted)
+    corners=np.asarray([corner for bounds in regions for corner in itertools.product(*zip(*bounds))])
+    result=[]
+    for R in rotations:
+        local=(corners-center)@R;normalized=local[:,:2]/(distance-local[:,2,None])/np.tan(np.radians(fovy)/2)
+        if np.max(np.abs(normalized))>=.8:raise RuntimeError('Balanced overview clipping margin failed')
+        result.append(dict(position=(center+distance*R[:,2]).tolist(),rotation=R.reshape(-1).tolist(),fovy=float(fovy),
+            focus=center.tolist(),distance=distance,maximum_projected_abs=float(np.max(np.abs(normalized))),
+            rule='Two opposing simulator views, common distance/fovy/elevation, midpoint of both regions, source/checkpoint-seeded azimuth; no selected-color query or future actions'))
+    return result
 
 
 def capture(env,folder,layout,physical_hash):
@@ -67,10 +93,18 @@ def capture(env,folder,layout,physical_hash):
     cid=m.camera_name2id('agentview')
     original_camera_position=np.asarray(d.cam_xpos[cid]).copy()
     original_camera_rotation=np.asarray(d.cam_xmat[cid]).copy()
-    overview=overview_pose(original_camera_rotation,[layout[k] for k in ('a','b','target','goal')],float(m.cam_fovy[cid]))
-    write(folder/'CAMERA.json',dict(external_overview=overview,native_wrist_unchanged=True,
+    scheme=layout.get('camera_scheme','native_overview_wrist_v1')
+    if scheme=='balanced_two_overviews_v2':
+        poses=balanced_poses(layout,float(m.cam_fovy[cid]))
+        views=[('agentview','overview_a',poses[0]),('agentview','overview_b',poses[1])]
+    elif scheme=='native_overview_wrist_v1':
+        poses=[overview_pose(original_camera_rotation,[layout[k] for k in ('a','b','target','goal')],float(m.cam_fovy[cid]))]
+        views=[('agentview','external',poses[0]),('robot0_eye_in_hand','wrist',None)]
+    else:raise RuntimeError('Unknown image protocol')
+    write(folder/'CAMERA.json',dict(camera_scheme=scheme,rendered_views=[dict(camera=name,pose=pose) for _,name,pose in views],
+        native_wrist_used=scheme=='native_overview_wrist_v1',
         original_external_position=original_camera_position.tolist(),original_external_rotation=original_camera_rotation.tolist(),
-        scope='Simulator-native alternative external framing for this derived task; no raster editing and no change to the source policy or physical trajectory'))
+        scope='Simulator-native cameras for this derived task; no raster editing, policy change, selected-rule camera choice or physical trajectory change'))
     ids={role:[g for g in range(m.ngeom) if (m.geom_id2name(g) or '').startswith('fdc_'+role+'_')]
          for role in ('a','b','target','goal')}
     if any(len(v)!=12 for v in ids.values()):raise RuntimeError('Incomplete virtual-region annotations')
@@ -95,9 +129,9 @@ def capture(env,folder,layout,physical_hash):
         for role,color in zip(('a','b'),('orange','purple') if assignment==0 else ('purple','orange')):
             m.geom_rgba[ids[role]]=COLORS[color]
         path=folder/('assignment_%d'%assignment);path.mkdir();images=[];seen=[]
-        for camera,name in [('agentview','external'),('robot0_eye_in_hand','wrist')]:
-            if camera=='agentview':
-                d.cam_xpos[cid]=overview['position'];d.cam_xmat[cid]=overview['rotation']
+        for camera,name,pose in views:
+            if pose is not None:
+                d.cam_xpos[cid]=pose['position'];d.cam_xmat[cid]=pose['rotation']
             rgb=np.asarray(env.sim.render(width=1024,height=1024,camera_name=camera))
             rgb=rgb[::IMAGE_CONVENTION_MAPPING[macros.IMAGE_CONVENTION]][::-1,::-1]
             rgb=image_tools.convert_to_uint8(image_tools.resize_with_pad(np.ascontiguousarray(rgb),224,224))
@@ -118,7 +152,7 @@ def capture(env,folder,layout,physical_hash):
             np.savez_compressed(seg_file,object_type=segmentation[:,:,0],object_id=segmentation[:,:,1])
             seen.append(dict(camera=name,entities=entities,segmentation_path=str(seg_file.relative_to(folder)),
                 segmentation_sha256=sha(seg_file),alignment='Same camera, resolution, row convention and orientation as RGB; nearest labels are diagnostic only'))
-            if camera=='agentview':
+            if pose is not None:
                 d.cam_xpos[cid]=original_camera_position;d.cam_xmat[cid]=original_camera_rotation
         output.append(images)
         visibility.append(seen)

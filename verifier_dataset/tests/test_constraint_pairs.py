@@ -2,7 +2,7 @@ import copy
 import unittest
 import xml.etree.ElementTree as ET
 from verifier_dataset.constraint_evidence import CONTRACT,verify_trace,verify_layout,rows
-from verifier_dataset.constraint_visuals import add,edge_boxes,overview_pose
+from verifier_dataset.constraint_visuals import add,edge_boxes,overview_pose,balanced_poses
 
 
 class ConstraintEvidence(unittest.TestCase):
@@ -98,6 +98,24 @@ class ConstraintEvidence(unittest.TestCase):
         moved=[[[x+2 for x in corner] for corner in box] for box in regions]
         other=overview_pose(np.eye(3),moved,45.)
         np.testing.assert_allclose(np.asarray(other['position'])-pose['position'],[2.,2.,2.])
+
+    def test_opposing_views_match_region_scale_and_do_not_depend_on_selected_rule(self):
+        import itertools
+        import numpy as np
+        layout,_,_,_=self.fixture();layout['camera_seed_sha256']='01'*32
+        pair=balanced_poses(layout,45.)
+        self.assertEqual(pair[0]['distance'],pair[1]['distance'])
+        self.assertEqual(pair[0]['focus'],pair[1]['focus'])
+        self.assertTrue(all(p['maximum_projected_abs']<.8 for p in pair))
+        changed=copy.deepcopy(layout);changed['selected_protected_color']='purple';changed['future_actions']=['hidden']
+        self.assertEqual(pair,balanced_poses(changed,45.))
+        def projected(bounds,pose):
+            xyz=np.asarray(list(itertools.product(*zip(*bounds))))
+            local=(xyz-np.asarray(pose['position']))@np.asarray(pose['rotation']).reshape(3,3)
+            pixels=local[:,:2]/-local[:,2,None]
+            return sorted(map(tuple,np.round(pixels,12)))
+        np.testing.assert_allclose(projected(layout['a'],pair[0]),projected(layout['b'],pair[1]),atol=1e-10)
+        np.testing.assert_allclose(projected(layout['b'],pair[0]),projected(layout['a'],pair[1]),atol=1e-10)
 
 
 if __name__=='__main__':unittest.main()

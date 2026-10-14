@@ -17,6 +17,36 @@ offline. The private key is never printed, copied or logged.
 
 ## Completed collection and active audit
 
+**The v1 image dataset failed scientific acceptance. Do not train it.** Audit
+9997306 (`20261014T202221Z_audit-constraints_51b09f4a94c3`) completed normally.
+Its raw evidence checks passed, but validation AUROC was 0.928755 for the fixed
+joint linear readout and 0.983110 for the depth-4 forest (limit 0.75). Image-only
+and text-only AUROC were exactly 0.5. The final test split was not scored.
+The proposed 1,000 records covered 64 original sources, 12 compositions and
+four families, with 544 train / 216 validation / 240 test rows.
+
+The first audit attempt 9993971 failed on Slurm accounting connectivity; the
+second 9995112 finished raw evidence checking but lacked scikit-learn. Fixed
+official PyPI wheels (scikit-learn 1.5.2, joblib 1.4.2, threadpoolctl 3.5.0) were
+staged without changing the base environment, then extracted/tested on compute.
+The dependency manifest is bound to each submitted receipt.
+
+Actual-image review inspected the initial 250 units and 60 replacement units,
+excluding 72 ambiguous units and retaining 238 image-reviewed units. Published
+records are `reviews/fd1000_visibility_exclusions_v1.json` and `v2.json`.
+These visibility checks do not override the failed shortcut screen; no v1 rows
+are accepted for training. The remaining 12-unit preview is preserved but has
+not been reviewed, because the image protocol now needs repair.
+
+The next bounded prototype uses **two opposing external simulator views**, with
+equal distance/fovy/elevation, the midpoint of both virtual regions as focus,
+and a source/checkpoint-seeded azimuth. It removes the target-following native
+wrist framing from the student inputs. Physics, witnesses, certificates, frozen
+source splits and the 0.75 shortcut limit remain unchanged. Both labels still
+share exactly the same capture. A new prototype and new data audit are required;
+old pixel reviews cannot approve the new images. This is a dataset-development
+revision after a validation failure, not a favorable test result.
+
 Two source-frozen rendering/replay batches were submitted from published commit
 `e1859532ae9e0155e085f4120c06810219bcc7e9`:
 

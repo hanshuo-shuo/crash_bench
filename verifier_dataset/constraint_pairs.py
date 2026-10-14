@@ -55,6 +55,8 @@ def layouts(env,goal,step,sample_index,horizon,obstacle,source_id):
             object_receiver_region='Initial receiver XY +/-4 cm, Z -1..25 cm; native On predicate also required',
             render_widths=widths,appearance_note='Boundary stroke widths vary by a fixed source/checkpoint seed, independently of the protected-color query; physics and guard bounds are unchanged',
             alternate_region_offset_metres=offset,alternate_region_sign=sign,layout_seed_sha256=layout_seed.hex(),
+            camera_scheme='balanced_two_overviews_v2',
+            camera_seed_sha256=hashlib.sha256((source_id+'|'+str(step)+'|camera-v2').encode()).hexdigest(),
             fixed_virtual_boundaries=True,physical_collision_walls=False))
     return choices
 

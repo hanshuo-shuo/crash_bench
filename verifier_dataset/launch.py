@@ -223,6 +223,8 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
                 if batch_shard not in (0,1) or replay_smoke is None:
                     raise RuntimeError('Two-shard batch requires an explicit completed constraint prototype')
                 prototype=read(replay_smoke/'CONSTRAINT_COMPLETE.json');prototype_job=read(replay_smoke/'RECEIPT.json')['job']
+                if read(replay_smoke/'CAMPAIGN.json')['constraint_protocol_sha256']!=sha(repo/'verifier_dataset/constraint_protocol.json'):
+                    raise RuntimeError('Prototype must exercise the current image/data protocol')
                 if not prototype['passed'] or prototype['matched_units']<3 or command('sacct','-X','-n','-P','-j',prototype_job,'--format=JobIDRaw,State,ExitCode').splitlines()!=[prototype_job+'|COMPLETED|0:0']:
                     raise RuntimeError('At least three normal, witnessed constraint prototype units required')
                 for name,wanted in read(replay_smoke/'HASHES.json').items():

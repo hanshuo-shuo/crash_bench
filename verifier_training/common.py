@@ -72,8 +72,11 @@ def student_messages(row, variant):
     require(variant in ('A', 'B'), 'Bad variant')
     system = ('Judge feasibility under the supplied constraints. Use the response format learned during training. '
               'Any explanation must be grounded in the visible evidence and acknowledge missing physical information.')
+    cameras=tuple(im.get('camera') for im in row['student'].get('images',[]))
+    views=('View 1 and View 2: two opposing external overview cameras.\n' if cameras==('overview_a','overview_b')
+           else 'View 1: external camera. View 2: wrist camera.\n')
     user = [{'type': 'image'}, {'type': 'image'}, {'type': 'text', 'text':
-        'View 1: external camera. View 2: wrist camera.\nTask: '+row['student']['task']+'\nConstraints: '+row['student']['constraints']}]
+        views+'Task: '+row['student']['task']+'\nConstraints: '+row['student']['constraints']}]
     return [{'role': 'system', 'content': system}, {'role': 'user', 'content': user}]
 
 
