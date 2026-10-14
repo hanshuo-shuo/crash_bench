@@ -22,6 +22,9 @@ export SINGULARITYENV_PYTHONNOUSERSITE=1 SINGULARITYENV_PYTHONDONTWRITEBYTECODE=
 export SINGULARITYENV_OMP_NUM_THREADS=1 SINGULARITYENV_OPENBLAS_NUM_THREADS=1
 export SINGULARITYENV_MUJOCO_GL=egl SINGULARITYENV_PYOPENGL_PLATFORM=egl
 export SINGULARITYENV_PYTHONPATH="$HOME/crash_bench/third_party/vlsa-aegis/openpi/packages/openpi-client/src"
+MODULE=verifier_dataset.fixture_smoke
+ARGS=("$ROOT" --render)
+if [[ "${CB_FD_STAGE:-}" == paired-render ]]; then MODULE=verifier_dataset.paired_render; ARGS=("$ROOT"); fi
 singularity exec --nv --bind "/projects,/home,$ROOT:$ROOT:rw,$ROOT/source:$ROOT/source:ro" \
  /projects/p33100/siosio/crashbench_safelibero/containers/aegis-py38.sif \
- /projects/p33100/siosio/crashbench_safelibero/envs/aegis_sim/bin/python -u -m verifier_dataset.fixture_smoke "$ROOT" --render
+ /projects/p33100/siosio/crashbench_safelibero/envs/aegis_sim/bin/python -u -m "$MODULE" "${ARGS[@]}"

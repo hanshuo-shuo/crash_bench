@@ -25,10 +25,10 @@ from experiments.red_enclosure.contract import segment_box
 from experiments.feasibility_contract.contract import SOURCE_HASHES
 
 
-def make_env(case,folder,proposal=None):
+def make_env(case,folder,proposal=None,render=False):
     import numpy as np
     from scipy.spatial.transform import Rotation
-    physical_hash=configure(folder)
+    physical_hash=configure(folder,rendering=render)
     from robosuite.environments.base import MujocoEnv
     from libero.libero import benchmark,get_libero_path
     from libero.libero.envs.env_wrapper import ControlEnv
@@ -42,13 +42,18 @@ def make_env(case,folder,proposal=None):
     suite=benchmark.get_benchmark_dict()[scene['suite']](safety_level=scene['level']);task=suite.get_task(scene['task'])
     original=MujocoEnv._initialize_sim
     if proposal is not None:
-        def patched(self,xml_string=None):return original(self,add_boxes(xml_string or self.model.get_xml(),proposal['boxes']))
+        def patched(self,xml_string=None):
+            xml=add_boxes(xml_string or self.model.get_xml(),proposal['boxes'])
+            if render:
+                from .paired_inputs import visual_xml
+                xml=visual_xml(xml,proposal)
+            return original(self,xml)
         MujocoEnv._initialize_sim=patched
     env=None
     try:
         random.seed(7);np.random.seed(7)
         env=ControlEnv(bddl_file_name=Path(get_libero_path('bddl_files'))/task.problem_folder/task.bddl_file,
-            use_camera_obs=False,has_offscreen_renderer=False,camera_depths=False,camera_heights=1024,camera_widths=1024)
+            use_camera_obs=False,has_offscreen_renderer=render,camera_depths=False,camera_heights=1024,camera_widths=1024)
         env.seed(7);env.reset();obs=env.set_init_state(suite.get_task_init_states(scene['task'])[scene['episode']])
         m=env.sim.model;marker=m.body_name2id('eef_marker')
         def update_marker(observation):
@@ -161,14 +166,18 @@ def scan_saved(folder):
         training_allowed=False))
 
 
-def execute(case,index):
+def execute(case,index,render=False):
     import numpy as np
     import mujoco
     folder=case/('option_%02d'%index);folder.mkdir();env=None;original_step=None;stream=None
     proposal=read(case/'PROPOSALS.json')['rows'][index]
     try:
-        env,physical_hash,update_marker,source,context=make_env(case,folder,proposal)
+        env,physical_hash,update_marker,source,context=make_env(case,folder,proposal,render=render)
         m,d=env.sim.model,env.sim.data
+        images=None
+        if render:
+            from .paired_render import capture
+            images=capture(env,folder,physical_hash)
         native_geometry=read(Path(source['root'])/'geometry_details.json')
         protected={m.geom_name2id(g['name']) for g in native_geometry['protected']}
         boxes=[];static=True;wall_geoms=set()
@@ -278,6 +287,11 @@ def execute(case,index):
         write(folder/'ACTIONS.json',actions);write(folder/'SUMMARY.json',summary)
         (folder/'model.xml').write_text(m.get_xml())
         scan_saved(folder)
+        if render and summary['matched_pair']:
+            from .paired_inputs import drafts
+            obstacle=read(Path(source['root'])/'geometry.json')['obstacle'].replace('_obstacle','').replace('_1','').replace('_',' ')
+            candidates=drafts(summary,geo,images,obstacle)
+            write(folder/'PAIRED_CANDIDATES.json',candidates)
         write(folder/'HASHES.json',{p.name:sha(p) for p in folder.iterdir() if p.is_file()})
     finally:
         if stream is not None:stream.close()
@@ -286,10 +300,10 @@ def execute(case,index):
             env.close()
 
 
-def main(root,mode=None,option=None):
+def main(root,mode=None,option=None,render=False):
     if not os.environ.get('SLURM_JOB_ID'):raise RuntimeError('Compute allocation required')
     if mode=='prepare':prepare(root);gc.collect();return
-    if mode=='execute':execute(root,option);gc.collect();return
+    if mode=='execute':execute(root,option,render=render);gc.collect();return
     rows=[]
     for index,row in enumerate(read(root/'CASES.json')):
         case=root/('case_%03d'%index);case.mkdir();write(case/'INPUT.json',row)
@@ -322,4 +336,5 @@ def main(root,mode=None,option=None):
 if __name__=='__main__':
     p=argparse.ArgumentParser();p.add_argument('root',type=Path)
     p.add_argument('--mode',choices=('prepare','execute'));p.add_argument('--option',type=int)
-    a=p.parse_args();main(a.root,a.mode,a.option)
+    p.add_argument('--render',action='store_true')
+    a=p.parse_args();main(a.root,a.mode,a.option,a.render)

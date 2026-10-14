@@ -169,6 +169,27 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
             choices=[r for r in candidates if r['metadata']['family']==family and r['evidence']['checkpoint_step']==0]
             if not choices:raise RuntimeError('Missing source family for bounded pair prototype')
             paired_sources.append(sorted(choices,key=lambda r:r['metadata']['source_id'])[0])
+    if stage=='paired-render':
+        if collection_root is None:raise RuntimeError('Explicit completed paired prototype required')
+        receipt=read(collection_root/'RECEIPT.json');job=receipt['job'];proof=read(collection_root/'PAIRED_COMPLETE.json')
+        if receipt['stage']!='paired-prototype' or not proof['passed'] or command('sacct','-X','-n','-P','-j',job,'--format=JobIDRaw,State,ExitCode').splitlines()!=[job+'|COMPLETED|0:0']:
+            raise RuntimeError('Paired prototype must terminate normally')
+        render_pairs=[]
+        for row in proof['rows']:
+            for index,outcome in enumerate(row['outcomes']):
+                if not outcome['matched_pair']:continue
+                if not outcome.get('synchronized_native_goal_required') or not outcome.get('initial_fixture_valid'):
+                    raise RuntimeError('Earlier prototype lacks strengthened paired evidence')
+                case=Path(row['case'])
+                if case.parent!=collection_root:raise RuntimeError('Paired case escapes completed source')
+                folder=case/('option_%02d'%index)
+                for name,wanted in read(folder/'HASHES.json').items():
+                    if sha(folder/name)!=wanted:raise RuntimeError('Paired evidence changed')
+                render_pairs.append(dict(case=str(case),option=index));break
+        if not render_pairs:raise RuntimeError('No checked matched pair available')
+        active=command('squeue','-h','-u',os.environ['USER'],'-A','p33100','-p','gengpu','-o','%j|%Z')
+        if sum('crash_bench' in x or 'crashbench_safelibero' in x or x.startswith('cb_') for x in active.splitlines())>=2:
+            raise RuntimeError('Two CrashBench GPU jobs already active')
     root = ASSETS/'verifier_dataset'/(datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')+'_'+stage+'_'+commit[:12])
     root.mkdir(parents=True, exist_ok=False); (root/'source').mkdir()
     with (root/'source.tar').open('wb') as stream:
@@ -184,12 +205,18 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
     manifest['contact_contract']=read(repo/'verifier_dataset/protocol.json').get('contact_contract')
     if stage in ('fixture-smoke','fixture-render','fixture-grounding'):
         manifest['contact_contract']='FD1000-fixture-v1 (development-only inherited strict contact and swept-root guard)'
-    if stage=='paired-prototype':
+    if stage in ('paired-prototype','paired-render'):
         manifest.update(contact_contract='FD1000-MARKED-PAIR-v1: v2 actor contact plus explicit swept material-center guard and fixed final destination',
             derived_tasks=True,api_mode='disabled',max_paid_attempts=0,max_logical_requests=0)
-        write(root/'CASES.json',paired_sources)
-        write(root/'INHERITED.json',dict(candidate_audit=str(collection_root),audit_sha256=sha(collection_root/'AUDIT_COMPLETE.json'),
-            source_count=4,maximum_candidates_per_source=3,prototype_only=True))
+        if stage=='paired-prototype':
+            write(root/'CASES.json',paired_sources)
+            write(root/'INHERITED.json',dict(candidate_audit=str(collection_root),audit_sha256=sha(collection_root/'AUDIT_COMPLETE.json'),
+                source_count=4,maximum_candidates_per_source=3,prototype_only=True))
+        else:
+            manifest['partition']='gengpu'
+            write(root/'PAIRED_SOURCES.json',render_pairs)
+            write(root/'INHERITED.json',dict(paired_prototype=str(collection_root),completion_sha256=sha(collection_root/'PAIRED_COMPLETE.json'),
+                physical_states=len(render_pairs),images_captured_once_per_assignment=True,training_allowed=False))
     write(root/'CAMPAIGN.json', manifest)
     if stage in ('fixture-render','fixture-grounding'):
         manifest.update(partition='gengpu',api_mode='disabled',max_paid_attempts=0,max_logical_requests=0)
@@ -280,7 +307,7 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
     script='collect.sbatch' if stage in ('collect-smoke','collect-cached-smoke','collect-cached-batch','collect-approved-cache','collect-frozen-perception') else ('cpu.sbatch' if stage in ('inventory','source-plan') else 'replay.sbatch')
     if stage=='export-candidates':script='export.sbatch'
     if stage=='audit-candidates':script='audit.sbatch'
-    if stage in ('fixture-render','fixture-grounding'):script='fixture_render.sbatch'
+    if stage in ('fixture-render','fixture-grounding','paired-render'):script='fixture_render.sbatch'
     if stage=='audit-request-drift':script='request_drift.sbatch'
     submit=['sbatch','--parsable','--output='+str(root/'slurm_%j.log')]
     if stage in ('replay-spatial-batch','replay-object-sources','replay-spatial-sources'):
@@ -317,7 +344,7 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
 
 
 if __name__ == '__main__':
-    p = argparse.ArgumentParser(); p.add_argument('stage', choices=['inventory','source-plan','replay-smoke','replay-spatial-batch','replay-object-sources','replay-spatial-sources','collect-smoke','collect-cached-smoke','collect-cached-batch','collect-approved-cache','collect-frozen-perception','replay-collection','export-candidates','audit-candidates','design-fixture','fixture-smoke','fixture-render','fixture-grounding','audit-request-drift','paired-prototype'])
+    p = argparse.ArgumentParser(); p.add_argument('stage', choices=['inventory','source-plan','replay-smoke','replay-spatial-batch','replay-object-sources','replay-spatial-sources','collect-smoke','collect-cached-smoke','collect-cached-batch','collect-approved-cache','collect-frozen-perception','replay-collection','export-candidates','audit-candidates','design-fixture','fixture-smoke','fixture-render','fixture-grounding','audit-request-drift','paired-prototype','paired-render'])
     p.add_argument('--inventory',type=Path);p.add_argument('--canonicalize',action='store_true')
     p.add_argument('--limit',type=int,default=12)
     p.add_argument('--source-plan',type=Path)
