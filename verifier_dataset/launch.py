@@ -153,6 +153,22 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
         old=read(collection_root/'RECEIPT.json');job=old['job']
         if old['stage']!='collect-approved-cache' or command('sacct','-X','-n','-P','-j',job,'--format=JobIDRaw,State,ExitCode').splitlines()!=[job+'|COMPLETED|0:0']:
             raise RuntimeError('Approved-cache collection must terminate normally')
+    if stage=='paired-prototype':
+        if collection_root is None:raise RuntimeError('Explicit v2 merged candidate audit required')
+        receipt=read(collection_root/'RECEIPT.json');job=receipt['job'];audit=read(collection_root/'AUDIT_COMPLETE.json')
+        if receipt['stage']!='audit-candidates' or not audit['passed'] or receipt.get('contact_contract')!='FD1000-SC-CONTACT-v2':
+            raise RuntimeError('Wrong candidate evidence audit')
+        if command('sacct','-X','-n','-P','-j',job,'--format=JobIDRaw,State,ExitCode').splitlines()!=[job+'|COMPLETED|0:0']:
+            raise RuntimeError('Candidate audit must terminate normally')
+        for name,wanted in read(collection_root/'HASHES.json').items():
+            if sha(collection_root/name)!=wanted:raise RuntimeError('Audited candidate evidence changed')
+        import json
+        candidates=[json.loads(line) for line in (collection_root/'MERGED_CANDIDATES.jsonl').read_text().splitlines()]
+        paired_sources=[]
+        for family in ('safelibero_object','safelibero_spatial','safelibero_goal','safelibero_long'):
+            choices=[r for r in candidates if r['metadata']['family']==family and r['evidence']['checkpoint_step']==0]
+            if not choices:raise RuntimeError('Missing source family for bounded pair prototype')
+            paired_sources.append(sorted(choices,key=lambda r:r['metadata']['source_id'])[0])
     root = ASSETS/'verifier_dataset'/(datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')+'_'+stage+'_'+commit[:12])
     root.mkdir(parents=True, exist_ok=False); (root/'source').mkdir()
     with (root/'source.tar').open('wb') as stream:
@@ -168,6 +184,12 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
     manifest['contact_contract']=read(repo/'verifier_dataset/protocol.json').get('contact_contract')
     if stage in ('fixture-smoke','fixture-render','fixture-grounding'):
         manifest['contact_contract']='FD1000-fixture-v1 (development-only inherited strict contact and swept-root guard)'
+    if stage=='paired-prototype':
+        manifest.update(contact_contract='FD1000-MARKED-PAIR-v1: v2 actor contact plus explicit swept material-center guard and fixed final destination',
+            derived_tasks=True,api_mode='disabled',max_paid_attempts=0,max_logical_requests=0)
+        write(root/'CASES.json',paired_sources)
+        write(root/'INHERITED.json',dict(candidate_audit=str(collection_root),audit_sha256=sha(collection_root/'AUDIT_COMPLETE.json'),
+            source_count=4,maximum_candidates_per_source=3,prototype_only=True))
     write(root/'CAMPAIGN.json', manifest)
     if stage in ('fixture-render','fixture-grounding'):
         manifest.update(partition='gengpu',api_mode='disabled',max_paid_attempts=0,max_logical_requests=0)
@@ -295,7 +317,7 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
 
 
 if __name__ == '__main__':
-    p = argparse.ArgumentParser(); p.add_argument('stage', choices=['inventory','source-plan','replay-smoke','replay-spatial-batch','replay-object-sources','replay-spatial-sources','collect-smoke','collect-cached-smoke','collect-cached-batch','collect-approved-cache','collect-frozen-perception','replay-collection','export-candidates','audit-candidates','design-fixture','fixture-smoke','fixture-render','fixture-grounding','audit-request-drift'])
+    p = argparse.ArgumentParser(); p.add_argument('stage', choices=['inventory','source-plan','replay-smoke','replay-spatial-batch','replay-object-sources','replay-spatial-sources','collect-smoke','collect-cached-smoke','collect-cached-batch','collect-approved-cache','collect-frozen-perception','replay-collection','export-candidates','audit-candidates','design-fixture','fixture-smoke','fixture-render','fixture-grounding','audit-request-drift','paired-prototype'])
     p.add_argument('--inventory',type=Path);p.add_argument('--canonicalize',action='store_true')
     p.add_argument('--limit',type=int,default=12)
     p.add_argument('--source-plan',type=Path)

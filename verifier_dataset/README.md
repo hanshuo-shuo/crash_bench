@@ -210,6 +210,34 @@ fixed-goal outlines. Rendering attributes do not supply label evidence. Actual
 physics/witnesses/certificates and closed-task pixel equality are rechecked;
 input-grounding review and broad matched-class admission remain separate gates.
 
+The next paired-construction prototype will enclose an unrelated object while
+replaying an existing successful trajectory for the original selected target.
+The two queries share one actual captured image pair and the same destination,
+but select different marked objects. A second rendering swaps the two marker
+colors. This yields four rows per checked state: two safe-witness positives and
+two conditional negatives, with image-only and text-only labels balanced within
+each construction. Merely increasing the number of opaque cages is excluded.
+
+These are explicitly derived, marker-assisted tasks. A native atomic goal is
+conjoined with a displayed fixed green final root region constructed from the
+initial receiver, not future witness coordinates. This avoids falsely assuming
+that a movable plate or basket is fixed. The contact rule keeps native supports
+allowed; the extra swept material-center rule is declared in the task contract.
+A rigid collision primitive can supply a material sphere away from the object
+root; its required destination bound must be expanded by the root-frame offset
+norm to cover all orientations. `paired_geometry.py` implements this sufficient
+bound, with missing-face, goal-overlap and invalid-initial-state tests. It is
+currently geometry scaffolding, not an executed paired dataset.
+
+A prototype must recheck actual modified-scene initial safety, executed wall
+geometry, a complete safe positive action suffix and the task-applicable negative
+certificate. A failed positive remains UNKNOWN and cannot form an accepted pair.
+The case source, checkpoint, alternate object, marked destination, digital guard
+and every rejected construction remain recorded. All descendants share the
+original ancestry group. Final explanation premises must point to actual images
+or explicit rules and persisted evidence. No new paid rationale request is
+approved or needed for these deterministic evidence explanations.
+
 Primary methodological references:
 
 - LaValle's [Planning Algorithms, §4.3](https://msl.cs.illinois.edu/~lavalle/planning/node156.html)
