@@ -8,8 +8,10 @@ grounded explanations and visual-shortcut audits, followed by verifier training
 only after data acceptance. The API budget is $20 for this new campaign. See
 [the collection protocol](../verifier_dataset/README.md). Policy failure remains
 UNKNOWN; historical benchmark success is only a contact-replay candidate.
-The [FD1000 status record](../verifier_dataset/CURRENT.md) records passed replay,
-the active CPU batch, preserved failures and the pending contact/API decisions.
+The [FD1000 status record](../verifier_dataset/CURRENT.md) records 1,021 verified
+positive candidates across 11 source identities, the active 41-source cache-only
+GPU collection, preserved failures and pending contact/API decisions. No complete
+mixed dataset has passed acceptance and no verifier training has started.
 Actual stage receipts and results live under `results/verifier_dataset/`.
 This authorization supersedes the earlier no-new-collection boundary for this
 specific campaign. It does not authorize changing the old benchmark results.

@@ -133,6 +133,20 @@ rationale review, observability, grouped splits, negatives and shortcut audits
 are still required. Every exported record has `training_eligible=false`; its
 existence witness must not be confused with a complete scientific dataset.
 
+`audit-candidates --candidate-export ROOT [--candidate-export ROOT ...]` performs
+a separate CPU readback: normal Slurm exits, all saved evidence hashes, legal
+tapes, zero recorded prohibited contacts, suffix horizons and byte-exact images
+against original policy inputs. It emits a merged index with neutral unique IDs
+and resolved source-image paths. Source identity, shared original settled qpos
+and exact shared image pairs form conservative ancestry components. It computes
+fixed RGB/red-area features but reports no binary AUROC for a one-class pool.
+This precheck keeps every scientific training gate closed. Task-template overlap,
+matched certified negatives, observable reasoning premises and a frozen grouped
+evaluation are still required; an ancestry component is not proof of statistical
+independence. New replays also save read-only initial task geometry to screen
+whether a sufficient separator certificate could apply. Hollow visual bounds
+never substitute for a verified material point or inscribed collision geometry.
+
 Primary methodological references:
 
 - Pinned [SafeLIBERO/AEGIS source](https://github.com/THU-RCSCT/vlsa-aegis/tree/2457feed5968ae803926e178c8ce8243b9ecdcf9)

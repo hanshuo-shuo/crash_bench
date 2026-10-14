@@ -131,6 +131,10 @@ def replay(row, folder, physical_hash, canonicalize=False):
             robot=geometry['robot_geoms'],objects_of_interest=clean(env.obj_of_interest),
             geoms=[dict(id=g,name=model.geom_id2name(g),body=model.body_id2name(int(model.geom_bodyid[g])),
                         type=int(model.geom_type[g])) for g in range(model.ngeom)]))
+        from .geometry_facts import initial_geometry
+        before_geometry=physical_hash(env)
+        write(folder/'INITIAL_TASK_GEOMETRY.json',clean(initial_geometry(env)))
+        if physical_hash(env)!=before_geometry:raise RuntimeError('Read-only geometry probe mutated physics')
         counter = dict(action=0, substep=0, total=0)
         def sample(phase):
             for contact in data.contact[:data.ncon]:

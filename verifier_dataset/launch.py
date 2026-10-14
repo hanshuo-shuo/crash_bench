@@ -14,7 +14,7 @@ def command(*args):
     return subprocess.check_output(args, text=True).strip()
 
 
-def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, replay_smoke=None, collection_root=None, batch_shard=None):
+def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, replay_smoke=None, collection_root=None, batch_shard=None, candidate_exports=None):
     repo = Path.cwd().resolve()
     if repo != (Path.home()/'crash_bench').resolve():
         raise RuntimeError('Wrong project checkout')
@@ -58,6 +58,15 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
         source_job=collection_inheritance['source_job']
         if command('sacct','-X','-n','-P','-j',source_job,'--format=JobIDRaw,State,ExitCode').splitlines()!=[source_job+'|COMPLETED|0:0']:
             raise RuntimeError('Collection job must finish normally before replay')
+    if stage=='audit-candidates':
+        if not candidate_exports or len(set(candidate_exports))!=len(candidate_exports):
+            raise RuntimeError('Distinct explicit candidate export roots required')
+        for export in candidate_exports:
+            old=read(export/'RECEIPT.json');job=old['job']
+            if old['stage']!='export-candidates' or not read(export/'CANDIDATE_EXPORT.json')['passed']:
+                raise RuntimeError('Candidate export prerequisite did not pass')
+            if command('sacct','-X','-n','-P','-j',job,'--format=JobIDRaw,State,ExitCode').splitlines()!=[job+'|COMPLETED|0:0']:
+                raise RuntimeError('Export must terminate normally before audit')
     if stage in ('collect-smoke','collect-cached-smoke','collect-cached-batch'):
         if source_plan is None or not read(source_plan/'source_plan/SUMMARY.json')['passed']:
             raise RuntimeError('Passed broader-source inventory required')
@@ -92,6 +101,7 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
         authorization='2026-10-14 user: 1000 evidence-backed rows on Quest; train only after audit; API cap $20',
         api_calls=0, api_limit_usd='20.00', account='p33100', partition='short',canonicalize=canonicalize,smoke_limit=limit)
     write(root/'CAMPAIGN.json', manifest)
+    if stage=='audit-candidates':write(root/'AUDIT_SOURCES.json',[str(x) for x in candidate_exports])
     if stage == 'replay-smoke':
         write(root/'CASES.json',read(inventory/'inventory/REPLAY_SMOKE.json')[:limit])
         write(root/'INHERITED.json',dict(inventory=str(inventory),hashes=hashes))
@@ -139,6 +149,7 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
         write(root/'EXPORT_SOURCE.json',dict(root=str(replay_smoke),receipt_sha256=sha(replay_smoke/'RECEIPT.json')))
     script='collect.sbatch' if stage in ('collect-smoke','collect-cached-smoke','collect-cached-batch') else ('cpu.sbatch' if stage in ('inventory','source-plan') else 'replay.sbatch')
     if stage=='export-candidates':script='export.sbatch'
+    if stage=='audit-candidates':script='audit.sbatch'
     submit=['sbatch','--parsable','--output='+str(root/'slurm_%j.log')]
     if stage=='replay-spatial-batch':
         submit=['sbatch','--parsable','--array=0-7%4','--output='+str(root/'slurm_%A_%a.log')]
@@ -174,11 +185,12 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
 
 
 if __name__ == '__main__':
-    p = argparse.ArgumentParser(); p.add_argument('stage', choices=['inventory','source-plan','replay-smoke','replay-spatial-batch','collect-smoke','collect-cached-smoke','collect-cached-batch','replay-collection','export-candidates'])
+    p = argparse.ArgumentParser(); p.add_argument('stage', choices=['inventory','source-plan','replay-smoke','replay-spatial-batch','collect-smoke','collect-cached-smoke','collect-cached-batch','replay-collection','export-candidates','audit-candidates'])
     p.add_argument('--inventory',type=Path);p.add_argument('--canonicalize',action='store_true')
     p.add_argument('--limit',type=int,default=12)
     p.add_argument('--source-plan',type=Path)
     p.add_argument('--replay-smoke',type=Path)
     p.add_argument('--collection-root',type=Path)
     p.add_argument('--batch-shard',type=int,choices=(0,1))
-    a=p.parse_args();main(a.stage,a.inventory,a.canonicalize,a.limit,a.source_plan,a.replay_smoke,a.collection_root,a.batch_shard)
+    p.add_argument('--candidate-export',type=Path,action='append')
+    a=p.parse_args();main(a.stage,a.inventory,a.canonicalize,a.limit,a.source_plan,a.replay_smoke,a.collection_root,a.batch_shard,a.candidate_export)

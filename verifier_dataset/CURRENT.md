@@ -26,7 +26,8 @@ $20. The workflow is implemented in this directory; this is not a claim that
   simulator payload and passed the pinned GLM-4.5V / Z.AI pricing guard. The
   proposed four-case GPU collection reserves at most $0.80 for eight attempts
   within the shared $20 ceiling; no paid worker or paid-enabled GPU collection
-  was launched. A separate cache-only GPU job is now queued (below).
+  was launched. The cache-only Goal smoke finished with two usable tapes and
+  two deferred cache misses; a broader offline batch is now active (below).
 - Spatial array **9906479**, all eight shards **COMPLETED/0:0**: 124 tapes
   rechecked, 116 strict contact-free legal witnesses, eight contact rejections,
   1,160 checkpoint candidates. Eligible witnesses cover **nine original states**,
@@ -39,6 +40,20 @@ $20. The workflow is implemented in this directory; this is not a claim that
   mixed 1,000-record scientific dataset. Its manifest, hashes and 18 preview
   images (two per source) are mirrored locally; all 2,002 images and original
   evidence remain at the immutable Quest export root.
+- Cache-only Goal smoke **9907813 COMPLETED/0:0**, 4m45s: Goal/I/task1/episode0
+  and task3/episode0 produced two complete proxy-success tapes. Task0/episode1
+  and task2/episode1 had no exact cache match and remain deferred/UNKNOWN before
+  scored policy actions. No key, API worker or new request was used.
+- Goal replay **9909651 COMPLETED/0:0**, 1m09s: both tapes reproduced exactly,
+  all 288 commands were legal and no prohibited contact was recorded. Goal
+  export **9910765 COMPLETED/0:0**, 6s, produced 20 distinct positive candidates.
+  Combined with Spatial, independent full-input/pixel hash checks find **1,021
+  distinct candidate inputs**, **11 original identities**, **three task
+  compositions**, **two families** and **117 represented witness trajectories**.
+  The export-local IDs overlap; use root namespaces or the neutral merged index.
+  All three Goal-stage manifests and four original preview PNGs are now mirrored
+  locally with verified delivery hashes. Two external views were visually checked;
+  that does not establish observability or shortcut acceptance.
 
 Local receipts and checksum-verified copies are under
 `results/verifier_dataset/`. The corresponding Quest roots are under
@@ -52,25 +67,37 @@ Local receipts and checksum-verified copies are under
 | Spatial CPU batch | `20261014T061523Z_replay-spatial-batch_454f29b3c8fd` | `454f29b3c8fd` |
 | Candidate export | `20261014T063344Z_export-candidates_efcf7fa16836` | `efcf7fa16836` |
 | Cache-only Goal smoke | `20261014T063412Z_collect-cached-smoke_efcf7fa16836` | `efcf7fa16836` |
+| Goal replay | `20261014T065339Z_replay-collection_fca699e146a7` | `fca699e146a7` |
+| Goal candidate export | `20261014T070045Z_export-candidates_fca699e146a7` | `fca699e146a7` |
+| Broader cached shard 0 | `20261014T070904Z_collect-cached-batch_520cde150f40` | `520cde150f40` |
+| Broader cached shard 1 | `20261014T070931Z_collect-cached-batch_520cde150f40` | `520cde150f40` |
 
 ## Active unaffected work
 
-Cache-only Goal job **9907813** is queued on one A100 (last checked
-PENDING/Priority). It uses four existing Goal source identities, one per task.
-It starts no API worker, reads no credential and has zero paid fallback. Missing
-exact historical cache entries are retained as deferred/UNKNOWN before scored
-policy actions. This is the safe alternative to the rejected paid operation;
-it does not grant approval for new external requests. Read actual receipts and
-Slurm state rather than treating this static paragraph as live status.
+Cache-only jobs **9911402 / 9911408** are running, one A100 each, one hour maximum
+per job. The frozen 21+20-source shards cover 41 additional original identities
+across nine task compositions and three families: the remaining 16 Goal sources,
+15 sources from three other Spatial tasks, and 10 Long sources. At the last
+check each job had two proxy successes, with six and ten cache misses respectively;
+these are live collection counts, not accepted witnesses. No API worker or key
+is used. Missing exact caches remain deferred/UNKNOWN before scored actions.
+Read actual receipts and Slurm state rather than treating this paragraph as live.
 
-The live Quest checkout remains at `efcf7fa1683670e9b85a8e0e7a2f7650f2207c5c`;
-the queued job uses its immutable archived source and staged upstream/assets.
+The live Quest checkout is frozen at `520cde150f4059fca17892894a963fc508e9ba81`
+while these jobs are active; each uses immutable archived source and staged assets.
 The finished Spatial input pool contained 63 AEGIS and 61 nominal tapes from
 ten initial identities; only nine identities contributed eligible witnesses.
 
 Local candidate manifest:
 `results/verifier_dataset/20261014T063344Z_export-candidates_efcf7fa16836/positive_candidates.jsonl`.
 Local image delivery is a preview subset, not the full training image pool.
+
+The next CPU precheck has been implemented and tested locally. It independently
+rechecks merged evidence and image pixels, computes RGB/red-area feature columns,
+and groups source/pixel/settled-qpos ancestry. A one-class pool produces no binary
+AUROC and cannot pass the final data gate. New replay geometry diagnostics check
+actual collision material, not visual extents, before proposing any enclosure
+certificate. Neither module invents negatives or reasoning labels.
 
 ## Pending decisions and closed gates
 
