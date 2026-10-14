@@ -150,7 +150,10 @@ never substitute for a verified material point or inscribed collision geometry.
 `design-fixture --replay-smoke ROOT --canonicalize` is a single read-only design
 pass on the first completed strict Long/task3 witness in that replay root. It
 records conservative native collision-geometry slices along the actual robot /
-pudding path and proposes fixed walls outside the connected low-height envelope.
+pudding path. The initial connected-envelope proposal failed because it enclosed
+part of the goal and intersected the plate; that result is preserved. Version 2
+uses a local target enclosure and opens every face intersected by the full native
+actor path, with no classifier or policy-outcome threshold search.
 The site goal must be world-fixed; its necessary point region is derived from
 the pinned `SiteObject.under` predicate. Proposed walls are checked against all
 initial moving geometry, the recorded open path and the goal region. This

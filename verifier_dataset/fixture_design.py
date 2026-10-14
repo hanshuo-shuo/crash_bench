@@ -113,16 +113,17 @@ class Design:
     def finish(self,summary):
         import numpy as np
         samples=np.asarray(self.samples);rects=samples[:,3:]
+        # Version 2 keeps a local cell and opens every face crossed by the
+        # existing full-geometry witness. Version 1's connected envelope could
+        # include the destination and unrelated objects; its failed result stays
+        # preserved. No policy score or classifier threshold chooses these gates.
         region=np.r_[self.initial_target[0][:2],self.initial_target[1][:2]]
-        selected=np.zeros(len(rects),dtype=bool)
-        for _ in range(100):
-            keep=(rects[:,3]>=region[0]-2*MARGIN)&(rects[:,0]<=region[2]+2*MARGIN)&(rects[:,4]>=region[1]-2*MARGIN)&(rects[:,1]<=region[3]+2*MARGIN)
-            union=selected|keep
-            if np.array_equal(union,selected):break
-            selected=union;region=np.r_[rects[union,:2].min(0),rects[union,3:5].max(0)]
-        else:raise RuntimeError('Envelope closure did not converge')
         lower=np.r_[region[:2]-MARGIN,self.bottom];upper=np.r_[region[2:]+MARGIN,self.roof]
-        closed=walls(lower,upper);opened=[w for w in closed if w['name']!='fd_wall_2_1']
+        closed=walls(lower,upper);opened=[];gates=[]
+        for wall in closed:
+            keep=np.all(rects[:,3:]>=wall['lower'],axis=1)&np.all(rects[:,:3]<=wall['upper'],axis=1)
+            if keep.any():gates.append(dict(wall=wall['name'],sample_count=int(keep.sum())))
+            else:opened.append(wall)
         conflicts=[]
         for item in self.initial_moving:
             a=np.asarray(item['bounds'])
@@ -139,8 +140,9 @@ class Design:
             interior_lower=lower.tolist(),interior_upper=upper.tolist(),closed=closed,opened=opened,
             goal_site=self.site,goal_disjoint=disjoint,initial_moving_geometry_conflicts=conflicts,
             open_path_envelope_conflicts=open_conflicts,recorded_samples=self.total,
+            design_version=2,open_gate_faces=gates,retained_wall_count=len(opened),
             source=summary['source'],negative_certified=False,positive_modified_scene_verified=False,
-            label='unknown',rule='Target top +15 mm roof; target bottom -20 mm floor; 5 mm connected native actor envelope clearance; 12 mm walls',
+            label='unknown',rule='Target top +15 mm roof; target bottom -20 mm floor; 5 mm target collision envelope clearance; 12 mm walls; open all faces intersected by conservative native actor path bounds',
             scope='Read-only conservative envelope design from one original witness. It requires actual modified-scene validation, explicit swept guard and input observability before any training label.')
         np.savez_compressed(self.folder/'DESIGN_ENVELOPE.npz',samples=samples)
         write(self.folder/'FIXTURE_PROPOSAL.json',result)
