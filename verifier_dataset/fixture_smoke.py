@@ -28,6 +28,14 @@ VARIANTS=('closed_full','open_full','closed_mug')
 MUG_GOAL=['on','porcelain_mug_1','plate_1']
 
 
+def prohibited_contact(a,b,distance,dynamic,protected,rigid_groups):
+    # A movable protected object can itself hit a newly protected static wall.
+    # Exclude only geometry belonging to the same rigid assembly, not all
+    # protected geometries from the set of moving bodies.
+    if distance>0 or rigid_groups[str(a)]==rigid_groups[str(b)]:return False
+    return (a in protected and b in dynamic) or (b in protected and a in dynamic)
+
+
 def add_boxes(xml,boxes):
     tree=ET.fromstring(xml);world=tree.find('worldbody')
     for box in boxes:
@@ -58,7 +66,7 @@ def check_saved(folder):
             row=json.loads(line);count+=1;bad=False
             for mode in ('native','synchronized'):
                 for a,b,distance in row[mode+'_contacts']:
-                    bad |= distance<=0 and ((a in protected and b in dynamic) or (b in protected and a in dynamic))
+                    bad |= prohibited_contact(a,b,distance,dynamic,protected,geo['rigid_groups'])
                 point=row[mode+'_root'];start=previous.get(mode,point)
                 for box in geo['boxes']:
                     bad |= segment_box(start,point,[x-rho for x in box['lower']],[x+rho for x in box['upper']])
@@ -131,7 +139,8 @@ def execute(root,variant):
             b=int(m.geom_bodyid[g]);moving=False
             while b:
                 moving |= int(m.body_dofnum[b])>0;b=int(m.body_parentid[b])
-            if moving and g not in protected:dynamic.add(g)
+            if moving:dynamic.add(g)
+        rigid_groups={str(g):int(m.body_weldid[int(m.geom_bodyid[g])]) for g in range(m.ngeom)}
         site=m.site_name2id(GOAL);b=int(m.site_bodyid[site]);fixed=True
         while b:
             fixed &= int(m.body_dofnum[b])==0;b=int(m.body_parentid[b])
@@ -158,7 +167,7 @@ def execute(root,variant):
                 contacts=[[int(c.geom1),int(c.geom2),float(c.dist)] for c in data.contact[:data.ncon]]
                 point=np.asarray(data.xpos[body] if mode=='synchronized' else data.body_xpos[body]).tolist()
                 row[mode+'_contacts']=contacts;row[mode+'_root']=point
-                bad |= any(dist<=0 and ((a in protected and b in dynamic) or (b in protected and a in dynamic)) for a,b,dist in contacts)
+                bad |= any(prohibited_contact(a,b,dist,dynamic,protected,rigid_groups) for a,b,dist in contacts)
                 start=previous.get(mode,point)
                 bad |= any(segment_box(start,point,[x-rho for x in box['lower']],[x+rho for x in box['upper']]) for box in actual)
                 previous[mode]=point
@@ -169,7 +178,7 @@ def execute(root,variant):
         geometry=dict(boxes=actual,lower=proposal['interior_lower'],upper=proposal['interior_upper'],
             initial_root=np.asarray(d.body_xpos[body]).tolist(),goal_bounds=actual_goal_bounds,
             radius=radius,material_verified=radius>0,material_evidence=target,static=static,
-            initial_safe=initial_safe,dynamic=sorted(dynamic),protected=sorted(protected),
+            initial_safe=initial_safe,dynamic=sorted(dynamic),protected=sorted(protected),rigid_groups=rigid_groups,
             goal_site=site_info,goal_predicate_source_hashes={k:SOURCE_HASHES[k] for k in SOURCE_HASHES if k in
                 ('objects/site_object.py','object_states/base_object_states.py','predicates/base_predicates.py')})
         write(folder/'EXECUTED_GEOMETRY.json',geometry)
