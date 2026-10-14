@@ -32,6 +32,16 @@ verifier training runs. V1 images, exclusions and shortcut results cannot approv
 v2 pixels. Early completed source images may be reviewed while collection runs;
 final selection and model/readout fitting wait for both full shards.
 
+Update: 3602426 failed after 54s on H100 node qgpu3004 at the first action of
+source 0: actual physics hash did not match the source tape. The same source
+passed the four-family prototype on A100-PCIE-40GB (qgpu0208). This is a platform
+compatibility observation, not proof of the numerical cause, and it creates no
+negative label. The failed root is retained. Future constraint renders request
+A100 and keep the exact hash gate. Shard 1 (3602435) was still running on qgpu2014;
+read its actual GPU/progress before admitting it. A fresh shard-0 root is needed.
+The attempted reduction of pending wall times made no changes because one job
+was already failed and the other running; their submitted four-hour caps remain.
+
 **The v1 image dataset failed scientific acceptance. Do not train it.** Audit
 9997306 (`20261014T202221Z_audit-constraints_51b09f4a94c3`) completed normally.
 Its raw evidence checks passed, but validation AUROC was 0.928755 for the fixed

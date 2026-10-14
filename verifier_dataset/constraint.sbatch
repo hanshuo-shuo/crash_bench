@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #SBATCH --account=p33100
 #SBATCH --partition=gengpu
-#SBATCH --gres=gpu:1
+#SBATCH --gres=gpu:a100:1
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4

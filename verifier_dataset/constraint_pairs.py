@@ -184,6 +184,7 @@ def main(root,case_index=None):
     if case_index is not None:execute(root/('case_%03d'%case_index),maximum);gc.collect();return
     device=subprocess.check_output(['nvidia-smi','--query-gpu=name,driver_version','--format=csv,noheader'],text=True).strip()
     write(root/'GPU.json',dict(devices=device,scope='OpenGL rendering only; no neural policy inference',slurm_job=os.environ['SLURM_JOB_ID']))
+    if 'A100' not in device:raise RuntimeError('This exact source replay is qualified on A100 nodes; do not relax physical equality on another platform')
     outcomes=[];all_rows=[]
     for index,row in enumerate(read(root/'CASES.json')):
         case=root/('case_%03d'%index);case.mkdir();write(case/'INPUT.json',row)

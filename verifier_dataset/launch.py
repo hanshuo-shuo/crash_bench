@@ -309,7 +309,7 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
             same_image_and_target_opposite_safety_rules=True,physical_collision_walls=False,batch_shard=batch_shard,
             constraint_protocol_sha256=sha(repo/'verifier_dataset/constraint_protocol.json'),
             frozen_source_split_sha256=sha(repo/'verifier_dataset/frozen_sources_67.json'),
-            gpu_request='one available gengpu GPU for rendering only; actual model recorded in GPU.json')
+            gpu_request='one gengpu A100 for rendering and the qualified exact-replay platform; actual device recorded in GPU.json')
         write(root/'CAMPAIGN.json',manifest);write(root/'CASES.json',paired_sources)
         write(root/'INHERITED.json',dict(candidate_audit=str(collection_root),audit_sha256=sha(collection_root/'AUDIT_COMPLETE.json'),
             source_count=len(paired_sources),original_sources_only=True,training_allowed=False,
