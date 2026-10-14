@@ -37,6 +37,25 @@ def edge_boxes(bounds,width=.0017):
     return result
 
 
+def overview_pose(rotation,regions,fovy):
+    """Fit all declared boxes before either rule query, retaining view angle."""
+    import numpy as np
+    R=np.asarray(rotation).reshape(3,3)
+    if not np.allclose(R.T@R,np.eye(3),atol=1e-6) or not 1<float(fovy)<179:
+        raise ValueError('Invalid source camera')
+    points=np.asarray([corner for bounds in regions for corner in itertools.product(*zip(*bounds))],dtype=float)
+    if not np.isfinite(points).all():raise ValueError('Nonfinite declared region')
+    center=points.mean(0);local=(points-center)@R
+    tangent=np.tan(np.radians(fovy)/2)
+    distance=max(.5,float(np.max(local[:,2]+np.max(np.abs(local[:,:2]),axis=1)/(tangent*.8))))+.05
+    position=center+R[:,2]*distance
+    normalized=local[:,:2]/(distance-local[:,2,None])/tangent
+    if np.max(np.abs(normalized))>=.8:raise RuntimeError('Overview clipping margin failed')
+    return dict(position=position.tolist(),rotation=R.reshape(-1).tolist(),fovy=float(fovy),
+        maximum_projected_abs=float(np.max(np.abs(normalized))),
+        rule='Fit current target, both virtual regions and destination with 10% image margin; original external view angle; no labels, future actions or selected protected color')
+
+
 def capture(env,folder,layout,physical_hash):
     import numpy as np
     from PIL import Image
@@ -45,6 +64,13 @@ def capture(env,folder,layout,physical_hash):
     import robosuite.macros as macros
     from .inventory import sha,write
     m,d=env.sim.model,env.sim.data;before=physical_hash(env)
+    cid=m.camera_name2id('agentview')
+    original_camera_position=np.asarray(d.cam_xpos[cid]).copy()
+    original_camera_rotation=np.asarray(d.cam_xmat[cid]).copy()
+    overview=overview_pose(original_camera_rotation,[layout[k] for k in ('a','b','target','goal')],float(m.cam_fovy[cid]))
+    write(folder/'CAMERA.json',dict(external_overview=overview,native_wrist_unchanged=True,
+        original_external_position=original_camera_position.tolist(),original_external_rotation=original_camera_rotation.tolist(),
+        scope='Simulator-native alternative external framing for this derived task; no raster editing and no change to the source policy or physical trajectory'))
     ids={role:[g for g in range(m.ngeom) if (m.geom_id2name(g) or '').startswith('fdc_'+role+'_')]
          for role in ('a','b','target','goal')}
     if any(len(v)!=12 for v in ids.values()):raise RuntimeError('Incomplete virtual-region annotations')
@@ -70,6 +96,8 @@ def capture(env,folder,layout,physical_hash):
             m.geom_rgba[ids[role]]=COLORS[color]
         path=folder/('assignment_%d'%assignment);path.mkdir();images=[];seen=[]
         for camera,name in [('agentview','external'),('robot0_eye_in_hand','wrist')]:
+            if camera=='agentview':
+                d.cam_xpos[cid]=overview['position'];d.cam_xmat[cid]=overview['rotation']
             rgb=np.asarray(env.sim.render(width=1024,height=1024,camera_name=camera))
             rgb=rgb[::IMAGE_CONVENTION_MAPPING[macros.IMAGE_CONVENTION]][::-1,::-1]
             rgb=image_tools.convert_to_uint8(image_tools.resize_with_pad(np.ascontiguousarray(rgb),224,224))
@@ -90,6 +118,8 @@ def capture(env,folder,layout,physical_hash):
             np.savez_compressed(seg_file,object_type=segmentation[:,:,0],object_id=segmentation[:,:,1])
             seen.append(dict(camera=name,entities=entities,segmentation_path=str(seg_file.relative_to(folder)),
                 segmentation_sha256=sha(seg_file),alignment='Same camera, resolution, row convention and orientation as RGB; nearest labels are diagnostic only'))
+            if camera=='agentview':
+                d.cam_xpos[cid]=original_camera_position;d.cam_xmat[cid]=original_camera_rotation
         output.append(images)
         visibility.append(seen)
         if physical_hash(env)!=before:raise RuntimeError('Virtual-region rendering altered physical arrays')

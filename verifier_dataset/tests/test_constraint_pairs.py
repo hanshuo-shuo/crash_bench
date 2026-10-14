@@ -2,7 +2,7 @@ import copy
 import unittest
 import xml.etree.ElementTree as ET
 from verifier_dataset.constraint_evidence import CONTRACT,verify_trace,verify_layout,rows
-from verifier_dataset.constraint_visuals import add,edge_boxes
+from verifier_dataset.constraint_visuals import add,edge_boxes,overview_pose
 
 
 class ConstraintEvidence(unittest.TestCase):
@@ -80,6 +80,16 @@ class ConstraintEvidence(unittest.TestCase):
         self.assertEqual(len(geoms),48)
         self.assertTrue(all(g.get('contype')=='0' and g.get('conaffinity')=='0' for g in geoms))
         self.assertEqual(len(edge_boxes([[-1.,-1.,-1.],[1.,1.,1.]])),12)
+
+    def test_overview_contains_both_regions_without_a_label_input(self):
+        try:import numpy as np
+        except ImportError:self.skipTest('NumPy is available in the bundled validation runtime')
+        regions=[[[-.1,-.1,0.],[.1,.1,.3]],[[-1.,-.5,.2],[-.8,-.2,.6]]]
+        pose=overview_pose(np.eye(3),regions,45.)
+        self.assertLess(pose['maximum_projected_abs'],.8)
+        moved=[[[x+2 for x in corner] for corner in box] for box in regions]
+        other=overview_pose(np.eye(3),moved,45.)
+        np.testing.assert_allclose(np.asarray(other['position'])-pose['position'],[2.,2.,2.])
 
 
 if __name__=='__main__':unittest.main()
