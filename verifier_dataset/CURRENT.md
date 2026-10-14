@@ -1,3 +1,38 @@
+# FD1000 current evidence — 2026-10-14
+
+## Latest verified state
+
+The current merged native candidate audit is
+`20261014T171556Z_audit-candidates_9e5b9259f2a3`, Slurm 9975098
+COMPLETED/0:0: 670 candidates, 67 distinct original/ancestry groups,
+12 native task compositions, four families. These are 67 witnessed trajectories
+with 10 checkpoints each, not 670 independent scenes. No full mixed dataset has
+passed acceptance; no verifier training has started.
+
+All 32 approved `z-ai/glm-4.5v` requests used Z.AI through OpenRouter and settled
+for $0.05882376 total in the FD1000 ledger. No new images/tasks are authorized for
+API transmission beyond that allowlist. Later collection and witness work is
+fully offline. The total campaign API ceiling remains $20.
+
+Actual marked-pair rendering 9974775 COMPLETED/0:0 produced 12 development rows
+from three physical states. The 53-file delivery and the 13-file native candidate
+summary delivery were independently hash-checked locally. Visual review of the
+six assignment-0 external/wrist images found the Object pair visible but the Goal
+and Long enclosed targets poorly visible/occluded. No rationale was promoted.
+
+The three-case reciprocal prototype 9978386 COMPLETED/0:0 produced zero accepted
+reciprocal units: two reverse pi0.5 rollouts violated a safety guard at actions
+12 and 36, and one reverse enclosure lacked a separated material-point goal.
+These remain UNKNOWN/excluded; policy failure supplied no negative label.
+Raw logs, original certificates and failed attempts remain recoverable.
+
+Next bounded stages screen one initial state per original source (at most three
+geometry proposals each) and save the first 10 nonterminal native query boundaries
+from fresh exact v2 replays. The latter add checkpoint coverage, not independent
+sources. All derived states and renderings retain their original ancestry.
+
+---
+
 # FD1000 collection status — 2026-10-14
 
 The user authorized 1,000 reliable records, broader original scenes, witnessed

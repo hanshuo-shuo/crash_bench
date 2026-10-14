@@ -51,7 +51,7 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
     if stage=='export-candidates':
         if replay_smoke is None:raise RuntimeError('Explicit completed replay source required')
         source_receipt=read(replay_smoke/'RECEIPT.json')
-        if source_receipt['stage'] not in ('replay-smoke','replay-spatial-batch','replay-object-sources','replay-spatial-sources','replay-collection'):
+        if source_receipt['stage'] not in ('replay-smoke','replay-spatial-batch','replay-object-sources','replay-spatial-sources','replay-early-sources','replay-collection'):
             raise RuntimeError('Wrong witness source stage')
         if not source_receipt['canonicalize']:raise RuntimeError('Canonical legal witness required')
     if stage=='design-fixture':
@@ -153,7 +153,7 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
         old=read(collection_root/'RECEIPT.json');job=old['job']
         if old['stage']!='collect-approved-cache' or command('sacct','-X','-n','-P','-j',job,'--format=JobIDRaw,State,ExitCode').splitlines()!=[job+'|COMPLETED|0:0']:
             raise RuntimeError('Approved-cache collection must terminate normally')
-    if stage=='paired-prototype':
+    if stage in ('paired-prototype','paired-screen','replay-early-sources'):
         if collection_root is None:raise RuntimeError('Explicit v2 merged candidate audit required')
         receipt=read(collection_root/'RECEIPT.json');job=receipt['job'];audit=read(collection_root/'AUDIT_COMPLETE.json')
         if receipt['stage']!='audit-candidates' or not audit['passed'] or receipt.get('contact_contract')!='FD1000-SC-CONTACT-v2':
@@ -164,11 +164,23 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
             if sha(collection_root/name)!=wanted:raise RuntimeError('Audited candidate evidence changed')
         import json
         candidates=[json.loads(line) for line in (collection_root/'MERGED_CANDIDATES.jsonl').read_text().splitlines()]
-        paired_sources=[]
-        for family in ('safelibero_object','safelibero_spatial','safelibero_goal','safelibero_long'):
-            choices=[r for r in candidates if r['metadata']['family']==family and r['evidence']['checkpoint_step']==0]
-            if not choices:raise RuntimeError('Missing source family for bounded pair prototype')
-            paired_sources.append(sorted(choices,key=lambda r:r['metadata']['source_id'])[0])
+        initial={r['metadata']['source_id']:r for r in candidates if r['evidence']['checkpoint_step']==0}
+        if not 30<=len(initial)<=100:raise RuntimeError('Expected a bounded, diverse source inventory')
+        paired_sources=sorted(initial.values(),key=lambda r:r['metadata']['source_id'])
+        if stage=='paired-prototype':
+            paired_sources=[next(r for r in paired_sources if r['metadata']['family']==family)
+                for family in ('safelibero_object','safelibero_spatial','safelibero_goal','safelibero_long')]
+        if stage=='replay-early-sources':
+            if not canonicalize:raise RuntimeError('Early checkpoints require the same canonical legal replay')
+            early_sources=[]
+            for row in paired_sources:
+                witness=Path(row['evidence']['witness_root'])
+                if sha(witness/'SUMMARY.json')!=row['evidence']['witness_summary_sha256']:
+                    raise RuntimeError('Audited source witness changed')
+                summary=read(witness/'SUMMARY.json')
+                if not summary['eligible_feasible_witness'] or summary['contact_contract_version']!='FD1000-SC-CONTACT-v2':
+                    raise RuntimeError('Early capture must retain the approved native contact contract')
+                early_sources.append(summary['source'])
     if stage in ('paired-render','reciprocal-prototype'):
         if collection_root is None:raise RuntimeError('Explicit completed paired prototype required')
         receipt=read(collection_root/'RECEIPT.json');job=receipt['job'];proof=read(collection_root/'PAIRED_COMPLETE.json')
@@ -205,13 +217,13 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
     manifest['contact_contract']=read(repo/'verifier_dataset/protocol.json').get('contact_contract')
     if stage in ('fixture-smoke','fixture-render','fixture-grounding'):
         manifest['contact_contract']='FD1000-fixture-v1 (development-only inherited strict contact and swept-root guard)'
-    if stage in ('paired-prototype','paired-render','reciprocal-prototype'):
+    if stage in ('paired-prototype','paired-screen','paired-render','reciprocal-prototype'):
         manifest.update(contact_contract='FD1000-MARKED-PAIR-v1: v2 actor contact plus explicit swept material-center guard and fixed final destination',
             derived_tasks=True,api_mode='disabled',max_paid_attempts=0,max_logical_requests=0)
-        if stage=='paired-prototype':
+        if stage in ('paired-prototype','paired-screen'):
             write(root/'CASES.json',paired_sources)
             write(root/'INHERITED.json',dict(candidate_audit=str(collection_root),audit_sha256=sha(collection_root/'AUDIT_COMPLETE.json'),
-                source_count=4,maximum_candidates_per_source=3,prototype_only=True))
+                source_count=len(paired_sources),maximum_candidates_per_source=3,prototype_only=True))
         else:
             manifest['partition']='gengpu'
             write(root/'PAIRED_SOURCES.json',render_pairs)
@@ -225,6 +237,17 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
                 manifest['reverse_controller']='existing native nominal pi0.5 on the swapped derived task'
                 manifest['max_reverse_rollouts']=len(render_pairs)
     write(root/'CAMPAIGN.json', manifest)
+    if stage in ('replay-early-sources','paired-screen'):
+        rows=early_sources if stage=='replay-early-sources' else paired_sources
+        if stage=='replay-early-sources':manifest['checkpoint_schedule']='early'
+        write(root/'CAMPAIGN.json',manifest)
+        for index in range(8):
+            shard=root/'shards'/str(index);shard.mkdir(parents=True)
+            write(shard/'CASES.json',rows[index::8]);write(shard/'CAMPAIGN.json',manifest)
+        write(root/'CASES.json',rows)
+        write(root/'INHERITED.json',dict(candidate_audit=str(collection_root),audit_sha256=sha(collection_root/'AUDIT_COMPLETE.json'),
+            source_count=len(rows),new_independent_sources=0,maximum_checkpoints_per_trajectory=10,
+            purpose='Early nonterminal native checkpoints' if stage=='replay-early-sources' else 'One initial state per original source; at most three closed-enclosure candidates'))
     if stage in ('fixture-render','fixture-grounding'):
         manifest.update(partition='gengpu',api_mode='disabled',max_paid_attempts=0,max_logical_requests=0)
         write(root/'CAMPAIGN.json',manifest)
@@ -318,8 +341,9 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
     if stage=='reciprocal-prototype':script='reciprocal.sbatch'
     if stage=='audit-request-drift':script='request_drift.sbatch'
     submit=['sbatch','--parsable','--output='+str(root/'slurm_%j.log')]
-    if stage in ('replay-spatial-batch','replay-object-sources','replay-spatial-sources'):
+    if stage in ('replay-spatial-batch','replay-object-sources','replay-spatial-sources','replay-early-sources','paired-screen'):
         submit=['sbatch','--parsable','--array=0-7%4','--output='+str(root/'slurm_%A_%a.log')]
+    if stage=='paired-screen':submit.append('--time=01:00:00')
     if stage=='collect-smoke':submit.append('--hold')
     if stage in ('collect-cached-batch','collect-approved-cache','collect-frozen-perception'):submit.append('--time=01:00:00')
     job = subprocess.check_output(submit+[str(root/'source/verifier_dataset'/script)],env=env,text=True).strip().split(';')[0]
@@ -352,7 +376,7 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
 
 
 if __name__ == '__main__':
-    p = argparse.ArgumentParser(); p.add_argument('stage', choices=['inventory','source-plan','replay-smoke','replay-spatial-batch','replay-object-sources','replay-spatial-sources','collect-smoke','collect-cached-smoke','collect-cached-batch','collect-approved-cache','collect-frozen-perception','replay-collection','export-candidates','audit-candidates','design-fixture','fixture-smoke','fixture-render','fixture-grounding','audit-request-drift','paired-prototype','paired-render','reciprocal-prototype'])
+    p = argparse.ArgumentParser(); p.add_argument('stage', choices=['inventory','source-plan','replay-smoke','replay-spatial-batch','replay-object-sources','replay-spatial-sources','replay-early-sources','collect-smoke','collect-cached-smoke','collect-cached-batch','collect-approved-cache','collect-frozen-perception','replay-collection','export-candidates','audit-candidates','design-fixture','fixture-smoke','fixture-render','fixture-grounding','audit-request-drift','paired-prototype','paired-screen','paired-render','reciprocal-prototype'])
     p.add_argument('--inventory',type=Path);p.add_argument('--canonicalize',action='store_true')
     p.add_argument('--limit',type=int,default=12)
     p.add_argument('--source-plan',type=Path)

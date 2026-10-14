@@ -17,9 +17,13 @@ ARRAYS = ['qpos', 'qvel', 'act', 'ctrl', 'qacc', 'qacc_warmstart', 'qfrc_applied
           'xfrc_applied', 'mocap_pos', 'mocap_quat', 'userdata']
 
 
-def checkpoint_steps(actions, maximum=10):
+def checkpoint_steps(actions, maximum=10, schedule='uniform'):
     # Retain meaningful remaining work; never supervise an already-solved endpoint.
     eligible = list(range(0, max(0, actions-10), 5))
+    if schedule == 'early':
+        return eligible[:maximum]
+    if schedule != 'uniform':
+        raise ValueError('Unknown checkpoint schedule')
     if len(eligible) <= maximum:
         return eligible
     return [eligible[i*(len(eligible)-1)//(maximum-1)] for i in range(maximum)]
@@ -68,7 +72,7 @@ def clean(value):
     return {'unsupported_type':type(value).__name__}
 
 
-def replay(row, folder, physical_hash, canonicalize=False, design_fixture=False):
+def replay(row, folder, physical_hash, canonicalize=False, design_fixture=False, checkpoint_schedule='uniform'):
     import numpy as np
     from libero.libero import benchmark, get_libero_path
     from libero.libero.envs.env_wrapper import ControlEnv
@@ -182,7 +186,7 @@ def replay(row, folder, physical_hash, canonicalize=False, design_fixture=False)
             counter['substep'] += 1; counter['total'] += 1; sample('integration',data)
             return value
         env.sim.step = step_and_sample
-        wanted = set(checkpoint_steps(len(steps)))
+        wanted = set(checkpoint_steps(len(steps), schedule=checkpoint_schedule))
         legal = True; original_legal = True; equality = []; done = False; legal_tape=[]
         low, high = [np.asarray(v) for v in env.env.action_spec]
         for item in steps:
@@ -228,7 +232,7 @@ def replay(row, folder, physical_hash, canonicalize=False, design_fixture=False)
             canonicalization_note='Clipped to native action_spec; accepted only if every original physical hash is still exactly reproduced' if canonicalize else None,
             protected_contact_events=len(contacts),integration_steps=counter['total'],
             out_of_scope_contact_events=counter['outside'],contact_contract_version=VERSION,
-            eligible_feasible_witness=approved,checkpoints=saved,accepted_dataset_rows=0,
+            eligible_feasible_witness=approved,checkpoints=saved,checkpoint_schedule=checkpoint_schedule,accepted_dataset_rows=0,
             safety_contract=DESCRIPTION,
             conditional_digital_evidence=True,continuous_physics_proof=False,arbitrary_restore_verified=False,
             seed=7,slurm_job=os.environ['SLURM_JOB_ID'],code_commit=os.environ['CB_CODE_COMMIT'],
@@ -266,7 +270,8 @@ def main(root, case_index=None):
         work=root/('worker_%03d'%case_index);work.mkdir(exist_ok=False)
         physical_hash=configure(work)
         value=replay(rows[case_index],root/('case_%03d'%case_index),physical_hash,canonicalize=canonicalize,
-                     design_fixture=read(root/'CAMPAIGN.json')['stage']=='design-fixture')
+                     design_fixture=read(root/'CAMPAIGN.json')['stage']=='design-fixture',
+                     checkpoint_schedule=read(root/'CAMPAIGN.json').get('checkpoint_schedule','uniform'))
         gc.collect()
         print(json.dumps({k:v for k,v in value.items() if k!='source'}),flush=True)
         return
