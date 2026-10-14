@@ -51,7 +51,7 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
         if source_receipt['stage'] not in ('replay-smoke','replay-spatial-batch'):
             raise RuntimeError('Wrong witness source stage')
         if not source_receipt['canonicalize']:raise RuntimeError('Canonical legal witness required')
-    if stage=='collect-smoke':
+    if stage in ('collect-smoke','collect-cached-smoke'):
         if source_plan is None or not read(source_plan/'source_plan/SUMMARY.json')['passed']:
             raise RuntimeError('Passed broader-source inventory required')
         source_job=read(source_plan/'RECEIPT.json')['job']
@@ -89,7 +89,7 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
         write(root/'CASES.json',rows)
         write(root/'INHERITED.json',dict(inventory=str(inventory),hashes=hashes,replay_smoke=str(replay_smoke),
             smoke_sha256=sha(replay_smoke/'REPLAY_COMPLETE.json'),smoke_job=smoke_job))
-    if stage=='collect-smoke':
+    if stage in ('collect-smoke','collect-cached-smoke'):
         entries=read(source_plan/'source_plan/GOAL20_CANDIDATES.json')
         chosen=[next(r for r in entries if r['scene']['task']==task) for task in range(4)]
         if len({r['source_id'] for r in chosen})!=4:raise RuntimeError('Four unique Goal source states required')
@@ -99,13 +99,15 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
         cfg=config();cfg['save_diagnostic_samples']=False
         write(root/'plan.json',dict(configuration=cfg))
         manifest.update(partition='gengpu',budget_root=str(ASSETS/'verifier_dataset/budget_fd1000_20261014'),
-            source_plan=str(source_plan),max_logical_requests=4,max_paid_attempts=8)
+            source_plan=str(source_plan),max_logical_requests=4 if stage=='collect-smoke' else 0,
+            max_paid_attempts=8 if stage=='collect-smoke' else 0,
+            api_mode='paid_guarded' if stage=='collect-smoke' else 'cache_only')
         write(root/'CAMPAIGN.json',manifest)
     env = dict(os.environ, CB_FD_ROOT=str(root), CB_FD_STAGE=stage)
     if stage=='export-candidates':
         env['CB_FD_REPLAY']=str(replay_smoke)
         write(root/'EXPORT_SOURCE.json',dict(root=str(replay_smoke),receipt_sha256=sha(replay_smoke/'RECEIPT.json')))
-    script='collect.sbatch' if stage=='collect-smoke' else ('cpu.sbatch' if stage in ('inventory','source-plan') else 'replay.sbatch')
+    script='collect.sbatch' if stage in ('collect-smoke','collect-cached-smoke') else ('cpu.sbatch' if stage in ('inventory','source-plan') else 'replay.sbatch')
     if stage=='export-candidates':script='export.sbatch'
     submit=['sbatch','--parsable','--output='+str(root/'slurm_%j.log')]
     if stage=='replay-spatial-batch':
@@ -119,6 +121,8 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
     local = repo/'results/verifier_dataset'/root.name; local.mkdir(parents=True, exist_ok=False)
     write(local/'RECEIPT.json', receipt)
     print(receipt, flush=True)
+    if stage=='collect-cached-smoke':
+        write(root/'API_FINAL.json',dict(api_mode='cache_only',paid_calls=0,committed_usd='0.00',worker_started=False))
     if stage=='collect-smoke':
         try:
             worker=shlex.join(['/projects/p33100/siosio/envs/openpi/bin/python','-u','-m','verifier_dataset.api_worker',str(root)])
@@ -139,7 +143,7 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
 
 
 if __name__ == '__main__':
-    p = argparse.ArgumentParser(); p.add_argument('stage', choices=['inventory','source-plan','replay-smoke','replay-spatial-batch','collect-smoke','export-candidates'])
+    p = argparse.ArgumentParser(); p.add_argument('stage', choices=['inventory','source-plan','replay-smoke','replay-spatial-batch','collect-smoke','collect-cached-smoke','export-candidates'])
     p.add_argument('--inventory',type=Path);p.add_argument('--canonicalize',action='store_true')
     p.add_argument('--limit',type=int,default=12)
     p.add_argument('--source-plan',type=Path)

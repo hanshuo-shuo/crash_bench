@@ -21,6 +21,7 @@ class ScopedBudget:
 
 def main(root):
     plan=read(root/'RECEIPT.json');budget=None
+    if plan.get('api_mode')=='cache_only':raise RuntimeError('Paid worker forbidden for cache-only collection')
     expected=len(read(root/'COLLECTION_SOURCES.json'))
     allowed={'fd_goal%02d_aegis'%i for i in range(expected)}
     try:

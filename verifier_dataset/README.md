@@ -88,6 +88,15 @@ exact request identity and Z.AI provider; no cache hit incurs a new call. This
 stage captures evidence independently of the pending question about support
 contacts; it cannot alter the label contract or enable verifier training.
 
+While new paid requests are pending approval, `collect-cached-smoke` is a distinct
+offline alternative. It starts **no API worker**, never reads the private key,
+and checks only exact historical caches from the completed official batches.
+A cache miss is recorded as deferred/UNKNOWN before any scored policy action;
+it cannot create a paid-work marker. The paid worker refuses cache-only roots.
+This stage can collect existing-cache sources without authorizing or attempting
+the rejected external request. Both cache hits and misses are unit-tested with
+network access mocked to raise an error.
+
 After a normal-exit 12-source replay smoke, `replay-spatial-batch --inventory ROOT
 --replay-smoke ROOT --canonicalize` validates the bounded existing Spatial pool
 (124 original proxy-success tapes in the initial inventory), eight CPU shards
