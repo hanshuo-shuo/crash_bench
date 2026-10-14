@@ -95,6 +95,16 @@ with at most four concurrent workers. This common-safe subset does not depend on
 whether native Object pedestal contact is allowed. Source coverage and unique
 inputs still have to be audited; checkpoint count is not accepted dataset count.
 
+`export-candidates --replay-smoke ROOT` runs on CPU after all source workers and
+their Slurm jobs finish normally. It rechecks file hashes, canonical command
+legality, every source equality record and the absence of prohibited contacts;
+exports only the actual RGB arrays and original task; and removes exact duplicate
+student inputs. Future actions and diagnostics in the same NPZ archives remain
+metadata, never student input. This is explicitly a positive-candidate export:
+rationale review, observability, grouped splits, negatives and shortcut audits
+are still required. Every exported record has `training_eligible=false`; its
+existence witness must not be confused with a complete scientific dataset.
+
 Primary methodological references:
 
 - Pinned [SafeLIBERO/AEGIS source](https://github.com/THU-RCSCT/vlsa-aegis/tree/2457feed5968ae803926e178c8ce8243b9ecdcf9)

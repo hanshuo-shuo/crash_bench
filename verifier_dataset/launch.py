@@ -45,6 +45,12 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
         if command('sacct','-X','-n','-P','-j',smoke_job,'--format=JobIDRaw,State,ExitCode').splitlines()!=[smoke_job+'|COMPLETED|0:0']:
             raise RuntimeError('Smoke must terminate normally; a JSON pass alone is insufficient')
         if not read(replay_smoke/'CAMPAIGN.json')['canonicalize']:raise RuntimeError('Wrong smoke action contract')
+    if stage=='export-candidates':
+        if replay_smoke is None:raise RuntimeError('Explicit completed replay source required')
+        source_receipt=read(replay_smoke/'RECEIPT.json')
+        if source_receipt['stage'] not in ('replay-smoke','replay-spatial-batch'):
+            raise RuntimeError('Wrong witness source stage')
+        if not source_receipt['canonicalize']:raise RuntimeError('Canonical legal witness required')
     if stage=='collect-smoke':
         if source_plan is None or not read(source_plan/'source_plan/SUMMARY.json')['passed']:
             raise RuntimeError('Passed broader-source inventory required')
@@ -96,7 +102,11 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
             source_plan=str(source_plan),max_logical_requests=4,max_paid_attempts=8)
         write(root/'CAMPAIGN.json',manifest)
     env = dict(os.environ, CB_FD_ROOT=str(root), CB_FD_STAGE=stage)
+    if stage=='export-candidates':
+        env['CB_FD_REPLAY']=str(replay_smoke)
+        write(root/'EXPORT_SOURCE.json',dict(root=str(replay_smoke),receipt_sha256=sha(replay_smoke/'RECEIPT.json')))
     script='collect.sbatch' if stage=='collect-smoke' else ('cpu.sbatch' if stage in ('inventory','source-plan') else 'replay.sbatch')
+    if stage=='export-candidates':script='export.sbatch'
     submit=['sbatch','--parsable','--output='+str(root/'slurm_%j.log')]
     if stage=='replay-spatial-batch':
         submit=['sbatch','--parsable','--array=0-7%4','--output='+str(root/'slurm_%A_%a.log')]
@@ -129,7 +139,7 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
 
 
 if __name__ == '__main__':
-    p = argparse.ArgumentParser(); p.add_argument('stage', choices=['inventory','source-plan','replay-smoke','replay-spatial-batch','collect-smoke'])
+    p = argparse.ArgumentParser(); p.add_argument('stage', choices=['inventory','source-plan','replay-smoke','replay-spatial-batch','collect-smoke','export-candidates'])
     p.add_argument('--inventory',type=Path);p.add_argument('--canonicalize',action='store_true')
     p.add_argument('--limit',type=int,default=12)
     p.add_argument('--source-plan',type=Path)
