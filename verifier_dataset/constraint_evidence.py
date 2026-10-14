@@ -19,6 +19,29 @@ def certificate(layout,initial,mode):
         bound=sum(math.sqrt(sum(v*v for v in xyz)) for xyz in material['rigid_translation_vectors'])+1e-6
         if material.get('root_offset_norm_upper_bound')!=bound:raise RuntimeError('Unverified material offset bound')
     goal=expanded_point_goal(layout['goal'],material['center_in_root'],material.get('root_offset_norm_upper_bound'))
+    from .constraint_sides import ENTRY,contains_bounds
+    if layout.get('construction_mode')==ENTRY:
+        point=initial[mode+'_point'];center=[(a+b)/2 for a,b in zip(*goal)]
+        # The existing finite face-coverage checker supplies geometric facts.
+        # The forward entry theorem below makes no reverse-dynamics assertion.
+        coverage=certify(walls(*bounds),*bounds,center,[point,point],material['radius'],True,True,
+            material['rigid_primitive_verified'],True)
+        keys=('all_six_faces_covered','positive_material_ball','material_geometry_verified',
+              'actual_obstacles_world_fixed','digital_guard_active')
+        conditions={k:coverage['conditions'][k] for k in keys}
+        conditions.update(initial_contact_safe=bool(initial['safe_history']),
+            initial_material_center_outside=any(point[i]<bounds[0][i] or point[i]>bounds[1][i] for i in range(3)),
+            initial_material_center_guard_safe=guard_segment(point,point,bounds,material['radius']),
+            entire_necessary_material_goal_strictly_inside=contains_bounds(bounds,goal))
+        proof=dict(label='infeasible' if all(conditions.values()) else 'unknown',contract='FD1000-INWARD-SEP-1',
+            conditions=conditions,covered_faces=coverage['covered_faces'],
+            material_ball_radius=material['radius'],world_cube_halfwidth=coverage['world_cube_halfwidth'],
+            proof='The initial material center is outside a fixed six-face boundary. Every necessary material goal point is strictly inside. Any center polyline reaching a task goal must enter across a covered face, which the declared guard forbids.',
+            scope='Same closed-separator mechanism in the inward direction; no reverse physical trajectory or new independent proof family is claimed')
+        return dict(contract=CONTRACT,boundary_kind='virtual protected six-face boundary, not a physical collision wall',
+            direction='inward',label='conditionally_infeasible' if proof['label']=='infeasible' else 'unknown',
+            guarded_material=material,root_goal=layout['goal'],necessary_material_goal=goal,separator=proof,
+            scope='No admissible path from outside to the enclosed necessary goal under the explicit material-center segment guard')
     proof=certify(walls(*bounds),*bounds,initial[mode+'_point'],goal,
         material['radius'],initial['safe_history'],True,material['rigid_primitive_verified'],True)
     return dict(contract=CONTRACT,boundary_kind='virtual protected six-face boundary, not a physical collision wall',
@@ -81,6 +104,8 @@ def verify_trace(samples,actions,geometry):
 
 
 def verify_layout(layout,samples,actions):
+    from .constraint_sides import verify_sides
+    side_checks=verify_sides(layout)
     start=layout['sample_index'];t=layout['checkpoint'];initial=samples[start]
     if initial['step']!=t or initial['phase'] not in ('initial','endpoint'):
         raise RuntimeError('Layout does not begin at its stated checkpoint')
@@ -105,11 +130,13 @@ def verify_layout(layout,samples,actions):
     negative=all(p['label']=='conditionally_infeasible' for p in proofs.values())
     if positive and negative and not blocked_path_crossed:
         raise RuntimeError('Witness contradicts the protected-boundary certificate')
-    return dict(contract=CONTRACT,positive_witness=positive,conditional_negative=negative,
+    result=dict(contract=CONTRACT,positive_witness=positive,conditional_negative=negative,
         matched_pair=positive and negative,checkpoint=t,witness_end_step=endpoint,
         witness_commands=endpoint-t if endpoint is not None else None,
         physical_actions_changed=False,blocked_boundary_crossed_by_positive_witness=blocked_path_crossed,
         certificates=proofs,training_allowed=False)
+    if side_checks is not None:result['endpoint_side_checks']=side_checks
+    return result
 
 
 def rows(layout,verification,source,images):
@@ -150,6 +177,27 @@ def rows(layout,verification,source,images):
                     dict(claim='A complete legal safe trajectory satisfies this rule',
                     evidence=['VERIFIED.json#/witness_end_step','trace/ACTIONS.json','trace/SAMPLES.jsonl.gz'],
                     input_basis='Privileged teacher label evidence, not visible in the initial image')]
+            from .constraint_sides import ENTRY
+            if layout.get('construction_mode')==ENTRY:
+                if protected=='a':
+                    rationale=(f'The white-outlined target is outside the {color} boundary, while the green destination is inside. '
+                        f'The rule protects {color}. Every route to that destination enters through a face of the closed boundary, which the stated material-point rule forbids.')
+                    refs=['layout.a','layout.target','layout.goal','verification.certificates.native','verification.certificates.synchronized']
+                    facts=[dict(claim='The target is outside the protected boundary and the entire necessary destination is inside',
+                        evidence=['LAYOUT.json#/a','LAYOUT.json#/target','LAYOUT.json#/goal','VERIFIED.json#/certificates'],
+                        input_basis='Visible target/boundary/destination and explicit protected-color rule; requires visual review; the enlarged material-goal bound is privileged certificate evidence'),
+                        dict(claim='Every admissible material-center route to the destination must cross a forbidden face',
+                        evidence=['VERIFIED.json#/certificates'],input_basis='Closed-separator entry theorem under the explicit fixed-boundary guard')]
+                else:
+                    rationale=(f'The white-outlined target and the green destination are inside the protected {color} boundary. '
+                        'Motion between them does not require crossing its closed faces. The other stated safety constraints still apply.')
+                    refs=['layout.b','layout.target','layout.goal','verification.witness_end_step','source.raw_trace']
+                    facts=[dict(claim='The target and destination are both inside the protected boundary',
+                        evidence=['LAYOUT.json#/b','LAYOUT.json#/target','LAYOUT.json#/goal','student.constraints'],
+                        input_basis='Actual RGB and explicit protected-color rule; requires visual review'),
+                        dict(claim='A legal actual source suffix stays within this boundary and completes the task safely',
+                        evidence=['VERIFIED.json#/witness_end_step','trace/ACTIONS.json','trace/SAMPLES.jsonl.gz'],
+                        input_basis='Privileged positive label evidence; no hidden trajectory is presented as an observation')]
             output.append(dict(schema_version='FD1000-constraint-candidate-v1',
                 student=dict(images=copy.deepcopy(images[assignment]),task=task,constraints=constraints),
                 evidence=dict(feasibility=label,kind='safe_source_suffix_with_virtual_guard' if protected=='b' else 'virtual_material_point_separator',
@@ -161,4 +209,8 @@ def rows(layout,verification,source,images):
                 teacher=dict(rationale_draft=rationale,evidence_refs=refs,clause_grounding=facts,
                     caveat='Positive existence comes from the actual safe witness; no claim that an RGB image alone proves general robot reachability.'),
                 reasoning_target=None,observability_review='pending',training_eligible=False,split='unassigned'))
+            if 'construction_mode' in layout:
+                output[-1]['metadata'].update(construction_mode=layout['construction_mode'],construction_version=layout['construction_version'])
+                if layout['construction_mode']==ENTRY and protected=='a':
+                    output[-1]['evidence']['kind']='virtual_material_point_inward_separator'
     return output

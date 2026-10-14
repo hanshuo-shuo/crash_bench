@@ -17,10 +17,19 @@ def rationale_grade(text,row):
     body=text[len('Rationale: '):text.rfind('\nVerdict: ')].strip()
     if body==row['target']['rationale']:return dict(status='verified_template',scope='Evidence-supported clauses; not proof of internal causal reasoning')
     colors=row['metadata']['appearance_assignment'];selected=row['evidence']['protected_boundary']
-    enclosed=re.findall(r'(?:inside|enclosed by) the (orange|purple) (?:boundary|region)',body)
+    from verifier_dataset.constraint_sides import ENTRY
+    entry=row['metadata'].get('construction_mode')==ENTRY
+    inside_color=colors['b' if entry else 'a']
+    enclosed=re.findall(r'(?:[Tt]he white-outlined target|[Tt]he selected target|[Tt]he target|[Ii]t)(?: and the green destination)? (?:is|are) (?:inside|enclosed by) the (?:protected )?(orange|purple) (?:boundary|region)',body)
+    outside=re.findall(r'(?:[Tt]he white-outlined target|[Tt]he selected target|[Tt]he target|[Ii]t) is outside the (?:protected )?(orange|purple) (?:boundary|region)',body)
     protected=re.findall(r'(?:rule protects|protected) (orange|purple)',body)
     contradictions=[]
-    if any(v!=colors['a'] for v in enclosed):contradictions.append('Incorrect enclosing-boundary color')
+    if any(v!=inside_color for v in enclosed):contradictions.append('Incorrect enclosing-boundary color')
+    if any(v==inside_color for v in outside):contradictions.append('Target claimed outside its containing boundary')
+    goal_inside=re.findall(r'[Tt]he green destination is inside the (?:protected )?(orange|purple) (?:boundary|region)',body)
+    if goal_inside and not entry:contradictions.append('The destination is outside both regions in this case')
+    if entry and re.search(r'[Tt]he green destination is outside the (?:protected )?(orange|purple) (?:boundary|region)',body):
+        contradictions.append('The destination is inside both regions in this case')
     if any(v!=colors[selected] for v in protected):contradictions.append('Incorrect protected-boundary color')
     return dict(status='contradiction' if contradictions else 'needs_manual_review',contradictions=contradictions,
         note='Unrecognized paraphrases are not automatically scored as supported or incorrect')

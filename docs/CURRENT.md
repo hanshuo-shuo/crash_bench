@@ -10,10 +10,12 @@ only after data acceptance. The API budget is $20 for this new campaign. See
 UNKNOWN; historical benchmark success is only a contact-replay candidate.
 The [FD1000 status record](../verifier_dataset/CURRENT.md) records the current
 67 replayed source trajectories and 2,380 v2 rule-counterfactual candidate rows.
-The proposed 1,000 rows have complete image-premise review and cover 63 sources,
-12 task compositions and four families under the approved native-support contact
-contract. Independent evidence and shortcut audit 3614374 is still in progress;
-read its real results before acceptance. The 32 explicitly approved GLM requests
+The v2 proposed 1,000 rows had complete image-premise review across 63 sources,
+12 task compositions and four families. Audit 3614374 completed normally but
+rejected acceptance: the fixed joint forest still reached validation AUROC
+0.867627, exceeding the unchanged 0.75 limit. A prospective v3 construction now
+balances target and goal sides of the same closed separator; its real native
+prototype and new data audit remain mandatory. The 32 explicitly approved GLM requests
 completed for $0.05882376. No complete mixed dataset has passed scientific
 acceptance and no verifier training has started.
 Actual stage receipts and results live under `results/verifier_dataset/`.

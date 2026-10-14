@@ -25,40 +25,26 @@ from . import constraint_visuals
 
 
 def layouts(env,goal,step,sample_index,horizon,obstacle,source_id):
-    import numpy as np
     from .paired_inputs import receiver_phrase
-    receiver_phrase(goal)  # Unsupported task wording cannot become a label.
-    # Native object-On requires XY distance <3 cm. Declare a fixed 4 cm
-    # half-width around the INITIAL receiver, allowing 1 cm more per axis;
-    # this is an explicit extra goal and never uses the future witness endpoint.
-    target=body_bounds(env,goal[1]);dest=destination(env,goal,object_xy_halfwidth=.04)['fixed_root_region']
-    a=[(np.asarray(target[0])+[-.015,-.015,-.02]).tolist(),
-       (np.asarray(target[1])+[.015,.015,.015]).tolist()]
-    material=material_sphere(env,goal[1]);center=np.mean(a,axis=0);half=(np.asarray(a[1])-a[0])/2
-    goal_center=np.mean(dest,axis=0);axis=goal_center-center;axis[2]=0
-    if np.linalg.norm(axis)<1e-8:return []
-    axis/=np.linalg.norm(axis);perpendicular=np.asarray([-axis[1],axis[0],0.])
-    choices=[]
+    from .constraint_sides import mode_for,entry_regions,exit_regions,ENTRY,VERSION
+    receiver_phrase(goal)
+    target=body_bounds(env,goal[1])
+    dest=destination(env,goal,object_xy_halfwidth=.04)['fixed_root_region']
+    material=material_sphere(env,goal[1]);mode=mode_for(source_id,step)
+    designs=([entry_regions(target,dest,material,source_id,step)] if mode==ENTRY
+             else exit_regions(target,dest,material,source_id,step))
     widths={role:.0012+.0024*int.from_bytes(hashlib.sha256((source_id+'|'+str(step)+'|'+role+'|appearance-v1').encode()).digest()[:8],'big')/2**64
             for role in ('a','b')}
-    layout_seed=hashlib.sha256((source_id+'|'+str(step)+'|layout-v1').encode()).digest()
-    offset=.18+.16*int.from_bytes(layout_seed[:8],'big')/2**64
-    signs=(1,-1) if layout_seed[8]%2==0 else (-1,1)
-    for sign in signs:
-        bcenter=(center+goal_center)/2+sign*offset*perpendicular;bcenter[2]=center[2]
-        b=[(bcenter-half).tolist(),(bcenter+half).tolist()]
-        if not disjoint(a,b) or not disjoint(dest,b):continue
-        choices.append(dict(contract=CONTRACT,native_goal=goal,native_obstacle=obstacle,
-            checkpoint=step,sample_index=sample_index,remaining_horizon=horizon-step,
-            a=a,b=b,target=target,goal=dest,material=material,
-            geometry_source='Current initial geometry only; candidate locations are fixed before inspecting future actions',
-            object_receiver_region='Initial receiver XY +/-4 cm, Z -1..25 cm; native On predicate also required',
-            render_widths=widths,appearance_note='Boundary stroke widths vary by a fixed source/checkpoint seed, independently of the protected-color query; physics and guard bounds are unchanged',
-            alternate_region_offset_metres=offset,alternate_region_sign=sign,layout_seed_sha256=layout_seed.hex(),
-            camera_scheme='balanced_two_overviews_v2',
-            camera_seed_sha256=hashlib.sha256((source_id+'|'+str(step)+'|camera-v2').encode()).hexdigest(),
-            fixed_virtual_boundaries=True,physical_collision_walls=False))
-    return choices
+    common=dict(contract=CONTRACT,native_goal=goal,native_obstacle=obstacle,
+        checkpoint=step,sample_index=sample_index,remaining_horizon=horizon-step,
+        target=target,goal=dest,material=material,render_widths=widths,
+        object_receiver_region='Initial receiver XY +/-4 cm, Z -1..25 cm; native On predicate also required',
+        appearance_note='Same source/checkpoint-seeded stroke widths and initial envelope dimensions in both construction modes',
+        camera_scheme='balanced_two_overviews_v2',
+        camera_seed_sha256=hashlib.sha256((source_id+'|'+str(step)+'|camera-v2').encode()).hexdigest(),
+        fixed_virtual_boundaries=True,physical_collision_walls=False,
+        construction_mode=mode,construction_version=VERSION)
+    return [dict(common,**design) for design in designs]
 
 
 def execute(case,maximum):
@@ -200,7 +186,9 @@ def main(root,case_index=None):
         if (case/'CANDIDATES.json').exists():all_rows.extend(read(case/'CANDIDATES.json'))
         write(root/'PROGRESS.json',dict(completed=len(outcomes),expected=len(read(root/'CASES.json')),candidate_rows=len(all_rows)))
     write(root/'CONSTRAINT_CANDIDATES.json',all_rows)
+    from collections import Counter
     write(root/'CONSTRAINT_COMPLETE.json',dict(passed=True,rows=outcomes,matched_units=sum(r['matched_units'] for r in outcomes),
+        matched_units_by_mode=dict(Counter(r['metadata'].get('construction_mode','legacy_exit') for r in all_rows[::4])),
         candidate_rows=len(all_rows),final_reasoning_targets=0,training_allowed=False,api_calls=0,slurm_job=os.environ['SLURM_JOB_ID']))
     write(root/'HASHES.json',{name:sha(root/name) for name in ('CONSTRAINT_CANDIDATES.json','CONSTRAINT_COMPLETE.json')})
 

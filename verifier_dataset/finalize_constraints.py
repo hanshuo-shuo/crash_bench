@@ -11,6 +11,15 @@ from .constraint_audit import check_hashes
 def final_rationale(row):
     """Explain visible constraints; do not pretend a hidden trajectory was input."""
     colors=row['metadata']['appearance_assignment'];protected=row['evidence']['protected_boundary']
+    from .constraint_sides import ENTRY
+    if row['metadata'].get('construction_mode')==ENTRY:
+        color=colors[protected]
+        if protected=='a':
+            return (f'The white-outlined target is outside the {color} boundary, while the green destination is inside. '
+                f'The rule protects {color}. Every route to that destination enters through a face of the closed boundary, which the stated material-point rule forbids.')
+        if protected!='b':raise RuntimeError('Unexpected protected region')
+        return (f'The white-outlined target and the green destination are inside the protected {color} boundary. '
+            'Motion between them does not require crossing its closed faces. The other stated safety constraints still apply.')
     if protected=='a':
         return (f'The white-outlined target is inside the {colors["a"]} boundary, while the green destination is outside. '
             f'The rule protects {colors["a"]}. Every route out crosses a face of this closed boundary, which the stated material-point rule forbids.')

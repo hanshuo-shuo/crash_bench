@@ -42,7 +42,11 @@ def main(parents,review_path,output):
             for choice in c.get('rows',[]):
                 if choice['selected_first_valid_option']:
                     unit=read(Path(choice['option'])/'CANDIDATES.json');check_unit(unit);units.append(unit)
-    eligible=exclude(units,review);selected=select_units(eligible)
+    frozen={r['source_id']:r for r in read(repo/'verifier_dataset/frozen_sources_67.json')['sources']}
+    for unit in units:
+        for row in unit:row['split']=frozen[row['metadata']['source_id']]['split']
+    protocol=read(repo/'verifier_dataset/constraint_protocol.json')
+    eligible=exclude(units,review);selected=select_units(eligible,quotas=protocol.get('selection_quotas'))
     old={}
     for record in review.get('all_reviewed_units',[]):
         key=(record['source_id'],record['checkpoint'])

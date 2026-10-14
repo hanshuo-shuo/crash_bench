@@ -133,6 +133,8 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
             old=read(parent/'RECEIPT.json');job=old['job']
             if old['stage']!='constraint-batch' or not read(parent/'CONSTRAINT_COMPLETE.json')['passed']:
                 raise RuntimeError('Constraint batch did not complete')
+            if read(parent/'CAMPAIGN.json')['constraint_protocol_sha256']!=sha(repo/'verifier_dataset/constraint_protocol.json'):
+                raise RuntimeError('Audit parents must exercise the current frozen construction protocol')
             accounting=command('sacct','-X','-n','-P','-j',job,'--format=JobIDRaw,State,ExitCode')
             if accounting.splitlines()!=[job+'|COMPLETED|0:0']:
                 raise RuntimeError('Constraint collections must terminate normally before audit')
@@ -239,6 +241,9 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
                     raise RuntimeError('Prototype must exercise the current image/data protocol')
                 if not prototype['passed'] or prototype['matched_units']<6 or command('sacct','-X','-n','-P','-j',prototype_job,'--format=JobIDRaw,State,ExitCode').splitlines()!=[prototype_job+'|COMPLETED|0:0']:
                     raise RuntimeError('At least six normal, witnessed constraint prototype units required')
+                from .constraint_sides import EXIT,ENTRY
+                if any(prototype.get('matched_units_by_mode',{}).get(mode,0)<3 for mode in (EXIT,ENTRY)):
+                    raise RuntimeError('Both separator directions need at least three actual prototype witnesses')
                 for name,wanted in read(replay_smoke/'HASHES.json').items():
                     if sha(replay_smoke/name)!=wanted:raise RuntimeError('Constraint prototype changed')
                 paired_sources=paired_sources[batch_shard::2]
@@ -310,6 +315,7 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
             maximum_virtual_layouts_per_checkpoint=2,api_mode='disabled',max_paid_attempts=0,max_logical_requests=0,
             same_image_and_target_opposite_safety_rules=True,physical_collision_walls=False,batch_shard=batch_shard,
             constraint_protocol_sha256=sha(repo/'verifier_dataset/constraint_protocol.json'),
+            construction_version='balanced_start_goal_sides_v3',
             frozen_source_split_sha256=sha(repo/'verifier_dataset/frozen_sources_67.json'),
             gpu_request='one gengpu A100; exclude qgpu2014 after observed rendering inconsistency; actual device recorded in GPU.json',
             rendering_integrity='NVIDIA OpenGL required; camera data cannot change during render; color-swap segmentation must match before any candidate is emitted')

@@ -59,6 +59,12 @@ def validate(root):
     require(all(len(v)==1 for v in group_splits.values()),'Ancestry leakage')
     require(len({r['metadata']['task_group'] for r in rows})>=6 and len({r['metadata']['family'] for r in rows})>=3,'Task/family coverage failed')
     for unit in units.values():check_unit(unit)
+    from verifier_dataset.constraint_sides import EXIT,ENTRY,VERSION
+    if any(r['metadata'].get('construction_version')==VERSION for r in rows):
+        require(all(r['metadata'].get('construction_version')==VERSION for r in rows),'Mixed construction versions')
+        actual=Counter((u[0]['split'],u[0]['metadata'].get('construction_mode')) for u in units.values())
+        expected={(split,mode):n for split,n in (('train',75),('validation',25),('test',25)) for mode in (EXIT,ENTRY)}
+        require(actual==expected,'Endpoint-side balance must hold within every frozen source split')
     require(set(units)==set(review['reviewed_units']),'Visual review does not cover the final selected units')
     for name in ('train','validation','test'):
         part=[r for r in rows if r['split']==name]

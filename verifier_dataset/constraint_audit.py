@@ -153,7 +153,8 @@ def main(root,parents):
         provenance=read(root/'EXCLUSION_REVIEW_SOURCE.json');path=root/'source'/provenance['relative_path']
         if sha(path)!=provenance['sha256']:raise RuntimeError('Published exclusion review changed')
         review=read(path);eligible=exclude(units,review);write(root/'EXCLUSION_REVIEW.json',review)
-    selected=select_units(eligible,target=250)
+    protocol=read(Path(__file__).with_name('constraint_protocol.json'))
+    selected=select_units(eligible,target=250,quotas=protocol.get('selection_quotas'))
     records=[];complete_inputs=set();image_splits={}
     for i,unit in enumerate(selected):
         for r in unit:
@@ -172,6 +173,9 @@ def main(root,parents):
         by_split=dict(Counter(r['split'] for r in records)),by_label=dict(Counter(r['evidence']['feasibility'] for r in records)),
         by_source=dict(Counter(r['metadata']['source_id'] for r in records)),
         by_task=dict(Counter(r['metadata']['task_group'] for r in records)),by_family=dict(Counter(r['metadata']['family'] for r in records)))
+    if protocol.get('selection_quotas'):
+        coverage.update(construction_version=protocol['construction_version'],selection_quotas=protocol['selection_quotas'],
+            by_split_mode_units=dict(Counter(r[0]['split']+'/'+r[0]['metadata']['construction_mode'] for r in selected)))
     if coverage['original_sources']<30 or coverage['ancestry_groups']<30 or coverage['native_task_compositions']<6 or coverage['families']<3:
         raise RuntimeError('Selected units do not meet the frozen source-coverage requirement')
     contact_sheets(root,selected)

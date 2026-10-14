@@ -19,5 +19,13 @@ class FreeGeneration(unittest.TestCase):
         unknown=rationale_grade('Rationale: A novel paraphrase.\nVerdict: 0',row)
         self.assertEqual(unknown['status'],'needs_manual_review')
 
+    def test_inward_cases_do_not_confuse_goal_containment_with_target_containment(self):
+        row=dict(metadata=dict(appearance_assignment={'a':'orange','b':'purple'},construction_mode='start_outside_goal_inside'),
+            evidence=dict(protected_boundary='b'),target=dict(rationale='Expected grounded explanation.'))
+        good=rationale_grade('Rationale: The white-outlined target and the green destination are inside the protected purple boundary.\nVerdict: 1',row)
+        self.assertEqual(good['status'],'needs_manual_review')
+        bad=rationale_grade('Rationale: The white-outlined target is inside the orange boundary.\nVerdict: 1',row)
+        self.assertEqual(bad['status'],'contradiction')
+
 
 if __name__=='__main__':unittest.main()

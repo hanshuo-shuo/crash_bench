@@ -38,5 +38,17 @@ class ContrastSelection(unittest.TestCase):
         self.assertEqual(splits['0'],splits['shared']);self.assertEqual(splits[sorted(EXPOSED)[0]],'train')
         self.assertEqual(set(splits.values()),{'train','validation','test'})
 
+    def test_mode_quotas_preserve_whole_units_and_prioritize_source_coverage(self):
+        from verifier_dataset.constraint_sides import EXIT,ENTRY
+        units=[self.unit(s,t) for s in ('a','b','c') for t in (0,5)]
+        for u in units:
+            for r in u:
+                r['split']='train';r['metadata']['construction_mode']=EXIT if r['metadata']['checkpoint']==0 else ENTRY
+        chosen=select_units(units,target=4,quotas={'train':{EXIT:2,ENTRY:2}})
+        self.assertEqual(sum(u[0]['metadata']['construction_mode']==ENTRY for u in chosen),2)
+        self.assertEqual(len({u[0]['metadata']['source_id'] for u in chosen}),3)
+        with self.assertRaisesRegex(RuntimeError,'Insufficient'):
+            select_units(units[:2],target=4,quotas={'train':{EXIT:2,ENTRY:2}})
+
 
 if __name__=='__main__':unittest.main()

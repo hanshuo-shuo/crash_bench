@@ -15,7 +15,47 @@ The full FD1000 API budget is $20, including a $6.40 ceiling for that completed
 batch. All current collection, reasoning targets and training preparation are
 offline. The private key is never printed, copied or logged.
 
-## V2 collection complete; acceptance still pending
+## V2 rejected by shortcut gate; v3 endpoint-side construction in preparation
+
+V2 audit **3614374 COMPLETED/0:0**, 9m54s, root
+`20261014T222942Z_audit-constraints_c2182eb82cf7`. All 595 raw units passed
+witness/certificate/image-integrity checking; 41 visible-premise exclusions
+left 554 eligible units. The selected 250 units/1,000 rows had complete prior
+image review, 63 sources, 12 compositions, four families and 532/216/252 rows.
+**Scientific acceptance failed**: validation AUROC was 0.645919 for the fixed
+linear joint readout and **0.867627 for the fixed depth-4 forest** (limit 0.75).
+Image-only and text-only AUROC were exactly 0.5. No test predictions, accepted
+final data, finalized training rationales or verifier training were produced.
+
+Fixed exploratory diagnostic **3616198 COMPLETED/0:0**, 43s,
+`20261014T224323Z_diagnose-shortcuts_5e30f3543e0c`, found forest validation AUROC
+0.839935 from view 1, 0.786008 from view 2, 0.682099 from two-view color
+statistics, 0.617884 from color area and 0.627486 from color centroids. The
+residual strong signal needs coarse RGB tiles plus the rule; target containment
+alone still nearly determines the current contract label. This does not prove
+that the model needs a generative verifier.
+
+V3 is a prospective construction change, not a threshold or classifier search.
+It keeps native physics, both qualified cameras, frozen source groups and the
+0.75 gate. Source/checkpoint-seeded alternating modes cover all four endpoint
+side combinations: negative inside/outside versus witnessed positive
+outside/outside, and negative outside/inside versus witnessed positive
+inside/inside. The inward certificate requires the ENTIRE orientation-enlarged
+necessary material goal to lie inside the closed boundary. Both modes use equal region dimensions from the current target/goal envelope
+plus a fixed 12 cm margin, never future actions. The exit-mode outside region
+lies 3 cm beyond that envelope; the entry-mode positive region encloses it;
+its complete actual source suffix must pass the guard or stay UNKNOWN.
+This remains one closed-separator mechanism, extended in direction.
+
+Before any v3 readout fit, quotas are fixed at **600 train / 200 validation /
+200 test rows**, with equal construction-mode counts within each original source
+split. Native source group assignments remain byte-identical. Each source is
+still limited to ten checkpoints, and each physical checkpoint has one complete
+four-row color/rule unit. V3 first needs a new four-family, two-checkpoint native
+prototype with at least three matched units of each mode, actual-image review,
+and normal exit. No new API requests are authorized or needed.
+
+## V2 collection and visual-review history (not training-approved)
 
 Both source-frozen v2 collectors terminated normally:
 

@@ -46,6 +46,8 @@ def check_unit(rows):
         raise RuntimeError('Unit labels are not counterbalanced')
     for key in ('source_id','checkpoint','ancestry_component'):
         if len({r['metadata'][key] for r in rows})!=1:raise RuntimeError('Unit provenance differs')
+    for key in ('construction_mode','construction_version'):
+        if len({r['metadata'].get(key) for r in rows})!=1:raise RuntimeError('Unit construction differs')
     images=defaultdict(Counter);texts=defaultdict(Counter);full={}
     for row in rows:
         if set(row['student'])!={'images','task','constraints'}:raise RuntimeError('Privileged student field')
@@ -62,17 +64,29 @@ def check_unit(rows):
     return True
 
 
-def select_units(units,target=250,maximum_per_source=10):
+def select_units(units,target=250,maximum_per_source=10,quotas=None):
     grouped=defaultdict(list)
+    limits={(split,mode):n for split,values in (quotas or {}).items() for mode,n in values.items()}
+    if limits and (sum(limits.values())!=target or any(type(n) is not int or n<=0 for n in limits.values())):
+        raise RuntimeError('Invalid predeclared split/mode quotas')
     for unit in units:
         check_unit(unit);m=unit[0]['metadata'];grouped[m['source_id']].append(unit)
     for source,pool in grouped.items():
         checkpoints=[u[0]['metadata']['checkpoint'] for u in pool]
         if len(set(checkpoints))!=len(checkpoints):raise RuntimeError('Multiple layouts inflate the same source checkpoint')
         pool.sort(key=lambda u:u[0]['metadata']['checkpoint'])
-    selected=[]
+    selected=[];counts=Counter();source_counts=Counter()
     for index in range(maximum_per_source):
-        for source in sorted(grouped,key=order):
-            if index<len(grouped[source]):selected.append(grouped[source][index])
+        ordered=sorted(grouped,key=lambda s:(source_counts[s],order(s))) if limits else sorted(grouped,key=order)
+        for source in ordered:
+            if index<len(grouped[source]):
+                unit=grouped[source][index]
+                if limits:
+                    key=(unit[0]['split'],unit[0]['metadata'].get('construction_mode'))
+                    if key not in limits:raise RuntimeError('Unknown split/construction mode')
+                    if counts[key]>=limits[key]:continue
+                    counts[key]+=1
+                selected.append(unit)
+                source_counts[source]+=1
             if len(selected)==target:return selected
     raise RuntimeError('Insufficient complete observable units: '+str(len(selected)))
