@@ -43,6 +43,49 @@ mix it into a v2 dataset: the new synchronized checks require fresh replay.
 Accepted complete scientific rows and finalized reasoning targets remain **0**.
 Training remains unlaunched pending matched negatives, grounding and shortcut audit.
 
+## Latest evidence checkpoint
+
+The uniform v2 merged audit **9970852 COMPLETED/0:0** contains **530 distinct
+positive candidates, 53 original/ancestry groups, 10 native task compositions,
+four suite families and 53 witness trajectories**. Root:
+`20261014T163316Z_audit-candidates_2c71431d672f`. Fourteen local delivered files
+were checksum-verified. This is still a one-class precheck, not 1,000 accepted rows.
+
+All 32 approved perception requests have now supported completed collection:
+14 exact-input runs produced 12 proxy successes and two failures; the other 18
+had only one-level raster differences (at most 37 of 1,048,576 pixels) with every
+saved initial physical array equal. Two CPU diagnostics, **9969425 / 9969474**,
+completed normally and their six-file deliveries each verified. The 18 were
+rerun under the explicitly named `full_AEGIS_with_frozen_approved_perception_v1`
+variant, **9970399 COMPLETED/0:0**, 14m57s: 18 executed, 14 proxy successes, four
+failures, no deferrals and no new API calls. It returns the original approved
+image's obstacle response without publishing it as an exact cache hit for a
+different image. Live policy images remain unchanged. Fourteen successes are
+being independently replayed in **9972315**, root
+`20261014T164902Z_replay-collection_414c6542c6ff`. Total API cost stays $0.05882376.
+Failures remain UNKNOWN; these variant results are not public benchmark scores.
+
+Transparent-panel rendering **9969314 COMPLETED/0:0**, 2m23s, keeps real collision
+walls and adds noncolliding goal outlines. The pudding is visible, particularly
+in the wrist view. External repeated task views are exact; wrist views differ at
+two pixels by one level, so raw repeated renders are not claimed identical.
+Future task pairs will reference one common actual capture for both queries.
+All 54 delivered metadata/image files verified. This diagnostic actually inherits
+`FD1000-fixture-v1`; its original campaign's broad v2 field is corrected by the
+additive `EFFECTIVE_CONTACT_CONTRACT.json`, and new launch receipts distinguish
+these contracts. The old receipt is preserved.
+
+Four-source paired prototype **9972022** completed its computation with three
+matched witness/certificate pairs (Object, Goal, Long); Spatial's three attempts
+are retained without admission. Root:
+`20261014T164620Z_paired-prototype_414c6542c6ff`. No student images or finalized
+rationales were created by that CPU prototype. The next revision adds independent
+native and synchronized goal formulas, an initial-validity check for *new wall*
+contacts with unrelated objects (native support stays permitted), and at most
+20 fixed native zero-motion/open-gripper settling commands within the original
+remaining budget. Every added action is recorded and checked. No classifier or
+policy threshold search is used. All scientific training gates remain closed.
+
 ## Completed evidence
 
 - Inventory job **9892280 COMPLETED/0:0**: 1,200 instrumented rollouts, 391

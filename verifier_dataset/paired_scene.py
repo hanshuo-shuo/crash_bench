@@ -20,6 +20,7 @@ from .replay import ARRAYS,configure,clean,assert_trace
 from .fixture_smoke import add_boxes,restore_canonical_initial
 from .contact_contract import descendants,prohibited
 from .paired_geometry import CONTRACT,proposals,material_sphere,point_certificate,inside,sphere_radius
+from .paired_goal import definition as goal_definition,snapshot as goal_snapshot,evaluate as goal_evaluate
 from experiments.red_enclosure.contract import segment_box
 from experiments.feasibility_contract.contract import SOURCE_HASHES
 
@@ -100,13 +101,19 @@ def scan_saved(folder):
                b['rotation']==[1.,0.,0.,0.,1.,0.,0.,0.,1.] for b in geo['boxes'])
     if static!=geo['static']:raise RuntimeError('Unverified static wall geometry')
     cert=point_certificate(geo['boxes'],geo['lower'],geo['upper'],geo['materials']['enclosed'],
-        geo['destination']['fixed_root_region'],geo['initial_safe']['enclosed'],geo['static'])
+        geo['destination']['fixed_root_region'],geo['initial_safe']['enclosed'] and geo['initial_fixture_valid'],geo['static'])
     if cert!=read(folder/'CERTIFICATE.json'):raise RuntimeError('Saved material-point separator disagrees')
     protected=set(geo['protected']);actors={r:set(v) for r,v in geo['actors'].items()}
     safe={r:True for r in actors};previous={};count=0;last=None;integrations=0;endpoints=[];last_pair=(0,0)
     with gzip.open(folder/'SAMPLES.jsonl.gz','rt') as stream:
         for line in stream:
             row=json.loads(line);count+=1;last=row
+            for mode in ('native','synchronized'):
+                value=goal_evaluate(geo['goal_definition'],row[mode+'_goal_state'],row[mode+'_contacts'])
+                if value!=row[mode+'_goal_success'] or row[mode+'_goal_state']['target_position']!=row[mode+'_roots']['primary']:
+                    raise RuntimeError('Saved native goal formula or object identity mismatch')
+            if row['primary_native_goal']!=row['native_goal_success']:
+                raise RuntimeError('Native predicate and independent formula disagree')
             pair=(row['step'],row['substep'])
             if row['phase']=='initial':
                 if count!=1 or pair!=(0,0):raise RuntimeError('Invalid initial sample order')
@@ -130,6 +137,12 @@ def scan_saved(folder):
                 if safe[role]!=row['safe_history'][role]:raise RuntimeError('Saved task-specific safety mismatch')
             if count==1 and (row['phase']!='initial' or safe!=geo['initial_safe']):
                 raise RuntimeError('Unverified initial safety')
+            if count==1:
+                walls=set(geo['wall_geoms'])
+                overlaps=[c for mode in ('native','synchronized') for c in row[mode+'_contacts']
+                          if c[2]<=0 and ((c[0] in walls)!=(c[1] in walls))]
+                if (not overlaps)!=geo['initial_fixture_valid']:
+                    raise RuntimeError('Unverified constructed-wall initial validity')
     actions=read(folder/'ACTIONS.json')
     if count!=summary['samples'] or len(actions)!=summary['actions'] or safe!=summary['safe_history']:
         raise RuntimeError('Incomplete pair witness evidence')
@@ -137,7 +150,7 @@ def scan_saved(folder):
         raise RuntimeError('Incomplete integration/endpoint coverage')
     if any(len(x['action'])!=7 or not all(math.isfinite(v) and -1<=v<=1 for v in x['action']) for x in actions):
         raise RuntimeError('Illegal action in paired witness')
-    witness=bool(actions and safe['primary'] and last['primary_native_goal'] and
+    witness=bool(actions and geo['initial_fixture_valid'] and safe['primary'] and last['primary_native_goal'] and last['synchronized_goal_success'] and
         inside(last['native_roots']['primary'],geo['destination']['fixed_root_region']) and
         inside(last['synchronized_roots']['primary'],geo['destination']['fixed_root_region']))
     if witness!=summary['positive_witness'] or summary['matched_pair']!=(witness and cert['label']=='conditionally_infeasible'):
@@ -158,7 +171,7 @@ def execute(case,index):
         m,d=env.sim.model,env.sim.data
         native_geometry=read(Path(source['root'])/'geometry_details.json')
         protected={m.geom_name2id(g['name']) for g in native_geometry['protected']}
-        boxes=[];static=True
+        boxes=[];static=True;wall_geoms=set()
         for box in proposal['boxes']:
             g=m.geom_name2id(box['name']);p=np.asarray(d.geom_xpos[g]);half=np.asarray(m.geom_size[g])
             static &= bool(int(m.geom_bodyid[g])==0 and int(m.geom_type[g])==6 and m.geom_contype[g] and m.geom_conaffinity[g] and
@@ -167,6 +180,7 @@ def execute(case,index):
                 world_body=int(m.geom_bodyid[g]),geom_type=int(m.geom_type[g]),contype=int(m.geom_contype[g]),
                 conaffinity=int(m.geom_conaffinity[g]),rotation=np.asarray(d.geom_xmat[g]).reshape(-1).tolist()))
             protected.add(g)
+            wall_geoms.add(g)
         names={r:proposal[r] for r in ('primary','enclosed')}
         roots={r:int(env.env.obj_body_id[name]) for r,name in names.items()}
         robot=descendants(m,{m.body_name2id(env.robots[0].robot_model.root_body)})
@@ -175,7 +189,7 @@ def execute(case,index):
         materials={r:material_sphere(env,name) for r,name in names.items()}
         centers={r:m.geom_name2id(material['geom_name']) for r,material in materials.items()}
         shadow=mujoco.MjData(m._model);step=0;substep=0;samples=0;integrations=0;previous={};safe={r:True for r in actors}
-        goal=proposal['primary_goal'];region=proposal['destination']['fixed_root_region']
+        goal=proposal['primary_goal'];region=proposal['destination']['fixed_root_region'];goal_spec=goal_definition(env,goal)
         stream=gzip.open(folder/'SAMPLES.jsonl.gz','wt')
         def sample(phase):
             nonlocal samples
@@ -188,6 +202,8 @@ def execute(case,index):
                 points={r:np.asarray(data.geom_xpos[g]).tolist() for r,g in centers.items()}
                 positions={r:np.asarray(data.body_xpos[b] if mode=='native' else data.xpos[b]).tolist() for r,b in roots.items()}
                 row[mode+'_contacts']=contacts;row[mode+'_points']=points;row[mode+'_roots']=positions
+                state=goal_snapshot(data,goal_spec,synchronized=mode=='synchronized')
+                row[mode+'_goal_state']=state;row[mode+'_goal_success']=goal_evaluate(goal_spec,state,contacts)
                 for role in actors:
                     rho=max(0.,materials[role]['radius']/math.sqrt(3)-1e-6)
                     bad=any(prohibited((a,b),protected,actors[role]) and dist<=0 for a,b,dist in contacts)
@@ -195,20 +211,27 @@ def execute(case,index):
                     bad |= any(segment_box(old,point,[x-rho for x in box['lower']],[x+rho for x in box['upper']]) for box in boxes)
                     previous[(role,mode)]=point;safe[role] &= not bad
             row['safe_history']=dict(safe);samples+=1;stream.write(json.dumps(row)+'\n')
+            if row['native_goal_success']!=row['primary_native_goal']:
+                raise RuntimeError('Independent goal formula disagrees with pinned native predicate')
             if physical_hash(env)!=before:raise RuntimeError('Read-only paired checker mutated physics')
             return row
         initial=sample('initial');initial_safe=dict(safe)
+        initial_wall_contacts=[c for mode in ('native','synchronized') for c in initial[mode+'_contacts']
+            if c[2]<=0 and ((c[0] in wall_geoms)!=(c[1] in wall_geoms))]
+        initial_fixture_valid=not initial_wall_contacts
         for role in materials:materials[role]['initial_world_center']=initial['native_points'][role]
         geo=dict(contract=CONTRACT,proposal=proposal,boxes=boxes,lower=proposal['lower'],upper=proposal['upper'],
             materials=materials,destination=proposal['destination'],protected=sorted(protected),
             actors={r:sorted(gs) for r,gs in actors.items()},initial_safe=initial_safe,static=static,
-            native_support_contacts_allowed=True,source=source,checkpoint=context['step'])
+            initial_fixture_valid=initial_fixture_valid,initial_wall_contacts=initial_wall_contacts,wall_geoms=sorted(wall_geoms),
+            native_support_contacts_allowed=True,goal_definition=goal_spec,source=source,checkpoint=context['step'])
         write(folder/'GEOMETRY.json',geo)
-        cert=point_certificate(boxes,geo['lower'],geo['upper'],materials['enclosed'],region,initial_safe['enclosed'],static)
+        cert=point_certificate(boxes,geo['lower'],geo['upper'],materials['enclosed'],region,
+            initial_safe['enclosed'] and initial_fixture_valid,static)
         write(folder/'CERTIFICATE.json',cert)
         initially_done=bool(env.env._eval_predicate(goal))
         actions=[];last=initial
-        if all(initial_safe.values()) and cert['label']=='conditionally_infeasible' and not initially_done:
+        if initial_fixture_valid and all(initial_safe.values()) and cert['label']=='conditionally_infeasible' and not initially_done:
             original_step=env.sim.step
             def monitored(*args,**kwargs):
                 nonlocal substep,integrations
@@ -218,13 +241,20 @@ def execute(case,index):
             if sha(source_path)!=source['tape_sha256']:raise RuntimeError('Source action tape changed')
             tape=[json.loads(line) for line in source_path.read_text().splitlines()];assert_trace(tape,source['actions'])
             low,high=map(np.asarray,env.env.action_spec)
-            for item in tape[context['step']:]:
+            # One fixed native settling tail may supply a completed legal
+            # witness after the inherited commands. It uses the benchmark's
+            # existing zero-motion/open-gripper action, never an API or policy
+            # search, and stays within the stated remaining action budget.
+            commands=[dict(item,command_kind='source_replay') for item in tape[context['step']:]]
+            commands += [dict(step=None,applied=[0.]*6+[-1.],physics_after_sha256=None,
+                              command_kind='native_settling_tail') for _ in range(20)]
+            for item in commands:
                 if step>=context['remaining_horizon']:break
                 step+=1;substep=0;action=np.clip(item['applied'],low,high)
                 obs,_,_,_=env.step(action.tolist());last=sample('endpoint')
-                goal_success=bool(last['primary_native_goal'] and inside(last['native_roots']['primary'],region)
+                goal_success=bool(last['primary_native_goal'] and last['synchronized_goal_success'] and inside(last['native_roots']['primary'],region)
                                   and inside(last['synchronized_roots']['primary'],region))
-                actions.append(dict(step=step,source_step=item['step'],action=action.tolist(),
+                actions.append(dict(step=step,source_step=item['step'],command_kind=item['command_kind'],action=action.tolist(),
                     source_physics_equal=physical_hash(env)==item['physics_after_sha256'],
                     actual_physics_sha256=physical_hash(env),goal_success=goal_success,safe_history=dict(safe)))
                 update_marker(obs)
@@ -238,7 +268,11 @@ def execute(case,index):
             source=source,checkpoint=context['step'],remaining_horizon=context['remaining_horizon'],
             initial_physics_sha256=context['physical_sha256'],initially_solved=initially_done,
             source_equality_diagnostic=sum(x['source_physics_equal'] for x in actions),
+            replayed_source_actions=sum(x['command_kind']=='source_replay' for x in actions),
+            native_settling_tail_actions=sum(x['command_kind']=='native_settling_tail' for x in actions),
+            maximum_settling_tail_actions=20,initial_fixture_valid=initial_fixture_valid,
             task_scope='Derived atomic native predicate AND explicit fixed green root region; marker-conditioned task contrast',
+            synchronized_native_goal_required=True,independent_native_goal_formula_checked=True,
             labels_created_for_training=False,training_allowed=False,api_calls=0,
             code_commit=os.environ['CB_CODE_COMMIT'],slurm_job=os.environ['SLURM_JOB_ID'])
         write(folder/'ACTIONS.json',actions);write(folder/'SUMMARY.json',summary)
