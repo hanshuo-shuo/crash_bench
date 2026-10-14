@@ -165,7 +165,11 @@ solve class balance, observation grounding or task-conditioned shortcut controls
 `fixture-smoke --fixture-design ROOT` checks three **development mechanism**
 cases with actual modified-scene simulation: closed/full conjunction,
 open/full conjunction and closed/explicit mug-only subtask. Initial physical
-arrays must match the canonical source. The native full benchmark goal stays
+arrays and saved controller context must match the canonical source. Disposable
+constructor-settling differences are recorded before restoring the common initial
+snapshot, as an explicit paired-state construction before any scored action.
+Initial contacts are then checked in the executing modified model; restoring
+bytes does not make an overlapping state valid. The native full benchmark goal stays
 separate from the derived atomic subtask. The fixture contract adds both native
 and synchronized contact checks and explicit swept-root guards; its exclusions
 are conditional, not claims about unrestricted soft-contact physics. The

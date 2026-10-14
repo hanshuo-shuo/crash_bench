@@ -50,6 +50,46 @@ def add_boxes(xml,boxes):
     return ET.tostring(tree,encoding='unicode')
 
 
+def restore_canonical_initial(env,root,folder):
+    """Construct the paired initial state, before any scored action.
+
+    Constructor settling with a closed roof is not a source witness. Preserve
+    its differences, then restore the verified common initial snapshot and
+    controller context. New geometry is still checked for initial validity.
+    """
+    import numpy as np
+    from .replay import clean
+    context=read(root/'CANONICAL_CONTEXT.json');differences={}
+    with np.load(root/'CANONICAL_PHYSICS.npz',allow_pickle=False) as saved:
+        for key in ARRAYS:
+            current=np.asarray(getattr(env.sim.data,key));wanted=saved[key]
+            if current.shape!=wanted.shape:raise RuntimeError('Canonical initial array shape changed')
+            differences[key]=dict(equal=bool(np.array_equal(current,wanted)),
+                max_abs=float(np.max(np.abs(current-wanted))) if current.size else 0.)
+        write(folder/'CONSTRUCTION_SETTLE_DIFFERENCES.json',differences)
+        env.sim.set_state_from_flattened(saved['sim_state'])
+        env.sim.model.body_pos[:]=saved['model_body_pos'];env.sim.model.body_quat[:]=saved['model_body_quat']
+        for key in ARRAYS:np.asarray(getattr(env.sim.data,key))[:]=saved[key]
+        env.sim.forward()
+        for key in ARRAYS:np.asarray(getattr(env.sim.data,key))[:]=saved[key]
+    def like(value,current):
+        if isinstance(value,dict) and 'unsupported_type' in value:raise RuntimeError('Incomplete canonical controller serialization')
+        if isinstance(current,np.ndarray):return np.asarray(value,dtype=current.dtype).reshape(current.shape)
+        if isinstance(current,np.generic):return type(current)(value)
+        if isinstance(current,tuple):return tuple(like(v,c) for v,c in zip(value,current))
+        if isinstance(current,list):return [like(v,c) for v,c in zip(value,current)]
+        return value
+    controller=env.robots[0].controller
+    for key,value in context['controller'].items():setattr(controller,key,like(value,getattr(controller,key)))
+    for key,value in context['environment'].items():setattr(env.env,key,value)
+    env.robots[0].gripper.current_action=np.asarray(context['gripper_action']).copy()
+    if any(clean(getattr(controller,key))!=value for key,value in context['controller'].items()):
+        raise RuntimeError('Canonical controller context differs after restore')
+    write(folder/'CANONICAL_RESTORE.json',dict(passed=True,checkpoint_context_sha256=sha(root/'CANONICAL_CONTEXT.json'),
+        checkpoint_physics_sha256=sha(root/'CANONICAL_PHYSICS.npz'),controller_fields=len(context['controller']),
+        scored_actions_before_restore=0,scope='Initial paired-state construction only, not arbitrary learned-policy/RNG continuation'))
+
+
 def check_saved(folder):
     """Recompute the separator and every saved contact/root-segment guard."""
     geo=read(folder/'EXECUTED_GEOMETRY.json');summary=read(folder/'SUMMARY.json')
@@ -115,6 +155,7 @@ def execute(root,variant):
             m.body_quat[marker]=q[[3,0,1,2]]
         update_marker(obs)
         for _ in range(20):obs,_,_,_=env.step([0.]*6+[-1.])
+        restore_canonical_initial(env,root,folder)
         expected=read(directory/'RESULT.json')['settled_physics_sha256']
         if physical_hash(env)!=expected:raise RuntimeError('Modified initial physics differs from canonical source; no label')
         write(folder/'INITIAL_EQUALITY.json',dict(passed=True,source_sha256=expected,actual_sha256=physical_hash(env)))

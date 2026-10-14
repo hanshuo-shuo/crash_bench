@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 import os
 from pathlib import Path
 import shlex
+import shutil
 import subprocess
 import sys
 import time
@@ -129,8 +130,12 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
             purpose='One read-only enclosure proposal, no labels or modified-scene execution'))
     if stage=='fixture-smoke':
         write(root/'FIXTURE_PROPOSAL.json',proposal)
+        canonical=fixture_design/'case_000/checkpoint_000'
+        shutil.copyfile(canonical/'context.json',root/'CANONICAL_CONTEXT.json')
+        shutil.copyfile(canonical/'physics.npz',root/'CANONICAL_PHYSICS.npz')
         write(root/'INHERITED.json',dict(design_root=str(fixture_design),design_job=design_job,
             proposal_sha256=sha(fixture_design/'case_000/FIXTURE_PROPOSAL.json'),
+            canonical_context_sha256=sha(root/'CANONICAL_CONTEXT.json'),canonical_physics_sha256=sha(root/'CANONICAL_PHYSICS.npz'),
             purpose='Three mechanism/debug cases only; no batch labels or training; explicit digital swept-root contract'))
     if stage == 'replay-smoke':
         write(root/'CASES.json',read(inventory/'inventory/REPLAY_SMOKE.json')[:limit])
