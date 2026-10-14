@@ -32,6 +32,16 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
         exclusion_relative=exclusion_review.resolve().relative_to(repo)
         if exclusion_relative.parts[:2]!=('verifier_dataset','reviews') or command('git','ls-files','--error-unmatch',str(exclusion_relative))!=str(exclusion_relative):
             raise RuntimeError('Visual exclusions must be a published project record')
+    if stage=='diagnose-shortcuts':
+        if collection_root is None:raise RuntimeError('Explicit completed dataset screen required')
+        prior=read(collection_root/'RECEIPT.json');job=prior['job']
+        if prior['stage']!='audit-constraints' or command('sacct','-X','-n','-P','-j',job,'--format=JobIDRaw,State,ExitCode')!=job+'|COMPLETED|0:0':
+            raise RuntimeError('Shortcut source must be a normally completed evidence audit')
+        from .statistics_assets import ROOT as statistics_root,PACKAGES
+        if read(statistics_root/'STAGED.json')['overlay_packages']!=PACKAGES:raise RuntimeError('Offline statistics assets not staged')
+        inherited_hashes=read(collection_root/'HASHES.json')
+        diagnostic_files={name:sha(collection_root/name) for name in ('PROPOSED_DATASET.jsonl','SHORTCUT_FEATURES.npz','SHORTCUT_AUDIT.json')}
+        if any(inherited_hashes[name]!=digest for name,digest in diagnostic_files.items()):raise RuntimeError('Audited diagnostic inputs changed')
     if stage in ('replay-smoke','replay-spatial-batch','replay-object-sources','replay-spatial-sources'):
         if not 1<=limit<=12: raise RuntimeError('Smoke limit must be 1..12')
         if inventory is None or not read(inventory/'inventory/SUMMARY.json')['passed']:
@@ -264,7 +274,7 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
         authorization='2026-10-14 user: 1000 evidence-backed rows on Quest; train only after audit; API cap $20',
         api_calls=0, api_limit_usd='20.00', account='p33100', partition='short',canonicalize=canonicalize,smoke_limit=limit)
     manifest['contact_contract']=read(repo/'verifier_dataset/protocol.json').get('contact_contract')
-    if stage=='audit-constraints':manifest['statistics_assets_sha256']=sha(statistics_root/'STAGED.json')
+    if stage in ('audit-constraints','diagnose-shortcuts'):manifest['statistics_assets_sha256']=sha(statistics_root/'STAGED.json')
     if stage in ('fixture-smoke','fixture-render','fixture-grounding'):
         manifest['contact_contract']='FD1000-fixture-v1 (development-only inherited strict contact and swept-root guard)'
     if stage in ('paired-prototype','paired-screen','paired-render','reciprocal-prototype'):
@@ -287,6 +297,8 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
                 manifest['reverse_controller']='existing native nominal pi0.5 on the swapped derived task'
                 manifest['max_reverse_rollouts']=len(render_pairs)
     write(root/'CAMPAIGN.json', manifest)
+    if stage=='diagnose-shortcuts':write(root/'DIAGNOSTIC_SOURCE.json',dict(root=str(collection_root),files=diagnostic_files,
+        receipt_sha256=sha(collection_root/'RECEIPT.json'),accounting=job+'|COMPLETED|0:0'))
     if stage=='finalize-constraints':
         write(root/'FINALIZE_SOURCE.json',dict(prepared=str(collection_root),
             prepared_hashes_sha256=sha(collection_root/'HASHES.json'),review_relative_path=str(review_relative),review_sha256=sha(review_file)))
@@ -404,7 +416,7 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
         write(root/'EXPORT_SOURCE.json',dict(root=str(replay_smoke),receipt_sha256=sha(replay_smoke/'RECEIPT.json')))
     script='collect.sbatch' if stage in ('collect-smoke','collect-cached-smoke','collect-cached-batch','collect-approved-cache','collect-frozen-perception') else ('cpu.sbatch' if stage in ('inventory','source-plan') else 'replay.sbatch')
     if stage=='export-candidates':script='export.sbatch'
-    if stage in ('audit-candidates','audit-constraints'):script='audit.sbatch'
+    if stage in ('audit-candidates','audit-constraints','diagnose-shortcuts'):script='audit.sbatch'
     if stage in ('fixture-render','fixture-grounding','paired-render'):script='fixture_render.sbatch'
     if stage=='reciprocal-prototype':script='reciprocal.sbatch'
     if stage in ('constraint-prototype','constraint-batch'):script='constraint.sbatch'
@@ -448,7 +460,7 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
 
 
 if __name__ == '__main__':
-    p = argparse.ArgumentParser(); p.add_argument('stage', choices=['inventory','source-plan','replay-smoke','replay-spatial-batch','replay-object-sources','replay-spatial-sources','replay-early-sources','collect-smoke','collect-cached-smoke','collect-cached-batch','collect-approved-cache','collect-frozen-perception','replay-collection','export-candidates','audit-candidates','audit-constraints','finalize-constraints','design-fixture','fixture-smoke','fixture-render','fixture-grounding','audit-request-drift','paired-prototype','paired-screen','paired-render','reciprocal-prototype','constraint-prototype','constraint-batch'])
+    p = argparse.ArgumentParser(); p.add_argument('stage', choices=['inventory','source-plan','replay-smoke','replay-spatial-batch','replay-object-sources','replay-spatial-sources','replay-early-sources','collect-smoke','collect-cached-smoke','collect-cached-batch','collect-approved-cache','collect-frozen-perception','replay-collection','export-candidates','audit-candidates','audit-constraints','diagnose-shortcuts','finalize-constraints','design-fixture','fixture-smoke','fixture-render','fixture-grounding','audit-request-drift','paired-prototype','paired-screen','paired-render','reciprocal-prototype','constraint-prototype','constraint-batch'])
     p.add_argument('--inventory',type=Path);p.add_argument('--canonicalize',action='store_true')
     p.add_argument('--limit',type=int,default=12)
     p.add_argument('--source-plan',type=Path)
