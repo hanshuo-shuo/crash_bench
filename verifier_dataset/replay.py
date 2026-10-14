@@ -44,6 +44,10 @@ def configure(root):
     os.environ['LIBERO_CONFIG_PATH'] = str(cfg)
     sys.path[:0] = [str(upstream/'safelibero'), str(repo/'experiments/feasibility')]
     from robosuite.environments.base import MujocoEnv
+    import robosuite.utils.binding_utils as bindings
+    write(root/'BACKEND.json',dict(MUJOCO_GL=os.environ.get('MUJOCO_GL'),
+        PYOPENGL_PLATFORM=os.environ.get('PYOPENGL_PLATFORM'),binding_backend=bindings._MUJOCO_GL,
+        rendering_enabled=False))
     from reset_forward import replay_renderer_reset_forward
     replay_renderer_reset_forward(MujocoEnv)
     # Match the exact historical hash implementation, not a new relaxed tolerance.
