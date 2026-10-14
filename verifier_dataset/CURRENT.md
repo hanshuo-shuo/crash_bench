@@ -168,32 +168,31 @@ The read-only API review file is
 `results/verifier_dataset/20261014T075301Z_paid-request-review_f0b6fcfecbca/PENDING_API_REVIEW.json`.
 It lists all 32 deferred request identities, image/request hashes, exact payload
 scope and pinned routing. At most two attempts each would reserve $6.40 under
-the existing price guard within the $20 campaign cap. This is a review-only
-estimate, not a started worker, an incurred charge or approval of the blocked
-operation. The historical cache-only roots remain immutable.
+the existing price guard within the $20 campaign cap. This file records the earlier review-only estimate; the subsequent human
+approval is recorded below. It is not itself a worker receipt or incurred charge. The historical cache-only roots remain immutable.
 
-## Pending decisions and closed gates
+## Human decisions resolved; scientific gates remain closed
 
-1. The replay initially used the strict rule prohibiting protected-object contact
-   with **any other body with a motion DOF**, including movable support pedestals.
-   Some Object initial states have native `box_small_base_1_g2` support contacts;
-   some also have actual target contacts. Earlier SC-CONTACT/RA protocols instead
-   monitor robot/target versus protected objects and permit native support.
-   The user has been asked which definition FD1000 should use. Preserve v1 and
-   its results; any change requires an explicit versioned contract, new checks
-   and identical treatment across classes. Existing strict contact-free Spatial
-   work proceeds independently of this decision.
-2. Automatic approval review rejected the proposed paid GPU/API launch, stating
-   that explicit approval of the external GLM-4.5V / Z.AI image/prompt egress and
-   notification of key use were needed. The user has been shown the exact model,
-   payload scope, existing private-key usage and $0.80 first-batch / $20 campaign
-   limits. That approval question is pending. **The rejected operation executed
-   no paid request and created no collect-smoke job/root.** Do not retry it until
-   the missing approval arrives. The key is never copied into source or logs.
-   A newer explicit question offers approval of the concrete 32-request/$6.40
-   review, approval of only the original four-request/$0.80 smoke, or continued
-   offline work. No answer has arrived. Approval of the smaller smoke must not
-   be interpreted as approval of the larger review manifest.
+The human explicitly approved the exact 32 reviewed simulator PNG/task requests
+through OpenRouter to GLM-4.5V on Z.AI, use of the existing private key, a maximum
+$6.40 reservation allowance and the shared $20 FD1000 cap. The old pending review
+and the rejected pre-authorization launch remain preserved historical records;
+neither is an active approval block. The signed-by-content allowlist and verbatim
+human instruction are in `authorizations/approved_perception_32.json`.
+
+The bounded `approved_requests` worker copies only those 32 hash-verified inputs
+into a new frozen execution root. Original cache-only roots remain immutable.
+Both payload hashes and pinned routing are checked before paid execution; all
+calls use the shared campaign ledger. Unknown charges retain their reservation
+and stop further calls, including automatic retries. No key is written to source,
+receipts or job logs. A validated response is perception for collection, not a
+feasibility verdict or reasoning label. Read the new execution receipt and ledger
+for actual spending; the $6.40 figure is a ceiling, not an incurred charge.
+
+The human also chose the original robot/target versus protected-object contact
+rule, allowing native support contacts. FD1000 v1 and all outputs remain intact;
+a new version and independent rechecks are required before previously rejected
+Object sources can qualify. The final data and training gates remain closed.
 
 Accepted complete scientific dataset rows: **0**. New matched certified negatives:
 **0** admitted to the scientific dataset; **one** conditional development
