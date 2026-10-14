@@ -153,7 +153,7 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
         old=read(collection_root/'RECEIPT.json');job=old['job']
         if old['stage']!='collect-approved-cache' or command('sacct','-X','-n','-P','-j',job,'--format=JobIDRaw,State,ExitCode').splitlines()!=[job+'|COMPLETED|0:0']:
             raise RuntimeError('Approved-cache collection must terminate normally')
-    if stage in ('paired-prototype','paired-screen','replay-early-sources'):
+    if stage in ('paired-prototype','paired-screen','replay-early-sources','constraint-prototype','constraint-batch'):
         if collection_root is None:raise RuntimeError('Explicit v2 merged candidate audit required')
         receipt=read(collection_root/'RECEIPT.json');job=receipt['job'];audit=read(collection_root/'AUDIT_COMPLETE.json')
         if receipt['stage']!='audit-candidates' or not audit['passed'] or receipt.get('contact_contract')!='FD1000-SC-CONTACT-v2':
@@ -167,7 +167,7 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
         initial={r['metadata']['source_id']:r for r in candidates if r['evidence']['checkpoint_step']==0}
         if not 30<=len(initial)<=100:raise RuntimeError('Expected a bounded, diverse source inventory')
         paired_sources=sorted(initial.values(),key=lambda r:r['metadata']['source_id'])
-        if stage=='paired-prototype':
+        if stage in ('paired-prototype','constraint-prototype'):
             paired_sources=[next(r for r in paired_sources if r['metadata']['family']==family)
                 for family in ('safelibero_object','safelibero_spatial','safelibero_goal','safelibero_long')]
         if stage=='replay-early-sources':
@@ -181,6 +181,19 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
                 if not summary['eligible_feasible_witness'] or summary['contact_contract_version']!='FD1000-SC-CONTACT-v2':
                     raise RuntimeError('Early capture must retain the approved native contact contract')
                 early_sources.append(summary['source'])
+        if stage in ('constraint-prototype','constraint-batch'):
+            active=command('squeue','-h','-u',os.environ['USER'],'-A','p33100','-p','gengpu','-o','%j|%Z')
+            active_count=sum('crash_bench' in x or 'crashbench_safelibero' in x or x.startswith('cb_') for x in active.splitlines())
+            if active_count>=2:raise RuntimeError('Two CrashBench GPU jobs already active')
+            if stage=='constraint-batch':
+                if batch_shard not in (0,1) or replay_smoke is None:
+                    raise RuntimeError('Two-shard batch requires an explicit completed constraint prototype')
+                prototype=read(replay_smoke/'CONSTRAINT_COMPLETE.json');prototype_job=read(replay_smoke/'RECEIPT.json')['job']
+                if not prototype['passed'] or prototype['matched_units']<3 or command('sacct','-X','-n','-P','-j',prototype_job,'--format=JobIDRaw,State,ExitCode').splitlines()!=[prototype_job+'|COMPLETED|0:0']:
+                    raise RuntimeError('At least three normal, witnessed constraint prototype units required')
+                for name,wanted in read(replay_smoke/'HASHES.json').items():
+                    if sha(replay_smoke/name)!=wanted:raise RuntimeError('Constraint prototype changed')
+                paired_sources=paired_sources[batch_shard::2]
     if stage in ('paired-render','reciprocal-prototype'):
         if collection_root is None:raise RuntimeError('Explicit completed paired prototype required')
         receipt=read(collection_root/'RECEIPT.json');job=receipt['job'];proof=read(collection_root/'PAIRED_COMPLETE.json')
@@ -237,6 +250,15 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
                 manifest['reverse_controller']='existing native nominal pi0.5 on the swapped derived task'
                 manifest['max_reverse_rollouts']=len(render_pairs)
     write(root/'CAMPAIGN.json', manifest)
+    if stage in ('constraint-prototype','constraint-batch'):
+        manifest.update(partition='gengpu',derived_tasks=True,contact_contract='FD1000-SC-CONTACT-v2',
+            additional_constraint='FD1000-VIRTUAL-CONSTRAINT-v1',maximum_checkpoints=1 if stage=='constraint-prototype' else 10,
+            maximum_virtual_layouts_per_checkpoint=2,api_mode='disabled',max_paid_attempts=0,max_logical_requests=0,
+            same_image_and_target_opposite_safety_rules=True,physical_collision_walls=False,batch_shard=batch_shard)
+        write(root/'CAMPAIGN.json',manifest);write(root/'CASES.json',paired_sources)
+        write(root/'INHERITED.json',dict(candidate_audit=str(collection_root),audit_sha256=sha(collection_root/'AUDIT_COMPLETE.json'),
+            source_count=len(paired_sources),original_sources_only=True,training_allowed=False,
+            prerequisite_prototype=str(replay_smoke) if replay_smoke else None))
     if stage in ('replay-early-sources','paired-screen'):
         rows=early_sources if stage=='replay-early-sources' else paired_sources
         if stage=='replay-early-sources':manifest['checkpoint_schedule']='early'
@@ -339,11 +361,13 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
     if stage=='audit-candidates':script='audit.sbatch'
     if stage in ('fixture-render','fixture-grounding','paired-render'):script='fixture_render.sbatch'
     if stage=='reciprocal-prototype':script='reciprocal.sbatch'
+    if stage in ('constraint-prototype','constraint-batch'):script='constraint.sbatch'
     if stage=='audit-request-drift':script='request_drift.sbatch'
     submit=['sbatch','--parsable','--output='+str(root/'slurm_%j.log')]
     if stage in ('replay-spatial-batch','replay-object-sources','replay-spatial-sources','replay-early-sources','paired-screen'):
         submit=['sbatch','--parsable','--array=0-7%4','--output='+str(root/'slurm_%A_%a.log')]
     if stage=='paired-screen':submit.append('--time=01:00:00')
+    if stage=='constraint-batch':submit.append('--time=04:00:00')
     if stage=='collect-smoke':submit.append('--hold')
     if stage in ('collect-cached-batch','collect-approved-cache','collect-frozen-perception'):submit.append('--time=01:00:00')
     job = subprocess.check_output(submit+[str(root/'source/verifier_dataset'/script)],env=env,text=True).strip().split(';')[0]
@@ -376,7 +400,7 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
 
 
 if __name__ == '__main__':
-    p = argparse.ArgumentParser(); p.add_argument('stage', choices=['inventory','source-plan','replay-smoke','replay-spatial-batch','replay-object-sources','replay-spatial-sources','replay-early-sources','collect-smoke','collect-cached-smoke','collect-cached-batch','collect-approved-cache','collect-frozen-perception','replay-collection','export-candidates','audit-candidates','design-fixture','fixture-smoke','fixture-render','fixture-grounding','audit-request-drift','paired-prototype','paired-screen','paired-render','reciprocal-prototype'])
+    p = argparse.ArgumentParser(); p.add_argument('stage', choices=['inventory','source-plan','replay-smoke','replay-spatial-batch','replay-object-sources','replay-spatial-sources','replay-early-sources','collect-smoke','collect-cached-smoke','collect-cached-batch','collect-approved-cache','collect-frozen-perception','replay-collection','export-candidates','audit-candidates','design-fixture','fixture-smoke','fixture-render','fixture-grounding','audit-request-drift','paired-prototype','paired-screen','paired-render','reciprocal-prototype','constraint-prototype','constraint-batch'])
     p.add_argument('--inventory',type=Path);p.add_argument('--canonicalize',action='store_true')
     p.add_argument('--limit',type=int,default=12)
     p.add_argument('--source-plan',type=Path)

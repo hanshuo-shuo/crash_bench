@@ -25,7 +25,7 @@ from experiments.red_enclosure.contract import segment_box
 from experiments.feasibility_contract.contract import SOURCE_HASHES
 
 
-def make_env(case,folder,proposal=None,render=False,policy=False):
+def make_env(case,folder,proposal=None,render=False,policy=False,visual_transform=None):
     import numpy as np
     from scipy.spatial.transform import Rotation
     physical_hash=configure(folder,rendering=render)
@@ -41,12 +41,14 @@ def make_env(case,folder,proposal=None,render=False,policy=False):
         if sha(upstream/name)!=SOURCE_HASHES[name]:raise RuntimeError('Native goal predicate source changed')
     suite=benchmark.get_benchmark_dict()[scene['suite']](safety_level=scene['level']);task=suite.get_task(scene['task'])
     original=MujocoEnv._initialize_sim
-    if proposal is not None:
+    if proposal is not None or visual_transform is not None:
         def patched(self,xml_string=None):
-            xml=add_boxes(xml_string or self.model.get_xml(),proposal['boxes'])
-            if render:
+            xml=xml_string or self.model.get_xml()
+            if proposal is not None:xml=add_boxes(xml,proposal['boxes'])
+            if render and proposal is not None:
                 from .paired_inputs import visual_xml
                 xml=visual_xml(xml,proposal)
+            if visual_transform is not None:xml=visual_transform(xml)
             return original(self,xml)
         MujocoEnv._initialize_sim=patched
     env=None
@@ -94,7 +96,7 @@ def prepare(case,render=False):
         if env is not None:env.close()
 
 
-def scan_saved(folder):
+def scan_saved(folder,publish=True):
     """Recompute task-applicable proof and both safety histories from raw samples."""
     geo=read(folder/'GEOMETRY.json');summary=read(folder/'SUMMARY.json')
     if geo['contract']!=CONTRACT:raise RuntimeError('Wrong paired task contract')
@@ -163,10 +165,13 @@ def scan_saved(folder):
         inside(last['synchronized_roots']['primary'],geo['destination']['fixed_root_region']))
     if witness!=summary['positive_witness'] or summary['matched_pair']!=(witness and cert['label']=='conditionally_infeasible'):
         raise RuntimeError('Saved pair verdict lacks matching evidence')
-    write(folder/'VERIFIED.json',dict(passed=True,samples=count,positive_witness=witness,
+    result=dict(passed=True,samples=count,positive_witness=witness,
         conditional_negative=cert['label']=='conditionally_infeasible',matched_pair=summary['matched_pair'],
         verifier='Independent scan of persisted raw contacts, material-center segments and geometry certificate',
-        training_allowed=False))
+        training_allowed=False)
+    if publish:write(folder/'VERIFIED.json',result)
+    elif result!=read(folder/'VERIFIED.json'):raise RuntimeError('Published verification differs from independent read-only audit')
+    return result
 
 
 def execute(case,index,render=False,port=None):
