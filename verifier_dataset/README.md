@@ -97,6 +97,16 @@ This stage can collect existing-cache sources without authorizing or attempting
 the rejected external request. Both cache hits and misses are unit-tested with
 network access mocked to raise an error.
 
+After that smoke terminates normally, `collect-cached-batch --source-plan ROOT
+--collection-root SMOKE --batch-shard 0` (and shard 1) collects a frozen pool of
+41 additional initial identities: the remaining 16 Goal sources, 15 sources
+from three other Spatial tasks and 10 sources from two Long tasks. Each task
+contributes five historical proxy-success identities before excluding the four
+Goal smoke identities. Two interleaved shards use at most two GPUs, with one
+hour per allocation. They retain the exact same no-network/no-key/cache-miss
+semantics and cannot create paid work. Source selection favors historical
+success for collection efficiency; every new outcome still needs contact replay.
+
 `replay-collection --collection-root ROOT --canonicalize` consumes only actual
 completed tapes from a terminal cache-only collection. It checks run identities,
 source/collection agreement, code/Slurm provenance and zero paid-worker activity,

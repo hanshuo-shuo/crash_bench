@@ -14,7 +14,7 @@ def command(*args):
     return subprocess.check_output(args, text=True).strip()
 
 
-def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, replay_smoke=None, collection_root=None):
+def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, replay_smoke=None, collection_root=None, batch_shard=None):
     repo = Path.cwd().resolve()
     if repo != (Path.home()/'crash_bench').resolve():
         raise RuntimeError('Wrong project checkout')
@@ -58,7 +58,7 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
         source_job=collection_inheritance['source_job']
         if command('sacct','-X','-n','-P','-j',source_job,'--format=JobIDRaw,State,ExitCode').splitlines()!=[source_job+'|COMPLETED|0:0']:
             raise RuntimeError('Collection job must finish normally before replay')
-    if stage in ('collect-smoke','collect-cached-smoke'):
+    if stage in ('collect-smoke','collect-cached-smoke','collect-cached-batch'):
         if source_plan is None or not read(source_plan/'source_plan/SUMMARY.json')['passed']:
             raise RuntimeError('Passed broader-source inventory required')
         source_job=read(source_plan/'RECEIPT.json')['job']
@@ -69,6 +69,16 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
         active=command('squeue','-h','-u',os.environ['USER'],'-A','p33100','-p','gengpu','-o','%j|%Z')
         if sum('crash_bench' in x or 'crashbench_safelibero' in x or x.startswith('cb_') for x in active.splitlines())>=2:
             raise RuntimeError('Two CrashBench GPU jobs already active')
+        if stage=='collect-cached-batch':
+            if batch_shard not in (0,1) or collection_root is None:
+                raise RuntimeError('Two-shard index and terminal cache-only smoke required')
+            from .collection_evidence import replay_candidates
+            _, prior=replay_candidates(collection_root)
+            if read(collection_root/'RECEIPT.json')['stage']!='collect-cached-smoke':
+                raise RuntimeError('Cache-only smoke prerequisite changed')
+            prior_job=prior['source_job']
+            if command('sacct','-X','-n','-P','-j',prior_job,'--format=JobIDRaw,State,ExitCode').splitlines()!=[prior_job+'|COMPLETED|0:0']:
+                raise RuntimeError('Offline smoke must terminate normally before extending')
     root = ASSETS/'verifier_dataset'/(datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')+'_'+stage+'_'+commit[:12])
     root.mkdir(parents=True, exist_ok=False); (root/'source').mkdir()
     with (root/'source.tar').open('wb') as stream:
@@ -99,10 +109,20 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
         write(root/'CASES.json',rows)
         write(root/'INHERITED.json',dict(inventory=str(inventory),hashes=hashes,replay_smoke=str(replay_smoke),
             smoke_sha256=sha(replay_smoke/'REPLAY_COMPLETE.json'),smoke_job=smoke_job))
-    if stage in ('collect-smoke','collect-cached-smoke'):
-        entries=read(source_plan/'source_plan/GOAL20_CANDIDATES.json')
-        chosen=[next(r for r in entries if r['scene']['task']==task) for task in range(4)]
-        if len({r['source_id'] for r in chosen})!=4:raise RuntimeError('Four unique Goal source states required')
+    if stage in ('collect-smoke','collect-cached-smoke','collect-cached-batch'):
+        if stage=='collect-cached-batch':
+            from .cached_pool import select_pool
+            pool=select_pool(read(source_plan/'source_plan/OFFICIAL_OUTCOMES.json'))
+            chosen=pool[batch_shard::2]
+            write(root/'COLLECTION_PLAN.json',dict(pool=pool,shard=batch_shard,shards=2,
+                smoke_root=str(collection_root),smoke_hashes=prior['hashes'],
+                source_plan_hashes=read(source_plan/'source_plan/HASHES.json'),
+                selection_conditioned_on_historical_proxy_success=True,
+                feasibility_labels_created=False))
+        else:
+            entries=read(source_plan/'source_plan/GOAL20_CANDIDATES.json')
+            chosen=[next(r for r in entries if r['scene']['task']==task) for task in range(4)]
+            if len({r['source_id'] for r in chosen})!=4:raise RuntimeError('Four unique Goal source states required')
         write(root/'COLLECTION_SOURCES.json',chosen)
         sys.path.insert(0,str(repo/'analysis/uncertainty'))
         from common import config
@@ -117,12 +137,13 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
     if stage=='export-candidates':
         env['CB_FD_REPLAY']=str(replay_smoke)
         write(root/'EXPORT_SOURCE.json',dict(root=str(replay_smoke),receipt_sha256=sha(replay_smoke/'RECEIPT.json')))
-    script='collect.sbatch' if stage in ('collect-smoke','collect-cached-smoke') else ('cpu.sbatch' if stage in ('inventory','source-plan') else 'replay.sbatch')
+    script='collect.sbatch' if stage in ('collect-smoke','collect-cached-smoke','collect-cached-batch') else ('cpu.sbatch' if stage in ('inventory','source-plan') else 'replay.sbatch')
     if stage=='export-candidates':script='export.sbatch'
     submit=['sbatch','--parsable','--output='+str(root/'slurm_%j.log')]
     if stage=='replay-spatial-batch':
         submit=['sbatch','--parsable','--array=0-7%4','--output='+str(root/'slurm_%A_%a.log')]
     if stage=='collect-smoke':submit.append('--hold')
+    if stage=='collect-cached-batch':submit.append('--time=01:00:00')
     job = subprocess.check_output(submit+[str(root/'source/verifier_dataset'/script)],env=env,text=True).strip().split(';')[0]
     if not job.isdigit():
         raise RuntimeError('Invalid Slurm receipt')
@@ -131,7 +152,7 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
     local = repo/'results/verifier_dataset'/root.name; local.mkdir(parents=True, exist_ok=False)
     write(local/'RECEIPT.json', receipt)
     print(receipt, flush=True)
-    if stage=='collect-cached-smoke':
+    if stage in ('collect-cached-smoke','collect-cached-batch'):
         write(root/'API_FINAL.json',dict(api_mode='cache_only',paid_calls=0,committed_usd='0.00',worker_started=False))
     if stage=='collect-smoke':
         try:
@@ -153,10 +174,11 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
 
 
 if __name__ == '__main__':
-    p = argparse.ArgumentParser(); p.add_argument('stage', choices=['inventory','source-plan','replay-smoke','replay-spatial-batch','collect-smoke','collect-cached-smoke','replay-collection','export-candidates'])
+    p = argparse.ArgumentParser(); p.add_argument('stage', choices=['inventory','source-plan','replay-smoke','replay-spatial-batch','collect-smoke','collect-cached-smoke','collect-cached-batch','replay-collection','export-candidates'])
     p.add_argument('--inventory',type=Path);p.add_argument('--canonicalize',action='store_true')
     p.add_argument('--limit',type=int,default=12)
     p.add_argument('--source-plan',type=Path)
     p.add_argument('--replay-smoke',type=Path)
     p.add_argument('--collection-root',type=Path)
-    a=p.parse_args();main(a.stage,a.inventory,a.canonicalize,a.limit,a.source_plan,a.replay_smoke,a.collection_root)
+    p.add_argument('--batch-shard',type=int,choices=(0,1))
+    a=p.parse_args();main(a.stage,a.inventory,a.canonicalize,a.limit,a.source_plan,a.replay_smoke,a.collection_root,a.batch_shard)

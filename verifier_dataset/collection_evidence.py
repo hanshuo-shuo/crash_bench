@@ -1,10 +1,11 @@
 """Route completed collection tapes to replay, preserving unresolved sources."""
 from .inventory import candidate, identity, read, sha
+from .cached_pool import run_spec
 
 
 def replay_candidates(root):
     receipt=read(root/'RECEIPT.json')
-    if receipt['stage']!='collect-cached-smoke' or receipt.get('api_mode')!='cache_only':
+    if receipt['stage'] not in ('collect-cached-smoke','collect-cached-batch') or receipt.get('api_mode')!='cache_only':
         raise RuntimeError('This continuation accepts only the approved cache-only collection')
     api=read(root/'API_FINAL.json')
     if api.get('paid_calls')!=0 or api.get('worker_started') is not False:
@@ -12,7 +13,7 @@ def replay_candidates(root):
     complete=read(root/'COLLECTION_COMPLETE.json');sources=read(root/'COLLECTION_SOURCES.json')
     if not complete['passed'] or complete['runs']!=len(complete['rows']):
         raise RuntimeError('Incomplete collection accounting')
-    expected={'fd_goal%02d_aegis'%i:entry['scene'] for i,entry in enumerate(sources)}
+    expected={run_spec(receipt['stage'],i,entry)['name']:entry['scene'] for i,entry in enumerate(sources)}
     seen=set();rows=[];unresolved=[]
     for result in complete['rows']:
         spec=result['spec'];name=spec['name']

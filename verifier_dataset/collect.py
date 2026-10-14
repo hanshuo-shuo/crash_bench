@@ -7,6 +7,7 @@ import shutil
 import sys
 import time
 from .inventory import ASSETS, read, sha, write
+from .cached_pool import run_spec
 
 
 class CacheMiss(RuntimeError):
@@ -40,7 +41,8 @@ def main(root,port):
     import runtime
     from openrouter_perception import export_request,read_response
     original_observer=runtime.Observer
-    cache_only=read(root/'CAMPAIGN.json').get('api_mode')=='cache_only'
+    campaign=read(root/'CAMPAIGN.json')
+    cache_only=campaign.get('api_mode')=='cache_only'
     cache_roots=[ASSETS/'batches/20260927T204911Z_d22035816647/perception_cache',
                  ASSETS/'batches/20260926T233314Z_af6ac874d168/perception_cache',ASSETS/'perception_cache']
 
@@ -65,7 +67,7 @@ def main(root,port):
     try:
         for i,entry in enumerate(read(root/'COLLECTION_SOURCES.json')):
             if (root/'STOP.json').exists():raise RuntimeError('External stop')
-            spec=dict(name='fd_goal%02d_aegis'%i,scene=entry['scene'],repeat=0,method='aegis',diagnostics=False)
+            spec=run_spec(campaign['stage'],i,entry)
             try:
                 result=runner.run(spec);results.append(result)
             except CacheMiss:
