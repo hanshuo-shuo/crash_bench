@@ -15,7 +15,7 @@ The full FD1000 API budget is $20, including a $6.40 ceiling for that completed
 batch. All current collection, reasoning targets and training preparation are
 offline. The private key is never printed, copied or logged.
 
-## Active collection
+## Completed collection and active audit
 
 Two source-frozen rendering/replay batches were submitted from published commit
 `e1859532ae9e0155e085f4120c06810219bcc7e9`:
@@ -26,9 +26,17 @@ Two source-frozen rendering/replay batches were submitted from published commit
   `20261014T184802Z_constraint-batch_e1859532ae9e`
 
 Roots are beneath `/projects/p33100/siosio/crashbench_safelibero/verifier_dataset`.
-Read their actual Slurm accounting and PROGRESS/CONSTRAINT_COMPLETE files; this
-static status does not claim they have completed. At most two task GPUs are
-allowed. These jobs execute immutable source archives, not the live checkout.
+Both jobs are terminal COMPLETED/0:0: shard 0 produced 290 matched units/1,160
+candidates and shard 1 produced 302 units/1,208 candidates. Together they processed
+all 67 sources and produced 2,368 candidate rows, not accepted training data.
+At most two task GPUs are allowed. Jobs execute immutable source archives.
+
+Audit 9993971 (`20261014T195410Z_audit-constraints_01ae2d2e22ef`) stopped with
+FAILED/1:0 when Slurm's accounting database refused the compute-node connection
+for its second parent. This is an infrastructure failure, not a data verdict.
+The repair captures both terminal accounting records in the launcher, binds them
+to the parent receipt/completion hashes, then audits the evidence offline.
+The failed root remains recoverable; a new exact-commit audit is required.
 
 The construction is explicitly **derived constraint-conditioned data**: unchanged
 native physics/action trajectories plus noncolliding virtual six-face regions.
@@ -96,9 +104,10 @@ rule statistics must have validation AUROC ≤0.75. No threshold or hyperparamet
 search is allowed. The final test split is not scored during dataset screening.
 Passing these readouts does not prove that generative reasoning is necessary.
 
-Final packaging/visual acceptance and the scientific A/B training runner still
-need to be completed. `verifier_training/fd1000_contract.py` is a tested fail-closed
-acceptance gate and fixed comparison configuration, not a submitted training job.
+Final packaging and the scientific A/B training runner are implemented; actual
+visual acceptance and native processor/Torch preflight remain pending.
+`verifier_training/fd1000_contract.py` is a tested fail-closed acceptance gate and
+fixed comparison configuration, not a submitted training job.
 It requires exact data/evidence/review hashes, 1,000 reviewed records and frozen
 source groups; historical 120-row engineering approval cannot satisfy it. Planned
 A/B evaluation uses free generation, no gold rationale prefix, identical inputs,

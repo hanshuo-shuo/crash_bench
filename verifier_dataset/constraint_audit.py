@@ -5,7 +5,6 @@ import hashlib
 import json
 import os
 from pathlib import Path
-import subprocess
 from .inventory import read,sha,write
 from .constraint_evidence import verify_trace,verify_layout,rows as regenerate_rows
 from .constraint_selection import check_unit,select_units
@@ -14,6 +13,18 @@ from .constraint_selection import check_unit,select_units
 def check_hashes(folder):
     for name,wanted in read(folder/'HASHES.json').items():
         if sha(folder/name)!=wanted:raise RuntimeError('Evidence changed: '+str(folder/name))
+
+
+def parent_accounting(root,parent):
+    """Use a terminal Slurm receipt captured before submitting the offline audit."""
+    matches=[x for x in read(root/'DEPENDENCY_ACCOUNTING.json') if x['root']==str(parent)]
+    if len(matches)!=1:raise RuntimeError('Missing or repeated dependency accounting')
+    record=matches[0];receipt=read(parent/'RECEIPT.json');job=receipt['job']
+    if record['job']!=job or record['accounting']!=job+'|COMPLETED|0:0':
+        raise RuntimeError('Dependency did not terminate normally')
+    if record['receipt_sha256']!=sha(parent/'RECEIPT.json') or record['completion_sha256']!=sha(parent/'CONSTRAINT_COMPLETE.json'):
+        raise RuntimeError('Dependency receipt or completion changed after submission')
+    return record['accounting']
 
 
 def visibility_check(option,layout):
@@ -68,7 +79,7 @@ def main(root,parents):
         receipt=read(parent/'RECEIPT.json');job=receipt['job']
         if receipt['stage'] not in ('constraint-batch','constraint-prototype'):
             raise RuntimeError('Unexpected constraint collection stage')
-        account=subprocess.check_output(['sacct','-X','-n','-P','-j',job,'--format=JobIDRaw,State,ExitCode'],text=True).strip()
+        account=parent_accounting(root,parent)
         if account!=job+'|COMPLETED|0:0' or not read(parent/'CONSTRAINT_COMPLETE.json')['passed']:
             raise RuntimeError('Every collection process must finish normally')
         check_hashes(parent);inheritance.append(dict(root=str(parent),receipt_sha256=sha(parent/'RECEIPT.json'),accounting=account))

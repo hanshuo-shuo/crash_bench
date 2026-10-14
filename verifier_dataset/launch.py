@@ -111,12 +111,17 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
     if stage=='audit-constraints':
         if not candidate_exports or len(candidate_exports)!=2 or len(set(candidate_exports))!=2:
             raise RuntimeError('Two distinct completed constraint batch shards required')
+        dependency_accounting=[]
         for parent in candidate_exports:
             old=read(parent/'RECEIPT.json');job=old['job']
             if old['stage']!='constraint-batch' or not read(parent/'CONSTRAINT_COMPLETE.json')['passed']:
                 raise RuntimeError('Constraint batch did not complete')
-            if command('sacct','-X','-n','-P','-j',job,'--format=JobIDRaw,State,ExitCode').splitlines()!=[job+'|COMPLETED|0:0']:
+            accounting=command('sacct','-X','-n','-P','-j',job,'--format=JobIDRaw,State,ExitCode')
+            if accounting.splitlines()!=[job+'|COMPLETED|0:0']:
                 raise RuntimeError('Constraint collections must terminate normally before audit')
+            dependency_accounting.append(dict(root=str(parent),job=job,accounting=accounting,
+                receipt_sha256=sha(parent/'RECEIPT.json'),completion_sha256=sha(parent/'CONSTRAINT_COMPLETE.json'),
+                captured_utc=datetime.now(timezone.utc).isoformat()))
     if stage=='finalize-constraints':
         if collection_root is None or review_file is None:raise RuntimeError('Explicit evidence preparation and published visual review required')
         old=read(collection_root/'RECEIPT.json');job=old['job'];audit=read(collection_root/'AUDIT_COMPLETE.json')
@@ -312,6 +317,7 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
             write(root/'VISUAL_GROUNDING.json',dict(style=STYLE,labels_created=False,
                 purpose='Check target visibility and goal grounding while retaining real collision geometry'))
     if stage in ('audit-candidates','audit-constraints'):write(root/'AUDIT_SOURCES.json',[str(x) for x in candidate_exports])
+    if stage=='audit-constraints':write(root/'DEPENDENCY_ACCOUNTING.json',dependency_accounting)
     if stage=='design-fixture':
         write(root/'CASES.json',[chosen_design])
         write(root/'INHERITED.json',dict(replay_root=str(replay_smoke),replay_job=proof_job,
