@@ -1,6 +1,5 @@
-import copy
 import unittest
-from verifier_dataset.pool_audit import group_components,shortcut_readiness,validate_public
+from verifier_dataset.pool_audit import group_components,shortcut_readiness,validate_public,native_horizons
 
 
 class CandidateAudit(unittest.TestCase):
@@ -31,6 +30,14 @@ class CandidateAudit(unittest.TestCase):
     def test_relative_image_reference_cannot_escape_source_export(self):
         row=self.row();row['student']['images'][0]['path']='../../evidence/private.png'
         with self.assertRaisesRegex(RuntimeError,'escapes'):validate_public(row)
+
+    def test_actual_long_horizon_is_not_inherited_300_default(self):
+        source=''
+        for suite,horizon in [('safelibero_spatial',300),('safelibero_goal',300),
+                              ('safelibero_object',300),('safelibero_long',550)]:
+            source+='if args.task_suite_name == "%s":\n    max_steps = %d\n'%(suite,horizon)
+        self.assertEqual(native_horizons(source)['safelibero_long'],550)
+        with self.assertRaisesRegex(RuntimeError,'horizons changed'):native_horizons(source.replace('550','300'))
 
 
 if __name__=='__main__':unittest.main()

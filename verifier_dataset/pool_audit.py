@@ -4,6 +4,7 @@ This stage deliberately cannot accept a one-class pool as a feasibility dataset.
 Image features are computed on Quest; no external service or learned VLM is used.
 """
 import argparse
+import ast
 from collections import Counter,defaultdict
 import hashlib
 import json
@@ -61,6 +62,29 @@ def shortcut_readiness(labels):
                 training_or_test_metrics_claimed=False)
 
 
+def native_horizons(source):
+    """Read constant suite horizons from the actual executed adapter source."""
+    values={}
+    for node in ast.walk(ast.parse(source)):
+        if not isinstance(node,ast.If) or not isinstance(node.test,ast.Compare):continue
+        test=node.test
+        if not (isinstance(test.left,ast.Attribute) and test.left.attr=='task_suite_name'
+                and len(test.ops)==1 and isinstance(test.ops[0],ast.Eq)
+                and len(test.comparators)==1 and isinstance(test.comparators[0],ast.Constant)
+                and isinstance(test.comparators[0].value,str)):continue
+        for item in node.body:
+            if (isinstance(item,ast.Assign) and len(item.targets)==1 and
+                isinstance(item.targets[0],ast.Name) and item.targets[0].id=='max_steps' and
+                isinstance(item.value,ast.Constant) and type(item.value.value) is int):
+                suite=test.comparators[0].value
+                if suite in values:raise RuntimeError('Ambiguous native horizon')
+                values[suite]=item.value.value
+    wanted={s:550 if s=='safelibero_long' else 300 for s in
+            ('safelibero_spatial','safelibero_goal','safelibero_object','safelibero_long')}
+    if values!=wanted:raise RuntimeError('Native suite horizons changed')
+    return values
+
+
 def image_statistics(images):
     import numpy as np
     features=[]
@@ -78,7 +102,7 @@ def main(root,exports):
     import numpy as np
     from PIL import Image
     if not os.environ.get('SLURM_JOB_ID'):raise RuntimeError('Pool audit belongs on a CPU allocation')
-    source_records=[];rows=[];features=[];duplicate=[];unique={};verified=set()
+    source_records=[];rows=[];features=[];duplicate=[];unique={};verified=set();effective={}
     for export in exports:
         receipt=read(export/'RECEIPT.json');job=receipt['job']
         state=subprocess.check_output(['sacct','-X','-n','-P','-j',job,'--format=JobIDRaw,State,ExitCode'],text=True).strip()
@@ -116,6 +140,25 @@ def main(root,exports):
             if sha(original_result)!=summary['source']['result_sha256']:
                 raise RuntimeError('Original rollout result changed')
             row['metadata']['initial_qpos_sha256']=read(original_result)['settled_qpos_sha256']
+            collection=original_result.parent.parent.parent
+            if (collection/'CAMPAIGN.json').exists() and str(original_result.parent) not in effective:
+                campaign=read(collection/'CAMPAIGN.json')
+                if campaign.get('api_mode')=='cache_only':
+                    adapted=original_result.parent/'adapted_main_aegis.py';source_result=read(original_result)
+                    limits=native_horizons(adapted.read_text());spec=source_result['spec']
+                    if spec['diagnostics'] is not False or source_result['actions']>limits[spec['scene']['suite']]:
+                        raise RuntimeError('Effective collection configuration differs')
+                    api=read(collection/'API_FINAL.json')
+                    if api['paid_calls']!=0 or api['worker_started'] is not False:
+                        raise RuntimeError('Unexpected API worker activity')
+                    effective[str(original_result.parent)]=dict(
+                        campaign='FD1000',stage=campaign['stage'],method=spec['method'],
+                        diagnostics_enabled=spec['diagnostics'],native_horizon=limits[spec['scene']['suite']],
+                        executed_actions=source_result['actions'],api_mode='cache_only',new_paid_calls=0,
+                        campaign_api_limit_usd='20.00',adapted_source_sha256=sha(adapted),
+                        raw_manifest_sha256=sha(original_result.parent/'manifest.json'),
+                        campaign_manifest_sha256=sha(collection/'CAMPAIGN.json'),
+                        note='The retained runtime configuration embeds dormant historical uncertainty defaults. Actual horizons come from the executed native loop; diagnostic enablement comes from spec; cache-only code refuses paid work.')
             images=[]
             for im in row['student']['images']:
                 path=export/im['path']
@@ -160,6 +203,7 @@ def main(root,exports):
     (root/'MERGED_CANDIDATES.jsonl').write_text(''.join(json.dumps(r,allow_nan=False)+'\n' for r in rows))
     np.savez_compressed(root/'RGB_FEATURES.npz',features=np.asarray(features),sample_ids=np.asarray([r['sample_id'] for r in rows]))
     write(root/'SOURCE_COVERAGE.json',coverage);write(root/'INHERITED_EXPORTS.json',source_records)
+    write(root/'EFFECTIVE_CONFIGURATION.json',effective)
     write(root/'DUPLICATES.json',duplicate)
     write(root/'SHORTCUT_PRECHECK.json',dict(shortcut_readiness([r['evidence']['feasibility'] for r in rows]),
         feature_definition='Each original view: RGB means/std, fixed red-mask fraction, 4x4 pooled RGB; no labels or future data',
@@ -179,7 +223,8 @@ def main(root,exports):
         binary_shortcut_auroc=None,api_calls=0,slurm_job=os.environ['SLURM_JOB_ID'])
     write(root/'AUDIT_COMPLETE.json',result)
     names=['MERGED_CANDIDATES.jsonl','RGB_FEATURES.npz','SOURCE_COVERAGE.json','INHERITED_EXPORTS.json',
-           'DUPLICATES.json','SHORTCUT_PRECHECK.json','REASONING_REQUIREMENTS.json','AUDIT_COMPLETE.json']
+           'DUPLICATES.json','SHORTCUT_PRECHECK.json','REASONING_REQUIREMENTS.json','AUDIT_COMPLETE.json',
+           'EFFECTIVE_CONFIGURATION.json']
     write(root/'HASHES.json',{name:sha(root/name) for name in names})
     print(json.dumps(result),flush=True)
 
