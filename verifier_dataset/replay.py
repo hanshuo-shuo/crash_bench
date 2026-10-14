@@ -1,5 +1,7 @@
 """CPU action-tape replay with source equality and integration-contact evidence."""
 import argparse
+import faulthandler
+import gc
 import gzip
 import json
 import math
@@ -200,6 +202,7 @@ def replay(row, folder, physical_hash, canonicalize=False):
 
 
 def main(root, case_index=None):
+    faulthandler.enable()
     if not os.environ.get('SLURM_JOB_ID'): raise RuntimeError('Compute allocation required')
     rows=read(root/'CASES.json'); results=[]; errors=[]
     canonicalize=read(root/'CAMPAIGN.json').get('canonicalize',False)
@@ -207,6 +210,7 @@ def main(root, case_index=None):
         work=root/('worker_%03d'%case_index);work.mkdir(exist_ok=False)
         physical_hash=configure(work)
         value=replay(rows[case_index],root/('case_%03d'%case_index),physical_hash,canonicalize=canonicalize)
+        gc.collect()
         print(json.dumps({k:v for k,v in value.items() if k!='source'}),flush=True)
         return
     for i,row in enumerate(rows):

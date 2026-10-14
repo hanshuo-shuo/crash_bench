@@ -13,4 +13,9 @@ cd "$ROOT/source"
 sha256sum --quiet -c "$ROOT/source.sha256"
 unset OPENROUTER_API_KEY
 export PYTHONNOUSERSITE=1 PYTHONDONTWRITEBYTECODE=1
-/projects/p33100/siosio/envs/openpi/bin/python -u -m verifier_dataset.inventory "$ROOT"
+case "${CB_FD_STAGE:?}" in
+  inventory) STAGE=inventory ;;
+  source-plan) STAGE=source_plan ;;
+  *) exit 2 ;;
+esac
+/projects/p33100/siosio/envs/openpi/bin/python -u -m "verifier_dataset.$STAGE" "$ROOT"

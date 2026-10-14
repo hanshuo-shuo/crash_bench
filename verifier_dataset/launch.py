@@ -11,7 +11,7 @@ def command(*args):
     return subprocess.check_output(args, text=True).strip()
 
 
-def main(stage, inventory=None, canonicalize=False):
+def main(stage, inventory=None, canonicalize=False, limit=12):
     repo = Path.cwd().resolve()
     if repo != (Path.home()/'crash_bench').resolve():
         raise RuntimeError('Wrong project checkout')
@@ -24,6 +24,7 @@ def main(stage, inventory=None, canonicalize=False):
     if 'origin/' not in command('git', 'branch', '-r', '--contains', commit):
         raise RuntimeError('Source must be published')
     if stage == 'replay-smoke':
+        if not 1<=limit<=12: raise RuntimeError('Smoke limit must be 1..12')
         if inventory is None or not read(inventory/'inventory/SUMMARY.json')['passed']:
             raise RuntimeError('Passed inventory required')
         inventory_job=read(inventory/'RECEIPT.json')['job']
@@ -44,14 +45,14 @@ def main(stage, inventory=None, canonicalize=False):
         upstream_commit='2457feed5968ae803926e178c8ce8243b9ecdcf9', seed=1014,
         protocol_sha256=sha(repo/'verifier_dataset/protocol.json'),
         authorization='2026-10-14 user: 1000 evidence-backed rows on Quest; train only after audit; API cap $20',
-        api_calls=0, api_limit_usd='20.00', account='p33100', partition='short',canonicalize=canonicalize)
+        api_calls=0, api_limit_usd='20.00', account='p33100', partition='short',canonicalize=canonicalize,smoke_limit=limit)
     write(root/'CAMPAIGN.json', manifest)
     if stage == 'replay-smoke':
-        write(root/'CASES.json',read(inventory/'inventory/REPLAY_SMOKE.json'))
+        write(root/'CASES.json',read(inventory/'inventory/REPLAY_SMOKE.json')[:limit])
         write(root/'INHERITED.json',dict(inventory=str(inventory),hashes=hashes))
     env = dict(os.environ, CB_FD_ROOT=str(root), CB_FD_STAGE=stage)
     job = subprocess.check_output(['sbatch', '--parsable', '--output='+str(root/'slurm_%j.log'),
-        str(root/'source/verifier_dataset'/('cpu.sbatch' if stage=='inventory' else 'replay.sbatch'))], env=env, text=True).strip().split(';')[0]
+        str(root/'source/verifier_dataset'/('cpu.sbatch' if stage in ('inventory','source-plan') else 'replay.sbatch'))], env=env, text=True).strip().split(';')[0]
     if not job.isdigit():
         raise RuntimeError('Invalid Slurm receipt')
     receipt = dict(manifest, job=job)
@@ -62,6 +63,7 @@ def main(stage, inventory=None, canonicalize=False):
 
 
 if __name__ == '__main__':
-    p = argparse.ArgumentParser(); p.add_argument('stage', choices=['inventory','replay-smoke'])
+    p = argparse.ArgumentParser(); p.add_argument('stage', choices=['inventory','source-plan','replay-smoke'])
     p.add_argument('--inventory',type=Path);p.add_argument('--canonicalize',action='store_true')
-    a=p.parse_args();main(a.stage,a.inventory,a.canonicalize)
+    p.add_argument('--limit',type=int,default=12)
+    a=p.parse_args();main(a.stage,a.inventory,a.canonicalize,a.limit)
