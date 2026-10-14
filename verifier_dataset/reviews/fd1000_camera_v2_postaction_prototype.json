@@ -1,0 +1,20 @@
+{
+  "purpose": "bounded_renderer_qualification",
+  "model_predictions_used": false,
+  "reviewer": "Codex actual-image inspection; not independent human review",
+  "units": 8,
+  "images_inspected": 32,
+  "passed": true,
+  "notes": [
+    "All eight selected checkpoint units, including step 5 for each family, show the expected simulator scene with swapped orange/purple outlines.",
+    "Object target is small; long-task step 5 has one view obscured by robot but the opposing view exposes target and constraints. Final per-unit observability review remains mandatory."
+  ],
+  "slurm_job": "3607154",
+  "terminal": "COMPLETED|0:0",
+  "preview_units_sha256": "00148f0fc093bc51569482fa7e230777d74ddbd0e58f957cf096b70e2172ff37",
+  "training_allowed": false,
+  "delivery_manifest_sha256": "b56992eb851796baaf2629bb43f6938d8b96114c4840e376bf1c3659795be8f5",
+  "source_commit": "e8ecc40f6f41cb8cc6544a5ed55e40a726b1059c",
+  "constraint_protocol_sha256": "2e2ded10fa57f969640d968284a9909fa01cbbe3b939c73c8ae1d785651ac79c",
+  "scope": "Qualify the renderer before bounded collection, not final dataset acceptance."
+}

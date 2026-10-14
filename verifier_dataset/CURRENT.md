@@ -60,6 +60,10 @@ camera-data mutation, and check color-swap mask identity immediately. A new
 two-checkpoint four-family prototype must pass before restarting shard 1.
 All original source splits remain frozen; no test model predictions were used.
 
+Expanded renderer prototype **3607154 COMPLETED/0:0**, 2m45s, A100-PCIE-40GB on qgpu0403, root `20261014T213750Z_constraint-prototype_e8ecc40f6f41`: eight matched units/32 candidates across four families at checkpoints 0 and 5. All 32 selected images were inspected and 69 delivered files hash-checked. Actual NVIDIA GL, camera stability and per-capture color-swap segmentation checks passed. `reviews/fd1000_camera_v2_postaction_prototype.json` qualifies bounded collection only.
+
+Fresh shard 1 **3608143** runs from `e8ecc40f6f41cb8cc6544a5ed55e40a726b1059c` at `20261014T214517Z_constraint-batch_e8ecc40f6f41` (A100-PCIE-40GB, qgpu0208). It replaces the cancelled image-invalid shard without deleting it. Shard 0 **3603883** had completed 31/34 sources and 1,096 candidates at the latest check. Streaming image review has inspected 70 units from 25 completed sources and marked six units for whole-unit exclusion based only on visible premises. Read live receipts; none of this is scientific training acceptance.
+
 **The v1 image dataset failed scientific acceptance. Do not train it.** Audit
 9997306 (`20261014T202221Z_audit-constraints_51b09f4a94c3`) completed normally.
 Its raw evidence checks passed, but validation AUROC was 0.928755 for the fixed
