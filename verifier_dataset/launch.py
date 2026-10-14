@@ -233,10 +233,12 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
                 if batch_shard not in (0,1) or replay_smoke is None:
                     raise RuntimeError('Two-shard batch requires an explicit completed constraint prototype')
                 prototype=read(replay_smoke/'CONSTRAINT_COMPLETE.json');prototype_job=read(replay_smoke/'RECEIPT.json')['job']
+                if read(replay_smoke/'CAMPAIGN.json')['maximum_checkpoints']<2:
+                    raise RuntimeError('Renderer qualification must include a post-action checkpoint')
                 if read(replay_smoke/'CAMPAIGN.json')['constraint_protocol_sha256']!=sha(repo/'verifier_dataset/constraint_protocol.json'):
                     raise RuntimeError('Prototype must exercise the current image/data protocol')
-                if not prototype['passed'] or prototype['matched_units']<3 or command('sacct','-X','-n','-P','-j',prototype_job,'--format=JobIDRaw,State,ExitCode').splitlines()!=[prototype_job+'|COMPLETED|0:0']:
-                    raise RuntimeError('At least three normal, witnessed constraint prototype units required')
+                if not prototype['passed'] or prototype['matched_units']<6 or command('sacct','-X','-n','-P','-j',prototype_job,'--format=JobIDRaw,State,ExitCode').splitlines()!=[prototype_job+'|COMPLETED|0:0']:
+                    raise RuntimeError('At least six normal, witnessed constraint prototype units required')
                 for name,wanted in read(replay_smoke/'HASHES.json').items():
                     if sha(replay_smoke/name)!=wanted:raise RuntimeError('Constraint prototype changed')
                 paired_sources=paired_sources[batch_shard::2]
@@ -304,12 +306,13 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
             prepared_hashes_sha256=sha(collection_root/'HASHES.json'),review_relative_path=str(review_relative),review_sha256=sha(review_file)))
     if stage in ('constraint-prototype','constraint-batch'):
         manifest.update(partition='gengpu',derived_tasks=True,contact_contract='FD1000-SC-CONTACT-v2',
-            additional_constraint='FD1000-VIRTUAL-CONSTRAINT-v1',maximum_checkpoints=1 if stage=='constraint-prototype' else 10,
+            additional_constraint='FD1000-VIRTUAL-CONSTRAINT-v1',maximum_checkpoints=2 if stage=='constraint-prototype' else 10,
             maximum_virtual_layouts_per_checkpoint=2,api_mode='disabled',max_paid_attempts=0,max_logical_requests=0,
             same_image_and_target_opposite_safety_rules=True,physical_collision_walls=False,batch_shard=batch_shard,
             constraint_protocol_sha256=sha(repo/'verifier_dataset/constraint_protocol.json'),
             frozen_source_split_sha256=sha(repo/'verifier_dataset/frozen_sources_67.json'),
-            gpu_request='one gengpu A100 for rendering and the qualified exact-replay platform; actual device recorded in GPU.json')
+            gpu_request='one gengpu A100; exclude qgpu2014 after observed rendering inconsistency; actual device recorded in GPU.json',
+            rendering_integrity='NVIDIA OpenGL required; camera data cannot change during render; color-swap segmentation must match before any candidate is emitted')
         write(root/'CAMPAIGN.json',manifest);write(root/'CASES.json',paired_sources)
         write(root/'INHERITED.json',dict(candidate_audit=str(collection_root),audit_sha256=sha(collection_root/'AUDIT_COMPLETE.json'),
             source_count=len(paired_sources),original_sources_only=True,training_allowed=False,

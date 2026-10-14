@@ -2,6 +2,7 @@
 #SBATCH --account=p33100
 #SBATCH --partition=gengpu
 #SBATCH --gres=gpu:a100:1
+#SBATCH --exclude=qgpu2014
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4

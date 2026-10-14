@@ -5,10 +5,17 @@ the very same rendered pixels; the second assignment swaps only region colors.
 """
 import itertools
 import hashlib
+import time
 import xml.etree.ElementTree as ET
 from .fixture_visuals import edges
 
 COLORS={'orange':[1.,.45,.02,1.],'purple':[.82,.04,.92,1.]}
+
+
+def require_same_segmentation(reference,actual):
+    import numpy as np
+    if reference.shape!=actual.shape or not np.array_equal(reference,actual):
+        raise RuntimeError('Color swap changed camera/geometry segmentation; no candidate may be emitted')
 
 
 def prescreen(visibility):
@@ -124,7 +131,7 @@ def capture(env,folder,layout,physical_hash):
         ancestor=int(m.geom_bodyid[g])
         while ancestor and ancestor!=target_root:ancestor=int(m.body_parentid[ancestor])
         if ancestor==target_root:target_geoms.append(g)
-    output=[];visibility=[]
+    output=[];visibility=[];reference_segments={};timings=[]
     for assignment in (0,1):
         for role,color in zip(('a','b'),('orange','purple') if assignment==0 else ('purple','orange')):
             m.geom_rgba[ids[role]]=COLORS[color]
@@ -132,12 +139,24 @@ def capture(env,folder,layout,physical_hash):
         for camera,name,pose in views:
             if pose is not None:
                 d.cam_xpos[cid]=pose['position'];d.cam_xmat[cid]=pose['rotation']
+            started=time.monotonic()
             rgb=np.asarray(env.sim.render(width=1024,height=1024,camera_name=camera))
+            rgb_seconds=time.monotonic()-started
+            from OpenGL import GL
+            backend={key:GL.glGetString(token).decode() for key,token in (
+                ('vendor',GL.GL_VENDOR),('renderer',GL.GL_RENDERER),('version',GL.GL_VERSION))}
+            write(folder/'RENDER_BACKEND.json',backend)
+            if 'NVIDIA' not in backend['vendor'].upper():
+                raise RuntimeError('Requested NVIDIA rendering is not active; no software fallback is allowed')
+            if pose is not None and (not np.array_equal(d.cam_xpos[cid],pose['position']) or not np.array_equal(d.cam_xmat[cid],pose['rotation'])):
+                raise RuntimeError('Renderer changed the declared camera data')
             rgb=rgb[::IMAGE_CONVENTION_MAPPING[macros.IMAGE_CONVENTION]][::-1,::-1]
             rgb=image_tools.convert_to_uint8(image_tools.resize_with_pad(np.ascontiguousarray(rgb),224,224))
             image=path/(name+'.png');Image.fromarray(rgb).save(image)
             images.append(dict(camera=name,path=str(image.relative_to(folder)),sha256=sha(image),width=224,height=224))
+            started=time.monotonic()
             segmentation=np.asarray(env.sim.render(width=1024,height=1024,camera_name=camera,segmentation=True))
+            segmentation_seconds=time.monotonic()-started;started=time.monotonic()
             segmentation=segmentation[::IMAGE_CONVENTION_MAPPING[macros.IMAGE_CONVENTION]][::-1,::-1]
             if segmentation.shape!=(1024,1024,2):raise RuntimeError('Unexpected native segmentation format')
             # MuJoCo geometry object type is read from the installed enum.
@@ -150,6 +169,18 @@ def capture(env,folder,layout,physical_hash):
                 entities[entity]=dict(pixels_1024=int(mask.sum()),pixels_224_nearest=int(small.sum()))
             seg_file=path/(name+'_segmentation.npz')
             np.savez_compressed(seg_file,object_type=segmentation[:,:,0],object_id=segmentation[:,:,1])
+            timings.append(dict(assignment=assignment,camera=name,rgb_render_seconds=rgb_seconds,
+                segmentation_render_seconds=segmentation_seconds,segmentation_processing_seconds=time.monotonic()-started))
+            write(folder/'RENDER_TIMINGS.json',timings)
+            if assignment==0:reference_segments[name]=segmentation.copy()
+            else:
+                try:require_same_segmentation(reference_segments[name],segmentation)
+                except RuntimeError:
+                    write(folder/'RENDER_MISMATCH.json',dict(camera=name,assignment=assignment,
+                        changed_object_type_pixels=int(np.count_nonzero(reference_segments[name][:,:,0]!=segmentation[:,:,0])),
+                        changed_object_id_pixels=int(np.count_nonzero(reference_segments[name][:,:,1]!=segmentation[:,:,1])),
+                        source_physics_sha256=before,training_allowed=False))
+                    raise
             seen.append(dict(camera=name,entities=entities,segmentation_path=str(seg_file.relative_to(folder)),
                 segmentation_sha256=sha(seg_file),alignment='Same camera, resolution, row convention and orientation as RGB; nearest labels are diagnostic only'))
             if pose is not None:

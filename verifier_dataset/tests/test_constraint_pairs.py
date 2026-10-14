@@ -2,7 +2,7 @@ import copy
 import unittest
 import xml.etree.ElementTree as ET
 from verifier_dataset.constraint_evidence import CONTRACT,verify_trace,verify_layout,rows
-from verifier_dataset.constraint_visuals import add,edge_boxes,overview_pose,balanced_poses
+from verifier_dataset.constraint_visuals import add,edge_boxes,overview_pose,balanced_poses,require_same_segmentation
 
 
 class ConstraintEvidence(unittest.TestCase):
@@ -116,6 +116,13 @@ class ConstraintEvidence(unittest.TestCase):
             return sorted(map(tuple,np.round(pixels,12)))
         np.testing.assert_allclose(projected(layout['a'],pair[0]),projected(layout['b'],pair[1]),atol=1e-10)
         np.testing.assert_allclose(projected(layout['b'],pair[0]),projected(layout['a'],pair[1]),atol=1e-10)
+
+    def test_color_swap_cannot_change_geometry_or_object_identity(self):
+        import numpy as np
+        a=np.zeros((3,4,2),dtype=np.int32);require_same_segmentation(a,a.copy())
+        for channel in (0,1):
+            b=a.copy();b[1,2,channel]=9
+            with self.assertRaisesRegex(RuntimeError,'no candidate'):require_same_segmentation(a,b)
 
 
 if __name__=='__main__':unittest.main()

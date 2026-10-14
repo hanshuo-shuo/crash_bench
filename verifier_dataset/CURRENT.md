@@ -42,6 +42,24 @@ read its actual GPU/progress before admitting it. A fresh shard-0 root is needed
 The attempted reduction of pending wall times made no changes because one job
 was already failed and the other running; their submitted four-hour caps remain.
 
+Fresh shard 0 **3603883** runs at
+`20261014T211358Z_constraint-batch_40c7166d3940`, A100-SXM4-80GB on qgpu2002.
+Its sampled checkpoint-5 segmentation is exactly identical across color swaps
+in both views, and the actual RGB shows the expected scene. Read live progress;
+this spot check is not final acceptance.
+
+Shard 1 **3602435 was cancelled** after a concrete rendering failure on qgpu2014:
+checkpoint-5 object-ID masks differed by 770,336 and 769,253 pixels across color
+swaps, and actual images showed unrelated wall/cabinet surfaces. The source
+physics had passed beyond the first action, but its images are inadmissible.
+`STOP_REQUEST.json` and local/remote `RENDER_DIAGNOSTIC` records preserve it.
+The precise renderer cause is not established; do not blame all SXM GPUs (the
+healthy qgpu2002 shard uses the same GPU model). Future jobs exclude qgpu2014,
+record actual OpenGL vendor/renderer and timings, reject software fallback and
+camera-data mutation, and check color-swap mask identity immediately. A new
+two-checkpoint four-family prototype must pass before restarting shard 1.
+All original source splits remain frozen; no test model predictions were used.
+
 **The v1 image dataset failed scientific acceptance. Do not train it.** Audit
 9997306 (`20261014T202221Z_audit-constraints_51b09f4a94c3`) completed normally.
 Its raw evidence checks passed, but validation AUROC was 0.928755 for the fixed
