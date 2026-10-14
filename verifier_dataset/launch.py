@@ -14,7 +14,7 @@ def command(*args):
     return subprocess.check_output(args, text=True).strip()
 
 
-def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, replay_smoke=None, collection_root=None, batch_shard=None, candidate_exports=None):
+def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, replay_smoke=None, collection_root=None, batch_shard=None, candidate_exports=None, fixture_design=None):
     repo = Path.cwd().resolve()
     if repo != (Path.home()/'crash_bench').resolve():
         raise RuntimeError('Wrong project checkout')
@@ -61,6 +61,16 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
                   x['source']['scene']['suite']=='safelibero_long' and x['source']['scene']['task']==3]
         if not eligible:raise RuntimeError('No safe Long pudding witness')
         chosen_design=sorted(eligible,key=lambda x:x['source']['source_id'])[0]['source']
+    if stage=='fixture-smoke':
+        if fixture_design is None:raise RuntimeError('Explicit checked fixture proposal required')
+        design_receipt=read(fixture_design/'RECEIPT.json');design_job=design_receipt['job']
+        if design_receipt['stage']!='design-fixture' or command('sacct','-X','-n','-P','-j',design_job,'--format=JobIDRaw,State,ExitCode').splitlines()!=[design_job+'|COMPLETED|0:0']:
+            raise RuntimeError('Design pass must terminate normally')
+        if not read(fixture_design/'REPLAY_COMPLETE.json')['passed']:raise RuntimeError('Failed design replay')
+        for name,wanted in read(fixture_design/'case_000/HASHES.json').items():
+            if sha(fixture_design/'case_000'/name)!=wanted:raise RuntimeError('Design evidence changed')
+        proposal=read(fixture_design/'case_000/FIXTURE_PROPOSAL.json')
+        if not proposal['compatible_proposal'] or proposal['label']!='unknown':raise RuntimeError('Invalid proposal for bounded fixture test')
     if stage=='replay-collection':
         if collection_root is None or not canonicalize:raise RuntimeError('Explicit collection and canonical action replay required')
         from .collection_evidence import replay_candidates
@@ -117,6 +127,11 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
         write(root/'INHERITED.json',dict(replay_root=str(replay_smoke),replay_job=proof_job,
             completion_sha256=sha(replay_smoke/'REPLAY_COMPLETE.json'),
             purpose='One read-only enclosure proposal, no labels or modified-scene execution'))
+    if stage=='fixture-smoke':
+        write(root/'FIXTURE_PROPOSAL.json',proposal)
+        write(root/'INHERITED.json',dict(design_root=str(fixture_design),design_job=design_job,
+            proposal_sha256=sha(fixture_design/'case_000/FIXTURE_PROPOSAL.json'),
+            purpose='Three mechanism/debug cases only; no batch labels or training; explicit digital swept-root contract'))
     if stage == 'replay-smoke':
         write(root/'CASES.json',read(inventory/'inventory/REPLAY_SMOKE.json')[:limit])
         write(root/'INHERITED.json',dict(inventory=str(inventory),hashes=hashes))
@@ -200,7 +215,7 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
 
 
 if __name__ == '__main__':
-    p = argparse.ArgumentParser(); p.add_argument('stage', choices=['inventory','source-plan','replay-smoke','replay-spatial-batch','collect-smoke','collect-cached-smoke','collect-cached-batch','replay-collection','export-candidates','audit-candidates','design-fixture'])
+    p = argparse.ArgumentParser(); p.add_argument('stage', choices=['inventory','source-plan','replay-smoke','replay-spatial-batch','collect-smoke','collect-cached-smoke','collect-cached-batch','replay-collection','export-candidates','audit-candidates','design-fixture','fixture-smoke'])
     p.add_argument('--inventory',type=Path);p.add_argument('--canonicalize',action='store_true')
     p.add_argument('--limit',type=int,default=12)
     p.add_argument('--source-plan',type=Path)
@@ -208,4 +223,5 @@ if __name__ == '__main__':
     p.add_argument('--collection-root',type=Path)
     p.add_argument('--batch-shard',type=int,choices=(0,1))
     p.add_argument('--candidate-export',type=Path,action='append')
-    a=p.parse_args();main(a.stage,a.inventory,a.canonicalize,a.limit,a.source_plan,a.replay_smoke,a.collection_root,a.batch_shard,a.candidate_export)
+    p.add_argument('--fixture-design',type=Path)
+    a=p.parse_args();main(a.stage,a.inventory,a.canonicalize,a.limit,a.source_plan,a.replay_smoke,a.collection_root,a.batch_shard,a.candidate_export,a.fixture_design)

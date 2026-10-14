@@ -162,7 +162,28 @@ safe witness, and a closed scene needs an executed-geometry separator check unde
 an explicit digital guard. One proposal does not establish a new proof family or
 solve class balance, observation grounding or task-conditioned shortcut controls.
 
+`fixture-smoke --fixture-design ROOT` checks three **development mechanism**
+cases with actual modified-scene simulation: closed/full conjunction,
+open/full conjunction and closed/explicit mug-only subtask. Initial physical
+arrays must match the canonical source. The native full benchmark goal stays
+separate from the derived atomic subtask. The fixture contract adds both native
+and synchronized contact checks and explicit swept-root guards; its exclusions
+are conditional, not claims about unrestricted soft-contact physics. The
+pudding certificate cannot label an unrelated mug task. Actual geometry and the
+complete recorded guards are independently rechecked; finite failure is UNKNOWN.
+The local open construction retains only its floor, so appearance matching is
+explicitly failed and bulk dataset admission remains closed. Identical initial
+physics is not yet verified image equality. The native fixed-world region and
+the language phrase 'right of the plate' also need explicit input grounding;
+privileged coordinates cannot silently become visible explanation premises.
+
 Primary methodological references:
+
+- LaValle's [Planning Algorithms, §4.3](https://msl.cs.illinois.edu/~lavalle/planning/node156.html)
+  provides the configuration-space obstacle construction background. RA-SEP-1
+  uses a conservative inscribed material ball/cube and expanded boxes; the
+  six-face coverage argument and digital guard are our explicit conditional
+  implementation, not a claim that the reference certifies these simulations.
 
 - Pinned [SafeLIBERO/AEGIS source](https://github.com/THU-RCSCT/vlsa-aegis/tree/2457feed5968ae803926e178c8ce8243b9ecdcf9)
   supplies the existing policy/environment semantics. Our stricter contact audit

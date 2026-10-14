@@ -22,6 +22,8 @@ export SINGULARITYENV_OMP_NUM_THREADS=1 SINGULARITYENV_OPENBLAS_NUM_THREADS=1
 export SINGULARITYENV_MUJOCO_GL=glx SINGULARITYENV_PYOPENGL_PLATFORM=glx
 RUN="$ROOT"
 if [[ -n "${SLURM_ARRAY_TASK_ID:-}" ]]; then RUN="$ROOT/shards/$SLURM_ARRAY_TASK_ID"; fi
+MODULE=verifier_dataset.replay
+if [[ "${CB_FD_STAGE:-}" == fixture-smoke ]]; then MODULE=verifier_dataset.fixture_smoke; fi
 singularity exec --bind "/projects,/home,$ROOT:$ROOT:rw,$ROOT/source:$ROOT/source:ro" \
  /projects/p33100/siosio/crashbench_safelibero/containers/aegis-py38.sif \
- /projects/p33100/siosio/crashbench_safelibero/envs/aegis_sim/bin/python -u -m verifier_dataset.replay "$RUN"
+ /projects/p33100/siosio/crashbench_safelibero/envs/aegis_sim/bin/python -u -m "$MODULE" "$RUN"
