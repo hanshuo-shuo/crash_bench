@@ -1,5 +1,17 @@
 # Current — SafeLIBERO reproduction and feasibility evidence, 2026-10-03
 
+## FD1000 collection authorized — 2026-10-14
+
+The user authorized 1,000 reliable feasibility records from existing pi0.5/full
+AEGIS trajectories, more independent scene sources, evidence-backed negatives,
+grounded explanations and visual-shortcut audits, followed by verifier training
+only after data acceptance. The API budget is $20 for this new campaign. See
+[the collection protocol](../verifier_dataset/README.md). Policy failure remains
+UNKNOWN; historical benchmark success is only a contact-replay candidate.
+Actual stage receipts and results live under `results/verifier_dataset/`.
+This authorization supersedes the earlier no-new-collection boundary for this
+specific campaign. It does not authorize changing the old benchmark results.
+
 ## Reach-avoid grouped study complete
 
 Read [reach_avoid/RESULTS.md](reach_avoid/RESULTS.md) and the
