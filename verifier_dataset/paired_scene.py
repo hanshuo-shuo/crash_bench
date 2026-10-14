@@ -25,7 +25,7 @@ from experiments.red_enclosure.contract import segment_box
 from experiments.feasibility_contract.contract import SOURCE_HASHES
 
 
-def make_env(case,folder,proposal=None,render=False):
+def make_env(case,folder,proposal=None,render=False,policy=False):
     import numpy as np
     from scipy.spatial.transform import Rotation
     physical_hash=configure(folder,rendering=render)
@@ -53,7 +53,7 @@ def make_env(case,folder,proposal=None,render=False):
     try:
         random.seed(7);np.random.seed(7)
         env=ControlEnv(bddl_file_name=Path(get_libero_path('bddl_files'))/task.problem_folder/task.bddl_file,
-            use_camera_obs=False,has_offscreen_renderer=render,camera_depths=False,camera_heights=1024,camera_widths=1024)
+            use_camera_obs=policy,has_offscreen_renderer=render,camera_depths=False,camera_heights=1024,camera_widths=1024)
         env.seed(7);env.reset();obs=env.set_init_state(suite.get_task_init_states(scene['task'])[scene['episode']])
         m=env.sim.model;marker=m.body_name2id('eef_marker')
         def update_marker(observation):
@@ -71,11 +71,13 @@ def make_env(case,folder,proposal=None,render=False):
     finally:MujocoEnv._initialize_sim=original
 
 
-def prepare(case):
+def prepare(case,render=False):
     folder=case/'probe';folder.mkdir();env=None
     try:
-        env,physical_hash,_,source,context=make_env(case,folder)
+        env,physical_hash,_,source,context=make_env(case,folder,render=render)
         goals=[[str(g[0]).lower()]+list(g[1:]) for g in env.env.parsed_problem['goal_state']]
+        override=read(case/'TASK_OVERRIDE.json') if (case/'TASK_OVERRIDE.json').exists() else None
+        if override:goals=[override['goal']]
         eligible=[g for g in goals if len(g)==3 and g[0] in ('on','in') and not env.env._eval_predicate(g)]
         if not eligible:
             write(case/'PROPOSALS.json',dict(rows=[],rejected=[dict(reason='No unsolved supported native atomic goal')],labels_created=False));return
@@ -83,7 +85,8 @@ def prepare(case):
         try:material_sphere(env,goal[1])
         except RuntimeError as error:
             write(case/'PROPOSALS.json',dict(rows=[],rejected=[dict(reason=str(error),object=goal[1])],labels_created=False));return
-        before=physical_hash(env);choices,rejected=proposals(env,goal[1],{obstacle},goal)
+        before=physical_hash(env);choices,rejected=proposals(env,goal[1],{obstacle},goal,
+            required_enclosed=override['required_enclosed'] if override else None)
         if physical_hash(env)!=before:raise RuntimeError('Read-only paired design mutated physics')
         write(case/'PROPOSALS.json',dict(rows=choices,rejected=rejected,source=source,
             checkpoint=context['step'],contract=CONTRACT,labels_created=False,maximum_candidates=3))
@@ -166,13 +169,14 @@ def scan_saved(folder):
         training_allowed=False))
 
 
-def execute(case,index,render=False):
+def execute(case,index,render=False,port=None):
     import numpy as np
     import mujoco
-    folder=case/('option_%02d'%index);folder.mkdir();env=None;original_step=None;stream=None
+    folder=case/('option_%02d'%index);folder.mkdir();env=None;original_step=None;stream=None;policy=None
     proposal=read(case/'PROPOSALS.json')['rows'][index]
     try:
-        env,physical_hash,update_marker,source,context=make_env(case,folder,proposal,render=render)
+        if port is not None and not render:raise RuntimeError('Native policy requires the actual rendering backend')
+        env,physical_hash,update_marker,source,context=make_env(case,folder,proposal,render=render,policy=port is not None)
         m,d=env.sim.model,env.sim.data
         images=None
         if render:
@@ -254,9 +258,16 @@ def execute(case,index,render=False):
             # witness after the inherited commands. It uses the benchmark's
             # existing zero-motion/open-gripper action, never an API or policy
             # search, and stays within the stated remaining action budget.
-            commands=[dict(item,command_kind='source_replay') for item in tape[context['step']:]]
-            commands += [dict(step=None,applied=[0.]*6+[-1.],physics_after_sha256=None,
-                              command_kind='native_settling_tail') for _ in range(20)]
+            if port is None:
+                commands=[dict(item,command_kind='source_replay') for item in tape[context['step']:]]
+                commands += [dict(step=None,applied=[0.]*6+[-1.],physics_after_sha256=None,
+                                  command_kind='native_settling_tail') for _ in range(20)]
+            else:
+                from .paired_policy import Policy
+                before=physical_hash(env)
+                policy=Policy(env,folder,source,context,goal,port,os.environ['SLURM_JOB_ID']+'_'+case.parent.name+'_'+case.name+'_'+folder.name)
+                if physical_hash(env)!=before:raise RuntimeError('Policy observation extraction mutated initial physics')
+                commands=policy.commands(context['remaining_horizon'])
             for item in commands:
                 if step>=context['remaining_horizon']:break
                 step+=1;substep=0;action=np.clip(item['applied'],low,high)
@@ -266,6 +277,7 @@ def execute(case,index,render=False):
                 actions.append(dict(step=step,source_step=item['step'],command_kind=item['command_kind'],action=action.tolist(),
                     source_physics_equal=physical_hash(env)==item['physics_after_sha256'],
                     actual_physics_sha256=physical_hash(env),goal_success=goal_success,safe_history=dict(safe)))
+                if policy is not None:policy.observe(obs)
                 update_marker(obs)
                 if goal_success or not safe['primary']:break
         stream.close();stream=None
@@ -280,6 +292,8 @@ def execute(case,index,render=False):
             replayed_source_actions=sum(x['command_kind']=='source_replay' for x in actions),
             native_settling_tail_actions=sum(x['command_kind']=='native_settling_tail' for x in actions),
             maximum_settling_tail_actions=20,initial_fixture_valid=initial_fixture_valid,
+            witness_controller='existing_native_pi05_derived_task' if port is not None else 'source_tape_plus_bounded_native_settling',
+            native_policy_actions=sum(x['command_kind']=='native_pi05_derived_task' for x in actions),
             task_scope='Derived atomic native predicate AND explicit fixed green root region; marker-conditioned task contrast',
             synchronized_native_goal_required=True,independent_native_goal_formula_checked=True,
             labels_created_for_training=False,training_allowed=False,api_calls=0,
@@ -295,15 +309,16 @@ def execute(case,index,render=False):
         write(folder/'HASHES.json',{p.name:sha(p) for p in folder.iterdir() if p.is_file()})
     finally:
         if stream is not None:stream.close()
+        if policy is not None:policy.close()
         if env is not None:
             if original_step is not None:delattr(env.sim,'step')
             env.close()
 
 
-def main(root,mode=None,option=None,render=False):
+def main(root,mode=None,option=None,render=False,port=None):
     if not os.environ.get('SLURM_JOB_ID'):raise RuntimeError('Compute allocation required')
-    if mode=='prepare':prepare(root);gc.collect();return
-    if mode=='execute':execute(root,option,render=render);gc.collect();return
+    if mode=='prepare':prepare(root,render=render);gc.collect();return
+    if mode=='execute':execute(root,option,render=render,port=port);gc.collect();return
     rows=[]
     for index,row in enumerate(read(root/'CASES.json')):
         case=root/('case_%03d'%index);case.mkdir();write(case/'INPUT.json',row)
@@ -337,4 +352,5 @@ if __name__=='__main__':
     p=argparse.ArgumentParser();p.add_argument('root',type=Path)
     p.add_argument('--mode',choices=('prepare','execute'));p.add_argument('--option',type=int)
     p.add_argument('--render',action='store_true')
-    a=p.parse_args();main(a.root,a.mode,a.option,a.render)
+    p.add_argument('--port',type=int)
+    a=p.parse_args();main(a.root,a.mode,a.option,a.render,a.port)

@@ -70,6 +70,7 @@ def drafts(summary,geometry,images,obstacle):
                 metadata=dict(source_id=summary['source']['source_id'],task_group=summary['source']['task_group'],
                     family=summary['source']['family'],checkpoint=summary['checkpoint'],
                     perception_variant=summary['source'].get('perception_variant','native'),
+                    witness_controller=summary.get('witness_controller','source_tape_plus_bounded_native_settling'),
                     marker_assignment=colors,goal=summary['primary_goal'] if role=='primary' else summary['enclosed_goal']),
                 teacher=dict(rationale_draft=rationale,facts=[dict(claim=c,evidence_ref=e,input_basis=b) for c,e,b in facts],
                     caveat='The positive explanation identifies relevant visible constraints; its existential label is independently supported by the executed witness. It is not a visual proof of arbitrary robot reachability.'),

@@ -104,12 +104,13 @@ def inside(point,bounds):return all(a<x<b for a,x,b in zip(bounds[0],point,bound
 def disjoint(a,b):return any(a[1][i]<b[0][i] or b[1][i]<a[0][i] for i in range(3))
 
 
-def proposals(env,primary,protected_names,goal,max_candidates=3):
+def proposals(env,primary,protected_names,goal,max_candidates=3,required_enclosed=None):
     import numpy as np
     m=env.sim.model;free=body_bounds(env,primary);region=destination(env,goal)
     eligible=[];rejected=[]
     native_targets={g[1] for g in env.env.parsed_problem['goal_state'] if len(g)>=2}
     for name in sorted(env.env.objects_dict,key=lambda n:(n not in native_targets,n)):
+        if required_enclosed is not None and name!=required_enclosed:continue
         if 'obstacle' in name or 'box_base' in name or 'box_small_base' in name:continue
         if name==primary or name==goal[2] or name in protected_names or name not in env.env.obj_body_id:continue
         root=int(env.env.obj_body_id[name])

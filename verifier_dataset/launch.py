@@ -169,7 +169,7 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
             choices=[r for r in candidates if r['metadata']['family']==family and r['evidence']['checkpoint_step']==0]
             if not choices:raise RuntimeError('Missing source family for bounded pair prototype')
             paired_sources.append(sorted(choices,key=lambda r:r['metadata']['source_id'])[0])
-    if stage=='paired-render':
+    if stage in ('paired-render','reciprocal-prototype'):
         if collection_root is None:raise RuntimeError('Explicit completed paired prototype required')
         receipt=read(collection_root/'RECEIPT.json');job=receipt['job'];proof=read(collection_root/'PAIRED_COMPLETE.json')
         if receipt['stage']!='paired-prototype' or not proof['passed'] or command('sacct','-X','-n','-P','-j',job,'--format=JobIDRaw,State,ExitCode').splitlines()!=[job+'|COMPLETED|0:0']:
@@ -205,7 +205,7 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
     manifest['contact_contract']=read(repo/'verifier_dataset/protocol.json').get('contact_contract')
     if stage in ('fixture-smoke','fixture-render','fixture-grounding'):
         manifest['contact_contract']='FD1000-fixture-v1 (development-only inherited strict contact and swept-root guard)'
-    if stage in ('paired-prototype','paired-render'):
+    if stage in ('paired-prototype','paired-render','reciprocal-prototype'):
         manifest.update(contact_contract='FD1000-MARKED-PAIR-v1: v2 actor contact plus explicit swept material-center guard and fixed final destination',
             derived_tasks=True,api_mode='disabled',max_paid_attempts=0,max_logical_requests=0)
         if stage=='paired-prototype':
@@ -217,6 +217,13 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
             write(root/'PAIRED_SOURCES.json',render_pairs)
             write(root/'INHERITED.json',dict(paired_prototype=str(collection_root),completion_sha256=sha(collection_root/'PAIRED_COMPLETE.json'),
                 physical_states=len(render_pairs),images_captured_once_per_assignment=True,training_allowed=False))
+            if stage=='reciprocal-prototype':
+                sys.path.insert(0,str(repo/'analysis/uncertainty'))
+                from common import config
+                cfg=config();cfg['save_diagnostic_samples']=False
+                write(root/'plan.json',dict(configuration=cfg))
+                manifest['reverse_controller']='existing native nominal pi0.5 on the swapped derived task'
+                manifest['max_reverse_rollouts']=len(render_pairs)
     write(root/'CAMPAIGN.json', manifest)
     if stage in ('fixture-render','fixture-grounding'):
         manifest.update(partition='gengpu',api_mode='disabled',max_paid_attempts=0,max_logical_requests=0)
@@ -308,6 +315,7 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
     if stage=='export-candidates':script='export.sbatch'
     if stage=='audit-candidates':script='audit.sbatch'
     if stage in ('fixture-render','fixture-grounding','paired-render'):script='fixture_render.sbatch'
+    if stage=='reciprocal-prototype':script='reciprocal.sbatch'
     if stage=='audit-request-drift':script='request_drift.sbatch'
     submit=['sbatch','--parsable','--output='+str(root/'slurm_%j.log')]
     if stage in ('replay-spatial-batch','replay-object-sources','replay-spatial-sources'):
@@ -344,7 +352,7 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
 
 
 if __name__ == '__main__':
-    p = argparse.ArgumentParser(); p.add_argument('stage', choices=['inventory','source-plan','replay-smoke','replay-spatial-batch','replay-object-sources','replay-spatial-sources','collect-smoke','collect-cached-smoke','collect-cached-batch','collect-approved-cache','collect-frozen-perception','replay-collection','export-candidates','audit-candidates','design-fixture','fixture-smoke','fixture-render','fixture-grounding','audit-request-drift','paired-prototype','paired-render'])
+    p = argparse.ArgumentParser(); p.add_argument('stage', choices=['inventory','source-plan','replay-smoke','replay-spatial-batch','replay-object-sources','replay-spatial-sources','collect-smoke','collect-cached-smoke','collect-cached-batch','collect-approved-cache','collect-frozen-perception','replay-collection','export-candidates','audit-candidates','design-fixture','fixture-smoke','fixture-render','fixture-grounding','audit-request-drift','paired-prototype','paired-render','reciprocal-prototype'])
     p.add_argument('--inventory',type=Path);p.add_argument('--canonicalize',action='store_true')
     p.add_argument('--limit',type=int,default=12)
     p.add_argument('--source-plan',type=Path)
