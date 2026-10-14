@@ -7,6 +7,7 @@ an independently checked separator support each counterfactual pair.
 import argparse
 import gc
 import gzip
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -23,7 +24,7 @@ from .constraint_evidence import CONTRACT,verify_trace,verify_layout,rows as mak
 from . import constraint_visuals
 
 
-def layouts(env,goal,step,sample_index,horizon,obstacle):
+def layouts(env,goal,step,sample_index,horizon,obstacle,source_id):
     import numpy as np
     from .paired_inputs import receiver_phrase
     receiver_phrase(goal)  # Unsupported task wording cannot become a label.
@@ -38,6 +39,8 @@ def layouts(env,goal,step,sample_index,horizon,obstacle):
     if np.linalg.norm(axis)<1e-8:return []
     axis/=np.linalg.norm(axis);perpendicular=np.asarray([-axis[1],axis[0],0.])
     choices=[]
+    widths={role:.0012+.0024*int.from_bytes(hashlib.sha256((source_id+'|'+str(step)+'|'+role+'|appearance-v1').encode()).digest()[:8],'big')/2**64
+            for role in ('a','b')}
     for sign in (1,-1):
         bcenter=(center+goal_center)/2+sign*.25*perpendicular;bcenter[2]=center[2]
         b=[(bcenter-half).tolist(),(bcenter+half).tolist()]
@@ -47,6 +50,7 @@ def layouts(env,goal,step,sample_index,horizon,obstacle):
             a=a,b=b,target=target,goal=dest,material=material,
             geometry_source='Current initial geometry only; candidate locations are fixed before inspecting future actions',
             object_receiver_region='Initial receiver XY +/-4 cm, Z -1..25 cm; native On predicate also required',
+            render_widths=widths,appearance_note='Boundary stroke widths vary by a fixed source/checkpoint seed, independently of the protected-color query; physics and guard bounds are unchanged',
             fixed_virtual_boundaries=True,physical_collision_walls=False))
     return choices
 
@@ -117,7 +121,7 @@ def execute(case,maximum):
         for item in tape:
             t=item['step']-1
             if t in wanted and not last['native_goal_success'] and not last['synchronized_goal_success'] and last['safe_history']:
-                try:proposals=layouts(env,goal,t,len(samples)-1,context['remaining_horizon'],obstacle)
+                try:proposals=layouts(env,goal,t,len(samples)-1,context['remaining_horizon'],obstacle,source['source_id'])
                 except RuntimeError as error:
                     write(case/('checkpoint_%03d_REJECTED.json'%t),dict(reason=str(error),label='unknown'));proposals=[]
                 for index,layout in enumerate(proposals):

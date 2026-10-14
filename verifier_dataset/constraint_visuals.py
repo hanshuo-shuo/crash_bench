@@ -42,7 +42,8 @@ def capture(env,folder,layout,physical_hash):
     if any(len(v)!=12 for v in ids.values()):raise RuntimeError('Incomplete virtual-region annotations')
     for role,geoms in ids.items():
         bounds=layout[role]
-        for g,(center,half) in zip(geoms,edge_boxes(bounds)):
+        width=layout.get('render_widths',{}).get(role,.0017)
+        for g,(center,half) in zip(geoms,edge_boxes(bounds,width=width)):
             if m.geom_contype[g] or m.geom_conaffinity[g] or int(m.geom_bodyid[g])!=0:
                 raise RuntimeError('Virtual annotation affects the physical scene')
             m.geom_pos[g]=center;m.geom_size[g]=half
