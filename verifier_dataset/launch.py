@@ -26,6 +26,10 @@ def main(stage, inventory=None, canonicalize=False):
     if stage == 'replay-smoke':
         if inventory is None or not read(inventory/'inventory/SUMMARY.json')['passed']:
             raise RuntimeError('Passed inventory required')
+        inventory_job=read(inventory/'RECEIPT.json')['job']
+        accounting=command('sacct','-X','-n','-P','-j',inventory_job,'--format=JobIDRaw,State,ExitCode')
+        if accounting.splitlines()!=[inventory_job+'|COMPLETED|0:0']:
+            raise RuntimeError('Inventory must be terminal COMPLETED/0:0')
         hashes=read(inventory/'inventory/HASHES.json')
         for name, expected in hashes.items():
             if sha(inventory/'inventory'/name)!=expected: raise RuntimeError('Inventory hash changed')

@@ -6,6 +6,7 @@ import math
 import os
 from pathlib import Path
 import random
+import subprocess
 import sys
 import time
 from .inventory import read, sha, write
@@ -75,7 +76,7 @@ def replay(row, folder, physical_hash, canonicalize=False):
     steps = [json.loads(x) for x in (source/'steps.jsonl').read_text().splitlines()]
     assert_trace(steps, row['actions'])
     random.seed(7); np.random.seed(7)
-    env = None; started = time.monotonic(); contacts = []; saved = []
+    env = None; original_step = None; started = time.monotonic(); contacts = []; saved = []
     try:
         env = ControlEnv(bddl_file_name=Path(get_libero_path('bddl_files'))/task.problem_folder/task.bddl_file,
                          use_camera_obs=False, has_offscreen_renderer=False, camera_depths=False,
@@ -191,20 +192,37 @@ def replay(row, folder, physical_hash, canonicalize=False):
         write(folder/'HASHES.json',{str(p.relative_to(folder)):sha(p) for p in sorted(folder.rglob('*')) if p.is_file()})
         return summary
     finally:
-        if env is not None: env.close()
+        if env is not None:
+            # Remove the environment -> wrapper closure -> bound sim cycle before
+            # native MuJoCo destruction. Never accept a shutdown crash as success.
+            if original_step is not None: env.sim.step = original_step
+            env.close()
 
 
-def main(root):
+def main(root, case_index=None):
     if not os.environ.get('SLURM_JOB_ID'): raise RuntimeError('Compute allocation required')
-    physical_hash=configure(root)
     rows=read(root/'CASES.json'); results=[]; errors=[]
     canonicalize=read(root/'CAMPAIGN.json').get('canonicalize',False)
+    if case_index is not None:
+        work=root/('worker_%03d'%case_index);work.mkdir(exist_ok=False)
+        physical_hash=configure(work)
+        value=replay(rows[case_index],root/('case_%03d'%case_index),physical_hash,canonicalize=canonicalize)
+        print(json.dumps({k:v for k,v in value.items() if k!='source'}),flush=True)
+        return
     for i,row in enumerate(rows):
         folder=root/('case_%03d'%i)
         try:
-            value=replay(row,folder,physical_hash,canonicalize=canonicalize); results.append(value)
+            # MuJoCo/native allocations must not survive into the next scene.
+            # A successful JSON followed by a native crash is not accepted.
+            with (root/('worker_%03d.log'%i)).open('w') as log:
+                process=subprocess.run([sys.executable,'-u','-m','verifier_dataset.replay',str(root),
+                    '--case-index',str(i)],stdout=log,stderr=subprocess.STDOUT)
+            if process.returncode != 0:
+                raise RuntimeError('Isolated replay process exit '+str(process.returncode))
+            value=read(folder/'SUMMARY.json'); results.append(value)
             print(json.dumps({k:v for k,v in value.items() if k!='source'}),flush=True)
         except Exception as error:
+            folder.mkdir(exist_ok=True)
             failure=dict(case=i,source=row['root'],error=type(error).__name__,reason=str(error))
             errors.append(failure);write(folder/'FAILED.json',failure); print(json.dumps(failure),flush=True)
         write(root/'PROGRESS.json',dict(completed=len(results),failed=len(errors),expected=len(rows)))
@@ -217,4 +235,5 @@ def main(root):
 
 
 if __name__ == '__main__':
-    p=argparse.ArgumentParser();p.add_argument('root',type=Path);main(p.parse_args().root)
+    p=argparse.ArgumentParser();p.add_argument('root',type=Path);p.add_argument('--case-index',type=int)
+    a=p.parse_args();main(a.root,a.case_index)
