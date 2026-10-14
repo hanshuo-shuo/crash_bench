@@ -14,6 +14,13 @@ class CacheMiss(RuntimeError):
     pass
 
 
+def check_expected_request(request,expected):
+    if request.name!=expected:
+        write(request/'CACHE_MISS.json',dict(reason='Reconstructed input differs from approved screenshot/task',
+            paid_request_allowed=False,expected=expected,actual=request.name))
+        raise CacheMiss('Unapproved reconstructed input; no new payload may leave Quest')
+
+
 def prepare_response(request,cache_roots,cache_only):
     from scripts.openrouter_perception import read_response
     for cache in cache_roots:
@@ -45,12 +52,20 @@ def main(root,port):
     cache_only=campaign.get('api_mode')=='cache_only'
     cache_roots=[ASSETS/'batches/20260927T204911Z_d22035816647/perception_cache',
                  ASSETS/'batches/20260926T233314Z_af6ac874d168/perception_cache',ASSETS/'perception_cache']
+    entries=read(root/'COLLECTION_SOURCES.json')
+    approved={}
+    if campaign['stage']=='collect-approved-cache':
+        if not cache_only:raise RuntimeError('Approved cache collection must be offline')
+        from .approved_collection import check_cache
+        check_cache(root);cache_roots=[root/'perception_cache']
+        approved={run_spec(campaign['stage'],i,e)['name']:e['approved_request_identity'] for i,e in enumerate(entries)}
 
     class CachedObserver(original_observer):
         def perception(self,image,instruction,suite):
             import matplotlib.pyplot as plt
             buf=io.BytesIO();plt.imsave(buf,image,format='png')
             request=export_request(buf.getvalue(),instruction,suite,self.runner.root/'requests'/self.spec['name'],budgeted=True)
+            if approved:check_expected_request(request,approved[self.spec['name']])
             prepare_response(request,cache_roots,cache_only)
             deadline=time.monotonic()+300
             while not (request/'response.json').exists():

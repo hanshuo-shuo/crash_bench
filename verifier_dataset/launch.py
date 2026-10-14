@@ -27,7 +27,7 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
     commit = command('git', 'rev-parse', 'HEAD')
     if 'origin/' not in command('git', 'branch', '-r', '--contains', commit):
         raise RuntimeError('Source must be published')
-    if stage in ('replay-smoke','replay-spatial-batch'):
+    if stage in ('replay-smoke','replay-spatial-batch','replay-object-sources'):
         if not 1<=limit<=12: raise RuntimeError('Smoke limit must be 1..12')
         if inventory is None or not read(inventory/'inventory/SUMMARY.json')['passed']:
             raise RuntimeError('Passed inventory required')
@@ -38,7 +38,7 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
         hashes=read(inventory/'inventory/HASHES.json')
         for name, expected in hashes.items():
             if sha(inventory/'inventory'/name)!=expected: raise RuntimeError('Inventory hash changed')
-    if stage=='replay-spatial-batch':
+    if stage in ('replay-spatial-batch','replay-object-sources'):
         if not canonicalize or replay_smoke is None:raise RuntimeError('Canonicalized passing 12-source smoke required')
         smoke=read(replay_smoke/'REPLAY_COMPLETE.json');smoke_job=read(replay_smoke/'RECEIPT.json')['job']
         if not smoke['passed'] or smoke['completed']!=12 or smoke['errors']:
@@ -46,10 +46,12 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
         if command('sacct','-X','-n','-P','-j',smoke_job,'--format=JobIDRaw,State,ExitCode').splitlines()!=[smoke_job+'|COMPLETED|0:0']:
             raise RuntimeError('Smoke must terminate normally; a JSON pass alone is insufficient')
         if not read(replay_smoke/'CAMPAIGN.json')['canonicalize']:raise RuntimeError('Wrong smoke action contract')
+        if stage=='replay-object-sources' and read(replay_smoke/'CAMPAIGN.json').get('contact_contract')!='FD1000-SC-CONTACT-v2':
+            raise RuntimeError('Object replay requires the new user-approved contact smoke')
     if stage=='export-candidates':
         if replay_smoke is None:raise RuntimeError('Explicit completed replay source required')
         source_receipt=read(replay_smoke/'RECEIPT.json')
-        if source_receipt['stage'] not in ('replay-smoke','replay-spatial-batch','replay-collection'):
+        if source_receipt['stage'] not in ('replay-smoke','replay-spatial-batch','replay-object-sources','replay-collection'):
             raise RuntimeError('Wrong witness source stage')
         if not source_receipt['canonicalize']:raise RuntimeError('Canonical legal witness required')
     if stage=='design-fixture':
@@ -127,6 +129,13 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
             prior_job=prior['source_job']
             if command('sacct','-X','-n','-P','-j',prior_job,'--format=JobIDRaw,State,ExitCode').splitlines()!=[prior_job+'|COMPLETED|0:0']:
                 raise RuntimeError('Offline smoke must terminate normally before extending')
+    if stage=='collect-approved-cache':
+        if collection_root is None:raise RuntimeError('Explicit completed approved API batch required')
+        from .approved_collection import sources
+        approved_sources,approved_inheritance=sources(collection_root,batch_shard)
+        active=command('squeue','-h','-u',os.environ['USER'],'-A','p33100','-p','gengpu','-o','%j|%Z')
+        if sum('crash_bench' in x or 'crashbench_safelibero' in x or x.startswith('cb_') for x in active.splitlines())>=2:
+            raise RuntimeError('Two CrashBench GPU jobs already active')
     root = ASSETS/'verifier_dataset'/(datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')+'_'+stage+'_'+commit[:12])
     root.mkdir(parents=True, exist_ok=False); (root/'source').mkdir()
     with (root/'source.tar').open('wb') as stream:
@@ -171,10 +180,14 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
     if stage=='replay-collection':
         write(root/'CASES.json',collection_rows)
         write(root/'INHERITED.json',collection_inheritance)
-    if stage=='replay-spatial-batch':
-        rows=[r for r in read(inventory/'inventory/CANDIDATES.json') if r['family']=='safelibero_spatial'
+    if stage in ('replay-spatial-batch','replay-object-sources'):
+        family='safelibero_object' if stage=='replay-object-sources' else 'safelibero_spatial'
+        rows=[r for r in read(inventory/'inventory/CANDIDATES.json') if r['family']==family
               and r['proxy_safe_success'] and r['has_action_tape'] and r['has_settled_state']]
-        if not 0<len(rows)<=200:raise RuntimeError('Unexpected bounded Spatial replay pool')
+        if stage=='replay-object-sources':
+            from .inventory import smoke_selection
+            rows=smoke_selection(rows,limit=60)
+        if not 0<len(rows)<=200:raise RuntimeError('Unexpected bounded source replay pool')
         rows.sort(key=lambda r:(r['source_id'],r['repeat'],r['method']))
         for index in range(8):
             shard=root/'shards'/str(index);shard.mkdir(parents=True)
@@ -182,8 +195,13 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
         write(root/'CASES.json',rows)
         write(root/'INHERITED.json',dict(inventory=str(inventory),hashes=hashes,replay_smoke=str(replay_smoke),
             smoke_sha256=sha(replay_smoke/'REPLAY_COMPLETE.json'),smoke_job=smoke_job))
-    if stage in ('collect-smoke','collect-cached-smoke','collect-cached-batch'):
-        if stage=='collect-cached-batch':
+    if stage in ('collect-smoke','collect-cached-smoke','collect-cached-batch','collect-approved-cache'):
+        if stage=='collect-approved-cache':
+            chosen=approved_sources
+            write(root/'COLLECTION_PLAN.json',approved_inheritance)
+            from .approved_collection import stage_cache
+            stage_cache(root,collection_root,chosen)
+        elif stage=='collect-cached-batch':
             from .cached_pool import select_pool
             pool=select_pool(read(source_plan/'source_plan/OFFICIAL_OUTCOMES.json'))
             chosen=pool[batch_shard::2]
@@ -210,15 +228,15 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
     if stage=='export-candidates':
         env['CB_FD_REPLAY']=str(replay_smoke)
         write(root/'EXPORT_SOURCE.json',dict(root=str(replay_smoke),receipt_sha256=sha(replay_smoke/'RECEIPT.json')))
-    script='collect.sbatch' if stage in ('collect-smoke','collect-cached-smoke','collect-cached-batch') else ('cpu.sbatch' if stage in ('inventory','source-plan') else 'replay.sbatch')
+    script='collect.sbatch' if stage in ('collect-smoke','collect-cached-smoke','collect-cached-batch','collect-approved-cache') else ('cpu.sbatch' if stage in ('inventory','source-plan') else 'replay.sbatch')
     if stage=='export-candidates':script='export.sbatch'
     if stage=='audit-candidates':script='audit.sbatch'
     if stage=='fixture-render':script='fixture_render.sbatch'
     submit=['sbatch','--parsable','--output='+str(root/'slurm_%j.log')]
-    if stage=='replay-spatial-batch':
+    if stage in ('replay-spatial-batch','replay-object-sources'):
         submit=['sbatch','--parsable','--array=0-7%4','--output='+str(root/'slurm_%A_%a.log')]
     if stage=='collect-smoke':submit.append('--hold')
-    if stage=='collect-cached-batch':submit.append('--time=01:00:00')
+    if stage in ('collect-cached-batch','collect-approved-cache'):submit.append('--time=01:00:00')
     job = subprocess.check_output(submit+[str(root/'source/verifier_dataset'/script)],env=env,text=True).strip().split(';')[0]
     if not job.isdigit():
         raise RuntimeError('Invalid Slurm receipt')
@@ -227,7 +245,7 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
     local = repo/'results/verifier_dataset'/root.name; local.mkdir(parents=True, exist_ok=False)
     write(local/'RECEIPT.json', receipt)
     print(receipt, flush=True)
-    if stage in ('collect-cached-smoke','collect-cached-batch'):
+    if stage in ('collect-cached-smoke','collect-cached-batch','collect-approved-cache'):
         write(root/'API_FINAL.json',dict(api_mode='cache_only',paid_calls=0,committed_usd='0.00',worker_started=False))
     if stage=='collect-smoke':
         try:
@@ -249,7 +267,7 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
 
 
 if __name__ == '__main__':
-    p = argparse.ArgumentParser(); p.add_argument('stage', choices=['inventory','source-plan','replay-smoke','replay-spatial-batch','collect-smoke','collect-cached-smoke','collect-cached-batch','replay-collection','export-candidates','audit-candidates','design-fixture','fixture-smoke','fixture-render'])
+    p = argparse.ArgumentParser(); p.add_argument('stage', choices=['inventory','source-plan','replay-smoke','replay-spatial-batch','replay-object-sources','collect-smoke','collect-cached-smoke','collect-cached-batch','collect-approved-cache','replay-collection','export-candidates','audit-candidates','design-fixture','fixture-smoke','fixture-render'])
     p.add_argument('--inventory',type=Path);p.add_argument('--canonicalize',action='store_true')
     p.add_argument('--limit',type=int,default=12)
     p.add_argument('--source-plan',type=Path)

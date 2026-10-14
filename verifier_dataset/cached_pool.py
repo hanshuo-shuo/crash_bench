@@ -32,6 +32,6 @@ def select_pool(outcomes):
 
 
 def run_spec(stage, index, entry):
-    prefix = 'fd_pool' if stage == 'collect-cached-batch' else 'fd_goal'
+    prefix = 'fd_approved' if stage=='collect-approved-cache' else ('fd_pool' if stage == 'collect-cached-batch' else 'fd_goal')
     return dict(name=prefix + '%02d_aegis' % index, scene=entry['scene'],
                 repeat=0, method='aegis', diagnostics=False)
