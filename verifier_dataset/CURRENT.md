@@ -55,6 +55,18 @@ four-row color/rule unit. V3 first needs a new four-family, two-checkpoint nativ
 prototype with at least three matched units of each mode, actual-image review,
 and normal exit. No new API requests are authorized or needed.
 
+V3 native prototype **3619478 COMPLETED/0:0**, 2m55s on A100-SXM4-80GB
+qgpu2002, root `20261014T230815Z_constraint-prototype_54d27600d138`: seven
+matched units/28 candidates, four outward and three inward. The Object step-0
+inward positive witness failed its new enclosing guard and was not admitted;
+its failure did not become an infeasibility label. All 28 selected images and
+76 delivered files were inspected/hash-checked. Review record:
+`reviews/fd1000_sides_v3_prototype.json`. This qualifies bounded collection only;
+small targets, occlusion and overlapping volumes still need final per-unit review.
+The pending prototype's requested time was reduced from 30 to 10 minutes after
+identity checks, recorded in `SCHEDULING_UPDATE.json`; its source was unchanged.
+New bounded bulk jobs request 90 minutes each, with at most two task GPUs.
+
 ## V2 collection and visual-review history (not training-approved)
 
 Both source-frozen v2 collectors terminated normally:

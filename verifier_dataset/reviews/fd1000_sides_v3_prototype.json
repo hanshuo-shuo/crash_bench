@@ -1,0 +1,29 @@
+{
+  "purpose": "bounded_construction_and_renderer_qualification",
+  "reviewer": "Codex actual-image inspection; not independent human review",
+  "source_commit": "54d27600d1382ea9201796dc880c673ea60ca018",
+  "slurm_job": "3619478",
+  "terminal": "COMPLETED|0:0",
+  "elapsed": "00:02:55",
+  "constraint_protocol_sha256": "88538ce0a48eb05492ed59092a759ac514df6ee051a974b4423113a2b3c67a03",
+  "matched_units": 7,
+  "matched_units_by_mode": {
+    "start_inside_goal_outside": 4,
+    "start_outside_goal_inside": 3
+  },
+  "inspected_selected_images": 28,
+  "delivery_manifest_sha256": "ce3afe3ebd2656da6288fff8395e9d5ea5e0527dc94b989c1291ffae7c0fdd54",
+  "preview_units_sha256": "a059d56eaa1667530396e1f55de736bdca1f466d1d73b5ed376d86bc2ef0e302",
+  "model_predictions_used": false,
+  "api_calls": 0,
+  "qualified_for_bounded_collection": true,
+  "scientific_training_allowed": false,
+  "full_dataset_visible_premise_review_complete": false,
+  "notes": [
+    "All 28 selected images show the expected native scene and consistent orange/purple swaps across opposing views. No wall/cabinet rendering corruption is visible.",
+    "The larger regions have matched dimensions across both construction modes. Overlapping inward-mode volumes require both views to judge target and destination sides.",
+    "The Object target is small. Robot occlusion and near-boundary side ambiguity still require individual review of every finally selected unit; this prototype does not approve those future pixels.",
+    "Object/I/task2/episode6 step 0 has a valid inward negative certificate but its actual candidate positive suffix violates the enclosing positive guard. No complete unit was admitted; that failed witness was not relabeled infeasible.",
+    "All four full original physical traces retained their required per-action hashes. Actual image review does not replace the later independent raw evidence and fixed shortcut gates."
+  ]
+}

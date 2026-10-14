@@ -316,6 +316,7 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
             same_image_and_target_opposite_safety_rules=True,physical_collision_walls=False,batch_shard=batch_shard,
             constraint_protocol_sha256=sha(repo/'verifier_dataset/constraint_protocol.json'),
             construction_version='balanced_start_goal_sides_v3',
+            requested_walltime='00:10:00' if stage=='constraint-prototype' else '01:30:00',
             frozen_source_split_sha256=sha(repo/'verifier_dataset/frozen_sources_67.json'),
             gpu_request='one gengpu A100; exclude qgpu2014 after observed rendering inconsistency; actual device recorded in GPU.json',
             rendering_integrity='NVIDIA OpenGL required; camera data cannot change during render; color-swap segmentation must match before any candidate is emitted')
@@ -435,7 +436,8 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
     if stage in ('replay-spatial-batch','replay-object-sources','replay-spatial-sources','replay-early-sources','paired-screen'):
         submit=['sbatch','--parsable','--array=0-7%4','--output='+str(root/'slurm_%A_%a.log')]
     if stage=='paired-screen':submit.append('--time=01:00:00')
-    if stage=='constraint-batch':submit.append('--time=04:00:00')
+    if stage=='constraint-prototype':submit.append('--time=00:10:00')
+    if stage=='constraint-batch':submit.append('--time=01:30:00')
     if stage=='audit-constraints':submit+=['--time=01:00:00','--mem=16G']
     if stage=='collect-smoke':submit.append('--hold')
     if stage in ('collect-cached-batch','collect-approved-cache','collect-frozen-perception'):submit.append('--time=01:00:00')
