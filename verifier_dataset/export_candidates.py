@@ -29,6 +29,9 @@ def verify_case(folder, summary):
         raise RuntimeError('Illegal exported witness action')
     with gzip.open(folder/'CONTACTS.jsonl.gz','rt') as stream:
         if any(line.strip() for line in stream):raise RuntimeError('Strict safe witness contains prohibited contact events')
+    if summary.get('contact_contract_version'):
+        from .contact_contract import verify_saved
+        verify_saved(folder,summary)
 
 
 def main(root, replay_root):
@@ -64,10 +67,15 @@ def main(root, replay_root):
                     images=[fields['external_rgb'].copy(),fields['wrist_rgb'].copy()]
                 if any(im.shape!=(224,224,3) or im.dtype!=np.uint8 for im in images):
                     raise RuntimeError('Unexpected original student image format')
+                if summary.get('contact_contract_version'):
+                    from .contact_contract import DESCRIPTION
+                    safety=DESCRIPTION
+                else:
+                    safety=('No robot or other body with a motion degree of freedom, including movable supports, '
+                            'may contact it at the current state or any MuJoCo integration step (contact distance <= 0).')
                 constraints=(f'At most {remaining} further commands in the native 7-D action range [-1, 1]. '
-                    f'The protected object is {geometry["obstacle"]}. '
-                    'No robot or other body with a motion degree of freedom, including movable supports, may contact it at the current state or any MuJoCo integration step '
-                    '(contact distance <= 0). Complete the stated native task goal. The preceding history is safe.')
+                    f'The protected object is {geometry["obstacle"]}. '+safety+
+                    ' Complete the stated native task goal. The preceding history is safe.')
                 image_pair_hash=hashlib.sha256(images[0].tobytes()+images[1].tobytes()).hexdigest()
                 key=hashlib.sha256(json.dumps(dict(images=image_pair_hash,task=fields['task'],constraints=constraints),
                                                sort_keys=True).encode()).hexdigest()
@@ -85,6 +93,7 @@ def main(root, replay_root):
                     student=dict(images=image_records,task=fields['task'],constraints=constraints),
                     evidence=dict(feasibility='feasible',kind='replayed_safe_success_suffix',witness_root=str(folder),
                         witness_summary_sha256=sha(folder/'SUMMARY.json'),checkpoint_step=step,
+                        contact_contract_version=summary.get('contact_contract_version','FD1000-strict-contact-v1'),
                         remaining_witness_actions=summary['actions']-step,remaining_horizon=remaining,
                         checkpoint_context_sha256=sha(checkpoint/'context.json'),source_inference_sha256=sha(context['source_inference'])),
                     metadata=dict(source_id=source['source_id'],task_group=source['task_group'],family=source['family'],

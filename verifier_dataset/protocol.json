@@ -1,5 +1,5 @@
 {
-  "version": "FD1000-v1",
+  "version": "FD1000-v2",
   "authorization_date": "2026-10-14",
   "target_records": 1000,
   "target_feasible": 500,
@@ -16,10 +16,19 @@
   "max_concurrent_gpus": 2,
   "policy_failure_label": "unknown",
   "infrastructure_failure_label": null,
-  "student_inputs": ["external_rgb", "wrist_rgb", "task", "constraints"],
+  "student_inputs": [
+    "external_rgb",
+    "wrist_rgb",
+    "task",
+    "constraints"
+  ],
   "positive_contract": "Legal actions, verified success, and protected-object contact checks at every integration step under the explicit per-row contract",
   "negative_contract": "Independently rechecked sufficient exclusion certificate; failed rollouts never supply negatives",
   "ancestry_rule": "All policy repeats, checkpoints, renderings and interventions sharing a source stay in one split; task-template overlap is separately reported",
   "training_gate": "Exactly 1000 accepted rows, verified evidence, source coverage, balanced matched constructions, student-visible rationale premises and frozen grouped shortcut evaluation must all pass",
-  "status": "authorized_collection_training_only_after_audit"
+  "status": "authorized_collection_training_only_after_audit",
+  "contact_contract": "FD1000-SC-CONTACT-v2",
+  "contact_actor_scope": "Robot plus every manipulated native task target versus the protected object; native support contacts allowed",
+  "contact_sampling": "Native initial state and every integration step; separate synchronized initial/action endpoints",
+  "prior_contract": "protocol_v1.json and all prior frozen run sources remain immutable; prior rejects require fresh v2 replay"
 }

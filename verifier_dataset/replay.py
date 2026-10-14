@@ -84,7 +84,7 @@ def replay(row, folder, physical_hash, canonicalize=False, design_fixture=False)
     assert_trace(steps, row['actions'])
     random.seed(7); np.random.seed(7)
     env = None; original_step = None; had_step_override = False; previous_step_override = None
-    started = time.monotonic(); contacts = []; saved = []
+    started = time.monotonic(); contacts = []; saved = []; contact_stream = None; synchronized = None
     try:
         env = ControlEnv(bddl_file_name=Path(get_libero_path('bddl_files'))/task.problem_folder/task.bddl_file,
                          use_camera_obs=False, has_offscreen_renderer=False, camera_depths=False,
@@ -119,6 +119,15 @@ def replay(row, folder, physical_hash, canonicalize=False, design_fixture=False)
         for geom in details['protected']:
             if model.geom_id2name(geom['id']) != geom['name']:
                 raise RuntimeError('Protected geometry identity changed')
+        from .contact_contract import actor_geometry, prohibited, VERSION, DESCRIPTION
+        scope = actor_geometry(env, protected, task.language)
+        actors = set(scope['actors'])
+        if set(geometry['robot_geoms']) != set(scope['robot']):
+            raise RuntimeError('Recorded and independently derived robot identities disagree')
+        write(folder/'CONTACT_CONTRACT.json', scope)
+        from robosuite.utils.binding_utils import MjSim
+        synchronized = MjSim.from_xml_string(model.get_xml())
+        contact_stream = gzip.open(folder/'CONTACT_SAMPLES.jsonl.gz', 'wt')
         dynamic = set()
         for geom in range(model.ngeom):
             body = int(model.geom_bodyid[geom]); moving = False
@@ -140,23 +149,37 @@ def replay(row, folder, physical_hash, canonicalize=False, design_fixture=False)
         if design_fixture:
             from .fixture_design import Design
             design=Design(env,folder,geometry)
-        counter = dict(action=0, substep=0, total=0)
-        def sample(phase):
-            if design is not None:design.sample(counter['action'],counter['substep'])
-            for contact in data.contact[:data.ncon]:
+        counter = dict(action=0, substep=0, total=0, outside=0)
+        def sample(phase, sampled_data):
+            if design is not None and phase != 'synchronized_endpoint':
+                design.sample(counter['action'],counter['substep'])
+            observed=[]; bad_count=0
+            for contact in sampled_data.contact[:sampled_data.ncon]:
                 pair = (int(contact.geom1),int(contact.geom2))
-                bad = ((pair[0] in protected and pair[1] in dynamic) or
-                       (pair[1] in protected and pair[0] in dynamic))
-                if bad and contact.dist <= 0:
+                if contact.dist > 0 or not (pair[0] in protected or pair[1] in protected):continue
+                observed.append([*pair,float(contact.dist)])
+                bad = prohibited(pair, protected, actors)
+                bad_count += int(bad); counter['outside'] += int(not bad)
+                if bad:
                     contacts.append(dict(action=counter['action'],substep=counter['substep'],phase=phase,
                                          geom_pair=list(pair),distance=float(contact.dist)))
-        sample('initial')
+            contact_stream.write(json.dumps(dict(action=counter['action'],substep=counter['substep'],
+                phase=phase,contacts=observed,prohibited_contact_count=bad_count))+'\n')
+        def synchronized_sample():
+            for key in ARRAYS:
+                np.asarray(getattr(synchronized.data,key))[:] = np.asarray(getattr(data,key))
+            synchronized.data.time = data.time
+            synchronized.model.body_pos[:] = model.body_pos
+            synchronized.model.body_quat[:] = model.body_quat
+            synchronized.forward()
+            sample('synchronized_endpoint', synchronized.data)
+        sample('initial',data); synchronized_sample()
         had_step_override = 'step' in vars(env.sim)
         previous_step_override = vars(env.sim).get('step')
         original_step = env.sim.step
         def step_and_sample(*args,**kwargs):
             value = original_step(*args,**kwargs)
-            counter['substep'] += 1; counter['total'] += 1; sample('integration')
+            counter['substep'] += 1; counter['total'] += 1; sample('integration',data)
             return value
         env.sim.step = step_and_sample
         wanted = set(checkpoint_steps(len(steps)))
@@ -193,6 +216,8 @@ def replay(row, folder, physical_hash, canonicalize=False, design_fixture=False)
                     actual=actual_hash,expected_success=item['success'],actual_success=bool(done)))
                 raise RuntimeError('Per-action replay differs at '+str(item['step']))
             update_marker(obs)
+            synchronized_sample()
+        contact_stream.close();contact_stream=None
         with gzip.open(folder/'CONTACTS.jsonl.gz','wt') as stream:
             for event in contacts: stream.write(json.dumps(event)+'\n')
         write(folder/'EQUALITY.json',equality)
@@ -202,16 +227,22 @@ def replay(row, folder, physical_hash, canonicalize=False, design_fixture=False)
             original_commands_legal=original_legal,canonicalized_to_native_action_spec=canonicalize,
             canonicalization_note='Clipped to native action_spec; accepted only if every original physical hash is still exactly reproduced' if canonicalize else None,
             protected_contact_events=len(contacts),integration_steps=counter['total'],
+            out_of_scope_contact_events=counter['outside'],contact_contract_version=VERSION,
             eligible_feasible_witness=approved,checkpoints=saved,accepted_dataset_rows=0,
-            safety_contract='No native MuJoCo contact with distance <=0 between the recorded protected obstacle and another moving body at initial state or any executed integration step',
+            safety_contract=DESCRIPTION,
             conditional_digital_evidence=True,continuous_physics_proof=False,arbitrary_restore_verified=False,
             seed=7,slurm_job=os.environ['SLURM_JOB_ID'],code_commit=os.environ['CB_CODE_COMMIT'],
             source_code_commit=row['source_code_commit'],elapsed_seconds=time.monotonic()-started)
         write(folder/'SUMMARY.json',summary)
+        if approved:
+            from .contact_contract import verify_saved
+            verify_saved(folder, summary)
         if design is not None:design.finish(summary)
         write(folder/'HASHES.json',{str(p.relative_to(folder)):sha(p) for p in sorted(folder.rglob('*')) if p.is_file()})
         return summary
     finally:
+        if contact_stream is not None:contact_stream.close()
+        synchronized = None
         if env is not None:
             # Remove the environment -> wrapper closure -> bound sim cycle before
             # native MuJoCo destruction. Never accept a shutdown crash as success.

@@ -139,6 +139,7 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
         protocol_sha256=sha(repo/'verifier_dataset/protocol.json'),
         authorization='2026-10-14 user: 1000 evidence-backed rows on Quest; train only after audit; API cap $20',
         api_calls=0, api_limit_usd='20.00', account='p33100', partition='short',canonicalize=canonicalize,smoke_limit=limit)
+    manifest['contact_contract']=read(repo/'verifier_dataset/protocol.json').get('contact_contract')
     write(root/'CAMPAIGN.json', manifest)
     if stage=='fixture-render':
         manifest.update(partition='gengpu',api_mode='disabled',max_paid_attempts=0,max_logical_requests=0)
