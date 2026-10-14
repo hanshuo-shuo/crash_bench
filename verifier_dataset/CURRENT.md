@@ -15,7 +15,22 @@ The full FD1000 API budget is $20, including a $6.40 ceiling for that completed
 batch. All current collection, reasoning targets and training preparation are
 offline. The private key is never printed, copied or logged.
 
-## Completed collection and active audit
+## Active v2 collection; v1 failed acceptance
+
+Two v2 batches were submitted from published source
+`000bcec9a2a7c29db7c67fb20dcad81a3deb02c2`:
+
+- **3602426**, 34 sources:
+  `20261014T210036Z_constraint-batch_000bcec9a2a7`
+- **3602435**, 33 sources:
+  `20261014T210042Z_constraint-batch_000bcec9a2a7`
+
+Both were PENDING at the last 21:03 UTC check. Read their live Slurm accounting,
+PROGRESS and completion files before any downstream step. Their source archives
+are immutable. There are still zero scientifically accepted rows and no new
+verifier training runs. V1 images, exclusions and shortcut results cannot approve
+v2 pixels. Early completed source images may be reviewed while collection runs;
+final selection and model/readout fitting wait for both full shards.
 
 **The v1 image dataset failed scientific acceptance. Do not train it.** Audit
 9997306 (`20261014T202221Z_audit-constraints_51b09f4a94c3`) completed normally.
@@ -38,12 +53,12 @@ These visibility checks do not override the failed shortcut screen; no v1 rows
 are accepted for training. The remaining 12-unit preview is preserved but has
 not been reviewed, because the image protocol now needs repair.
 
-The next bounded prototype uses **two opposing external simulator views**, with
+The revised image protocol uses **two opposing external simulator views**, with
 equal distance/fovy/elevation, the midpoint of both virtual regions as focus,
 and a source/checkpoint-seeded azimuth. It removes the target-following native
 wrist framing from the student inputs. Physics, witnesses, certificates, frozen
 source splits and the 0.75 shortcut limit remain unchanged. Both labels still
-share exactly the same capture. A new prototype and new data audit are required;
+share exactly the same capture. The bounded prototype below passed; a fresh bulk audit is required;
 old pixel reviews cannot approve the new images. This is a dataset-development
 revision after a validation failure, not a favorable test result.
 
