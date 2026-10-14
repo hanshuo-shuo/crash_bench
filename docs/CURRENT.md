@@ -9,11 +9,13 @@ only after data acceptance. The API budget is $20 for this new campaign. See
 [the collection protocol](../verifier_dataset/README.md). Policy failure remains
 UNKNOWN; historical benchmark success is only a contact-replay candidate.
 The [FD1000 status record](../verifier_dataset/CURRENT.md) records the current
-670 native positive candidates across 67 source identities, 12 task compositions
-and four families under the approved native-support contact contract. The 32
-explicitly approved GLM requests completed for $0.05882376. Paired construction,
-visibility and category-shortcut checks are still in progress. No complete
-mixed dataset has passed acceptance and no verifier training has started.
+67 replayed source trajectories and 2,380 v2 rule-counterfactual candidate rows.
+The proposed 1,000 rows have complete image-premise review and cover 63 sources,
+12 task compositions and four families under the approved native-support contact
+contract. Independent evidence and shortcut audit 3614374 is still in progress;
+read its real results before acceptance. The 32 explicitly approved GLM requests
+completed for $0.05882376. No complete mixed dataset has passed scientific
+acceptance and no verifier training has started.
 Actual stage receipts and results live under `results/verifier_dataset/`.
 This authorization supersedes the earlier no-new-collection boundary for this
 specific campaign. It does not authorize changing the old benchmark results.

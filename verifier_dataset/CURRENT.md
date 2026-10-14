@@ -30,15 +30,26 @@ Together: all 67 source trajectories, 595 matched units / 2,380 candidate rows.
 These are the only parents for the next v2 evidence audit. Zero final rows are
 accepted and no new verifier training has started. API cost remains $0.05882376.
 
-Published `reviews/fd1000_camera_v2_visibility_v3.json` binds 276 actual-image
-reviews (59 source identities), including 28 whole-unit visibility exclusions,
-to their exact four-image hashes. This is Codex image review, not independent
-human review. Fixed source-round-robin selection proposes 250 units: 217 already
-have matching visible-premise reviews and 33 still require image inspection.
-Preview: `results/verifier_dataset/camera_v2_selection_20261014/round1`.
-No shortcut readout has been fit on v2; no locked-test prediction has been made.
-The new selection-preview helper performs file I/O and visibility curation only;
-the independent compute-node raw evidence and shortcut gates remain mandatory.
+Published `reviews/fd1000_camera_v2_visibility_v6.json` binds **319 actual-image
+reviews**, including **41 whole-unit visibility exclusions**, to their exact
+four-image hashes. This is Codex image review, not independent human review.
+One source's ten checkpoints all failed visible-premise review; its raw evidence
+is preserved. Fixed source-round-robin selection now has **250/250 units with
+matching visible-premise reviews**, covering **63 sources, 12 native task
+compositions and four families**, with at most five selected checkpoints/source.
+The proposed row split is **532 train / 216 validation / 252 test**.
+Preview and coverage checks are in
+`results/verifier_dataset/camera_v2_selection_20261014/round4`.
+
+Independent CPU audit **3614374** was submitted from
+`c2182eb82cf7b7ba76e38d69f17ad6b183dee868` at
+`20261014T222942Z_audit-constraints_c2182eb82cf7` and was RUNNING at the latest
+check. It rechecks both normal collection parents, all raw witness/geometry,
+camera/segmentation evidence and the fixed validation-only shortcut readouts.
+Read its terminal accounting and both audit JSON results before proceeding.
+The selection-preview helper performs file I/O and visibility curation only;
+no final dataset is accepted merely because those previews are complete.
+No locked-test prediction has been made and no verifier training has started.
 
 ## V2 collection history; v1 failed acceptance
 
