@@ -106,15 +106,20 @@ def preflight(root):
 def acceptance_digest(dataset):return read(dataset/'ACCEPTANCE.json')['dataset_sha256']
 
 
-def generate(model,processor,items,rows,arm,config,hashes):
+def generate(model,processor,items,rows,arm,config,hashes,audit_stream):
     model.eval();records=[];digit_ids=[processor.tokenizer.encode(s,add_special_tokens=False)[0] for s in ('0','1')]
+    # Preserve every completed prediction if a later example or job fails.
+    # Exclusive creation prevents a retry from silently replacing test evidence.
+    audit_stream.touch(exist_ok=False)
     with torch.no_grad():
         for row,item in zip(rows,items):
             n=item[4];require(input_digest(item)==hashes[row['sample_id']],'Evaluation input changed')
             prompt={k:(v[:,:n] if k in ('input_ids','attention_mask') else v).to('cuda') for k,v in item[0].items()}
+            torch.cuda.synchronize();generation_start=time.monotonic()
             result=model.generate(**prompt,max_new_tokens=config['maximum_new_tokens'][arm],do_sample=False,use_cache=True,
                 repetition_penalty=config['repetition_penalty'],pad_token_id=processor.tokenizer.pad_token_id,
                 return_dict_in_generate=True,output_scores=True,output_logits=True)
+            torch.cuda.synchronize();generation_seconds=time.monotonic()-generation_start
             tokens=result.sequences[0,n:];text=processor.tokenizer.decode(tokens,skip_special_tokens=True).strip()
             pred,formatted=parse(text,arm);probability=None;decision=None
             if pred is not None:
@@ -127,9 +132,12 @@ def generate(model,processor,items,rows,arm,config,hashes):
                 source_id=row['metadata']['source_id'],family=row['metadata']['family'],assignment=row['evidence']['assignment'],
                 protected_boundary=row['evidence']['protected_boundary'],truth=int(row['target']['verdict']=='feasible'),
                 generated=text,predicted=pred,format_valid=formatted,p_feasible=probability,native_decision=decision,
+                generated_token_ids=tokens.tolist(),generated_token_count=len(tokens),generation_seconds=generation_seconds,
                 student_input_sha256=hashes[row['sample_id']],gold_rationale_prefix_used=False)
             if arm=='B':record['rationale_assessment']=rationale_grade(text,row)
             records.append(record)
+            with audit_stream.open('a') as stream:
+                stream.write(json.dumps(record,allow_nan=False)+'\n')
     return records
 
 
@@ -196,7 +204,8 @@ def train(root,arm):
         if step%10==0:print(arm,json.dumps(record),flush=True)
         if step%per_epoch==0:
             epoch=step//per_epoch
-            predictions=generate(model,processor,[items[r['sample_id']] for r in validation],validation,arm,config,hashes)
+            predictions=generate(model,processor,[items[r['sample_id']] for r in validation],validation,arm,config,hashes,
+                out/('validation_epoch_%d.jsonl'%epoch))
             measured=score(predictions,arm);epoch_scores.append(dict(epoch=epoch,**measured))
             write(out/('validation_epoch_%d.json'%epoch),predictions);write(out/'VALIDATION_SCORES.json',epoch_scores)
             if measured['verdict_accuracy']>best_score:
@@ -211,7 +220,8 @@ def train(root,arm):
             'Validation-selected adapter was not restored exactly')
     require(tensor_digest(visual)==visual_hash and all(not v.requires_grad and v.grad is None for n,v in visual),'Frozen vision/projector changed')
     model.save_pretrained(out/'adapter');processor.save_pretrained(out/'adapter')
-    predictions=generate(model,processor,[items[r['sample_id']] for r in test],test,arm,config,hashes)
+    predictions=generate(model,processor,[items[r['sample_id']] for r in test],test,arm,config,hashes,
+        out/'TEST_GENERATIONS.jsonl')
     write(out/'TEST_GENERATIONS.json',predictions);measured=score(predictions,arm,bootstrap=True)
     write(out/'RESULT.json',dict(passed=True,arm=arm,steps=len(orders),selected_epoch=best_epoch,
         selected_validation_accuracy=best_score,test=measured,test_evaluations=1,
