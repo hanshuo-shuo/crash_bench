@@ -68,10 +68,12 @@ def main(root, replay_root):
                     f'The protected object is {geometry["obstacle"]}. '
                     'No robot or other body with a motion degree of freedom, including movable supports, may contact it at the current state or any MuJoCo integration step '
                     '(contact distance <= 0). Complete the stated native task goal. The preceding history is safe.')
-                key=hashlib.sha256(images[0].tobytes()+images[1].tobytes()+fields['task'].encode()+constraints.encode()).hexdigest()
+                image_pair_hash=hashlib.sha256(images[0].tobytes()+images[1].tobytes()).hexdigest()
+                key=hashlib.sha256(json.dumps(dict(images=image_pair_hash,task=fields['task'],constraints=constraints),
+                                               sort_keys=True).encode()).hexdigest()
                 if key in seen:
                     duplicates.append(dict(kept_sample=seen[key],source=source['root'],step=step,input_sha256=key));continue
-                sample='fd_positive_%05d'%len(rows);seen[key]=sample
+                sample='fd_%05d'%len(rows);seen[key]=sample
                 image_records=[]
                 for camera,im in zip(('external','wrist'),images):
                     rel=Path('images')/sample/(camera+'.png');path=root/rel;path.parent.mkdir(parents=True,exist_ok=True)
@@ -87,13 +89,16 @@ def main(root, replay_root):
                         checkpoint_context_sha256=sha(checkpoint/'context.json'),source_inference_sha256=sha(context['source_inference'])),
                     metadata=dict(source_id=source['source_id'],task_group=source['task_group'],family=source['family'],
                         source_method=source['method'],source_seed=source['seed'],source_code_commit=source['source_code_commit'],
-                        replay_code_commit=summary['code_commit'],slurm_job=summary['slurm_job'],input_sha256=key),
+                        replay_code_commit=summary['code_commit'],slurm_job=summary['slurm_job'],input_sha256=key,
+                        image_pair_sha256=image_pair_hash),
                     reasoning_target=None,observability_review='pending',split='unassigned',training_eligible=False))
     (root/'positive_candidates.jsonl').write_text(''.join(json.dumps(r,allow_nan=False)+'\n' for r in rows))
     write(root/'DUPLICATES.json',duplicates);write(root/'REJECTED.json',rejected)
     summary=dict(passed=True,positive_candidates=len(rows),duplicates_removed=len(duplicates),
         original_states=len({r['metadata']['source_id'] for r in rows}),
         task_compositions=len({r['metadata']['task_group'] for r in rows}),
+        distinct_image_pairs=len({r['metadata']['image_pair_sha256'] for r in rows}),
+        candidates_by_original_source=dict(Counter(r['metadata']['source_id'] for r in rows)),
         by_family=dict(Counter(r['metadata']['family'] for r in rows)),
         accepted_dataset_rows=0,scientific_training_allowed=False,negative_examples=0,
         remaining_gates=['matched certified negatives','source coverage','student-observable rationale evidence',
