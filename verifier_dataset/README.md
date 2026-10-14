@@ -88,6 +88,13 @@ exact request identity and Z.AI provider; no cache hit incurs a new call. This
 stage captures evidence independently of the pending question about support
 contacts; it cannot alter the label contract or enable verifier training.
 
+After a normal-exit 12-source replay smoke, `replay-spatial-batch --inventory ROOT
+--replay-smoke ROOT --canonicalize` validates the bounded existing Spatial pool
+(124 original proxy-success tapes in the initial inventory), eight CPU shards
+with at most four concurrent workers. This common-safe subset does not depend on
+whether native Object pedestal contact is allowed. Source coverage and unique
+inputs still have to be audited; checkpoint count is not accepted dataset count.
+
 Primary methodological references:
 
 - Pinned [SafeLIBERO/AEGIS source](https://github.com/THU-RCSCT/vlsa-aegis/tree/2457feed5968ae803926e178c8ce8243b9ecdcf9)

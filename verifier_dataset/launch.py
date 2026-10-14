@@ -14,7 +14,7 @@ def command(*args):
     return subprocess.check_output(args, text=True).strip()
 
 
-def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None):
+def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, replay_smoke=None):
     repo = Path.cwd().resolve()
     if repo != (Path.home()/'crash_bench').resolve():
         raise RuntimeError('Wrong project checkout')
@@ -26,7 +26,7 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None):
     commit = command('git', 'rev-parse', 'HEAD')
     if 'origin/' not in command('git', 'branch', '-r', '--contains', commit):
         raise RuntimeError('Source must be published')
-    if stage == 'replay-smoke':
+    if stage in ('replay-smoke','replay-spatial-batch'):
         if not 1<=limit<=12: raise RuntimeError('Smoke limit must be 1..12')
         if inventory is None or not read(inventory/'inventory/SUMMARY.json')['passed']:
             raise RuntimeError('Passed inventory required')
@@ -37,6 +37,14 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None):
         hashes=read(inventory/'inventory/HASHES.json')
         for name, expected in hashes.items():
             if sha(inventory/'inventory'/name)!=expected: raise RuntimeError('Inventory hash changed')
+    if stage=='replay-spatial-batch':
+        if not canonicalize or replay_smoke is None:raise RuntimeError('Canonicalized passing 12-source smoke required')
+        smoke=read(replay_smoke/'REPLAY_COMPLETE.json');smoke_job=read(replay_smoke/'RECEIPT.json')['job']
+        if not smoke['passed'] or smoke['completed']!=12 or smoke['errors']:
+            raise RuntimeError('Full replay smoke did not pass')
+        if command('sacct','-X','-n','-P','-j',smoke_job,'--format=JobIDRaw,State,ExitCode').splitlines()!=[smoke_job+'|COMPLETED|0:0']:
+            raise RuntimeError('Smoke must terminate normally; a JSON pass alone is insufficient')
+        if not read(replay_smoke/'CAMPAIGN.json')['canonicalize']:raise RuntimeError('Wrong smoke action contract')
     if stage=='collect-smoke':
         if source_plan is None or not read(source_plan/'source_plan/SUMMARY.json')['passed']:
             raise RuntimeError('Passed broader-source inventory required')
@@ -64,6 +72,17 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None):
     if stage == 'replay-smoke':
         write(root/'CASES.json',read(inventory/'inventory/REPLAY_SMOKE.json')[:limit])
         write(root/'INHERITED.json',dict(inventory=str(inventory),hashes=hashes))
+    if stage=='replay-spatial-batch':
+        rows=[r for r in read(inventory/'inventory/CANDIDATES.json') if r['family']=='safelibero_spatial'
+              and r['proxy_safe_success'] and r['has_action_tape'] and r['has_settled_state']]
+        if not 0<len(rows)<=200:raise RuntimeError('Unexpected bounded Spatial replay pool')
+        rows.sort(key=lambda r:(r['source_id'],r['repeat'],r['method']))
+        for index in range(8):
+            shard=root/'shards'/str(index);shard.mkdir(parents=True)
+            write(shard/'CASES.json',rows[index::8]);write(shard/'CAMPAIGN.json',manifest)
+        write(root/'CASES.json',rows)
+        write(root/'INHERITED.json',dict(inventory=str(inventory),hashes=hashes,replay_smoke=str(replay_smoke),
+            smoke_sha256=sha(replay_smoke/'REPLAY_COMPLETE.json'),smoke_job=smoke_job))
     if stage=='collect-smoke':
         entries=read(source_plan/'source_plan/GOAL20_CANDIDATES.json')
         chosen=[next(r for r in entries if r['scene']['task']==task) for task in range(4)]
@@ -79,6 +98,8 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None):
     env = dict(os.environ, CB_FD_ROOT=str(root), CB_FD_STAGE=stage)
     script='collect.sbatch' if stage=='collect-smoke' else ('cpu.sbatch' if stage in ('inventory','source-plan') else 'replay.sbatch')
     submit=['sbatch','--parsable','--output='+str(root/'slurm_%j.log')]
+    if stage=='replay-spatial-batch':
+        submit=['sbatch','--parsable','--array=0-7%4','--output='+str(root/'slurm_%A_%a.log')]
     if stage=='collect-smoke':submit.append('--hold')
     job = subprocess.check_output(submit+[str(root/'source/verifier_dataset'/script)],env=env,text=True).strip().split(';')[0]
     if not job.isdigit():
@@ -108,8 +129,9 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None):
 
 
 if __name__ == '__main__':
-    p = argparse.ArgumentParser(); p.add_argument('stage', choices=['inventory','source-plan','replay-smoke','collect-smoke'])
+    p = argparse.ArgumentParser(); p.add_argument('stage', choices=['inventory','source-plan','replay-smoke','replay-spatial-batch','collect-smoke'])
     p.add_argument('--inventory',type=Path);p.add_argument('--canonicalize',action='store_true')
     p.add_argument('--limit',type=int,default=12)
     p.add_argument('--source-plan',type=Path)
-    a=p.parse_args();main(a.stage,a.inventory,a.canonicalize,a.limit,a.source_plan)
+    p.add_argument('--replay-smoke',type=Path)
+    a=p.parse_args();main(a.stage,a.inventory,a.canonicalize,a.limit,a.source_plan,a.replay_smoke)
