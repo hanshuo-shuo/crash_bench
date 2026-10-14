@@ -66,7 +66,22 @@ Quest and is not an API charge. Use at most two GPUs, p33100/gengpu; CPU work us
 p33100/short. Each stage archives a clean tested published source commit, records
 seed/upstream/Slurm provenance, and uses a new immutable output directory.
 
-Current implemented entry point: `python -m verifier_dataset.launch inventory`.
-It submits only the read-only inventory stage. It cannot submit training or spend
-API money. Further collection stages must enforce the gates above; a job exit
-code alone never declares the dataset scientifically ready.
+Implemented entry points: `python -m verifier_dataset.launch inventory`, then
+`python -m verifier_dataset.launch replay-smoke --inventory ROOT`. The optional
+`--canonicalize` clips recorded commands to the native action specification;
+every original per-action physical hash must still match exactly, otherwise the
+new tape is rejected. This tests whether controller saturation admits an equivalent
+legal witness; it does not quietly accept out-of-range commands. Both stages make
+zero API calls. They cannot submit training. A job exit code alone never declares
+the dataset scientifically ready.
+
+Primary methodological references:
+
+- Pinned [SafeLIBERO/AEGIS source](https://github.com/THU-RCSCT/vlsa-aegis/tree/2457feed5968ae803926e178c8ce8243b9ecdcf9)
+  supplies the existing policy/environment semantics. Our stricter contact audit
+  is a separately named dataset contract, not the original displacement metric.
+- [Generative Verifiers](https://arxiv.org/abs/2408.15240) motivates reference-guided
+  explanation supervision and direct versus rationale-conditioned comparisons;
+  this collection is not a reproduction of its math-verification experiments.
+- [CLEVR](https://arxiv.org/abs/1612.06890) motivates nuisance controls and relational
+  generalization. Those audits are planned gates, not yet measured results here.

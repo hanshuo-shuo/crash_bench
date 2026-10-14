@@ -60,7 +60,7 @@ def clean(value):
     return {'unsupported_type':type(value).__name__}
 
 
-def replay(row, folder, physical_hash):
+def replay(row, folder, physical_hash, canonicalize=False):
     import numpy as np
     from libero.libero import benchmark, get_libero_path
     from libero.libero.envs.env_wrapper import ControlEnv
@@ -118,6 +118,11 @@ def replay(row, folder, physical_hash):
                 body = int(model.body_parentid[body])
             if moving and geom not in protected:
                 dynamic.add(geom)
+        write(folder/'GEOMETRY_IDENTITIES.json',dict(
+            protected=sorted(protected), moving_nonprotected=sorted(dynamic),
+            robot=geometry['robot_geoms'],objects_of_interest=clean(env.obj_of_interest),
+            geoms=[dict(id=g,name=model.geom_id2name(g),body=model.body_id2name(int(model.geom_bodyid[g])),
+                        type=int(model.geom_type[g])) for g in range(model.ngeom)]))
         counter = dict(action=0, substep=0, total=0)
         def sample(phase):
             for contact in data.contact[:data.ncon]:
@@ -135,7 +140,7 @@ def replay(row, folder, physical_hash):
             return value
         env.sim.step = step_and_sample
         wanted = set(checkpoint_steps(len(steps)))
-        legal = True; equality = []; done = False
+        legal = True; original_legal = True; equality = []; done = False; legal_tape=[]
         low, high = [np.asarray(v) for v in env.env.action_spec]
         for item in steps:
             t = item['step']-1
@@ -145,7 +150,7 @@ def replay(row, folder, physical_hash):
                     sim_state=env.get_sim_state().copy(), time=np.asarray([data.time]),
                     model_body_pos=np.asarray(model.body_pos).copy(), model_body_quat=np.asarray(model.body_quat).copy())
                 robot = env.robots[0]
-                write(checkpoint/'context.json', clean(dict(step=t, remaining_horizon=300-t,
+                write(checkpoint/'context.json', clean(dict(step=t, remaining_horizon=(550 if scene['suite']=='safelibero_long' else 300)-t,
                     controller={k:v for k,v in vars(robot.controller).items() if isinstance(v,(np.ndarray,np.generic,str,float,int,bool,list,tuple,type(None)))},
                     gripper_action=robot.gripper.current_action, initial_success=bool(env.check_success()),
                     source_inference=str(source/('infer_%03d.npz'%(t//5+1))),
@@ -153,7 +158,11 @@ def replay(row, folder, physical_hash):
                     environment=dict(timestep=env.env.timestep,cur_time=env.env.cur_time,done=env.env.done),
                     restore_verified=False, witness_basis='State encountered on fully rechecked action-tape trajectory; not an arbitrary restored continuation')))
                 saved.append(t)
-            action = np.asarray(item['applied']); legal &= bool(np.all(action>=low) and np.all(action<=high))
+            original_action = np.asarray(item['applied'])
+            original_legal &= bool(np.all(original_action>=low) and np.all(original_action<=high))
+            action = np.clip(original_action,low,high) if canonicalize else original_action
+            legal &= bool(np.all(action>=low) and np.all(action<=high))
+            legal_tape.append(dict(step=item['step'],action=action.tolist(),original=original_action.tolist()))
             counter.update(action=item['step'],substep=0)
             obs, _, done, _ = env.step(action.tolist())
             actual_hash = physical_hash(env)
@@ -167,8 +176,11 @@ def replay(row, folder, physical_hash):
         with gzip.open(folder/'CONTACTS.jsonl.gz','wt') as stream:
             for event in contacts: stream.write(json.dumps(event)+'\n')
         write(folder/'EQUALITY.json',equality)
+        write(folder/'ACTION_TAPE.json',legal_tape)
         approved = bool(done and legal and not contacts and all(x['equal'] for x in equality))
         summary = dict(source=row,replay_verified=True,actions=len(steps),legal_actions=legal,success=bool(done),
+            original_commands_legal=original_legal,canonicalized_to_native_action_spec=canonicalize,
+            canonicalization_note='Clipped to native action_spec; accepted only if every original physical hash is still exactly reproduced' if canonicalize else None,
             protected_contact_events=len(contacts),integration_steps=counter['total'],
             eligible_feasible_witness=approved,checkpoints=saved,accepted_dataset_rows=0,
             safety_contract='No native MuJoCo contact with distance <=0 between the recorded protected obstacle and another moving body at initial state or any executed integration step',
@@ -186,10 +198,11 @@ def main(root):
     if not os.environ.get('SLURM_JOB_ID'): raise RuntimeError('Compute allocation required')
     physical_hash=configure(root)
     rows=read(root/'CASES.json'); results=[]; errors=[]
+    canonicalize=read(root/'CAMPAIGN.json').get('canonicalize',False)
     for i,row in enumerate(rows):
         folder=root/('case_%03d'%i)
         try:
-            value=replay(row,folder,physical_hash); results.append(value)
+            value=replay(row,folder,physical_hash,canonicalize=canonicalize); results.append(value)
             print(json.dumps({k:v for k,v in value.items() if k!='source'}),flush=True)
         except Exception as error:
             failure=dict(case=i,source=row['root'],error=type(error).__name__,reason=str(error))

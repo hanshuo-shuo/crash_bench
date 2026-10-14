@@ -11,7 +11,7 @@ def command(*args):
     return subprocess.check_output(args, text=True).strip()
 
 
-def main(stage, inventory=None):
+def main(stage, inventory=None, canonicalize=False):
     repo = Path.cwd().resolve()
     if repo != (Path.home()/'crash_bench').resolve():
         raise RuntimeError('Wrong project checkout')
@@ -40,7 +40,7 @@ def main(stage, inventory=None):
         upstream_commit='2457feed5968ae803926e178c8ce8243b9ecdcf9', seed=1014,
         protocol_sha256=sha(repo/'verifier_dataset/protocol.json'),
         authorization='2026-10-14 user: 1000 evidence-backed rows on Quest; train only after audit; API cap $20',
-        api_calls=0, api_limit_usd='20.00', account='p33100', partition='short')
+        api_calls=0, api_limit_usd='20.00', account='p33100', partition='short',canonicalize=canonicalize)
     write(root/'CAMPAIGN.json', manifest)
     if stage == 'replay-smoke':
         write(root/'CASES.json',read(inventory/'inventory/REPLAY_SMOKE.json'))
@@ -59,4 +59,5 @@ def main(stage, inventory=None):
 
 if __name__ == '__main__':
     p = argparse.ArgumentParser(); p.add_argument('stage', choices=['inventory','replay-smoke'])
-    p.add_argument('--inventory',type=Path);a=p.parse_args();main(a.stage,a.inventory)
+    p.add_argument('--inventory',type=Path);p.add_argument('--canonicalize',action='store_true')
+    a=p.parse_args();main(a.stage,a.inventory,a.canonicalize)
