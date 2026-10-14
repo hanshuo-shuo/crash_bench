@@ -75,6 +75,19 @@ legal witness; it does not quietly accept out-of-range commands. Both stages mak
 zero API calls. They cannot submit training. A job exit code alone never declares
 the dataset scientifically ready.
 
+`source-plan` audits all 3,200 terminal official outcome records and freezes 20
+additional source candidates across four Goal tasks (five initial states each).
+The `collect-smoke --source-plan ROOT` stage records one original full-AEGIS
+execution per Goal task on one A100, with no uncertainty sampling or policy
+training. It keeps exact-input caching, native preprocessing/actions/QP and the
+existing policy seed protocol. All outcomes stay unlabeled until contact replay.
+Its four logical perception requests allow at most eight attempts, with $0.80
+worst-case reservations against the new shared $20 ledger. Current endpoint
+metadata must pass before the held GPU job is released. Cached responses require
+exact request identity and Z.AI provider; no cache hit incurs a new call. This
+stage captures evidence independently of the pending question about support
+contacts; it cannot alter the label contract or enable verifier training.
+
 Primary methodological references:
 
 - Pinned [SafeLIBERO/AEGIS source](https://github.com/THU-RCSCT/vlsa-aegis/tree/2457feed5968ae803926e178c8ce8243b9ecdcf9)
