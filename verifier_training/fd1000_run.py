@@ -21,7 +21,7 @@ from .loss import gradient_probe
 from .verdict_diagnostic import tensor_digest
 from .engineering_contract import epoch_orders
 from .fd1000_contract import configuration,validate
-from .fd1000_metrics import parse,rationale_grade,score
+from .fd1000_metrics import parse,rationale_grade,score,paired_comparison
 
 
 def encode(processor,row,dataset,arm,maximum):
@@ -104,6 +104,35 @@ def preflight(root):
 
 
 def acceptance_digest(dataset):return read(dataset/'ACCEPTANCE.json')['dataset_sha256']
+
+
+def compare(root):
+    receipt,config,dataset,assets,rows,staged=context(root)
+    path=root/'COMPARISON.json';require(not path.exists(),'No silent replacement of the paired comparison')
+    expected={r['sample_id']:r for r in rows if r['split']=='test'}
+    hashes={r['sample_id']:r['input_sha256'] for r in read(root/'preflight/ENCODINGS.json')}
+    predictions={};results={};artifacts={}
+    for arm in ('A','B'):
+        out=root/arm;result=read(out/'RESULT.json');provenance=read(out/'PROVENANCE.json')
+        require(result['passed'] and result['test_evaluations']==1,'Both selected models need one complete test evaluation')
+        require(provenance['source_commit']==receipt['source_commit'] and provenance['config']==config and
+            provenance['dataset_sha256']==acceptance_digest(dataset),'A/B source, data or configuration differs')
+        records=read(out/'TEST_GENERATIONS.json')
+        stream=[json.loads(line) for line in (out/'TEST_GENERATIONS.jsonl').read_text().splitlines()]
+        require(records==stream and len(records)==len(expected) and {r['sample_id'] for r in records}==set(expected),
+            'Final predictions do not match the complete raw test-generation stream')
+        for r in records:
+            row=expected[r['sample_id']];m=row['metadata']
+            require(r['truth']==int(row['target']['verdict']=='feasible') and
+                r['student_input_sha256']==hashes[r['sample_id']] and r['unit_id']==m['unit_id'] and
+                r['source_group']==m['ancestry_component'] and r['source_id']==m['source_id'] and
+                r['assignment']==row['evidence']['assignment'] and r['protected_boundary']==row['evidence']['protected_boundary'],
+                'Test predictions are not anchored to the accepted source-split records')
+        predictions[arm]=records;results[arm]=result
+        artifacts[arm]={name:sha(out/name) for name in ('RESULT.json','PROVENANCE.json','TEST_GENERATIONS.json','TEST_GENERATIONS.jsonl')}
+    write(path,dict(passed=True,source_commit=receipt['source_commit'],dataset_sha256=acceptance_digest(dataset),
+        comparison=paired_comparison(predictions['A'],predictions['B']),arms=results,artifacts=artifacts,
+        new_model_predictions=0,api_calls=0,slurm_job=os.environ['SLURM_JOB_ID']))
 
 
 def generate(model,processor,items,rows,arm,config,hashes,audit_stream):
@@ -234,6 +263,7 @@ if __name__=='__main__':
     stage=sys.argv[1];root=Path(sys.argv[2])
     try:
         if stage=='preflight':preflight(root)
+        elif stage=='compare':compare(root)
         else:require(stage in ('A','B'),'Unknown arm');train(root,stage)
     except BaseException as error:
         write(root/('STOP_'+stage+'.json'),dict(error=type(error).__name__,message=str(error),slurm_job=os.environ.get('SLURM_JOB_ID')))

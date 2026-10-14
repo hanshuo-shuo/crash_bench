@@ -78,6 +78,10 @@ Read live progress and terminal accounting; submission is not acceptance.
 V3 requires fresh pixel-bound visibility review. Review-sheet captions now name
 the expected endpoint sides for each mode, solely to guide checking; student
 PNGs and model inputs contain no such captions and are unchanged.
+Automatic approval review rejected a live-checkout sync while these jobs run.
+Keep the Quest checkout at its current commit until both shards are terminal;
+use the already-published result-copy helper and perform image review locally.
+The rejection did not stop either collector or authorize a workaround.
 
 ## V2 collection and visual-review history (not training-approved)
 
@@ -304,6 +308,14 @@ It requires exact data/evidence/review hashes, 1,000 reviewed records and frozen
 source groups; historical 120-row engineering approval cannot satisfy it. Planned
 A/B evaluation uses free generation, no gold rationale prefix, identical inputs,
 fresh Qwen2.5-VL-3B language LoRA and the same data order/update budget.
+The predeclared final A/B comparison additionally requires matching sample IDs,
+truths, source groups, full inference-input hashes and complete four-row units.
+It reports generative-minus-direct accuracy with 1,000 paired source-bootstrap
+replicates (seed 1014), preserving the correlation of all variants/checkpoints
+from one original trajectory. A separate CPU comparison stage reads the two
+already-complete free-generation streams; it makes no new model prediction.
+Three new comparison-integrity tests and all 16 earlier pure training checks
+passed before any v3 verifier fitting or test evaluation.
 
 Historical status text is preserved in
 [STATUS_HISTORY_before_rule_batch_20261014.md](STATUS_HISTORY_before_rule_batch_20261014.md).

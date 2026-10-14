@@ -27,8 +27,12 @@ def submit(root,stage):
         active=command('squeue','-h','-u',os.environ['USER'],'-A','p33100','-p','gengpu','-o','%j|%Z')
         require(sum('crash_bench' in line or 'crashbench_safelibero' in line or line.startswith('cb_') for line in active.splitlines())<2,
                 'Two CrashBench GPU jobs already active')
+    if stage=='compare':
+        for arm in ('A','B'):
+            normal(read(root/(arm+'_SUBMISSION.json'))['job'])
+            require(read(root/arm/'RESULT.json')['passed'],'Both model runs must complete before comparison')
     env=dict(os.environ,CB_VERIFIER_RUN=str(root),CB_VERIFIER_ASSETS=str(ASSETS),CB_FD_TRAIN_STAGE=stage)
-    script='fd1000_cpu.sbatch' if stage=='preflight' else 'fd1000_gpu.sbatch'
+    script='fd1000_cpu.sbatch' if stage in ('preflight','compare') else 'fd1000_gpu.sbatch'
     job=subprocess.check_output(['sbatch','--parsable','--output='+str(root/(stage+'_%j.log')),
         str(root/'source/verifier_training'/script)],env=env,text=True).strip().split(';')[0]
     require(job.isdigit(),'Invalid Slurm receipt')
@@ -70,5 +74,5 @@ def main(stage,dataset=None,root=None):
 
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('stage',choices=('create','preflight','A','B'));p.add_argument('--dataset',type=Path);p.add_argument('--root',type=Path)
+    p=argparse.ArgumentParser();p.add_argument('stage',choices=('create','preflight','A','B','compare'));p.add_argument('--dataset',type=Path);p.add_argument('--root',type=Path)
     a=p.parse_args();main(a.stage,a.dataset,a.root)

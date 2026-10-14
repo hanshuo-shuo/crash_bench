@@ -70,3 +70,44 @@ def score(records,arm,bootstrap=False):
         q=np.quantile(metrics,[.025,.975],axis=0)
         result['source_bootstrap_95pct']=dict(verdict_accuracy=q[:,0].tolist(),auroc=q[:,1].tolist(),replicates=1000)
     return result
+
+
+def paired_comparison(direct,generative):
+    """Compare the same free-generated test decisions, resampling source groups."""
+    import numpy as np
+    indexed=[]
+    for records in (direct,generative):
+        mapping={r['sample_id']:r for r in records}
+        if not records or len(mapping)!=len(records):raise RuntimeError('Missing or duplicate paired predictions')
+        indexed.append(mapping)
+    a,b=indexed
+    if set(a)!=set(b):raise RuntimeError('A/B test samples differ')
+    keys=('truth','source_group','source_id','unit_id','assignment','protected_boundary','student_input_sha256')
+    ids=sorted(a);units=defaultdict(list)
+    for sid in ids:
+        if any(a[sid][k]!=b[sid][k] for k in keys):raise RuntimeError('A/B labels, groups or inference inputs differ')
+        if any(r.get('gold_rationale_prefix_used') is not False for r in (a[sid],b[sid])):
+            raise RuntimeError('Paired comparison requires free generation without a gold rationale prefix')
+        units[a[sid]['unit_id']].append(sid)
+    for members in units.values():
+        if len(members)!=4 or {(a[s]['assignment'],a[s]['protected_boundary']) for s in members}!={(0,'a'),(0,'b'),(1,'a'),(1,'b')}:
+            raise RuntimeError('Paired comparison requires complete four-row units')
+        if len({a[s]['source_group'] for s in members})!=1:raise RuntimeError('Unit crosses source groups')
+    correct_a=np.asarray([a[s]['predicted']==a[s]['truth'] for s in ids])
+    correct_b=np.asarray([b[s]['predicted']==b[s]['truth'] for s in ids])
+    groups=np.asarray([a[s]['source_group'] for s in ids]);unique=sorted(set(groups))
+    if len(unique)<2:raise RuntimeError('Source uncertainty requires at least two groups')
+    difference=correct_b.astype(float)-correct_a.astype(float)
+    rng=np.random.default_rng(1014);boot=[]
+    indices={g:np.flatnonzero(groups==g) for g in unique}
+    for _ in range(1000):
+        selected=np.concatenate([indices[g] for g in rng.choice(unique,len(unique),replace=True)])
+        boot.append(difference[selected].mean())
+    return dict(rows=len(ids),physical_checkpoint_units=len(units),source_groups=len(unique),
+        direct_accuracy=float(correct_a.mean()),generative_accuracy=float(correct_b.mean()),
+        generative_minus_direct_accuracy=float(difference.mean()),
+        source_paired_bootstrap_95pct=np.quantile(boot,[.025,.975]).tolist(),bootstrap_replicates=1000,bootstrap_seed=1014,
+        both_correct=int((correct_a&correct_b).sum()),direct_only_correct=int((correct_a&~correct_b).sum()),
+        generative_only_correct=int((~correct_a&correct_b).sum()),neither_correct=int((~correct_a&~correct_b).sum()),
+        same_inference_inputs=True,gold_rationale_prefix_used=False,
+        scope='Paired row accuracy with whole original-source resampling. Correlated color/rule variants are not independent trials; this comparison does not establish internal reasoning or general verifier necessity.')
