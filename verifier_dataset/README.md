@@ -147,6 +147,18 @@ independence. New replays also save read-only initial task geometry to screen
 whether a sufficient separator certificate could apply. Hollow visual bounds
 never substitute for a verified material point or inscribed collision geometry.
 
+`design-fixture --replay-smoke ROOT --canonicalize` is a single read-only design
+pass on the first completed strict Long/task3 witness in that replay root. It
+records conservative native collision-geometry slices along the actual robot /
+pudding path and proposes fixed walls outside the connected low-height envelope.
+The site goal must be world-fixed; its necessary point region is derived from
+the pinned `SiteObject.under` predicate. Proposed walls are checked against all
+initial moving geometry, the recorded open path and the goal region. This
+produces **no feasibility label**: the modified open scene still needs an actual
+safe witness, and a closed scene needs an executed-geometry separator check under
+an explicit digital guard. One proposal does not establish a new proof family or
+solve class balance, observation grounding or task-conditioned shortcut controls.
+
 Primary methodological references:
 
 - Pinned [SafeLIBERO/AEGIS source](https://github.com/THU-RCSCT/vlsa-aegis/tree/2457feed5968ae803926e178c8ce8243b9ecdcf9)

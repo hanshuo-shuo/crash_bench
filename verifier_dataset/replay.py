@@ -67,7 +67,7 @@ def clean(value):
     return {'unsupported_type':type(value).__name__}
 
 
-def replay(row, folder, physical_hash, canonicalize=False):
+def replay(row, folder, physical_hash, canonicalize=False, design_fixture=False):
     import numpy as np
     from libero.libero import benchmark, get_libero_path
     from libero.libero.envs.env_wrapper import ControlEnv
@@ -135,8 +135,13 @@ def replay(row, folder, physical_hash, canonicalize=False):
         before_geometry=physical_hash(env)
         write(folder/'INITIAL_TASK_GEOMETRY.json',clean(initial_geometry(env)))
         if physical_hash(env)!=before_geometry:raise RuntimeError('Read-only geometry probe mutated physics')
+        design=None
+        if design_fixture:
+            from .fixture_design import Design
+            design=Design(env,folder,geometry)
         counter = dict(action=0, substep=0, total=0)
         def sample(phase):
+            if design is not None:design.sample(counter['action'],counter['substep'])
             for contact in data.contact[:data.ncon]:
                 pair = (int(contact.geom1),int(contact.geom2))
                 bad = ((pair[0] in protected and pair[1] in dynamic) or
@@ -202,6 +207,7 @@ def replay(row, folder, physical_hash, canonicalize=False):
             seed=7,slurm_job=os.environ['SLURM_JOB_ID'],code_commit=os.environ['CB_CODE_COMMIT'],
             source_code_commit=row['source_code_commit'],elapsed_seconds=time.monotonic()-started)
         write(folder/'SUMMARY.json',summary)
+        if design is not None:design.finish(summary)
         write(folder/'HASHES.json',{str(p.relative_to(folder)):sha(p) for p in sorted(folder.rglob('*')) if p.is_file()})
         return summary
     finally:
@@ -227,7 +233,8 @@ def main(root, case_index=None):
     if case_index is not None:
         work=root/('worker_%03d'%case_index);work.mkdir(exist_ok=False)
         physical_hash=configure(work)
-        value=replay(rows[case_index],root/('case_%03d'%case_index),physical_hash,canonicalize=canonicalize)
+        value=replay(rows[case_index],root/('case_%03d'%case_index),physical_hash,canonicalize=canonicalize,
+                     design_fixture=read(root/'CAMPAIGN.json')['stage']=='design-fixture')
         gc.collect()
         print(json.dumps({k:v for k,v in value.items() if k!='source'}),flush=True)
         return

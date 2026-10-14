@@ -51,6 +51,16 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
         if source_receipt['stage'] not in ('replay-smoke','replay-spatial-batch','replay-collection'):
             raise RuntimeError('Wrong witness source stage')
         if not source_receipt['canonicalize']:raise RuntimeError('Canonical legal witness required')
+    if stage=='design-fixture':
+        if replay_smoke is None or not canonicalize:raise RuntimeError('Explicit legal replay source required')
+        proof=read(replay_smoke/'REPLAY_COMPLETE.json');proof_receipt=read(replay_smoke/'RECEIPT.json')
+        proof_job=proof_receipt['job']
+        if not proof['passed'] or proof['errors'] or command('sacct','-X','-n','-P','-j',proof_job,'--format=JobIDRaw,State,ExitCode').splitlines()!=[proof_job+'|COMPLETED|0:0']:
+            raise RuntimeError('Completed exact source replay required')
+        eligible=[x for x in proof['rows'] if x['eligible_feasible_witness'] and
+                  x['source']['scene']['suite']=='safelibero_long' and x['source']['scene']['task']==3]
+        if not eligible:raise RuntimeError('No safe Long pudding witness')
+        chosen_design=sorted(eligible,key=lambda x:x['source']['source_id'])[0]['source']
     if stage=='replay-collection':
         if collection_root is None or not canonicalize:raise RuntimeError('Explicit collection and canonical action replay required')
         from .collection_evidence import replay_candidates
@@ -102,6 +112,11 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
         api_calls=0, api_limit_usd='20.00', account='p33100', partition='short',canonicalize=canonicalize,smoke_limit=limit)
     write(root/'CAMPAIGN.json', manifest)
     if stage=='audit-candidates':write(root/'AUDIT_SOURCES.json',[str(x) for x in candidate_exports])
+    if stage=='design-fixture':
+        write(root/'CASES.json',[chosen_design])
+        write(root/'INHERITED.json',dict(replay_root=str(replay_smoke),replay_job=proof_job,
+            completion_sha256=sha(replay_smoke/'REPLAY_COMPLETE.json'),
+            purpose='One read-only enclosure proposal, no labels or modified-scene execution'))
     if stage == 'replay-smoke':
         write(root/'CASES.json',read(inventory/'inventory/REPLAY_SMOKE.json')[:limit])
         write(root/'INHERITED.json',dict(inventory=str(inventory),hashes=hashes))
@@ -185,7 +200,7 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
 
 
 if __name__ == '__main__':
-    p = argparse.ArgumentParser(); p.add_argument('stage', choices=['inventory','source-plan','replay-smoke','replay-spatial-batch','collect-smoke','collect-cached-smoke','collect-cached-batch','replay-collection','export-candidates','audit-candidates'])
+    p = argparse.ArgumentParser(); p.add_argument('stage', choices=['inventory','source-plan','replay-smoke','replay-spatial-batch','collect-smoke','collect-cached-smoke','collect-cached-batch','replay-collection','export-candidates','audit-candidates','design-fixture'])
     p.add_argument('--inventory',type=Path);p.add_argument('--canonicalize',action='store_true')
     p.add_argument('--limit',type=int,default=12)
     p.add_argument('--source-plan',type=Path)
