@@ -71,10 +71,19 @@ def contact_sheets(root,units):
                 with Image.open(im['path']) as pic:canvas.paste(pic,(x+view*224,y))
             meta=row['metadata'];label='%03d %s t%d'%(i,meta['source_id'],meta['checkpoint'])
             draw.text((x,y+228),label,fill='black')
-            draw.text((x,y+244),'Check target, both virtual boxes, and green destination.',fill='black')
-            draw.text((x,y+258),'Same capture: protect orange / protect purple.',fill='black')
+            mode=meta.get('construction_mode')
+            from .constraint_sides import ENTRY,EXIT
+            if mode==ENTRY:
+                caption='ENTRY, left pair: target inside PURPLE only; green goal inside BOTH.'
+            elif mode==EXIT:
+                caption='EXIT, left pair: target inside ORANGE only; green goal outside BOTH.'
+            else:
+                caption='Check target, both virtual boxes, and green destination.'
+            draw.text((x,y+244),caption,fill='black')
+            draw.text((x,y+258),'Right pair swaps colors. Verify visible sides; reject ambiguity. Captions are review-only.',fill='black')
             members.append(dict(unit_index=i,evidence_root=meta['evidence_root'],
                 source_id=meta['source_id'],checkpoint=meta['checkpoint'],
+                construction_mode=mode,
                 image_sha256=[im['sha256'] for im in pictures]))
         path=directory/('sheet_%02d.png'%page);canvas.save(path)
         records.append(dict(path=str(path.relative_to(root)),sha256=sha(path),units=members))

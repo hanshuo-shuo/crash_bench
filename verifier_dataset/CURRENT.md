@@ -15,7 +15,7 @@ The full FD1000 API budget is $20, including a $6.40 ceiling for that completed
 batch. All current collection, reasoning targets and training preparation are
 offline. The private key is never printed, copied or logged.
 
-## V2 rejected by shortcut gate; v3 endpoint-side construction in preparation
+## V2 rejected by shortcut gate; v3 endpoint-side collection running
 
 V2 audit **3614374 COMPLETED/0:0**, 9m54s, root
 `20261014T222942Z_audit-constraints_c2182eb82cf7`. All 595 raw units passed
@@ -66,6 +66,18 @@ small targets, occlusion and overlapping volumes still need final per-unit revie
 The pending prototype's requested time was reduced from 30 to 10 minutes after
 identity checks, recorded in `SCHEDULING_UPDATE.json`; its source was unchanged.
 New bounded bulk jobs request 90 minutes each, with at most two task GPUs.
+
+V3 bulk shards **3622211** and **3622216** were submitted from clean published
+source `bd13a33c3339ee94377010d744a2860bf18da9f9`. Both were RUNNING at the
+23:35 UTC check, on qgpu2002 and qgpu2005 respectively:
+`20261014T232911Z_constraint-batch_bd13a33c3339` (34 original sources), and
+`20261014T232922Z_constraint-batch_bd13a33c3339` (33 original sources).
+They execute immutable source archives and retain the protocol digest
+`88538ce0a48eb05492ed59092a759ac514df6ee051a974b4423113a2b3c67a03`.
+Read live progress and terminal accounting; submission is not acceptance.
+V3 requires fresh pixel-bound visibility review. Review-sheet captions now name
+the expected endpoint sides for each mode, solely to guide checking; student
+PNGs and model inputs contain no such captions and are unchanged.
 
 ## V2 collection and visual-review history (not training-approved)
 
