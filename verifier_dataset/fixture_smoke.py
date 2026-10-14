@@ -124,12 +124,12 @@ def check_saved(folder):
           training_eligible=False,independent_scan='Recomputed actual-box certificate and all recorded contact/swept-root predicates'))
 
 
-def execute(root,variant):
+def execute(root,variant,render=False):
     import numpy as np
     import mujoco
     from scipy.spatial.transform import Rotation
     folder=root/variant;folder.mkdir(exist_ok=False)
-    physical_hash=configure(folder)
+    physical_hash=configure(folder,rendering=render)
     from robosuite.environments.base import MujocoEnv
     from libero.libero import benchmark,get_libero_path
     from libero.libero.envs.env_wrapper import ControlEnv
@@ -147,7 +147,7 @@ def execute(root,variant):
     random.seed(7);np.random.seed(7);env=None;original_step=None;stream=None
     try:
         env=ControlEnv(bddl_file_name=Path(get_libero_path('bddl_files'))/task.problem_folder/task.bddl_file,
-            use_camera_obs=False,has_offscreen_renderer=False,camera_depths=False,camera_heights=1024,camera_widths=1024)
+            use_camera_obs=False,has_offscreen_renderer=render,camera_depths=False,camera_heights=1024,camera_widths=1024)
         env.seed(7);env.reset();obs=env.set_init_state(suite.get_task_init_states(scene['task'])[scene['episode']])
         m,d=env.sim.model,env.sim.data;marker=m.body_name2id('eef_marker')
         def update_marker(observation):
@@ -159,6 +159,23 @@ def execute(root,variant):
         expected=read(directory/'RESULT.json')['settled_physics_sha256']
         if physical_hash(env)!=expected:raise RuntimeError('Modified initial physics differs from canonical source; no label')
         write(folder/'INITIAL_EQUALITY.json',dict(passed=True,source_sha256=expected,actual_sha256=physical_hash(env)))
+        if render:
+            from PIL import Image
+            from openpi_client import image_tools
+            from robosuite.utils.mjcf_utils import IMAGE_CONVENTION_MAPPING
+            import robosuite.macros as macros
+            before=physical_hash(env);images=[]
+            for view,camera in [('external','agentview'),('wrist','robot0_eye_in_hand')]:
+                rgb=np.asarray(env.sim.render(width=1024,height=1024,camera_name=camera))
+                rgb=rgb[::IMAGE_CONVENTION_MAPPING[macros.IMAGE_CONVENTION]][::-1,::-1]
+                rgb=image_tools.convert_to_uint8(image_tools.resize_with_pad(np.ascontiguousarray(rgb),224,224))
+                path=folder/(view+'.png');Image.fromarray(rgb).save(path)
+                images.append(dict(view=view,camera=camera,path=path.name,sha256=sha(path),shape=list(rgb.shape)))
+            if physical_hash(env)!=before:raise RuntimeError('Rendering mutated initial physical arrays')
+            write(folder/'IMAGES.json',dict(images=images,physics_unchanged=True,
+                source='Actual full-precision constructed simulator at canonical initial state, not XML reload or edited imagery',
+                task=task.language if variant!='closed_mug' else 'Put the porcelain mug on the plate. Moving the pudding is not part of this task.',
+                goal_region_observability='pending',training_eligible=False))
         (folder/'model.xml').write_text(m.get_xml())
         np.savez_compressed(folder/'initial_physics.npz',**{k:np.asarray(getattr(d,k)).copy() for k in ARRAYS},
             time=np.asarray([d.time]),body_pos=np.asarray(m.body_pos).copy(),body_quat=np.asarray(m.body_quat).copy())
@@ -267,23 +284,70 @@ def execute(root,variant):
         MujocoEnv._initialize_sim=original_init
 
 
-def main(root,variant=None):
+def main(root,variant=None,render=False):
     if not os.environ.get('SLURM_JOB_ID'):raise RuntimeError('Compute allocation required')
     if variant is not None:
-        result=execute(root,variant);gc.collect();print(json.dumps(result),flush=True);return
+        result=execute(root,variant,render);gc.collect();print(json.dumps(result),flush=True);return
     rows=[]
     for name in VARIANTS:
         with (root/(name+'.log')).open('w') as stream:
-            result=subprocess.run([sys.executable,'-u','-m','verifier_dataset.fixture_smoke',str(root),'--variant',name],stdout=stream,stderr=subprocess.STDOUT)
+            command=[sys.executable,'-u','-m','verifier_dataset.fixture_smoke',str(root),'--variant',name]
+            if render:command.append('--render')
+            result=subprocess.run(command,stdout=stream,stderr=subprocess.STDOUT)
         if result.returncode:raise RuntimeError('Fixture subprocess failed: '+name+' exit '+str(result.returncode))
         check_saved(root/name);rows.append(read(root/name/'SUMMARY.json'))
     complete=dict(passed=True,rows=rows,accepted_dataset_rows=0,scientific_training_allowed=False,
         same_initial_physics=len({r['initial_physics_sha256'] for r in rows})==1,
         same_image_task_flip_candidate=rows[0]['label']=='conditionally_infeasible' and rows[2]['label']=='feasible',
         image_equality_verified=False,appearance_matching_passed=False,api_calls=0,slurm_job=os.environ['SLURM_JOB_ID'])
+    if render:
+        import numpy as np
+        from PIL import Image
+        comparisons=[]
+        for view in ('external','wrist'):
+            with Image.open(root/'closed_full'/(view+'.png')) as image:a=np.asarray(image).copy()
+            with Image.open(root/'closed_mug'/(view+'.png')) as image:b=np.asarray(image).copy()
+            comparisons.append(dict(view=view,exact=bool(np.array_equal(a,b)),
+                changed_pixels=int(np.any(a!=b,axis=2).sum()),maximum_channel_difference=int(np.abs(a.astype(int)-b.astype(int)).max())))
+        inherited=read(root/'CPU_FIXTURE_COMPLETE.json')
+        cross=[dict(variant=a['variant'],same_label=a['label']==b['label'],same_actions=a['actions']==b['actions'],
+                    same_initial_physics=a['initial_physics_sha256']==b['initial_physics_sha256']) for a,b in zip(rows,inherited['rows'])]
+        if not all(x['same_label'] and x['same_actions'] and x['same_initial_physics'] for x in cross):
+            raise RuntimeError('CPU/GPU fixture evidence disagrees')
+        write(root/'TASK_CONTRAST_PIXELS.json',dict(comparisons=comparisons,cpu_gpu=cross,
+            identical_image_different_task_verdict=all(x['exact'] for x in comparisons) and complete['same_image_task_flip_candidate'],
+            independent_original_states=1,scientific_training_allowed=False,
+            scope='One development counterfactual under an explicit digital contract, not model performance or broad generalization'))
+        complete['image_equality_verified']=all(x['exact'] for x in comparisons)
+        notes=[]
+        for row in rows:
+            case=root/row['variant'];cert=read(case/'PUDDING_CERTIFICATE.json')
+            refs=[dict(path=str(case/name),sha256=sha(case/name)) for name in ('SUMMARY.json','PUDDING_CERTIFICATE.json','VERIFIED.json','IMAGES.json')]
+            if row['label']=='conditionally_infeasible':
+                facts=[dict(claim='The full task requires moving the pudding to the fixed native goal region.',evidence='SUMMARY.json#/task_scope'),
+                    dict(claim='The pudding material root starts strictly inside the enclosure.',evidence='PUDDING_CERTIFICATE.json#/conditions/initial_root_strictly_inside'),
+                    dict(claim='Expanded static collision boxes cover all six boundary faces.',evidence='PUDDING_CERTIFICATE.json#/covered_faces'),
+                    dict(claim='The necessary fixed goal region is outside that enclosure.',evidence='PUDDING_CERTIFICATE.json#/conditions/frozen_goal_disjoint')]
+                note='Every admissible pudding-root path to the required fixed region must cross a covered boundary. The explicit swept-root safety rule forbids this, so the full task is conditionally infeasible under that rule.'
+            elif row['label']=='feasible':
+                facts=[dict(claim='The selected task is '+row['task_scope']+'.',evidence='SUMMARY.json#/task_scope'),
+                    dict(claim='A legal witness completes the selected task in %d commands.'%row['actions'],evidence='SUMMARY.json#/actions'),
+                    dict(claim='Every recorded contact and swept-root safety check passes.',evidence='VERIFIED.json#/passed')]
+                note=('The mug-only task does not require moving the enclosed pudding. ' if row['task_scope']=='mug_only' else '')
+                note+='The actual checked safe-success witness establishes feasibility for the stated task and safety contract.'
+            else:
+                facts=[dict(claim='Neither a task-applicable certificate nor a complete safe witness has been established.',evidence='SUMMARY.json#/label')]
+                note='A failed finite action sequence cannot establish infeasibility.'
+            notes.append(dict(variant=row['variant'],label=row['label'],facts=facts,inference=note,evidence_files=refs,
+                purpose='Privileged teacher audit notes, not student-ready reasoning supervision',
+                input_grounding='pending: exact fixed-goal semantics, digital guard and visible geometry premises',
+                final_reasoning_target=None,training_eligible=False))
+        write(root/'TEACHER_FACTS.json',dict(rows=notes,finalized_reasoning_targets=0,paid_calls=0,
+            rule='Each future explanation clause needs an evidence pointer and input-grounding review. Correct verdict or fluent paraphrase alone is insufficient.'))
     write(root/'FIXTURE_COMPLETE.json',complete);print(json.dumps(complete),flush=True)
 
 
 if __name__=='__main__':
     p=argparse.ArgumentParser();p.add_argument('root',type=Path);p.add_argument('--variant',choices=VARIANTS)
-    a=p.parse_args();main(a.root,a.variant)
+    p.add_argument('--render',action='store_true')
+    a=p.parse_args();main(a.root,a.variant,a.render)

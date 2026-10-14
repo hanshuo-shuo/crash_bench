@@ -72,6 +72,24 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
             if sha(fixture_design/'case_000'/name)!=wanted:raise RuntimeError('Design evidence changed')
         proposal=read(fixture_design/'case_000/FIXTURE_PROPOSAL.json')
         if not proposal['compatible_proposal'] or proposal['label']!='unknown':raise RuntimeError('Invalid proposal for bounded fixture test')
+    if stage=='fixture-render':
+        if collection_root is None:raise RuntimeError('Explicit completed fixture smoke required')
+        old=read(collection_root/'RECEIPT.json');old_job=old['job']
+        if old['stage']!='fixture-smoke' or command('sacct','-X','-n','-P','-j',old_job,'--format=JobIDRaw,State,ExitCode').splitlines()!=[old_job+'|COMPLETED|0:0']:
+            raise RuntimeError('CPU fixture check must terminate normally')
+        fixture_proof=read(collection_root/'FIXTURE_COMPLETE.json')
+        if not fixture_proof['passed'] or not fixture_proof['same_initial_physics']:
+            raise RuntimeError('CPU fixture evidence did not pass')
+        inherited=read(collection_root/'INHERITED.json')
+        for name,key in [('FIXTURE_PROPOSAL.json','proposal_sha256'),('CANONICAL_CONTEXT.json','canonical_context_sha256'),
+                         ('CANONICAL_PHYSICS.npz','canonical_physics_sha256')]:
+            if sha(collection_root/name)!=inherited[key]:raise RuntimeError('CPU fixture construction input changed')
+        for case in ('closed_full','open_full','closed_mug'):
+            for name,wanted in read(collection_root/case/'HASHES.json').items():
+                if sha(collection_root/case/name)!=wanted:raise RuntimeError('CPU fixture evidence changed')
+        active=command('squeue','-h','-u',os.environ['USER'],'-A','p33100','-p','gengpu','-o','%j|%Z')
+        if sum('crash_bench' in x or 'crashbench_safelibero' in x or x.startswith('cb_') for x in active.splitlines())>=2:
+            raise RuntimeError('Two CrashBench GPU jobs already active')
     if stage=='replay-collection':
         if collection_root is None or not canonicalize:raise RuntimeError('Explicit collection and canonical action replay required')
         from .collection_evidence import replay_candidates
@@ -122,6 +140,15 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
         authorization='2026-10-14 user: 1000 evidence-backed rows on Quest; train only after audit; API cap $20',
         api_calls=0, api_limit_usd='20.00', account='p33100', partition='short',canonicalize=canonicalize,smoke_limit=limit)
     write(root/'CAMPAIGN.json', manifest)
+    if stage=='fixture-render':
+        manifest.update(partition='gengpu',api_mode='disabled',max_paid_attempts=0,max_logical_requests=0)
+        write(root/'CAMPAIGN.json',manifest)
+        for name in ('FIXTURE_PROPOSAL.json','CANONICAL_CONTEXT.json','CANONICAL_PHYSICS.npz'):
+            shutil.copyfile(collection_root/name,root/name)
+        write(root/'CPU_FIXTURE_COMPLETE.json',fixture_proof)
+        write(root/'INHERITED.json',dict(fixture_root=str(collection_root),job=old_job,
+            completion_sha256=sha(collection_root/'FIXTURE_COMPLETE.json'),
+            purpose='Actual initial simulator images and CPU/GPU consistency only; no policy inference, API or training'))
     if stage=='audit-candidates':write(root/'AUDIT_SOURCES.json',[str(x) for x in candidate_exports])
     if stage=='design-fixture':
         write(root/'CASES.json',[chosen_design])
@@ -185,6 +212,7 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
     script='collect.sbatch' if stage in ('collect-smoke','collect-cached-smoke','collect-cached-batch') else ('cpu.sbatch' if stage in ('inventory','source-plan') else 'replay.sbatch')
     if stage=='export-candidates':script='export.sbatch'
     if stage=='audit-candidates':script='audit.sbatch'
+    if stage=='fixture-render':script='fixture_render.sbatch'
     submit=['sbatch','--parsable','--output='+str(root/'slurm_%j.log')]
     if stage=='replay-spatial-batch':
         submit=['sbatch','--parsable','--array=0-7%4','--output='+str(root/'slurm_%A_%a.log')]
@@ -220,7 +248,7 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
 
 
 if __name__ == '__main__':
-    p = argparse.ArgumentParser(); p.add_argument('stage', choices=['inventory','source-plan','replay-smoke','replay-spatial-batch','collect-smoke','collect-cached-smoke','collect-cached-batch','replay-collection','export-candidates','audit-candidates','design-fixture','fixture-smoke'])
+    p = argparse.ArgumentParser(); p.add_argument('stage', choices=['inventory','source-plan','replay-smoke','replay-spatial-batch','collect-smoke','collect-cached-smoke','collect-cached-batch','replay-collection','export-candidates','audit-candidates','design-fixture','fixture-smoke','fixture-render'])
     p.add_argument('--inventory',type=Path);p.add_argument('--canonicalize',action='store_true')
     p.add_argument('--limit',type=int,default=12)
     p.add_argument('--source-plan',type=Path)

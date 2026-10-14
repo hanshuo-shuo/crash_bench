@@ -27,7 +27,7 @@ $20. The workflow is implemented in this directory; this is not a claim that
   proposed four-case GPU collection reserves at most $0.80 for eight attempts
   within the shared $20 ceiling; no paid worker or paid-enabled GPU collection
   was launched. The cache-only Goal smoke finished with two usable tapes and
-  two deferred cache misses; a broader offline batch is now active (below).
+  two deferred cache misses; the broader offline batch also finished (below).
 - Spatial array **9906479**, all eight shards **COMPLETED/0:0**: 124 tapes
   rechecked, 116 strict contact-free legal witnesses, eight contact rejections,
   1,160 checkpoint candidates. Eligible witnesses cover **nine original states**,
@@ -54,6 +54,25 @@ $20. The workflow is implemented in this directory; this is not a claim that
   All three Goal-stage manifests and four original preview PNGs are now mirrored
   locally with verified delivery hashes. Two external views were visually checked;
   that does not establish observability or shortcut acceptance.
+- Broader cached jobs **9911402 / 9911408 COMPLETED/0:0**, 10m29s and 8m42s:
+  41 new initial identities, 11 complete executions, 10 proxy successes, one
+  retained Long/task3/episode5 crash, and 30 exact-cache misses. The crash and
+  misses remain UNKNOWN. Together with the first smoke, there are 32 cache
+  misses, zero paid calls and no credential/API worker use.
+- New replay jobs **9912987 / 9912989 COMPLETED/0:0**, 3m34s and 3m00s:
+  all ten tapes passed, all 3,055 actions were legal and source-exact, with zero
+  strict prohibited contacts. Exports **9913423 / 9913426 COMPLETED/0:0**
+  produced 50 distinct candidates each, with no additional duplicates.
+- Merged CPU audit **9913478 COMPLETED/0:0**, 1m55s: **1,121 distinct candidate
+  inputs and image pairs**, **21 original/ancestry groups**, **six task
+  compositions**, **three families**, **127 represented witness trajectories**.
+  It independently rechecked saved hashes, source pixels, legal suffixes, horizons
+  and conservative source/image/settled-qpos ancestry. The 110 RGB/red-area
+  feature columns are saved, but a one-class pool has no binary AUROC. Final
+  acceptance remains closed. The effective configuration supplement reads the
+  actual executed 300/550 native horizons and preserves dormant inherited runtime
+  defaults in the raw manifests. All new top-level results and 20 source preview
+  images were delivered locally and checksum-verified.
 
 Local receipts and checksum-verified copies are under
 `results/verifier_dataset/`. The corresponding Quest roots are under
@@ -71,33 +90,59 @@ Local receipts and checksum-verified copies are under
 | Goal candidate export | `20261014T070045Z_export-candidates_fca699e146a7` | `fca699e146a7` |
 | Broader cached shard 0 | `20261014T070904Z_collect-cached-batch_520cde150f40` | `520cde150f40` |
 | Broader cached shard 1 | `20261014T070931Z_collect-cached-batch_520cde150f40` | `520cde150f40` |
+| New-source replay 0 | `20261014T072215Z_replay-collection_0d3587daa3bd` | `0d3587daa3bd` |
+| New-source replay 1 | `20261014T072240Z_replay-collection_0d3587daa3bd` | `0d3587daa3bd` |
+| New candidate export 0 | `20261014T072751Z_export-candidates_ad9725da5ebf` | `ad9725da5ebf` |
+| New candidate export 1 | `20261014T072803Z_export-candidates_ad9725da5ebf` | `ad9725da5ebf` |
+| Merged candidate audit | `20261014T073032Z_audit-candidates_ad9725da5ebf` | `ad9725da5ebf` |
+| Enclosure design v1 | `20261014T073559Z_design-fixture_dd736b8b164c` | `dd736b8b164c` |
+| Enclosure design v2 | `20261014T074039Z_design-fixture_a33e4f6d9ce2` | `a33e4f6d9ce2` |
+| Failed fixture initialization | `20261014T075122Z_fixture-smoke_f0b6fcfecbca` | `f0b6fcfecbca` |
+| Canonical-state fixture test | `20261014T075535Z_fixture-smoke_0b2769cb21f7` | `0b2769cb21f7` |
 
 ## Active unaffected work
 
-Cache-only jobs **9911402 / 9911408** are running, one A100 each, one hour maximum
-per job. The frozen 21+20-source shards cover 41 additional original identities
-across nine task compositions and three families: the remaining 16 Goal sources,
-15 sources from three other Spatial tasks, and 10 Long sources. At the last
-check each job had two proxy successes, with six and ten cache misses respectively;
-these are live collection counts, not accepted witnesses. No API worker or key
-is used. Missing exact caches remain deferred/UNKNOWN before scored actions.
-Read actual receipts and Slurm state rather than treating this paragraph as live.
+No collection GPU remains active. All native candidate collection, replay, export
+and merged-audit jobs above are terminal. The source pool remains dominated by
+1,001 Spatial/task1 inputs; source coverage and paired-class requirements have
+not been replaced by checkpoint counts.
 
-The live Quest checkout is frozen at `520cde150f4059fca17892894a963fc508e9ba81`
-while these jobs are active; each uses immutable archived source and staged assets.
-The finished Spatial input pool contained 63 AEGIS and 61 nominal tapes from
-ten initial identities; only nine identities contributed eligible witnesses.
+Two bounded read-only Long pudding enclosure designs ran. Job **9914088**
+COMPLETED/0:0 (1m22s), but v1 was incompatible: the proposed region intersected
+the fixed goal and nine plate/wall bounds. Job **9914713** COMPLETED/0:0 (54s)
+found a compatible local v2 proposal. It removes five faces along the original
+path and retains only its floor, so it fails appearance matching for a scientific
+dataset. Both proposals remain UNKNOWN, not negative evidence.
 
-Local candidate manifest:
-`results/verifier_dataset/20261014T063344Z_export-candidates_efcf7fa16836/positive_candidates.jsonl`.
-Local image delivery is a preview subset, not the full training image pool.
+The first three-condition fixture job **9916416 FAILED/1:0**, 1m10s, because
+modified-scene settling did not match the source initial state. No label was
+created; the failed root is retained. The repaired **9917115 COMPLETED/0:0**,
+3m01s, restores one common initial physical/controller snapshot after recording
+disposable constructor-settling differences. All 51 saved controller fields and
+initial physical bytes match. Closed/full has a sufficient conditional pudding
+separator certificate; open/full has an actual 309-command safe witness;
+closed/mug-only has an actual 130-command safe witness. All 439 commands match
+the original physical trace. The 11,417 recorded native/synchronized contact and
+root-segment checks were independently recomputed. This is one original scene.
 
-The next CPU precheck has been implemented and tested locally. It independently
-rechecks merged evidence and image pixels, computes RGB/red-area feature columns,
-and groups source/pixel/settled-qpos ancestry. A one-class pool produces no binary
-AUROC and cannot pass the final data gate. New replay geometry diagnostics check
-actual collision material, not visual extents, before proposing any enclosure
-certificate. Neither module invents negatives or reasoning labels.
+The derived mug-only subtask is not an unchanged official benchmark goal. This
+is a mechanism test only: the digital guard, fixed-site goal observability,
+rendered-input equality and appearance matching need explicit treatment before
+scientific admission. A bounded rendering stage is prepared to verify actual
+pixels and evidence-linked teacher facts; it cannot enable training.
+
+Local merged index:
+`results/verifier_dataset/20261014T073032Z_audit-candidates_ad9725da5ebf/MERGED_CANDIDATES.jsonl`.
+Image paths in that index resolve to immutable Quest exports. Local images are
+preview subsets, not the full training pool.
+
+The read-only API review file is
+`results/verifier_dataset/20261014T075301Z_paid-request-review_f0b6fcfecbca/PENDING_API_REVIEW.json`.
+It lists all 32 deferred request identities, image/request hashes, exact payload
+scope and pinned routing. At most two attempts each would reserve $6.40 under
+the existing price guard within the $20 campaign cap. This is a review-only
+estimate, not a started worker, an incurred charge or approval of the blocked
+operation. The historical cache-only roots remain immutable.
 
 ## Pending decisions and closed gates
 
@@ -119,7 +164,9 @@ certificate. Neither module invents negatives or reasoning labels.
    the missing approval arrives. The key is never copied into source or logs.
 
 Accepted complete scientific dataset rows: **0**. New matched certified negatives:
-**0**. Final grounded reasoning targets: **0**. Verifier training: **not launched**.
+**0** admitted to the scientific dataset; **one** conditional development
+certificate is separately established above. Final grounded reasoning targets:
+**0**. Verifier training: **not launched**.
 The source-coverage, paired-negative, observability, explanation and shortcut
 requirements are still open. Do not rename witness/checkpoint counts as accepted
 training rows or use policy failures as infeasible labels.

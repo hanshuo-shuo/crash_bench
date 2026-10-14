@@ -34,7 +34,7 @@ def assert_trace(steps, count):
             raise RuntimeError('Invalid action tape')
 
 
-def configure(root):
+def configure(root,rendering=False):
     upstream = Path(os.environ['CB_UPSTREAM'])
     repo = Path(__file__).resolve().parents[1]
     cfg = root/'libero_config'; cfg.mkdir(exist_ok=False)
@@ -47,9 +47,10 @@ def configure(root):
     import robosuite.utils.binding_utils as bindings
     write(root/'BACKEND.json',dict(MUJOCO_GL=os.environ.get('MUJOCO_GL'),
         PYOPENGL_PLATFORM=os.environ.get('PYOPENGL_PLATFORM'),binding_backend=bindings._MUJOCO_GL,
-        rendering_enabled=False))
-    from reset_forward import replay_renderer_reset_forward
-    replay_renderer_reset_forward(MujocoEnv)
+        rendering_enabled=rendering))
+    if not rendering:
+        from reset_forward import replay_renderer_reset_forward
+        replay_renderer_reset_forward(MujocoEnv)
     # Match the exact historical hash implementation, not a new relaxed tolerance.
     import importlib.util
     spec = importlib.util.spec_from_file_location('fd_uncertainty_geometry', repo/'analysis/uncertainty/geometry.py')

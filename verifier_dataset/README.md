@@ -181,6 +181,15 @@ physics is not yet verified image equality. The native fixed-world region and
 the language phrase 'right of the plate' also need explicit input grounding;
 privileged coordinates cannot silently become visible explanation premises.
 
+`fixture-render --collection-root CPU_FIXTURE_ROOT` rebuilds the same cases from
+the full-precision constructors on one rendering GPU, restores the same canonical
+initial state, renders the actual two camera views before scored actions and
+rechecks the resulting witness/certificate outcomes against the CPU pass. It
+makes no policy-model or API calls. Closed/full versus closed/mug images are
+compared pixel by pixel; physical equality alone cannot supply that result.
+Evidence-linked teacher audit notes are emitted as privileged facts, with null
+final reasoning targets until their input premises have passed grounding review.
+
 Primary methodological references:
 
 - LaValle's [Planning Algorithms, §4.3](https://msl.cs.illinois.edu/~lavalle/planning/node156.html)
