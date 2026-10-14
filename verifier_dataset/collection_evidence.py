@@ -5,7 +5,7 @@ from .cached_pool import run_spec
 
 def replay_candidates(root):
     receipt=read(root/'RECEIPT.json')
-    if receipt['stage'] not in ('collect-cached-smoke','collect-cached-batch','collect-approved-cache') or receipt.get('api_mode')!='cache_only':
+    if receipt['stage'] not in ('collect-cached-smoke','collect-cached-batch','collect-approved-cache','collect-frozen-perception') or receipt.get('api_mode')!='cache_only':
         raise RuntimeError('This continuation accepts only the approved cache-only collection')
     api=read(root/'API_FINAL.json')
     if api.get('paid_calls')!=0 or api.get('worker_started') is not False:

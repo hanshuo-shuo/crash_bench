@@ -97,7 +97,8 @@ def main(root, replay_root):
                         remaining_witness_actions=summary['actions']-step,remaining_horizon=remaining,
                         checkpoint_context_sha256=sha(checkpoint/'context.json'),source_inference_sha256=sha(context['source_inference'])),
                     metadata=dict(source_id=source['source_id'],task_group=source['task_group'],family=source['family'],
-                        source_method=source['method'],source_seed=source['seed'],source_code_commit=source['source_code_commit'],
+                        source_method=source['method'],perception_variant=source.get('perception_variant','native'),
+                        source_seed=source['seed'],source_code_commit=source['source_code_commit'],
                         replay_code_commit=summary['code_commit'],slurm_job=summary['slurm_job'],input_sha256=key,
                         image_pair_sha256=image_pair_hash),
                     reasoning_target=None,observability_review='pending',split='unassigned',training_eligible=False))

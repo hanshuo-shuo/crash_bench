@@ -54,17 +54,26 @@ def main(root,port):
                  ASSETS/'batches/20260926T233314Z_af6ac874d168/perception_cache',ASSETS/'perception_cache']
     entries=read(root/'COLLECTION_SOURCES.json')
     approved={}
-    if campaign['stage']=='collect-approved-cache':
+    if campaign['stage'] in ('collect-approved-cache','collect-frozen-perception'):
         if not cache_only:raise RuntimeError('Approved cache collection must be offline')
         from .approved_collection import check_cache
         check_cache(root);cache_roots=[root/'perception_cache']
         approved={run_spec(campaign['stage'],i,e)['name']:e['approved_request_identity'] for i,e in enumerate(entries)}
+    frozen={run_spec(campaign['stage'],i,e)['name']:e for i,e in enumerate(entries)} if campaign['stage']=='collect-frozen-perception' else {}
 
     class CachedObserver(original_observer):
         def perception(self,image,instruction,suite):
             import matplotlib.pyplot as plt
             buf=io.BytesIO();plt.imsave(buf,image,format='png')
             request=export_request(buf.getvalue(),instruction,suite,self.runner.root/'requests'/self.spec['name'],budgeted=True)
+            if frozen:
+                from .frozen_perception import inherit,UnsupportedFrozenInput
+                entry=frozen[self.spec['name']]
+                try:
+                    return inherit(request,root/'perception_cache'/entry['approved_request_identity'],entry,self.directory)
+                except UnsupportedFrozenInput as error:
+                    write(request/'FROZEN_INPUT_REJECTED.json',dict(reason=str(error),label='unknown',paid_request_allowed=False))
+                    raise CacheMiss('Frozen-input diagnostic failed; source remains unknown') from error
             if approved:check_expected_request(request,approved[self.spec['name']])
             prepare_response(request,cache_roots,cache_only)
             deadline=time.monotonic()+300

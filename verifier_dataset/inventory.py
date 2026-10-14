@@ -43,6 +43,7 @@ def candidate(result, directory):
     return dict(source_id=identity(scene), task_group='{suite}/{level}/task{task}'.format(**scene),
                 family=scene['suite'], scene=scene, method=spec['method'], repeat=spec['repeat'],
                 root=str(directory), seed=result['seed'], actions=result['actions'],
+                perception_variant=spec.get('perception_variant','native'),
                 source_outcome=result['outcome'], infrastructure_complete=complete,
                 proxy_safe_success=success, feasibility_label='unknown',
                 needs_contact_replay=success, has_action_tape=tape.is_file(),
