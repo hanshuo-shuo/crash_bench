@@ -190,6 +190,26 @@ compared pixel by pixel; physical equality alone cannot supply that result.
 Evidence-linked teacher audit notes are emitted as privileged facts, with null
 final reasoning targets until their input premises have passed grounding review.
 
+Current continuation uses `FD1000-SC-CONTACT-v2`; native support is permitted,
+while robot/task-target contact with protected objects remains prohibited. The
+old strict v1 evidence remains in frozen archives. `replay-object-sources` and
+`replay-spatial-sources` select one existing tape per original source, after the
+v2 smoke passes, to prioritize source coverage over many policy repeats.
+
+`approved_requests launch` is restricted to the verbatim human-approved 32-row
+allowlist and exact payload hashes. Its shared campaign ledger enforces $20 and
+its approval scope permits at most 64 attempts / $6.40 of full reservations.
+Uncertain charges stop the worker without automatic retries. After completion,
+`collect-approved-cache --collection-root API_ROOT --batch-shard 0` (and 1)
+stages the 16 corresponding exact responses per GPU and executes fully offline.
+A newly rendered input with a different hash is deferred, never sent externally.
+
+`fixture-grounding --collection-root CPU_FIXTURE_ROOT` repeats the existing
+three-case physical checks with transparent collision panels and noncolliding
+fixed-goal outlines. Rendering attributes do not supply label evidence. Actual
+physics/witnesses/certificates and closed-task pixel equality are rechecked;
+input-grounding review and broad matched-class admission remain separate gates.
+
 Primary methodological references:
 
 - LaValle's [Planning Algorithms, §4.3](https://msl.cs.illinois.edu/~lavalle/planning/node156.html)

@@ -27,7 +27,7 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
     commit = command('git', 'rev-parse', 'HEAD')
     if 'origin/' not in command('git', 'branch', '-r', '--contains', commit):
         raise RuntimeError('Source must be published')
-    if stage in ('replay-smoke','replay-spatial-batch','replay-object-sources'):
+    if stage in ('replay-smoke','replay-spatial-batch','replay-object-sources','replay-spatial-sources'):
         if not 1<=limit<=12: raise RuntimeError('Smoke limit must be 1..12')
         if inventory is None or not read(inventory/'inventory/SUMMARY.json')['passed']:
             raise RuntimeError('Passed inventory required')
@@ -38,7 +38,7 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
         hashes=read(inventory/'inventory/HASHES.json')
         for name, expected in hashes.items():
             if sha(inventory/'inventory'/name)!=expected: raise RuntimeError('Inventory hash changed')
-    if stage in ('replay-spatial-batch','replay-object-sources'):
+    if stage in ('replay-spatial-batch','replay-object-sources','replay-spatial-sources'):
         if not canonicalize or replay_smoke is None:raise RuntimeError('Canonicalized passing 12-source smoke required')
         smoke=read(replay_smoke/'REPLAY_COMPLETE.json');smoke_job=read(replay_smoke/'RECEIPT.json')['job']
         if not smoke['passed'] or smoke['completed']!=12 or smoke['errors']:
@@ -46,12 +46,12 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
         if command('sacct','-X','-n','-P','-j',smoke_job,'--format=JobIDRaw,State,ExitCode').splitlines()!=[smoke_job+'|COMPLETED|0:0']:
             raise RuntimeError('Smoke must terminate normally; a JSON pass alone is insufficient')
         if not read(replay_smoke/'CAMPAIGN.json')['canonicalize']:raise RuntimeError('Wrong smoke action contract')
-        if stage=='replay-object-sources' and read(replay_smoke/'CAMPAIGN.json').get('contact_contract')!='FD1000-SC-CONTACT-v2':
-            raise RuntimeError('Object replay requires the new user-approved contact smoke')
+        if stage in ('replay-object-sources','replay-spatial-sources') and read(replay_smoke/'CAMPAIGN.json').get('contact_contract')!='FD1000-SC-CONTACT-v2':
+            raise RuntimeError('Distinct-source replay requires the new user-approved contact smoke')
     if stage=='export-candidates':
         if replay_smoke is None:raise RuntimeError('Explicit completed replay source required')
         source_receipt=read(replay_smoke/'RECEIPT.json')
-        if source_receipt['stage'] not in ('replay-smoke','replay-spatial-batch','replay-object-sources','replay-collection'):
+        if source_receipt['stage'] not in ('replay-smoke','replay-spatial-batch','replay-object-sources','replay-spatial-sources','replay-collection'):
             raise RuntimeError('Wrong witness source stage')
         if not source_receipt['canonicalize']:raise RuntimeError('Canonical legal witness required')
     if stage=='design-fixture':
@@ -184,11 +184,11 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
     if stage=='replay-collection':
         write(root/'CASES.json',collection_rows)
         write(root/'INHERITED.json',collection_inheritance)
-    if stage in ('replay-spatial-batch','replay-object-sources'):
+    if stage in ('replay-spatial-batch','replay-object-sources','replay-spatial-sources'):
         family='safelibero_object' if stage=='replay-object-sources' else 'safelibero_spatial'
         rows=[r for r in read(inventory/'inventory/CANDIDATES.json') if r['family']==family
               and r['proxy_safe_success'] and r['has_action_tape'] and r['has_settled_state']]
-        if stage=='replay-object-sources':
+        if stage in ('replay-object-sources','replay-spatial-sources'):
             from .inventory import smoke_selection
             rows=smoke_selection(rows,limit=60)
         if not 0<len(rows)<=200:raise RuntimeError('Unexpected bounded source replay pool')
@@ -237,7 +237,7 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
     if stage=='audit-candidates':script='audit.sbatch'
     if stage in ('fixture-render','fixture-grounding'):script='fixture_render.sbatch'
     submit=['sbatch','--parsable','--output='+str(root/'slurm_%j.log')]
-    if stage in ('replay-spatial-batch','replay-object-sources'):
+    if stage in ('replay-spatial-batch','replay-object-sources','replay-spatial-sources'):
         submit=['sbatch','--parsable','--array=0-7%4','--output='+str(root/'slurm_%A_%a.log')]
     if stage=='collect-smoke':submit.append('--hold')
     if stage in ('collect-cached-batch','collect-approved-cache'):submit.append('--time=01:00:00')
@@ -271,7 +271,7 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
 
 
 if __name__ == '__main__':
-    p = argparse.ArgumentParser(); p.add_argument('stage', choices=['inventory','source-plan','replay-smoke','replay-spatial-batch','replay-object-sources','collect-smoke','collect-cached-smoke','collect-cached-batch','collect-approved-cache','replay-collection','export-candidates','audit-candidates','design-fixture','fixture-smoke','fixture-render','fixture-grounding'])
+    p = argparse.ArgumentParser(); p.add_argument('stage', choices=['inventory','source-plan','replay-smoke','replay-spatial-batch','replay-object-sources','replay-spatial-sources','collect-smoke','collect-cached-smoke','collect-cached-batch','collect-approved-cache','replay-collection','export-candidates','audit-candidates','design-fixture','fixture-smoke','fixture-render','fixture-grounding'])
     p.add_argument('--inventory',type=Path);p.add_argument('--canonicalize',action='store_true')
     p.add_argument('--limit',type=int,default=12)
     p.add_argument('--source-plan',type=Path)

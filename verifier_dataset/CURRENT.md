@@ -6,6 +6,43 @@ then verifier training only after data acceptance. New API spending is capped at
 $20. The workflow is implemented in this directory; this is not a claim that
 1,000 scientific training records already exist.
 
+## Authorized continuation (latest)
+
+The human resolved both pending decisions: the exact 32 GLM-4.5V/Z.AI requests
+are approved with a $6.40 reservation ceiling inside $20, and native support
+contacts are allowed under the original robot/task-target contact scope.
+
+- API root `20261014T155252Z_fill-approved-perception-32_c892c8635496` completed
+  **32/32**, **32 settled attempts**, **$0.05882376** total. All returned model and
+  provider fields match; no retries or unresolved charges remain. Ten delivered
+  metadata/ledger files were checksum-verified locally. These are perception
+  outputs for AEGIS, not feasibility or rationale labels.
+- `FD1000-SC-CONTACT-v2` is versioned in `protocol.json`; `protocol_v1.json` and
+  all old archives remain intact. Replays derive robot/target collision geometry,
+  record native initial/integration contacts and separate synchronized endpoints,
+  and independently reclassify the saved sample stream. Supports are allowed;
+  robot/target violations still reject a witness. The drawer task includes its
+  manipulated cabinet even though its BDDL goal only states final containment.
+- New 12-source smoke **9967329 COMPLETED/0:0**, 6m00s: 12 exact legal replays,
+  **10 safe witnesses**, two real robot/target-contact rejections retained UNKNOWN.
+  Root: `20261014T155606Z_replay-smoke_cc44a522444c`.
+- Distinct Object array **9968038**, all eight shards COMPLETED/0:0, rechecks one
+  fixed existing trajectory per original Object source; counts and export are
+  being read back. Root: `20261014T160243Z_replay-object-sources_3c63329349f2`.
+- Offline GPU collection jobs **9967974 / 9967976** are active, 16 approved sources
+  each. Roots: `20261014T160147Z_collect-approved-cache_3c63329349f2` and
+  `20261014T160156Z_collect-approved-cache_3c63329349f2`. Only the exact approved
+  cached responses are staged. Changed reconstructed screenshots remain UNKNOWN
+  with no new paid request. Their source is frozen at `3c63329349f2`.
+- A simulator-native visibility diagnostic is implemented and tested: transparent
+  blue collision panels and noncolliding green fixed-goal outlines. It has not
+  yet run; it cannot open training or declare image grounding by itself.
+
+The earlier one-class 1,121-row export is a v1 candidate pool. Do not silently
+mix it into a v2 dataset: the new synchronized checks require fresh replay.
+Accepted complete scientific rows and finalized reasoning targets remain **0**.
+Training remains unlaunched pending matched negatives, grounding and shortcut audit.
+
 ## Completed evidence
 
 - Inventory job **9892280 COMPLETED/0:0**: 1,200 instrumented rollouts, 391
