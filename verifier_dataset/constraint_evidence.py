@@ -35,6 +35,10 @@ def guard_segment(old,new,bounds,radius):
 
 def verify_trace(samples,actions,geometry):
     if not samples or samples[0]['phase']!='initial':raise RuntimeError('Missing initial witness sample')
+    scope=geometry['contact_scope']
+    expected=set(scope['robot'])|{g for values in scope['targets'].values() for g in values}
+    if set(geometry['actors'])!=expected or set(geometry['protected'])!=set(scope['protected']):
+        raise RuntimeError('Contact actor/protected scope differs from the native identities')
     safe=True;last_pair=(0,0);endpoints=[];integrations=0
     for i,row in enumerate(samples):
         pair=(row['step'],row['substep'])
@@ -62,6 +66,7 @@ def verify_trace(samples,actions,geometry):
             raise RuntimeError('Native goal or contact history disagrees')
     if endpoints!=list(range(1,len(actions)+1)) or len(samples)!=1+integrations+len(actions):
         raise RuntimeError('Incomplete raw witness history')
+    if [r['step'] for r in actions]!=list(range(1,len(actions)+1)):raise RuntimeError('Noncontiguous legal commands')
     if any(len(r['action'])!=7 or not all(math.isfinite(v) and -1<=v<=1 for v in r['action']) or
            not r['source_physics_equal'] for r in actions):
         raise RuntimeError('Illegal or physically different source action')

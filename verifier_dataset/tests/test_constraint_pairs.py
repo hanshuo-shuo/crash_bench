@@ -12,7 +12,7 @@ class ConstraintEvidence(unittest.TestCase):
             goal=[[.45,-.05,0.],[.55,.05,.2]],target=[[-.01,-.01,.09],[.01,.01,.11]],
             material=material,native_goal=['on','object','plate_1'],native_obstacle='bottle',
             checkpoint=0,sample_index=0,remaining_horizon=10)
-        geometry=dict(protected=[100],actors=[10,11],goal_definition=dict(goal=layout['native_goal'],kind='object',
+        geometry=dict(protected=[100],actors=[10,11],contact_scope=dict(robot=[10],targets={'object':[11]},protected=[100]),goal_definition=dict(goal=layout['native_goal'],kind='object',
             target_contact_geoms=[11],receiver_contact_geoms=[20]))
         samples=[]
         for phase,step,substep,x,done in [('initial',0,0,0.,False),('integration',1,1,.3,False),('endpoint',1,1,.5,True)]:
@@ -60,6 +60,10 @@ class ConstraintEvidence(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError,'formula'):verify_trace(bad,actions,geometry)
         actions[0]['source_physics_equal']=False
         with self.assertRaisesRegex(RuntimeError,'physically different'):verify_trace(samples,actions,geometry)
+
+    def test_checker_cannot_omit_the_task_target_from_contact_actors(self):
+        _,geometry,samples,actions=self.fixture();geometry['actors']=[10]
+        with self.assertRaisesRegex(RuntimeError,'scope differs'):verify_trace(samples,actions,geometry)
 
     def test_same_image_text_and_object_category_balanced(self):
         layout,geometry,samples,actions=self.fixture();proof=verify_layout(layout,samples,actions)

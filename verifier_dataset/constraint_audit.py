@@ -38,12 +38,13 @@ def visibility_check(option,layout):
 def contact_sheets(root,units):
     from PIL import Image,ImageDraw
     records=[];directory=root/'review_sheets';directory.mkdir()
-    for page,start in enumerate(range(0,len(units),10)):
+    for page,start in enumerate(range(0,len(units),5)):
         canvas=Image.new('RGB',(920,5*280),'white');draw=ImageDraw.Draw(canvas)
         members=[]
-        for local,unit in enumerate(units[start:start+10]):
-            i=start+local;row=unit[0];x=(local%2)*460;y=(local//2)*280
-            for view,im in enumerate(row['student']['images']):
+        for local,unit in enumerate(units[start:start+5]):
+            i=start+local;row=unit[0];x=0;y=local*280
+            pictures=unit[0]['student']['images']+unit[2]['student']['images']
+            for view,im in enumerate(pictures):
                 with Image.open(im['path']) as pic:canvas.paste(pic,(x+view*224,y))
             meta=row['metadata'];label='%03d %s t%d'%(i,meta['source_id'],meta['checkpoint'])
             draw.text((x,y+228),label,fill='black')
@@ -51,7 +52,7 @@ def contact_sheets(root,units):
             draw.text((x,y+258),'Same capture: protect orange / protect purple.',fill='black')
             members.append(dict(unit_index=i,evidence_root=meta['evidence_root'],
                 source_id=meta['source_id'],checkpoint=meta['checkpoint'],
-                image_sha256=[im['sha256'] for im in row['student']['images']]))
+                image_sha256=[im['sha256'] for im in pictures]))
         path=directory/('sheet_%02d.png'%page);canvas.save(path)
         records.append(dict(path=str(path.relative_to(root)),sha256=sha(path),units=members))
     write(root/'VISUAL_REVIEW_INDEX.json',records)
@@ -110,6 +111,8 @@ def main(root,parents):
                             for image in value['images']:image['path']=str(Path(image['path']).relative_to(option))
                         if value!=expected[key]:raise RuntimeError('Candidate or reasoning draft does not match its evidence')
                     m=actual['metadata'];split_source=sources[m['source_id']]
+                    for key,value in expected['metadata'].items():
+                        if m.get(key)!=value:raise RuntimeError('Candidate target, role or source metadata differs from evidence')
                     for key in ('ancestry_component','task_group','family'):
                         if m[key]!=split_source[key]:raise RuntimeError('Frozen source ancestry changed')
                     actual['split']=split_source['split']

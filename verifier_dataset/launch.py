@@ -15,7 +15,7 @@ def command(*args):
     return subprocess.check_output(args, text=True).strip()
 
 
-def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, replay_smoke=None, collection_root=None, batch_shard=None, candidate_exports=None, fixture_design=None, drift_roots=None):
+def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, replay_smoke=None, collection_root=None, batch_shard=None, candidate_exports=None, fixture_design=None, drift_roots=None, review_file=None):
     repo = Path.cwd().resolve()
     if repo != (Path.home()/'crash_bench').resolve():
         raise RuntimeError('Wrong project checkout')
@@ -117,6 +117,19 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
                 raise RuntimeError('Constraint batch did not complete')
             if command('sacct','-X','-n','-P','-j',job,'--format=JobIDRaw,State,ExitCode').splitlines()!=[job+'|COMPLETED|0:0']:
                 raise RuntimeError('Constraint collections must terminate normally before audit')
+    if stage=='finalize-constraints':
+        if collection_root is None or review_file is None:raise RuntimeError('Explicit evidence preparation and published visual review required')
+        old=read(collection_root/'RECEIPT.json');job=old['job'];audit=read(collection_root/'AUDIT_COMPLETE.json')
+        if old['stage']!='audit-constraints' or not audit['passed'] or not read(collection_root/'SHORTCUT_AUDIT.json')['passed']:
+            raise RuntimeError('Evidence and shortcut gates must pass before finalization')
+        if command('sacct','-X','-n','-P','-j',job,'--format=JobIDRaw,State,ExitCode').splitlines()!=[job+'|COMPLETED|0:0']:
+            raise RuntimeError('Evidence preparation must terminate normally')
+        review_relative=review_file.resolve().relative_to(repo)
+        if review_relative.parts[:2]!=('verifier_dataset','reviews') or command('git','ls-files','--error-unmatch',str(review_relative))!=str(review_relative):
+            raise RuntimeError('Visual review must be a published project record')
+        review=read(review_file)
+        if not review.get('complete') or review.get('unresolved_units') or review['prepared_dataset_sha256']!=sha(collection_root/'PROPOSED_DATASET.jsonl'):
+            raise RuntimeError('Visual review is incomplete or refers to another proposed dataset')
     if stage in ('collect-smoke','collect-cached-smoke','collect-cached-batch'):
         if source_plan is None or not read(source_plan/'source_plan/SUMMARY.json')['passed']:
             raise RuntimeError('Passed broader-source inventory required')
@@ -259,6 +272,9 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
                 manifest['reverse_controller']='existing native nominal pi0.5 on the swapped derived task'
                 manifest['max_reverse_rollouts']=len(render_pairs)
     write(root/'CAMPAIGN.json', manifest)
+    if stage=='finalize-constraints':
+        write(root/'FINALIZE_SOURCE.json',dict(prepared=str(collection_root),
+            prepared_hashes_sha256=sha(collection_root/'HASHES.json'),review_relative_path=str(review_relative),review_sha256=sha(review_file)))
     if stage in ('constraint-prototype','constraint-batch'):
         manifest.update(partition='gengpu',derived_tasks=True,contact_contract='FD1000-SC-CONTACT-v2',
             additional_constraint='FD1000-VIRTUAL-CONSTRAINT-v1',maximum_checkpoints=1 if stage=='constraint-prototype' else 10,
@@ -374,6 +390,7 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
     if stage in ('fixture-render','fixture-grounding','paired-render'):script='fixture_render.sbatch'
     if stage=='reciprocal-prototype':script='reciprocal.sbatch'
     if stage in ('constraint-prototype','constraint-batch'):script='constraint.sbatch'
+    if stage=='finalize-constraints':script='finalize.sbatch'
     if stage=='audit-request-drift':script='request_drift.sbatch'
     submit=['sbatch','--parsable','--output='+str(root/'slurm_%j.log')]
     if stage in ('replay-spatial-batch','replay-object-sources','replay-spatial-sources','replay-early-sources','paired-screen'):
@@ -413,7 +430,7 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
 
 
 if __name__ == '__main__':
-    p = argparse.ArgumentParser(); p.add_argument('stage', choices=['inventory','source-plan','replay-smoke','replay-spatial-batch','replay-object-sources','replay-spatial-sources','replay-early-sources','collect-smoke','collect-cached-smoke','collect-cached-batch','collect-approved-cache','collect-frozen-perception','replay-collection','export-candidates','audit-candidates','audit-constraints','design-fixture','fixture-smoke','fixture-render','fixture-grounding','audit-request-drift','paired-prototype','paired-screen','paired-render','reciprocal-prototype','constraint-prototype','constraint-batch'])
+    p = argparse.ArgumentParser(); p.add_argument('stage', choices=['inventory','source-plan','replay-smoke','replay-spatial-batch','replay-object-sources','replay-spatial-sources','replay-early-sources','collect-smoke','collect-cached-smoke','collect-cached-batch','collect-approved-cache','collect-frozen-perception','replay-collection','export-candidates','audit-candidates','audit-constraints','finalize-constraints','design-fixture','fixture-smoke','fixture-render','fixture-grounding','audit-request-drift','paired-prototype','paired-screen','paired-render','reciprocal-prototype','constraint-prototype','constraint-batch'])
     p.add_argument('--inventory',type=Path);p.add_argument('--canonicalize',action='store_true')
     p.add_argument('--limit',type=int,default=12)
     p.add_argument('--source-plan',type=Path)
@@ -423,4 +440,5 @@ if __name__ == '__main__':
     p.add_argument('--candidate-export',type=Path,action='append')
     p.add_argument('--fixture-design',type=Path)
     p.add_argument('--drift-root',type=Path,action='append')
-    a=p.parse_args();main(a.stage,a.inventory,a.canonicalize,a.limit,a.source_plan,a.replay_smoke,a.collection_root,a.batch_shard,a.candidate_export,a.fixture_design,a.drift_root)
+    p.add_argument('--review-file',type=Path)
+    a=p.parse_args();main(a.stage,a.inventory,a.canonicalize,a.limit,a.source_plan,a.replay_smoke,a.collection_root,a.batch_shard,a.candidate_export,a.fixture_design,a.drift_root,a.review_file)
