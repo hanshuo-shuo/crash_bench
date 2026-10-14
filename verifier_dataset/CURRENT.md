@@ -25,7 +25,20 @@ $20. The workflow is implemented in this directory; this is not a claim that
 - **Zero new paid calls.** Public endpoint metadata was fetched without a key or
   simulator payload and passed the pinned GLM-4.5V / Z.AI pricing guard. The
   proposed four-case GPU collection reserves at most $0.80 for eight attempts
-  within the shared $20 ceiling; no paid worker or GPU collection was launched.
+  within the shared $20 ceiling; no paid worker or paid-enabled GPU collection
+  was launched. A separate cache-only GPU job is now queued (below).
+- Spatial array **9906479**, all eight shards **COMPLETED/0:0**: 124 tapes
+  rechecked, 116 strict contact-free legal witnesses, eight contact rejections,
+  1,160 checkpoint candidates. Eligible witnesses cover **nine original states**,
+  one task composition and one family; the tenth inventoried state had no
+  passing witness in this batch.
+- Export **9907786 COMPLETED/0:0**, 2m15s: **1,001 distinct positive candidates**
+  after removing 159 duplicate full inputs; 1,001 distinct image pairs. All
+  records remain `training_eligible=false`, with null reasoning targets, pending
+  observability review and unassigned splits. This does not satisfy the requested
+  mixed 1,000-record scientific dataset. Its manifest, hashes and 18 preview
+  images (two per source) are mirrored locally; all 2,002 images and original
+  evidence remain at the immutable Quest export root.
 
 Local receipts and checksum-verified copies are under
 `results/verifier_dataset/`. The corresponding Quest roots are under
@@ -37,23 +50,27 @@ Local receipts and checksum-verified copies are under
 | Broader sources | `20261014T055536Z_source-plan_28670c444e49` | `28670c444e49` |
 | Passing 12-case replay | `20261014T060755Z_replay-smoke_bc55dec076a6` | `bc55dec076a6` |
 | Spatial CPU batch | `20261014T061523Z_replay-spatial-batch_454f29b3c8fd` | `454f29b3c8fd` |
+| Candidate export | `20261014T063344Z_export-candidates_efcf7fa16836` | `efcf7fa16836` |
+| Cache-only Goal smoke | `20261014T063412Z_collect-cached-smoke_efcf7fa16836` | `efcf7fa16836` |
 
 ## Active unaffected work
 
-CPU array **9906479** validates the existing 124 Spatial proxy-success tapes in
-eight shards, at most four running concurrently. These are 124 distinct action
-tapes, **ten original initial states and one task composition**, including 63
-AEGIS and 61 nominal executions. Read its actual `shards/*/PROGRESS.json`,
-`REPLAY_COMPLETE.json` and Slurm terminal accounting; do not infer completion
-from this paragraph. Keep the live Quest source frozen until the array ends.
+Cache-only Goal job **9907813** is queued on one A100 (last checked
+PENDING/Priority). It uses four existing Goal source identities, one per task.
+It starts no API worker, reads no credential and has zero paid fallback. Missing
+exact historical cache entries are retained as deferred/UNKNOWN before scored
+policy actions. This is the safe alternative to the rejected paid operation;
+it does not grant approval for new external requests. Read actual receipts and
+Slurm state rather than treating this static paragraph as live status.
 
-The tested `export-candidates` stage is published but not yet run. It requires
-every source shard to finish normally, rechecks witness hashes, command legality,
-contact records and exact replay, strips future actions/diagnostics from student
-inputs, verifies PNG pixel equality and removes duplicate full inputs. It reports
-image-pair and original-source counts separately. Exports remain positive
-**candidates** with `training_eligible=false`, no invented rationale, and explicit
-pending observability/split/negative/shortcut gates.
+The live Quest checkout remains at `efcf7fa1683670e9b85a8e0e7a2f7650f2207c5c`;
+the queued job uses its immutable archived source and staged upstream/assets.
+The finished Spatial input pool contained 63 AEGIS and 61 nominal tapes from
+ten initial identities; only nine identities contributed eligible witnesses.
+
+Local candidate manifest:
+`results/verifier_dataset/20261014T063344Z_export-candidates_efcf7fa16836/positive_candidates.jsonl`.
+Local image delivery is a preview subset, not the full training image pool.
 
 ## Pending decisions and closed gates
 
