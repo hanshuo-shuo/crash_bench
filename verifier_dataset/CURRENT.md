@@ -15,7 +15,32 @@ The full FD1000 API budget is $20, including a $6.40 ceiling for that completed
 batch. All current collection, reasoning targets and training preparation are
 offline. The private key is never printed, copied or logged.
 
-## Active v2 collection; v1 failed acceptance
+## V2 collection complete; acceptance still pending
+
+Both source-frozen v2 collectors terminated normally:
+
+- **3603883 COMPLETED/0:0**, 34m52s, A100-SXM4-80GB/qgpu2002,
+  `20261014T211358Z_constraint-batch_40c7166d3940`: 34 sources,
+  294 matched units / 1,176 candidate rows.
+- **3608143 COMPLETED/0:0**, 30m49s, A100-PCIE-40GB/qgpu0208,
+  `20261014T214517Z_constraint-batch_e8ecc40f6f41`: 33 sources,
+  301 matched units / 1,204 candidate rows.
+
+Together: all 67 source trajectories, 595 matched units / 2,380 candidate rows.
+These are the only parents for the next v2 evidence audit. Zero final rows are
+accepted and no new verifier training has started. API cost remains $0.05882376.
+
+Published `reviews/fd1000_camera_v2_visibility_v3.json` binds 276 actual-image
+reviews (59 source identities), including 28 whole-unit visibility exclusions,
+to their exact four-image hashes. This is Codex image review, not independent
+human review. Fixed source-round-robin selection proposes 250 units: 217 already
+have matching visible-premise reviews and 33 still require image inspection.
+Preview: `results/verifier_dataset/camera_v2_selection_20261014/round1`.
+No shortcut readout has been fit on v2; no locked-test prediction has been made.
+The new selection-preview helper performs file I/O and visibility curation only;
+the independent compute-node raw evidence and shortcut gates remain mandatory.
+
+## V2 collection history; v1 failed acceptance
 
 Two v2 batches were submitted from published source
 `000bcec9a2a7c29db7c67fb20dcad81a3deb02c2`:
