@@ -10,6 +10,27 @@ only after data acceptance. The API budget is $20 for this new campaign. See
 UNKNOWN; historical benchmark success is only a contact-replay candidate.
 The [FD1000 status record](../verifier_dataset/CURRENT.md) records the current
 67 replayed source trajectories and the successive constraint-data versions.
+Latest update: the user requested final acceptance and typical examples before
+discussing training. Quest access is restored and both V4 collectors are verified
+COMPLETED/0:0: **494 matched units / 1,976 candidate rows** across all 67 source
+cases. Collection is closed; only selection, acceptance and an example review
+pack continue. No A/B training starts before the user's data-quality review.
+The prior wrap-up snapshot below records the earlier approval-service outage.
+The user's latest instruction is to wrap up collection and discuss next steps.
+V4 has at least **424 matched checkpoint units / 1,696 candidate rows**. Collector
+3634921 completed normally (34 sources, 248 units); collector 3634922 was last
+observed RUNNING with 32/33 sources complete. Its terminal state is unconfirmed:
+automatic approval review could not execute the final Quest status query because
+of a Codex usage-limit error. This is not a reported experiment failure.
+Local image review covers 178 units from 48 sources, excluding 10 and retaining
+168 with visible premises; all 738 delivery files for these reviews were
+rehashed. This is Codex review, not independent human review or final acceptance.
+V4 selection and the fixed evidence/shortcut audit remain unfinished. No further
+collection job or training was submitted after the wrap-up instruction. The local
+wrap-up and review bank are saved but not yet published/synchronized. The intended
+1,000 rows are 250 matched checkpoints from at most 67 original trajectories,
+not 1,000 independent trajectories. Do not sync the Quest source until both
+collectors are verified terminal. See the status record for the remaining work.
 V3's proposed 1,000 rows had 250 image-reviewed checkpoint units across 44
 sources, 10 native compositions and three families. Independent audit 3628952
 completed normally but rejected acceptance: fixed joint validation AUROC was

@@ -15,6 +15,76 @@ The full FD1000 API budget is $20, including a $6.40 ceiling for that completed
 batch. All current collection, reasoning targets and training preparation are
 offline. The private key is never printed, copied or logged.
 
+## Collection wrap-up requested; V4 acceptance still pending
+
+Update after the user's explicit final-acceptance request: the approval service
+and Quest connection are available again. Slurm accounting confirms **both
+3634921 and 3634922 COMPLETED/0:0**; the second took 34m35s. All 67 source cases
+completed, yielding **494 matched units / 1,976 candidate rows** (248 + 246).
+The earlier uncertain status below is retained as history. Collection is closed.
+The remaining authorized work is selection, fixed data acceptance and a user
+review pack of typical examples; **no A/B training is to start before the user
+has reviewed data quality and discussed training**. No further API call is needed.
+
+The user's latest direction is to stop expanding if the pool is sufficient,
+wrap up and discuss next steps. No additional collection, audit or training job
+was submitted after that direction. The current pool is sufficient in raw count
+to stop expanding; it has not established 1,000 scientifically accepted records.
+
+Both V4 collectors use published source
+`96a99b51efaa2934bf53bfe10c2a73c806f1cd29` and protocol
+`9da9e2638eab6904b629665acb8daf1748ca3c65d7cb2fcb9782c379c5258787`:
+
+- **3634921 COMPLETED/0:0**, 27m45s, qgpu0408, root
+  `20261015T013004Z_constraint-batch_96a99b51efaa`: all 34 sources,
+  248 matched units / 992 candidate rows.
+- **3634922 last observed RUNNING**, 33m42s, qgpu2003, root
+  `20261015T013009Z_constraint-batch_96a99b51efaa`: 32/33 sources complete
+  at the last successful observation. An earlier count after 26 sources was
+  176 units. Its final state, exit code and total are **unconfirmed**. Its
+  pending walltime adjustment to 60 minutes is preserved remotely in
+  `SCHEDULING_UPDATE.json`; scientific source and settings were unchanged.
+
+Thus the confirmed lower bound is **424 units / 1,696 candidate rows**. Four
+rows per unit pair two color assignments with two protected-color rules at one
+physical checkpoint. The intended final 1,000 rows mean 250 checkpoint units
+from at most 67 original trajectories, not 1,000 independent trajectories.
+The certificate construction still uses one closed-separator mechanism.
+
+Local `reviews/fd1000_factorial_v4_visibility_v1.json` binds **178 reviewed units
+across 48 original sources**, with **10 excluded and 168 premises-visible**,
+to their actual image hashes. All 738 delivery files for the completed reviews
+were rehashed during wrap-up. This is Codex image review, not independent human
+review, and visible premises alone do not establish scientific acceptance.
+Another 32 downloaded units in `shard1_17_25` remain unreviewed. Second-shard
+source indices 25 through 32 have not been exported for review. No final V4
+250-unit selection, shortcut fit or locked-test prediction has been made.
+Accepted rows, finalized training targets and new verifier training runs are zero.
+
+The final Quest status query was **not executed**: automatic approval review
+hit a Codex usage limit and could not complete. This is an approval-service
+failure, not a determination that the action was unsafe or that the experiment
+failed. No alternate route was used. The already submitted collector may have
+continued independently; no completion or cancellation is asserted. Keep the
+Quest source frozen until both terminal states are verified.
+
+The local wrap-up record is
+`results/verifier_dataset/factorial_v4_collection_20261015/WRAPUP.json`.
+These wrap-up docs and the visibility bank are saved locally, not yet committed,
+published or synchronized. Original submission receipts and all prior results
+remain intact. API spend remains **$0.05882376 of $20**, with no new paid call.
+
+Remaining completion work is to retrieve the terminal receipt, finish reviewing
+the deterministically selected units and run the fixed independent evidence and
+grouped shortcut audit. Preserve rejection if the unchanged gate fails; do not
+relax it or automatically start another construction revision. After acceptance,
+the proposed next experiment is the matched direct-verdict versus grounded
+generative-verifier comparison, with the same inputs, splits and training budget.
+Measure verdict accuracy, counterfactual consistency and explanation support.
+Passing simple shortcut checks would not by itself prove reasoning or establish
+that a generative verifier is necessary. Full SFT and more collection are not
+needed for this next comparison and are not being started during wrap-up.
+
 ## V3 rejected; V4 native prototype qualified for bounded bulk collection
 
 Independent V3 audit **3628952 COMPLETED/0:0**, 9m20s on qnode0106,
