@@ -2,6 +2,19 @@
 
 ## FD1000 collection authorized — 2026-10-14
 
+**Final acceptance is complete and V4 is rejected for training.** CPU audit
+3657699 completed normally (9m48s, source `75be81f8f066`). The user-authorized
+smaller subset has **896 evidence-backed, image-reviewed candidate rows** from
+64 original trajectories, 12 task compositions and four families. The independent
+evidence audit passes; the fixed joint shortcut gate fails: RGB/color/rule linear
+AUROC 0.781576 and color-statistics/rule linear AUROC 0.779948 exceed 0.75.
+The locked test remains unscored. No further collection, post-fit reselection,
+threshold relaxation or training is queued. All submitted jobs are terminal;
+API spend remains $0.05882376. See the top of
+[the final status record](../verifier_dataset/CURRENT.md) for the complete decision,
+review-only dataset, original images and typical positive/negative examples.
+The earlier progress entries below are retained as history.
+
 The user authorized 1,000 reliable feasibility records from existing pi0.5/full
 AEGIS trajectories, more independent scene sources, evidence-backed negatives,
 grounded explanations and visual-shortcut audits, followed by verifier training

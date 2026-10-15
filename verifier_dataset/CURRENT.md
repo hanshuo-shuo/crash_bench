@@ -1,4 +1,73 @@
-# FD1000 current state — 2026-10-14
+# FD1000 final acceptance — V4 rejected, 896 review-only rows
+
+## Final acceptance complete; collection closed and training not started
+
+Quest CPU audit **3657699 COMPLETED/0:0**, 9m48s on qnode0026, root
+`20261015T042328Z_audit-constraints_75be81f8f066`, used published source
+`75be81f8f0664e89ece893a16ae3659b2c431452`. It independently rechecked the
+67 original traces, 494 raw matched units, selected image hashes, regenerated
+candidate explanations and the fixed source split. The selected set exactly
+matches the local selection frozen before the first V4 model fit.
+
+**The final dataset is rejected for scientific training.** Evidence and selected
+visual-premise checks pass, but the unchanged maximum joint-shortcut AUROC
+threshold of 0.75 fails:
+
+| Fixed validation readout | AUROC |
+| --- | ---: |
+| Image statistics only | 0.500000 |
+| Task/rules only | 0.500000 |
+| RGB/color/rule linear | **0.781576** |
+| RGB/color/rule forest | 0.738824 |
+| Color statistics/rule linear | **0.779948** |
+| Color statistics/rule forest | 0.690213 |
+| Color centroids/rule linear | 0.685221 |
+| Color centroids/rule forest | 0.638346 |
+
+Image-only and text-only chance performance is guaranteed by paired input/label
+balance; it does not establish absence of shortcuts in their combination. Test
+model predictions remain unscored. No post-fit reselection, extra diagnostic run,
+construction revision, relaxed threshold, finalizer or verifier training followed.
+All collection and audit jobs in this work are terminal. API spend remains
+**$0.05882376 of $20**, with no new API request during final acceptance.
+
+The review-only subset contains **896 rows: 448 witnessed positives and 448
+conditional negatives**, organized as 224 complete four-row checkpoint units
+from **64 original trajectories / ancestry groups, 12 task compositions and four
+families**. There are 512/192/192 rows and 35/14/15 original source groups in
+train/validation/test. Each source contributes at most six selected checkpoints.
+Four factor cells have equal counts in every split. The broader visibility bank
+has 293 reviewed units with 39 whole-unit exclusions; all 224 selected units have
+image-bound visible-premise records. This is Codex review, not independent human
+review. The user reduced the size requirement rather than relaxing any evidence,
+visibility, split, coverage or shortcut condition.
+
+Published decision and final selected-image record:
+`reviews/fd896_v4_final_decision.json` and `reviews/fd896_v4_final_visual.json`.
+The latter binds the proposed dataset digest and every selected unit's PNG hashes;
+its completion is not overall acceptance. Accepted training rows and new verifier
+training runs remain **zero**.
+
+Local delivery:
+
+- `results/verifier_dataset/factorial_v4_final_896_20261015/FINAL_DECISION.json`
+  and `AUDIT_DELIVERY/`: 14 hash-verified audit/provenance files.
+- `results/verifier_dataset/factorial_v4_final_896_20261015/candidate_review/`:
+  896 candidate records and 896 exact student PNGs, complete manifest and explicit
+  `REVIEW_ONLY_NOT_ACCEPTED.json`; each row has `training_eligible=false`.
+- `results/verifier_dataset/factorial_v4_examples_20261015/index.html`:
+  three training-split positive/negative pairs, original two-view images,
+  proposed reasoning labels in English and Chinese, raw witness/certificate
+  links, color-swap controls and one visibility exclusion. The 25 example proof
+  delivery files were hash-verified. No locked-test model prediction is shown.
+
+Scope: colored boxes are explicit virtual six-face no-crossing boundaries, not
+new physical walls. Negatives use one closed-separator mechanism under that
+contract. Positive wording explains visible boundary relations; only the actual
+safe-success trajectory establishes existence. Endpoint containment alone does
+not establish general robot reachability. Policy failure remains UNKNOWN.
+The user's next step is data-quality review; A/B training requires a later
+discussion and is not queued. The chronology below is preserved as history.
 
 ## Authorized scope and budget
 
