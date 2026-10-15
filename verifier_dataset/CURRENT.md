@@ -15,7 +15,7 @@ The full FD1000 API budget is $20, including a $6.40 ceiling for that completed
 batch. All current collection, reasoning targets and training preparation are
 offline. The private key is never printed, copied or logged.
 
-## V2 rejected by shortcut gate; v3 collection complete, image review continuing
+## V2 rejected by shortcut gate; v3 selected images reviewed, independent audit next
 
 V2 audit **3614374 COMPLETED/0:0**, 9m54s, root
 `20261014T222942Z_audit-constraints_c2182eb82cf7`. All 595 raw units passed
@@ -93,7 +93,25 @@ not admitted on the strength of a geometric certificate alone. Published record:
 `reviews/fd1000_sides_v3_visibility_v2.json`. Every delivered file and all review
 image hashes were rechecked. This is Codex image review, not independent human
 review. Deterministic quota selection and additional selected-image review are
-still required, followed by a new independent evidence and shortcut audit.
+now complete as described below; a new independent evidence/shortcut audit is
+still required.
+
+Published `reviews/fd1000_sides_v3_visibility_v6.json` binds **375 actual-image
+reviews and 124 whole-unit exclusions** to the exact four PNG hashes. The final
+preliminary selection contains **250/250 image-reviewed units / 1,000 rows**,
+from **44 original sources, 10 native task compositions and three families**:
+121 Spatial, 60 Long and 69 Goal units. No Object unit is in this selection.
+There are at most eight selected checkpoints per source. Frozen row quotas are
+**600 train / 200 validation / 200 test**, with **23 / 10 / 11 source groups**;
+both construction modes have exactly equal counts within each split.
+`results/verifier_dataset/sides_v3_selection_20261014/round4/LOCAL_SELECTION_COVERAGE_CHECK.json`
+records the local image-bound coverage check. Preliminary selection SHA256:
+`1357f76f207182ed8a99848dd19d9ecb5d9e5fa9c4502f173d1dab01610e2b07`.
+Review SHA256:
+`95d164f14facd6272569498ecf1856257aa6fd44997f5b93f8f455072a7e3662`.
+Only visibility was used for these exclusions; no v3 readout/verifier has been
+fitted and no locked-test model prediction has been made. This is still zero
+scientifically accepted rows until the raw evidence and fixed shortcut gates pass.
 
 ## V2 collection and visual-review history (not training-approved)
 

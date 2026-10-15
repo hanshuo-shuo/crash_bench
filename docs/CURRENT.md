@@ -16,9 +16,11 @@ rejected acceptance: the fixed joint forest still reached validation AUROC
 0.867627, exceeding the unchanged 0.75 limit. A prospective v3 construction now
 balances target and goal sides of the same closed separator. Its native prototype
 passed, and both v3 bulk jobs completed normally with 495 matched units/1,980
-candidate rows. Initial image review found 191 visible units and 102 visibility
-exclusions; final selection, complete selected-image review and a fresh evidence/
-shortcut audit remain mandatory. The 32 explicitly approved GLM requests
+candidate rows. After 375 image reviews and 124 visibility exclusions, the fixed
+1,000-row selection has 250/250 reviewed checkpoint units across 44 sources,
+10 native task compositions and three families. A fresh independent evidence/
+shortcut audit remains mandatory before scientific acceptance or training.
+The 32 explicitly approved GLM requests
 completed for $0.05882376. No complete mixed dataset has passed scientific
 acceptance and no verifier training has started.
 Actual stage receipts and results live under `results/verifier_dataset/`.
