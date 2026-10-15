@@ -73,7 +73,8 @@ def context(root):
 
 
 def processor_for(assets):
-    return AutoProcessor.from_pretrained(assets/'model',local_files_only=True,min_pixels=224*224,max_pixels=224*224)
+    pixels=configuration()['image_pixels']
+    return AutoProcessor.from_pretrained(assets/'model',local_files_only=True,min_pixels=pixels,max_pixels=pixels)
 
 
 def preflight(root):

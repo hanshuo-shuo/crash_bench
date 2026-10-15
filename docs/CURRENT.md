@@ -10,16 +10,19 @@ only after data acceptance. The API budget is $20 for this new campaign. See
 UNKNOWN; historical benchmark success is only a contact-replay candidate.
 The [FD1000 status record](../verifier_dataset/CURRENT.md) records the current
 67 replayed source trajectories and the successive constraint-data versions.
-The v2 proposed 1,000 rows had complete image-premise review across 63 sources,
-12 task compositions and four families. Audit 3614374 completed normally but
-rejected acceptance: the fixed joint forest still reached validation AUROC
-0.867627, exceeding the unchanged 0.75 limit. A prospective v3 construction now
-balances target and goal sides of the same closed separator. Its native prototype
-passed, and both v3 bulk jobs completed normally with 495 matched units/1,980
-candidate rows. After 375 image reviews and 124 visibility exclusions, the fixed
-1,000-row selection has 250/250 reviewed checkpoint units across 44 sources,
-10 native task compositions and three families. A fresh independent evidence/
-shortcut audit remains mandatory before scientific acceptance or training.
+V3's proposed 1,000 rows had 250 image-reviewed checkpoint units across 44
+sources, 10 native compositions and three families. Independent audit 3628952
+completed normally but rejected acceptance: fixed joint validation AUROC was
+0.7690 (linear) and 0.8311 (forest), above the unchanged 0.75 limit. Diagnostic
+3630797 found color-centroid/rule forest AUROC 0.8600. Locked test predictions
+were not made. V1, V2 and V3 remain preserved failed dataset-development versions.
+The prospective V4 design independently balances negative entry/exit direction
+and positive both-inside/neither-inside placement, with congruent same-height,
+same-stroke boundaries and 448-pixel student views. Four fixed color-only
+readouts join the original screen before any V4 fit. The frozen source groups,
+camera seeds and 0.75 gate remain unchanged. Local checks passed (93 dataset,
+21 training-contract/metrics tests); a fresh four-family native prototype and
+actual-image review are still required before bounded bulk collection.
 The 32 explicitly approved GLM requests
 completed for $0.05882376. No complete mixed dataset has passed scientific
 acceptance and no verifier training has started.

@@ -22,7 +22,7 @@ def main(parents,start,stop,output,checkpoint_start=0,checkpoint_stop=3):
     for parent in parents:
         parent=parent.resolve();parent.relative_to((ASSETS/'verifier_dataset').resolve())
         receipt=read(parent/'RECEIPT.json')
-        if receipt['stage']!='constraint-batch':raise RuntimeError('Expected an explicit constraint collection shard')
+        if receipt['stage'] not in ('constraint-batch','constraint-prototype'):raise RuntimeError('Expected an explicit constraint collection shard or prototype')
         inherited.append(dict(root=str(parent),receipt_sha256=sha(parent/'RECEIPT.json'),job=receipt['job'],code_commit=receipt['code_commit']))
         for index in range(start,min(stop,len(read(parent/'CASES.json')))):
             case=parent/('case_%03d'%index)

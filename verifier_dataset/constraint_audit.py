@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 from .inventory import read,sha,write
 from .constraint_evidence import verify_trace,verify_layout,rows as regenerate_rows
-from .constraint_selection import check_unit,select_units
+from .constraint_selection import check_unit,select_units,selection_cell
 
 
 def check_hashes(folder):
@@ -31,6 +31,9 @@ def visibility_check(option,layout):
     import numpy as np
     from PIL import Image
     vis=read(option/'VISIBILITY.json');images=read(option/'IMAGES.json')['assignments']
+    size=layout.get('student_image_size',224)
+    from .constraint_sides import VERSION
+    if layout.get('construction_version')==VERSION and size!=448:raise RuntimeError('V4 student resolution differs')
     if layout.get('camera_scheme')=='balanced_two_overviews_v2':
         from .constraint_visuals import balanced_poses
         camera=read(option/'CAMERA.json');views=camera['rendered_views']
@@ -53,37 +56,48 @@ def visibility_check(option,layout):
             if sha(option/image['path'])!=image['sha256'] or sha(option/view['segmentation_path'])!=view['segmentation_sha256']:
                 raise RuntimeError('Visibility/image evidence changed')
             with Image.open(option/image['path']) as im:
-                if im.size!=(224,224) or im.mode!='RGB':raise RuntimeError('Unexpected final student image')
+                if im.size!=(size,size) or im.mode!='RGB' or image['width']!=size or image['height']!=size:
+                    raise RuntimeError('Unexpected final student image')
     from .constraint_visuals import prescreen
     return prescreen(vis)
 
 
 def contact_sheets(root,units):
-    from PIL import Image,ImageDraw
+    from PIL import Image,ImageDraw,ImageFont
+    size=units[0][0]['student']['images'][0].get('width',224) if units else 224
+    per_page=3 if size==448 else 5;height=size+56
+    font=ImageFont.load_default(size=14 if size==448 else 10)
     records=[];directory=root/'review_sheets';directory.mkdir()
-    for page,start in enumerate(range(0,len(units),5)):
-        canvas=Image.new('RGB',(920,5*280),'white');draw=ImageDraw.Draw(canvas)
+    for page,start in enumerate(range(0,len(units),per_page)):
+        canvas=Image.new('RGB',(4*size+24,per_page*height),'white');draw=ImageDraw.Draw(canvas)
         members=[]
-        for local,unit in enumerate(units[start:start+5]):
-            i=start+local;row=unit[0];x=0;y=local*280
+        for local,unit in enumerate(units[start:start+per_page]):
+            i=start+local;row=unit[0];x=0;y=local*height
             pictures=unit[0]['student']['images']+unit[2]['student']['images']
             for view,im in enumerate(pictures):
-                with Image.open(im['path']) as pic:canvas.paste(pic,(x+view*224,y))
+                with Image.open(im['path']) as pic:
+                    if pic.size!=(size,size):raise RuntimeError('Review cannot mix student resolutions')
+                    canvas.paste(pic,(x+view*size,y))
             meta=row['metadata'];label='%03d %s t%d'%(i,meta['source_id'],meta['checkpoint'])
-            draw.text((x,y+228),label,fill='black')
+            draw.text((x,y+size+4),label,fill='black',font=font)
             mode=meta.get('construction_mode')
-            from .constraint_sides import ENTRY,EXIT
-            if mode==ENTRY:
+            from .constraint_sides import ENTRY,EXIT,BOTH
+            if 'positive_side' in meta:
+                target=(['ORANGE'] if mode==EXIT else [])+(['PURPLE'] if meta['positive_side']==BOTH else [])
+                goal=(['ORANGE'] if mode==ENTRY else [])+(['PURPLE'] if meta['positive_side']==BOTH else [])
+                names=lambda colors:'BOTH' if len(colors)==2 else colors[0] if colors else 'NEITHER'
+                caption='Left pair: target inside '+names(target)+'; green destination inside '+names(goal)+'. Check actual native student pixels.'
+            elif mode==ENTRY:
                 caption='ENTRY, left pair: target inside PURPLE only; green goal inside BOTH.'
             elif mode==EXIT:
                 caption='EXIT, left pair: target inside ORANGE only; green goal outside BOTH.'
             else:
                 caption='Check target, both virtual boxes, and green destination.'
-            draw.text((x,y+244),caption,fill='black')
-            draw.text((x,y+258),'Right pair swaps colors. Verify visible sides; reject ambiguity. Captions are review-only.',fill='black')
+            draw.text((x,y+size+21),caption,fill='black',font=font)
+            draw.text((x,y+size+38),'Right pair swaps colors. Reject ambiguous premises. Captions are review-only.',fill='black',font=font)
             members.append(dict(unit_index=i,evidence_root=meta['evidence_root'],
                 source_id=meta['source_id'],checkpoint=meta['checkpoint'],
-                construction_mode=mode,
+                construction_mode=mode,positive_side=meta.get('positive_side'),construction_cell=meta.get('construction_cell'),
                 image_sha256=[im['sha256'] for im in pictures]))
         path=directory/('sheet_%02d.png'%page);canvas.save(path)
         records.append(dict(path=str(path.relative_to(root)),sha256=sha(path),units=members))
@@ -184,7 +198,8 @@ def main(root,parents):
         by_task=dict(Counter(r['metadata']['task_group'] for r in records)),by_family=dict(Counter(r['metadata']['family'] for r in records)))
     if protocol.get('selection_quotas'):
         coverage.update(construction_version=protocol['construction_version'],selection_quotas=protocol['selection_quotas'],
-            by_split_mode_units=dict(Counter(r[0]['split']+'/'+r[0]['metadata']['construction_mode'] for r in selected)))
+            by_split_mode_units=dict(Counter(r[0]['split']+'/'+r[0]['metadata']['construction_mode'] for r in selected)),
+            by_split_cell_units=dict(Counter(r[0]['split']+'/'+selection_cell(r[0]) for r in selected)))
     if coverage['original_sources']<30 or coverage['ancestry_groups']<30 or coverage['native_task_compositions']<6 or coverage['families']<3:
         raise RuntimeError('Selected units do not meet the frozen source-coverage requirement')
     contact_sheets(root,selected)

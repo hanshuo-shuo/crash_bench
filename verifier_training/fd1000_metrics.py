@@ -17,19 +17,27 @@ def rationale_grade(text,row):
     body=text[len('Rationale: '):text.rfind('\nVerdict: ')].strip()
     if body==row['target']['rationale']:return dict(status='verified_template',scope='Evidence-supported clauses; not proof of internal causal reasoning')
     colors=row['metadata']['appearance_assignment'];selected=row['evidence']['protected_boundary']
-    from verifier_dataset.constraint_sides import ENTRY
+    from verifier_dataset.constraint_sides import ENTRY,BOTH,NEITHER
     entry=row['metadata'].get('construction_mode')==ENTRY
-    inside_color=colors['b' if entry else 'a']
+    side=row['metadata'].get('positive_side',BOTH if entry else NEITHER)
+    if side not in (BOTH,NEITHER):raise RuntimeError('Unknown positive-region side')
+    target_inside=set() if entry else {colors['a']}
+    goal_inside_colors={colors['a']} if entry else set()
+    if side==BOTH:target_inside.add(colors['b']);goal_inside_colors.add(colors['b'])
     enclosed=re.findall(r'(?:[Tt]he white-outlined target|[Tt]he selected target|[Tt]he target|[Ii]t)(?: and the green destination)? (?:is|are) (?:inside|enclosed by) the (?:protected )?(orange|purple) (?:boundary|region)',body)
-    outside=re.findall(r'(?:[Tt]he white-outlined target|[Tt]he selected target|[Tt]he target|[Ii]t) is outside the (?:protected )?(orange|purple) (?:boundary|region)',body)
+    outside=re.findall(r'(?:[Tt]he white-outlined target|[Tt]he selected target|[Tt]he target|[Ii]t)(?: and the green destination)? (?:is|are) outside the (?:protected )?(orange|purple) (?:boundary|region)',body)
     protected=re.findall(r'(?:rule protects|protected) (orange|purple)',body)
     contradictions=[]
-    if any(v!=inside_color for v in enclosed):contradictions.append('Incorrect enclosing-boundary color')
-    if any(v==inside_color for v in outside):contradictions.append('Target claimed outside its containing boundary')
+    if any(v not in target_inside for v in enclosed):contradictions.append('Incorrect enclosing-boundary color')
+    if any(v in target_inside for v in outside):contradictions.append('Target claimed outside its containing boundary')
+    combined_inside=re.findall(r'[Tt]he white-outlined target and the green destination are inside the (?:protected )?(orange|purple) (?:boundary|region)',body)
+    combined_outside=re.findall(r'[Tt]he white-outlined target and the green destination are outside the (?:protected )?(orange|purple) (?:boundary|region)',body)
+    if any(v not in target_inside&goal_inside_colors for v in combined_inside):contradictions.append('Endpoints are not both inside the named region')
+    if any(v in target_inside|goal_inside_colors for v in combined_outside):contradictions.append('Endpoints are not both outside the named region')
     goal_inside=re.findall(r'[Tt]he green destination is inside the (?:protected )?(orange|purple) (?:boundary|region)',body)
-    if goal_inside and not entry:contradictions.append('The destination is outside both regions in this case')
-    if entry and re.search(r'[Tt]he green destination is outside the (?:protected )?(orange|purple) (?:boundary|region)',body):
-        contradictions.append('The destination is inside both regions in this case')
+    if any(v not in goal_inside_colors for v in goal_inside):contradictions.append('Destination claimed inside a region that does not contain it')
+    goal_outside=re.findall(r'[Tt]he green destination is outside the (?:protected )?(orange|purple) (?:boundary|region)',body)
+    if any(v in goal_inside_colors for v in goal_outside):contradictions.append('Destination claimed outside its containing region')
     if any(v!=colors[selected] for v in protected):contradictions.append('Incorrect protected-boundary color')
     return dict(status='contradiction' if contradictions else 'needs_manual_review',contradictions=contradictions,
         note='Unrecognized paraphrases are not automatically scored as supported or incorrect')

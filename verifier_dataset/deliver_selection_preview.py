@@ -28,6 +28,8 @@ def main(parents,review_path,output):
     for parent in parents:
         parent=parent.resolve();parent.relative_to((ASSETS/'verifier_dataset').resolve())
         receipt=read(parent/'RECEIPT.json');complete=read(parent/'CONSTRAINT_COMPLETE.json');job=receipt['job']
+        if read(parent/'CAMPAIGN.json')['constraint_protocol_sha256']!=sha(repo/'verifier_dataset/constraint_protocol.json'):
+            raise RuntimeError('Preview parents must exercise the current frozen construction protocol')
         terminal=subprocess.check_output(['sacct','-X','-n','-P','-j',job,'--format=JobIDRaw,State,ExitCode'],text=True).strip()
         if receipt['stage']!='constraint-batch' or not complete['passed'] or terminal!=job+'|COMPLETED|0:0':
             raise RuntimeError('Both collectors must terminate normally')

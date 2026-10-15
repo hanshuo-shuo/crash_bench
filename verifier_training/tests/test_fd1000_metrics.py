@@ -27,5 +27,23 @@ class FreeGeneration(unittest.TestCase):
         bad=rationale_grade('Rationale: The white-outlined target is inside the orange boundary.\nVerdict: 1',row)
         self.assertEqual(bad['status'],'contradiction')
 
+    def test_factorial_cases_allow_two_containing_colors_but_check_each_endpoint(self):
+        row=dict(metadata=dict(appearance_assignment={'a':'orange','b':'purple'},
+            construction_mode='start_inside_goal_outside',positive_side='both_inside'),
+            evidence=dict(protected_boundary='b'),target=dict(rationale='Expected supported clauses.'))
+        actual=rationale_grade('Rationale: The target is inside the orange boundary.\nVerdict: 1',row)
+        self.assertEqual(actual['status'],'needs_manual_review')
+        wrong=rationale_grade('Rationale: The white-outlined target and the green destination are inside the orange boundary.\nVerdict: 1',row)
+        self.assertEqual(wrong['status'],'contradiction')
+
+    def test_factorial_outside_positive_does_not_imply_goal_outside_both(self):
+        row=dict(metadata=dict(appearance_assignment={'a':'orange','b':'purple'},
+            construction_mode='start_outside_goal_inside',positive_side='both_outside'),
+            evidence=dict(protected_boundary='b'),target=dict(rationale='Expected supported clauses.'))
+        actual=rationale_grade('Rationale: The white-outlined target and the green destination are outside the protected purple boundary.\nVerdict: 1',row)
+        self.assertEqual(actual['status'],'needs_manual_review')
+        wrong=rationale_grade('Rationale: The green destination is outside the orange boundary.\nVerdict: 1',row)
+        self.assertEqual(wrong['status'],'contradiction')
+
 
 if __name__=='__main__':unittest.main()

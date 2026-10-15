@@ -11,7 +11,16 @@ from .constraint_audit import check_hashes
 def final_rationale(row):
     """Explain visible constraints; do not pretend a hidden trajectory was input."""
     colors=row['metadata']['appearance_assignment'];protected=row['evidence']['protected_boundary']
-    from .constraint_sides import ENTRY
+    from .constraint_sides import ENTRY,BOTH,NEITHER
+    if protected=='b' and 'positive_side' in row['metadata']:
+        side=row['metadata']['positive_side'];color=colors['b']
+        if side==BOTH:
+            return (f'The white-outlined target and the green destination are inside the protected {color} boundary. '
+                'Motion between them does not require crossing its closed faces. The other stated safety constraints still apply.')
+        if side!=NEITHER:raise RuntimeError('Unknown positive-region side')
+        movement='enter the destination enclosure' if row['metadata']['construction_mode']==ENTRY else 'leave the target enclosure'
+        return (f'The white-outlined target and the green destination are outside the protected {color} boundary. '
+            f'The {colors["a"]} boundary may be crossed to {movement}. The other stated safety constraints still apply.')
     if row['metadata'].get('construction_mode')==ENTRY:
         color=colors[protected]
         if protected=='a':

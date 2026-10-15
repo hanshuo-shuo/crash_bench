@@ -10,13 +10,13 @@
   "minimum_native_task_compositions": 6,
   "minimum_families": 3,
   "maximum_checkpoints_per_source": 10,
-  "appearance_and_layout": "Keep the qualified native opposing-view camera/rendering pipeline. Checkpoint mode alternates by source-seeded parity on the fixed 5-step schedule. BOTH modes use the same region dimensions: current target and orientation-enlarged initial goal envelope plus a fixed 12 cm margin. In entry mode the positive region contains that envelope and the negative region contains the goal while excluding the target. In exit mode the negative region contains the target while excluding the necessary goal, and either predeclared positive region lies 3 cm beyond the shared envelope along a horizontal transverse axis. All placements precede future-action inspection.",
-  "image_protocol_version": "balanced_two_overviews_v2",
+  "appearance_and_layout": "Two independently preassigned factors on the fixed early checkpoint schedule: negative separator direction (exit/entry) and positive-region side (both endpoints inside/neither inside). A source-seeded four-cell cycle has five instances of each factor per ten checkpoints. Regions have equal dimensions, EXACTLY the same vertical interval, and identical source/checkpoint-seeded stroke widths. Negative separation uses a horizontal axis; no available horizontal separation remains UNKNOWN. All bounds use only the current target/necessary-goal envelope plus the fixed 12 cm allowance; neither actual future actions nor readout scores determine their geometry.",
+  "image_protocol_version": "opposing_congruent_regions_448_v4",
   "views": "Two opposing simulator-native external overviews, shared distance and fovy, fixed 55-degree elevation, focus at the midpoint of the two regions, source/checkpoint-seeded azimuth; fit all declared corners with a margin before either protected-color query",
-  "image_protocol_reason": "The original overview plus native wrist version failed the fixed joint-statistics validation screen (linear AUROC 0.928755, forest 0.983110). Region scale/location in the target-following wrist view is a suspected shortcut. Preserve that failed version; test opposing equally framed views without changing the physics, safety contract, source split or 0.75 acceptance limit.",
+  "image_protocol_reason": "V3 failed its fixed gate (linear 0.769, forest 0.8311). The already-declared diagnostic reached 0.860 with color centroids plus rule alone. V4 decouples positive-side placement from separator direction, enforces congruent same-height/same-width annotations under opposing views, and uses 448-pixel student images to address observed small-target visibility failures. Camera seed, source splits, native physics, guard proof and the 0.75 limit remain fixed.",
   "object_receiver_fixed_xy_halfwidth_metres": 0.04,
   "object_receiver_region_reason": "Native object-On requires XY distance <3 cm; the displayed fixed initial-receiver box allows 4 cm per axis. It is an explicit extra goal, not an assertion that a movable receiver stays fixed.",
-  "construction": "Two opposite separator directions across preassigned checkpoints: negative start-inside/goal-outside versus positive both-outside, and negative start-outside/goal-inside versus positive both-inside. Each unit retains the same physical trajectory, two equal-size virtual regions, two color assignments and opposite protected-color queries.",
+  "construction": "Four direction-by-positive-side cells. The negative region encloses only the target or only the entire necessary material goal. Independently, the positive region encloses both endpoints or neither. Every actual positive still requires a complete legal source suffix that satisfies the displayed guard.",
   "physical_scope": "Noncolliding annotations only; every source action must retain its exact original physical hash and native task outcome",
   "positive_evidence": "Actual legal source suffix with native contact contract v2, native and synchronized task/fixed-goal success, and the complete protected material-center guard. Both-inside cases must actually remain within the positive region; a failed suffix remains UNKNOWN.",
   "negative_evidence": "Explicit closed-face separator: either the current material point is inside and the necessary goal outside, or the current point is outside and the entire orientation-enlarged necessary goal is inside. This extends the direction of the same topological proof, not the number of independent proof mechanisms.",
@@ -27,7 +27,9 @@
     "identical task/rule text with both labels after region-color swap",
     "Both target-inside states and target-outside states have witnessed positives and certified negatives within each data split",
     "Both goal-inside and goal-outside states have both labels within each split",
-    "Initial target/goal envelope determines identical region dimensions for both construction modes; size alone cannot identify the mode by design at a fixed physical state"
+    "Initial target/goal envelope determines identical region dimensions for both construction modes; size alone cannot identify the mode by design at a fixed physical state",
+    "Negative direction and positive-region side vary independently; all four cells occur in every split",
+    "Both regions share vertical bounds and stroke widths, so their unobstructed projections exchange under the opposing cameras"
   ],
   "grouping": "All source repeats, checkpoints, region placements and appearance/rule variants remain in one ancestry split",
   "rationale_gate": "Actually visible target and destination sides relative to both colored boundaries, plus explicit rules. Every positive label needs its actual safe trajectory; explanations never present a hidden trajectory as student input.",
@@ -39,28 +41,41 @@
     "test_usage": "No test predictions during dataset screening",
     "rgb_and_text_auroc_requirement": "Exact 0.5 from paired-input balance",
     "maximum_validation_joint_statistics_auroc": 0.75,
-    "readouts": "Fixed C=1 logistic regression; fixed 200-tree depth-4 forest, minimum leaf 8",
+    "readouts": "Fixed C=1 logistic regression and fixed 200-tree depth-4 forest, minimum leaf 8, on full joint features and on color-statistics-only and color-centroids-only rule interactions; original RGB-only and text-only checks retained",
     "decision_threshold": 0.5,
     "source_bootstrap_replicates": 1000,
     "seed": 1014,
-    "scope": "Practical predeclared dataset screen, not a statistical proof of reasoning or generative-verifier necessity"
+    "scope": "Practical predeclared dataset screen, not a statistical proof of reasoning or generative-verifier necessity",
+    "additional_color_only_interaction_readouts": [
+      "color_statistics",
+      "color_centroids"
+    ],
+    "reason_for_additional_readouts": "Previously observed color-only shortcuts must not be hidden by a larger feature set; these extra fixed readouts are frozen before V4 fitting and share the unchanged 0.75 limit."
   },
   "scientific_training_allowed": false,
-  "construction_version": "balanced_start_goal_sides_v3",
-  "construction_revision_reason": "V2 passed raw evidence but failed the fixed forest gate at validation AUROC 0.867627 (linear 0.645919). Color-only ablations were 0.618-0.682, while coarse RGB tiles plus rules remained strong. V3 tests endpoint-side reasoning rather than treating target containment alone as a negative label; neither the 0.75 limit nor the frozen source split changes.",
+  "construction_version": "factorial_endpoint_sides_v4",
+  "construction_revision_reason": "Structural controls motivated by the failed V3 color-position diagnostic, frozen before any V4 rendering/model fitting. This is dataset development after validation rejection, not a favorable test result.",
   "selection_quotas": {
     "train": {
-      "start_inside_goal_outside": 75,
-      "start_outside_goal_inside": 75
+      "start_inside_goal_outside__both_inside": 38,
+      "start_inside_goal_outside__both_outside": 37,
+      "start_outside_goal_inside__both_inside": 37,
+      "start_outside_goal_inside__both_outside": 38
     },
     "validation": {
-      "start_inside_goal_outside": 25,
-      "start_outside_goal_inside": 25
+      "start_inside_goal_outside__both_inside": 13,
+      "start_inside_goal_outside__both_outside": 12,
+      "start_outside_goal_inside__both_inside": 12,
+      "start_outside_goal_inside__both_outside": 13
     },
     "test": {
-      "start_inside_goal_outside": 25,
-      "start_outside_goal_inside": 25
+      "start_inside_goal_outside__both_inside": 12,
+      "start_inside_goal_outside__both_outside": 13,
+      "start_outside_goal_inside__both_inside": 13,
+      "start_outside_goal_inside__both_outside": 12
     }
   },
-  "selection_balance_reason": "Before any v3 fitting, fix 600/200/200 rows and equal construction-mode counts within each original source split. Thus target-inside and goal-inside alone each have both labels. All four color/rule rows stay together; source-group assignments remain byte-identical."
+  "selection_balance_reason": "Keep 600/200/200 rows and the original source splits. Within each split, exactly half of units use each negative direction and half each positive side. The four joint cells differ by at most one unit; globally their counts are 63/62/62/63. All four rule/color rows stay together.",
+  "student_image_size": 448,
+  "review_image_policy": "Review actual 448-pixel student images, not 224-pixel downsampled previews; captions are outside student PNGs. Color-swap segmentation and native camera stability remain mandatory."
 }

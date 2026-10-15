@@ -46,7 +46,7 @@ def check_unit(rows):
         raise RuntimeError('Unit labels are not counterbalanced')
     for key in ('source_id','checkpoint','ancestry_component'):
         if len({r['metadata'][key] for r in rows})!=1:raise RuntimeError('Unit provenance differs')
-    for key in ('construction_mode','construction_version'):
+    for key in ('construction_mode','construction_version','positive_side','construction_cell'):
         if len({r['metadata'].get(key) for r in rows})!=1:raise RuntimeError('Unit construction differs')
     images=defaultdict(Counter);texts=defaultdict(Counter);full={}
     for row in rows:
@@ -62,6 +62,15 @@ def check_unit(rows):
     if len({tuple(r['metadata']['goal']) for r in rows})!=1:
         raise RuntimeError('Selected object/category or task changed across the unit')
     return True
+
+
+def selection_cell(row):
+    m=row['metadata']
+    if 'construction_cell' in m:
+        from .constraint_sides import cell
+        if m['construction_cell']!=cell(m['construction_mode'],m['positive_side']):raise RuntimeError('Invalid factor-cell metadata')
+        return m['construction_cell']
+    return m.get('construction_mode')
 
 
 def select_units(units,target=250,maximum_per_source=10,quotas=None):
@@ -82,7 +91,7 @@ def select_units(units,target=250,maximum_per_source=10,quotas=None):
             if index<len(grouped[source]):
                 unit=grouped[source][index]
                 if limits:
-                    key=(unit[0]['split'],unit[0]['metadata'].get('construction_mode'))
+                    key=(unit[0]['split'],selection_cell(unit[0]))
                     if key not in limits:raise RuntimeError('Unknown split/construction mode')
                     if counts[key]>=limits[key]:continue
                     counts[key]+=1

@@ -235,15 +235,15 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
                 if batch_shard not in (0,1) or replay_smoke is None:
                     raise RuntimeError('Two-shard batch requires an explicit completed constraint prototype')
                 prototype=read(replay_smoke/'CONSTRAINT_COMPLETE.json');prototype_job=read(replay_smoke/'RECEIPT.json')['job']
-                if read(replay_smoke/'CAMPAIGN.json')['maximum_checkpoints']<2:
-                    raise RuntimeError('Renderer qualification must include a post-action checkpoint')
+                if read(replay_smoke/'CAMPAIGN.json')['maximum_checkpoints']<4:
+                    raise RuntimeError('Factorial qualification needs the four preassigned early cells')
                 if read(replay_smoke/'CAMPAIGN.json')['constraint_protocol_sha256']!=sha(repo/'verifier_dataset/constraint_protocol.json'):
                     raise RuntimeError('Prototype must exercise the current image/data protocol')
-                if not prototype['passed'] or prototype['matched_units']<6 or command('sacct','-X','-n','-P','-j',prototype_job,'--format=JobIDRaw,State,ExitCode').splitlines()!=[prototype_job+'|COMPLETED|0:0']:
-                    raise RuntimeError('At least six normal, witnessed constraint prototype units required')
-                from .constraint_sides import EXIT,ENTRY
-                if any(prototype.get('matched_units_by_mode',{}).get(mode,0)<3 for mode in (EXIT,ENTRY)):
-                    raise RuntimeError('Both separator directions need at least three actual prototype witnesses')
+                if not prototype['passed'] or prototype['matched_units']<8 or command('sacct','-X','-n','-P','-j',prototype_job,'--format=JobIDRaw,State,ExitCode').splitlines()!=[prototype_job+'|COMPLETED|0:0']:
+                    raise RuntimeError('At least eight normal, witnessed factorial prototype units required')
+                from .constraint_sides import selection_quotas
+                if any(prototype.get('matched_units_by_cell',{}).get(cell,0)<2 for cell in selection_quotas()['train']):
+                    raise RuntimeError('Each direction/positive-side cell needs at least two actual prototype witnesses')
                 for name,wanted in read(replay_smoke/'HASHES.json').items():
                     if sha(replay_smoke/name)!=wanted:raise RuntimeError('Constraint prototype changed')
                 paired_sources=paired_sources[batch_shard::2]
@@ -311,11 +311,12 @@ def main(stage, inventory=None, canonicalize=False, limit=12, source_plan=None, 
             prepared_hashes_sha256=sha(collection_root/'HASHES.json'),review_relative_path=str(review_relative),review_sha256=sha(review_file)))
     if stage in ('constraint-prototype','constraint-batch'):
         manifest.update(partition='gengpu',derived_tasks=True,contact_contract='FD1000-SC-CONTACT-v2',
-            additional_constraint='FD1000-VIRTUAL-CONSTRAINT-v1',maximum_checkpoints=2 if stage=='constraint-prototype' else 10,
+            additional_constraint='FD1000-VIRTUAL-CONSTRAINT-v1',maximum_checkpoints=4 if stage=='constraint-prototype' else 10,
             maximum_virtual_layouts_per_checkpoint=2,api_mode='disabled',max_paid_attempts=0,max_logical_requests=0,
             same_image_and_target_opposite_safety_rules=True,physical_collision_walls=False,batch_shard=batch_shard,
             constraint_protocol_sha256=sha(repo/'verifier_dataset/constraint_protocol.json'),
-            construction_version='balanced_start_goal_sides_v3',
+            construction_version=read(repo/'verifier_dataset/constraint_protocol.json')['construction_version'],
+            student_image_size=448,
             requested_walltime='00:10:00' if stage=='constraint-prototype' else '01:30:00',
             frozen_source_split_sha256=sha(repo/'verifier_dataset/frozen_sources_67.json'),
             gpu_request='one gengpu A100; exclude qgpu2014 after observed rendering inconsistency; actual device recorded in GPU.json',

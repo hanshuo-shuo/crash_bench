@@ -9,7 +9,7 @@ from verifier_dataset.constraint_selection import check_unit
 def configuration():
     return dict(version='FD1000-verifier-comparison-v1',seed=713,model_id='Qwen/Qwen2.5-VL-3B-Instruct',
         lora_rank=16,lora_alpha=32,lora_dropout=.05,learning_rate=.0001,epochs=3,
-        micro_batch_size=1,effective_batch_size=4,max_length=1536,image_pixels=224*224,
+        micro_batch_size=1,effective_batch_size=4,max_length=2048,image_pixels=448*448,
         optimizer='AdamW',weight_decay=0.,gradient_clip=1.,vision_and_projector_frozen=True,
         initialization='Fresh staged base and fresh LoRA for each arm; no historical adapter',
         objective='0.5 decisive binary-token CE + 0.5 mean other assistant-token CE',
@@ -59,12 +59,17 @@ def validate(root):
     require(all(len(v)==1 for v in group_splits.values()),'Ancestry leakage')
     require(len({r['metadata']['task_group'] for r in rows})>=6 and len({r['metadata']['family'] for r in rows})>=3,'Task/family coverage failed')
     for unit in units.values():check_unit(unit)
-    from verifier_dataset.constraint_sides import EXIT,ENTRY,VERSION
-    if any(r['metadata'].get('construction_version')==VERSION for r in rows):
-        require(all(r['metadata'].get('construction_version')==VERSION for r in rows),'Mixed construction versions')
-        actual=Counter((u[0]['split'],u[0]['metadata'].get('construction_mode')) for u in units.values())
-        expected={(split,mode):n for split,n in (('train',75),('validation',25),('test',25)) for mode in (EXIT,ENTRY)}
+    from verifier_dataset.constraint_sides import VERSION,LEGACY_VERSION,selection_quotas
+    from verifier_dataset.constraint_selection import selection_cell
+    versions={r['metadata'].get('construction_version') for r in rows}
+    if versions&{VERSION,LEGACY_VERSION}:
+        require(len(versions)==1,'Mixed construction versions');version=next(iter(versions))
+        actual=Counter((u[0]['split'],selection_cell(u[0])) for u in units.values())
+        expected={(split,cell):n for split,cells in selection_quotas(version).items() for cell,n in cells.items()}
         require(actual==expected,'Endpoint-side balance must hold within every frozen source split')
+        if version==VERSION:
+            require(all(im.get('width')==448 and im.get('height')==448 for r in rows for im in r['student']['images']),
+                'V4 requires native 448-pixel student images')
     require(set(units)==set(review['reviewed_units']),'Visual review does not cover the final selected units')
     for name in ('train','validation','test'):
         part=[r for r in rows if r['split']==name]

@@ -198,6 +198,24 @@ def rows(layout,verification,source,images):
                         dict(claim='A legal actual source suffix stays within this boundary and completes the task safely',
                         evidence=['VERIFIED.json#/witness_end_step','trace/ACTIONS.json','trace/SAMPLES.jsonl.gz'],
                         input_basis='Privileged positive label evidence; no hidden trajectory is presented as an observation')]
+            if protected=='b' and 'positive_side' in layout:
+                from .constraint_sides import BOTH,NEITHER
+                if layout['positive_side']==BOTH:
+                    rationale=(f'The white-outlined target and the green destination are inside the protected {color} boundary. '
+                        'Motion between them does not require crossing its closed faces. The other stated safety constraints still apply.')
+                    relation='Both the selected target and the fixed destination are inside the protected boundary'
+                elif layout['positive_side']==NEITHER:
+                    movement='leave the target enclosure' if layout['construction_mode']!=ENTRY else 'enter the destination enclosure'
+                    rationale=(f'The white-outlined target and the green destination are outside the protected {color} boundary. '
+                        f'The {colors["a"]} boundary may be crossed to {movement}. The other stated safety constraints still apply.')
+                    relation='Both the selected target and the fixed destination are outside the protected boundary; the separating boundary is unprotected'
+                else:raise RuntimeError('Unknown positive-region side')
+                refs=['layout.a','layout.b','layout.target','layout.goal','verification.witness_end_step','source.raw_trace']
+                facts=[dict(claim=relation,evidence=['LAYOUT.json#/a','LAYOUT.json#/b','LAYOUT.json#/target','LAYOUT.json#/goal','student.constraints'],
+                    input_basis='Actual RGB endpoint sides and explicit selected-color rule; requires visual review'),
+                    dict(claim='A complete legal actual source suffix satisfies the protected guard and native task/contact requirements',
+                        evidence=['VERIFIED.json#/witness_end_step','trace/ACTIONS.json','trace/SAMPLES.jsonl.gz'],
+                        input_basis='Privileged existential label evidence, not an observation in the student image')]
             output.append(dict(schema_version='FD1000-constraint-candidate-v1',
                 student=dict(images=copy.deepcopy(images[assignment]),task=task,constraints=constraints),
                 evidence=dict(feasibility=label,kind='safe_source_suffix_with_virtual_guard' if protected=='b' else 'virtual_material_point_separator',
@@ -211,6 +229,8 @@ def rows(layout,verification,source,images):
                 reasoning_target=None,observability_review='pending',training_eligible=False,split='unassigned'))
             if 'construction_mode' in layout:
                 output[-1]['metadata'].update(construction_mode=layout['construction_mode'],construction_version=layout['construction_version'])
+                for key in ('positive_side','construction_cell','student_image_size'):
+                    if key in layout:output[-1]['metadata'][key]=layout[key]
                 if layout['construction_mode']==ENTRY and protected=='a':
                     output[-1]['evidence']['kind']='virtual_material_point_inward_separator'
     return output

@@ -19,9 +19,12 @@ def require_same_segmentation(reference,actual):
 
 
 def prescreen(visibility):
-    counts={entity:max(view['entities'][entity]['pixels_224_nearest'] for view in visibility['assignments'][0])
+    size=visibility.get('student_image_size',224);key='pixels_%d_nearest'%size
+    if size not in (224,448):raise RuntimeError('Unknown student resolution')
+    counts={entity:max(view['entities'][entity][key] for view in visibility['assignments'][0])
             for entity in ('target_object','a','b','goal')}
-    return dict(quantitative_prescreen=counts['target_object']>=24 and all(counts[k]>=12 for k in ('a','b','goal')),
+    scale=(size/224)**2
+    return dict(quantitative_prescreen=counts['target_object']>=24*scale and all(counts[k]>=12*scale for k in ('a','b','goal')),
         maximum_pixels_in_one_view=counts,physical_visibility_approval=False,
         reason='Pixel counts assist but do not replace visual review')
 
@@ -97,6 +100,8 @@ def capture(env,folder,layout,physical_hash):
     import robosuite.macros as macros
     from .inventory import sha,write
     m,d=env.sim.model,env.sim.data;before=physical_hash(env)
+    size=layout.get('student_image_size',224)
+    if size not in (224,448):raise RuntimeError('Unexpected student image size')
     cid=m.camera_name2id('agentview')
     original_camera_position=np.asarray(d.cam_xpos[cid]).copy()
     original_camera_rotation=np.asarray(d.cam_xmat[cid]).copy()
@@ -151,9 +156,9 @@ def capture(env,folder,layout,physical_hash):
             if pose is not None and (not np.array_equal(d.cam_xpos[cid],pose['position']) or not np.array_equal(d.cam_xmat[cid],pose['rotation'])):
                 raise RuntimeError('Renderer changed the declared camera data')
             rgb=rgb[::IMAGE_CONVENTION_MAPPING[macros.IMAGE_CONVENTION]][::-1,::-1]
-            rgb=image_tools.convert_to_uint8(image_tools.resize_with_pad(np.ascontiguousarray(rgb),224,224))
+            rgb=image_tools.convert_to_uint8(image_tools.resize_with_pad(np.ascontiguousarray(rgb),size,size))
             image=path/(name+'.png');Image.fromarray(rgb).save(image)
-            images.append(dict(camera=name,path=str(image.relative_to(folder)),sha256=sha(image),width=224,height=224))
+            images.append(dict(camera=name,path=str(image.relative_to(folder)),sha256=sha(image),width=size,height=size))
             started=time.monotonic()
             segmentation=np.asarray(env.sim.render(width=1024,height=1024,camera_name=camera,segmentation=True))
             segmentation_seconds=time.monotonic()-started;started=time.monotonic()
@@ -165,8 +170,8 @@ def capture(env,folder,layout,physical_hash):
             entities={}
             for entity,which in dict(ids,target_object=target_geoms).items():
                 mask=geom_pixels&np.isin(segmentation[:,:,1],which)
-                small=np.asarray(Image.fromarray(mask.astype('uint8')).resize((224,224),Image.Resampling.NEAREST if hasattr(Image,'Resampling') else Image.NEAREST))
-                entities[entity]=dict(pixels_1024=int(mask.sum()),pixels_224_nearest=int(small.sum()))
+                small=np.asarray(Image.fromarray(mask.astype('uint8')).resize((size,size),Image.Resampling.NEAREST if hasattr(Image,'Resampling') else Image.NEAREST))
+                entities[entity]=dict(pixels_1024=int(mask.sum()),**{'pixels_%d_nearest'%size:int(small.sum())})
             seg_file=path/(name+'_segmentation.npz')
             np.savez_compressed(seg_file,object_type=segmentation[:,:,0],object_id=segmentation[:,:,1])
             timings.append(dict(assignment=assignment,camera=name,rgb_render_seconds=rgb_seconds,
@@ -191,6 +196,6 @@ def capture(env,folder,layout,physical_hash):
     write(folder/'IMAGES.json',dict(assignments=output,shared_pixels_per_constraint_pair=True,
         all_annotations_noncolliding_world_geoms=True,physical_arrays_unchanged=True,
         native_action_hashes_still_require_full_replay=True,grounding_review='pending'))
-    write(folder/'VISIBILITY.json',dict(assignments=visibility,geom_ids=dict(ids,target_object=target_geoms),
+    write(folder/'VISIBILITY.json',dict(assignments=visibility,geom_ids=dict(ids,target_object=target_geoms),student_image_size=size,
         scope='Native instance-segmentation measurements assist review; pixel counts alone do not establish recognizable objects or complete geometric observability'))
     return output

@@ -15,7 +15,58 @@ The full FD1000 API budget is $20, including a $6.40 ceiling for that completed
 batch. All current collection, reasoning targets and training preparation are
 offline. The private key is never printed, copied or logged.
 
-## V2 rejected by shortcut gate; v3 selected images reviewed, independent audit next
+## V3 rejected; V4 prospective factorial controls, native prototype pending
+
+Independent V3 audit **3628952 COMPLETED/0:0**, 9m20s on qnode0106,
+`20261015T003524Z_audit-constraints_4abfcd9fe913`, rechecked all 67 source traces
+and 495 raw units. The 124 image exclusions left 371 eligible units. The
+proposed 1,000 rows met the fixed split, mode and image-review requirements but
+**failed scientific acceptance**: validation AUROC **0.7690** for the fixed
+joint linear model and **0.8311** for the fixed forest, above 0.75. RGB-only and
+text-only AUROC were 0.5. Raw-stage `AUDIT_COMPLETE.passed` does not override
+`SHORTCUT_AUDIT.passed=false`. Test predictions remain unscored; accepted rows,
+finalized reasoning targets and new verifier training runs all remain zero.
+
+Fixed diagnostic **3630797 COMPLETED/0:0**, 53s,
+`20261015T005127Z_diagnose-shortcuts_4abfcd9fe913`, found validation forest
+AUROC 0.7113/0.8247 from individual views, 0.8542 from color statistics,
+0.6665 from color areas and 0.8600 from color centroids. These results identify
+an unwanted color-position cue, not a need for generative verification. All
+16 delivered audit/diagnostic files were hash-verified locally. Source, raw
+images, exclusions and all failed versions remain recoverable.
+
+V4 is frozen prospectively before new rendering/fitting: negative separator
+ENTRY/EXIT and positive-region BOTH/NEITHER endpoint containment are independent
+preassigned factors. Each factor appears five times per ten source checkpoints.
+Both boundaries have equal dimensions, exactly equal vertical intervals and the
+same source/checkpoint-seeded line width. Separation must be horizontal; cases
+without such a certificate stay UNKNOWN. Current target/necessary-goal geometry
+and the unchanged fixed 12 cm allowance determine all placements, before future
+actions are examined. Actual complete suffix witnesses remain mandatory in all
+four cells; endpoint containment alone cannot certify a positive.
+
+Native cameras, seeds, contact rules and original source groups are unchanged.
+Student images increase to 448 square pixels to address observed target-visibility
+failures. Review sheets retain every actual student pixel. Four fixed color-only
+linear/forest readouts (statistics and centroids) join the primary screen before
+V4 fitting; all six joint readouts must meet the original 0.75 limit. RGB/text
+chance checks remain. No readout hyperparameters or source splits are tuned.
+
+The 250-unit quotas remain 600/200/200 rows. In EXIT-BOTH, EXIT-NEITHER,
+ENTRY-BOTH, ENTRY-NEITHER order, joint-cell quotas are 38/37/37/38 for training,
+13/12/12/13 for validation and 12/13/13/12 for locked test. Whole four-row units
+stay together. Both factors have exactly balanced margins in every split.
+Prototype qualification requires four families and four early checkpoints,
+at least eight matched units, at least two in each joint cell, normal Slurm
+exit and actual-image review. Bulk collection still uses at most two A100 jobs.
+
+Local validation: 93 dataset tests and 21 training contract/metrics/comparison
+tests passed; byte compilation and diff whitespace checks passed. The future
+fixed A/B processor contract uses two 448-pixel images and max length 2048;
+actual processor/no-truncation and gradient preflight remains unrun. No V4
+native prototype, accepted dataset or new verifier training is claimed here.
+
+## Historical V2 rejection and V3 collection/review before its audit
 
 V2 audit **3614374 COMPLETED/0:0**, 9m54s, root
 `20261014T222942Z_audit-constraints_c2182eb82cf7`. All 595 raw units passed
@@ -109,9 +160,9 @@ records the local image-bound coverage check. Preliminary selection SHA256:
 `1357f76f207182ed8a99848dd19d9ecb5d9e5fa9c4502f173d1dab01610e2b07`.
 Review SHA256:
 `95d164f14facd6272569498ecf1856257aa6fd44997f5b93f8f455072a7e3662`.
-Only visibility was used for these exclusions; no v3 readout/verifier has been
-fitted and no locked-test model prediction has been made. This is still zero
-scientifically accepted rows until the raw evidence and fixed shortcut gates pass.
+Only visibility was used for these exclusions before the V3 audit fit. The
+subsequent fixed readouts failed acceptance as recorded above; no verifier was
+trained and no locked-test model prediction was made.
 
 ## V2 collection and visual-review history (not training-approved)
 

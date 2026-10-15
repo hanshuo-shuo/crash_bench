@@ -1,6 +1,6 @@
 import copy
 import unittest
-from verifier_dataset.constraint_sides import EXIT,ENTRY,VERSION,mode_for,entry_regions,exit_regions,verify_sides
+from verifier_dataset.constraint_sides import EXIT,ENTRY,LEGACY_VERSION as VERSION,mode_for,entry_regions,exit_regions,verify_sides
 from verifier_dataset.constraint_evidence import certificate,verify_layout,rows
 from verifier_dataset.finalize_constraints import final_rationale
 from verifier_dataset.tests import test_constraint_pairs as fixtures

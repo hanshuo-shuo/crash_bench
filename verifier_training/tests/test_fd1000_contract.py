@@ -25,6 +25,8 @@ class ScientificDataGate(unittest.TestCase):
         self.assertIn('no gold rationale prefix',config['evaluation'])
         self.assertFalse(config['hyperparameter_search'])
         self.assertTrue(config['inference_inputs_identical'])
+        self.assertEqual(config['image_pixels'],448*448)
+        self.assertEqual(config['max_length'],2048)
 
 
 if __name__=='__main__':unittest.main()

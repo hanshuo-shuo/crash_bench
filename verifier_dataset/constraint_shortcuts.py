@@ -42,6 +42,16 @@ def measured(y,score,groups):
     return result
 
 
+def color_interaction_features(joint,kind):
+    """The same color-only columns used by the pre-existing failed-screen diagnostic."""
+    if joint.ndim!=2 or joint.shape[1]!=261:raise RuntimeError('Unexpected fixed joint features')
+    columns={'color_statistics':list(range(110,130)),
+             'color_centroids':[111,112,116,117,121,122,126,127]}
+    if kind not in columns:raise RuntimeError('Unknown predeclared color-only readout')
+    base=columns[kind]
+    return joint[:,base+[130+i for i in base]+[260]]
+
+
 def main(root,rows):
     import numpy as np
     from sklearn.pipeline import make_pipeline
@@ -62,12 +72,16 @@ def main(root,rows):
         ('task_rules_only',make_pipeline(TfidfVectorizer(ngram_range=(1,2)),LogisticRegression(C=1.,max_iter=1000,random_state=1014)),np.asarray(text)),
         ('rgb_color_rule_interactions_linear',make_pipeline(StandardScaler(),LogisticRegression(C=1.,max_iter=1000,random_state=1014)),joint),
         ('rgb_color_rule_interactions_forest',RandomForestClassifier(n_estimators=200,max_depth=4,min_samples_leaf=8,random_state=1014,n_jobs=2),joint)]
+    protocol=json.loads((__import__('pathlib').Path(__file__).with_name('constraint_protocol.json')).read_text())
+    limits=protocol['shortcut_screen']
+    for kind in limits.get('additional_color_only_interaction_readouts',[]):
+        x=color_interaction_features(joint,kind)
+        models.extend([(kind+'_rule_interactions_linear',make_pipeline(StandardScaler(),LogisticRegression(C=1.,max_iter=1000,random_state=1014)),x),
+            (kind+'_rule_interactions_forest',RandomForestClassifier(n_estimators=200,max_depth=4,min_samples_leaf=8,random_state=1014,n_jobs=2),x)])
     results={};predictions={}
     for name,model,x in models:
         model.fit(x[train],y[train]);p=model.predict_proba(x[val])[:,list(model.classes_).index(1)]
         results[name]=measured(y[val],p,groups[val]);predictions[name]=p.tolist()
-    protocol=json.loads((__import__('pathlib').Path(__file__).with_name('constraint_protocol.json')).read_text())
-    limits=protocol['shortcut_screen']
     image_ok=abs(results['rgb_red_statistics']['auroc']-.5)<1e-8
     text_ok=abs(results['task_rules_only']['auroc']-.5)<1e-8
     joint_ok=max(results[k]['auroc'] for k in results if 'interactions' in k)<=limits['maximum_validation_joint_statistics_auroc']
