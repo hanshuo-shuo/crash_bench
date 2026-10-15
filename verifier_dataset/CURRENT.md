@@ -15,7 +15,7 @@ The full FD1000 API budget is $20, including a $6.40 ceiling for that completed
 batch. All current collection, reasoning targets and training preparation are
 offline. The private key is never printed, copied or logged.
 
-## V3 rejected; V4 prospective factorial controls, native prototype pending
+## V3 rejected; V4 native prototype qualified for bounded bulk collection
 
 Independent V3 audit **3628952 COMPLETED/0:0**, 9m20s on qnode0106,
 `20261015T003524Z_audit-constraints_4abfcd9fe913`, rechecked all 67 source traces
@@ -63,8 +63,18 @@ exit and actual-image review. Bulk collection still uses at most two A100 jobs.
 Local validation: 93 dataset tests and 21 training contract/metrics/comparison
 tests passed; byte compilation and diff whitespace checks passed. The future
 fixed A/B processor contract uses two 448-pixel images and max length 2048;
-actual processor/no-truncation and gradient preflight remains unrun. No V4
-native prototype, accepted dataset or new verifier training is claimed here.
+actual processor/no-truncation and gradient preflight remains unrun. V4 native prototype **3634063 COMPLETED/0:0**, 4m12s on A100-SXM4-80GB/qgpu2003,
+root `20261015T012057Z_constraint-prototype_34922227dd21`, used published source
+`34922227dd21473fad3b54a32e780d6a5e73c9fa` and protocol
+`9da9e2638eab6904b629665acb8daf1748ca3c65d7cb2fcb9782c379c5258787`.
+It produced 14 matched units / 56 candidate rows: four in each NEITHER cell and
+three in each BOTH cell. Object checkpoints 5 and 10 failed their actual positive
+guard and supplied no paired unit. All 58 delivered files were hash-checked and
+all 56 actual 448-pixel student images inspected. Published qualification:
+`reviews/fd1000_factorial_v4_prototype.json`. Native images/color swaps are
+consistent; small Object targets and local occlusion still require fresh final
+per-unit review. This qualifies bounded collection only. There is still no
+accepted final dataset or new verifier training.
 
 ## Historical V2 rejection and V3 collection/review before its audit
 

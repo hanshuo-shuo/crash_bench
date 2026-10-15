@@ -1,0 +1,202 @@
+{
+  "purpose": "bounded_construction_and_renderer_qualification",
+  "reviewer": "Codex actual-image inspection; not independent human review",
+  "source_commit": "34922227dd21473fad3b54a32e780d6a5e73c9fa",
+  "slurm_job": "3634063",
+  "terminal": "COMPLETED|0:0",
+  "elapsed": "00:04:12",
+  "node": "qgpu2003",
+  "gpu": "NVIDIA A100-SXM4-80GB",
+  "constraint_protocol_sha256": "9da9e2638eab6904b629665acb8daf1748ca3c65d7cb2fcb9782c379c5258787",
+  "matched_units": 14,
+  "matched_units_by_cell": {
+    "start_outside_goal_inside__both_outside": 4,
+    "start_inside_goal_outside__both_outside": 4,
+    "start_inside_goal_outside__both_inside": 3,
+    "start_outside_goal_inside__both_inside": 3
+  },
+  "inspected_selected_images": 56,
+  "student_image_size": 448,
+  "delivery_manifest_sha256": "0bb0f1c238442eabca5f8fa3b222971f0d684f7ce9f5d04c308ce2aab50cda16",
+  "preview_units_sha256": "e9ec17b9b93474ec29840d8f81bb41aa7ec276141217d05f84a92745717a9671",
+  "model_predictions_used": false,
+  "api_calls": 0,
+  "qualified_for_bounded_collection": true,
+  "scientific_training_allowed": false,
+  "full_dataset_visible_premise_review_complete": false,
+  "notes": [
+    "All four original physical source traces completed normally under required per-action equality checks. Native camera and color-swap segmentation checks passed before candidate export.",
+    "Object checkpoints 5 and 10 had valid negative certificates but failed the actual enclosing positive guard. They remain unmatched and do not supply binary training units.",
+    "All actual 448-pixel images were inspected, without downsampling. No cabinet/wall rendering corruption was observed. Prototype qualification does not approve future bulk pixels or shortcut performance."
+  ],
+  "units": [
+    {
+      "source_id": "safelibero_object/I/task2/episode6",
+      "checkpoint": 0,
+      "construction_cell": "start_outside_goal_inside__both_outside",
+      "image_sha256": [
+        "0306b72ffc518bf38a8157cefdafb463fa30d028d410cf8d5cb98de0a3501104",
+        "083f58c989be177d5881feb1c8cec012c283ccc093dedee920bb46ab19c86f97",
+        "c7a4287da99bc3725df175042cc71a18c44e1e811e517c14fab60d8bebff96ab",
+        "c93041f138a2a8b5e033ee03c3d79b84b4b086812598d0f8339a97936aba8eb6"
+      ],
+      "observation": "Native Object scene and green basket destination are recognizable; small white-outlined target and robot crowding warrant renewed final per-unit review."
+    },
+    {
+      "source_id": "safelibero_object/I/task2/episode6",
+      "checkpoint": 15,
+      "construction_cell": "start_inside_goal_outside__both_outside",
+      "image_sha256": [
+        "16fef0eb6073072561f76c328efc64a83b1867a2094baaa7e615f5f3c0c86f71",
+        "41d2a5d8f1df4dce53d070cebe30ac60d1c65eb668a071cb16697cbc717aa52c",
+        "70127b8f7c56afda3a9d13e1e2278b7be1fce80157361f93f167e1e734bb6222",
+        "8e128f2b00cc1a8792669aea4458a22bd261edac4975d1a0a77a030c0190a040"
+      ],
+      "observation": "Object scene is consistent in both opposing views and under color swap; small carton target remains the most visibility-sensitive part."
+    },
+    {
+      "source_id": "safelibero_spatial/I/task0/episode0",
+      "checkpoint": 0,
+      "construction_cell": "start_outside_goal_inside__both_outside",
+      "image_sha256": [
+        "0b92e56736e9c940d512ba203184aa66d2a5af046d724cf8fd5d132a3893e001",
+        "84085e010d84e8b82ec9d0fabc163da704c3b1858052284feddc9e4eda0c6fb0",
+        "aca41b46eb1040f87a12918d95575645cb81c7bc8f86ca27fb170025069b6d5c",
+        "b4278dda79dc0f1a81c1d4c8bbd007f8080db499bae743e4481650e9ee95ac2a"
+      ],
+      "observation": "Outlined target and green destination are visible in complementary views; the destination-containing and remote regions exchange colors consistently."
+    },
+    {
+      "source_id": "safelibero_spatial/I/task0/episode0",
+      "checkpoint": 5,
+      "construction_cell": "start_inside_goal_outside__both_inside",
+      "image_sha256": [
+        "0a0dcb59660e40416fc5929c81898a7b6545dff65def4c11c9adf3cbc4c2ef33",
+        "1bfc58b02c7f7504f2b093368743fa98b9ca85fd4d255e18d93f0bbd80cbec5c",
+        "55df448223552043c639f95ea9a0d402dd057d711ed61067cce6410cfc31f1b3",
+        "7bf1e2b5dc127a4ce747f980dfc2cf6f1208655b86083998e8f23b80474d4ee2"
+      ],
+      "observation": "Overlapping regions and target/destination are visible; the green destination lies beyond the target-only region."
+    },
+    {
+      "source_id": "safelibero_spatial/I/task0/episode0",
+      "checkpoint": 10,
+      "construction_cell": "start_outside_goal_inside__both_inside",
+      "image_sha256": [
+        "247a733fed1cf09bcc36223536aa2af1798919bf9119e293fba9566d36fd9b14",
+        "4329d4cb5853ff652d422cefa65ae58c884a5d5d51895ea1738b4ac54b461a6b",
+        "c46d30636d7f6c30f2e9e511995c53813d05c8da86a05d958aa013218e09f664",
+        "ecad42cf48479999b145836670d34096c71a43d80eacdef51e93f9afd4d82df9"
+      ],
+      "observation": "Both overlapping region outlines and the target/green destination can be distinguished using both views."
+    },
+    {
+      "source_id": "safelibero_spatial/I/task0/episode0",
+      "checkpoint": 15,
+      "construction_cell": "start_inside_goal_outside__both_outside",
+      "image_sha256": [
+        "3e6f547e76f3046945b16ad75465043f91dec95c41b0767d820756d5f29f357b",
+        "4ff0c54cb2f97fab4090befe23ec6f1a1484f4f008d2697592d0a6cf9f73b1a9",
+        "6ca9bda311efca8f58613ed7e6152f91fd43de92535351f103d9a7465ad4c872",
+        "dc8eac362dad9cbd0dc2c6a651a346cb2ba86b5f0d55596d5351176d41aa4d70"
+      ],
+      "observation": "Opposing view resolves the target near the gripper; green destination and separate remote region are visible."
+    },
+    {
+      "source_id": "safelibero_goal/I/task0/episode1",
+      "checkpoint": 0,
+      "construction_cell": "start_outside_goal_inside__both_outside",
+      "image_sha256": [
+        "29705d32dc87b27ae3b43d3cfa4132983b767c7b12c2a1f07a94f915f2d792f5",
+        "50e2cb07b238b24ef4718f6d192e82e1bd4272e0f20c12b0c2b1ec956a246671",
+        "c3e657ee15e7286a4a4a5fd5cbfccd6861ad78cd8964c9b39d955cdb813f34a6",
+        "ee15a39c716dafcb948bc30f2e850fd4a50db7e2154aacbb111e4cf1fbebc138"
+      ],
+      "observation": "Second view resolves the target beside the cabinet; both boundary colors and green plate destination are visible."
+    },
+    {
+      "source_id": "safelibero_goal/I/task0/episode1",
+      "checkpoint": 5,
+      "construction_cell": "start_inside_goal_outside__both_inside",
+      "image_sha256": [
+        "2cdb2166ccfd99d93f9b39336d37265aff9d275f326a3b16081445c2286b40ce",
+        "4e598fb4ff57e7b31b85ee1440227ad63c266e52d6d9670c4b6404ae3650b71a",
+        "896cce3ed1f4bc1b443c4192638d55bee658ac0d12373dc2739b165fb56f8795",
+        "bc49f9446293a51620171e20aec70897d5472cfb2917378f4e53bf17822d4010"
+      ],
+      "observation": "Outlined target and green destination are visible among overlapping regions in both color assignments."
+    },
+    {
+      "source_id": "safelibero_goal/I/task0/episode1",
+      "checkpoint": 10,
+      "construction_cell": "start_outside_goal_inside__both_inside",
+      "image_sha256": [
+        "80847ebb9f78356bbe6e89b3a7e168bf3b1f13970116b00a238c9f036f34d7d8",
+        "808d66307d145eac70fcd3f6fff48ac74135d7d551dd3407ec274044e2842273",
+        "8a87f027b63e4a13c62d3e43a716baae7ac4ac7de679dcc01c28ee74d6f80778",
+        "a445e13ff6cc0ee97f6bd8df4659d0d05e1efe3970304dece026df0006d311f5"
+      ],
+      "observation": "First view resolves the target near the cabinet; the green destination is visible in the overlapping volumes."
+    },
+    {
+      "source_id": "safelibero_goal/I/task0/episode1",
+      "checkpoint": 15,
+      "construction_cell": "start_inside_goal_outside__both_outside",
+      "image_sha256": [
+        "0065be14900cf0e2de7c3e2568e020cf4f89c89ca84695aedae832f1b0094b07",
+        "2b1f2afb750b22e976a0b4b617a661511c0c99cdb112cfbba4ac222c7a51691c",
+        "329cf197cd2c731565ede6817e08ec56ceb477c3d5b6317e815ad936473e35de",
+        "a9943d5336f1f857314d3cfba9046da3835b4d16f36221b923796283b548a18a"
+      ],
+      "observation": "Second view resolves the target partly blocked in the first; green destination and remote region are visible."
+    },
+    {
+      "source_id": "safelibero_long/I/task2/episode1",
+      "checkpoint": 0,
+      "construction_cell": "start_inside_goal_outside__both_inside",
+      "image_sha256": [
+        "2a75d16f8bce083055e4f073e00a157fb9518d4af885e3c48f7f3337fcbfa2aa",
+        "8b3de08712f63c9c9497f732ad39e952cbf7046f09c5f4599576e772e32d7da2",
+        "c929a8f61831df67e72fda5ede02e276c2b71738fad8dd53090d739a20deaae3",
+        "ed4e2ea18c581f10c683baa9da861d942637a0c9d8dbfce1a0bcf68f8003e860"
+      ],
+      "observation": "White-outlined target is distinct from the yellow mug; green plate destination and overlapping regions are visible."
+    },
+    {
+      "source_id": "safelibero_long/I/task2/episode1",
+      "checkpoint": 5,
+      "construction_cell": "start_outside_goal_inside__both_outside",
+      "image_sha256": [
+        "0d6e0032ee74719b1147d4326f4c7d8b56dac394648863459fb37f7d14ddb78c",
+        "26b5033ee5e8b1c0dd2161e16b0894b2f0746fa430a635487ca18e50aa37e23d",
+        "ad7b6bdddd0e13cf3ccf78a944a26e97e293bfd38af85f2af22f82b05a437a95",
+        "cb48eaf5e6c2b0b7ebf4f3a10eb8dea46973ed93cf93b5d7995ca92b3c5ae452"
+      ],
+      "observation": "Both views show the outlined target and green destination across the separating face; remote region is identifiable."
+    },
+    {
+      "source_id": "safelibero_long/I/task2/episode1",
+      "checkpoint": 10,
+      "construction_cell": "start_inside_goal_outside__both_outside",
+      "image_sha256": [
+        "153c697e04ba72510e6ca7a67671e354e47ddbb173a94a4622102809bb0d89af",
+        "611af87215b0b5cb4b0b5e07cc599a02e30d4a36dd3f395a359a446d275dc377",
+        "bb5c0abd9699cc8b8a10ef4ae26abdf2b5bf2fade9bd3439a3008663fd8cf17d",
+        "da00fc67cdb35cd21ef9ca741e89e7f891ee342e93fdfd1f4810d95fbd39aaa8"
+      ],
+      "observation": "Second view resolves the outlined target behind the arm in the first; green destination and remote region are visible."
+    },
+    {
+      "source_id": "safelibero_long/I/task2/episode1",
+      "checkpoint": 15,
+      "construction_cell": "start_outside_goal_inside__both_inside",
+      "image_sha256": [
+        "494a20ec82d38394fde9d7f7d1c61ecfe1ff2f43561509c48ac602180eb6088c",
+        "5c1286ece065a114f5d7674d2d7d0389ff88e6f970538fb93e4b240dfdf9df9f",
+        "703cabd92aa23d83ab23fa0f2b0593147b029d9b9e8c20e686f441f51eb7074a",
+        "94336e2c6833a8a6edb1458b9d41e8b434f0cae924708c3c743d1f9ba4a033e6"
+      ],
+      "observation": "Second view resolves the outlined target under the gripper; green destination and both overlapping boundaries are visible."
+    }
+  ]
+}

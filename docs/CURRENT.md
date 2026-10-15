@@ -21,8 +21,10 @@ and positive both-inside/neither-inside placement, with congruent same-height,
 same-stroke boundaries and 448-pixel student views. Four fixed color-only
 readouts join the original screen before any V4 fit. The frozen source groups,
 camera seeds and 0.75 gate remain unchanged. Local checks passed (93 dataset,
-21 training-contract/metrics tests); a fresh four-family native prototype and
-actual-image review are still required before bounded bulk collection.
+21 training-contract/metrics tests); fresh four-family prototype 3634063 completed normally (14 matched units),
+and all 56 actual 448-pixel images passed renderer qualification for bounded
+bulk collection. Future selected pixels, evidence and shortcuts still require
+independent audit before acceptance.
 The 32 explicitly approved GLM requests
 completed for $0.05882376. No complete mixed dataset has passed scientific
 acceptance and no verifier training has started.
