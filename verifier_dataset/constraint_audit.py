@@ -170,14 +170,18 @@ def main(root,parents):
     write(root/'INHERITED.json',inheritance);write(root/'TRACE_AUDIT.json',trace_checks)
     write(root/'REJECTED.json',rejected)
     write(root/'ALL_VALID_UNITS.json',units)
-    eligible=units
+    eligible=units;review={}
     if (root/'EXCLUSION_REVIEW_SOURCE.json').exists():
         from .constraint_curation import exclude
         provenance=read(root/'EXCLUSION_REVIEW_SOURCE.json');path=root/'source'/provenance['relative_path']
         if sha(path)!=provenance['sha256']:raise RuntimeError('Published exclusion review changed')
         review=read(path);eligible=exclude(units,review);write(root/'EXCLUSION_REVIEW.json',review)
     protocol=read(Path(__file__).with_name('constraint_protocol.json'))
-    selected=select_units(eligible,target=250,quotas=protocol.get('selection_quotas'))
+    from .constraint_curation import reviewed_only,selection_settings
+    target,quotas=selection_settings(review,protocol,sha(Path(__file__).with_name('constraint_protocol.json')))
+    eligible_after_exclusions=len(eligible)
+    if review.get('final_selection'):eligible=reviewed_only(eligible,review)
+    selected=select_units(eligible,target=target,quotas=quotas)
     records=[];complete_inputs=set();image_splits={}
     for i,unit in enumerate(selected):
         for r in unit:
@@ -197,7 +201,7 @@ def main(root,parents):
         by_source=dict(Counter(r['metadata']['source_id'] for r in records)),
         by_task=dict(Counter(r['metadata']['task_group'] for r in records)),by_family=dict(Counter(r['metadata']['family'] for r in records)))
     if protocol.get('selection_quotas'):
-        coverage.update(construction_version=protocol['construction_version'],selection_quotas=protocol['selection_quotas'],
+        coverage.update(construction_version=protocol['construction_version'],selection_quotas=quotas,
             by_split_mode_units=dict(Counter(r[0]['split']+'/'+r[0]['metadata']['construction_mode'] for r in selected)),
             by_split_cell_units=dict(Counter(r[0]['split']+'/'+selection_cell(r[0]) for r in selected)))
     if coverage['original_sources']<30 or coverage['ancestry_groups']<30 or coverage['native_task_compositions']<6 or coverage['families']<3:
@@ -209,7 +213,9 @@ def main(root,parents):
     shortcut=shortcuts(root,records)
     write(root/'AUDIT_COMPLETE.json',dict(passed=True,stage='evidence_and_visibility_prescreen',coverage=coverage,
         available_valid_units=len(units),frozen_sources_sha256=sha(frozen_path),
-        eligible_after_visual_exclusions=len(eligible),visually_excluded_units=len(units)-len(eligible),
+        selection_reduction=review.get('final_selection'),
+        eligible_after_visual_exclusions=eligible_after_exclusions,visually_excluded_units=len(units)-eligible_after_exclusions,
+        eligible_after_completed_review=len(eligible),unreviewed_units_not_selected=eligible_after_exclusions-len(eligible),
         visual_review_complete=False,shortcut_evaluation_complete=True,shortcut_screen_passed=shortcut['passed'],accepted_training_rows=0,
         scientific_training_allowed=False,api_calls=0,slurm_job=os.environ['SLURM_JOB_ID']))
     write(root/'HASHES.json',{str(p.relative_to(root)):sha(p) for p in root.rglob('*') if p.is_file() and 'source' not in p.relative_to(root).parts

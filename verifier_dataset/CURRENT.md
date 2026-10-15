@@ -17,6 +17,18 @@ offline. The private key is never printed, copied or logged.
 
 ## Collection wrap-up requested; V4 acceptance still pending
 
+Final selection update: strict image exclusions make the original 250-unit
+quota infeasible (the unchanged selector stops at 245). Following the user's
+instruction to prefer quality over 1,000 rows, freeze **224 already reviewed
+units / 896 rows**, with four equally populated cells in every original split:
+32 units per cell in train and 12 per cell in validation/test (512/192/192 rows).
+Published review v4 retains all 293 reviews and 39 visibility exclusions and
+records this reduction before any V4 model fit. Unreviewed candidates are not
+eligible for this final selection. No geometry, source split, camera, certificate,
+contact requirement, source-coverage minimum or shortcut threshold is relaxed.
+The fixed evidence/shortcut audit is the remaining acceptance gate. Training is
+still deferred until the user's data-quality review and subsequent discussion.
+
 Update after the user's explicit final-acceptance request: the approval service
 and Quest connection are available again. Slurm accounting confirms **both
 3634921 and 3634922 COMPLETED/0:0**; the second took 34m35s. All 67 source cases

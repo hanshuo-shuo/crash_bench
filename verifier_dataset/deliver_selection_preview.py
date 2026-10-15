@@ -11,7 +11,7 @@ import shutil
 import subprocess
 from .inventory import ASSETS,read,sha,write
 from .constraint_selection import check_unit,select_units
-from .constraint_curation import exclude
+from .constraint_curation import exclude,reviewed_only,selection_settings
 
 
 def main(parents,review_path,output):
@@ -48,7 +48,10 @@ def main(parents,review_path,output):
     for unit in units:
         for row in unit:row['split']=frozen[row['metadata']['source_id']]['split']
     protocol=read(repo/'verifier_dataset/constraint_protocol.json')
-    eligible=exclude(units,review);selected=select_units(eligible,quotas=protocol.get('selection_quotas'))
+    target,quotas=selection_settings(review,protocol,sha(repo/'verifier_dataset/constraint_protocol.json'))
+    eligible=exclude(units,review)
+    if review.get('final_selection'):eligible=reviewed_only(eligible,review)
+    selected=select_units(eligible,target=target,quotas=quotas)
     old={}
     for record in review.get('all_reviewed_units',[]):
         key=(record['source_id'],record['checkpoint'])

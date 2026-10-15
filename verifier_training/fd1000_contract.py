@@ -30,13 +30,21 @@ def validate(root):
         'VISUAL_REVIEW.json':'visual_review_sha256','SHORTCUT_AUDIT.json':'shortcut_audit_sha256',
         'FROZEN_SOURCES.json':'frozen_sources_sha256'}
     for name,key in required.items():require(sha(root/name)==acceptance[key],'Acceptance evidence changed: '+name)
-    require(read(root/'EVIDENCE_AUDIT.json')['passed'],'Evidence audit incomplete')
+    audit=read(root/'EVIDENCE_AUDIT.json')
+    require(audit['passed'],'Evidence audit incomplete')
+    expected_units=250;reduced_quotas=None
+    if audit.get('selection_reduction'):
+        from verifier_dataset.constraint_curation import selection_settings
+        protocol_path=Path(__file__).resolve().parents[1]/'verifier_dataset/constraint_protocol.json'
+        expected_units,reduced_quotas=selection_settings(dict(model_predictions_used=False,
+            final_selection=audit['selection_reduction']),read(protocol_path),sha(protocol_path))
     require(read(root/'SHORTCUT_AUDIT.json')['passed'],'Specified shortcut screen did not pass')
     review=read(root/'VISUAL_REVIEW.json');require(review['complete'] and not review['unresolved_units'],'Visual premises remain unresolved')
     split={s['source_id']:s for s in read(root/'FROZEN_SOURCES.json')['sources']}
     rows=[json.loads(line) for line in (root/'dataset.jsonl').read_text().splitlines()]
-    require(len(rows)==1000 and len({r['sample_id'] for r in rows})==1000,'Exactly 1000 distinct records required')
-    require(Counter(r['target']['verdict'] for r in rows)=={'feasible':500,'infeasible':500},'Unbalanced final labels')
+    expected_rows=4*expected_units
+    require(len(rows)==expected_rows and len({r['sample_id'] for r in rows})==expected_rows,'Audited distinct record count required')
+    require(Counter(r['target']['verdict'] for r in rows)=={'feasible':expected_rows//2,'infeasible':expected_rows//2},'Unbalanced final labels')
     units=defaultdict(list);group_splits=defaultdict(set);images={};source_units=defaultdict(set);full_inputs=set()
     for r in rows:
         m=r['metadata'];source=split[m['source_id']]
@@ -55,7 +63,7 @@ def validate(root):
         require(key not in images or images[key]==r['split'],'Shared image pair crosses source splits');images[key]=r['split']
         full=(key,r['student']['task'],r['student']['constraints'])
         require(full not in full_inputs,'Repeated complete model input');full_inputs.add(full)
-    require(len(units)==250 and len(source_units)>=30 and all(len(v)<=10 for v in source_units.values()),'Source/checkpoint coverage failed')
+    require(len(units)==expected_units and len(source_units)>=30 and all(len(v)<=10 for v in source_units.values()),'Source/checkpoint coverage failed')
     require(all(len(v)==1 for v in group_splits.values()),'Ancestry leakage')
     require(len({r['metadata']['task_group'] for r in rows})>=6 and len({r['metadata']['family'] for r in rows})>=3,'Task/family coverage failed')
     for unit in units.values():check_unit(unit)
@@ -65,7 +73,7 @@ def validate(root):
     if versions&{VERSION,LEGACY_VERSION}:
         require(len(versions)==1,'Mixed construction versions');version=next(iter(versions))
         actual=Counter((u[0]['split'],selection_cell(u[0])) for u in units.values())
-        expected={(split,cell):n for split,cells in selection_quotas(version).items() for cell,n in cells.items()}
+        expected={(split,cell):n for split,cells in (reduced_quotas or selection_quotas(version)).items() for cell,n in cells.items()}
         require(actual==expected,'Endpoint-side balance must hold within every frozen source split')
         if version==VERSION:
             require(all(im.get('width')==448 and im.get('height')==448 for r in rows for im in r['student']['images']),
