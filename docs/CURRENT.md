@@ -9,13 +9,16 @@ only after data acceptance. The API budget is $20 for this new campaign. See
 [the collection protocol](../verifier_dataset/README.md). Policy failure remains
 UNKNOWN; historical benchmark success is only a contact-replay candidate.
 The [FD1000 status record](../verifier_dataset/CURRENT.md) records the current
-67 replayed source trajectories and 2,380 v2 rule-counterfactual candidate rows.
+67 replayed source trajectories and the successive constraint-data versions.
 The v2 proposed 1,000 rows had complete image-premise review across 63 sources,
 12 task compositions and four families. Audit 3614374 completed normally but
 rejected acceptance: the fixed joint forest still reached validation AUROC
 0.867627, exceeding the unchanged 0.75 limit. A prospective v3 construction now
-balances target and goal sides of the same closed separator; its real native
-prototype and new data audit remain mandatory. The 32 explicitly approved GLM requests
+balances target and goal sides of the same closed separator. Its native prototype
+passed, and both v3 bulk jobs completed normally with 495 matched units/1,980
+candidate rows. Initial image review found 191 visible units and 102 visibility
+exclusions; final selection, complete selected-image review and a fresh evidence/
+shortcut audit remain mandatory. The 32 explicitly approved GLM requests
 completed for $0.05882376. No complete mixed dataset has passed scientific
 acceptance and no verifier training has started.
 Actual stage receipts and results live under `results/verifier_dataset/`.

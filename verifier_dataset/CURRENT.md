@@ -15,7 +15,7 @@ The full FD1000 API budget is $20, including a $6.40 ceiling for that completed
 batch. All current collection, reasoning targets and training preparation are
 offline. The private key is never printed, copied or logged.
 
-## V2 rejected by shortcut gate; v3 endpoint-side collection running
+## V2 rejected by shortcut gate; v3 collection complete, image review continuing
 
 V2 audit **3614374 COMPLETED/0:0**, 9m54s, root
 `20261014T222942Z_audit-constraints_c2182eb82cf7`. All 595 raw units passed
@@ -67,21 +67,33 @@ The pending prototype's requested time was reduced from 30 to 10 minutes after
 identity checks, recorded in `SCHEDULING_UPDATE.json`; its source was unchanged.
 New bounded bulk jobs request 90 minutes each, with at most two task GPUs.
 
-V3 bulk shards **3622211** and **3622216** were submitted from clean published
-source `bd13a33c3339ee94377010d744a2860bf18da9f9`. Both were RUNNING at the
-23:35 UTC check, on qgpu2002 and qgpu2005 respectively:
+V3 bulk shards **3622211** and **3622216** both terminated **COMPLETED/0:0**,
+in 29m33s and 30m19s on qgpu2002 and qgpu2005 respectively. Both used clean
+published source `bd13a33c3339ee94377010d744a2860bf18da9f9`:
 `20261014T232911Z_constraint-batch_bd13a33c3339` (34 original sources), and
 `20261014T232922Z_constraint-batch_bd13a33c3339` (33 original sources).
-They execute immutable source archives and retain the protocol digest
+Together they processed all 67 original sources and produced **495 matched
+units / 1,980 candidate rows**, comprising 288 outward and 207 inward units.
+They executed immutable source archives and retain the protocol digest
 `88538ce0a48eb05492ed59092a759ac514df6ee051a974b4423113a2b3c67a03`.
-Read live progress and terminal accounting; submission is not acceptance.
+Neither normal completion nor candidate count is scientific acceptance.
 V3 requires fresh pixel-bound visibility review. Review-sheet captions now name
 the expected endpoint sides for each mode, solely to guide checking; student
 PNGs and model inputs contain no such captions and are unchanged.
-Automatic approval review rejected a live-checkout sync while these jobs run.
-Keep the Quest checkout at its current commit until both shards are terminal;
-use the already-published result-copy helper and perform image review locally.
-The rejection did not stop either collector or authorize a workaround.
+Automatic approval review rejected an attempted live-checkout sync while these
+jobs ran. Sync was deferred; existing published result-copy tools and local image
+review continued. Both normal terminal records and an empty project GPU queue
+were verified before resuming source synchronization. No bypass was used.
+
+The first v3 review round inspected **293 units across 64 sources** and excluded
+**102 whole units** for concrete visibility faults. The remaining **191 visible
+units cover 44 original sources**. The Object wide views often leave the outlined
+target too small or crowded by the gripper/nearby objects; these candidates are
+not admitted on the strength of a geometric certificate alone. Published record:
+`reviews/fd1000_sides_v3_visibility_v2.json`. Every delivered file and all review
+image hashes were rechecked. This is Codex image review, not independent human
+review. Deterministic quota selection and additional selected-image review are
+still required, followed by a new independent evidence and shortcut audit.
 
 ## V2 collection and visual-review history (not training-approved)
 
