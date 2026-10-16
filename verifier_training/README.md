@@ -3,6 +3,11 @@
 Active plan (2026-10-16): [docs/generative_verifier/PLAN.md](../docs/generative_verifier/PLAN.md),
 covering A/B/B′/C training on the V4 development set. The sections below describe
 the completed 120-row single-scene engineering pilot, whose code is reused.
+On 2026-10-16 its Quest run roots (adapters, source archives, full records) were
+deleted at the user's request. Delivered summaries remain under
+`results/verifier_training/`, and the text records are archived as described in
+[the cleanup record](../docs/CLEANUP_20261016.md). Quest paths and adapter
+locations mentioned below are historical.
 
 Latest fixed lower-LR rank64 comparison: [LOW_LR_RESULTS.md](LOW_LR_RESULTS.md) — smoke passed, but the120 fit remains97/120 verdicts and92/120 exact outputs.
 Prior higher-rank SFT comparison: [RANK64_RESULTS.md](RANK64_RESULTS.md) — the original-LR rank64 smoke failed; no full fit was launched in that run.
