@@ -1,5 +1,9 @@
 # Generative Feasibility Verifier — engineering pilot
 
+Active plan (2026-10-16): [docs/generative_verifier/PLAN.md](../docs/generative_verifier/PLAN.md),
+covering A/B/B′/C training on the V4 development set. The sections below describe
+the completed 120-row single-scene engineering pilot, whose code is reused.
+
 Latest fixed lower-LR rank64 comparison: [LOW_LR_RESULTS.md](LOW_LR_RESULTS.md) — smoke passed, but the120 fit remains97/120 verdicts and92/120 exact outputs.
 Prior higher-rank SFT comparison: [RANK64_RESULTS.md](RANK64_RESULTS.md) — the original-LR rank64 smoke failed; no full fit was launched in that run.
 Prior diagnosis and controlled correction: [BINARY_CORRECTION_RESULTS.md](BINARY_CORRECTION_RESULTS.md).

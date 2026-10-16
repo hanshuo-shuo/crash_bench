@@ -1,5 +1,17 @@
 # FD1000 final acceptance — V4 rejected, 896 review-only rows
 
+## 2026-10-16 user decision: V4 is used as development data
+
+The user decided that the V4 review need not be strict. The 896 rows below are
+used as development data for verifier training under
+[the generative verifier plan](../docs/generative_verifier/PLAN.md). The failed
+shortcut gate stays disclosed and is reported as a baseline. A validation-only
+stratification (the locked test was not used) places the readout signal in
+EXIT × checkpoint 0 (AUROC 1.000, 32 rows) and leaves ENTRY × checkpoint > 0
+at 0.636 (84 rows). That readout has no target or goal features, so the signal
+most likely reflects box placement rather than containment reasoning. All
+records below are unchanged history.
+
 ## Final acceptance complete; collection closed and training not started
 
 Quest CPU audit **3657699 COMPLETED/0:0**, 9m48s on qnode0026, root
