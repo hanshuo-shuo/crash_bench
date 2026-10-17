@@ -1,7 +1,7 @@
 # 生成式可行性 Verifier：研究与实验计划
 
 2026-10-16（已吸收外部评审意见）。读者：项目负责人，以及之后执行本计划的 Codex/Claude 会话。
-状态：**Phase 0 未开始**，等用户说开始。所有 Quest 操作遵守 [AGENTS.md](../../AGENTS.md) 和
+状态（2026-10-17）：**Phase 0、Phase 1 已完成**，结果见 [PHASE1_REPORT.md](PHASE1_REPORT.md)；Phase 2 等用户确认。所有 Quest 操作遵守 [AGENTS.md](../../AGENTS.md) 和
 [QUEST_WORKFLOW.md](../../QUEST_WORKFLOW.md)：账号 p33100，GPU 分区 gengpu，CPU 分区 short，
 最多同时 2 张 GPU，登录节点不跑重计算，每次运行使用新的输出根目录并记录 commit、配置、seed 和 Slurm ID。
 
@@ -457,9 +457,10 @@ B′（先 verdict 后 rationale）、filler 对照、更大的模型，按验�
 
 ## 8. 待用户决定
 
-1. 是否开始 Phase 0。
-2. Phase 1 是否加 API 前沿模型基线：涉及图片外发，预算不超过 $3，并需指定用哪个模型。
-3. Phase 4 的 AEGIS 控制器改动，以后再决定。
+1. ~~是否开始 Phase 0~~：用户 2026-10-17 要求开始，Phase 0 与 Phase 1 已完成。
+2. ~~Phase 1 的 API 基线~~：用户指定 "gpt luna 6"，即 OpenRouter 上的 `openai/gpt-6-luna`。只用 validation，实际花费 $0.4669（上限 $3）。
+3. 是否开始 Phase 2（A/B/C × 3 个 seed，之后统一评估一次锁定测试集）。开始前要先处理 [PHASE1_REPORT.md](PHASE1_REPORT.md) §6 的工程事项。
+4. Phase 4 的 AEGIS 控制器改动，以后再决定。
 
 ## 9. 参考文献
 

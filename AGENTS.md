@@ -49,3 +49,8 @@ scored once per selected checkpoint. Follow docs/generative_verifier/PLAN.md.
 GPU phases still follow the Quest rules above. The AEGIS controller change in
 Phase 4, new paid API image requests and new data collection each need separate
 user approval.
+
+Phase 0-1 (2026-10-17): the user asked to start Phase 0 and, if it went well, Phase 1,
+naming "gpt luna 6" (openai/gpt-6-luna) for the Phase 1 API baseline. Both phases are
+complete (docs/generative_verifier/PHASE1_REPORT.md); the baseline spent $0.4669 of its $3 cap
+on validation only. Phase 2 and any locked-test evaluation need the user's go-ahead.
