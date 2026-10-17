@@ -9,6 +9,27 @@ deleted at the user's request. Delivered summaries remain under
 [the cleanup record](../docs/CLEANUP_20261016.md). Quest paths and adapter
 locations mentioned below are historical.
 
+## V4 development A/B/C (Phase 0 code, 2026-10-17)
+
+- `v4_export.py` (CPU job): packages the 896 V4 rows unchanged as text, copies
+  images beneath `dataset/images/`, and adds structured facts (§4.0 of the plan).
+  Facts come from the construction factors and must equal the `LAYOUT.json`
+  geometry; every label is rechecked against `VERIFIED.json`. Writes
+  `DEV_ACCEPTANCE.json` (user decision, failed gate, validation-only strata),
+  `SAMPLES.html` (32 training rows) and `MANIFEST.json`.
+- `fd1000_contract.py`: `validate(root, mode='development')` keeps every hash,
+  split, unit and quota check but replaces the shortcut-gate requirement by the
+  disclosed `DEV_ACCEPTANCE.json`. Also defines the A/B/C targets, readings, the
+  C target schedule and the shared zero-shot prompts.
+- `fd1000_run.py`: `preflight` (CPU token audit, fixed orders), `zero-shot`,
+  `train ARM SEED` (train + validation only; checkpoints at 128/256/384, or 128 in
+  the trial schedule) and `evaluate-test` (once, after `TEST_FREEZE.json`).
+- `launch_fd1000.py`: `export`, `create`, `stage`, `freeze`; every stage runs an
+  archived clean published commit through `v4_cpu.sbatch` / `v4_gpu.sbatch`.
+- `api_baseline.py`: optional Phase 1.4 baseline (`openai/gpt-6-luna`, chosen by
+  the user), validation only, login node, $3 ledger with per-call reservation.
+- `configs/v4_dev_prereg.json`: §5 of the plan in machine-readable form.
+
 Latest fixed lower-LR rank64 comparison: [LOW_LR_RESULTS.md](LOW_LR_RESULTS.md) — smoke passed, but the120 fit remains97/120 verdicts and92/120 exact outputs.
 Prior higher-rank SFT comparison: [RANK64_RESULTS.md](RANK64_RESULTS.md) — the original-LR rank64 smoke failed; no full fit was launched in that run.
 Prior diagnosis and controlled correction: [BINARY_CORRECTION_RESULTS.md](BINARY_CORRECTION_RESULTS.md).

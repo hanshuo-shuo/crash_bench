@@ -1,0 +1,70 @@
+{
+  "version": "V4-dev-prereg-v1",
+  "source": "docs/generative_verifier/PLAN.md section 5, frozen 2026-10-17 before any Phase 2 run",
+  "commit_record": "Each campaign RECEIPT.json records the source commit and this file's sha256; TEST_FREEZE.json repeats both",
+  "training_configuration": "V4-dev-ABC-v1",
+  "data": {
+    "acceptance_mode": "development",
+    "rows": 896,
+    "splits": {"train": 512, "validation": 192, "test": 192},
+    "test_sources": 15,
+    "shortcut_gate": "failed (0.780 validation AUROC > 0.75); disclosed and reported as a baseline"
+  },
+  "arms": {
+    "A": {"target": "Verdict: 0/1", "readings": ["direct_free"]},
+    "B": {"target": "structured facts then Verdict: 0/1", "readings": ["facts_free", "facts_free_sampled"]},
+    "C": {"target": "both targets, half the samples each epoch", "readings": ["direct_forced", "facts_forced", "facts_forced_sampled"]}
+  },
+  "seeds": [713, 714, 715],
+  "optimizer_updates": 384,
+  "checkpoints": [128, 256, 384],
+  "selection": {
+    "A": "direct_free validation verdict accuracy",
+    "B": "facts_free validation verdict accuracy",
+    "C": "mean of direct_forced and facts_forced validation verdict accuracy, one shared checkpoint",
+    "ties": "earlier update"
+  },
+  "sampling": {"temperature": 0.7, "top_p": 1.0, "top_k": 0, "samples": 16, "k_values": [1, 2, 4, 8, 16], "aggregate": "mean P(1) at each sampled verdict token; majority vote reported alongside"},
+  "primary": {
+    "comparison": "facts_free (B greedy) minus direct_free (A) row accuracy on the locked test",
+    "unit": "four-row unit for interpretation; rows paired, correctness averaged over the three seeds per row before differencing",
+    "cluster": "source (15 test sources); seeds never add independent scenes",
+    "also_reported": "unit all-correct rate for both arms"
+  },
+  "secondary": [
+    "C facts_forced minus C direct_forced",
+    "C direct_forced minus A direct_free",
+    "B facts_free_sampled (K = 1, 2, 4, 8, 16) versus B facts_free",
+    "model facts + program rule (rule_reading_accuracy) versus B verdict",
+    "P(1) AUROC for every reading (invalid outputs scored 0.5)",
+    "strata: construction cell x checkpoint 0 / > 0, and the weak-shortcut subset ENTRY x checkpoint > 0",
+    "rule-flip consistency (same images, both rules correct) and color-renaming invariance",
+    "false-feasible rate (infeasible predicted feasible)"
+  ],
+  "diagnostics_not_pass_criteria": [
+    "per-field accuracy of protected color, target inside, goal inside, separated",
+    "counts: facts wrong (perception), facts right but verdict wrong (rule application), verdict right but facts wrong (shortcut or post-hoc text)",
+    "oracle facts: gold facts forced before Verdict:, P(1) read at the verdict token",
+    "edited premise: flip target or goal containment, regenerate from the edit; report follows-text and keeps-image rates without calling either correct",
+    "all diagnostics stratified by correct versus incorrect greedy verdict"
+  ],
+  "baselines": [
+    "majority class (0.5)",
+    "fixed color-statistics x rule linear readout, refit on train features and scored on test in the test report",
+    "zero-shot Qwen2.5-VL-3B: direct and facts prompts",
+    "oracle facts (upper bound 1.0)",
+    "optional API model (validation only in Phase 1)"
+  ],
+  "statistics": {
+    "bootstrap": {"replicates": 1000, "seed": 1014, "resample": "source"},
+    "tests": ["exact source-level sign-flip test", "Durkalski clustered McNemar", "t test over per-source mean differences (df 14)"],
+    "minimum_detectable_effect": "about 15-25 percentage points at the unit level; smaller differences are exploratory only",
+    "multiplicity": "one primary comparison; secondary comparisons reported without adjustment and labelled as such"
+  },
+  "success": {
+    "development_milestone": {"test_row_accuracy": 0.85, "unit_all_correct": 0.70, "rule_flip_consistency": 0.90, "rule": "any single arm meets all three; not sufficient for a safety gate"},
+    "scientific": "source-clustered 95% bootstrap CI of B facts_free minus A direct_free excludes 0"
+  },
+  "test_usage": "Only evaluate-test after every A/B/C x seed run finishes and TEST_FREEZE.json is written; scored once per selected checkpoint",
+  "phase1": "Validation only; Phase 1 results never select Phase 2 settings beyond resource requests"
+}
