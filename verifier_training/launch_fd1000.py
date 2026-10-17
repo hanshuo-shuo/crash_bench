@@ -3,9 +3,13 @@
 python -m verifier_training.launch_fd1000 export
 python -m verifier_training.launch_fd1000 create --dataset EXPORT/dataset --schedule trial --name phase1
 python -m verifier_training.launch_fd1000 stage --root RUN --stage zero-shot
-python -m verifier_training.launch_fd1000 stage --root RUN --stage train --arm A --seed 713
+python -m verifier_training.launch_fd1000 stage --root RUN --stage train --arm A --seed 713 [--after JOB]
+python -m verifier_training.launch_fd1000 stage --root RUN --stage report --split validation
 python -m verifier_training.launch_fd1000 freeze --root RUN      (Phase 2 only, after every run)
-python -m verifier_training.launch_fd1000 stage --root RUN --stage evaluate-test
+python -m verifier_training.launch_fd1000 stage --root RUN --stage evaluate-test --target A_seed713 [--after JOB]
+python -m verifier_training.launch_fd1000 stage --root RUN --stage report --split test
+
+--after chains GPU jobs into lanes (afterany), so two lanes never use more than two GPUs.
 """
 import argparse
 from datetime import datetime,timezone
@@ -47,16 +51,24 @@ def active_gpu_jobs():
     return sum(line.startswith('cb_') for line in lines)
 
 
-def submit(root,label,args,gpu):
+def lane_predecessor(root,job):
+    """A lane may only wait on a GPU job of this same campaign."""
+    receipts=[read(p) for p in root.glob('*_SUBMISSION.json')]
+    require(any(r['job']==job and r['partition']=='gengpu' for r in receipts),'Lane predecessor is not a GPU job of this campaign')
+    return job
+
+
+def submit(root,label,args,gpu,after=None,statistics=False):
     require(not (root/(label+'_SUBMISSION.json')).exists(),'No silent resubmission or output overwrite')
-    if gpu:require(active_gpu_jobs()<2,'Two CrashBench GPU jobs already active')
-    env=dict(os.environ,CB_V4_ROOT=str(root),CB_V4_ARGS=' '.join(args),CB_VERIFIER_ASSETS=str(ASSETS))
+    if gpu and after is None:require(active_gpu_jobs()<2,'Two CrashBench GPU jobs already active')
+    env=dict(os.environ,CB_V4_ROOT=str(root),CB_V4_ARGS=' '.join(args),CB_VERIFIER_ASSETS=str(ASSETS),CB_V4_STATISTICS='1' if statistics else '0')
     script=root/'source/verifier_training'/('v4_gpu.sbatch' if gpu else 'v4_cpu.sbatch')
-    job=subprocess.check_output(['sbatch','--parsable','--job-name=cb_v4_'+label,'--output='+str(root/(label+'_%j.log')),str(script)],
+    options=['--dependency=afterany:'+lane_predecessor(root,after)] if after else []
+    job=subprocess.check_output(['sbatch','--parsable','--job-name=cb_v4_'+label,'--output='+str(root/(label+'_%j.log')),*options,str(script)],
         env=env,text=True).strip().split(';')[0]
     require(job.isdigit(),'Invalid Slurm receipt')
     result=dict(label=label,job=job,root=str(root),args=args,source_commit=read(root/'RECEIPT.json')['source_commit'],
-        partition='gengpu' if gpu else 'short',account='p33100',api_calls=0)
+        partition='gengpu' if gpu else 'short',account='p33100',after=after,api_calls=0)
     write(root/(label+'_SUBMISSION.json'),result);print(result,flush=True)
 
 
@@ -90,16 +102,22 @@ def create(dataset,schedule,name):
     write(root/'RECEIPT.json',receipt);submit(root,'preflight',['verifier_training.fd1000_run','preflight',str(root)],gpu=False)
 
 
-def stage(root,name,arm=None,seed=None):
+def stage(root,name,arm=None,seed=None,target=None,split=None,after=None):
     receipt=read(root/'RECEIPT.json');require(command('git','rev-parse','HEAD')==receipt['source_commit'],'Use the campaign source commit for every stage')
     published_commit();normal(read(root/'preflight_SUBMISSION.json')['job']);require(read(root/'preflight/COMPLETE.json')['passed'],'Preflight did not pass')
-    if name=='zero-shot':submit(root,'zero_shot',['verifier_training.fd1000_run','zero-shot',str(root)],gpu=True)
+    if name=='zero-shot':submit(root,'zero_shot',['verifier_training.fd1000_run','zero-shot',str(root)],gpu=True,after=after)
     elif name=='train':
         require(arm in receipt['arms'] and seed in receipt['seeds'],'Unplanned arm or seed')
-        submit(root,f'{arm}_seed{seed}',['verifier_training.fd1000_run','train',str(root),arm,str(seed)],gpu=True)
+        submit(root,f'{arm}_seed{seed}',['verifier_training.fd1000_run','train',str(root),arm,str(seed)],gpu=True,after=after)
     elif name=='evaluate-test':
-        require((root/'TEST_FREEZE.json').exists() and not (root/'test').exists(),'Test evaluation needs a freeze and runs only once')
-        submit(root,'evaluate_test',['verifier_training.fd1000_run','evaluate-test',str(root)],gpu=True)
+        freeze=read(root/'TEST_FREEZE.json');targets={f'{r["arm"]}_seed{r["seed"]}' for r in freeze['runs']}|{'zero_shot'}
+        require(target in targets and not (root/'test'/target).exists(),'Test evaluation needs a frozen target and runs only once')
+        submit(root,'test_'+target,['verifier_training.fd1000_run','evaluate-test',str(root),target],gpu=True,after=after)
+    elif name=='report':
+        require(split in ('validation','test'),'Report split must be validation or test')
+        if split=='test':require(all((root/'test'/t/'COMPLETE.json').exists() for t in
+            [f'{a}_seed{s}' for a in receipt['arms'] for s in receipt['seeds']]+['zero_shot']),'Every frozen target needs its single test evaluation first')
+        submit(root,'report_'+split,['verifier_training.v4_report',str(root),split],gpu=False,statistics=split=='test')
     else:raise ValueError('Unknown stage')
 
 
@@ -122,8 +140,9 @@ if __name__=='__main__':
     p=argparse.ArgumentParser();p.add_argument('action',choices=('export','create','stage','freeze'))
     p.add_argument('--dataset',type=Path);p.add_argument('--schedule',choices=('trial','main'));p.add_argument('--name')
     p.add_argument('--root',type=Path);p.add_argument('--stage');p.add_argument('--arm');p.add_argument('--seed',type=int)
+    p.add_argument('--target');p.add_argument('--split');p.add_argument('--after')
     a=p.parse_args()
     if a.action=='export':export()
     elif a.action=='create':create(a.dataset,a.schedule,a.name)
-    elif a.action=='stage':stage(a.root,a.stage,a.arm,a.seed)
+    elif a.action=='stage':stage(a.root,a.stage,a.arm,a.seed,a.target,a.split,a.after)
     else:freeze(a.root)

@@ -26,10 +26,10 @@ from .loss import gradient_probe
 from .verdict_diagnostic import tensor_digest
 from .fd1000_contract import (configuration,validate,assistant_target,arm_kinds,readings,facts_text,rule_verdict,
     zero_shot_messages,probe_messages,probe_truth,schedules,check_schedule,edit_prefix,diagnostic_plan,FORCED_PREFIX,FACT_KEYS,KINDS)
-from .fd1000_metrics import parse_output,score,sampled_scores,auroc,row_record
+from .fd1000_metrics import parse_output,auroc,row_record,summarize
 
 TESTS=['verifier_training.tests.test_fd1000_contract','verifier_training.tests.test_fd1000_metrics',
-       'verifier_training.tests.test_v4_export','verifier_training.tests.test_fd1000_comparison']
+       'verifier_training.tests.test_v4_export','verifier_training.tests.test_fd1000_comparison','verifier_training.tests.test_v4_report']
 PROBE_WORDS={'yes':('yes','Yes'),'no':('no','No')}
 
 
@@ -231,25 +231,6 @@ def evaluate(model,processor,rows,items,plan,config,hashes,stream):
     return records
 
 
-def summarize(records,config,bootstrap=False):
-    by=defaultdict(list)
-    for r in records:by[r['reading']].append(r)
-    result={}
-    for reading,part in by.items():
-        if 'samples' in part[0]:
-            result[reading]=sampled_scores(part,config['sampling']['k_values'])
-            result[reading]['mean_generation_seconds']=sum(r['generation_seconds'] for r in part)/len(part)
-        elif reading.startswith('edit_'):
-            result[reading]=dict(rows=len(part),follows_edited_text=sum(r['predicted']==r['text_implied_verdict'] for r in part)/len(part),
-                keeps_image_label=sum(r['predicted']==r['truth'] for r in part)/len(part),invalid=sum(r['predicted'] is None for r in part),
-                note='Edited text may contradict the image, so neither outcome alone is correct')
-        else:
-            result[reading]=score(part,part[0]['kind'],bootstrap=bootstrap)
-            result[reading]['mean_generation_seconds']=sum(r['generation_seconds'] for r in part)/len(part)
-            result[reading]['mean_generated_tokens']=sum(r['generated_token_count'] for r in part)/len(part)
-    return result
-
-
 def selection_value(scores,arm):
     names=list(readings(arm));return sum(scores[n]['verdict_accuracy'] for n in names)/len(names)
 
@@ -392,41 +373,40 @@ def zero_shot(root):
         source_commit=receipt['source_commit'],slurm_job=os.environ['SLURM_JOB_ID']))
 
 
-def evaluate_test(root):
-    """Score every frozen selected adapter (and the zero-shot base) once on the locked test split."""
+def evaluate_test(root,name):
+    """Score one frozen target (ARM_seedN or zero_shot) exactly once on the locked test split."""
     freeze=read(root/'TEST_FREEZE.json');receipt,config,dataset,assets,rows,staged=context(root,include_test=True);hashes=gate(root,receipt)
     require(freeze['source_commit']==receipt['source_commit'] and freeze['config_sha256']==sha(root/'config.json'),'Freeze belongs to another campaign')
     require(sha(root/'source'/'verifier_training/configs/v4_dev_prereg.json')==freeze['prereg_sha256'],'Preregistration changed after freeze')
-    expected={(a,s) for a in config['arms'] for s in config['seeds']}
-    require({(r['arm'],r['seed']) for r in freeze['runs']}==expected,'Freeze does not list every planned run')
-    out=root/'test';out.mkdir(exist_ok=False);test=[r for r in rows if r['split']=='test'];started=time.monotonic()
-    processor=processor_for(assets);vision={r['sample_id']:vision_inputs(processor,r,dataset) for r in test};summary={}
-    items={(r['sample_id'],k):encode(processor,r,dataset,k,config['max_length'],vision[r['sample_id']]) for r in test for k in KINDS}
-    require(all(input_digest(v)==hashes[s] for (s,k),v in items.items()),'Test input differs from preflight')
-    for run in freeze['runs']:
-        folder=root/f'{run["arm"]}_seed{run["seed"]}';result=read(folder/'RESULT.json')
+    require({(r['arm'],r['seed']) for r in freeze['runs']}=={(a,s) for a in config['arms'] for s in config['seeds']},'Freeze does not list every planned run')
+    runs={f'{r["arm"]}_seed{r["seed"]}':r for r in freeze['runs']};require(name in runs or name=='zero_shot','Target was not frozen')
+    (root/'test').mkdir(exist_ok=True);out=root/'test'/name;out.mkdir();require(torch.cuda.is_available(),'Quest GPU required')
+    test=[r for r in rows if r['split']=='test'];started=time.monotonic();processor=processor_for(assets)
+    vision={r['sample_id']:vision_inputs(processor,r,dataset) for r in test}
+    if name=='zero_shot':
+        torch.manual_seed(1014);model=base_model(assets);model.eval();records=[];stream=out/'records.jsonl';stream.touch(exist_ok=False)
+        for row in test:
+            for mode,kind,prefix in (('direct','direct','Verdict: '),('facts','facts',None)):
+                item=prompt_item(processor,zero_shot_messages(row,mode),vision[row['sample_id']])
+                (output,),seconds=run_generation(model,processor,item,kind,prefix,config['maximum_new_tokens']['direct'] if kind=='direct' else 96)
+                record=row_record(row,'zero_shot_'+mode,kind,prefix,hashes[row['sample_id']])
+                record.update(output,generation_seconds=seconds,gold_rationale_prefix_used=False);records.append(record)
+                with stream.open('a') as f:f.write(json.dumps(record,allow_nan=False)+'\n')
+        adapter=None
+    else:
+        run=runs[name];folder=root/name;result=read(folder/'RESULT.json')
         require(sha(folder/'RESULT.json')==run['result_sha256'] and sha(folder/'selected_adapter/adapter_model.safetensors')==run['adapter_sha256']==result['adapter_sha256'],
                 'Selected adapter changed after freeze')
-        model=PeftModel.from_pretrained(base_model(assets),folder/'selected_adapter',is_trainable=False);model.eval()
+        items={(r['sample_id'],k):encode(processor,r,dataset,k,config['max_length'],vision[r['sample_id']]) for r in test for k in KINDS}
+        require(all(input_digest(v)==hashes[s] for (s,k),v in items.items()),'Test input differs from preflight')
+        torch.manual_seed(run['seed']);model=PeftModel.from_pretrained(base_model(assets),folder/'selected_adapter',is_trainable=False);model.eval()
         plan=[(n,k,p,'greedy') for n,(k,p) in readings(run['arm']).items()]+diagnostic_plan(run['arm'])
-        name=f'{run["arm"]}_seed{run["seed"]}';records=evaluate(model,processor,test,items,plan,config,hashes,out/(name+'.jsonl'))
-        write(out/(name+'.json'),records);summary[name]=summarize(records,config,bootstrap=True)
-        del model;torch.cuda.empty_cache()
-    model=base_model(assets);model.eval();zs={}
-    for row in test:
-        for mode in ('direct','facts'):zs[(row['sample_id'],mode)]=prompt_item(processor,zero_shot_messages(row,mode),vision[row['sample_id']])
-    records=[];stream=out/'zero_shot.jsonl';stream.touch(exist_ok=False)
-    for row in test:
-        for mode,kind,prefix in (('direct','direct','Verdict: '),('facts','facts',None)):
-            (output,),seconds=run_generation(model,processor,zs[(row['sample_id'],mode)],kind,prefix,8 if kind=='direct' else 96)
-            record=row_record(row,'zero_shot_'+mode,kind,prefix,hashes[row['sample_id']]);record.update(output,generation_seconds=seconds,gold_rationale_prefix_used=False)
-            records.append(record)
-            with stream.open('a') as f:f.write(json.dumps(record,allow_nan=False)+'\n')
-    summary['zero_shot']=summarize(records,config,bootstrap=True)
-    write(out/'SUMMARY.json',summary)
-    write(out/'COMPLETE.json',dict(passed=True,test_rows=len(test),runs=[r['arm']+'_seed'+str(r['seed']) for r in freeze['runs']],
+        records=evaluate(model,processor,test,items,plan,config,hashes,out/'records.jsonl');adapter=run['adapter_sha256']
+    write(out/'SUMMARY.json',summarize(records,config,bootstrap=True))
+    write(out/'COMPLETE.json',dict(passed=True,target=name,test_rows=len(test),records=len(records),adapter_sha256=adapter,
         freeze_sha256=sha(root/'TEST_FREEZE.json'),evaluations=1,elapsed_seconds=time.monotonic()-started,
-        source_commit=receipt['source_commit'],slurm_job=os.environ['SLURM_JOB_ID'],api_calls=0))
+        peak_gpu_gib=torch.cuda.max_memory_allocated()/2**30,source_commit=receipt['source_commit'],
+        slurm_job=os.environ['SLURM_JOB_ID'],api_calls=0))
 
 
 if __name__=='__main__':
@@ -435,7 +415,7 @@ if __name__=='__main__':
         if stage=='preflight':preflight(root)
         elif stage=='zero-shot':zero_shot(root)
         elif stage=='train':train(root,sys.argv[3],int(sys.argv[4]))
-        elif stage=='evaluate-test':evaluate_test(root)
+        elif stage=='evaluate-test':evaluate_test(root,sys.argv[3])
         else:raise ValueError('Unknown stage')
     except BaseException as error:
         write(root/('STOP_'+label+'.json'),dict(error=type(error).__name__,message=str(error),slurm_job=os.environ.get('SLURM_JOB_ID')))

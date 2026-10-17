@@ -285,3 +285,22 @@ def clustered_difference(control,treatment,groups,replicates=1000,seed=1014):
         durkalski_mcnemar=dict(chi2=x2,p=float(math.erfc(math.sqrt(x2/2))) if denominator>0 else 1.,df=1),
         source_t=dict(t=t,df=len(means)-1,p_two_sided=t_p),
         scope='Sources are the independent units; seeds are averaged per row before differencing')
+
+
+def summarize(records,config,bootstrap=False):
+    by=defaultdict(list)
+    for r in records:by[r['reading']].append(r)
+    result={}
+    for reading,part in by.items():
+        if 'samples' in part[0]:
+            result[reading]=sampled_scores(part,config['sampling']['k_values'])
+            result[reading]['mean_generation_seconds']=sum(r['generation_seconds'] for r in part)/len(part)
+        elif reading.startswith('edit_'):
+            result[reading]=dict(rows=len(part),follows_edited_text=sum(r['predicted']==r['text_implied_verdict'] for r in part)/len(part),
+                keeps_image_label=sum(r['predicted']==r['truth'] for r in part)/len(part),invalid=sum(r['predicted'] is None for r in part),
+                note='Edited text may contradict the image, so neither outcome alone is correct')
+        else:
+            result[reading]=score(part,part[0]['kind'],bootstrap=bootstrap)
+            result[reading]['mean_generation_seconds']=sum(r['generation_seconds'] for r in part)/len(part)
+            result[reading]['mean_generated_tokens']=sum(r['generated_token_count'] for r in part)/len(part)
+    return result

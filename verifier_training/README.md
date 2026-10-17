@@ -23,9 +23,14 @@ locations mentioned below are historical.
   C target schedule and the shared zero-shot prompts.
 - `fd1000_run.py`: `preflight` (CPU token audit, fixed orders), `zero-shot`,
   `train ARM SEED` (train + validation only; checkpoints at 128/256/384, or 128 in
-  the trial schedule) and `evaluate-test` (once, after `TEST_FREEZE.json`).
+  the trial schedule) and `evaluate-test TARGET` (one frozen run or `zero_shot`,
+  exactly once each, after `TEST_FREEZE.json`).
+- `v4_report.py`: the preregistered report (seed-averaged rows, source-clustered
+  tests, diagnostics split by greedy correctness, readout and zero-shot baselines)
+  for `validation` or, after every test evaluation, `test`.
 - `launch_fd1000.py`: `export`, `create`, `stage`, `freeze`; every stage runs an
   archived clean published commit through `v4_cpu.sbatch` / `v4_gpu.sbatch`.
+  `--after JOB` chains GPU jobs into two lanes so at most two GPUs are used.
 - `api_baseline.py`: optional Phase 1.4 baseline (`openai/gpt-6-luna`, chosen by
   the user), validation only, login node, $3 ledger with per-call reservation.
 - `configs/v4_dev_prereg.json`: §5 of the plan in machine-readable form.
