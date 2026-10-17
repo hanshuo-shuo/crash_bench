@@ -1,7 +1,7 @@
 # 生成式可行性 Verifier：研究与实验计划
 
-版本 v1，2026-10-16。读者：项目负责人，以及之后执行本计划的 Codex/Claude 会话。
-状态：**Phase 0 未开始**。所有 Quest 操作遵守 [AGENTS.md](../../AGENTS.md) 和
+2026-10-16（已吸收外部评审意见）。读者：项目负责人，以及之后执行本计划的 Codex/Claude 会话。
+状态：**Phase 0 未开始**，等用户说开始。所有 Quest 操作遵守 [AGENTS.md](../../AGENTS.md) 和
 [QUEST_WORKFLOW.md](../../QUEST_WORKFLOW.md)：账号 p33100，GPU 分区 gengpu，CPU 分区 short，
 最多同时 2 张 GPU，登录节点不跑重计算，每次运行使用新的输出根目录并记录 commit、配置、seed 和 Slurm ID。
 
@@ -14,10 +14,11 @@
   失败结果如实披露，该读数作为模型必须超过的基线报告。
 - **为什么可以这样做**：诊断显示闸门信号是局部的盒子摆放伪迹（EXIT × checkpoint 0 上 AUROC 1.000，
   ENTRY × checkpoint > 0 只有 0.636），不是"整个任务不需要关系推理"；锁定测试集从未被任何模型看过。
+- **这批数据能回答什么**：能检验"中间事实监督是否帮助判断"；不足以证明模型获得了通用的机器人规划推理能力。
 - **四个研究问题**：
-  1. 先推理再判断，是否比直接判断更准？
-  2. 如果更准，收益来自"rationale 作为训练信号"，还是"测试时推理"？
-  3. 瓶颈在感知（看清包含关系），还是组合（把两个事实和规则组合起来）？
+  1. 先生成事实再判断（B），是否比直接判断（A）更准？
+  2. 如果更准，收益来自"rationale 作为训练信号"，还是"测试时显式推理"？（C 组的两种读法回答）
+  3. 瓶颈在感知（看清包含关系），还是规则应用？（"模型预测事实 + 程序应用规则"的读法回答）
   4. verifier 能否作为 AEGIS 之前的拒绝执行门，减少无解场景中的违规？
 - **文献先验**（§3）：
   - 在短的、偏感知的二分类上，测试时 CoT 的收益通常只有 0–3 分，甚至为负。
@@ -25,15 +26,13 @@
   - 带坐标的 grounded CoT 比纯文本 CoT 更可能有用。
   - GenRM 的优势很大程度来自多条 rationale 的投票。
 - **"有效果"分两种**：
-  - (a) 实用：任一组在 held-out 源上准确率高、反事实一致性高，就可以拿去当门用。
-  - (b) 科学：推理组显著优于直接组。
-  - 本计划先保证 (a)，同时检验 (b)。
+  - (a) 开发里程碑：任一组在 held-out 源上准确率高、反事实一致性高。它本身不足以当安全门用（§5）。
+  - (b) 科学：B 显著优于 A；C 的推理读法优于它自己的直接读法。
 - **下一步**：
-  - Phase 0：导出数据和改代码，只用 CPU。
-  - Phase 1：零样本难度标定，约 1–2 A100·小时。
-  - Phase 2：A/B/B′/C 四组 × 3 个 seed，约 10–16 A100·小时。
-  - 之后按结果进入 Phase 3/4。
-  - 正常情况下一周内拿到第一轮对照结论。
+  - Phase 0：导出数据和改代码，只用 CPU；顺手输出 32 行 rationale 样例。
+  - Phase 1：零样本诊断，加一次小规模 A/B 工程试跑（测能否学会输出格式和实际耗时），只用 validation。
+  - Phase 2：A/B/C 三组 × 3 个 seed；全部训练完、选模规则冻结后，再统一评估一次锁定测试集。
+  - 之后按结果进入 Phase 3/4。B′ 和更大的模型按验证集发现再追加。
 
 ## 1. 问题定义
 
@@ -43,17 +42,21 @@
   - 两张 448×448 外部视角 RGB（`overview_a`、`overview_b`）。
   - 任务文本。
   - 约束文本，其中写明哪个颜色的虚拟盒子受保护。
-- **输出**：`Verdict: 1`（可行）或 `Verdict: 0`（条件不可行）。推理组在 verdict 前先输出结构化推理（§4.0）。
+- **输出**：`Verdict: 1`（可行）或 `Verdict: 0`（条件不可行）。推理组在 verdict 前先输出结构化事实（§4.0）。
 - **student 不可见、只放在 metadata**：几何、证书、安全轨迹、源 ID、相机参数、分割掩码。
 
 ### 1.2 标签语义
 
 - **正例**：一条真实的安全轨迹（源轨迹后缀）满足全部约束，所以解的存在性已被证明。
 - **负例**：受保护的封闭虚拟盒子把目标和终点分在两侧（closed-separator 证书），所以在声明的合同下不可行。
-- **因此这个 verifier 实际上是"证书检测器"**：
+- **在当前经过见证筛选的数据分布内**，这个 verifier 实际上是"证书检测器"：
   - 找到一个分隔目标和终点的受保护盒子，就判 0；找不到，就判 1。
-  - 负例的推理可以推出 verdict。正例的推理只能说明"没有发现阻断"，存在性来自训练数据里的安全轨迹，不来自图像。
-  - 所有结论都限定在声明的合同之内。
+  - "找不到"只说明这道边界没有把两者分隔，**不能**证明机器人够得着、抓得住、能在时间限制内完成。
+    这条规则之所以在数据里成立，是因为每个正例都另有一条经过核验的安全轨迹；离开这个分布不一定成立。
+- **特权信息的使用边界**：
+  - 用证书、安全轨迹、几何来**制作**监督标签是允许的（GenRM 也用参考答案生成训练 rationale，推理时移除）。
+  - 模型输出不能把特权信息说成自己看到的事实，例如"我观察到一条成功轨迹"、精确距离等。
+- 所有结论都限定在声明的合同之内。
 
 ### 1.3 与 π0.5 / AEGIS 的关系
 
@@ -76,7 +79,7 @@
 | 构造格子 | EXIT/ENTRY（分隔盒包住目标 / 包住终点）× BOTH/NEITHER（另一个盒子同时包住两者 / 都不包）；每个 split 内四格等量 |
 | 图像审核 | 由 Codex 逐单元做过前提可见性审核，不是独立的人工审核 |
 | 原始记录 | 本地 `results/verifier_dataset/factorial_v4_final_896_20261015/AUDIT_DELIVERY/PROPOSED_DATASET.jsonl`；Quest `/projects/p33100/siosio/crashbench_safelibero/verifier_dataset/20261015T042328Z_audit-constraints_75be81f8f066/` |
-| 每张图的辅助数据 | 各 assignment 目录下有 `overview_*_segmentation.npz`；单元目录下有 `CAMERA.json`、`LAYOUT.json`（两个盒子、目标、终点的几何） |
+| 每张图的辅助数据 | 各 assignment 目录下有 `overview_*_segmentation.npz`；单元目录下有 `CAMERA.json`、`LAYOUT.json`（两个盒子、目标、终点的几何）、`VERIFIED.json`（证书与见证核验） |
 
 ### 2.2 闸门结果与诊断
 
@@ -100,15 +103,16 @@
 - 所以 0.78 只能来自"受保护的盒子本身长什么样、摆在哪"，而标签本应不随这些量变化。
 - 再结合 checkpoint 0（机器人处于初始姿态）时 AUROC 达到 1.0，最可能的原因是初始姿态下盒子摆放规则的规律性。
 - 注意 EXIT × checkpoint 0 只有 8 个单元，这是有证据的假设，还不是结论。
+- ENTRY × checkpoint > 0 只能称为"**已测捷径较弱的子集**"，不能说成已证明干净：它只是对这一个读数弱。
 
 ### 2.3 已知限制（必须写进所有结论）
 
-1. **rationale 很浅**：只有 5 个模板，本质是两个比特（目标、终点是否在受保护盒内）加一个 XNOR。
+1. **rationale 很浅**：本质是两个比特（目标、终点是否在受保护盒内）加一个 XNOR。
    这是对"中间监督"的干净测试，不能说成复杂物理推理。
 2. **每张图恰好只有一个分隔盒**：所以"先找到分隔盒，再看它是否受保护"这种策略在这个数据里就能拿满分。
 3. **感知很难**：盒子是细线框，两个高棱柱在投影中大面积重叠，目标的白色框很小。感知可能是首要瓶颈。
-4. **测试集小**：锁定测试集只有 48 个单元、15 个源，单元级可检测的最小差异约 15–25 个百分点。
-   最干净的分层（ENTRY × checkpoint > 0）在测试集里只有 16 个单元。
+4. **测试集小**：锁定测试集只有 48 个单元、**15 个独立源**；3 个训练 seed 不会增加独立场景数量。
+   单元级可检测的最小差异约 15–25 个百分点。"已测捷径较弱的子集"在测试集里只有 16 个单元。
 5. **虚拟盒是合同约束，不是物理墙**：结论不能外推到真实碰撞物理或一般可达性。
 6. **闸门未通过**：模型可能学到摆放伪迹，所以结果必须分层报告。
 
@@ -124,13 +128,18 @@
   [fd1000_metrics.py](../../verifier_training/fd1000_metrics.py)、
   [binary_verifier.py](../../verifier_training/binary_verifier.py)。
 
+**必须先修的代码问题**：`fd1000_run.py` 的 `train()` 在恢复验证集选中的 checkpoint 后，会**立即评估测试集**。
+这样每次调试、smoke 都会提前看到测试集结果。Phase 0 要把测试评估拆成独立阶段（0.4）。
+
 **120 行单场景工程 pilot 的教训：**
 
 - 原 B 组只拟合了 73/120。主因是生成配置里的 `repetition_penalty=1.05` 对 "feasible/infeasible"
   两个词不对称。现在已改为 0/1 单 token，而且 V4 合同里 penalty 固定为 1.0。
 - 把 verdict 和 rationale 的损失平均在一起，会掩盖判定 token 的难度，所以判定 token 要单独归一化。
+  同理，rationale 里少数关键字段的错误也会被大量固定模板 token 掩盖，所以关键字段要单独计分（§4.0）。
 - rank64 配原学习率时训练不稳定；降低学习率后稳定了，但准确率没有提升。剩余错误集中在目标完全被遮挡的样本。
 - 把模型自己生成的 rationale 换成正确 rationale 后，15 个错误判定被修正。说明 rationale 里的错误会传到判定。
+- 这个 pilot 的 Quest 运行目录已于 2026-10-16 删除，摘要仍在 `results/verifier_training/`。
 
 ## 3. 其他方法的启示
 
@@ -140,12 +149,12 @@
 
 | 发现 | 来源 | 对本计划的启示 |
 |---|---|---|
-| GenRM-CoT 报告的数字是对 32 条采样 rationale 的 P(Yes) 取平均；投票在 2 票内就超过 greedy ✓ | GenRM §4.3 | B 组必须同时报告 greedy 和 K=1…16 的采样曲线 |
+| GenRM-CoT 报告的数字是对 32 条采样 rationale 的 P(Yes) 取平均；投票在 2 票内就超过 greedy ✓ | GenRM §4.3 | 多次采样作为预先声明的次要结果；主比较用 greedy |
 | MMLU 各子集上，判别式 RM → GenRM-CoT 只提高 0.5–3.5 分；摘要里的大幅提升是相对基座模型 ✓ | GenRM Table 1 | 不要期待大幅提升；比较对象是 A 组，不是零样本基座 |
-| 增益最大的是用程序生成 oracle rationale 的算法任务（32 票下约 +8.4，从图读出） | GenRM Fig. 1 | 我们的模板正是程序生成的 oracle rationale，这是最接近的正面先例 |
+| 增益最大的是用程序生成 oracle rationale 的算法任务（32 票下约 +8.4，从图读出） | GenRM Fig. 1 | 我们的结构化事实正是程序生成的 oracle rationale，这是最接近的正面先例 |
 | 直接 GenRM（只取 P(Yes)、不推理）与判别式 verifier 相当 ✓ | GenRM §4.1 | 用 P(1) 给 A 组打分，就等价于"直接 GenRM" |
-| GSM8K 的 rationale 由看到参考解的教师生成，再按 verdict 过滤 ✓ | GenRM §3.3、附录 C | 我们的模板直接由证书生成，每一步按构造正确，比按 verdict 过滤更干净 |
-| 按步过滤的合成验证链，优于只按最终结果过滤 | ThinkPRM | 结构化 rationale 让每一步都能自动判分 |
+| 训练 rationale 由看到参考解的教师生成，推理时移除参考解；再按 verdict 过滤 ✓ | GenRM §3.3、附录 C | 用特权信息制作标签是允许的；我们的事实直接由几何和证书生成并核对，比按 verdict 过滤更干净 |
+| 按步过滤的合成验证链，优于只按最终结果过滤 | ThinkPRM | 关键字段逐项判分、单独报告损失 |
 | 自洽投票的收益普遍很小（CLoud ≤0.7；DeepSeek-GRM +1.1；Mahan +1.6） | CLoud；DeepSeek-GRM；Mahan | 投票只作为变体，不作主结果；要在相同算力下比较 |
 | 多模态 judge 中，直接模式和 CoT 模式差不多（UnifiedReward-Think 73.1 vs 73.8）；在感知类题目上，标量 RM 不输长 CoT（BaseReward） | UnifiedReward-Think；BaseReward | 在偏感知的任务上，B 组不一定赢 |
 
@@ -154,10 +163,10 @@
 | 发现 | 来源 | 对本计划的启示 |
 |---|---|---|
 | LIBERO-90：无推理 82.0 / 完整 ECoT 90.8 / 推理只在训练时出现 89.4 / 无意义"思考 token" 78.9–79.8 ✓ | ECoT-Lite Table 1 | 收益主要来自表征学习，所以要设 C 组 |
-| 失败检测：只输出答案 0.80 / 推理只在训练时出现 0.81 / 始终先推理 0.83，后者推理慢约 6 倍 ✓ | Guardian Table 4 | 测试时推理只多 1–2 分 |
-| 多任务（标签和 rationale 分开训练）优于"rationale → 标签"单序列（ANLI 49.58 vs 43.50） | Distilling Step-by-Step | 单序列联合训练可能拖累判定，C 组用混合目标 |
-| CoT 放在标签之后也有帮助，打乱顺序的 CoT token 仍有帮助 | Wadhwa 2024 | 设 B′ 组（先 verdict 后 rationale）和 filler 对照 |
-| 小模型上 rationale 先行会因 rationale 幻觉而掉点（81.63 → 69.32） | Multimodal-CoT | 要盯住前提准确率 |
+| 失败检测：只输出答案 0.80 / 推理只在训练时出现 0.81 / 始终先推理 0.83，后者推理慢约 6 倍 ✓ | Guardian Table 4 | 测试时推理只多 1–2 分；要报告推理开销 |
+| 多任务（标签和 rationale 作为两个任务分别训练）优于"rationale → 标签"单序列（ANLI 49.58 vs 43.50） | Distilling Step-by-Step | C 组让每条样本同时有两种训练目标 |
+| CoT 放在标签之后也有帮助，打乱顺序的 CoT token 仍有帮助 | Wadhwa 2024 | B′（先 verdict 后 rationale）和 filler 对照留作后续 |
+| 小模型上 rationale 先行会因 rationale 幻觉而掉点（81.63 → 69.32） | Multimodal-CoT | 要盯住关键事实的准确率 |
 
 ### 3.3 感知与空间推理中的 CoT
 
@@ -173,10 +182,10 @@
 
 | 发现 | 来源 | 对本计划的启示 |
 |---|---|---|
-| 中间监督可以证明地让 parity 类组合变得可学 | Wies 2023 | 结构化 rationale 里的两个比特就是中间监督 |
+| 中间监督可以证明地让 parity 类组合变得可学 | Wies 2023 | 结构化事实里的两个比特就是中间监督 |
 | 端到端训练在 Pentomino、视觉 parity 上会卡住，加上中间目标后可学 | Gülçehre & Bengio 2016；Shalev-Shwartz 2017 | 小数据下 B/C 组相对 A 组可能有样本效率优势 |
 | PGM 的辅助元目标在分布内有提升，外推没有提升 | Barrett 2018 | 外推（更深的组合、新布局）要单独测 |
-| 概念瓶颈模型可以在测试时修正中间概念 | Koh 2020 | 提供 oracle-premise 条件，用来分离感知错误和规则应用错误 |
+| 概念瓶颈模型先预测概念、再由概念得到答案，测试时可修正概念 | Koh 2020 | "模型预测事实 + 程序应用规则"读法；oracle 事实诊断 |
 
 ### 3.5 机器人失败检测与可行性预测
 
@@ -218,24 +227,24 @@
 | 发现 | 来源 | 对本计划的启示 |
 |---|---|---|
 | shortcut 按"干预下标签不变"定义，不按"特征简单"定义 | Geirhos 2020；Eisenstein 2022 | 闸门改成检查"标签本应不依赖的读数" |
-| 部分输入基线失败不能证明数据干净；简单模型成功时，应报告结果并构造反例子集，而不是拒绝数据 | Feng 2019；Dancette 2021 | 颜色读数作为基线；报告伪迹弱的分层 |
+| 部分输入基线失败不能证明数据干净；简单模型成功时，应报告结果并构造反例子集，而不是拒绝数据 | Feng 2019；Dancette 2021 | 颜色读数作为基线；报告"已测捷径较弱的子集" |
 | contrast set 与组一致性指标 | Gardner 2020；NLVR2 | 主指标加入"单元四行全对率" |
-| 反复对同一个 holdout 做适配，会让它失效 | Dwork 2015；Teney 2020 | 锁定测试集只用一次 |
+| 反复对同一个 holdout 做适配，会让它失效 | Dwork 2015；Teney 2020 | 锁定测试集在所有选择冻结后只评估一次 |
 | 小样本比较普遍功效不足 | Card 2020 | 事先写明最小可检测效应 |
 
 ### 3.10 忠实性检验
 
 | 方法 | 来源 | 本计划中的用法 |
 |---|---|---|
-| 截断、插入错误前提、filler、改写 | Lanham 2023 | 对 B 组：在结论前截断；翻转一个前提 |
+| 截断、插入错误前提、filler、改写 | Lanham 2023 | 只作诊断，不作通过标准；修改前提后从修改位置重新生成后续内容 |
 | 有偏的输入特征会改变答案，但 CoT 不提它 | Turpin 2023 | 把换色、规则翻转当作输入干预 |
 | 忠实性指标与准确率相关，需要按对错分层 | Bentham 2024 | 忠实性结果按对错分层报告 |
 
 ## 4. 实验计划
 
-### 4.0 结构化 rationale（B、B′、C 组共用）
+### 4.0 结构化事实（B、C 组共用）
 
-格式固定如下，每一行都可以自动判分：
+格式固定如下，每个关键字段都可以自动判分：
 
 ```text
 Protected: orange
@@ -245,7 +254,7 @@ Separated: yes
 Verdict: 0
 ```
 
-由 metadata 推导各行的值（P 表示受保护的盒子）：
+各行的值（P 表示受保护的盒子）：
 
 | 受保护盒 | 构造 | Target inside P | Goal inside P | Separated | Verdict |
 |---|---|---|---|---|---|
@@ -254,86 +263,107 @@ Verdict: 0
 | b（另一个盒） | BOTH | yes | yes | no | 1 |
 | b（另一个盒） | NEITHER | no | no | no | 1 |
 
-P 的颜色取 `appearance_assignment[protected_boundary]`。student 输入保持 V4 原文不变：
-两张图约 512 个视觉 token，加上文本，远低于 2048 的长度上限，所以不需要缩短约束文本。
+**生成方式**：`几何与规则 → 核验空间关系 → 生成结构化事实 → 与证书或安全轨迹核对`。
+
+- 表中的值由构造 metadata 推出，同时必须与 `LAYOUT.json` 的实际几何（目标点、必要终点区域、两个盒子）
+  以及 `VERIFIED.json` 的证书/见证结果一致；任何不一致都让导出失败，不能只凭类别名称填答案。
+- P 的颜色取 `appearance_assignment[protected_boundary]`。
+- 正例的 `Separated: no` 只表示"没有发现受保护边界阻断"；标签依据是证据记录里的安全轨迹，输出中不提轨迹。
+
+**关键字段**：受保护颜色、`Target inside`、`Goal inside`、`Separated` 四个值，加上 verdict。
+
+- 逐字段统计准确率，并单独报告这些值 token 的损失，避免被固定字段名称的低损失掩盖。
+- 训练目标仍是"判定 token 0.5 + 其余 token 0.5"，不另加权重。
+
+**输入**：student 输入保持 V4 原文不变。两张图约 512 个视觉 token，加上文本，远低于 2048 的长度上限。
+各组的图片、任务、安全规则完全相同；C 组的两种模式用强制解码前缀切换（§Phase 2），不改输入。
 
 ### Phase 0：准备（CPU，约 1 天编码）
 
 | 编号 | 任务 | 产出 |
 |---|---|---|
 | 0.1 | 开发验收记录：写明用户 2026-10-16 的决定、闸门结果、§2.2 的分层诊断，以及锁定测试集未使用 | `DEV_ACCEPTANCE.json`，放在导出数据集根目录 |
-| 0.2 | 导出脚本：`PROPOSED_DATASET.jsonl` → `dataset.jsonl` 加 `dataset/images/`（相对路径加 sha256）；生成 §4.0 的结构化目标；标记 `acceptance_mode=development` | `verifier_training/v4_export.py` |
-| 0.3 | 合同：给 `fd1000_contract.validate` 加 development 模式。用 `DEV_ACCEPTANCE.json` 代替 `ACCEPTANCE.json`；保留哈希、按源切分、单元完整等全部检查；不再要求 shortcut 闸门通过 | `fd1000_contract.py` |
-| 0.4 | 组别：实现 A/B/B′/C 的目标格式和解码方式。C 组用两种强制前缀读取（`Verdict:` 或 `Protected:`）；B 组和 C 组的 CoT 读法加入 K 采样（`num_return_sequences`） | `fd1000_run.py` |
-| 0.5 | 指标：结构化前提逐行判分；rationale 与 verdict 的一致性；前提翻转、截断干预；分层报告；按源聚类的检验（源级符号翻转检验、Durkalski 聚类 McNemar） | `fd1000_metrics.py` |
-| 0.6 | 单元测试和 token 审计：两张 448 图加文本不超过 2048，不发生截断；四组的推理输入逐字节相同 | `verifier_training/tests/` |
-| 0.7 | 冻结预注册：把 §5 写成 JSON，记录 commit | `verifier_training/configs/v4_dev_prereg.json` |
+| 0.2 | 导出脚本：`PROPOSED_DATASET.jsonl` → `dataset.jsonl` 加 `dataset/images/`（相对路径加 sha256）；按 §4.0 生成结构化事实并做几何/证书一致性断言；标记 `acceptance_mode=development` | `verifier_training/v4_export.py` |
+| 0.3 | 32 行样例包，由导出脚本顺手生成：从训练集选 8 个完整四行单元，覆盖四种构造；展示图片、结构化事实、正负证据和模型可见范围。供用户翻看，不是审核关 | 导出根目录下的 `SAMPLES.html` |
+| 0.4 | 训练与测试分离：`train()` 只训练、在 validation 上选模并保存选中的 adapter，不再碰测试集；新增独立的 `evaluate-test` 阶段，只能在所有运行完成、读法和指标冻结后执行一次 | `fd1000_run.py` |
+| 0.5 | 合同：给 `fd1000_contract.validate` 加 development 模式。用 `DEV_ACCEPTANCE.json` 代替 `ACCEPTANCE.json`；保留哈希、按源切分、单元完整等全部检查；不再要求 shortcut 闸门通过 | `fd1000_contract.py` |
+| 0.6 | 组别：实现 A/B/C 的目标格式、C 的双目标训练与两种强制前缀读法、B 和 C-CoT 的 K 次采样（`num_return_sequences`） | `fd1000_run.py` |
+| 0.7 | 指标：关键字段逐项准确率与损失；"模型预测事实 + 程序应用规则"读法；事实与 verdict 一致性；oracle 事实诊断；修改前提并从修改处重新生成的诊断；分层报告；按源聚类的检验（源级符号翻转检验、Durkalski 聚类 McNemar） | `fd1000_metrics.py` |
+| 0.8 | 单元测试和 token 审计：两张 448 图加文本不超过 2048，不发生截断；各组的图片、任务、规则 token 完全相同；`train()` 不读测试集 | `verifier_training/tests/` |
+| 0.9 | 冻结预注册：把 §5 写成 JSON，记录 commit | `verifier_training/configs/v4_dev_prereg.json` |
 
-### Phase 1：难度标定（约 1–2 A100·小时，只用 validation）
+### Phase 1：零样本诊断与小规模试跑（约 2–3 A100·小时，只用 validation）
 
 - **1.1 感知探针**：96 张验证图，每张 4 个比特（目标、终点分别在橙色、紫色盒内吗）。
   问 "Is the white-outlined object inside the orange box? Answer yes or no."，
-  用 P(yes)/(P(yes)+P(no)) 打分。真值由构造 metadata 推出。
+  用 P(yes)/(P(yes)+P(no)) 打分。真值由几何核对过的结构化事实给出。
 - **1.2 零样本 verdict**（Qwen2.5-VL-3B 基座），三种问法：
   - 直接给 P(1)。
-  - 先生成结构化 CoT，再解析。
-  - oracle-premise：在文本里直接给出两个事实，只考规则应用。
-- **1.3 可选**：
+  - 先生成结构化事实，再解析。
+  - oracle 事实：在文本里直接给出正确的两个事实，只考规则应用。
+- **1.3 小规模 A/B 工程试跑**：A、B 各 1 个 seed、1 个 epoch，只在 validation 上评估。
+  检查：能否学会输出格式、关键字段是否开始拟合、损失与梯度是否正常、每次运行的实际耗时和显存。
+  这一步用来定 Phase 2 的资源请求，不作为科学结果。
+- **1.4 可选**：
   - Qwen3-VL-32B：共享 HF cache 里有完整权重，但需要比现在的 4.53.2 更新的 transformers，得另建一个 pinned overlay。
   - API 前沿模型基线：需要用户单独授权图片外发，预算不超过 $3，默认用 pinned 的 GLM-4.5V，换模型须用户指定。
 
 解读方式（Phase 2 无论如何都会运行）：
 
-| 比特准确率 | oracle-premise 准确率 | 含义 |
+| 比特准确率 | oracle 事实准确率 | 含义 |
 |---|---|---|
 | 低 | 高 | 感知瓶颈：Phase 3 优先做 grounded CoT 和视觉侧改进 |
-| 高 | 低 | 规则应用瓶颈：结构化 CoT 应该有帮助 |
-| 高 | 高，但直接 verdict 低 | 组合或对齐问题：CoT 和中间监督有机会 |
+| 高 | 低 | 规则应用瓶颈：结构化事实应该有帮助 |
+| 高 | 高，但直接 verdict 低 | 组合或对齐问题：中间监督有机会 |
 
 产出：`PHASE1_REPORT.md`，放在该次运行根目录，摘要抄回本目录。
 
-### Phase 2：主对照（约 10–16 A100·小时，最多 2 张卡）
+### Phase 2：主对照（约 10–14 A100·小时，最多 2 张卡）
 
-| 组 | 训练目标 | 测试时读法 | 检验的问题 |
+| 组 | 训练目标 | 测试时读法 | 回答的问题 |
 |---|---|---|---|
-| A | `Verdict: 0/1` | 直接读取 | 直接判别基线（等价于"直接 GenRM"） |
-| B | 结构化 rationale → verdict | 自由生成：greedy，以及 K=1/2/4/8/16 条采样（温度 0.7）的平均 P(1) | 生成式验证 |
-| B′ | verdict → 结构化 rationale | 读第一个 verdict token | rationale 只作训练信号、放在答案之后 |
-| C | 每个样本 50% 用 A 目标、50% 用 B 目标，分配由 seed 固定 | 同一个模型读两次：强制 `Verdict:`（C-直接），或强制 `Protected:`（C-CoT） | 推理只在训练时出现 vs 测试时推理 |
+| A | `Verdict: 0/1` | 直接读取 P(1) 和 greedy verdict | 直接判别能做到什么程度 |
+| B | 结构化事实 → verdict | 自由生成事实再判断：greedy（主结果）；K=1/2/4/8/16 条采样（温度 0.7）的平均 P(1)（次要） | 完整的生成式方法是否更好 |
+| C | 每条样本同时有两种目标：直接 verdict，以及结构化事实 → verdict | 同一个选定 checkpoint 读两次：强制 `Verdict:`（C-直接），或强制 `Protected:`（C-CoT） | 测试时显式生成事实是否额外有用 |
 
-**固定配置**（沿用 `fd1000_contract.configuration()`）：
+B′（先 verdict 后 rationale）、filler 对照、更大的模型，按验证集发现在 Phase 3 追加。
 
-- LoRA：rank 16，alpha 32，dropout 0.05。
-- 优化：LR 1e-4，AdamW，weight decay 0，梯度裁剪 1。
-- batch：microbatch 1，有效 batch 4；训练 3 个 epoch。
-- 输入与解码：max_length 2048，图像 448²，`repetition_penalty=1.0`，主结果用 greedy。
-- 冻结视觉和 projector；每次运行都从全新的基座加全新的 LoRA 开始。
-- seed 取 713、714、715；同一个 seed 下各组的数据顺序相同。
+**公平性固定项**：
 
-**模型选择与采样**：
+- 同一份数据、同一个初始模型、同一个 seed 下相同的样本顺序、相同的优化器更新次数和选模规则。
+- 配置沿用 `fd1000_contract.configuration()`：LoRA rank 16、alpha 32、dropout 0.05；LR 1e-4，AdamW，
+  weight decay 0，梯度裁剪 1；microbatch 1、有效 batch 4；max_length 2048；图像 448²；
+  `repetition_penalty=1.0`；冻结视觉和 projector；每次运行从全新的基座加全新的 LoRA 开始。
+- seed 取 713、714、715。
+- 更新次数：所有组都是 384 次更新（A/B 相当于 3 个 epoch）。C 每条样本有两个目标，同样 384 次更新
+  相当于把 1,024 个"样本 × 目标"各看 1.5 次；两个目标的损失等权。
+- 所有组在第 128、256、384 次更新时做 validation 评估，从这三个 checkpoint 里选一个。
+- 选模规则：A 和 B 按各自 validation verdict 准确率；C 按两种读法 validation 准确率的平均值，
+  两种读法必须用这同一个 checkpoint，不能各自挑最好的。平局取更早的。
+- 报告每组的训练时间、推理时 token 数和耗时。
 
-- 每次运行在每个 epoch 结束后看 validation 的 verdict 准确率，取最高的一个（平局取更早的 epoch）。
-- 选中的 checkpoint 在锁定测试集上只评估一次。
-- K 采样只在选中的 checkpoint 上做，并记录 K 条样本里出现过多少种不同的前提组合。
+**测试集**：Phase 2 全部 9 次运行结束、读法与采样次数和指标冻结后，运行 `evaluate-test` 一次，统一评估所有选定 checkpoint。
 
-**结果解读**：
+**结果解读**（只说明行为差异，不能据此认定输出文字反映了模型内部推理）：
 
 | 结果 | 解释 | 下一步 |
 |---|---|---|
-| B ≈ C-直接 > A | 收益来自训练监督 | 部署用 C-直接（推理便宜）；Phase 3 重点扩数据 |
-| B 或 C-CoT 同时优于 C-直接和 A | 测试时推理有用 | Phase 3：grounded CoT，加上用可验证奖励做 RL |
-| 各组接近，且前提准确率低 | 感知瓶颈 | grounded CoT、训练 projector、裁剪图像或提高分辨率 |
-| 各组接近，且准确率都很高 | 任务太浅 | 增加组合深度 |
+| B > A | "加入事实监督并生成事实"这整套方法有收益 | 看 C 区分来源 |
+| C-CoT > C-直接 | 测试时显式生成事实有额外帮助 | Phase 3：grounded CoT，加上用可验证奖励做 RL |
+| C-直接 ≈ C-CoT，且都 > A | 收益主要来自训练监督 | 部署用直接读法（推理便宜）；Phase 3 重点扩数据 |
+| "模型事实 + 程序规则" ≥ B 的 verdict | 长解释没有额外收益；两步事实预测已足够 | 优先改进感知 |
+| 关键事实准确率低 | 感知瓶颈 | grounded CoT、训练 projector、裁剪图像或提高分辨率 |
+| 各组都接近且很高 | 任务太浅 | 增加组合深度 |
 | 各组都接近随机 | 数据或感知都不够 | 回看 Phase 1；考虑更大的 backbone |
 
 ### Phase 3：按结果扩展（每项开始前单独确认）
 
 - **3a grounded CoT（G 组）**：
-  - 在 rationale 里加入每个视角下目标、终点的 2D 点（取分割掩码的质心），以及受保护盒在桌面高度的投影角点（由 `LAYOUT.json` 和 `CAMERA.json` 算出）。
+  - 在事实里加入每个视角下目标、终点的 2D 点（取分割掩码的质心），以及受保护盒在桌面高度的投影角点（由 `LAYOUT.json` 和 `CAMERA.json` 算出）。
   - 按像素容差自动核验。
   - 对应 ViGoRL、GRIT、ECoT 的做法。
 - **3b 可验证奖励的 RL**：
-  - 从 B 或 G 组的 SFT checkpoint 出发做 GRPO，奖励 = 格式 + 前提比特 + verdict。
+  - 从 B 或 G 组的 SFT checkpoint 出发做 GRPO，奖励 = 格式 + 关键事实 + verdict。
   - 要有不思考的 RL 对照（参照 Think-or-Not-Think）。
   - 注意防止输出塌缩成常数。
 - **3c 数据**：
@@ -341,14 +371,14 @@ P 的颜色取 `appearance_assignment[protected_boundary]`。student 输入保�
   - 从 3,200 个官方 episode 中补充更多源轨迹。一条安全轨迹可以为所有它不违反的规则作见证（hindsight relabeling）。
   - 做按 family 留出的切分。
 - **3d 组合深度**：两个受保护盒，或嵌套盒；画出 A 组和 B 组准确率随深度的变化。
-- **3e 更大的 backbone**：如果确认是感知瓶颈，试 Qwen2.5-VL-7B 或 Qwen3-VL-4B/8B。
+- **3e 追加的对照**：B′（先 verdict 后 rationale）、filler 对照；如果确认是感知瓶颈，试 Qwen2.5-VL-7B 或 Qwen3-VL-4B/8B。
 
 ### Phase 4：接到 AEGIS 的系统实验（需要用户单独授权，涉及控制器改动）
 
 - **门的定义**：执行前由 verifier 判断；P(1) < τ 时拒绝执行或请求人类帮助。
 - **评估**：
   - 在 held-out 源上，用可行与不可行混合的场景，画 risk–coverage 曲线。
-  - 报告固定误拒率下避免的违规执行数。
+  - 报告固定误拒率下避免的违规执行数，以及"不可行被判可行"的比例和置信区间。
   - τ 在 validation 源上用 conformal 校准。
   - 在未修改的 SafeLIBERO 上做"不帮倒忙"检查：那里的场景都可解，只会出现误拒。
 - **前提条件**：AEGIS 必须把受保护盒当作 CBF 约束，否则虚拟盒对策略毫无意义。
@@ -356,52 +386,54 @@ P 的颜色取 `appearance_assignment[protected_boundary]`。student 输入保�
 
 ## 5. 评估与统计（Phase 2 提交前冻结为预注册）
 
-**主指标**：锁定测试集上 B 组与 A 组的行准确率差（配对，按源聚类），以及单元四行全对率。
+**主比较**：锁定测试集上 B-greedy 与 A 的行准确率差（配对，按源聚类），以及单元四行全对率。
 
-**关键次要指标**：
+**预先声明的次要比较**：
 
-- C-直接 vs A；B vs C-直接。
+- C-CoT vs C-直接；C-直接 vs A。
+- B 的 K 次采样读法 vs B-greedy。
+- "模型预测事实 + 程序应用规则"读法 vs B 的 verdict。
 - P(1) 的 AUROC。
-- 按"构造格子 × checkpoint"分层，以及 ENTRY × checkpoint > 0 这一干净分层。
+- 按"构造格子 × checkpoint"分层，以及"已测捷径较弱的子集"（ENTRY × checkpoint > 0）。
 - 规则翻转一致性、换色不变性。
 - false-feasible 率（危险方向的错误）。
 
-**推理组专属指标**（B、B′、C-CoT）：
+**B 与 C-CoT 的诊断**（只用于定位问题，不作通过标准）：
 
-- 每个前提比特的准确率。
-- rationale 与 verdict 的一致性：verdict 是否等于"由自己写出的前提推出的结论"。
-- 翻转一个前提后，verdict 是否跟着变。
-- 在 `Separated` 行之前截断时的表现。
-- filler 对照。
+- 每个关键字段的准确率。
+- 三类情况的计数：事实错（感知问题）；事实对但 verdict 错（规则应用问题）；verdict 对但事实错（警惕捷径或事后解释）。
+- oracle 事实诊断：强制给出正确事实后，verdict 错误能减少多少。
+- 修改一个事实并从修改处重新生成后续内容，看 verdict 如何变化；修改后的文字可能与图片冲突，
+  所以"坚持图片"或"跟随文字"都不能单独判为对错。
+- 按对错分层报告。
 
 **基线**：
 
 - 多数类（50%）。
-- 颜色 + 规则读数：已固定，最后在测试集上统一打一次分。
-- 零样本 Qwen2.5-VL-3B：直接问法和 CoT 问法。
-- oracle 比特（上限 100%）。
+- 颜色 + 规则读数：已固定，在 `evaluate-test` 阶段一并打分。
+- 零样本 Qwen2.5-VL-3B：直接问法和事实问法。
+- oracle 事实（上限 100%）。
 
 **统计方法**：
 
-- 分析单位是四行单元，聚类单位是源。
-- 每行的正确率先在 3 个 seed 上取平均，再算 B−A 的配对差。
+- 分析单位是四行单元，聚类单位是源；15 个测试源就是全部的独立场景数，seed 不增加它。
+- 每行的正确率先在 3 个 seed 上取平均，再算组间配对差。
 - 检验：15 个测试源上的源级符号翻转检验，或 t₁₄ 检验；Durkalski 聚类 McNemar。
 - 置信区间：1,000 次源级 bootstrap，seed 1014。
 - 单元级最小可检测效应约 15–25 个百分点；小于这个的差异一律只算探索性结果。
 
-**成功标准**（这里是提案，需用户确认）：
+**成功标准**：
 
-- **实用**：任一组同时满足以下三条，就进入 Phase 4。
-  - 测试集行准确率 ≥ 0.85。
-  - 单元全对率 ≥ 0.70。
-  - 规则翻转一致性 ≥ 0.90。
-- **科学**：B（或 C-CoT）减 A 的源聚类 95% CI 不包含 0。
+- **开发里程碑**：任一组同时满足测试集行准确率 ≥ 0.85、单元全对率 ≥ 0.70、规则翻转一致性 ≥ 0.90。
+  这只说明值得继续，不足以作为安全执行门的依据；接到机器人之前还要看 false-feasible 率、
+  置信区间和 risk–coverage（Phase 4）。
+- **科学**：B-greedy 减 A 的源聚类 95% CI 不包含 0。
 
 ## 6. 资源与预算
 
 - **GPU**：p33100/gengpu，A100，最多同时 2 张。
-  - Phase 1：约 1–2 小时。
-  - Phase 2：约 10–16 小时（A/B/C 各 3 个 seed 共 9 次运行，B′ 另加 3 次）。
+  - Phase 1：约 2–3 小时（含小规模试跑）。
+  - Phase 2：约 10–14 小时（A/B/C 各 3 个 seed 共 9 次运行），以 Phase 1.3 实测耗时为准。
   - Phase 3：按选定的项目另行估计。
 - **CPU**：p33100/short，用于导出、审计和报告。
 - **API**：默认零调用。
@@ -415,19 +447,19 @@ P 的颜色取 `appearance_assignment[protected_boundary]`。student 输入保�
 
 | 风险 | 对策 |
 |---|---|
-| 模型学到摆放伪迹 | 分层报告，看干净分层；Phase 3c 加入"都分隔 / 都不分隔"的单元 |
-| B 组欠拟合，重演 pilot 的问题 | 0/1 单 token、损失分开归一化、penalty 1.0；先跑小 smoke，自由生成正确后再跑全量 |
+| 模型学到摆放伪迹 | 分层报告，看"已测捷径较弱的子集"；Phase 3c 加入"都分隔 / 都不分隔"的单元 |
+| 调试时提前看到测试集 | 0.4 拆分训练与测试评估，并有测试保证 `train()` 不读测试集 |
+| B 组欠拟合，重演 pilot 的问题 | 0/1 单 token、损失分开归一化、penalty 1.0；Phase 1.3 先试跑 |
+| 关键事实没学会，却被模板 token 的低损失掩盖 | 关键字段单独计分、单独报告损失 |
 | 感知瓶颈导致各组都接近随机 | Phase 1 先测；必要时走 Phase 3a / 3e |
-| 测试集太小 | 事先写明最小可检测效应；用 3 个 seed；必要时在 train+val 上补做按源分组的交叉验证 |
-| 模型只是背诵模板 | 前提逐项判分；做前提翻转干预 |
+| 测试集太小 | 事先写明最小可检测效应；必要时在 train+val 上补做按源分组的交叉验证 |
 | 学到数据生成器专属的捷径（FailBench 现象） | 报告与零样本基座的对比；Phase 3c 引入新的场景家族 |
 
 ## 8. 待用户决定
 
-1. 是否现在开始 Phase 0 和 Phase 1。
+1. 是否开始 Phase 0。
 2. Phase 1 是否加 API 前沿模型基线：涉及图片外发，预算不超过 $3，并需指定用哪个模型。
-3. 是否认可 §5 的"实用成功"阈值。
-4. Phase 4 的 AEGIS 控制器改动，以后再决定。
+3. Phase 4 的 AEGIS 控制器改动，以后再决定。
 
 ## 9. 参考文献
 

@@ -1,7 +1,7 @@
 # Generative Feasibility Verifier — engineering pilot
 
 Active plan (2026-10-16): [docs/generative_verifier/PLAN.md](../docs/generative_verifier/PLAN.md),
-covering A/B/B′/C training on the V4 development set. The sections below describe
+covering A/B/C training on the V4 development set. The sections below describe
 the completed 120-row single-scene engineering pilot, whose code is reused.
 On 2026-10-16 its Quest run roots (adapters, source archives, full records) were
 deleted at the user's request. Delivered summaries remain under
