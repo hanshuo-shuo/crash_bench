@@ -72,7 +72,7 @@ def export():
 
 
 def create(dataset,schedule,name):
-    commit=published_commit();dataset=dataset.resolve();dataset.relative_to(BASE/'verifier_dataset')
+    commit=published_commit();dataset=Path(os.path.abspath(dataset));dataset.resolve().relative_to((BASE/'verifier_dataset').resolve())
     parent=dataset.parent;normal(read(parent/'export_SUBMISSION.json')['job'])
     require(read(parent/'COMPLETE.json')['passed'] and read(parent/'COMPLETE.json')['dev_acceptance_sha256']==sha(dataset/'DEV_ACCEPTANCE.json'),
             'Development export incomplete or changed')

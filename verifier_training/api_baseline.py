@@ -20,6 +20,7 @@ from decimal import Decimal
 import fcntl
 import hashlib
 import json
+import os
 from pathlib import Path
 import threading
 import time
@@ -150,7 +151,7 @@ def call(root,ledger,key,request,secret):
 
 def prepare(dataset):
     from .launch_fd1000 import published_commit,stamp
-    commit=published_commit();dataset=dataset.resolve();dataset.relative_to(BASE/'verifier_dataset')
+    commit=published_commit();dataset=Path(os.path.abspath(dataset));dataset.resolve().relative_to((BASE/'verifier_dataset').resolve())
     rows,acceptance=validate(dataset,mode='development',include_test=False)
     validation=[r for r in rows if r['split']=='validation']
     root=BASE/'verifier_training/runs'/(stamp()+'_api-luna_'+commit[:12]);root.mkdir();(root/'responses').mkdir()
