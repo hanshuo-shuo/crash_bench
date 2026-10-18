@@ -14,6 +14,12 @@
   - 原始测试报告误判"里程碑达成"，已用只读更正记录修正（PHASE2_REPORT §5）。Phase 3 等用户决定；没有正在运行的 CrashBench 作业。
   - 带图的报告：[PHASE2_REPORT.html](generative_verifier/PHASE2_REPORT.html)（含方法的文献来源）。
   - **下一步讨论稿**（用户、Astra、Claude 三方）：[NEXT_STEPS.md](generative_verifier/NEXT_STEPS.md)。
+- **第 1 步（A 基线能否拟合）**：2026-10-18 完成，见 [STEP1_REPORT.md](generative_verifier/STEP1_REPORT.md)。
+  - 用了 1.15 A100 小时，只读训练集，没有调用 API。
+  - A 在 512 个训练行上停在随机水平，连 16 行都拟合不了；B 在第 80 次更新时就拟合了 16 行。
+  - 按决策表记为 `implementation_suspect`。按规定检查了 direct 目标的编码、掩码和损失，没有发现错误。
+  - 目前的解释：在平衡构造下，直接标签是"规则颜色词 × 图像"的纯交互，缺少一阶梯度信号。这个解释还没有验证。
+  - 下一步（单通路标签对照，以及 A 的训练预算）等用户决定；没有正在运行的 CrashBench 作业。
 
 ## 已完成的研究（结果只读）
 
