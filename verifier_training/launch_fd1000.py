@@ -8,6 +8,7 @@ python -m verifier_training.launch_fd1000 stage --root RUN --stage report --spli
 python -m verifier_training.launch_fd1000 freeze --root RUN      (Phase 2 only, after every run)
 python -m verifier_training.launch_fd1000 stage --root RUN --stage evaluate-test --target A_seed713 [--after JOB]
 python -m verifier_training.launch_fd1000 stage --root RUN --stage report --split test
+python -m verifier_training.launch_fd1000 fit --root PHASE2_RUN      (step 1 fit diagnostic, a new campaign)
 
 --after chains GPU jobs into lanes (afterany), so two lanes never use more than two GPUs.
 """
@@ -20,6 +21,7 @@ from .common import BASE,UPSTREAM,MODEL_ID,read,write,sha,require
 from .launch import command
 from .launch_verdict_diagnostic import ASSETS
 from .fd1000_contract import configuration
+from . import fit_contract
 from verifier_dataset.statistics_assets import ROOT as STATISTICS
 
 PREREG='verifier_training/configs/v4_dev_prereg.json'
@@ -136,8 +138,26 @@ def freeze(root):
         readings='Fixed by fd1000_contract.readings and fd1000_run.diagnostic_plan at the campaign commit'))
 
 
+def fit(phase2):
+    """Step 1 fit diagnostic: a new campaign that reads Phase 2 training artifacts and never the test split."""
+    commit=published_commit();phase2=Path(os.path.abspath(phase2));phase2.resolve().relative_to((BASE/'verifier_training/runs').resolve())
+    p2=read(phase2/'RECEIPT.json');require(p2['schedule']=='main' and (phase2/'TEST_FREEZE.json').exists(),'Needs the finished Phase 2 campaign')
+    for label in ['preflight']+[f'{arm}_seed{s}' for arm in 'ABC' for s in fit_contract.SEEDS]:normal(read(phase2/(label+'_SUBMISSION.json'))['job'])
+    require(read(ASSETS/'STAGED.json')['model_id']==MODEL_ID and p2['assets']==str(ASSETS),'Wrong staged VLM; no substitution permitted')
+    dataset=Path(p2['dataset']);require(sha(dataset/'DEV_ACCEPTANCE.json')==p2['dataset_acceptance_sha256'],'Development data changed')
+    config=fit_contract.configuration();require(read(phase2/'config.json')==config['phase2_configuration'],'Phase 2 configuration differs')
+    root=BASE/'verifier_training/runs'/(stamp()+'_step1-fit_'+commit[:12]);archive(root,commit);write(root/'config.json',config)
+    receipt=dict(stage='step1-fit-diagnostic',source_commit=commit,upstream_commit=UPSTREAM,run_root=str(root),
+        phase2_root=str(phase2),phase2_source_commit=p2['source_commit'],phase2_files={f:sha(phase2/f) for f in fit_contract.phase2_files()},
+        dataset=str(dataset),assets=str(ASSETS),dataset_acceptance_sha256=p2['dataset_acceptance_sha256'],
+        assets_stage_sha256=sha(ASSETS/'STAGED.json'),configuration_sha256=sha(root/'config.json'),seeds=list(fit_contract.SEEDS),api_calls=0,
+        authorization='2026-10-17: user approved NEXT_STEPS.md section 7.2 step 1 (1a and 1b in one GPU job) with the proposed fit criteria',
+        scope='Training-set and 16-row fit diagnostic on development data; no validation scoring, no test row loaded')
+    write(root/'RECEIPT.json',receipt);submit(root,'fit',['verifier_training.fit_run',str(root)],gpu=True)
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('action',choices=('export','create','stage','freeze'))
+    p=argparse.ArgumentParser();p.add_argument('action',choices=('export','create','stage','freeze','fit'))
     p.add_argument('--dataset',type=Path);p.add_argument('--schedule',choices=('trial','main'));p.add_argument('--name')
     p.add_argument('--root',type=Path);p.add_argument('--stage');p.add_argument('--arm');p.add_argument('--seed',type=int)
     p.add_argument('--target');p.add_argument('--split');p.add_argument('--after')
@@ -145,4 +165,5 @@ if __name__=='__main__':
     if a.action=='export':export()
     elif a.action=='create':create(a.dataset,a.schedule,a.name)
     elif a.action=='stage':stage(a.root,a.stage,a.arm,a.seed,a.target,a.split,a.after)
+    elif a.action=='fit':fit(a.root)
     else:freeze(a.root)

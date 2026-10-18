@@ -246,6 +246,27 @@ def adapter_model(assets,config,seed):
     return model,targets
 
 
+def update(model,optimizer,items,batch,params,config,inspect=None):
+    """One AdamW update over an effective batch; inspect(kind,values) sees each item's losses before backward."""
+    model.train();optimizer.zero_grad(set_to_none=True);totals=defaultdict(float);counts=Counter()
+    for sample,kind in batch:
+        item=items[(sample,kind)];fields={k:v.to('cuda') for k,v in item['fields'].items()}
+        logits=model(**fields,use_cache=False).logits
+        values=losses(logits,item['labels'].cuda(),item['rm'].cuda(),item['vm'].cuda(),{k:v.cuda() for k,v in item['detail'].items()})
+        require(torch.isfinite(values['total']),'Nonfinite training loss')
+        if inspect:inspect(kind,values)
+        (values['total']/len(batch)).backward();counts[kind]+=1
+        for name in ('total','rationale','verdict'):totals[name]+=float(values[name].detach())/len(batch)
+        totals[kind+'_verdict']+=float(values['verdict'].detach())
+        if kind=='facts':totals['facts_key_values']+=float(values['key_values'].detach());totals['facts_template']+=float(values['template'].detach())
+    for name in list(totals):
+        for kind in KINDS:
+            if name.startswith(kind+'_'):totals[name]/=counts[kind]
+    norm=torch.nn.utils.clip_grad_norm_([v for n,v in params],config['gradient_clip']);require(torch.isfinite(norm),'Nonfinite optimizer gradient')
+    optimizer.step()
+    return dict(gradient_norm=float(norm),kinds=dict(counts),**totals)
+
+
 def train(root,arm,seed):
     receipt,config,dataset,assets,rows,staged=context(root,include_test=False);hashes=gate(root,receipt)
     require(arm in config['arms'] and seed in config['seeds'],'Unplanned run')
@@ -273,32 +294,22 @@ def train(root,arm,seed):
         orders_sha256=sha(root/'ORDERS.json'),splits_loaded=sorted({r['split'] for r in rows}),
         slurm={k:v for k,v in os.environ.items() if k in ('SLURM_JOB_ID','SLURM_JOB_NODELIST','SLURM_JOB_PARTITION','SLURM_JOB_ACCOUNT')},
         gpu=torch.cuda.get_device_name(),same_inference_inputs=True,gold_rationale_prefix_at_selection=False))
-    started=time.monotonic();checkpoints=[];states={};probed=set();probes={}
+    started=time.monotonic();checkpoints=[];states={};probes={}
+
+    def probe(kind,values):
+        """Gradient probe on the first item of each target kind."""
+        if kind in probes:return
+        probes[kind]=gradient_probe(model,values,'B')
+        if kind=='facts':
+            grads=torch.autograd.grad(values['key_values'],[v for n,v in params],retain_graph=True,allow_unused=True)
+            norm=sum(float(g.detach().float().square().sum()) for g in grads if g is not None)**.5
+            require(np.isfinite(norm) and norm>0,'Key facts do not train language adapters')
+            probes[kind]['key_values']=dict(tokens=values['key_values_tokens'],gradient_norm=norm)
+        write(out/'GRADIENT_PROBE.json',probes)
+
     for step,batch in enumerate(order,1):
-        model.train();optimizer.zero_grad(set_to_none=True);totals=defaultdict(float);counts=Counter()
-        for sample,kind in batch:
-            item=items[(sample,kind)];fields={k:v.to('cuda') for k,v in item['fields'].items()}
-            logits=model(**fields,use_cache=False).logits
-            values=losses(logits,item['labels'].cuda(),item['rm'].cuda(),item['vm'].cuda(),{k:v.cuda() for k,v in item['detail'].items()})
-            require(torch.isfinite(values['total']),'Nonfinite training loss')
-            if kind not in probed:
-                probes[kind]=gradient_probe(model,values,'B')
-                if kind=='facts':
-                    grads=torch.autograd.grad(values['key_values'],[v for n,v in params],retain_graph=True,allow_unused=True)
-                    norm=sum(float(g.detach().float().square().sum()) for g in grads if g is not None)**.5
-                    require(np.isfinite(norm) and norm>0,'Key facts do not train language adapters')
-                    probes[kind]['key_values']=dict(tokens=values['key_values_tokens'],gradient_norm=norm)
-                probed.add(kind);write(out/'GRADIENT_PROBE.json',probes)
-            (values['total']/len(batch)).backward();counts[kind]+=1
-            for name in ('total','rationale','verdict'):totals[name]+=float(values[name].detach())/len(batch)
-            totals[kind+'_verdict']+=float(values['verdict'].detach())
-            if kind=='facts':totals['facts_key_values']+=float(values['key_values'].detach());totals['facts_template']+=float(values['template'].detach())
-        for name in list(totals):
-            for kind in KINDS:
-                if name.startswith(kind+'_'):totals[name]/=counts[kind]
-        norm=torch.nn.utils.clip_grad_norm_([v for n,v in params],config['gradient_clip']);require(torch.isfinite(norm),'Nonfinite optimizer gradient')
-        optimizer.step()
-        record=dict(step=step,seconds=time.monotonic()-started,gradient_norm=float(norm),kinds=dict(counts),**totals)
+        totals=update(model,optimizer,items,batch,params,config,probe)
+        record=dict(step=step,seconds=time.monotonic()-started,**totals)
         with (out/'curve.jsonl').open('a') as f:f.write(json.dumps(record)+'\n')
         if step%10==0:print(arm,seed,json.dumps(record),flush=True)
         if step in config['evaluation_updates']:
