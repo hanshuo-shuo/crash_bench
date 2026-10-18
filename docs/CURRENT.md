@@ -11,6 +11,8 @@
   - 开发里程碑未达成：B 行准确率 79.7%、单元全对 54.2%、规则翻转 64.2%，门槛分别是 85% / 70% / 90%。
   - 错误全部来自感知（"事实对但判错"为 0）；A 和 C 的直接读法都是常数预测（50%）；C-CoT 62.8%。
   - 原始测试报告误判"里程碑达成"，已用只读更正记录修正（PHASE2_REPORT §5）。Phase 3 等用户决定；没有正在运行的 CrashBench 作业。
+  - 带图的报告：[PHASE2_REPORT.html](generative_verifier/PHASE2_REPORT.html)（含方法的文献来源）。
+  - **下一步讨论稿**（用户、Astra、Claude 三方）：[NEXT_STEPS.md](generative_verifier/NEXT_STEPS.md)。
 
 ## 已完成的研究（结果只读）
 
@@ -35,6 +37,19 @@
   - FD1000 campaign 已用 $0.0588（上限 $20）。
   - V4 verifier 的 Phase 1 API 基线（`openai/gpt-6-luna`，384 次调用）已用 $0.4669（上限 $3），计入用户方法的每周预算。
   - key 不进入 Git，也不进入日志。
+
+## 分支（2026-10-17 整理）
+
+| 分支 | 用途 | 状态 |
+|---|---|---|
+| `main` | 默认分支，稳定线 | 快进到 verifier Phase 0–2 的最新状态 |
+| `codex/generative-verifier-pilot` | verifier 工作线 | 与 `main` 相同；后续工作可以继续在这里，或每个阶段开新分支 |
+| `codex/archive-crashbench-20260926` | 2026-09-26 之前的 CrashBench 计划存档 | 只读，AGENTS.md 引用 |
+| `codex/feasibility` | 10 月初可行性研究的发布分支 | 只读；`analysis/uncertainty/`、`experiments/reach_avoid/`、`experiments/feasibility_contract/` 的启动器靠它核对来源，不要删除 |
+| `codex/paired-repeats` | paired repeats 实验，以及用户在网页上写的 `docs/new_report.md`（10-06 至 10-13） | 有 7 个独有提交，没有并入 `main`；是否合并由用户决定 |
+
+Quest 上只在本地存在的 `agent/task-phase-transfer`（1 个独有提交和 1 个 stash）保留未动。
+三个已完全并入、远端已删除的本地分支已删除，不丢任何提交：`codex-repo-hygiene-provenance`、`codex/glass-recovery-d0-fprime-rescue`、`codex/odur-repair`。
 
 ## 历史与清理记录
 
