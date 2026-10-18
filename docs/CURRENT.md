@@ -23,7 +23,7 @@
 - **单通路对照**：2026-10-18 完成（作业 4371785，58 分钟，只读训练集），见 [CONTROLS_REPORT.md](generative_verifier/CONTROLS_REPORT.md)。
   - t（只看文字）、s（只看图像）、A+P（先复述颜色再判断）三组的 9 次运行全部拟合了 16 行；预注册读法为 `composition_bottleneck` 和 `restatement_restores_fit`。
   - 结论：direct 路径学得会两个单一模态的标签，学不会它们的 XOR；先写出受保护颜色，同一个 XOR 就学会了。这还只是拟合，不是泛化。
-  - 下一步（等用户决定，见 [NEXT_STEPS.md](generative_verifier/NEXT_STEPS.md) §8.5）：只加 token 的对照，以及在 512 行上比较 A、A+P、R、B。没有正在运行的 CrashBench 作业。
+  - 下一步：第 2 步梯级对照 A → AF → AP → B，用户要求放在同一批；协议见 [LADDER_PROTOCOL.md](generative_verifier/LADDER_PROTOCOL.md)，计划和初步故事线的收尾条件见 [NEXT_STEPS.md](generative_verifier/NEXT_STEPS.md) §8.6。代码已准备，作业等用户确认后提交。
 
 ## 已完成的研究（结果只读）
 

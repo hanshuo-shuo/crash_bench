@@ -10,6 +10,7 @@ python -m verifier_training.launch_fd1000 stage --root RUN --stage evaluate-test
 python -m verifier_training.launch_fd1000 stage --root RUN --stage report --split test
 python -m verifier_training.launch_fd1000 fit --root PHASE2_RUN      (step 1 fit diagnostic, a new campaign)
 python -m verifier_training.launch_fd1000 controls --root STEP1_RUN  (single-pathway label controls, a new campaign)
+python -m verifier_training.launch_fd1000 ladder --root CONTROLS_RUN (step 2 ladder: AF fit and 512-row AF/AP validation)
 
 --after chains GPU jobs into lanes (afterany), so two lanes never use more than two GPUs.
 """
@@ -22,7 +23,7 @@ from .common import BASE,UPSTREAM,MODEL_ID,read,write,sha,require
 from .launch import command
 from .launch_verdict_diagnostic import ASSETS
 from .fd1000_contract import configuration
-from . import control_contract,fit_contract
+from . import control_contract,fit_contract,ladder_contract
 from verifier_dataset.statistics_assets import ROOT as STATISTICS
 
 PREREG='verifier_training/configs/v4_dev_prereg.json'
@@ -178,8 +179,33 @@ def controls(step1):
     write(root/'RECEIPT.json',receipt);submit(root,'controls',['verifier_training.control_run',str(root)],gpu=True)
 
 
+def ladder(controls):
+    """Step 2 ladder: a new campaign that reads the controls, step 1 and Phase 2 records and never the test split."""
+    commit=published_commit();controls=Path(os.path.abspath(controls));controls.resolve().relative_to((BASE/'verifier_training/runs').resolve())
+    rc=read(controls/'RECEIPT.json');require(rc['stage']=='step1-label-controls' and read(controls/'COMPLETE.json')['passed'] is True,'Needs the finished controls campaign')
+    normal(read(controls/'controls_SUBMISSION.json')['job'])
+    step1=Path(rc['step1_root']);phase2=Path(rc['phase2_root']);p2=read(phase2/'RECEIPT.json')
+    for label in [f'{arm}_seed{s}' for arm in ('A','B') for s in fit_contract.SEEDS]:normal(read(phase2/(label+'_SUBMISSION.json'))['job'])
+    require(read(ASSETS/'STAGED.json')['model_id']==MODEL_ID and p2['assets']==str(ASSETS),'Wrong staged VLM; no substitution permitted')
+    dataset=Path(p2['dataset']);require(sha(dataset/'DEV_ACCEPTANCE.json')==p2['dataset_acceptance_sha256'],'Development data changed')
+    config=ladder_contract.configuration();require(read(phase2/'config.json')==config['phase2_configuration'],'Phase 2 configuration differs')
+    root=BASE/'verifier_training/runs'/(stamp()+'_step2-ladder_'+commit[:12]);archive(root,commit);write(root/'config.json',config)
+    evidence=lambda base,files:{f:sha(base/f) for f in files}
+    receipt=dict(stage='step2-ladder',source_commit=commit,upstream_commit=UPSTREAM,run_root=str(root),
+        controls_root=str(controls),controls_files=evidence(controls,ladder_contract.CONTROLS_FILES),
+        step1_root=str(step1),step1_files=evidence(step1,ladder_contract.STEP1_FILES),
+        phase2_root=str(phase2),phase2_files=evidence(phase2,ladder_contract.PHASE2_FILES),
+        dataset=str(dataset),assets=str(ASSETS),dataset_acceptance_sha256=p2['dataset_acceptance_sha256'],
+        assets_stage_sha256=sha(ASSETS/'STAGED.json'),configuration_sha256=sha(root/'config.json'),seeds=list(fit_contract.SEEDS),
+        arms=dict(fit16=list(ladder_contract.ARMS16),train512=list(ladder_contract.ARMS512)),api_calls=0,
+        authorization='2026-10-18: user asked for the token-count control and the step 2 comparison in one batch and approved this design '
+            '(A and B reused from Phase 2, R replaced by AF)',
+        scope='Exploratory ladder on development data: 16-row AF fit and 512-row AF/AP validation; no test row loaded')
+    write(root/'RECEIPT.json',receipt);submit(root,'ladder',['verifier_training.ladder_run',str(root)],gpu=True)
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('action',choices=('export','create','stage','freeze','fit','controls'))
+    p=argparse.ArgumentParser();p.add_argument('action',choices=('export','create','stage','freeze','fit','controls','ladder'))
     p.add_argument('--dataset',type=Path);p.add_argument('--schedule',choices=('trial','main'));p.add_argument('--name')
     p.add_argument('--root',type=Path);p.add_argument('--stage');p.add_argument('--arm');p.add_argument('--seed',type=int)
     p.add_argument('--target');p.add_argument('--split');p.add_argument('--after')
@@ -189,4 +215,5 @@ if __name__=='__main__':
     elif a.action=='stage':stage(a.root,a.stage,a.arm,a.seed,a.target,a.split,a.after)
     elif a.action=='fit':fit(a.root)
     elif a.action=='controls':controls(a.root)
+    elif a.action=='ladder':ladder(a.root)
     else:freeze(a.root)
