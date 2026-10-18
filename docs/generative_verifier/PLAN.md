@@ -211,8 +211,8 @@
 
 | 发现 | 来源 | 对本计划的启示 |
 |---|---|---|
-| 现有的"缺陷指令"工作主要是语言层面的；没有找到"几何不可行、两类标签都有证明"的工作 | RationalVLA；RoboAbstention；综述 | 这是本项目的新意所在 |
-| 更多推理反而降低拒绝率 | RoboAbstention | 拒绝阈值靠校准，而不是靠推理 |
+| 现有的"缺陷指令"工作主要是语言层面的；没有找到"几何不可行、两类标签都有证明"的工作 | RationalVLA；Yes-Man Syndrome（Yeke 2026）；综述 | 这是本项目的新意所在 |
+| 更多推理反而降低拒绝率 | Yes-Man Syndrome（Yeke 2026） | 拒绝阈值靠校准，而不是靠推理 |
 | 用保形预测决定何时求助 | KnowNo；SAFE | Phase 4 的阈值用 conformal 校准 |
 | 在综述检索范围内，AEGIS/VLSA 论文没有讨论无解场景；CBF-QP 可能产生不期望的平衡点 | VLSA；Reis 2021 | 这就是 Phase 4 要回答的系统问题 |
 
@@ -467,6 +467,7 @@ B′（先 verdict 后 rationale）、filler 对照、更大的模型，按验�
 ## 9. 参考文献
 
 以下 arXiv 编号来自本次文献综述。✓ 表示其中引用的数字已核对原文。
+2026-10-17：报告网页（Phase 0–2）引用的 39 篇已在 arXiv API / Crossref 上核对过标题、作者和年份；本节其余条目还没有逐一核对。
 
 - 生成式验证器：GenRM, Zhang 2024, arXiv:2408.15240 ✓；CLoud, Ankner 2024, arXiv:2408.11791；
   Generative Reward Models, Mahan 2024, arXiv:2410.12832；ThinkPRM, Khalifa 2025, arXiv:2504.16828；
@@ -498,11 +499,15 @@ B′（先 verdict 后 rationale）、filler 对照、更大的模型，按验�
 - 空间推理与 grounding：ViGoRL, Sarch 2025, arXiv:2505.23678 ✓；GRIT, Fan 2025, arXiv:2505.15879；
   RoboSpatial, Song 2024, arXiv:2411.16537；Cosmos-Reason1, NVIDIA 2025, arXiv:2503.15558。
 - 不可行指令与安全：RationalVLA, Song 2025, arXiv:2506.10826；KnowNo, Ren 2023, arXiv:2307.01928；
-  RoboAbstention, Yeke 2026, arXiv:2605.20544；LIBERO-PRO, Zhou 2025, arXiv:2510.03827；
+  The Yes-Man Syndrome（abstention 基准，计划中曾简称 RoboAbstention）, Yeke 2026, arXiv:2605.20544；LIBERO-PRO, Zhou 2025, arXiv:2510.03827；
   LIBERO-Plus, Fei 2025, arXiv:2510.13626；VLSA/AEGIS, Hu 2025, arXiv:2512.11891；
   CBF-QP 的不期望平衡点, Reis 2021, arXiv:2003.07819。
-- 可行性与证书：Deep Visual Reasoning, Driess 2020, arXiv:2006.05398；Li & Dantam,
-  "Learning Proofs of Motion Planning Infeasibility", RSS 2021。
+- 可行性与证书：Deep Visual Reasoning, Driess 2020, arXiv:2006.05398；Wells, Dantam, Shrivastava, Kavraki,
+  "Learning Feasibility for Task and Motion Planning in Tabletop Environments", RA-L 2019, doi:10.1109/LRA.2019.2894861；
+  Bouhsain, Alami, Siméon, "Learning to Predict Action Feasibility for Task and Motion Planning in 3D Environments", ICRA 2023,
+  doi:10.1109/ICRA48891.2023.10161114；Li & Dantam, "Towards General Infeasibility Proofs in Motion Planning", IROS 2020,
+  doi:10.1109/IROS45743.2020.9340804；Li & Dantam, "Learning Proofs of Motion Planning Infeasibility", RSS 2021,
+  doi:10.15607/RSS.2021.XVII.064。
 - 评估方法学：Geirhos 2020, arXiv:2004.07780；Eisenstein 2022, arXiv:2204.04487；Feng 2019,
   arXiv:1905.05778；Gardner 2020, arXiv:2004.02709；Dancette 2021, arXiv:2104.03149；
   Teney 2020, arXiv:2005.09241；Card 2020, arXiv:2010.06595；
