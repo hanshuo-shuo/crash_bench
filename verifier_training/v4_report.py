@@ -25,6 +25,11 @@ MILESTONE=dict(verdict_accuracy=.85,unit_all_correct=.70,rule_flip_consistency=.
 def load(path):return [json.loads(line) for line in Path(path).read_text().splitlines()]
 
 
+def arm_readings(config):
+    """Readings that represent an arm for the milestone; oracle, edited and sampled readings are diagnostics."""
+    return {f'{a} {r}' for a in config['arms'] for r in readings(a)}
+
+
 def mean(values):
     values=[v for v in values if v is not None];return sum(values)/len(values) if values else None
 
@@ -193,7 +198,7 @@ def main(root,split):
     for k in config['sampling']['k_values']:
         secondary[f'B facts_free_sampled K={k} - B facts_free']=comparison(runs,('B','facts_free_sampled','sampled'),('B','facts_free','verdict'),groups,k=k)
     arms=arm_summaries(runs,config);primary=comparison(runs,*PRIMARY,groups)
-    met={name:all(e.get(k) is not None and e[k]>=v for k,v in MILESTONE.items()) for name,e in arms.items() if 'verdict_accuracy' in e}
+    met={name:all(e.get(k) is not None and e[k]>=v for k,v in MILESTONE.items()) for name,e in arms.items() if name in arm_readings(config)}
     report=dict(split=split,source_commit=receipt['source_commit'],seeds=config['seeds'],primary=primary,secondary=secondary,arms=arms,
         diagnostics_by_greedy_correctness=diagnostics_by_correctness(runs),
         baselines=dict(majority_class_accuracy=.5,readouts=readout_baseline(dataset,rows,split),
@@ -206,7 +211,25 @@ def main(root,split):
     write(out,report);(root/f'REPORT_{split}.md').write_text(markdown(report))
 
 
+def correct_milestone(root,split,commit):
+    """Rejudge the milestone of an existing report without touching it (e03da26 counted oracle diagnostics)."""
+    report=read(root/f'REPORT_{split}.json');config=read(root/'config.json');out=root/f'REPORT_{split}_CORRECTION.json'
+    require(not out.exists(),'Correction already written')
+    met={name:all(e.get(k) is not None and e[k]>=v for k,v in MILESTONE.items()) for name,e in report['arms'].items() if name in arm_readings(config)}
+    corrected=dict(report['success'],milestone_by_reading=met,development_milestone_met=any(met.values()) if split=='test' else None)
+    write(out,dict(split=split,report_sha256=sha(root/f'REPORT_{split}.json'),original_success=report['success'],corrected_success=corrected,
+        reason='The original report judged the milestone over every reading, so the oracle_facts diagnostics (gold facts forced before '
+            'Verdict:) counted as arms. The preregistration applies it to arms; only A direct_free, B facts_free, C direct_forced and '
+            'C facts_forced qualify. No prediction or other metric changes.',
+        correction_commit=commit,report_commit=report['source_commit'],api_calls=0))
+    text=markdown(dict(report,success=corrected))
+    (root/f'REPORT_{split}_CORRECTED.md').write_text(text+'\nCorrected milestone judgement; see REPORT_'+split+'_CORRECTION.json.\n')
+
+
 if __name__=='__main__':
+    if sys.argv[1]=='correct-milestone':
+        from .launch_fd1000 import published_commit
+        correct_milestone(Path(sys.argv[2]),sys.argv[3],published_commit());sys.exit()
     root=Path(sys.argv[1]);split=sys.argv[2]
     try:main(root,split)
     except BaseException as error:

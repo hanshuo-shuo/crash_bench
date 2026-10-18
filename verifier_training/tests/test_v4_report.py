@@ -1,7 +1,7 @@
 import copy
 import unittest
 from verifier_training.fd1000_contract import configuration
-from verifier_training.v4_report import comparison,arm_summaries,diagnostics_by_correctness,markdown,correct_map,seed_average,PRIMARY
+from verifier_training.v4_report import comparison,arm_summaries,diagnostics_by_correctness,markdown,correct_map,seed_average,arm_readings,PRIMARY
 
 EXIT='start_inside_goal_outside'
 
@@ -63,6 +63,13 @@ class Report(unittest.TestCase):
             secondary={'s':comparison(self.runs,('C','facts_forced','verdict'),('C','direct_forced','verdict'),self.groups)},
             success=dict(development_milestone_met=None,scientific_met=None))
         text=markdown(report);self.assertIn('PRIMARY B facts_free - A direct_free',text);self.assertIn('| B facts_free |',text)
+
+
+    def test_milestone_counts_arm_readings_only(self):
+        names=arm_readings(configuration('main'))
+        self.assertEqual(names,{'A direct_free','B facts_free','C direct_forced','C facts_forced'})
+        arms=arm_summaries(self.runs,configuration('main'))
+        self.assertIn('B oracle_facts',arms);self.assertNotIn('B oracle_facts',names)
 
 
 if __name__=='__main__':unittest.main()
