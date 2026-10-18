@@ -9,7 +9,8 @@
 - **当前阶段**：Phase 0–2 已于 2026-10-17 完成，见 [PHASE1_REPORT.md](generative_verifier/PHASE1_REPORT.md) 和 [PHASE2_REPORT.md](generative_verifier/PHASE2_REPORT.md)。
   - 锁定测试集（评估一次）：B（事实→判定）79.7%，A（直接）50.0%，差 +29.7 个百分点，源聚类 95% CI [+22.3, +36.8]，科学标准达成。
   - 开发里程碑未达成：B 行准确率 79.7%、单元全对 54.2%、规则翻转 64.2%，门槛分别是 85% / 70% / 90%。
-  - 错误全部来自感知（"事实对但判错"为 0）；A 和 C 的直接读法都是常数预测（50%）；C-CoT 62.8%。
+  - B 的错误全部出在两个包含关系的预测上（判定与"模型自己的关系 + 程序规则"逐行一致）；A 和 C 的直接读法都是常数预测（50%），在训练集上就没拟合；C-CoT 62.8%。
+  - 2026-10-17 Astra 独立评审：复算结果一致；"收益来自测试时推理"等过度表述已撤回；调整后的计划见 [NEXT_STEPS.md](generative_verifier/NEXT_STEPS.md) §7。
   - 原始测试报告误判"里程碑达成"，已用只读更正记录修正（PHASE2_REPORT §5）。Phase 3 等用户决定；没有正在运行的 CrashBench 作业。
   - 带图的报告：[PHASE2_REPORT.html](generative_verifier/PHASE2_REPORT.html)（含方法的文献来源）。
   - **下一步讨论稿**（用户、Astra、Claude 三方）：[NEXT_STEPS.md](generative_verifier/NEXT_STEPS.md)。
