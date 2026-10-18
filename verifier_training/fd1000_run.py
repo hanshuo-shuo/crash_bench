@@ -58,11 +58,15 @@ def prompt_item(processor,messages,vision):
     return dict(prompt=prompt,grid=vision['image_grid_thw'],vision=vision,n=len(text_ids(processor,prompt,vision['image_grid_thw'])))
 
 
-def encode(processor,row,dataset,kind,maximum,vision=None,verify=False):
-    """Supervised item; verify=True also checks the fast path against the native processor."""
+def encode(processor,row,dataset,kind,maximum,vision=None,verify=False,answer=None,keys=None):
+    """Supervised item; verify=True also checks the fast path against the native processor.
+
+    answer/keys replace the arm's target text and its key-value fields (fit-diagnostic controls);
+    by default they are the Phase 2 target and, for facts, all four FACT_KEYS."""
     images=load_images(row,dataset) if verify else None
     vision=vision or vision_inputs(processor,row,dataset);grid=vision['image_grid_thw']
-    messages=student_messages(row,'A');answer=assistant_target(row,kind)
+    messages=student_messages(row,'A');answer=answer or assistant_target(row,kind)
+    keys=(FACT_KEYS if kind=='facts' else ()) if keys is None else tuple(keys)
     item=prompt_item(processor,messages,vision);prompt=item['prompt']
     full=processor.apply_chat_template(messages+[dict(role='assistant',content=answer)],tokenize=False,add_generation_prompt=False)
     require(full.startswith(prompt+answer),'Assistant target template changed')
@@ -84,9 +88,9 @@ def encode(processor,row,dataset,kind,maximum,vision=None,verify=False):
     labels=ids.clone()[None];labels[:,:n]=-100;labels[:,end+1:]=-100
     vm=torch.zeros_like(labels,dtype=torch.bool);vm[:,digit]=True;rm=labels.ne(-100)&~vm
     eos_mask=labels.eq(eos);key=torch.zeros_like(vm);detail={}
-    if kind=='facts':
+    if keys:
         cursor=0
-        for name in FACT_KEYS:
+        for name in keys:
             value=' '+row['target']['facts'][name];start=answer.index(value+'\n',cursor)
             a=boundary(answer[:start]);b=boundary(answer[:start+len(value)]);require(b>a,'Empty key-field span')
             mask=torch.zeros_like(vm);mask[:,a:b]=True;detail['key_'+name]=mask;key|=mask;cursor=start+len(value)

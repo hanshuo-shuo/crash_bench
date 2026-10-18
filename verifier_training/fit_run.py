@@ -64,15 +64,19 @@ def train_evaluation(root,config,assets,phase2,processor,rows,items,hashes):
     return result
 
 
-def overfit(root,arm,seed,config,assets,processor,rows,items,hashes,order):
-    """1b: fresh LoRA trained on the 16-row subset with the Phase 2 update code and hyperparameters."""
+def overfit(root,arm,seed,config,assets,processor,rows,items,hashes,order,target=None):
+    """1b: fresh LoRA trained on the 16-row subset with the Phase 2 update code and hyperparameters.
+
+    target = dict(reading, kind, prefix, loss) replaces the A/B reading and fit loss (label controls)."""
     base=config['phase2_configuration'];spec=config['overfit'];out=root/'overfit'/f'{arm}_seed{seed}';out.mkdir(parents=True)
     torch.manual_seed(seed);np.random.seed(seed);random.seed(seed);torch.backends.cuda.matmul.allow_tf32=True
     model,targets=adapter_model(assets,base,seed);params=[(n,v) for n,v in model.named_parameters() if v.requires_grad]
     require(params and all('lora_' in n and 'visual' not in n and 'lm_head' not in n for n,v in params),'Unexpected trainable weights')
     model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={'use_reentrant':False});model.enable_input_require_grads();model.config.use_cache=False
     optimizer=torch.optim.AdamW([v for _,v in params],lr=base['learning_rate'],weight_decay=base['weight_decay'])
-    name=reading(arm);kind,prefix=readings(arm)[name];plan=[(name,kind,prefix,'greedy')]
+    if target is None:name=reading(arm);(kind,prefix),loss_key=readings(arm)[name],FIT_LOSS[arm]
+    else:name,kind,prefix,loss_key=target['reading'],target['kind'],target['prefix'],target['loss']
+    plan=[(name,kind,prefix,'greedy')]
     started=time.monotonic();curve=[];checks=[]
     for step,batch in enumerate(order,1):
         totals=update(model,optimizer,items,batch,params,base)
@@ -81,12 +85,12 @@ def overfit(root,arm,seed,config,assets,processor,rows,items,hashes,order):
         if step in spec['evaluation_updates']:
             scores=summarize(evaluate(model,processor,rows,items,plan,base,hashes,out/f'eval_step_{step}.jsonl'),base)[name]
             checks.append(dict(step=step,verdict_accuracy=scores['verdict_accuracy'],scores=scores))
-            print(arm,seed,'step',step,'accuracy',scores['verdict_accuracy'],FIT_LOSS[arm],record[FIT_LOSS[arm]],flush=True)
+            print(arm,seed,'step',step,'accuracy',scores['verdict_accuracy'],loss_key,record[loss_key],flush=True)
     require(checks and checks[-1]['step']==spec['optimizer_updates'],'Final update was not evaluated')
-    loss=last_epoch_loss(curve,arm,config);final=checks[-1]['verdict_accuracy']
+    loss=last_epoch_loss(curve,arm,config,loss_key);final=checks[-1]['verdict_accuracy']
     model.save_pretrained(out/'final_adapter')
     result=dict(passed=True,arm=arm,seed=seed,rows=len(rows),steps=len(curve),reading=name,final_accuracy=final,
-        fit_loss_name=FIT_LOSS[arm],last_epoch_fit_loss=loss,classification=classify_run(final,loss,config['thresholds']),
+        fit_loss_name=loss_key,last_epoch_fit_loss=loss,classification=classify_run(final,loss,config['thresholds']),
         checks=checks,adapter_sha256=sha(out/'final_adapter/adapter_model.safetensors'),trainable_parameters=sum(v.numel() for n,v in params),
         lora_targets=len(targets),elapsed_seconds=time.monotonic()-started)
     write(out/'RESULT.json',result);del model,optimizer,params;release();return result

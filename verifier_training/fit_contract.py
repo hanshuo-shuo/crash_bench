@@ -90,11 +90,11 @@ def reading(arm):
     names=list(readings(arm));require(len(names)==1,'Arm has more than one selection reading');return names[0]
 
 
-def last_epoch_loss(curve,arm,config):
-    """Mean fit loss over the final epoch of training updates."""
-    per_epoch=config['overfit']['rows']//config['overfit']['effective_batch_size'];tail=curve[-per_epoch:]
-    require(len(curve)==config['overfit']['optimizer_updates'] and all(FIT_LOSS[arm] in r for r in tail),'Incomplete training curve')
-    return sum(r[FIT_LOSS[arm]] for r in tail)/len(tail)
+def last_epoch_loss(curve,arm,config,key=None):
+    """Mean fit loss (the arm's FIT_LOSS unless key is given) over the final epoch of training updates."""
+    key=key or FIT_LOSS[arm];per_epoch=config['overfit']['rows']//config['overfit']['effective_batch_size'];tail=curve[-per_epoch:]
+    require(len(curve)==config['overfit']['optimizer_updates'] and all(key in r for r in tail),'Incomplete training curve')
+    return sum(r[key] for r in tail)/len(tail)
 
 
 def classify_run(final_accuracy,loss,thresholds):
