@@ -12,14 +12,15 @@
   - B 的错误全部出在两个包含关系的预测上（判定与"模型自己的关系 + 程序规则"逐行一致）；A 和 C 的直接读法都是常数预测（50%），在训练集上就没拟合；C-CoT 62.8%。
   - 2026-10-17 Astra 独立评审：复算结果一致；"收益来自测试时推理"等过度表述已撤回；调整后的计划见 [NEXT_STEPS.md](generative_verifier/NEXT_STEPS.md) §7。
   - 原始测试报告误判"里程碑达成"，已用只读更正记录修正（PHASE2_REPORT §5）。Phase 3 等用户决定；没有正在运行的 CrashBench 作业。
-  - 带图的报告：[PHASE2_REPORT.html](generative_verifier/PHASE2_REPORT.html)（含方法的文献来源）。
+  - 带图的报告：[PHASE2_REPORT.html](generative_verifier/PHASE2_REPORT.html)（含方法的文献来源；10-18 加入第 1 步和新的下一步，与 claude.ai 上的报告页同步）。
   - **下一步讨论稿**（用户、Astra、Claude 三方）：[NEXT_STEPS.md](generative_verifier/NEXT_STEPS.md)。
 - **第 1 步（A 基线能否拟合）**：2026-10-18 完成，见 [STEP1_REPORT.md](generative_verifier/STEP1_REPORT.md)。
   - 用了 1.15 A100 小时，只读训练集，没有调用 API。
   - A 在 512 个训练行上停在随机水平，连 16 行都拟合不了；B 在第 80 次更新时就拟合了 16 行。
   - 按决策表记为 `implementation_suspect`。按规定检查了 direct 目标的编码、掩码和损失，没有发现错误。
-  - 目前的解释：在平衡构造下，直接标签是"规则颜色词 × 图像"的纯交互，缺少一阶梯度信号。这个解释还没有验证。
-  - 下一步（单通路标签对照，以及 A 的训练预算）等用户决定；没有正在运行的 CrashBench 作业。
+  - 10-18 独立复核后的结论：中间事实监督改善了这种图文联合判断在当前设置下的可训练性；不能说直接判别普遍较弱，原因（梯度机制、显式条件化或其他）未定。初稿"缺少一阶梯度信号"的说法过强，已改。
+  - 补充核对：随规则翻转的那个包含事实在全部 512 个训练行上等于判定或其取反，B 先学会不变的事实、再学会翻转的事实。
+  - 下一步（16 行单通路对照 t / s，可加 A+P 和梯度测量，约 1.1 A100 小时）等用户决定，见 [NEXT_STEPS.md](generative_verifier/NEXT_STEPS.md) §8；没有正在运行的 CrashBench 作业。
 
 ## 已完成的研究（结果只读）
 

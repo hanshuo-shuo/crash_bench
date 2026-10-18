@@ -12,7 +12,7 @@
   --good:#0a7d0a; --bad:#c23434; --box-orange:#d9771c; --box-purple:#8d3fc4; --box-green:#2a9d4b;
   --display:"Noto Serif SC","Songti SC","STSong",serif;
   --body:"Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
-  --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,"Noto Sans SC","PingFang SC",monospace;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#161718; --panel:#1f2123; --ink:#eeeef0; --ink-2:#c3c5cb; --muted:#8e9098;
@@ -101,6 +101,9 @@ ul.plain{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:6px}
 ol.refs{margin:0;padding-left:1.6em;display:flex;flex-direction:column;gap:4px;font-size:13.5px}
 ol.refs li{overflow-wrap:anywhere}
 .refgroup{font-size:13px;color:var(--muted);margin-top:8px}
+table.xor{width:auto;min-width:min(100%,420px)}
+table.xor td,table.xor th{padding:9px 18px 9px 10px}
+table.xor td:first-child{white-space:nowrap}
 @media (max-width:520px){h1{font-size:27px}.tile .v{font-size:26px}.example{grid-template-columns:minmax(0,1fr)}.layer{grid-template-columns:minmax(0,1fr)}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -109,8 +112,9 @@ ol.refs li{overflow-wrap:anywhere}
 <header style="display:flex;flex-direction:column;gap:14px">
   <div class="eyebrow">CrashBench · SafeLIBERO · V4 开发数据</div>
   <h1>生成式可行性 Verifier</h1>
-  <p class="lede">在执行之前判断：给定受保护的虚拟盒子，这个操作任务到底有没有满足约束的解？Phase 0–2 的结果，以及它们能讲成什么故事。</p>
-  <div class="meta"><span>2026-10-17</span><span>Qwen2.5-VL-3B + LoRA</span><span>A/B/C × 3 个 seed</span><span>锁定测试集只评估一次</span><span>代码 <code>e03da26</code> / 更正 <code>4075e2d</code></span></div>
+  <p class="lede">在执行之前判断：给定受保护的虚拟盒子，这个操作任务到底有没有满足约束的解？Phase 0–2 的结果、第 1 步诊断，以及它们能讲成什么故事。</p>
+  <div class="meta"><span>2026-10-18 更新</span><span>Qwen2.5-VL-3B + LoRA</span><span>A/B/C × 3 个 seed</span><span>锁定测试集只评估一次</span><span>代码 <code>e03da26</code> / 更正 <code>4075e2d</code> / 第 1 步 <code>17183ea</code></span></div>
+  <p class="small"><b>10-18 更新</b>：新增<a href="#step1">第 1 步：直接判断连 16 行都学不会</a>和<a href="#why">B 为什么学得会</a>两节；按 10-18 的独立复核收紧了几处措辞；重写了<a href="#next">下一步</a>。</p>
 </header>
 
 <section>
@@ -126,11 +130,11 @@ ol.refs li{overflow-wrap:anywhere}
     </div>
     <div class="answer">
       <div class="q">有故事了吗？</div>
-      <p class="verdict">有可信的正结果；机制还没确定。</p>
+      <p class="verdict">有可信的正结果；原因还没确定。</p>
       <ul>
-        <li>在这个数据、模型和训练预算下，"先预测空间关系再判断"明显优于直接判断。直接判断在训练集上就停在随机水平。</li>
+        <li>直接判断在 512 个训练行上停在随机水平，连 16 行都拟合不了；B 在第 80 次更新时就拟合了这 16 行。差距在训练阶段就出现了。</li>
         <li>B 的错误全部出在两个包含关系的预测上；最终判定与"把它自己预测的关系代入程序规则"逐行一致。</li>
-        <li>还不能说收益来自测试时推理，也不能说直接判别本身不行。下一步先把直接基线和关系预测对照做扎实（见最后一节）。</li>
+        <li>能说的是：中间事实监督改善了这种图文联合判断在当前设置下的可训练性。还不能说直接判别普遍较弱，也不能说收益来自测试时推理。</li>
       </ul>
     </div>
   </div>
@@ -283,7 +287,74 @@ Verdict: 1</pre>
     <svg id="c2-svg" viewBox="0 0 720 300" role="img" aria-label="验证准确率：B 从 55.6% 升到 84.5%，C 写事实从 50.9% 升到 65.1%，A 和 C 直接一直约 50%"></svg>
     <details><summary>数据表</summary><div class="tablewrap"><table id="c2-table"></table></div></details>
   </div>
-  <p>B 组的损失曲线说明了它在学什么：模板文字的损失几乎立刻降到零；判定 token 的损失也很快接近零，因为在训练时判定完全由前面写出的事实决定；真正慢慢下降的，是四个关键事实 token 的损失，也就是"看清目标和终点在不在盒子里"。A 组三个 seed 的判定损失都从 1.5–1.7 降到 0.70 左右就不再下降，正好是 ln 2 ≈ 0.693，也就是只学到"一半可行一半不可行"时的值。</p>
+  <p>B 组的损失曲线说明了它在学什么：模板文字的损失几乎立刻降到零；判定 token 的损失也很快接近零，因为在训练时判定完全由前面写出的事实决定；真正慢慢下降的，是四个关键事实 token 的损失，也就是"看清目标和终点在不在盒子里"。A 组三个 seed 的判定损失都从 1.5–1.7 降到 0.70 左右就不再下降，正好是 ln 2 ≈ 0.693，也就是只学到"一半可行一半不可行"时的值。第 1 步确认，A 在训练集上同样停在这里，连 16 行都拟合不了（见下一节）。</p>
+</section>
+
+<section id="step1">
+  <h2>第 1 步：直接判断连 16 行训练数据都学不会</h2>
+  <p>第 1 步回答"A 是没泛化，还是根本没拟合"。答案是没拟合。这一步只读训练集，没有评估验证集和测试集，没有调用 API，用了 1.15 A100 小时。判定规则在作业提交前写进了协议（commit <code>17183ea</code>）。</p>
+  <ul class="plain">
+    <li><b>1a，Phase 2 的 A 模型在 512 个训练行上</b>：6 个 adapter（3 个 seed × 第 128、384 步）的准确率在 49.8–52.9% 之间。P(1) 几乎是常数，按规则颜色或真值分组，均值相差不超过 0.003。</li>
+    <li><b>1b，16 行过拟合</b>：从 4 个构造格子各取 1 个训练单元，8 行可行、8 行不可行。A 和 B 各 3 个 seed，从头训练 160 次更新（40 个 epoch），超参数与 Phase 2 相同。</li>
+  </ul>
+  <div class="chart" id="c5">
+    <div class="ctitle">16 个训练行上的准确率</div>
+    <div class="csub">线 = 3 个 seed 的平均，浅色点 = 单个 seed；悬停可看数值。第 40、80、120、160 次更新各评估一次。</div>
+    <div class="legend" id="c5-legend"></div>
+    <svg id="c5-svg" viewBox="0 0 720 270" role="img" aria-label="16 行过拟合：B 在第 80 次更新达到 100%，A 三个 seed 到第 160 次更新仍为 50%"></svg>
+    <details><summary>数据表</summary><div class="tablewrap"><table id="c5-table"></table></div></details>
+  </div>
+  <p>A 的判定损失降到 0.69（ln 2）后就不再下降，第 160 次更新时这 16 行的 P(1) 基本都是 0.5。B 在第 80 次更新时，3 个 seed 都是 16 行的判定和四个事实全对，事实值的损失降到 0。</p>
+  <details><summary>1a：6 个 A 模型在 512 个训练行上</summary><div class="tablewrap"><table>
+    <thead><tr><th>A 模型</th><th class="n">训练集准确率</th><th class="n">P(1) AUROC</th><th class="n">判为可行的比例</th></tr></thead>
+    <tbody>
+      <tr><td>seed 713，第 128 步</td><td class="n">49.8%</td><td class="n">0.483</td><td class="n">0.2%</td></tr>
+      <tr><td>seed 713，第 384 步</td><td class="n">50.0%</td><td class="n">0.518</td><td class="n">0.0%</td></tr>
+      <tr><td>seed 714，第 128 步</td><td class="n">50.0%</td><td class="n">0.457</td><td class="n">100%</td></tr>
+      <tr><td>seed 714，第 384 步</td><td class="n">52.9%</td><td class="n">0.529</td><td class="n">76.0%</td></tr>
+      <tr><td>seed 715，第 128 步</td><td class="n">50.0%</td><td class="n">0.511</td><td class="n">100%</td></tr>
+      <tr><td>seed 715，第 384 步</td><td class="n">50.0%</td><td class="n">0.494</td><td class="n">100%</td></tr>
+    </tbody></table></div></details>
+  <h3>实现检查：没有发现错误</h3>
+  <p>按协议，"A 拟合不了而 B 能拟合"会触发对 direct 目标的检查，协议里记为 <code>implementation_suspect</code>。这个类别只表示需要排查，不表示发现了 bug。检查在 CPU 上完成，没有训练：</p>
+  <ul class="plain">
+    <li>A 的监督 token 正好是 <code>Verdict: 0/1&lt;|im_end|&gt;</code>，判定掩码只覆盖数字这一个 token。</li>
+    <li>把 logits 设成在每个位置都完美预测下一个 token 时，A 和 B 的损失都是 0，说明移位正确。</li>
+    <li>A 与 B 的推理输入逐行相同；本次作业又按 Phase 2 preflight 的哈希核对了 512 行。</li>
+    <li>图像和文字信息都进入了模型：B 能学会依赖图像的事实，也能从规则文字里抄出颜色。</li>
+  </ul>
+  <p>没有找到会让 A 学不到东西、而 B 不受影响的实现错误。A 停滞的原因仍然没有确定。</p>
+</section>
+
+<section id="why">
+  <h2>B 为什么学得会：随规则翻转的那个事实就是判定</h2>
+  <p>把一个四行单元简化一下：判定只取决于"图里的分隔盒是什么颜色"和"规则保护哪个颜色"。两者相同就不可行，不同就可行。</p>
+  <div class="tablewrap"><table class="xor">
+    <thead><tr><th>图里的分隔盒</th><th>规则保护橙色</th><th>规则保护紫色</th></tr></thead>
+    <tbody>
+      <tr><td><span class="sw" style="background:var(--box-orange)"></span> 橙色</td><td><span class="label-pill no">不可行</span></td><td><span class="label-pill ok">可行</span></td></tr>
+      <tr><td><span class="sw" style="background:var(--box-purple)"></span> 紫色</td><td><span class="label-pill ok">可行</span></td><td><span class="label-pill no">不可行</span></td></tr>
+    </tbody></table></div>
+  <p>所以单看图像或单看规则文字，每一组相同输入对应的标签都是一半一半。这个构造排除的是单模态捷径。A 同时看到两种输入，50% 并不是它的信息上限：学会了"受保护盒是不是分隔盒"的模型，四种情况都能答对。GPT-6 Luna 零样本直接判断，在验证集上就有 71.9%。</p>
+  <p>B 的两个包含事实有固定的结构。每个图像对里，恰好一个事实在两条规则下不变，另一个随规则翻转。规则是 XNOR，所以在全部 512 个训练行上，翻转的那个事实都等于判定或判定取反，由不变的那个事实决定是哪一种。也就是说，B 写 <code>Target/Goal inside c:</code> 时学的，正是 A 学不会的那个图文交互。不同的是，颜色词就写在答案前面。</p>
+  <div class="chart" id="c6">
+    <div class="ctitle">B 的两类包含事实：随规则翻转的那个先落后，再追上</div>
+    <div class="csub">左：第 1 步的 16 行过拟合；右：Phase 2 验证集。线 = 3 个 seed 的平均，悬停可看单个 seed。</div>
+    <div class="legend" id="c6-legend"></div>
+    <svg id="c6-svg" viewBox="0 0 720 270" role="img" aria-label="B 的事实准确率：16 行上第 40 次更新时翻转事实 60.4%、不变事实 97.9%，第 80 次都是 100%；验证集第 128 步翻转事实 63.9%、不变事实 74.7%，第 384 步分别为 93.4% 和 89.7%"></svg>
+    <details><summary>数据表</summary><div class="tablewrap"><table id="c6-table"></table></div></details>
+  </div>
+  <p>B 也碰到了同样的难点，只是克服了。候选解释现在还没有区分开：</p>
+  <ul class="plain">
+    <li><b>部分一阶信号</b>：不变的那个事实只看图像就能确定，按图像查表能对 75%。B 先学会的正是这一类。</li>
+    <li><b>颜色词就在答案前面</b>：问题的形式接近 base 模型已有的识别能力。零样本时，"目标/终点在某颜色的盒子里吗"的 AUROC 分别是 0.63 和 0.72。</li>
+    <li><b>逐步分解</b>：每个 token 只做一步。先抄颜色，再判断一个包含关系，最后在写出的事实上做 XNOR。</li>
+    <li><b>监督更多</b>：B 每行多了四个事实值 token。</li>
+  </ul>
+  <p>第 1 步报告初稿里"一阶梯度正好互相抵消"的说法过强，已经改掉。图像和文字各自与标签无关，不等于模型参数上没有学习信号：预训练的 Qwen 能在语言层形成图文交互，训练用的也是随机小批次。它是否真的表现为梯度信号弱或相消，还没有测量。另外，反事实平衡没有排除联合捷径：审核时的"颜色统计 × 规则"读数在验证集上的 AUROC 约为 0.78。</p>
+  <div class="callout">
+    <p><b>目前的结论</b>：在单模态输入无法预测标签的反事实平衡任务中，当前的直接判定训练在完整训练集和 16 行小样本上都停滞；结构化事实监督能够拟合，并在按源留出的测试集上明显更好。这说明中间监督改善了这种图文联合判断在当前设置下的可训练性。设置是 Qwen2.5-VL-3B、语言侧 LoRA r16、学习率 1e-4、160–384 次更新。它还不能证明直接判别普遍较弱，也还不能确定优势来自梯度机制、显式条件化还是其他训练因素。</p>
+  </div>
 </section>
 
 <section id="errors">
@@ -336,26 +407,40 @@ Verdict: 1</pre>
   </div>
   <ul class="plain">
     <li><b>不像在走捷径</b>：在捷径读数最弱的子集（终点在分隔盒内、机器人已离开初始姿态）上，B 仍有 85.4%，捷径读数的 AUROC 只有 0.55–0.63。再加上"事实对但判错"为 0，B 的判定主要依赖的是它写出的事实。</li>
-    <li><b>已经超过前沿模型零样本</b>（只在验证集上比较过）：GPT-6 Luna 零样本 71.9–73.4%（花费 $0.47），B 组验证集 84.5%。Luna 的错误同样全是感知错误。</li>
+    <li><b>已经超过前沿模型零样本</b>（只在验证集上比较过）：GPT-6 Luna 零样本 71.9–73.4%（花费 $0.47），B 组验证集 84.5%。Luna 也没有"事实对但判错"的情况，错误几乎都出在两个包含关系上。</li>
   </ul>
 </section>
 
 <section id="story">
   <h2>能讲成什么故事，还缺什么</h2>
   <div class="callout">
-    <p><b>目前的定位</b>：用证书和安全见证建立可信的约束可行性监督，并研究显式的空间关系预测能否帮助模型判断任务是否可执行。已有的证据是"中间关系监督改善了可训练性"，以及"显式生成事实有帮助"的线索；机制结论还没完成，也还不能算一种新的训练方法。</p>
-    <p class="small">这一节按 2026-10-17 的独立评审意见修订。范围提醒："没有检测到分隔"本身不能证明可行，正例的存在性来自安全轨迹。</p>
+    <p><b>目前的定位</b>：用证书和安全见证建立可信的约束可行性监督，并研究显式的空间关系预测能否帮助模型判断任务是否可执行。已有的证据是"中间关系监督改善了可训练性"（第 1 步把它确认到了训练集上），以及"显式生成事实有帮助"的线索；机制结论还没完成，也还不能算一种新的训练方法。</p>
+    <p class="small">这一节按 2026-10-17 和 10-18 的两次独立复核修订。范围提醒："没有检测到分隔"本身不能证明可行，正例的存在性来自安全轨迹。</p>
   </div>
-  <p>这个现象有现成的理论可以接：只有"两个信号的交互"才带标签信息的问题（parity 一类）很难被端到端梯度学到，加上中间监督就变得可学（Wies 2023；Gülçehre &amp; Bengio 2016）。我们的数据正好是这种结构，而且是因为反事实平衡的设计才变成这样的，这一点本身就可以写。</p>
-  <p><b>C 组说明不了机制</b>。C 的写事实读法比它自己的直接读法高 12.8 分，但有两个混杂因素。第一，C 见到的事实样本只有 B 的一半。按见过的事实样本数对齐后，C 和 B 几乎一样（验证集：512 个事实样本时 54.5% 对 55.6%；768 个时 65.1%，B 在同等样本数下的插值约 64.5%），所以 C 比 B 低，主要是因为事实监督少，两个目标之间的干扰不大。第二，C 的直接分支在训练中本身也停在随机水平。所以现在只能说"事实联合训练没有让直接判定学起来"，还不能说"收益来自测试时推理"。</p>
-  <h3>调整后的下一步（短周期，只用 train / validation）</h3>
+  <p>已有理论提供了先例：只有两个信号的交互才带标签信息的问题（parity 一类）可能很难被端到端梯度学到，加入子任务监督后可以变得可学（Wies et al. 2022；Gülçehre &amp; Bengio 2016；Shalev-Shwartz et al. 2017）。这些结果的模型、分布和目标条件不能直接套到预训练的 Qwen 加 LoRA 上，我们的数据只是具备这种结构。A 的停滞在这个设置下稳定出现，值得作为一个学习现象来研究；但在原因明确之前，它不支持"生成式方法普遍优于直接判别"。</p>
+  <p><b>C 组说明不了机制</b>。C 的写事实读法比它自己的直接读法高 12.8 分，但有两个混杂因素。第一，C 见到的事实样本只有 B 的一半。按见过的事实样本数对齐后，C 和 B 接近（验证集：512 个事实样本时 54.5% 对 55.6%；768 个时 65.1%，B 在同等样本数下的插值约 64.5%）。这与"C 低主要是因为事实监督少"的解释相容；但 B 的 768 样本点是插值，验证集只有 192 行，区间很宽，不能据此说两个目标之间没有干扰。第二，C 的直接分支在训练中本身也停在随机水平。所以现在只能说"事实联合训练没有让直接判定学起来"，还不能说"收益来自测试时推理"。</p>
+  <h3 id="next">下一步（确认后开始）</h3>
+  <p>先用小对照定位原因，再决定是否扩大训练预算或推进完整对照。第一个作业沿用第 1 步的设置：同样的 16 行、同一条 direct 编码路径、同样的超参数，3 个 seed，只换训练目标。约 1.1 A100 小时，只用训练集，不调用 API。</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>对照</th><th>训练目标</th><th>结果怎么读</th></tr></thead>
+    <tbody>
+      <tr><td>文字标签 t（必做）</td><td><code>Verdict:</code> 后写"受保护的是不是橙色"，只看文字就能定</td><td>t 和 s 都学得会、原判定学不会：困难集中在把两者组合起来</td></tr>
+      <tr><td>图像标签 s（必做）</td><td>写"分隔盒是不是橙色"，只看图像就能定；原判定正好是 s XOR t</td><td>t 或 s 也学不会：继续查实现、优化或输入能否分辨，仍不能直接认定有 bug</td></tr>
+      <tr><td>A+P（建议加）</td><td>先写 <code>Protected: c</code>，再写判定；只多抄一个颜色词</td><td>学得会：瓶颈在把远处的颜色词和图像绑在一起；学不会：还需要中间的包含关系</td></tr>
+      <tr><td>梯度测量（可选）</td><td>不训练；在初始化时算这 16 行的逐行判定梯度</td><td>测完整四行单元内梯度的相消比例，对比判定、t、s 和 B 的事实 token。测过之后才能把"梯度相消"写成机制</td></tr>
+    </tbody></table></div>
+  <p>之后的顺序：</p>
   <ol class="next">
-    <li><b>先确认 A 基线能否正常拟合。</b> 用保存的第 128、384 步模型评估训练集；再做极小样本过拟合（例如 4 个单元、16 行），分清代码问题和优化停滞。约 1 GPU 小时。</li>
-    <li><b>建立更简洁的对照。</b> 直接判断、"只预测两个包含关系 + 程序规则"、当前完整的 B，3 个 seed。如果前者已经足够，工作就集中到关系识别的可靠性上；要主张测试时生成有独立价值，还需要监督量匹配的对照。训练中只做 greedy 验证，采样和干预诊断留到阶段收尾。约 2–3 GPU 小时。</li>
+    <li><b>简洁对照（原计划的第 2 步）。</b>在 512 行上比较直接判断、"只预测两个包含关系 + 程序规则"（R）和完整的 B，可以把 A+P 一起放进去。只用验证集，训练中只做 greedy 验证，采样和干预诊断留到收尾。要主张测试时生成有独立价值，还需要监督量匹配的对照。</li>
     <li><b>只选一个针对关系预测的改进</b>（grounding 或视觉输入），一次只改变一个主要因素。RL 暂不考虑。</li>
-    <li><b>确认性结论使用新的锁定源。</b> 旧测试集已经用过。新数据优先增加独立源和布局变化，并破坏"每张图只有一个分隔盒"的固定构造，而不是单纯增加行数。这一步需要单独授权数据采集。</li>
+    <li><b>确认性结论使用新的锁定源。</b>旧测试集已经用过。新数据优先增加独立源和布局变化，并破坏"每张图只有一个分隔盒"的固定构造。这一步需要单独授权数据采集。</li>
   </ol>
-  <p class="small">B′（先判定后事实）、组合深度和 AEGIS 拒绝执行门，等前两步的结果出来再决定。</p>
+  <p class="small">暂缓：A 的 4 倍更新次数或学习率扫描（只回答"学得慢还是学不会"，不回答机制）、B′（先判定后事实）、组合深度、AEGIS 拒绝执行门。</p>
+  <h3>需要决定的</h3>
+  <ul class="plain">
+    <li><b>下一阶段的主问题。</b>可以定为"中间事实监督为什么能让这种反事实图文关系可学"，偏方法和分析，全部在训练数据上做，不消耗测试集。也可以先提升关系准确率、建新的锁定测试集，偏系统。两条不冲突，但要定先后。</li>
+    <li><b>第一个作业的范围。</b>A+P 和梯度测量要不要一起加进去。</li>
+  </ul>
 </section>
 
 <section id="limits">
@@ -365,6 +450,7 @@ Verdict: 1</pre>
     <li>只有一种不可行证书机制（封闭分隔盒），4 个任务家族，测试集 15 个独立源；3 个 seed 不增加独立场景。</li>
     <li>虚拟盒是约束合同，不是物理墙。结论不能外推到真实碰撞物理或一般的可达性。</li>
     <li>图片审核由 Codex 逐单元完成，不是独立的人工审核。</li>
+    <li>第 1 步的结论只在当前设置内成立：Qwen2.5-VL-3B、语言侧 LoRA r16、学习率 1e-4、160–384 次更新。16 行属于记忆的范围，"能拟合"只说明可训练，不说明学会了一般的关系。</li>
   </ul>
 </section>
 
@@ -376,6 +462,8 @@ Verdict: 1</pre>
       <li>Phase 1（只用验证集）：零样本诊断、1 个 epoch 的 A/B 试跑、GPT-6 Luna 基线（384 次调用，$0.4669，上限 $3）。</li>
       <li>Phase 2：9 次训练（7.71 A100 小时）+ 10 个测试目标各评估一次（4.24 小时）。两次在 qgpu2014 上因 GPU 故障在训练前退出，原样保存后重跑。共约 12 A100 小时。</li>
       <li>campaign：<code>/projects/p33100/siosio/crashbench_safelibero/verifier_training/runs/20261017T160157Z_phase2_e03da261eb8f</code></li>
+      <li>第 1 步：作业 4225046，qgpu0205（A100-PCIE-40GB），COMPLETED 0:0，1 小时 09 分，显存峰值 9.3 GiB。只读训练集；44 个单元测试在作业开始时通过；512 行输入与 Phase 2 preflight 的哈希逐行一致。</li>
+      <li>第 1 步 campaign：<code>/projects/p33100/siosio/crashbench_safelibero/verifier_training/runs/20261018T031934Z_step1-fit_17183ea9c35e</code></li>
     </ul>
   </details>
   <details><summary>测试报告里的一处更正</summary>
@@ -386,7 +474,7 @@ Verdict: 1</pre>
       <li>模型：Qwen2.5-VL-3B-Instruct（固定 revision），只训练语言侧 LoRA（r 16、alpha 32），冻结视觉编码器和 projector。</li>
       <li>损失：判定 token 0.5 + 其余 assistant token 0.5，各自归一化。AdamW，学习率 1e-4，有效 batch 4，384 次更新；在第 128/256/384 次更新时按验证集选模，平局取更早的。</li>
       <li>统计：每行先对 3 个 seed 平均，再在 15 个测试源上做源级 bootstrap（1000 次，seed 1014）、精确 sign-flip 检验和 Durkalski 聚类 McNemar 检验。</li>
-      <li>完整记录：仓库 <code>docs/generative_verifier/PHASE1_REPORT.md</code> 与 <code>PHASE2_REPORT.md</code>。</li>
+      <li>完整记录：仓库 <code>docs/generative_verifier/PHASE1_REPORT.md</code>、<code>PHASE2_REPORT.md</code>，第 1 步的 <code>STEP1_PROTOCOL.md</code> 与 <code>STEP1_REPORT.md</code>。</li>
     </ul>
   </details>
   <details><summary>参考文献（39 篇，2026-10-17 在 arXiv / Crossref 上核对过）</summary>
@@ -482,6 +570,65 @@ const mean=a=>a.reduce((s,v)=>s+v,0)/a.length;
   el('line',{x1:X(50),x2:X(50),y1:top-12,y2:top+row*R.length-12,class:'ref'},svg);text(svg,X(50),top-14,'瞎猜 50%','lab2','middle');
   R.forEach(([n,c,v,kind],i)=>{const y=top+i*row;text(svg,x0-12,y+h/2+5,n,'lab','end');bar(svg,X(0),X(v),y,h,c);
     text(svg,X(v)+8,y+h/2+5,v.toFixed(1)+'%','val');const hit=el('rect',{x:0,y:y-8,width:720,height:row-2,class:'hit'},svg);bindTip(hit,`<b>${n}</b>（${kind}）<br>测试集准确率 ${v.toFixed(1)}%`);});
+})();
+
+const lineKey=c=>`<i class="key" style="background:var(${c});display:inline-block;width:10px;height:3px;margin-right:6px;vertical-align:middle"></i>`;
+
+// Chart 5: step 1, accuracy on the 16 training rows by update (mean line, faint seed dots).
+(function(){
+  const svg=document.getElementById('c5-svg');const S5=SERIES.filter(s=>s.k==='A'||s.k==='B');legend('c5-legend',S5);
+  const STEPS=[40,80,120,160];
+  const D={A:[[56.25,50,31.25,50],[50,43.75,50,50],[50,50,50,50]],B:[[68.75,100,100,100],[56.25,100,100,100],[50,100,100,100]]};
+  const M={};for(const k in D)M[k]=STEPS.map((_,j)=>mean(D[k].map(s=>s[j])));
+  const x0=56,x1=560,y0=236,y1=20,X=i=>x0+(x1-x0)*i/(STEPS.length-1),Y=v=>y0-(y0-y1)*(v-25)/75;
+  [25,50,75,100].forEach(v=>{el('line',{x1:x0,x2:x1,y1:Y(v),y2:Y(v),class:'grid'},svg);text(svg,x0-10,Y(v)+4,v+'%','tick','end');});
+  STEPS.forEach((s,i)=>text(svg,X(i),y0+22,s+' 次更新','tick','middle'));
+  ['A','B'].forEach(k=>{const s=SERIES.find(z=>z.k===k);
+    D[k].forEach((seed,j)=>seed.forEach((v,i)=>el('circle',{cx:X(i)+(j-1)*7,cy:Y(v),r:3.5,fill:`var(${s.c})`,'fill-opacity':.4},svg)));
+    el('polyline',{points:M[k].map((v,i)=>`${X(i)},${Y(v)}`).join(' '),fill:'none',stroke:`var(${s.c})`,'stroke-width':2,'stroke-linejoin':'round','stroke-linecap':'round'},svg);
+    M[k].forEach((v,i)=>el('circle',{cx:X(i),cy:Y(v),r:4.5,fill:`var(${s.c})`,stroke:'var(--bg)','stroke-width':2},svg));});
+  text(svg,x1+14,Y(100)+4,'B 先写事实 100%','lab');
+  text(svg,x1+14,Y(50)+4,'A 直接判别 50%','lab');
+  const cross=el('line',{x1:0,x2:0,y1:y1,y2:y0,class:'ref',visibility:'hidden'},svg);
+  STEPS.forEach((st,i)=>{const w=(x1-x0)/(STEPS.length-1),hit=el('rect',{x:X(i)-w/2,y:y1-10,width:w,height:y0-y1+20,class:'hit'},svg);
+    const html=`<b>${st} 次更新</b><br>`+S5.map(s=>`${lineKey(s.c)}${s.name}：${M[s.k][i].toFixed(1)}%（${D[s.k].map(d=>d[i].toFixed(1)).join(' / ')}）`).join('<br>');
+    hit.addEventListener('pointermove',e=>{cross.setAttribute('x1',X(i));cross.setAttribute('x2',X(i));cross.setAttribute('visibility','visible');showTip(html,e);});
+    hit.addEventListener('pointerleave',()=>{cross.setAttribute('visibility','hidden');hideTip();});});
+  const t=document.getElementById('c5-table');
+  t.innerHTML='<thead><tr><th>组</th>'+STEPS.map(s=>`<th class="n">${s} 次（平均）</th>`).join('')+'<th>单个 seed（713 / 714 / 715）</th></tr></thead><tbody>'+
+    S5.map(s=>`<tr><td>${s.name}</td>`+M[s.k].map(v=>`<td class="n">${v.toFixed(1)}</td>`).join('')+`<td class="mono">${D[s.k].map(r=>r.map(v=>v.toFixed(1)).join(' → ')).join('；')}</td></tr>`).join('')+'</tbody>';
+})();
+
+// Chart 6: B's rule-constant vs rule-flipping containment facts; left 16-row overfit, right Phase 2 validation.
+(function(){
+  const svg=document.getElementById('c6-svg');
+  const F6=[{k:'flip',name:'随规则翻转的事实（与判定等价）',short:'随规则翻转',c:'--s2'},{k:'stable',name:'不随规则变的事实',short:'不随规则变',c:'--neutral'}];
+  legend('c6-legend',F6);
+  const P=[{title:'16 行过拟合（第 1 步）',steps:[40,80],x0:64,x1:290,
+      D:{flip:[[68.75,100],[56.25,100],[56.25,100]],stable:[[100,100],[100,100],[93.75,100]]}},
+    {title:'Phase 2 验证集',steps:[128,256,384],x0:400,x1:690,
+      D:{flip:[[64.6,91.1,92.7],[62.5,76.6,94.8],[64.6,90.1,92.7]],stable:[[73.4,89.1,91.1],[71.4,81.2,88.5],[79.2,84.4,89.6]]}}];
+  const y0=236,y1=40,Y=v=>y0-(y0-y1)*(v-50)/50,rows=[];
+  P.forEach((p,pi)=>{
+    const n=p.steps.length,pad=26,X=i=>p.x0+pad+(p.x1-p.x0-2*pad)*i/(n-1);
+    const M={};for(const k in p.D)M[k]=p.steps.map((_,j)=>mean(p.D[k].map(s=>s[j])));
+    text(svg,p.x0,20,p.title,'lab');
+    [50,75,100].forEach(v=>{el('line',{x1:p.x0,x2:p.x1,y1:Y(v),y2:Y(v),class:'grid'},svg);text(svg,p.x0-8,Y(v)+4,v+'%','tick','end');});
+    p.steps.forEach((s,i)=>text(svg,X(i),y0+22,s+' 次更新','tick','middle'));
+    ['stable','flip'].forEach(k=>{const s=F6.find(z=>z.k===k);
+      el('polyline',{points:M[k].map((v,i)=>`${X(i)},${Y(v)}`).join(' '),fill:'none',stroke:`var(${s.c})`,'stroke-width':2,'stroke-linejoin':'round','stroke-linecap':'round'},svg);
+      M[k].forEach((v,i)=>el('circle',{cx:X(i),cy:Y(v),r:4.5,fill:`var(${s.c})`,stroke:'var(--bg)','stroke-width':2},svg));});
+    if(pi===0){
+      text(svg,X(0)+12,Y(M.stable[0])+20,'不随规则变 '+M.stable[0].toFixed(1)+'%','lab2');
+      text(svg,X(0)+12,Y(M.flip[0])+20,'随规则翻转 '+M.flip[0].toFixed(1)+'%','lab2');}
+    const cross=el('line',{x1:0,x2:0,y1:y1,y2:y0,class:'ref',visibility:'hidden'},svg);
+    p.steps.forEach((st,i)=>{const w=(p.x1-p.x0-2*pad)/(n-1),hit=el('rect',{x:X(i)-w/2,y:y1-10,width:w,height:y0-y1+20,class:'hit'},svg);
+      const html=`<b>${p.title} · ${st} 次更新</b><br>`+F6.map(s=>`${lineKey(s.c)}${s.short}：${M[s.k][i].toFixed(1)}%（${p.D[s.k].map(d=>d[i].toFixed(1)).join(' / ')}）`).join('<br>');
+      hit.addEventListener('pointermove',e=>{cross.setAttribute('x1',X(i));cross.setAttribute('x2',X(i));cross.setAttribute('visibility','visible');showTip(html,e);});
+      hit.addEventListener('pointerleave',()=>{cross.setAttribute('visibility','hidden');hideTip();});});
+    F6.forEach(s=>rows.push(`<tr><td>${p.title}</td><td>${s.short}</td><td class="mono">${p.steps.map((st,i)=>`${st} 次：${M[s.k][i].toFixed(1)}`).join('；')}</td><td class="mono">${p.D[s.k].map(r=>r.map(v=>v.toFixed(1)).join(' → ')).join('；')}</td></tr>`));
+  });
+  document.getElementById('c6-table').innerHTML='<thead><tr><th>数据</th><th>事实</th><th>各评估点（3 个 seed 平均，%）</th><th>单个 seed（713 / 714 / 715）</th></tr></thead><tbody>'+rows.join('')+'</tbody>';
 })();
 })();
 </script>
