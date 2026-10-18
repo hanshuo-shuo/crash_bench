@@ -6,10 +6,11 @@
 - **用户 2026-10-16 的决定**：
   - V4 的 896 行（224 个四行单元、64 条源轨迹）作为开发数据，直接用于 verifier 训练。
   - 不再要求通过 0.75 的 shortcut 闸门。闸门失败（0.780）如实披露，并作为基线报告。
-- **当前阶段**：Phase 0 与 Phase 1 已于 2026-10-17 完成，见 [generative_verifier/PHASE1_REPORT.md](generative_verifier/PHASE1_REPORT.md)。
-  - 只用 validation：感知（目标/终点是否在受保护盒内）是首要瓶颈，规则应用不是。
-  - A 组 1 个 epoch 没学到信号（50%）；B 组 1 个 epoch 55.7%；GPT-6 Luna 零样本 71.9–73.4%。
-  - Phase 2 等用户确认；锁定测试集未加载、未评分。没有正在运行的 CrashBench 作业。
+- **当前阶段**：Phase 0–2 已于 2026-10-17 完成，见 [PHASE1_REPORT.md](generative_verifier/PHASE1_REPORT.md) 和 [PHASE2_REPORT.md](generative_verifier/PHASE2_REPORT.md)。
+  - 锁定测试集（评估一次）：B（事实→判定）79.7%，A（直接）50.0%，差 +29.7 个百分点，源聚类 95% CI [+22.3, +36.8]，科学标准达成。
+  - 开发里程碑未达成：B 行准确率 79.7%、单元全对 54.2%、规则翻转 64.2%，门槛分别是 85% / 70% / 90%。
+  - 错误全部来自感知（"事实对但判错"为 0）；A 和 C 的直接读法都是常数预测（50%）；C-CoT 62.8%。
+  - 原始测试报告误判"里程碑达成"，已用只读更正记录修正（PHASE2_REPORT §5）。Phase 3 等用户决定；没有正在运行的 CrashBench 作业。
 
 ## 已完成的研究（结果只读）
 

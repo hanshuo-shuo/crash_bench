@@ -53,4 +53,6 @@ user approval.
 Phase 0-1 (2026-10-17): the user asked to start Phase 0 and, if it went well, Phase 1,
 naming "gpt luna 6" (openai/gpt-6-luna) for the Phase 1 API baseline. Both phases are
 complete (docs/generative_verifier/PHASE1_REPORT.md); the baseline spent $0.4669 of its $3 cap
-on validation only. Phase 2 and any locked-test evaluation need the user's go-ahead.
+on validation only. On 2026-10-17 the user said "开始吧" to Phase 2; it is complete and the locked test
+was scored once (docs/generative_verifier/PHASE2_REPORT.md). Do not score that test split again.
+Phase 3 items each need the user's go-ahead.
