@@ -20,7 +20,10 @@
   - 按决策表记为 `implementation_suspect`。按规定检查了 direct 目标的编码、掩码和损失，没有发现错误。
   - 10-18 独立复核后的结论：中间事实监督改善了这种图文联合判断在当前设置下的可训练性；不能说直接判别普遍较弱，原因（梯度机制、显式条件化或其他）未定。初稿"缺少一阶梯度信号"的说法过强，已改。
   - 补充核对：随规则翻转的那个包含事实在全部 512 个训练行上等于判定或其取反，B 先学会不变的事实、再学会翻转的事实。
-  - 下一步：16 行单通路对照 t、s、A+P（用户 10-18 认可范围，梯度测量后置），约 1.1–1.2 A100 小时；协议见 [CONTROLS_PROTOCOL.md](generative_verifier/CONTROLS_PROTOCOL.md)，计划见 [NEXT_STEPS.md](generative_verifier/NEXT_STEPS.md) §8。代码已准备，作业等用户确认后提交。
+- **单通路对照**：2026-10-18 完成（作业 4371785，58 分钟，只读训练集），见 [CONTROLS_REPORT.md](generative_verifier/CONTROLS_REPORT.md)。
+  - t（只看文字）、s（只看图像）、A+P（先复述颜色再判断）三组的 9 次运行全部拟合了 16 行；预注册读法为 `composition_bottleneck` 和 `restatement_restores_fit`。
+  - 结论：direct 路径学得会两个单一模态的标签，学不会它们的 XOR；先写出受保护颜色，同一个 XOR 就学会了。这还只是拟合，不是泛化。
+  - 下一步（等用户决定，见 [NEXT_STEPS.md](generative_verifier/NEXT_STEPS.md) §8.5）：只加 token 的对照，以及在 512 行上比较 A、A+P、R、B。没有正在运行的 CrashBench 作业。
 
 ## 已完成的研究（结果只读）
 
