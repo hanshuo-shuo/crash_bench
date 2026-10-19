@@ -22,8 +22,12 @@
   - 补充核对：随规则翻转的那个包含事实在全部 512 个训练行上等于判定或其取反，B 先学会不变的事实、再学会翻转的事实。
 - **单通路对照**：2026-10-18 完成（作业 4371785，58 分钟，只读训练集），见 [CONTROLS_REPORT.md](generative_verifier/CONTROLS_REPORT.md)。
   - t（只看文字）、s（只看图像）、A+P（先复述颜色再判断）三组的 9 次运行全部拟合了 16 行；预注册读法为 `composition_bottleneck` 和 `restatement_restores_fit`。
-  - 结论：direct 路径学得会两个单一模态的标签，学不会它们的 XOR；先写出受保护颜色，同一个 XOR 就学会了。这还只是拟合，不是泛化。
-  - 下一步：第 2 步梯级对照 A → AF → AP → B，用户要求放在同一批；协议见 [LADDER_PROTOCOL.md](generative_verifier/LADDER_PROTOCOL.md)，计划和初步故事线的收尾条件见 [NEXT_STEPS.md](generative_verifier/NEXT_STEPS.md) §8.6。代码已准备，作业等用户确认后提交。
+  - 结论（16 行）：direct 路径学得会两个单一模态的标签，学不会它们的 XOR；先写出受保护颜色，16 行就能拟合。
+  - 10-19 更正：判定前只加 4 个固定 token（AF）也能拟合这 16 行，所以 A+P 的拟合靠的是多出的输出位置，不是颜色（见下一条）。
+- **第 2 步梯级对照**：2026-10-19 完成（作业 4399441，2 小时 36 分，只读训练集和验证集），见 [LADDER_REPORT.md](generative_verifier/LADDER_REPORT.md)。
+  - 512 行上，AF 和 AP 在训练集和验证集上都停在 50%，B 是 84.5%（AP − B = −34.7 个百分点，区间 [−39.7, −30.1]）。
+  - 结论：让判定可学并能推广的，是关系事实的中间监督，不是输出结构或复述颜色。
+- **初步故事线已整理收尾**，见 [PRELIMINARY_STORY.md](generative_verifier/PRELIMINARY_STORY.md)；待用户确认，以及是否请 Astra 做最终复核。后续工作见其中一节；没有正在运行的 CrashBench 作业。
 
 ## 已完成的研究（结果只读）
 
