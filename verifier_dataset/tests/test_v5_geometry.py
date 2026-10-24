@@ -106,6 +106,45 @@ class Statistics(unittest.TestCase):
         self.assertEqual(g.readings(block(.8, 150, 3), block(.6, 40, 8, .5))['initial'], 'initial_layout_viable')
 
 
+class Selection(unittest.TestCase):
+    def test_round_robin_over_tasks_with_one_rule_of_each_label(self):
+        rows = []
+        for task, sources in (('a', 3), ('b', 1)):
+            for i in range(sources):
+                for unit in (0, 5):
+                    rows += [row('%s%d' % (task, i), unit, task + '|text', 'line:x|y', 1),
+                             row('%s%d' % (task, i), unit, task + '|text', 'line:x|z', 0),
+                             row('%s%d' % (task, i), unit, task + '|text', 'line:y|z', 0)]
+        rows.append(row('a0', 9, 'a|text', 'line:x|y', 1))
+        chosen = g.select_units(rows, n=3, strict_n=0)
+        self.assertEqual([c['task'].split('|')[0] for c in chosen], ['a', 'b', 'a'])
+        self.assertEqual(len({c['source'] for c in chosen}), 3)
+        for c in chosen:
+            self.assertEqual([r['label'] for r in c['rules']], [1, 0])
+            self.assertEqual(c['candidate_rules'], ['line:x|y', 'line:x|z', 'line:y|z'])
+            # Each rule keeps one label within its task and progress bin, so none is in the strict stratum.
+            self.assertFalse(c['strict'])
+
+    def test_strict_needs_both_labels_within_text_and_progress(self):
+        rows = [row('s1', 0, 't|x', 'line:x|y', 1), row('s1', 0, 't|x', 'line:x|z', 0),
+                row('s2', 0, 't|x', 'line:x|y', 0), row('s2', 0, 't|x', 'line:x|z', 1)]
+        self.assertTrue(all(c['strict'] for c in g.select_units(rows, n=2)))
+
+    def test_strict_units_come_first_then_broad_fill(self):
+        rows = [row('s1', 0, 't|x', 'line:x|y', 1), row('s1', 0, 't|x', 'line:x|z', 0),
+                row('s2', 0, 't|x', 'line:x|y', 0), row('s2', 0, 't|x', 'line:x|z', 1),
+                row('s3', 5, 'u|x', 'line:x|y', 1), row('s3', 5, 'u|x', 'line:x|z', 0)]
+        chosen = g.select_units(rows, n=3, strict_n=1)
+        # The broad pass still visits task t first; units keep their strict flag.
+        self.assertEqual([(c['source'][:2], c['strict']) for c in chosen][0][1], True)
+        self.assertEqual(sorted((c['task'][0], c['strict']) for c in chosen), [('t', True), ('t', True), ('u', False)])
+        self.assertEqual(len({(c['source'], c['unit']) for c in chosen}), 3)
+
+    def test_rule_text_uses_natural_phrases(self):
+        self.assertEqual(g.rule_text('line:ketchup|wine_bottle_obstacle'),
+                         'Do not let anything cross the straight line through the ketchup bottle and the wine bottle.')
+
+
 class Scan(unittest.TestCase):
     def state(self):
         objects = dict(bowl_1=obj(0, 0), plate_1=dict(obj(.4, 0, half=.08)), cookies_1=obj(.2, .3),

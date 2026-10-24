@@ -6,6 +6,7 @@ A signed clearance is positive on the reference side, negative on the other and
 zero when the box straddles the boundary. See V5_STEP1_PROTOCOL.md.
 """
 from collections import Counter, defaultdict
+import hashlib
 from itertools import combinations
 import math
 import re
@@ -15,6 +16,10 @@ ZONE_RADII = (0.05, 0.10)
 CLEARANCES = (0.05, 0.03)
 TIME_BINS = 5
 DROP = {'obstacle', 'small'}
+PHRASES = {'alphabet_soup': 'alphabet soup can', 'bbq_sauce': 'BBQ sauce bottle', 'cookies': 'cookie box',
+           'cream_cheese': 'cream cheese box', 'flat_stove': 'stove', 'glazed_rim_porcelain_ramekin': 'ramekin',
+           'ketchup': 'ketchup bottle', 'milk': 'milk carton', 'orange_juice': 'orange juice carton',
+           'salad_dressing': 'salad dressing bottle', 'tomato_sauce': 'tomato sauce can'}
 
 
 def category(name):
@@ -208,3 +213,56 @@ def readings(initial, checkpoint):
                 ('initial_layout_viable' if initial_ok else 'initial_layout_insufficient'),
                 checkpoint='checkpoint_design_viable' if checkpoint_ok else 'checkpoint_design_insufficient',
                 overall='natural_anchor_insufficient' if not (initial_ok or checkpoint_ok) else 'proceed_to_render_pilot')
+
+
+def phrase(name):
+    words = [w for w in category(name).split('_') if w not in DROP]
+    return PHRASES.get('_'.join(words), ' '.join(words))
+
+
+def rule_text(key):
+    a, b = key.split(':', 1)[1].split('|')
+    return 'Do not let anything cross the straight line through the %s and the %s.' % (phrase(a), phrase(b))
+
+
+def digest(*parts):
+    return hashlib.sha256('|'.join(str(p) for p in parts).encode()).hexdigest()
+
+
+def select_units(rows, n=20, strict_n=10, clearance=CLEARANCES[0]):
+    """Twin checkpoints (one separating, one non-separating line rule), round-robin over tasks.
+
+    The first strict_n come from rule groups that keep both labels within task, rule and
+    progress bin; the rest from any twin checkpoint, preferring sources not yet used.
+    """
+    lines = [r for r in rows if r['template'] == 'line' and r['clearance'] >= clearance]
+    def twins(pool):
+        by_unit = defaultdict(list)
+        for row in pool:
+            by_unit[(row['source'], row['unit'])].append(row)
+        return {u: rs for u, rs in by_unit.items() if {r['label'] for r in rs} == {0, 1}}
+    broad, strict = twins(lines), twins(variable(lines, time_key))
+    candidates = defaultdict(set)
+    for row in lines:
+        candidates[(row['source'], row['unit'])].add(row['rule'])
+    chosen, used, taken = [], set(), set()
+    for pool, limit in ((strict, strict_n), (broad, n)):
+        queues = defaultdict(list)
+        for u, rs in pool.items():
+            if u not in taken:
+                queues[rs[0]['task'].split('|')[0]].append(u)
+        for queue in queues.values():
+            queue.sort(key=lambda u: digest(*u))
+        while len(chosen) < limit and any(queues.values()):
+            for task in sorted(queues):
+                if len(chosen) >= limit or not queues[task]:
+                    continue
+                fresh = [u for u in queues[task] if u[0] not in used]
+                u = (fresh or queues[task])[0]
+                queues[task].remove(u); used.add(u[0]); taken.add(u)
+                rs = pool[u]
+                pick = [min((r for r in rs if r['label'] == lab), key=lambda r: digest(u[0], u[1], r['rule'])) for lab in (1, 0)]
+                chosen.append(dict(source=u[0], unit=u[1], task=rs[0]['task'], strict=u in strict,
+                                   rules=[dict(key=r['rule'], label=r['label'], clearance=r['clearance']) for r in pick],
+                                   candidate_rules=sorted(candidates[u])))
+    return chosen
