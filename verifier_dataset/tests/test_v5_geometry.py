@@ -31,6 +31,21 @@ class Names(unittest.TestCase):
         self.assertEqual(names, ['cookies_1', 'moka_pot_obstacle_1'])
 
 
+    def test_goal_parent_and_lookalikes_are_not_anchors(self):
+        objects = dict(akita_black_bowl_1=obj(0, 0), wooden_cabinet_1=obj(.3, 0), wine_rack_1=obj(-.3, 0),
+                       butter_1=obj(0, .3), chocolate_pudding_1=obj(.2, .3), ketchup_1=obj(-.2, .3))
+        self.assertEqual(g.goal_objects(objects, 'wooden_cabinet_1_top_region'), {'wooden_cabinet_1_top_region', 'wooden_cabinet_1'})
+        names = g.anchors(objects, 'open the top drawer and put the bowl inside',
+                          {'akita_black_bowl_1'} | g.goal_objects(objects, 'wooden_cabinet_1_top_region'))
+        self.assertEqual(names, ['ketchup_1', 'wine_rack_1'])
+
+    def test_lifted_rows_need_a_wider_margin(self):
+        self.assertAlmostEqual(g.required_clearance(.05, .3), .08)
+        self.assertAlmostEqual(g.required_clearance(.05, -.1), .05)
+        rows = [row('s1', 0, 't', 'r', 1, clearance=.06, lift=0.), row('s2', 0, 't', 'r', 0, clearance=.06, lift=.3)]
+        self.assertEqual(g.summarize(rows)['0.05']['all']['rows'], 1)
+
+
 class Geometry(unittest.TestCase):
     def test_line_sides_and_straddle(self):
         a, b = [0, 0], [1, 0]

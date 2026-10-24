@@ -103,7 +103,7 @@ def extract(root, index):
 
 def initial_rows(state):
     objects, atoms = state['objects'], state['goal_atoms']
-    excluded = {a[1] for a in atoms} | {state['goals'][a[2]]['name'] for a in atoms}
+    excluded = {a[1] for a in atoms} | {n for a in atoms for n in g.goal_objects(objects, a[2]) | {state['goals'][a[2]]['name']}}
     names = g.anchors(objects, state['language'], excluded)
     pairs = [(g.point(objects[a[1]]['center']), (state['goals'][a[2]]['lo'], state['goals'][a[2]]['hi'])) for a in atoms]
     rows = []
@@ -127,7 +127,7 @@ def checkpoint_rows(by_source):
                 samples = [json.loads(line) for line in stream]
             state = by_source[source]; objects = state['objects']; target, receiver = goal[1], goal[2]
             region = state['goals'].get(receiver)
-            excluded = {target, receiver} | ({region['name']} if region else set())
+            excluded = {target} | g.goal_objects(objects, receiver) | ({region['name']} if region else set())
             rules = g.rules(objects, g.anchors(objects, student['student']['task'], excluded))
             steps = max(s['step'] for s in samples)
             at = {s['step']: s for s in samples if s['phase'] == 'endpoint'}

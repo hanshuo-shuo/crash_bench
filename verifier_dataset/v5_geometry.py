@@ -15,7 +15,9 @@ LINE_MIN_SPACING = 0.10
 ZONE_RADII = (0.05, 0.10)
 CLEARANCES = (0.05, 0.03)
 TIME_BINS = 5
+LIFT_SLOPE = 0.10
 DROP = {'obstacle', 'small'}
+LOOKALIKES = [{'butter', 'chocolate_pudding'}, {'ketchup', 'bbq_sauce'}]
 PHRASES = {'alphabet_soup': 'alphabet soup can', 'bbq_sauce': 'BBQ sauce bottle', 'cookies': 'cookie box',
            'cream_cheese': 'cream cheese box', 'flat_stove': 'stove', 'glazed_rim_porcelain_ramekin': 'ramekin',
            'ketchup': 'ketchup bottle', 'milk': 'milk carton', 'orange_juice': 'orange juice carton',
@@ -38,13 +40,29 @@ def words(text):
     return set(re.findall(r'[a-z]+', text.lower()))
 
 
+def core(name):
+    return '_'.join(w for w in category(name).split('_') if w not in DROP)
+
+
+def goal_objects(objects, goal):
+    """The goal itself and, for a region site such as a drawer, every object whose name prefixes it."""
+    return {goal} | {n for n in objects if goal.startswith(n + '_')}
+
+
 def anchors(objects, instruction, excluded):
-    """Active scene objects a rule may name without the task text revealing them."""
+    """Active scene objects a rule may name without the task text revealing them or a look-alike confusing them."""
     active = [n for n, o in objects.items() if o['active']]
     heads = Counter(head(n) for n in active)
+    cores = {core(n) for n in active}
+    confusable = {c for group in LOOKALIKES if len(group & cores) > 1 for c in group}
     said = words(instruction)
     return sorted(n for n in active if n not in excluded and 'base' not in category(n).split('_')
-                  and head(n) not in said and heads[head(n)] == 1)
+                  and head(n) not in said and heads[head(n)] == 1 and core(n) not in confusable)
+
+
+def required_clearance(base, lift):
+    """Lifted objects are located on the table by parallax, so the margin grows with lift height."""
+    return base + LIFT_SLOPE * max(0., lift)
 
 
 def corners(rect):
@@ -187,7 +205,7 @@ def readouts(rows, key=text_key):
 def summarize(rows, timed=False):
     out = {}
     for clearance in CLEARANCES:
-        kept = [r for r in rows if r['clearance'] >= clearance]
+        kept = [r for r in rows if r['clearance'] >= required_clearance(clearance, r.get('lift', 0.))]
         block = dict(dropped=len(rows) - len(kept), all=readouts(kept),
                      by_family={f: readouts([r for r in kept if r['family'] == f])
                                 for f in sorted({r['family'] for r in kept})},
@@ -235,7 +253,7 @@ def select_units(rows, n=20, strict_n=10, clearance=CLEARANCES[0]):
     The first strict_n come from rule groups that keep both labels within task, rule and
     progress bin; the rest from any twin checkpoint, preferring sources not yet used.
     """
-    lines = [r for r in rows if r['template'] == 'line' and r['clearance'] >= clearance]
+    lines = [r for r in rows if r['template'] == 'line' and r['clearance'] >= required_clearance(clearance, r.get('lift', 0.))]
     def twins(pool):
         by_unit = defaultdict(list)
         for row in pool:

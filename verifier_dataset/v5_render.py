@@ -134,7 +134,8 @@ def capture(env, folder, unit, geometry, physical_hash):
         raise RuntimeError('Diagnostic line affects the physical scene')
     entities = dict(target=state['target'], goal=state['goal_body'], **state['anchors'])
     geoms = {k: body_geoms(m, int(env.env.obj_body_id[v])) for k, v in entities.items()}
-    floor = min(b[0][2] for b in state['anchor_boxes'].values())
+    from .v5_scan import scene_objects
+    floor = scene_objects(env, object_points)[1]
     visibility = {}
     for mode in ('student', 'diagnostic'):
         for geom, rule in zip(lines, state['labels']):

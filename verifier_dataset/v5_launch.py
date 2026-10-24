@@ -14,10 +14,12 @@ from .v5_scan import SHARDS, V4_ROOTS, identity
 from . import v5_geometry as g
 
 UPSTREAM = '2457feed5968ae803926e178c8ce8243b9ecdcf9'
-PROTOCOLS = dict(scan='docs/generative_verifier/V5_STEP1_PROTOCOL.md', render='docs/generative_verifier/V5_STEP2_PROTOCOL.md')
+PROTOCOLS = dict(scan='docs/generative_verifier/V5_STEP1_PROTOCOL.md', render='docs/generative_verifier/V5_STEP2_PROTOCOL.md',
+                 trace='docs/generative_verifier/V5_COLLECTION_PROTOCOL.md')
 AUTHORIZATION = dict(
     scan='2026-10-24 user: V5 step 1 CPU geometry scan; no rendering, training, API or dataset rows',
-    render='2026-10-24 user: V5 step 2 render pilot of about 20 checkpoints; no training, API or dataset rows')
+    render='2026-10-24 user: V5 step 2 render pilot of about 20 checkpoints; no training, API or dataset rows',
+    trace='2026-10-24 user: V5 design fixes and the V5 plan; CPU retrace of the 67 V4 sources, no rendering, training, API or dataset rows')
 
 
 def command(*args, env=None):
@@ -75,6 +77,17 @@ def v4_cases():
     return out
 
 
+def trace_plan():
+    specs = []
+    for source, (case, task) in sorted(v4_cases().items()):
+        geometry = read(case/'execution/GEOMETRY.json'); goal = geometry['goal_definition']['goal']
+        suite, level, task_id = source.split('/')[:3]
+        specs.append(dict(source=source, family=suite, task='/'.join((suite, level, task_id)), student_task=task,
+                          v4_case=str(case), goal=goal, target=goal[1], receiver=goal[2],
+                          material_geom=geometry['material']['geom_name']))
+    return specs
+
+
 def render_plan(scan):
     receipt = read(scan/'RECEIPT.json')
     if receipt['stage'] != 'v5-scan' or not read(scan/'V5_SCAN_COMPLETE.json')['passed']:
@@ -109,7 +122,14 @@ def main(stage, scan=None):
             raise RuntimeError('Two CrashBench GPU jobs already active')
     root, manifest = prepare(stage, repo)
     env = dict(os.environ, CB_FD_ROOT=str(root))
-    if stage == 'scan':
+    if stage == 'trace':
+        from .v5_trace import SHARDS as TRACE_SHARDS
+        cases = trace_plan(); manifest.update(partition='short', shards=TRACE_SHARDS, cases=len(cases))
+        write(root/'CAMPAIGN.json', manifest); write(root/'CASES.json', cases)
+        script = str(root/'source/verifier_dataset/v5_trace.sbatch')
+        job = submit(env, '--array=0-%d' % (TRACE_SHARDS-1), '--output='+str(root/'slurm_%A_%a.log'), script)
+        receipt = dict(manifest, job=job, summarize_job=submit(env, '--dependency=afterok:'+job, '--output='+str(root/'slurm_%j.log'), script))
+    elif stage == 'scan':
         manifest.update(partition='short', shards=len(SHARDS)); write(root/'CAMPAIGN.json', manifest)
         script = str(root/'source/verifier_dataset/v5_scan.sbatch')
         job = submit(env, '--array=0-%d%%4' % (len(SHARDS)-1), '--output='+str(root/'slurm_%A_%a.log'), script)
@@ -125,7 +145,7 @@ def main(stage, scan=None):
 
 
 if __name__ == '__main__':
-    p = argparse.ArgumentParser(); p.add_argument('stage', choices=['scan', 'render']); p.add_argument('scan_root', type=Path, nargs='?')
+    p = argparse.ArgumentParser(); p.add_argument('stage', choices=['scan', 'render', 'trace']); p.add_argument('scan_root', type=Path, nargs='?')
     a = p.parse_args()
     if (a.stage == 'render') != (a.scan_root is not None):
         raise SystemExit('render needs exactly one scan root; scan takes none')
