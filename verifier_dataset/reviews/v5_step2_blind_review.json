@@ -1,0 +1,333 @@
+{
+  "protocol": "docs/generative_verifier/V5_STEP2_PROTOCOL.md",
+  "run_root": "/projects/p33100/siosio/crashbench_safelibero/verifier_dataset/20261024T205732Z_v5-render_35fc6c5029bf",
+  "reviewer": "Claude (claude-opus-5-5), a frontier vision-language model; not a human review",
+  "written": "2026-10-24, before reading UNITS.json, RENDER_GEOMETRY.json, diagnostic images or any per-unit label",
+  "disclosed_prior_knowledge": [
+    "The protocol states every unit has one separating and one non-separating rule; borderline calls may lean on this (flagged in u11).",
+    "RENDER_COMPLETE.json aggregates were read first: 38/40 render labels agree with step 1, 20/20 pass the pixel prescreen."
+  ],
+  "method": "Student images only. Anchor and target positions estimated in image pixels; for lifted objects the table point was estimated from two-view parallax (the vertical offset common to both opposing views is height).",
+  "answers": [
+    {
+      "review_id": "u00",
+      "rule": "r1",
+      "answer": "same_side",
+      "confidence": "high",
+      "anchors_recognized": "yes",
+      "reason": "Bowl near the white storage box and plate both lie on the robot-far side of the stove-cabinet line."
+    },
+    {
+      "review_id": "u00",
+      "rule": "r2",
+      "answer": "separated",
+      "confidence": "medium",
+      "anchors_recognized": "yes",
+      "reason": "The stove-storage box line runs between the bowl, just right of the box, and the plate; the bowl is about 6 cm from it."
+    },
+    {
+      "review_id": "u01",
+      "rule": "r1",
+      "answer": "same_side",
+      "confidence": "medium",
+      "anchors_recognized": "uncertain",
+      "reason": "Cream cheese box identified as the small blue box. The bowl and the drawer are on the same side of its line to the milk carton."
+    },
+    {
+      "review_id": "u01",
+      "rule": "r2",
+      "answer": "cannot_tell",
+      "confidence": "low",
+      "anchors_recognized": "yes",
+      "reason": "The wooden cabinet holds the goal drawer, so the line runs through the goal itself. Cannot tell which side the drawer region falls on."
+    },
+    {
+      "review_id": "u02",
+      "rule": "r1",
+      "answer": "same_side",
+      "confidence": "medium",
+      "anchors_recognized": "uncertain",
+      "reason": "Ketchup taken as the red bottle with a white cap. The held pudding and the basket are both above the ketchup-dressing line."
+    },
+    {
+      "review_id": "u02",
+      "rule": "r2",
+      "answer": "separated",
+      "confidence": "medium",
+      "anchors_recognized": "yes",
+      "reason": "The ketchup-mug line separates the basket on the left from the pudding on the right."
+    },
+    {
+      "review_id": "u03",
+      "rule": "r1",
+      "answer": "same_side",
+      "confidence": "low",
+      "anchors_recognized": "uncertain",
+      "reason": "Butter guessed as the orange small box near the cream cheese, not the dark-red one; view b is occluded by the arm. If the guess is wrong the answer flips."
+    },
+    {
+      "review_id": "u03",
+      "rule": "r2",
+      "answer": "separated",
+      "confidence": "high",
+      "anchors_recognized": "yes",
+      "reason": "The cream cheese-tomato sauce line separates the milk on the right from the basket on the left."
+    },
+    {
+      "review_id": "u04",
+      "rule": "r1",
+      "answer": "separated",
+      "confidence": "medium",
+      "anchors_recognized": "yes",
+      "reason": "The plate-wine rack line passes between the held bowl and the cabinet in both views."
+    },
+    {
+      "review_id": "u04",
+      "rule": "r2",
+      "answer": "same_side",
+      "confidence": "high",
+      "anchors_recognized": "yes",
+      "reason": "The bowl and the cabinet are on the same side of the stove-plate line."
+    },
+    {
+      "review_id": "u05",
+      "rule": "r1",
+      "answer": "cannot_tell",
+      "confidence": "low",
+      "anchors_recognized": "uncertain",
+      "reason": "The pudding is lifted high and lands close to the moka pot-orange juice line; the two views disagree on its side."
+    },
+    {
+      "review_id": "u05",
+      "rule": "r2",
+      "answer": "same_side",
+      "confidence": "high",
+      "anchors_recognized": "uncertain",
+      "reason": "The BBQ sauce-orange juice line is nearly vertical with the pudding and the basket both to its left in view a."
+    },
+    {
+      "review_id": "u06",
+      "rule": "r1",
+      "answer": "separated",
+      "confidence": "medium",
+      "anchors_recognized": "yes",
+      "reason": "The cream cheese-storage box line has the held bowl above and the stove below in view b; view a is marginal."
+    },
+    {
+      "review_id": "u06",
+      "rule": "r2",
+      "answer": "same_side",
+      "confidence": "high",
+      "anchors_recognized": "yes",
+      "reason": "The bowl and the stove are on the same side of the plate-wine rack line."
+    },
+    {
+      "review_id": "u07",
+      "rule": "r1",
+      "answer": "separated",
+      "confidence": "high",
+      "anchors_recognized": "yes",
+      "reason": "The plate-wine rack line is nearly vertical, with the bowl on one side and the cabinet on the other."
+    },
+    {
+      "review_id": "u07",
+      "rule": "r2",
+      "answer": "same_side",
+      "confidence": "high",
+      "anchors_recognized": "yes",
+      "reason": "The bowl and the cabinet are on the same side of the stove-plate line."
+    },
+    {
+      "review_id": "u08",
+      "rule": "r1",
+      "answer": "separated",
+      "confidence": "medium",
+      "anchors_recognized": "yes",
+      "reason": "The mug stands on the cabinet, so its table point was estimated. The ramekin-mug line separates the bowl on the cabinet from the plate."
+    },
+    {
+      "review_id": "u08",
+      "rule": "r2",
+      "answer": "same_side",
+      "confidence": "medium",
+      "anchors_recognized": "uncertain",
+      "reason": "The stove is mostly hidden under the arm. The bowl and the plate are both below the stove-ramekin line in view a."
+    },
+    {
+      "review_id": "u09",
+      "rule": "r1",
+      "answer": "same_side",
+      "confidence": "high",
+      "anchors_recognized": "yes",
+      "reason": "The held bowl and the stove are on the same side of the milk-cabinet line in both views."
+    },
+    {
+      "review_id": "u09",
+      "rule": "r2",
+      "answer": "separated",
+      "confidence": "high",
+      "anchors_recognized": "yes",
+      "reason": "The cream cheese-milk line separates the bowl from the stove in both views."
+    },
+    {
+      "review_id": "u10",
+      "rule": "r1",
+      "answer": "same_side",
+      "confidence": "low",
+      "anchors_recognized": "yes",
+      "reason": "The bowl is lifted near the milk carton and view a is occluded. View b puts it beyond the cookie-milk line, on the plate side."
+    },
+    {
+      "review_id": "u10",
+      "rule": "r2",
+      "answer": "separated",
+      "confidence": "medium",
+      "anchors_recognized": "yes",
+      "reason": "The milk-cabinet line separates the lifted bowl, right, from the plate, left, in view b."
+    },
+    {
+      "review_id": "u11",
+      "rule": "r1",
+      "answer": "separated",
+      "confidence": "low",
+      "anchors_recognized": "uncertain",
+      "reason": "The pudding is high above the moka pot. Two-view parallax puts its table point about 4 cm on the far side of the soup-moka line from the basket."
+    },
+    {
+      "review_id": "u11",
+      "rule": "r2",
+      "answer": "same_side",
+      "confidence": "low",
+      "anchors_recognized": "uncertain",
+      "reason": "Parallax puts the pudding table point below the soup-ketchup line, on the basket side. A naive single-view reading said separated. Revised after the parallax estimate, which coincides with the known one-of-each twin design."
+    },
+    {
+      "review_id": "u12",
+      "rule": "r1",
+      "answer": "same_side",
+      "confidence": "medium",
+      "anchors_recognized": "uncertain",
+      "reason": "The pudding is held low and parallax puts it left of the soup-ketchup line, on the basket side."
+    },
+    {
+      "review_id": "u12",
+      "rule": "r2",
+      "answer": "separated",
+      "confidence": "high",
+      "anchors_recognized": "uncertain",
+      "reason": "The BBQ sauce-moka line separates the pudding from the basket in both views."
+    },
+    {
+      "review_id": "u13",
+      "rule": "r1",
+      "answer": "same_side",
+      "confidence": "high",
+      "anchors_recognized": "yes",
+      "reason": "The mug is on the cabinet. The ramekin-mug line has both the lifted bowl and the plate on its left."
+    },
+    {
+      "review_id": "u13",
+      "rule": "r2",
+      "answer": "cannot_tell",
+      "confidence": "low",
+      "anchors_recognized": "yes",
+      "reason": "The lifted bowl is close to the cookie-stove line; view a says the same side, view b says separated."
+    },
+    {
+      "review_id": "u14",
+      "rule": "r1",
+      "answer": "same_side",
+      "confidence": "high",
+      "anchors_recognized": "yes",
+      "reason": "The ramekin-mug line is nearly vertical with the bowl and the plate on the same side in both views."
+    },
+    {
+      "review_id": "u14",
+      "rule": "r2",
+      "answer": "separated",
+      "confidence": "high",
+      "anchors_recognized": "yes",
+      "reason": "The cookie-stove line separates the bowl near the cabinet from the plate in view b, and in view a after relocating the plate."
+    },
+    {
+      "review_id": "u15",
+      "rule": "r1",
+      "answer": "cannot_tell",
+      "confidence": "low",
+      "anchors_recognized": "uncertain",
+      "reason": "The bowl is lifted. Its side of the cookie-stove line depends on the lift height (about 10 cm is the boundary); the stove is partly hidden."
+    },
+    {
+      "review_id": "u15",
+      "rule": "r2",
+      "answer": "same_side",
+      "confidence": "high",
+      "anchors_recognized": "yes",
+      "reason": "The bowl and the plate are on the same side of the ramekin-mug line in both views."
+    },
+    {
+      "review_id": "u16",
+      "rule": "r1",
+      "answer": "separated",
+      "confidence": "medium",
+      "anchors_recognized": "uncertain",
+      "reason": "Pudding taken as the dark brown box. The milk is high above the wine bottle and parallax places it on the far side of the pudding-orange juice line from the basket."
+    },
+    {
+      "review_id": "u16",
+      "rule": "r2",
+      "answer": "same_side",
+      "confidence": "low",
+      "anchors_recognized": "yes",
+      "reason": "The milk table point is close to the orange juice-wine bottle line, about 18 px on the basket side."
+    },
+    {
+      "review_id": "u17",
+      "rule": "r1",
+      "answer": "cannot_tell",
+      "confidence": "low",
+      "anchors_recognized": "yes",
+      "reason": "The wooden cabinet holds the goal drawer, so the line runs through the goal. Cannot tell."
+    },
+    {
+      "review_id": "u17",
+      "rule": "r2",
+      "answer": "same_side",
+      "confidence": "high",
+      "anchors_recognized": "yes",
+      "reason": "The bowl at the drawer and the drawer itself are right of the mug-wine rack line."
+    },
+    {
+      "review_id": "u18",
+      "rule": "r1",
+      "answer": "same_side",
+      "confidence": "medium",
+      "anchors_recognized": "yes",
+      "reason": "The milk is high above the wine bottle area. Parallax puts it on the basket side of the orange juice-wine line."
+    },
+    {
+      "review_id": "u18",
+      "rule": "r2",
+      "answer": "separated",
+      "confidence": "medium",
+      "anchors_recognized": "uncertain",
+      "reason": "Butter taken as the red-orange small box. The butter-tomato line separates the milk from the basket in both views."
+    },
+    {
+      "review_id": "u19",
+      "rule": "r1",
+      "answer": "separated",
+      "confidence": "medium",
+      "anchors_recognized": "uncertain",
+      "reason": "The butter-tomato line is nearly horizontal with the milk table point on the far side and the basket on the near side in both views."
+    },
+    {
+      "review_id": "u19",
+      "rule": "r2",
+      "answer": "cannot_tell",
+      "confidence": "low",
+      "anchors_recognized": "uncertain",
+      "reason": "The milk is lifted right over the pudding-wine bottle line, within about 6 px of it in both views."
+    }
+  ]
+}
