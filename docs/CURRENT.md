@@ -40,7 +40,10 @@
   - 用户 2026-10-24 批准设计修改并采用 V5 计划，正式采集协议见 [V5_COLLECTION_PROTOCOL.md](generative_verifier/V5_COLLECTION_PROTOCOL.md)。
   - C0（修正后重新回放 V4 的 67 条源）2026-10-24 完成，见 [V5_C0_REPORT.md](generative_verifier/V5_C0_REPORT.md)：
     修正都生效了，但严格层孪生从 53 降到 0。固定布局里，"标签要看图"与"图上看得清"互相冲突。
-  - 待用户在三个方向中选择，推荐"移动锚点的反事实布局"。没有正在运行的 CrashBench 作业。
+  - 用户选了方向 3（反事实布局）。三轮 smoke 见 [V5_LAYOUT_PROTOCOL.md](generative_verifier/V5_LAYOUT_PROTOCOL.md)：
+    v3 的合法率 0.72，每个合法布局 8.3 个静置孪生，只看文字的上限 0.705，严格层孪生 249 个。
+    但 8 条源只有 4 条能产出孪生，其余 4 条在结构上做不到（可挪锚点太少或规则太少）。
+  - 待用户决定：是否把 V5 限定在能产出孪生的任务组合上。没有正在运行的 CrashBench 作业。
 
 ## 已完成的研究（结果只读）
 
