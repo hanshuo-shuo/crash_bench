@@ -40,6 +40,26 @@ class Sampling(unittest.TestCase):
         self.assertEqual(L.thin([[0, 0, 1], [.004, 0, 1], [.012, 0, 1], [.015, 0, 1]]), [[0, 0], [.012, 0]])
 
 
+class Design(unittest.TestCase):
+    def test_design_keeps_the_first_accepted_layout_or_reports_failure(self):
+        objects = dict(bowl_1=obj(0, 0), plate_1=obj(.4, 0, half=.08), cookies_1=obj(.2, .3), milk_1=obj(-.2, .3))
+        path, goal = [[x / 100, 0.] for x in range(41)], ([.32, -.08], [.48, .08])
+        below = lambda lay: lay['moved'].get('cookies_1', [0, 1])[1] < 0
+        out = L.design_layout(objects, ['cookies_1'], path, goal, 'bowl_1', 'ab' * 32, below)
+        self.assertTrue(out['designed'] and below(out))
+        never = L.design_layout(objects, ['cookies_1'], path, goal, 'bowl_1', 'ab' * 32, lambda lay: False)
+        self.assertEqual((never['designed'], never['attempts']), (False, L.DESIGN_ATTEMPTS))
+
+    def test_resting_twin_needs_a_moved_anchor_rule_of_each_label(self):
+        objects = dict(bowl_1=obj(0, 0), plate_1=obj(.4, 0, half=.05), cookies_1=obj(.2, .3), ramekin_1=obj(.2, -.3),
+                       milk_1=obj(-.3, .3))
+        start, goal = L.g.point([0., 0.]), ([.35, -.05], [.45, .05])
+        names = ['cookies_1', 'milk_1', 'ramekin_1']
+        # cookies at (.2, .3): its line to the ramekin separates; its line to the milk carton does not.
+        self.assertTrue(L.resting_twin(objects, {}, dict(moved={'cookies_1': [.2, .3]}), names, start, goal, 0.))
+        self.assertFalse(L.resting_twin(objects, {}, dict(moved={'milk_1': [-.3, .3]}), ['milk_1', 'cookies_1'], start, goal, 0.))
+
+
 class Stacks(unittest.TestCase):
     def test_obstacle_moves_with_its_base_and_blocked_stacks_stay(self):
         objects = dict(bowl_1=obj(0, 0), moka_pot_obstacle_1=obj(.3, .2), box_base_1=obj(.3, .2, half=.05),

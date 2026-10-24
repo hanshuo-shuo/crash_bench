@@ -66,6 +66,37 @@ def sample_layout(objects, movable, path, goal_box, target, seed):
     return dict(moved=moved, stayed=stayed, region=[[x0, y0], [x1, y1]])
 
 
+DESIGN_ATTEMPTS = 50
+
+
+def design_layout(objects, movable, path, goal_box, target, seed, accept):
+    """Try seeded random layouts until accept() holds; otherwise keep the last one and say so."""
+    layout = None
+    for attempt in range(DESIGN_ATTEMPTS):
+        layout = sample_layout(objects, movable, path, goal_box, target, g.digest(seed, attempt, 'design'))
+        if accept(layout):
+            return dict(layout, designed=True, attempts=attempt + 1)
+    return dict(layout, designed=False, attempts=DESIGN_ATTEMPTS)
+
+
+def resting_twin(objects, stacks, layout, names, start, goal_box, lift):
+    """Does the layout give, at this resting checkpoint, one separating and one non-separating rule
+    that names a moved anchor and clears the lift-aware margin?"""
+    moved = dict(objects)
+    for rep, (x, y) in layout['moved'].items():
+        o = objects[rep]; dx, dy = x - o['center'][0], y - o['center'][1]
+        moved[rep] = dict(o, center=[x, y, o['center'][2]], lo=[o['lo'][0] + dx, o['lo'][1] + dy, o['lo'][2]],
+                          hi=[o['hi'][0] + dx, o['hi'][1] + dy, o['hi'][2]])
+    labels = set()
+    for rule in g.rules(moved, [n for n in names if n in moved]):
+        if rule['template'] != 'line' or not set(rule['anchors']) & set(layout['moved']):
+            continue
+        separated, clearance = g.label(rule, [(start, goal_box)])
+        if clearance >= g.required_clearance(g.CLEARANCES[0], lift):
+            labels.add(separated)
+    return labels == {0, 1}
+
+
 def movable_stacks(objects, contacts, owner, support, robot, free_joint, anchors, fixed):
     """Stacks resting on the support that contain an anchor; each moves rigidly as one unit.
 
@@ -152,8 +183,11 @@ def run_layout(root, index):
         merged = merge_stacks(objects, stacks)
         with gzip.open(Path(plan['c0_case'])/'TRACE.json.gz', 'rt') as stream:
             source_path = json.load(stream)['path']
-        layout = sample_layout(merged, sorted(stacks), thin([p[1:] for p in source_path]), (region['lo'], region['hi']),
-                               spec['target'], plan['seed'])
+        names = g.anchors(objects, spec['student_task'], {spec['target']} | g.goal_objects(objects, spec['goal'][2]))
+        start = g.point(np.asarray(d.geom_xpos[geom]).tolist()); lift0 = max(0., float(d.geom_xpos[geom][2]) - surface)
+        layout = design_layout(merged, sorted(stacks), thin([p[1:] for p in source_path]), (region['lo'], region['hi']),
+                               spec['target'], plan['seed'],
+                               lambda lay: resting_twin(merged, stacks, lay, names, start, (region['lo'], region['hi']), lift0))
         movable = sorted(stacks)
         members = {n for rep in layout['moved'] for n in stacks[rep]}
         for rep, (x, y) in layout['moved'].items():
@@ -266,6 +300,7 @@ def readouts(layouts, rows):
                base_sources_with_twins=len({r['base_source'] for r in kept if (r['source'], r['unit']) in
                                             {u for u, labels in units.items() if labels == {0, 1}}}),
                moved_per_layout=sum(len(x['moved']) for x in layouts) / len(layouts) if layouts else 0.,
+               designed=sum(x.get('designed', False) for x in layouts),
                maximum_path_deviation=max((x['maximum_path_deviation'] or 0. for x in valid), default=None))
     twin_units = {u for u, labels in units.items() if labels == {0, 1}}
     family = {r['source']: r['family'] for r in kept}
@@ -301,7 +336,7 @@ def plan(c0_root):
         pool = sorted((c for c in cases if c['family'] == family), key=lambda c: g.digest(c['source'], 'v5-layout-smoke'))
         chosen += pool[:SOURCES_PER_FAMILY]
     index = {c['source']: i for i, c in enumerate(cases)}
-    return [dict(spec=c, plan=dict(layout=k, seed=g.digest(c['source'], k, 'v5-layout-v2'),
+    return [dict(spec=c, plan=dict(layout=k, seed=g.digest(c['source'], k, 'v5-layout-v3'),
                                    c0_case=str(c0_root/('case_%03d' % index[c['source']]))))
             for c in chosen for k in range(LAYOUTS_PER_SOURCE)]
 
