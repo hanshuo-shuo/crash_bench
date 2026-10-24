@@ -66,6 +66,52 @@ def sample_layout(objects, movable, path, goal_box, target, seed):
     return dict(moved=moved, stayed=stayed, region=[[x0, y0], [x1, y1]])
 
 
+def movable_stacks(objects, contacts, owner, support, robot, free_joint, anchors, fixed):
+    """Stacks resting on the support that contain an anchor; each moves rigidly as one unit.
+
+    A stack is a connected set of objects in mutual contact (an obstacle on its base, a
+    bowl on a box). It is movable when every member has a free joint, none is the target
+    or part of the goal, nothing in it touches the robot, and its only outside contact is
+    the table or floor. The representative is the stack's first anchor in name order.
+    """
+    from collections import defaultdict
+    touching = defaultdict(set); blocked = set()
+    for a, b in contacts:
+        oa, ob = owner.get(a), owner.get(b)
+        for o, other, geom in ((oa, ob, b), (ob, oa, a)):
+            if o is None:
+                continue
+            if geom in robot:
+                blocked.add(o)
+            elif other is not None and other != o:
+                touching[o].add(other)
+            elif other is None and geom not in support:
+                blocked.add(o)
+    out, seen = {}, set()
+    for name in sorted(anchors):
+        if name in seen or not objects[name]['active']:
+            continue
+        stack, frontier = set(), [name]
+        while frontier:
+            n = frontier.pop()
+            if n not in stack:
+                stack.add(n); frontier += sorted(touching[n] - stack)
+        seen |= stack
+        if all(free_joint(n) for n in stack) and not stack & (fixed | blocked):
+            out[name] = sorted(stack)
+    return out
+
+
+def merge_stacks(objects, stacks):
+    """Replace each stack by its representative with the union box, so sampling treats it as one object."""
+    merged = {n: o for n, o in objects.items() if not any(n in members and n != rep for rep, members in stacks.items())}
+    for rep, members in stacks.items():
+        lo = [min(objects[n]['lo'][i] for n in members) for i in range(3)]
+        hi = [max(objects[n]['hi'][i] for n in members) for i in range(3)]
+        merged[rep] = dict(objects[rep], lo=lo, hi=hi, center=[(a + b) / 2 for a, b in zip(lo, hi)])
+    return merged
+
+
 def thin(path, step=.01):
     """Keep path points at least step apart in xy (the keep-out test does not need every substep)."""
     out = []
@@ -99,29 +145,34 @@ def run_layout(root, index):
         robot = {x for x in range(m.ngeom) if (m.body_id2name(int(m.geom_bodyid[x])) or '').startswith(('robot0_', 'gripper0_'))}
         def contacts():
             return [(int(c.geom1), int(c.geom2)) for c in d.contact[:d.ncon] if c.dist <= 0]
-        resting = {n for n in objects if all(
-            (owner.get(a) != n or b in support) and (owner.get(b) != n or a in support) for a, b in contacts())}
-        names = g.anchors(objects, spec['student_task'], {spec['target']} | g.goal_objects(objects, spec['goal'][2]))
-        free = {n for n in names if (n + '_joint0') in m.joint_names and int(m.jnt_type[m.joint_name2id(n + '_joint0')]) == 0}
-        movable = sorted(n for n in free if n in resting)
+        stacks = movable_stacks(objects, contacts(), owner, support, robot, free_joint=lambda n: (n + '_joint0') in m.joint_names
+                                and int(m.jnt_type[m.joint_name2id(n + '_joint0')]) == 0,
+                                anchors=g.anchors(objects, spec['student_task'], {spec['target']} | g.goal_objects(objects, spec['goal'][2])),
+                                fixed={spec['target']} | g.goal_objects(objects, spec['goal'][2]))
+        merged = merge_stacks(objects, stacks)
         with gzip.open(Path(plan['c0_case'])/'TRACE.json.gz', 'rt') as stream:
             source_path = json.load(stream)['path']
-        layout = sample_layout(objects, movable, thin([p[1:] for p in source_path]), (region['lo'], region['hi']),
+        layout = sample_layout(merged, sorted(stacks), thin([p[1:] for p in source_path]), (region['lo'], region['hi']),
                                spec['target'], plan['seed'])
-        for name, (x, y) in layout['moved'].items():
-            j = m.joint_name2id(name + '_joint0'); adr, dof = int(m.jnt_qposadr[j]), int(m.jnt_dofadr[j])
-            d.qpos[adr] += x - objects[name]['center'][0]; d.qpos[adr + 1] += y - objects[name]['center'][1]
-            d.qvel[dof:dof + 6] = 0.
+        movable = sorted(stacks)
+        members = {n for rep in layout['moved'] for n in stacks[rep]}
+        for rep, (x, y) in layout['moved'].items():
+            dx, dy = x - merged[rep]['center'][0], y - merged[rep]['center'][1]
+            for name in stacks[rep]:
+                j = m.joint_name2id(name + '_joint0'); adr, dof = int(m.jnt_qposadr[j]), int(m.jnt_dofadr[j])
+                d.qpos[adr] += dx; d.qpos[adr + 1] += dy; d.qvel[dof:dof + 6] = 0.
+        layout['stacks'] = {rep: stacks[rep] for rep in layout['moved']}
         env.sim.forward()
-        placed = {n: np.asarray(d.body_xpos[int(env.env.obj_body_id[n])]).copy() for n in layout['moved']}
+        placed = {n: np.asarray(d.body_xpos[int(env.env.obj_body_id[n])]).copy() for n in members}
         obstacle = [n for n in objects if 'obstacle' in n and objects[n]['active']]
         protected = {x for x, n in owner.items() if n in obstacle}
         target_geoms = {x for x, n in owner.items() if n == spec['target']}
+        stack_of = {n: rep for rep in layout['moved'] for n in stacks[rep]}
         violations, path, snaps, current, drift = [], [], [], [0], [0.]
         def check():
             for a, b in contacts():
                 for x, y in ((a, b), (b, a)):
-                    if owner.get(x) in layout['moved'] and y not in support and owner.get(y) != owner.get(x):
+                    if owner.get(x) in members and y not in support and owner.get(y) not in stacks.get(stack_of.get(owner.get(x)), ()):
                         violations.append(dict(step=current[0], kind='moved_anchor_contact', anchor=owner[x], other=m.geom_id2name(y)))
                     if x in protected and (y in robot or y in target_geoms):
                         violations.append(dict(step=current[0], kind='obstacle_contact', other=m.geom_id2name(y)))
@@ -164,7 +215,7 @@ def run_layout(root, index):
         rows = []
         if valid:
             trace = dict(spec, source='%s#%d' % (spec['source'], plan['layout']), actions=len(tape), checkpoints=snaps, path=path)
-            rows = rows_from_trace(trace)
+            rows = [r for r in rows_from_trace(trace) if set(r['anchors']) & members]
             for row in rows:
                 row.update(base_source=spec['source'], layout=plan['layout'])
         with gzip.open(case/'ROWS.jsonl.gz', 'wt') as stream:
@@ -216,7 +267,11 @@ def readouts(layouts, rows):
                                             {u for u, labels in units.items() if labels == {0, 1}}}),
                moved_per_layout=sum(len(x['moved']) for x in layouts) / len(layouts) if layouts else 0.,
                maximum_path_deviation=max((x['maximum_path_deviation'] or 0. for x in valid), default=None))
-    ok = out['validity'] >= .5 and out['resting_twins_per_valid_layout'] >= 1 and (out['text_only_bound'] or 1.) <= .80
+    twin_units = {u for u, labels in units.items() if labels == {0, 1}}
+    family = {r['source']: r['family'] for r in kept}
+    out['families_with_twins'] = len({family[u[0]] for u in twin_units})
+    ok = (out['validity'] >= .5 and out['resting_twins_per_valid_layout'] >= 1 and (out['text_only_bound'] or 1.) <= .80
+          and out['base_sources_with_twins'] >= 6 and out['families_with_twins'] >= 3)
     out['reading'] = 'layout_design_viable' if ok else 'layout_design_insufficient'
     return out
 
@@ -246,7 +301,7 @@ def plan(c0_root):
         pool = sorted((c for c in cases if c['family'] == family), key=lambda c: g.digest(c['source'], 'v5-layout-smoke'))
         chosen += pool[:SOURCES_PER_FAMILY]
     index = {c['source']: i for i, c in enumerate(cases)}
-    return [dict(spec=c, plan=dict(layout=k, seed=g.digest(c['source'], k, 'v5-layout'),
+    return [dict(spec=c, plan=dict(layout=k, seed=g.digest(c['source'], k, 'v5-layout-v2'),
                                    c0_case=str(c0_root/('case_%03d' % index[c['source']]))))
             for c in chosen for k in range(LAYOUTS_PER_SOURCE)]
 

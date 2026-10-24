@@ -28,8 +28,10 @@ def command(*args, env=None):
 
 
 def completed(job):
-    lines = command('sacct', '-X', '-n', '-P', '-j', job, '--format=JobIDRaw,State,ExitCode').splitlines()
-    return bool(lines) and all(x.split('|')[1:] == ['COMPLETED', '0:0'] for x in lines)
+    # Slurm job numbers recur across years on Quest; keep only this project's records.
+    lines = [x for x in command('sacct', '-X', '-n', '-P', '-j', job, '-u', os.environ['USER'],
+                                '--format=JobIDRaw,State,ExitCode,Account').splitlines() if x.endswith('|p33100')]
+    return bool(lines) and all(x.split('|')[1:3] == ['COMPLETED', '0:0'] for x in lines)
 
 
 def submit(env, *args):

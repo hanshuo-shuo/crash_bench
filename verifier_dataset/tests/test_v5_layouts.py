@@ -40,17 +40,36 @@ class Sampling(unittest.TestCase):
         self.assertEqual(L.thin([[0, 0, 1], [.004, 0, 1], [.012, 0, 1], [.015, 0, 1]]), [[0, 0], [.012, 0]])
 
 
+class Stacks(unittest.TestCase):
+    def test_obstacle_moves_with_its_base_and_blocked_stacks_stay(self):
+        objects = dict(bowl_1=obj(0, 0), moka_pot_obstacle_1=obj(.3, .2), box_base_1=obj(.3, .2, half=.05),
+                       cookies_1=obj(-.2, .2), bowl_2=obj(-.2, .2), milk_1=obj(.1, -.3), plate_1=obj(.4, -.1))
+        owner = {1: 'moka_pot_obstacle_1', 2: 'box_base_1', 3: 'cookies_1', 4: 'bowl_2', 5: 'milk_1', 6: 'plate_1'}
+        table, finger = 100, 200
+        contacts = [(1, 2), (2, table), (3, table), (3, 4), (5, table), (5, finger), (6, table)]
+        stacks = L.movable_stacks(objects, contacts, owner, {table}, {finger}, free_joint=lambda n: True,
+                                  anchors=['moka_pot_obstacle_1', 'cookies_1', 'milk_1'], fixed={'bowl_1', 'plate_1'})
+        self.assertEqual(stacks, {'moka_pot_obstacle_1': ['box_base_1', 'moka_pot_obstacle_1'], 'cookies_1': ['bowl_2', 'cookies_1']})
+        merged = L.merge_stacks(objects, stacks)
+        self.assertNotIn('box_base_1', merged)
+        for got, want in zip(merged['moka_pot_obstacle_1']['lo'][:2], [.25, .15]):
+            self.assertAlmostEqual(got, want)
+        self.assertEqual(L.movable_stacks(objects, contacts, owner, {table}, {finger}, free_joint=lambda n: n != 'box_base_1',
+                                          anchors=['moka_pot_obstacle_1'], fixed=set()), {})
+
+
 class Readouts(unittest.TestCase):
     def test_resting_twins_validity_and_reading(self):
         layouts = [dict(valid=True, success=True, violations=[], moved={'a': 1}, maximum_path_deviation=.001),
                    dict(valid=False, success=True, violations=[dict(kind='anchor_drift')], moved={}, maximum_path_deviation=None)]
-        base = dict(task='t|x', template='line', clearance=.1, time_bin=0, base_source='s', lift=.01)
+        base = dict(task='t|x', template='line', clearance=.1, time_bin=0, base_source='s', lift=.01, family='f')
         rows = [dict(base, source='s#0', unit=0, rule='line:a|b', label=1), dict(base, source='s#0', unit=0, rule='line:a|c', label=0),
                 dict(base, source='s#1', unit=0, rule='line:a|b', label=0), dict(base, source='s#1', unit=0, rule='line:a|c', label=1)]
         out = L.readouts(layouts, rows)
         self.assertEqual((out['validity'], out['resting_twins'], out['text_only_bound']), (.5, 2, .5))
         self.assertEqual(out['invalid_reasons'], {'anchor_drift': 1})
-        self.assertEqual(out['reading'], 'layout_design_viable')
+        self.assertEqual(out['families_with_twins'], 1)
+        self.assertEqual(out['reading'], 'layout_design_insufficient')  # twins from one source and one family only
 
 
 if __name__ == '__main__':
