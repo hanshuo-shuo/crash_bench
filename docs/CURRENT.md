@@ -1,4 +1,4 @@
-# 当前状态（2026-10-17）
+# 当前状态（2026-10-24）
 
 ## 正在进行：生成式可行性 verifier
 
@@ -27,7 +27,11 @@
 - **第 2 步梯级对照**：2026-10-19 完成（作业 4399441，2 小时 36 分，只读训练集和验证集），见 [LADDER_REPORT.md](generative_verifier/LADDER_REPORT.md)。
   - 512 行上，AF 和 AP 在训练集和验证集上都停在 50%，B 是 84.5%（AP − B = −34.7 个百分点，区间 [−39.7, −30.1]）。
   - 结论：让判定可学并能推广的，是关系事实的中间监督，不是输出结构或复述颜色。
-- **初步故事线已整理收尾**，见 [PRELIMINARY_STORY.md](generative_verifier/PRELIMINARY_STORY.md)；待用户确认，以及是否请 Astra 做最终复核。后续工作见其中一节；没有正在运行的 CrashBench 作业。
+- **初步故事线已整理收尾**，见 [PRELIMINARY_STORY.md](generative_verifier/PRELIMINARY_STORY.md)。
+- **2026-10-24 方向调整：V5**，见 [V5_PLAN.md](generative_verifier/V5_PLAN.md)。
+  - 用户决定不做"收口批"（基本是反复验证），改为把环境做得不那么 toy：规则用自然语言指向真实物体、一个场景多条规则、自然分布训练、反事实孪生测试。
+  - 第 0 步（只读盘点）已完成：1,600 个官方初始状态里有 838 个有历史 proxy 安全成功，V4 只用了 67 个源。
+  - 第 1 步（CPU 几何摸底，先查文字捷径）待用户确认。没有正在运行的 CrashBench 作业。
 
 ## 已完成的研究（结果只读）
 

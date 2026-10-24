@@ -2,7 +2,8 @@
 
 2026-10-16（已吸收外部评审意见）。读者：项目负责人，以及之后执行本计划的 Codex/Claude 会话。
 状态（2026-10-17）：**Phase 0–2 已完成**。结果见 [PHASE1_REPORT.md](PHASE1_REPORT.md) 和 [PHASE2_REPORT.md](PHASE2_REPORT.md)：
-测试集上 B 比 A 高 29.7 个百分点（CI [+22.3, +36.8]），科学标准达成；开发里程碑未达成。Phase 3 等用户决定。所有 Quest 操作遵守 [AGENTS.md](../../AGENTS.md) 和
+测试集上 B 比 A 高 29.7 个百分点（CI [+22.3, +36.8]），科学标准达成；开发里程碑未达成。Phase 3 等用户决定。
+2026-10-24：Phase 3 的原定各项不再按本计划推进，改为 [V5_PLAN.md](V5_PLAN.md)（更不 toy 的环境，一步步推进）。所有 Quest 操作遵守 [AGENTS.md](../../AGENTS.md) 和
 [QUEST_WORKFLOW.md](../../QUEST_WORKFLOW.md)：账号 p33100，GPU 分区 gengpu，CPU 分区 short，
 最多同时 2 张 GPU，登录节点不跑重计算，每次运行使用新的输出根目录并记录 commit、配置、seed 和 Slurm ID。
 
