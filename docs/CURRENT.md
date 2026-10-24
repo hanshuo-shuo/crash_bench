@@ -43,7 +43,11 @@
   - 用户选了方向 3（反事实布局）。三轮 smoke 见 [V5_LAYOUT_PROTOCOL.md](generative_verifier/V5_LAYOUT_PROTOCOL.md)：
     v3 的合法率 0.72，每个合法布局 8.3 个静置孪生，只看文字的上限 0.705，严格层孪生 249 个。
     但 8 条源只有 4 条能产出孪生，其余 4 条在结构上做不到（可挪锚点太少或规则太少）。
-  - 待用户决定：是否把 V5 限定在能产出孪生的任务组合上。没有正在运行的 CrashBench 作业。
+  - 用户决定只保留能产出孪生的任务组合、不扩展，先走通最小故事闭环（[V5_SCREEN_PROTOCOL.md](generative_verifier/V5_SCREEN_PROTOCOL.md)）。
+  - S0 筛查 2026-10-24 完成，见 [V5_S0_REPORT.md](generative_verifier/V5_S0_REPORT.md)：
+    38 条源、6 个任务组合可用；预注册读法 `shortcut_survives`（查表 0.615 > 0.60）。
+    捷径只在 goal 和 spatial 任务上残留；严格配平后能挡住捷径的测试几乎只有 object/II/task1（验证、测试各 87 个孪生单元）。
+  - 待用户决定测试范围，推荐先用 object 一个任务走通。没有正在运行的 CrashBench 作业。
 
 ## 已完成的研究（结果只读）
 
