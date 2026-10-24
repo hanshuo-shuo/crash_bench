@@ -60,6 +60,26 @@ class Design(unittest.TestCase):
         self.assertFalse(L.resting_twin(objects, {}, dict(moved={'milk_1': [-.3, .3]}), ['milk_1', 'cookies_1'], start, goal, 0.))
 
 
+class Screen(unittest.TestCase):
+    def test_shortcut_transfer_and_capability(self):
+        base = dict(task='t|x', template='line', clearance=.1, lift=.01, family='f')
+        natural = [dict(base, source='a', unit=0, rule='line:p|q', label=1, time_bin=0),
+                   dict(base, source='a', unit=5, rule='line:p|r', label=0, time_bin=0),
+                   dict(base, source='z', unit=0, rule='line:p|q', label=0, time_bin=0)]  # validation source: not in the table
+        cf = lambda src, k, rule, label, tb=0: dict(base, source='%s#%d' % (src, k), base_source=src, unit=0, rule=rule,
+                                                    label=label, time_bin=tb)
+        counterfactual = [cf('b', 0, 'line:p|q', 0), cf('b', 0, 'line:p|r', 1),       # twin; the table gets both wrong
+                          cf('c', 0, 'line:p|q', 1), cf('c', 0, 'line:p|s', 0, 3),    # twin; one right, one from the global fallback
+                          cf('a', 0, 'line:p|q', 0), cf('a', 0, 'line:p|r', 1)]       # training source: excluded
+        split = dict(a='train', b='test', c='validation', z='validation')
+        out = L.shortcut_transfer(natural, counterfactual, split)
+        self.assertEqual((out['rows'], out['training_rows'], out['matched_text_time']), (4, 2, 3))
+        self.assertAlmostEqual(out['accuracy'], .25)
+        cap = L.capability([], counterfactual, split)
+        self.assertEqual(cap['capable_sources'], ['a', 'b', 'c'])
+        self.assertEqual(cap['capable_by_split'], {'train': 1, 'validation': 1, 'test': 1})
+
+
 class Stacks(unittest.TestCase):
     def test_obstacle_moves_with_its_base_and_blocked_stacks_stay(self):
         objects = dict(bowl_1=obj(0, 0), moka_pot_obstacle_1=obj(.3, .2), box_base_1=obj(.3, .2, half=.05),

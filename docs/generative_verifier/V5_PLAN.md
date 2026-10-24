@@ -1,5 +1,7 @@
 # V5：把可行性判断的环境做得不那么 toy
 
+> **2026-10-24 范围收窄**：用户决定只保留能产出孪生的任务组合，不补源、不扩规模，先走通最小故事闭环（S0–S3），见 [V5_SCREEN_PROTOCOL.md](V5_SCREEN_PROTOCOL.md)。下文第 3–4 节的正式采集（补源、C1–C5）暂缓。
+
 2026-10-24 起。读者：项目负责人，以及之后接手的 Codex/Claude 会话。
 V4 及其结果见 [PRELIMINARY_STORY.md](PRELIMINARY_STORY.md)，讨论过程见 [NEXT_STEPS.md](NEXT_STEPS.md) §9。
 所有 Quest 操作遵守 [AGENTS.md](../../AGENTS.md)。**每一步开始前都要用户确认**，正式采集数据需要单独授权。

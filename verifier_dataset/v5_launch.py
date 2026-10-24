@@ -15,12 +15,14 @@ from . import v5_geometry as g
 
 UPSTREAM = '2457feed5968ae803926e178c8ce8243b9ecdcf9'
 PROTOCOLS = dict(scan='docs/generative_verifier/V5_STEP1_PROTOCOL.md', render='docs/generative_verifier/V5_STEP2_PROTOCOL.md',
-                 trace='docs/generative_verifier/V5_COLLECTION_PROTOCOL.md', layout='docs/generative_verifier/V5_LAYOUT_PROTOCOL.md')
+                 trace='docs/generative_verifier/V5_COLLECTION_PROTOCOL.md', layout='docs/generative_verifier/V5_LAYOUT_PROTOCOL.md',
+                 screen='docs/generative_verifier/V5_SCREEN_PROTOCOL.md')
 AUTHORIZATION = dict(
     scan='2026-10-24 user: V5 step 1 CPU geometry scan; no rendering, training, API or dataset rows',
     render='2026-10-24 user: V5 step 2 render pilot of about 20 checkpoints; no training, API or dataset rows',
     trace='2026-10-24 user: V5 design fixes and the V5 plan; CPU retrace of the 67 V4 sources, no rendering, training, API or dataset rows',
-    layout='2026-10-24 user chose counterfactual layouts (option 3); CPU smoke of relocated anchors on 8 V4 sources, no rendering, training, API or dataset rows')
+    layout='2026-10-24 user chose counterfactual layouts (option 3); CPU smoke of relocated anchors on 8 V4 sources, no rendering, training, API or dataset rows',
+    screen='2026-10-24 user: restrict V5 to twin-capable compositions, no expansion; CPU screen of all 67 V4 sources, no rendering, training, API or dataset rows')
 
 
 def command(*args, env=None):
@@ -128,7 +130,7 @@ def finished(root, complete):
 
 def main(stage, scan=None):
     repo = Path.cwd().resolve()
-    if stage == 'layout' and finished(scan, 'TRACE_COMPLETE.json')['stage'] != 'v5-trace':
+    if stage in ('layout', 'screen') and finished(scan, 'TRACE_COMPLETE.json')['stage'] != 'v5-trace':
         raise RuntimeError('Counterfactual layouts start from a V5 trace run')
     if stage == 'render':
         units, sheet = render_plan(scan)
@@ -144,9 +146,9 @@ def main(stage, scan=None):
         script = str(root/'source/verifier_dataset/v5_trace.sbatch')
         job = submit(env, '--array=0-%d' % (TRACE_SHARDS-1), '--output='+str(root/'slurm_%A_%a.log'), script)
         receipt = dict(manifest, job=job, summarize_job=submit(env, '--dependency=afterok:'+job, '--output='+str(root/'slurm_%j.log'), script))
-    elif stage == 'layout':
+    elif stage in ('layout', 'screen'):
         from .v5_layouts import SHARDS as LAYOUT_SHARDS, plan
-        entries = plan(scan); manifest.update(partition='short', shards=LAYOUT_SHARDS, layouts=len(entries), trace_root=str(scan))
+        entries = plan(scan, 'screen' if stage == 'screen' else 'smoke'); manifest.update(partition='short', shards=LAYOUT_SHARDS, layouts=len(entries), trace_root=str(scan))
         write(root/'CAMPAIGN.json', manifest); write(root/'LAYOUTS.json', entries)
         script = str(root/'source/verifier_dataset/v5_layouts.sbatch')
         job = submit(env, '--array=0-%d' % (LAYOUT_SHARDS-1), '--output='+str(root/'slurm_%A_%a.log'), script)
@@ -167,8 +169,8 @@ def main(stage, scan=None):
 
 
 if __name__ == '__main__':
-    p = argparse.ArgumentParser(); p.add_argument('stage', choices=['scan', 'render', 'trace', 'layout']); p.add_argument('scan_root', type=Path, nargs='?')
+    p = argparse.ArgumentParser(); p.add_argument('stage', choices=['scan', 'render', 'trace', 'layout', 'screen']); p.add_argument('scan_root', type=Path, nargs='?')
     a = p.parse_args()
-    if (a.stage in ('render', 'layout')) != (a.scan_root is not None):
+    if (a.stage in ('render', 'layout', 'screen')) != (a.scan_root is not None):
         raise SystemExit('render and layout need exactly one prior run root; scan and trace take none')
     main(a.stage, a.scan_root)

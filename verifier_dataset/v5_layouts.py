@@ -24,6 +24,7 @@ from . import v5_geometry as g
 SHARDS = 4
 LAYOUTS_PER_SOURCE = 4
 SOURCES_PER_FAMILY = 2
+SCREEN_LAYOUTS = 2
 REGION_MARGIN = .10
 OBJECT_GAP = .02
 PATH_GAP = .06
@@ -323,22 +324,80 @@ def summarize(root):
     with gzip.open(root/'LAYOUT_ROWS.jsonl.gz', 'wt') as stream:
         stream.writelines(json.dumps(r) + '\n' for r in rows)
     summary = readouts(layouts, rows)
+    if entries and entries[0]['plan'].get('mode') == 'screen':
+        split = {x['source_id']: x['split'] for x in read(Path(__file__).resolve().parent/'frozen_sources_67.json')['sources']}
+        trace_root = Path(read(root/'CAMPAIGN.json')['trace_root'])
+        with gzip.open(trace_root/'TRACE_ROWS.jsonl.gz', 'rt') as stream:
+            natural = [json.loads(x) for x in stream]
+        transfer = shortcut_transfer(natural, rows, split)
+        summary.update(capability(layouts, rows, split), shortcut_transfer=transfer,
+                       screen_reading='test_resists_natural_shortcut' if transfer['accuracy'] is not None
+                       and transfer['accuracy'] <= .60 else 'shortcut_survives')
     write(root/'LAYOUT_SUMMARY.json', summary)
-    write(root/'LAYOUT_COMPLETE.json', dict(passed=True, reading=summary['reading'], api_calls=0, dataset_rows=0,
+    write(root/'LAYOUT_COMPLETE.json', dict(passed=True, reading=summary.get('screen_reading', summary['reading']), api_calls=0, dataset_rows=0,
         code_commit=os.environ.get('CB_CODE_COMMIT'), slurm_job=os.environ.get('SLURM_JOB_ID')))
     write(root/'HASHES.json', {n: sha(root/n) for n in ('LAYOUTS.json', 'LAYOUT_ROWS.jsonl.gz', 'LAYOUT_SUMMARY.json', 'LAYOUT_COMPLETE.json')})
 
 
-def plan(c0_root):
-    """Two C0 sources per family by digest, four seeded layouts each."""
+def plan(c0_root, mode='smoke'):
+    """smoke: two C0 sources per family by digest, four layouts each. screen: every C0 source, two layouts each."""
     cases = read(c0_root/'CASES.json'); chosen = []
-    for family in sorted({c['family'] for c in cases}):
-        pool = sorted((c for c in cases if c['family'] == family), key=lambda c: g.digest(c['source'], 'v5-layout-smoke'))
-        chosen += pool[:SOURCES_PER_FAMILY]
+    if mode == 'screen':
+        chosen, count, salt = list(cases), SCREEN_LAYOUTS, 'v5-layout-screen'
+    else:
+        for family in sorted({c['family'] for c in cases}):
+            pool = sorted((c for c in cases if c['family'] == family), key=lambda c: g.digest(c['source'], 'v5-layout-smoke'))
+            chosen += pool[:SOURCES_PER_FAMILY]
+        count, salt = LAYOUTS_PER_SOURCE, 'v5-layout-v3'
     index = {c['source']: i for i, c in enumerate(cases)}
-    return [dict(spec=c, plan=dict(layout=k, seed=g.digest(c['source'], k, 'v5-layout-v3'),
+    return [dict(spec=c, plan=dict(layout=k, seed=g.digest(c['source'], k, salt), mode=mode,
                                    c0_case=str(c0_root/('case_%03d' % index[c['source']]))))
-            for c in chosen for k in range(LAYOUTS_PER_SOURCE)]
+            for c in chosen for k in range(count)]
+
+
+def resting_twin_units(rows):
+    from collections import defaultdict
+    units = defaultdict(set)
+    for r in rows:
+        if r['lift'] < RESTING_LIFT and r['clearance'] >= g.required_clearance(g.CLEARANCES[0], r['lift']):
+            units[(r['source'], r['unit'])].add(r['label'])
+    return {u for u, labels in units.items() if labels == {0, 1}}
+
+
+def shortcut_transfer(natural, counterfactual, split):
+    """Accuracy of the best text-and-progress lookup learned from training-source natural rows
+    on held-out counterfactual resting-twin rows. Fallbacks: (task, rule), then the global majority."""
+    from collections import Counter, defaultdict
+    keep = lambda r: r['clearance'] >= g.required_clearance(g.CLEARANCES[0], r['lift'])
+    train = [r for r in natural if keep(r) and split[r['source']] == 'train']
+    tables = [defaultdict(Counter), defaultdict(Counter)]
+    for r in train:
+        tables[0][g.time_key(r)][r['label']] += 1; tables[1][g.text_key(r)][r['label']] += 1
+    overall = Counter(r['label'] for r in train).most_common(1)[0][0] if train else 0
+    twins = resting_twin_units(counterfactual)
+    held = [r for r in counterfactual if keep(r) and (r['source'], r['unit']) in twins and split[r['base_source']] != 'train']
+    def guess(r):
+        for table, key in ((tables[0], g.time_key(r)), (tables[1], g.text_key(r))):
+            if table.get(key):
+                return table[key].most_common(1)[0][0], table is tables[0]
+        return overall, False
+    guesses = [guess(r) for r in held]
+    correct = sum(label == r['label'] for (label, _), r in zip(guesses, held))
+    return dict(rows=len(held), accuracy=correct / len(held) if held else None,
+                matched_text_time=sum(exact for _, exact in guesses), training_rows=len(train))
+
+
+def capability(layouts, rows, split):
+    from collections import defaultdict
+    twins = resting_twin_units(rows); base = {r['source']: r['base_source'] for r in rows}
+    task = {r['base_source']: r['task'].split('|')[0] for r in rows}
+    sources = sorted({base[u[0]] for u in twins})
+    compositions = defaultdict(list)
+    for s in sources:
+        compositions[task[s]].append(s)
+    return dict(capable_sources=sources, capable_compositions={t: sorted(v) for t, v in sorted(compositions.items())},
+                capable_by_split={k: sum(split[s] == k for s in sources) for k in ('train', 'validation', 'test')},
+                resting_twin_units=len(twins))
 
 
 if __name__ == '__main__':
