@@ -1,4 +1,4 @@
-# 当前状态（2026-10-24）
+# 当前状态（2026-10-24 收尾）
 
 ## 正在进行：生成式可行性 verifier
 
@@ -47,7 +47,9 @@
   - S0 筛查 2026-10-24 完成，见 [V5_S0_REPORT.md](generative_verifier/V5_S0_REPORT.md)：
     38 条源、6 个任务组合可用；预注册读法 `shortcut_survives`（查表 0.615 > 0.60）。
     捷径只在 goal 和 spatial 任务上残留；严格配平后能挡住捷径的测试几乎只有 object/II/task1（验证、测试各 87 个孪生单元）。
-  - 待用户决定测试范围，推荐先用 object 一个任务走通。没有正在运行的 CrashBench 作业。
+  - 用户 10-24 选择先用 object/II/task1 一个任务走通故事，本轮收尾。**交接见 [V5_HANDOFF.md](generative_verifier/V5_HANDOFF.md)**。
+  - 报告页 DJPGiauxhPAC8BYE4L14Y5 第 5 版加了"本周进展"一节，包括和上周计划的对照（结论：主线没有走偏，覆盖面暂时变窄）。
+  - 没有正在运行的 CrashBench 作业。
 
 ## 已完成的研究（结果只读）
 

@@ -56,3 +56,9 @@ complete (docs/generative_verifier/PHASE1_REPORT.md); the baseline spent $0.4669
 on validation only. On 2026-10-17 the user said "开始吧" to Phase 2; it is complete and the locked test
 was scored once (docs/generative_verifier/PHASE2_REPORT.md). Do not score that test split again.
 Phase 3 items each need the user's go-ahead.
+
+V5 (2026-10-24): the user moved the verifier line to V5 (natural-language line rules
+on real objects, added mid-task; counterfactual layouts by moving untouched anchors),
+then restricted it to twin-capable task compositions with no source expansion and
+chose object/II/task1 for the first story pilot. Read docs/generative_verifier/V5_HANDOFF.md.
+Each S1-S3 step still needs the user's go-ahead; no paid API without separate approval.

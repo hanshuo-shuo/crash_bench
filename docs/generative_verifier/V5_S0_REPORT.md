@@ -1,5 +1,7 @@
 # V5 S0 结果：筛查与捷径迁移检验
 
+> **用户决定（2026-10-24）**：选做法 1，先用 object/II/task1 走通故事；本轮收尾。下一步见 [V5_HANDOFF.md](V5_HANDOFF.md)。
+
 2026-10-24。协议见 [V5_SCREEN_PROTOCOL.md](V5_SCREEN_PROTOCOL.md)（运行前冻结）。
 
 ## 一句话
