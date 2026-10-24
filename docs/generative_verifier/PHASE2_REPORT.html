@@ -214,6 +214,14 @@ section[id],h3[id]{scroll-margin-top:56px}
 .langsw button:hover{color:var(--ink)}
 .langsw button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
 .langsw button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+/* V5 progress figure (added 2026-10-24) */
+svg .d-lnd{stroke:var(--ink-2);stroke-width:1.4;fill:none;stroke-dasharray:5 4}
+svg .d-lna{stroke:var(--accent);stroke-width:1.4;fill:none}
+svg .d-ahc{fill:var(--accent)}
+svg .d-dot{fill:var(--ink)}
+svg .d-tgt{fill:var(--bad)}
+svg .d-ghost{fill:var(--bg);stroke:var(--muted);stroke-width:1.5;stroke-dasharray:3 2}
+svg .d-acc{fill:var(--accent);font-size:12px;font-family:var(--body)}
 @media (max-width:520px){:root[data-lang="en"] .layer{grid-template-columns:minmax(0,1fr)}:root[data-lang="en"] dl.gloss{grid-template-columns:minmax(0,1fr)}.langsw button{padding:6px 10px}}
 </style>
 <script>
@@ -230,17 +238,19 @@ l=l==='en'?'en':'zh';var r=document.documentElement;r.setAttribute('data-lang',l
   <h1><span data-l="zh">生成式可行性 Verifier</span><span data-l="en">Generative Feasibility Verifier</span></h1>
   <p class="lede" data-l="zh">机器人动手之前，先看两张场景图和一条规则，判断这件事在规则下到底做不做得成。这一页讲清楚四件事：数据怎么造，模型怎么训练，结果怎么样，为什么会是这个结果。</p>
   <p class="lede" data-l="en">Before the robot moves, look at two scene images and one rule, and decide whether the task can actually be done under that rule. This page covers four things: how the data was built, how the model was trained, what the results are, and why they came out this way.</p>
-  <div class="meta" data-l="zh"><span>2026-10-19 更新</span><span>模型 Qwen2.5-VL-3B + LoRA</span><span>每组 3 个 seed</span><span>正式测试集只评估过一次</span></div>
-  <div class="meta" data-l="en"><span>Updated 2026-10-19</span><span>Model: Qwen2.5-VL-3B + LoRA</span><span>3 seeds per arm</span><span>Locked test split scored once</span></div>
+  <div class="meta" data-l="zh"><span>2026-10-24 更新</span><span>模型 Qwen2.5-VL-3B + LoRA</span><span>每组 3 个 seed</span><span>正式测试集只评估过一次</span></div>
+  <div class="meta" data-l="en"><span>Updated 2026-10-24</span><span>Model: Qwen2.5-VL-3B + LoRA</span><span>3 seeds per arm</span><span>Locked test split scored once</span></div>
   <p class="small" data-l="zh"><b>10-19 改版</b>：文字改成白话，新增 4 张结构图和一条排查路线。数字和结论都没有变，代码版本放在<a href="#appendix">附录</a>。</p>
   <p class="small" data-l="en"><b>10-19 revision</b>: rewritten in plain language, with 4 new structure diagrams and a step-by-step diagnosis. No numbers or conclusions changed; code versions are in the <a href="#appendix">appendix</a>.</p>
   <p class="small" data-l="zh"><b>10-20</b>：新增英文版，用右上角的“中文 / English”切换，图表和流程图里的文字也一起切换。</p>
   <p class="small" data-l="en"><b>10-20</b>: English version added. Use the 中文 / English switch at the top right; the text in the charts and diagrams switches too.</p>
+  <p class="small" data-l="zh"><b>10-24</b>：新增<a href="#v5">下一阶段：V5</a>一节，记录这一周的进展，并和上周的结论、后续工作逐条对照。</p>
+  <p class="small" data-l="en"><b>24 Oct</b>: added <a href="#v5">Next phase: V5</a>, recording this week's progress and checking it item by item against last week's conclusions and next steps.</p>
   <nav class="toc" aria-label="目录" data-l="zh">
-    <a href="#problem">要解决的问题</a><a href="#task">一道题长什么样</a><a href="#data">数据怎么造</a><a href="#method">方法</a><a href="#result">主结果</a><a href="#diagnosis">为什么 A 学不会</a><a href="#errors">B 错在哪</a><a href="#story">结论</a><a href="#lineage">方法来源</a><a href="#limits">限制</a><a href="#reading">精读：为什么做这个实验</a>
+    <a href="#problem">要解决的问题</a><a href="#task">一道题长什么样</a><a href="#data">数据怎么造</a><a href="#method">方法</a><a href="#result">主结果</a><a href="#diagnosis">为什么 A 学不会</a><a href="#errors">B 错在哪</a><a href="#story">结论</a><a href="#lineage">方法来源</a><a href="#limits">限制</a><a href="#v5">下一阶段：V5</a><a href="#reading">精读：为什么做这个实验</a>
   </nav>
   <nav class="toc" aria-label="Contents" data-l="en">
-    <a href="#problem">The problem</a><a href="#task">One question</a><a href="#data">The data</a><a href="#method">Method</a><a href="#result">Main result</a><a href="#diagnosis">Why A fails</a><a href="#errors">Where B errs</a><a href="#story">Conclusions</a><a href="#lineage">Lineage</a><a href="#limits">Limitations</a><a href="#reading">Close reading: why this experiment</a>
+    <a href="#problem">The problem</a><a href="#task">One question</a><a href="#data">The data</a><a href="#method">Method</a><a href="#result">Main result</a><a href="#diagnosis">Why A fails</a><a href="#errors">Where B errs</a><a href="#story">Conclusions</a><a href="#lineage">Lineage</a><a href="#limits">Limitations</a><a href="#v5">Next phase: V5</a><a href="#reading">Close reading: why this experiment</a>
   </nav>
 </header>
 
@@ -1215,6 +1225,8 @@ Constraints: Use at most 295 native commands in [-1,1]^7. The robot and native t
   <p data-l="zh">所以 C 现在能说的只有一句：一起练写事实，没有让直接答法学起来。“好处来自训练还是来自考试时写推理”，这批实验答不了。</p>
   <p data-l="en">So C can tell us just one thing for now: practicing fact-writing alongside did not make the direct answer format learnable. “Does the benefit come from training or from reasoning at test time?” cannot be answered by these experiments.</p>
   <h3 id="next"><span data-l="zh">后续工作（不在这条故事线里，每项都需要单独批准）</span><span data-l="en">Next steps (outside this storyline; each needs separate approval)</span></h3>
+  <p class="small" data-l="zh"><b>10-24 更新</b>：这些后续工作已经由<a href="#v5">下一阶段 V5</a> 取代、跳过或暂缓，逐条对照见那一节。</p>
+  <p class="small" data-l="en"><b>24 Oct update</b>: these next steps have been replaced, skipped or deferred by <a href="#v5">the V5 phase</a>; see that section for the item-by-item check.</p>
   <ul class="plain" data-l="zh">
     <li><b>新的正式测试场景</b>：做确认性比较，并打破“每张图只有一个隔开的盒子”这个构造。需要批准新的数据采集。</li>
     <li><b>拆开 B</b>：只写两个关系、只写 Separated，以及监督量相同的对照。</li>
@@ -1393,6 +1405,122 @@ Constraints: Use at most 295 native commands in [-1,1]^7. The robot and native t
     <li>Step 1’s conclusions hold only within the current setup: Qwen2.5-VL-3B, language-side LoRA r16, learning rate 1e-4, 160–384 updates. 16 questions are within the “memorizable” range; being learnable there shows only that they can be memorized, not that the rule was learned.</li>
     <li>Step 2’s 512-question comparison was on validation only and is exploratory; AF and AP each tried just one filler text and one restatement format.</li>
   </ul>
+</section>
+
+<section id="v5">
+  <h2><span data-l="zh">下一阶段：V5（10-24 进展）</span><span data-l="en">Next phase: V5 (progress as of 24 Oct)</span></h2>
+  <div class="callout">
+    <p data-l="zh"><b>一句话</b>：V4 的题太 toy，规则是“保护橙色盒”这样的颜色模板，每张图恰好一个隔开的盒子。V5 把规则换成指向真实物体的一句话（“别让任何东西越过番茄酱和汤罐的连线”），在机器人做到一半时加进来；测试时把机器人碰不到的物体挪个位置，让“看文字猜”“看进度猜”都失效。目的不变：检验先写关系事实的模型是不是真的在看图。</p>
+    <p data-l="en"><b>In one sentence</b>: V4's task was too toy: the rule was a colour template such as “protect the orange box”, and every image had exactly one separating box. V5 turns the rule into a sentence about real objects (“do not let anything cross the straight line through the ketchup and the soup can”) that arrives while the robot is mid-task, and the test moves objects the robot never touches, so guessing from the text or from task progress stops working. The aim is unchanged: check whether a model that writes relational facts first really looks at the image.</p>
+    <p class="small" data-l="zh">2026-10-24 这一轮收尾，没有正在运行的作业。仓库里的交接文档是 <code>docs/generative_verifier/V5_HANDOFF.md</code>，各步的报告都在同一目录下，文件名以 <code>V5_</code> 开头。</p>
+    <p class="small" data-l="en">This round wrapped up on 2026-10-24 with no jobs running. The handoff in the repository is <code>docs/generative_verifier/V5_HANDOFF.md</code>; each step's report sits in the same folder under a <code>V5_</code> name.</p>
+  </div>
+
+  <div class="tiles">
+    <div class="tile"><span class="v">99.9%</span><span class="l"><span data-l="zh">固定布局上，只看规则文字就能猜对（1,600 个初始状态）</span><span data-l="en">correct from the rule text alone in fixed layouts (1,600 initial states)</span></span></div>
+    <div class="tile"><span class="v">34 / 34</span><span class="l"><span data-l="zh">盲看 40 个判断，回答了 34 个，全对：关系看得出来</span><span data-l="en">blind review: 34 of 40 judgements answered, all right; the relation is visible</span></span></div>
+    <div class="tile"><span class="v">249</span><span class="l"><span data-l="zh">挪动物体后的严格配平孪生（固定布局下是 0）</span><span data-l="en">strictly balanced twins after moving objects (0 in fixed layouts)</span></span></div>
+    <div class="tile"><span class="v">0.487</span><span class="l"><span data-l="zh">自然布局学来的“规则 × 进度”查表在 object 测试上的准确率（等于瞎猜）</span><span data-l="en">accuracy of a rule-by-progress lookup from natural layouts on the object test (chance)</span></span></div>
+  </div>
+
+  <h3><span data-l="zh">新的题长什么样</span><span data-l="en">What the new task looks like</span></h3>
+  <figure class="diagram">
+    <div class="dscroll">
+    <svg viewBox="0 0 720 262" role="img" aria-label="左：自然布局，番茄酱和汤罐的连线下方没有物体，布丁和篮子在同侧，可行。右：同一任务、同一条规则、同一条机器人轨迹，只把番茄酱挪到篮子旁边，连线从布丁和篮子之间穿过，两侧，不可行。" data-aria-en="Left: natural layout; the line through the ketchup and the soup can leaves the pudding and the basket on the same side, so the task is feasible. Right: same task, same rule, same robot trajectory, with only the ketchup moved next to the basket; the line now runs between the pudding and the basket, so it is infeasible.">
+      <defs><marker id="ah-v5r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="d-ahc"/></marker></defs>
+      <text class="d-b" x="10" y="20" data-l="zh">自然布局（训练）</text>
+      <text class="d-b" x="10" y="20" data-l="en">Natural layout (train)</text>
+      <text class="d-b" x="390" y="20" data-l="zh">反事实布局（测试）</text>
+      <text class="d-b" x="390" y="20" data-l="en">Counterfactual layout (test)</text>
+      <rect class="d-box" x="10" y="34" width="320" height="186" rx="6"/>
+      <rect class="d-box" x="390" y="34" width="320" height="186" rx="6"/>
+      <line class="d-lnd" x1="10" y1="50" x2="330" y2="210"/>
+      <circle class="d-dot" cx="90" cy="90" r="8"/>
+      <text class="d-s" x="102" y="86" data-l="zh">番茄酱</text><text class="d-s" x="102" y="86" data-l="en">ketchup</text>
+      <circle class="d-dot" cx="250" cy="170" r="8"/>
+      <text class="d-s" x="232" y="196" text-anchor="end" data-l="zh">汤罐</text><text class="d-s" x="232" y="196" text-anchor="end" data-l="en">soup can</text>
+      <circle class="d-tgt" cx="230" cy="78" r="7"/>
+      <text class="d-s" x="242" y="74" data-l="zh">布丁（目标）</text><text class="d-s" x="242" y="74" data-l="en">pudding (target)</text>
+      <rect class="d-gl" x="292" y="114" width="14" height="14" rx="2"/>
+      <text class="d-s" x="300" y="106" text-anchor="middle" data-l="zh">篮子</text><text class="d-s" x="300" y="106" text-anchor="middle" data-l="en">basket</text>
+      <text class="d-ok" x="170" y="246" text-anchor="middle" data-l="zh">同侧 → 可行</text><text class="d-ok" x="170" y="246" text-anchor="middle" data-l="en">same side → feasible</text>
+      <line class="d-lnd" x1="651" y1="40" x2="622" y2="220"/>
+      <circle class="d-ghost" cx="470" cy="90" r="8"/>
+      <text class="d-s" x="470" y="116" text-anchor="middle" data-l="zh">原位置</text><text class="d-s" x="470" y="116" text-anchor="middle" data-l="en">was here</text>
+      <path class="d-lna" d="M480,84 Q 560,40 638,47" marker-end="url(#ah-v5r)"/>
+      <text class="d-acc" x="528" y="86" text-anchor="middle" data-l="zh">挪走</text><text class="d-acc" x="528" y="86" text-anchor="middle" data-l="en">moved</text>
+      <circle class="d-dot" cx="650" cy="47" r="8"/>
+      <text class="d-s" x="664" y="66" data-l="zh">番茄酱</text><text class="d-s" x="664" y="66" data-l="en">ketchup</text>
+      <circle class="d-dot" cx="630" cy="170" r="8"/>
+      <text class="d-s" x="612" y="196" text-anchor="end" data-l="zh">汤罐</text><text class="d-s" x="612" y="196" text-anchor="end" data-l="en">soup can</text>
+      <circle class="d-tgt" cx="590" cy="100" r="7"/>
+      <text class="d-s" x="578" y="128" text-anchor="end" data-l="zh">布丁</text><text class="d-s" x="578" y="128" text-anchor="end" data-l="en">pudding</text>
+      <rect class="d-gl" x="672" y="114" width="14" height="14" rx="2"/>
+      <text class="d-s" x="679" y="146" text-anchor="middle" data-l="zh">篮子</text><text class="d-s" x="679" y="146" text-anchor="middle" data-l="en">basket</text>
+      <text class="d-no" x="550" y="246" text-anchor="middle" data-l="zh">两侧 → 不可行</text><text class="d-no" x="550" y="246" text-anchor="middle" data-l="en">opposite sides → infeasible</text>
+    </svg>
+    </div>
+    <figcaption data-l="zh">俯视示意图，不是实际场景。两边的任务、规则文字和机器人动作带完全一样，只挪了一个机器人和布丁都碰不到的物体。在 CPU 上把同一条动作带重放一遍核验：任务仍然完成，挪过的物体只碰桌面、没被推开，所以这条轨迹就是“做得成”的见证；“做不成”的依据是连线把布丁和篮子隔开。只看文字或进度去猜，右边就会猜错。</figcaption>
+    <figcaption data-l="en">A top-down schematic, not the real scene. Task, rule text and the robot's action tape are identical on both sides; only an object that neither the robot nor the pudding touches has moved. Replaying the same tape on CPU checks that the task still succeeds and the moved object touches only the table and stays put, so that trajectory witnesses feasibility; infeasibility rests on the line separating the pudding from the basket. A guess from the text or from task progress gets the right-hand side wrong.</figcaption>
+  </figure>
+
+  <h3><span data-l="zh">和上周的结论、后续工作对照：没有走偏</span><span data-l="en">Against last week's conclusions and next steps: no drift</span></h3>
+  <div class="tablewrap" data-l="zh"><table>
+    <thead><tr><th>上周写下的</th><th>这周</th><th>判断</th></tr></thead>
+    <tbody>
+      <tr><td>结论：先写关系事实，这道组合题就学得会</td><td>主线不变，换到更真实的场景里检验：在自然数据上，直接判断可以靠捷径拿高分，到反事实孪生上就会露馅</td><td class="ok">往前推了一步</td></tr>
+      <tr><td>不能说“直接判断普遍不行”（GPT-6 Luna 零样本 71.9%）</td><td>问题改成“直接判断会不会被捷径骗”，不再押在“学不会”上；零样本 VLM 会作为对照组放进 S3</td><td class="ok">一致</td></tr>
+      <tr><td>后续 1：新的正式测试场景，打破“每张图只有一个隔开的盒子”</td><td>以新的形式在做：规则变成两物体连线，一张图配多条规则，测试用挪动物体的反事实布局</td><td class="ok">进行中</td></tr>
+      <tr><td>后续 2–5：拆开 B、t/s 换到 512 道题、提高包含判断准确率、梯度机制</td><td>10-24 决定不做：对已有结论来说是重复验证，换不来新发现</td><td>有意跳过</td></tr>
+      <tr><td>后续 6：接到 AEGIS 前面当闸门</td><td>没做，仍要单独批准控制器改动</td><td>暂缓</td></tr>
+      <tr><td>限制：捷径审核没通过；只有一种证明；虚拟盒子</td><td>测试改为在“任务 × 规则 × 进度段”组内配平，文字和进度捷径按构造只能得 50%；证明换成连线证书加回放见证；约束仍是虚拟的</td><td class="ok">部分解决</td></tr>
+      <tr><td>覆盖面：4 类任务、15 个测试场景</td><td>能挡住捷径的主测试暂时只有 object/II/task1 一个任务（验证、测试各约 87 个孪生单元，各 4 个场景）</td><td class="no">变窄，要写明</td></tr>
+    </tbody>
+  </table></div>
+  <div class="tablewrap" data-l="en"><table>
+    <thead><tr><th>Written last week</th><th>This week</th><th>Verdict</th></tr></thead>
+    <tbody>
+      <tr><td>Conclusion: writing relational facts first makes this compositional task learnable</td><td>Same main line, tested in a more realistic setting: on natural data a direct verdict can score well through shortcuts, and should fail on counterfactual twins</td><td class="ok">pushed forward</td></tr>
+      <tr><td>We can't say “direct verdicts generally fail” (GPT-6 Luna zero-shot 71.9%)</td><td>The question becomes “is a direct verdict fooled by shortcuts”, no longer a bet on “it can't learn”; a zero-shot VLM joins S3 as a comparison arm</td><td class="ok">consistent</td></tr>
+      <tr><td>Next 1: new locked test scenes that break “one separating box per image”</td><td>Under way in a new form: rules are lines through two objects, several rules per image, and the test uses counterfactual layouts made by moving objects</td><td class="ok">in progress</td></tr>
+      <tr><td>Next 2–5: taking B apart, t/s at 512, better containment accuracy, gradient mechanism</td><td>Dropped on 24 Oct: they would re-verify the existing conclusion without new findings</td><td>skipped on purpose</td></tr>
+      <tr><td>Next 6: a gate in front of AEGIS</td><td>Not done; still needs separate approval of the controller change</td><td>deferred</td></tr>
+      <tr><td>Limitations: failed shortcut review; one kind of proof; virtual boxes</td><td>The test is balanced within task × rule × progress bin, so text and progress shortcuts score 50% by construction; proofs are now a line certificate plus a replay witness; constraints are still virtual</td><td class="ok">partly addressed</td></tr>
+      <tr><td>Coverage: 4 task types, 15 test scenes</td><td>The shortcut-proof main test currently covers one task, object/II/task1 (about 87 twin units each for validation and test, 4 scenes each)</td><td class="no">narrower; must be stated</td></tr>
+    </tbody>
+  </table></div>
+  <p data-l="zh">主线没有走偏。变的是两点：问题从“直接判断学不学得会”换成了“会不会被捷径骗”，更贴近相关工作里“孪生几乎一样时，拒绝训练退化成表面匹配”的观察（HazardArena）；主测试的覆盖面暂时变窄。</p>
+  <p data-l="en">The main line has not drifted. Two things changed: the question moved from “can a direct verdict be learned” to “is it fooled by shortcuts”, closer to the related-work observation that refusal training degrades into surface matching on near-identical twins (HazardArena); and the main test's coverage is narrower for now.</p>
+
+  <h3><span data-l="zh">这一周怎么走到这里</span><span data-l="en">How the week got here</span></h3>
+  <ol class="chain" data-l="zh">
+    <li><p class="cq">把规则绑到真实物体上，标签还要看图吗？（第 1 步，CPU）</p><p>SafeLIBERO 的初始布局几乎是固定的：1,600 个初始状态上，只看规则文字就能猜对 99.9%。改成“做到一半再加规则”后，物体在搬运途中位置在变，只看文字降到 90.8%，但“规则 × 进度”仍能猜对 98.8%。</p></li>
+    <li><p class="cq">关系从图上看得出来吗？（第 2 步，渲染后盲看）</p><p>20 个孪生单元、40 个判断，回答了 34 个，全部正确。看不出的 6 个有明确原因：终点所在的柜子被拿来当锚点（设计漏洞），或者物体被抬高、离连线太近。</p></li>
+    <li><p class="cq">修掉这些问题以后呢？（C0）</p><p>严格配平的孪生从 53 个掉到 0 个。在固定布局里，标签只在越线那一刻变化，而那一刻物体被抬着、离线很近，恰好看不清。</p></li>
+    <li><p class="cq">把物体挪个位置能解决吗？（反事实布局 v1–v3）</p><p>能。严格配平的孪生回到 249 个，只看文字的上限降到 0.705。但只在能挪动的物体足够多的任务上有效，柜子、炉灶这类固定件挪不动。</p></li>
+    <li><p class="cq">测试挡得住捷径吗？（S0，67 条源全部筛查）</p><p>38 条源、6 个任务能做出孪生。从自然布局学来的查表，在 object 任务上只有 0.487，等于瞎猜；在 goal、spatial 任务上约 0.73，因为那里能挪的物体太少。10-24 决定：先用 object/II/task1 一个任务把故事走通。</p></li>
+  </ol>
+  <ol class="chain" data-l="en">
+    <li><p class="cq">Once rules name real objects, do the labels still need the image? (Step 1, CPU)</p><p>SafeLIBERO's initial layouts are nearly fixed: over 1,600 initial states the rule text alone is right 99.9% of the time. With the rule added mid-task, the object's position changes during the carry and text alone drops to 90.8%, but rule × progress still gets 98.8%.</p></li>
+    <li><p class="cq">Is the relation visible in the images? (Step 2, render and blind review)</p><p>20 twin units, 40 judgements: 34 answered, all correct. The 6 unanswered had clear causes: the cabinet holding the goal drawer was used as an anchor (a design bug), or a lifted object sat close to the line.</p></li>
+    <li><p class="cq">What happens after fixing those? (C0)</p><p>Strictly balanced twins fall from 53 to 0. In a fixed layout the label changes only at the moment of crossing, when the object is lifted near the line, which is exactly when it is hard to see.</p></li>
+    <li><p class="cq">Does moving objects fix it? (Counterfactual layouts v1–v3)</p><p>Yes. Strictly balanced twins return to 249 and the text-only bound falls to 0.705. It works only where enough objects can move; fixtures such as the cabinet and the stove cannot.</p></li>
+    <li><p class="cq">Does the test stop the shortcuts? (S0, screening all 67 sources)</p><p>38 sources across 6 tasks yield twins. A lookup learned from natural layouts scores 0.487 on the object task, which is chance, but about 0.73 on goal and spatial tasks, where too few objects can move. Decision on 24 Oct: run the story on object/II/task1 first.</p></li>
+  </ol>
+
+  <h3><span data-l="zh">下一步（不扩展，每步开始前确认）</span><span data-l="en">Next (no expansion; each step confirmed before it starts)</span></h3>
+  <ol class="next" data-l="zh">
+    <li><b>S1</b>：object 的每条源多做几个反事实布局（只在 CPU 上重放，不补新的源），渲染一批谁都没看过的单元，再盲看一次。</li>
+    <li><b>S2</b>：训练集用训练场景的自然布局；验证和测试用对应场景的反事实孪生，在组内配平，测试集在任何模型看到前冻结。B 要写哪些中间事实还没定，一个候选是“物体在连线靠机器人的一侧吗”“终点呢”，答案是两者的异或。</li>
+    <li><b>S3</b>：A 和 B 各 1 个 seed 的 pilot，只看验证集，加零样本 VLM 对照。方向清楚后再定 3 个 seed，测试集只评估一次。</li>
+  </ol>
+  <ol class="next" data-l="en">
+    <li><b>S1</b>: more counterfactual layouts for each object source (CPU replay only, no new sources), render units nobody has seen, and review them blind again.</li>
+    <li><b>S2</b>: train on natural layouts of training scenes; validate and test on counterfactual twins of the corresponding scenes, balanced within groups, with the test split frozen before any model sees it. B's intermediate facts are not settled; one candidate is “is the object on the robot's side of the line?” and “is the goal?”, with the answer as their XOR.</li>
+    <li><b>S3</b>: a one-seed pilot of A and B on validation only, plus a zero-shot VLM arm. Three seeds come once the direction is clear, and the test split is scored once.</li>
+  </ol>
+  <p class="small" data-l="zh">盲看由 Claude 完成，不是人工审阅；它说明“仔细看图能判断”，不代表训练后模型的能力。上面的数字来自 <code>V5_STEP1_REPORT.md</code>、<code>V5_STEP2_REPORT.md</code>、<code>V5_C0_REPORT.md</code>、<code>V5_LAYOUT_PROTOCOL.md</code>、<code>V5_S0_REPORT.md</code>。</p>
+  <p class="small" data-l="en">The blind review was done by Claude, not by a human; it shows that a careful look at the images can decide, not what a trained model will do. The numbers above come from <code>V5_STEP1_REPORT.md</code>, <code>V5_STEP2_REPORT.md</code>, <code>V5_C0_REPORT.md</code>, <code>V5_LAYOUT_PROTOCOL.md</code> and <code>V5_S0_REPORT.md</code>.</p>
 </section>
 
 <section id="reading">

@@ -48,7 +48,7 @@
     38 条源、6 个任务组合可用；预注册读法 `shortcut_survives`（查表 0.615 > 0.60）。
     捷径只在 goal 和 spatial 任务上残留；严格配平后能挡住捷径的测试几乎只有 object/II/task1（验证、测试各 87 个孪生单元）。
   - 用户 10-24 选择先用 object/II/task1 一个任务走通故事，本轮收尾。**交接见 [V5_HANDOFF.md](generative_verifier/V5_HANDOFF.md)**。
-  - 报告页 DJPGiauxhPAC8BYE4L14Y5 第 5 版加了"本周进展"一节，包括和上周计划的对照（结论：主线没有走偏，覆盖面暂时变窄）。
+  - 主报告页 Ya7FQbZC9yEuNNyYhPBHHT 第 13 版加了"下一阶段：V5"一节，和上周的结论、后续工作逐条对照（结论：主线没有走偏，覆盖面暂时变窄）。精读页 DJPGiauxhPAC8BYE4L14Y5 第 5 版也有一节同样内容。
   - 没有正在运行的 CrashBench 作业。
 
 ## 已完成的研究（结果只读）

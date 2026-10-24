@@ -20,7 +20,7 @@
 - 测试用反事实布局：挪动机器人碰不到的锚点，同样的动作带回放仍是合法见证；同一张图配两条规则，一条分隔、一条不分隔。
 - 预期：直接判断（A）学到的是捷径，在反事实孪生上失败；先写关系事实的模型（B）必须看图，能够推广。
 
-这延续了 V4 的主线（关系事实监督 vs 直接判断），也对应 HazardArena 的"孪生几乎一样时，拒绝训练退化成表面匹配"。走偏检查见报告页 <https://claude.ai/artifact/DJPGiauxhPAC8BYE4L14Y5> 的"本周进展"一节（第 5 版）。
+这延续了 V4 的主线（关系事实监督 vs 直接判断），也对应 HazardArena 的"孪生几乎一样时，拒绝训练退化成表面匹配"。走偏检查见主报告 <https://claude.ai/artifact/Ya7FQbZC9yEuNNyYhPBHHT> 的"下一阶段：V5"一节（第 13 版）。
 
 ## 已完成（结果只读）
 
@@ -73,4 +73,6 @@ S0 的关键数字：
 - **Quest 会复用作业号。** `sacct -j` 可能列出别人的旧作业；启动器里的 `completed()` 已按 p33100 账号过滤，手动查询时加 `-u $USER` 并看 Account 列。
 - **容器里是 Python 3.8**（`aegis-py38.sif` 加 `envs/aegis_sim`），不要用 3.9 以后的语法。
 - **盲看纪律**：先只读 `REVIEW_SHEET.json` 和学生图，判断写进 `verifier_dataset/reviews/` 并提交，之后才读 UNITS.json、RENDER_GEOMETRY.json 和诊断图。
-- **报告页**：`docs/generative_verifier/PAPER_READING.html` 是 DJPGiauxhPAC8BYE4L14Y5 的源文件，中英两份内容都要改。主报告页 Ya7FQbZC9yEuNNyYhPBHHT（PHASE2_REPORT.html）本轮没有同步 V5。
+- **报告页**：
+  - **主报告**是 <https://claude.ai/artifact/Ya7FQbZC9yEuNNyYhPBHHT>，源文件 `docs/generative_verifier/PHASE2_REPORT.html`，公开链接，改动立刻可见。第 13 版新增 `#v5`"下一阶段：V5"一节，和上周的结论、后续工作逐条对照。中英双语用 `data-l="zh"` / `data-l="en"`，两种语言都要改。
+  - 精读页 DJPGiauxhPAC8BYE4L14Y5（`PAPER_READING.html`）第 5 版也有一节"本周进展"。那是用户一开始给错了链接时加的，是否保留由用户决定。
