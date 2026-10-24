@@ -34,7 +34,10 @@
   - 第 1 步（CPU 几何摸底）2026-10-24 完成，见 [V5_STEP1_REPORT.md](generative_verifier/V5_STEP1_REPORT.md)：
     初始布局上只看文字就能猜对 99.9%；"做到一半加一条新规则"让标签依赖图像，按文字 × 进度段配平后 616 行、43 个源，读法 `proceed_to_render_pilot`。
     产出集中在 object 任务，只有"两物体连线"模板可用。
-  - 第 2 步（小样本渲染看图）待用户确认。没有正在运行的 CrashBench 作业。
+  - 第 2 步（小样本渲染看图）2026-10-24 完成，见 [V5_STEP2_REPORT.md](generative_verifier/V5_STEP2_REPORT.md)：
+    Claude 盲看 20 个孪生单元的 40 个判断，回答 34 个、全部正确，读法 `relation_visible`。
+    6 个"看不出"对应三处设计修改（终点所属物体排除出锚点、用 checkpoint 时刻的几何、提高余量或加俯视图）。
+  - 下一步：先改设计，再提出正式采集计划（需要单独授权）。没有正在运行的 CrashBench 作业。
 
 ## 已完成的研究（结果只读）
 
