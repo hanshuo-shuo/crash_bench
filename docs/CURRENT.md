@@ -37,7 +37,10 @@
   - 第 2 步（小样本渲染看图）2026-10-24 完成，见 [V5_STEP2_REPORT.md](generative_verifier/V5_STEP2_REPORT.md)：
     Claude 盲看 20 个孪生单元的 40 个判断，回答 34 个、全部正确，读法 `relation_visible`。
     6 个"看不出"对应三处设计修改（终点所属物体排除出锚点、用 checkpoint 时刻的几何、提高余量或加俯视图）。
-  - 下一步：先改设计，再提出正式采集计划（需要单独授权）。没有正在运行的 CrashBench 作业。
+  - 用户 2026-10-24 批准设计修改并采用 V5 计划，正式采集协议见 [V5_COLLECTION_PROTOCOL.md](generative_verifier/V5_COLLECTION_PROTOCOL.md)。
+  - C0（修正后重新回放 V4 的 67 条源）2026-10-24 完成，见 [V5_C0_REPORT.md](generative_verifier/V5_C0_REPORT.md)：
+    修正都生效了，但严格层孪生从 53 降到 0。固定布局里，"标签要看图"与"图上看得清"互相冲突。
+  - 待用户在三个方向中选择，推荐"移动锚点的反事实布局"。没有正在运行的 CrashBench 作业。
 
 ## 已完成的研究（结果只读）
 
