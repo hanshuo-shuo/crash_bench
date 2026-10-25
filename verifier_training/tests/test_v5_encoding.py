@@ -24,6 +24,9 @@ class Encoding(unittest.TestCase):
             self.assertEqual(input_digest(items['direct']),input_digest(items['facts']))
             f=items['facts']
             for key in FACT_KEYS:self.assertGreater(int(f['detail']['key_'+key].sum()),0,key)
+            for key in ('target_robot_side','goal_robot_side'):
+                at=f['detail']['key_'+key][0].nonzero().flatten();self.assertEqual(len(at),1,key)
+                self.assertEqual(self.processor.tokenizer.decode(f['fields']['input_ids'][0,int(at[0])]),' '+r['target']['facts'][key])
             self.assertLessEqual(f['fields']['input_ids'].shape[1],config['max_length'])
             with self.assertRaisesRegex(ValueError,'Not a token boundary'):
                 encode(self.processor,r,DATASET,'facts',config['max_length'],vision,answer=assistant_target(r,'facts'),keys=FACT_KEYS)

@@ -4,6 +4,8 @@ python -m verifier_training.launch_v5 create              new campaign root and 
 python -m verifier_training.launch_v5 pilot --root RUN    after preflight: A and B lanes, 3B zero-shot after A,
                                                           32B zero-shot after both lanes, report after all
 python -m verifier_training.launch_v5 stage --root RUN --stage train --arm A --seed 713 [--after JOB[,JOB]]
+python -m verifier_training.launch_v5 fit --root S3_RUN   fit diagnostic (docs/generative_verifier/V5_FIT_PROTOCOL.md): a new
+                                                          campaign with the 16- and 64-row GPU jobs side by side, report after both
 
 At most two GPUs at any time: the two training lanes, then the 32B stage (two GPUs) once both lanes end.
 """
@@ -16,12 +18,16 @@ from .common import BASE,UPSTREAM,MODEL_ID,read,write,sha,require
 from .launch import command
 from .launch_verdict_diagnostic import ASSETS
 from .launch_fd1000 import published_commit,archive,stamp
-from .v5_contract import configuration,DATASET,DATASET_HASHES
+from .v5_contract import configuration,validate,DATASET,DATASET_HASHES
+from . import v5_fit_contract
 
 PROTOCOL='docs/generative_verifier/V5_S3_PROTOCOL.md'
 SCRIPTS={'cpu':'v5_cpu.sbatch','gpu':'v5_gpu.sbatch','gpu2':'v5_zero_shot_32b.sbatch'}
 STAGES={'preflight':('cpu',['verifier_training.v5_run','preflight']),'zero-shot-3b':('gpu',['verifier_training.v5_run','zero-shot-3b']),
     'zero-shot-32b':('gpu2',['verifier_training.v5_zero_shot_32b']),'report':('cpu',['verifier_training.v5_run','report'])}
+FIT_PROTOCOL='docs/generative_verifier/V5_FIT_PROTOCOL.md'
+FIT_AUTHORIZATION=('2026-10-25 user ("做一下吧") approved the recommended fit diagnostic after S3: B from scratch on 16 and 64 '
+    'training rows, read on held-out training images; training split only, no validation or test scoring, no API')
 AUTHORIZATION=('2026-10-25 user approved S3 ("可以 开始写", handoff in V5_HANDOFF.md) and asked to continue it ("接着做 V5 的 S3"): '
     'A and B with seed 713, validation only, plus zero-shot 3B and local 32B; no test, no API')
 
@@ -96,11 +102,36 @@ def pilot(root):
     stage(root,'report',after=(a,b,z3,z32))
 
 
+def fit(s3):
+    """Fit diagnostic: a new campaign that reads the finished S3 run and only the training split."""
+    commit=published_commit();repo=Path.cwd();s3=Path(os.path.abspath(s3));s3.resolve().relative_to((BASE/'verifier_training/runs').resolve())
+    require('状态：已冻结' in (repo/FIT_PROTOCOL).read_text(),'Freeze the fit protocol before launching')
+    r3=read(s3/'RECEIPT.json');require(r3['stage']=='v5-s3-pilot' and read(s3/'S3_READING.json')['passed'] is True,'Needs the finished S3 pilot')
+    for label in ('preflight','B_seed713','report'):require(completed(read(s3/(label+'_SUBMISSION.json'))['job']),'S3 job did not finish normally: '+label)
+    require(read(ASSETS/'STAGED.json')['model_id']==MODEL_ID and r3['assets']==str(ASSETS),'Wrong staged VLM; no substitution permitted')
+    require(active_gpus()==0,'Another CrashBench GPU job is active')
+    config=v5_fit_contract.configuration();require(read(s3/'config.json')==config['s3_configuration'],'S3 configuration differs')
+    train=[r for r in validate(DATASET,include_test=False) if r['split']=='train'];parts=v5_fit_contract.subsets(train,config)
+    plan={size:v5_fit_contract.orders(parts[size]['sample_ids'],size,config) for size in config['sizes']}
+    root=BASE/'verifier_training/runs'/(stamp()+'_v5-fit_'+commit[:12]);archive(root,commit)
+    write(root/'config.json',config);write(root/'SUBSETS.json',parts);write(root/'ORDERS.json',plan)
+    receipt=dict(stage='v5-fit-diagnostic',source_commit=commit,upstream_commit=UPSTREAM,run_root=str(root),s3_root=str(s3),
+        s3_source_commit=r3['source_commit'],s3_files={f:sha(s3/f) for f in v5_fit_contract.S3_FILES},dataset=str(DATASET),
+        dataset_hashes=dict(DATASET_HASHES),assets=str(ASSETS),assets_stage_sha256=sha(ASSETS/'STAGED.json'),
+        configuration_sha256=sha(root/'config.json'),subsets_sha256=sha(root/'SUBSETS.json'),orders_sha256=sha(root/'ORDERS.json'),
+        protocol=FIT_PROTOCOL,protocol_sha256=sha(root/'source'/FIT_PROTOCOL),seeds=config['seeds'],sizes=list(config['sizes']),api_calls=0,
+        authorization=FIT_AUTHORIZATION,scope='Fit diagnostic on V5 training rows; validation and test are not scored')
+    write(root/'RECEIPT.json',receipt)
+    jobs=[submit(root,'fit'+size,['verifier_training.v5_fit_run','fit',str(root),size],'gpu') for size in config['sizes']]
+    submit(root,'report',['verifier_training.v5_fit_run','report',str(root)],'cpu',after=tuple(jobs))
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('action',choices=('create','pilot','stage'))
+    p=argparse.ArgumentParser();p.add_argument('action',choices=('create','pilot','stage','fit'))
     p.add_argument('--root',type=Path);p.add_argument('--stage');p.add_argument('--arm');p.add_argument('--seed',type=int)
     p.add_argument('--after',default='')
     a=p.parse_args()
     if a.action=='create':create()
     elif a.action=='pilot':pilot(a.root)
+    elif a.action=='fit':fit(a.root)
     else:stage(a.root,a.stage,a.arm,a.seed,tuple(x for x in a.after.split(',') if x))
