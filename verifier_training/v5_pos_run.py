@@ -136,6 +136,16 @@ def evaluate(model,processor,rows,items,config,hashes,lookup,points,stream):
 def train(root,arm,seed):
     receipt,config,dataset,assets,s3,rows,staged=context(root);hashes,points,subsets,lookup=gate(root,receipt,s3)
     require(arm=='P' and seed in config['seeds'],'Unplanned run')
+    train_p(root,arm,seed,receipt,config,dataset,assets,rows,staged,hashes,points,subsets,lookup)
+
+
+def train_p(root,arm,seed,receipt,config,dataset,assets,rows,staged,hashes,points,subsets,lookup,provenance=None,
+            scope='Validation-only pilot of arm P; one seed; the test split is not read'):
+    """Arm P for one seed with the S4 settings in config (S4 above; the V5 seed campaign, v5_seeds_run).
+
+    The caller has checked its campaign, the planned seed and the preflight gate; root holds ORDERS.json with a P order
+    for the seed. provenance adds campaign fields to PROVENANCE.json."""
+    require(arm=='P','Unplanned run')
     out=root/f'{arm}_seed{seed}';out.mkdir();require(torch.cuda.is_available(),'Quest GPU required');base=config['s3_configuration']
     torch.manual_seed(seed);np.random.seed(seed);random.seed(seed);torch.backends.cuda.matmul.allow_tf32=True
     processor=processor_for(assets);model,targets=adapter_model(assets,base,seed)
@@ -161,7 +171,7 @@ def train(root,arm,seed):
         upstream_commit=UPSTREAM,config=config,lora_targets=targets,trainable_parameters=sum(v.numel() for n,v in params),frozen_visual_sha256=visual_hash,
         preflight_sha256=sha(root/'preflight/COMPLETE.json'),splits_loaded=sorted({r['split'] for r in rows}),
         slurm={k:v for k,v in os.environ.items() if k in ('SLURM_JOB_ID','SLURM_JOB_NODELIST','SLURM_JOB_PARTITION','SLURM_JOB_ACCOUNT')},
-        gpu=torch.cuda.get_device_name(),same_inference_inputs_as_s3=True,gold_rationale_prefix_at_selection=False))
+        gpu=torch.cuda.get_device_name(),same_inference_inputs_as_s3=True,gold_rationale_prefix_at_selection=False,**(provenance or {})))
     started=time.monotonic();checkpoints=[];states={};probes={}
 
     def probe(kind,values):
@@ -195,8 +205,7 @@ def train(root,arm,seed):
         R4_natural_program_accuracy=scores['validation_natural']['program']['verdict_accuracy'],
         R5_training_fit_program_accuracy=scores['training_fit']['program']['verdict_accuracy'],scores=scores,
         adapter_sha256=sha(out/'selected_adapter/adapter_model.safetensors'),elapsed_seconds=time.monotonic()-started,
-        peak_gpu_gib=torch.cuda.max_memory_allocated()/2**30,test_rows_loaded=0,test_evaluations=0,api_calls=0,
-        scope='Validation-only pilot of arm P; one seed; the test split is not read'))
+        peak_gpu_gib=torch.cuda.max_memory_allocated()/2**30,test_rows_loaded=0,test_evaluations=0,api_calls=0,scope=scope))
 
 
 def report(root):

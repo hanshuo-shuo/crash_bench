@@ -122,6 +122,15 @@ def evaluate(model,processor,rows,items,reading,kind,config,hashes,lookup,stream
 def train(root,arm,seed):
     receipt,config,dataset,assets,rows,staged=context(root);hashes,subsets,lookup=preflight_gate(root,receipt)
     require(arm in config['arms'] and seed in config['seeds'],'Unplanned run')
+    train_arm(root,arm,seed,receipt,config,dataset,assets,rows,staged,hashes,subsets,lookup)
+
+
+def train_arm(root,arm,seed,receipt,config,dataset,assets,rows,staged,hashes,subsets,lookup,provenance=None,
+              scope='Validation-only pilot; one seed; the test split is not read'):
+    """One arm and seed with the S3 settings in config (S3 above; the V5 seed campaign, v5_seeds_run).
+
+    The caller has checked its campaign, the planned arm and seed, and the preflight gate; root holds ORDERS.json,
+    SUBSETS.json and preflight/COMPLETE.json. provenance adds campaign fields to PROVENANCE.json."""
     out=root/f'{arm}_seed{seed}';out.mkdir();require(torch.cuda.is_available(),'Quest GPU required')
     torch.manual_seed(seed);np.random.seed(seed);random.seed(seed);torch.backends.cuda.matmul.allow_tf32=True
     processor=processor_for(assets);model,targets=adapter_model(assets,config,seed)
@@ -148,7 +157,7 @@ def train(root,arm,seed):
         trainable_parameters=sum(v.numel() for n,v in params),frozen_visual_sha256=visual_hash,preflight_sha256=sha(root/'preflight/COMPLETE.json'),
         orders_sha256=sha(root/'ORDERS.json'),subsets_sha256=sha(root/'SUBSETS.json'),splits_loaded=sorted({r['split'] for r in rows}),
         slurm={k:v for k,v in os.environ.items() if k in ('SLURM_JOB_ID','SLURM_JOB_NODELIST','SLURM_JOB_PARTITION','SLURM_JOB_ACCOUNT')},
-        gpu=torch.cuda.get_device_name(),same_inference_inputs=True,gold_rationale_prefix_at_selection=False))
+        gpu=torch.cuda.get_device_name(),same_inference_inputs=True,gold_rationale_prefix_at_selection=False,**(provenance or {})))
     started=time.monotonic();checkpoints=[];states={};probes={}
 
     def probe(kind_,values):
@@ -189,7 +198,7 @@ def train(root,arm,seed):
         R4_validation_natural_accuracy=scores['validation_natural']['verdict_accuracy'],R5_training_fit_accuracy=scores['training_fit']['verdict_accuracy'],
         scores=scores,adapter_sha256=sha(out/'selected_adapter/adapter_model.safetensors'),elapsed_seconds=time.monotonic()-started,
         frozen_vision_and_projector_unchanged=True,peak_gpu_gib=torch.cuda.max_memory_allocated()/2**30,
-        test_rows_loaded=0,test_evaluations=0,api_calls=0,scope='Validation-only pilot; one seed; the test split is not read'))
+        test_rows_loaded=0,test_evaluations=0,api_calls=0,scope=scope))
 
 
 def zero_shot_3b(root):

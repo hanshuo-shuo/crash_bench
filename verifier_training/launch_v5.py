@@ -8,6 +8,9 @@ python -m verifier_training.launch_v5 fit --root S3_RUN   fit diagnostic (docs/g
                                                           campaign with the 16- and 64-row GPU jobs side by side, report after both
 python -m verifier_training.launch_v5 s4 --root S3_RUN    S4 (docs/generative_verifier/V5_S4_PROTOCOL.md): CPU preflight and the
                                                           two-GPU zero-shot pointing together, then P training, then the report
+python -m verifier_training.launch_v5 seeds --s3 S3_RUN --s4 S4_RUN
+                                                          seed campaign (docs/generative_verifier/V5_SEEDS_PROTOCOL.md): CPU
+                                                          preflight, then two GPU lanes (A then P for seeds 714 and 715), report last
 
 At most two GPUs at any time: the two training lanes, then the 32B stage (two GPUs) once both lanes end.
 """
@@ -21,7 +24,7 @@ from .launch import command
 from .launch_verdict_diagnostic import ASSETS
 from .launch_fd1000 import published_commit,archive,stamp
 from .v5_contract import configuration,validate,DATASET,DATASET_HASHES
-from . import v5_fit_contract,v5_pos_contract
+from . import v5_fit_contract,v5_pos_contract,v5_seeds_contract
 
 PROTOCOL='docs/generative_verifier/V5_S3_PROTOCOL.md'
 SCRIPTS={'cpu':'v5_cpu.sbatch','gpu':'v5_gpu.sbatch','gpu2':'v5_zero_shot_32b.sbatch'}
@@ -29,6 +32,10 @@ STAGES={'preflight':('cpu',['verifier_training.v5_run','preflight']),'zero-shot-
     'zero-shot-32b':('gpu2',['verifier_training.v5_zero_shot_32b']),'report':('cpu',['verifier_training.v5_run','report'])}
 FIT_PROTOCOL='docs/generative_verifier/V5_FIT_PROTOCOL.md'
 S4_PROTOCOL='docs/generative_verifier/V5_S4_PROTOCOL.md'
+SEEDS_PROTOCOL='docs/generative_verifier/V5_SEEDS_PROTOCOL.md'
+SEEDS_AUTHORIZATION=('2026-10-25 user ("收尾下 然后让下一个agent开始干下一步") handed the approved next step to the next agent: arms A '
+    'and P with seeds 714 and 715 under the frozen S3 and S4 settings, validation only, read together with seed 713 from the S3 and S4 '
+    'records; no test, no API')
 S4_AUTHORIZATION=('2026-10-25 user ("换吧 继续 然后这一步干完先收尾 反正要尽力跑通故事线") approved switching B to positions plus a program: '
     'arm P with the S3 settings and seed 713, validation only, against the S3 A records; zero-shot pointing with 3B and local 32B; '
     'targets from stored geometry and cameras, no new rendering, no test, no API')
@@ -154,13 +161,45 @@ def s4(s3):
     submit(root,'report',['verifier_training.v5_pos_run','report',str(root)],'cpu',after=(tr,zs))
 
 
+def seeds(s3,s4):
+    """Seed campaign: CPU preflight, then one GPU lane per new seed (A, then P), then the CPU report; at most two GPUs."""
+    commit=published_commit();repo=Path.cwd();runs=(BASE/'verifier_training/runs').resolve()
+    s3=Path(os.path.abspath(s3));s4=Path(os.path.abspath(s4));s3.resolve().relative_to(runs);s4.resolve().relative_to(runs)
+    require('状态：已冻结' in (repo/SEEDS_PROTOCOL).read_text(),'Freeze the seed protocol before launching')
+    r3=read(s3/'RECEIPT.json');r4=read(s4/'RECEIPT.json')
+    require(r3['stage']=='v5-s3-pilot' and read(s3/'S3_READING.json')['passed'] is True,'Needs the finished S3 pilot')
+    require(r4['stage']=='v5-s4' and read(s4/'S4_READING.json')['passed'] is True and Path(r4['s3_root']).resolve()==s3.resolve(),
+            'Needs the finished S4 run on this S3 root')
+    for prior,labels in ((s3,('preflight','A_seed713','B_seed713','report')),(s4,('preflight','P_seed713','report'))):
+        for label in labels:require(completed(read(prior/(label+'_SUBMISSION.json'))['job']),'Prior job did not finish normally: %s %s'%(prior.name,label))
+    require(read(ASSETS/'STAGED.json')['model_id']==MODEL_ID and r3['assets']==r4['assets']==str(ASSETS),'Wrong staged VLM; no substitution permitted')
+    require(active_gpus()==0,'Another CrashBench GPU job is active')
+    config=v5_seeds_contract.configuration()
+    require(read(s3/'config.json')==config['s3_configuration'] and read(s4/'config.json')==config['s4_configuration'],'S3 or S4 configuration differs')
+    root=BASE/'verifier_training/runs'/(stamp()+'_v5-seeds_'+commit[:12]);archive(root,commit);write(root/'config.json',config)
+    receipt=dict(stage='v5-seeds',source_commit=commit,upstream_commit=UPSTREAM,run_root=str(root),s3_root=str(s3),s3_source_commit=r3['source_commit'],
+        s4_root=str(s4),s4_source_commit=r4['source_commit'],s3_files={f:sha(s3/f) for f in v5_seeds_contract.S3_FILES},
+        s4_files={f:sha(s4/f) for f in v5_seeds_contract.S4_FILES},dataset=str(DATASET),dataset_hashes=dict(DATASET_HASHES),assets=str(ASSETS),
+        assets_stage_sha256=sha(ASSETS/'STAGED.json'),configuration_sha256=sha(root/'config.json'),protocol=SEEDS_PROTOCOL,
+        protocol_sha256=sha(root/'source'/SEEDS_PROTOCOL),seeds=config['seeds'],arms=config['arms'],api_calls=0,authorization=SEEDS_AUTHORIZATION,
+        scope='Arms A and P with seeds 714 and 715; validation only; the test split is not read')
+    write(root/'RECEIPT.json',receipt)
+    module='verifier_training.v5_seeds_run';pre=submit(root,'preflight',[module,'preflight',str(root)],'cpu');lanes=[]
+    for seed in config['seeds']:
+        a=submit(root,f'A_seed{seed}',[module,'train',str(root),'A',str(seed)],'gpu',after=(pre,),dependency='afterok')
+        p=submit(root,f'P_seed{seed}',[module,'train',str(root),'P',str(seed)],'gpu',after=(pre,a),spec=f'afterok:{pre},afterany:{a}')
+        lanes+=[a,p]
+    submit(root,'report',[module,'report',str(root)],'cpu',after=tuple(lanes))
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('action',choices=('create','pilot','stage','fit','s4'))
-    p.add_argument('--root',type=Path);p.add_argument('--stage');p.add_argument('--arm');p.add_argument('--seed',type=int)
+    p=argparse.ArgumentParser();p.add_argument('action',choices=('create','pilot','stage','fit','s4','seeds'))
+    p.add_argument('--root',type=Path);p.add_argument('--s3',type=Path);p.add_argument('--s4',type=Path);p.add_argument('--stage');p.add_argument('--arm');p.add_argument('--seed',type=int)
     p.add_argument('--after',default='')
     a=p.parse_args()
     if a.action=='create':create()
     elif a.action=='pilot':pilot(a.root)
     elif a.action=='fit':fit(a.root)
     elif a.action=='s4':s4(a.root)
+    elif a.action=='seeds':seeds(a.s3,a.s4)
     else:stage(a.root,a.stage,a.arm,a.seed,tuple(x for x in a.after.split(',') if x))
