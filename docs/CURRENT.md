@@ -67,7 +67,8 @@
     用户："换吧 继续 然后这一步干完先收尾 反正要尽力跑通故事线"。组 P 先写两个锚点、布丁、篮子在图上的位置，再由程序判断是否隔开。
     预注册读法 `positions_ground`：反事实孪生验证上 P 0.940，A 0.501，P − A +0.438 [+0.416, +0.461]；自然诊断 0.962。
     P 自己写的结论是常数，起作用的是"模型定位、程序判定"的分工。1 个 seed，只看验证集。
-    交接见 [V5_HANDOFF.md](generative_verifier/V5_HANDOFF.md) 开头；加 seed 和测试评估需用户确认。没有正在运行的 CrashBench 作业。
+    交接见 [V5_HANDOFF.md](generative_verifier/V5_HANDOFF.md) 开头。
+    用户 10-25："收尾下 然后让下一个agent开始干下一步"。加 seed（A、P 各补 714、715，只看验证）已获批，交给下一个 agent；测试评估仍需用户确认。
   - 主报告页 Ya7FQbZC9yEuNNyYhPBHHT 第 13 版加了"下一阶段：V5"一节，和上周的结论、后续工作逐条对照（结论：主线没有走偏，覆盖面暂时变窄）。精读页 DJPGiauxhPAC8BYE4L14Y5 第 5 版也有一节同样内容。
   - 没有正在运行的 CrashBench 作业。
 
