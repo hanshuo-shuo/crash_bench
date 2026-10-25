@@ -6,6 +6,7 @@
 - **用户 2026-10-16 的决定**：
   - V4 的 896 行（224 个四行单元、64 条源轨迹）作为开发数据，直接用于 verifier 训练。
   - 不再要求通过 0.75 的 shortcut 闸门。闸门失败（0.780）如实披露，并作为基线报告。
+- **最新（2026-10-25）**：V5 故事线在 object/II/task1 上跑通一次（S4，见下文 V5 部分）。
 - **当前阶段**：Phase 0–2 已于 2026-10-17 完成，见 [PHASE1_REPORT.md](generative_verifier/PHASE1_REPORT.md) 和 [PHASE2_REPORT.md](generative_verifier/PHASE2_REPORT.md)。
   - 锁定测试集（评估一次）：B（事实→判定）79.7%，A（直接）50.0%，差 +29.7 个百分点，源聚类 95% CI [+22.3, +36.8]，科学标准达成。
   - 开发里程碑未达成：B 行准确率 79.7%、单元全对 54.2%、规则翻转 64.2%，门槛分别是 85% / 70% / 90%。
@@ -61,8 +62,12 @@
     用户同意先做拟合诊断（"做一下吧"）。
   - 拟合诊断于 2026-10-25 完成，见 [V5_FIT_REPORT.md](generative_verifier/V5_FIT_REPORT.md)（协议 [V5_FIT_PROTOCOL.md](generative_verifier/V5_FIT_PROTOCOL.md)，冻结 `ea76dab`）。
     预注册结论 `inconclusive`：16 行 3 个 seed 都背到 100%，64 行背到 94–98%（差一点没到"完全拟合"）；留出训练图上的迁移增益 +0.004，等于查表。
-    B 能背但学不会读线；S3 的 B 在同样的行上也是查表水平。下一步等用户决定，建议换事实写法（先写位置，再用程序判定），先做零样本定位检查。
-    只读训练集，测试集没有读。没有正在运行的 CrashBench 作业。
+    B 能背但学不会读线；S3 的 B 在同样的行上也是查表水平。
+  - **S4 于 2026-10-25 完成，本轮收尾**，见 [V5_S4_REPORT.md](generative_verifier/V5_S4_REPORT.md)（协议 [V5_S4_PROTOCOL.md](generative_verifier/V5_S4_PROTOCOL.md)，冻结 `20913c7`）。
+    用户："换吧 继续 然后这一步干完先收尾 反正要尽力跑通故事线"。组 P 先写两个锚点、布丁、篮子在图上的位置，再由程序判断是否隔开。
+    预注册读法 `positions_ground`：反事实孪生验证上 P 0.940，A 0.501，P − A +0.438 [+0.416, +0.461]；自然诊断 0.962。
+    P 自己写的结论是常数，起作用的是"模型定位、程序判定"的分工。1 个 seed，只看验证集。
+    交接见 [V5_HANDOFF.md](generative_verifier/V5_HANDOFF.md) 开头；加 seed 和测试评估需用户确认。没有正在运行的 CrashBench 作业。
   - 主报告页 Ya7FQbZC9yEuNNyYhPBHHT 第 13 版加了"下一阶段：V5"一节，和上周的结论、后续工作逐条对照（结论：主线没有走偏，覆盖面暂时变窄）。精读页 DJPGiauxhPAC8BYE4L14Y5 第 5 版也有一节同样内容。
   - 没有正在运行的 CrashBench 作业。
 

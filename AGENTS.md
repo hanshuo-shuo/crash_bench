@@ -62,3 +62,6 @@ on real objects, added mid-task; counterfactual layouts by moving untouched anch
 then restricted it to twin-capable task compositions with no source expansion and
 chose object/II/task1 for the first story pilot. Read docs/generative_verifier/V5_HANDOFF.md.
 Each S1-S3 step still needs the user's go-ahead; no paid API without separate approval.
+S3, the fit diagnostic and S4 ran on 2026-10-25; S4 (positions plus a program) reached 0.940 against
+A's 0.501 on the counterfactual validation twins and the round was wrapped up (V5_S4_REPORT.md). More seeds,
+the single test evaluation and any AEGIS gate each need the user's go-ahead.

@@ -252,6 +252,8 @@ l=l==='en'?'en':'zh';var r=document.documentElement;r.setAttribute('data-lang',l
   <p class="small" data-l="en"><b>25 Oct, later</b>: the <a href="#v5">V5</a> section now runs through S3. A and B both sit near 50% on the counterfactual twins; writing facts first did not make B look at the images. Reasons and next steps are under <a href="#v5-s3">S3 result</a>.</p>
   <p class="small" data-l="zh"><b>10-25 拟合诊断</b>：B 能把训练图上的两个“机器人一侧”事实背下来，但换到没练过的图上，和只看“规则 × 进度”一样准，见<a href="#v5-fit">拟合诊断</a>。</p>
   <p class="small" data-l="en"><b>25 Oct, fit diagnostic</b>: B can memorise the two robot-side facts on training images, but on images it has not practised on it is no better than rule × progress alone; see <a href="#v5-fit">Fit diagnostic</a>.</p>
+  <p class="small" data-l="zh"><b>10-25 S4</b>：B 改成先写物体在图上的位置、再由程序判断是否隔开，在反事实孪生上从 50% 升到 94%，故事线跑通了一次，本轮收尾，见 <a href="#v5-s4">S4 结果</a>。</p>
+  <p class="small" data-l="en"><b>25 Oct, S4</b>: with B rewritten to state where objects are in the image and a program deciding whether the line separates them, accuracy on the counterfactual twins rose from 50% to 94%. The storyline ran end to end once and this round is wrapped up; see <a href="#v5-s4">S4 result</a>.</p>
   <nav class="toc" aria-label="目录" data-l="zh">
     <a href="#problem">要解决的问题</a><a href="#task">一道题长什么样</a><a href="#data">数据怎么造</a><a href="#method">方法</a><a href="#result">主结果</a><a href="#diagnosis">为什么 A 学不会</a><a href="#errors">B 错在哪</a><a href="#story">结论</a><a href="#lineage">方法来源</a><a href="#limits">限制</a><a href="#v5">下一阶段：V5</a><a href="#reading">精读：为什么做这个实验</a>
   </nav>
@@ -1418,15 +1420,15 @@ Constraints: Use at most 295 native commands in [-1,1]^7. The robot and native t
   <div class="callout">
     <p data-l="zh"><b>一句话</b>：V4 的题太 toy，规则是“保护橙色盒”这样的颜色模板，每张图恰好一个隔开的盒子。V5 把规则换成指向真实物体的一句话（“别让任何东西越过番茄酱和汤罐的连线”），在机器人做到一半时加进来；测试时把机器人碰不到的物体挪个位置，让“看文字猜”“看进度猜”都失效。目的不变：检验先写关系事实的模型是不是真的在看图。</p>
     <p data-l="en"><b>In one sentence</b>: V4's task was too toy: the rule was a colour template such as “protect the orange box”, and every image had exactly one separating box. V5 turns the rule into a sentence about real objects (“do not let anything cross the straight line through the ketchup and the soup can”) that arrives while the robot is mid-task, and the test moves objects the robot never touches, so guessing from the text or from task progress stops working. The aim is unchanged: check whether a model that writes relational facts first really looks at the image.</p>
-    <p class="small" data-l="zh">2026-10-25：S1、S2、S3 和之后的拟合诊断都已完成。S3 的结果和预期不同：A 和 B 在反事实孪生上都在 50% 左右，见下面的 <a href="#v5-s3">S3 结果</a>；拟合诊断显示 B 能背但学不会读线，见<a href="#v5-fit">拟合诊断</a>。下一步等确认，现在没有正在运行的作业。仓库里的交接文档是 <code>docs/generative_verifier/V5_HANDOFF.md</code>，各步的报告都在同一目录下，文件名以 <code>V5_</code> 开头。</p>
-    <p class="small" data-l="en">25 Oct: S1, S2, S3 and the follow-up fit diagnostic are done. S3 did not come out as expected: A and B both sit near 50% on the counterfactual twins; see <a href="#v5-s3">S3 result</a> below. The fit diagnostic shows that B can memorise but does not learn to read the line; see <a href="#v5-fit">Fit diagnostic</a>. The next step waits for a go-ahead, and no jobs are running. The handoff in the repository is <code>docs/generative_verifier/V5_HANDOFF.md</code>; each step's report sits in the same folder under a <code>V5_</code> name.</p>
+    <p class="small" data-l="zh">2026-10-25：S1、S2、S3 和之后的拟合诊断都已完成。S3 的结果和预期不同：A 和 B 在反事实孪生上都在 50% 左右，见下面的 <a href="#v5-s3">S3 结果</a>；拟合诊断显示 B 能背但学不会读线，见<a href="#v5-fit">拟合诊断</a>。之后的 S4 改成先写位置、再由程序判定，反事实孪生上到了 94%，见 <a href="#v5-s4">S4 结果</a>。本轮已收尾，下一步等确认，现在没有正在运行的作业。仓库里的交接文档是 <code>docs/generative_verifier/V5_HANDOFF.md</code>，各步的报告都在同一目录下，文件名以 <code>V5_</code> 开头。</p>
+    <p class="small" data-l="en">25 Oct: S1, S2, S3 and the follow-up fit diagnostic are done. S3 did not come out as expected: A and B both sit near 50% on the counterfactual twins; see <a href="#v5-s3">S3 result</a> below. The fit diagnostic shows that B can memorise but does not learn to read the line; see <a href="#v5-fit">Fit diagnostic</a>. S4 then switched to writing positions with a program deciding, and reached 94% on the counterfactual twins; see <a href="#v5-s4">S4 result</a>. This round is wrapped up; the next step waits for a go-ahead, and no jobs are running. The handoff in the repository is <code>docs/generative_verifier/V5_HANDOFF.md</code>; each step's report sits in the same folder under a <code>V5_</code> name.</p>
   </div>
 
   <div class="tiles">
     <div class="tile"><span class="v">99.9%</span><span class="l"><span data-l="zh">固定布局上，只看规则文字就能猜对（1,600 个初始状态）</span><span data-l="en">correct from the rule text alone in fixed layouts (1,600 initial states)</span></span></div>
     <div class="tile"><span class="v">40 / 40</span><span class="l"><span data-l="zh">S1 盲看 20 个没见过的单元：判定和 B 的两个事实三项全对</span><span data-l="en">S1 blind review of 20 unseen units: the verdict and both of B's facts all right</span></span></div>
     <div class="tile"><span class="v">76% → 50%</span><span class="l"><span data-l="zh">只看“规则 × 进度”：训练集上能猜对 76%，验证和测试上按构造只有 50%</span><span data-l="en">rule × progress alone: 76% on the training set, 50% by construction on validation and test</span></span></div>
-    <div class="tile"><span class="v">50% / 50%</span><span class="l"><span data-l="zh">S3：A 和 B 在反事实孪生验证上的准确率，和瞎猜一样（自然布局上都约 89%）</span><span data-l="en">S3: accuracy of A and B on the counterfactual validation twins, the same as guessing (about 89% on natural layouts)</span></span></div>
+    <div class="tile"><span class="v">50% → 94%</span><span class="l"><span data-l="zh">反事实孪生验证：直接判断（A）50%，先写位置再由程序判定（P，S4）94%</span><span data-l="en">counterfactual validation twins: direct verdict (A) 50%, positions first and a program deciding (P, S4) 94%</span></span></div>
   </div>
 
   <h3><span data-l="zh">新的题长什么样</span><span data-l="en">What the new task looks like</span></h3>
@@ -1499,6 +1501,8 @@ Constraints: Use at most 295 native commands in [-1,1]^7. The robot and native t
   <p data-l="en">The main line has not drifted. Two things changed: the question moved from “can a direct verdict be learned” to “is it fooled by shortcuts”, closer to the related-work observation that refusal training degrades into surface matching on near-identical twins (HazardArena); and the main test's coverage is narrower for now.</p>
   <p data-l="zh"><b>10-25 补充</b>：S3 里 B 没有比 A 好，V4 的结论在 V5 上暂时没有复现。这还不推翻 V4：V4 的事实是看画上去的彩色框，V5 要在两张斜视图里判断布丁和篮子在两件真实杂货连线的哪一侧，难得多。是看不出还是没练够，要靠下面的拟合诊断分清。</p>
   <p data-l="en"><b>25 Oct addendum</b>: in S3, B did no better than A, so the V4 conclusion has not carried over to V5 yet. This does not overturn V4: V4's facts are about drawn coloured boxes, while V5 asks which side of the line through two real groceries the pudding and the basket are on, judged from two oblique views, which is much harder. Whether the model cannot see it or has not trained enough is for the fit diagnostic below to settle.</p>
+  <p data-l="zh"><b>10-25 S4 补充</b>：把 B 的事实换成位置以后，P 在反事实孪生上到了 94%，A 仍是 50%。主线在 V5 上以更具体的形式成立：中间事实要是模型能从图上读出来的东西，组合交给程序。</p>
+  <p data-l="en"><b>25 Oct S4 addendum</b>: once B's facts became positions, P reached 94% on the counterfactual twins while A stayed at 50%. The main line holds in V5 in a more specific form: the intermediate facts must be something the model can read off the image, and the combination is left to a program.</p>
 
   <h3><span data-l="zh">这一周怎么走到这里</span><span data-l="en">How the week got here</span></h3>
   <ol class="chain" data-l="zh">
@@ -1512,6 +1516,7 @@ Constraints: Use at most 295 native commands in [-1,1]^7. The robot and native t
     <li><p class="cq">数据集建好了吗？（S2）</p><p>4,643 行，1,750 对图像，渲染时重新算的标签全部和计划一致。训练集保留了捷径：只看“规则 × 进度”能猜对 76%。验证和测试在组内配平，这条捷径只能得 50%。在自然布局的诊断集上，捷径仍然有 75% 和 91%。测试集已冻结，只在最后评估一次。</p></li>
     <li><p class="cq">先写事实的 B，会因此去看图吗？（S3）</p><p>没有。在反事实孪生验证上，A 50.1%、B 50.3%，和瞎猜一样；在只有一种摆法的自然布局上，两组都约 89%。B 从事实推结论完全正确，错在两个“机器人一侧”的事实上。两组连训练集都没超过“规则 × 进度”的 76%。零样本的 3B 和 32B 也读不出这两个事实。</p></li>
     <li><p class="cq">是没练够，还是看不出？（拟合诊断）</p><p>让 B 在 16 道和 64 道训练题上反复练：16 道 3 次都背到 100%，64 道背到 94–98%。管线没问题。但换到 264 道没练过的训练题上，两个事实和只看“规则 × 进度”一样准（增益 +0.004）。按事先的规则记为“说不清”，从数字看，模型记住的是图，没学会读那条线。</p></li>
+    <li><p class="cq">换成先写位置呢？（S4）</p><p>P 先写两个锚点、布丁和篮子在第 1 张图上的位置，由程序判断这条线是否把布丁和篮子隔开。反事实孪生上 P 94.0%，A 50.1%，差 43.8 个百分点（区间 [41.6, 46.1]）。四个点的中位误差只有 2–4 像素。P 自己写的结论却总是“不隔开、做得成”，从位置推到结论这一步是程序做的。</p></li>
   </ol>
   <ol class="chain" data-l="en">
     <li><p class="cq">Once rules name real objects, do the labels still need the image? (Step 1, CPU)</p><p>SafeLIBERO's initial layouts are nearly fixed: over 1,600 initial states the rule text alone is right 99.9% of the time. With the rule added mid-task, the object's position changes during the carry and text alone drops to 90.8%, but rule × progress still gets 98.8%.</p></li>
@@ -1524,6 +1529,7 @@ Constraints: Use at most 295 native commands in [-1,1]^7. The robot and native t
     <li><p class="cq">Is the dataset built? (S2)</p><p>4,643 rows and 1,750 image pairs; every label recomputed at render time matched the plan. The training set keeps the shortcut: rule × progress alone gets 76%. Validation and test are balanced within groups, so that shortcut gets 50%. On the natural-layout diagnostic sets it still gets 75% and 91%. The test split is frozen and will be scored once, at the end.</p></li>
     <li><p class="cq">Does writing facts first make B look at the images? (S3)</p><p>No. On the counterfactual validation twins A gets 50.1% and B 50.3%, the same as guessing; on the natural layout, which has a single arrangement, both get about 89%. B turns facts into verdicts perfectly; its errors are in the two robot-side facts. Neither arm beats the 76% of rule × progress even on the training set. Zero-shot 3B and 32B cannot read the two facts either.</p></li>
     <li><p class="cq">Too little training, or unable to see it? (Fit diagnostic)</p><p>B practised over and over on 16 and on 64 training questions: all three 16-question runs reached 100%, the 64-question runs 94–98%, so the pipeline works. But on 264 training questions it had not practised on, the two facts are no better than rule × progress alone (gain +0.004). By the preset rules this counts as inconclusive; the numbers say the model memorised the images and did not learn to read the line.</p></li>
+    <li><p class="cq">What if B writes positions instead? (S4)</p><p>P writes where the two anchors, the pudding and the basket are in View 1, and a program decides whether the line separates the pudding from the basket. On the counterfactual twins P gets 94.0% and A 50.1%, a gap of 43.8 points (interval [41.6, 46.1]). The four points have median errors of only 2–4 pixels. P's own written verdict, however, is always “not separated, feasible”; the step from positions to verdict is done by the program.</p></li>
   </ol>
 
   <h3><span data-l="zh">现在 A 和 B 各写什么</span><span data-l="en">What A and B write now</span></h3>
@@ -1614,21 +1620,66 @@ B:   Line: alphabet soup can | salad dressing bottle
     <li><b>Memorising is slower than in V4</b>: the 16 questions took until update 120–160 to be all right, against update 80 in V4's Step 1. V4's facts were about drawn coloured boxes; V5 asks about an invisible line in oblique views.</li>
   </ul>
 
+  <h3 id="v5-s4"><span data-l="zh">S4 结果：先写位置，再用程序判定</span><span data-l="en">S4 result: write positions first, let a program decide</span></h3>
+  <p data-l="zh">拟合诊断说明，B 学不会直接回答“在线的哪一侧”。S4 把 B 的事实换成它更可能看得出来的东西：两个锚点、布丁和篮子在第 1 张图上的位置（物体正下方桌面上的那一点）。是否隔开交给程序算。输入、数据、训练设置都和 S3 完全一样；A 直接用 S3 的结果，两者逐行配对。位置的真值由仿真里存下的坐标和相机算出，程序用真值点算出的结论和全部 3,409 个训练、验证标签一致。</p>
+  <p data-l="en">The fit diagnostic showed that B cannot learn to answer “which side of the line” directly. S4 replaces B's facts with something it is more likely to see: where the two anchors, the pudding and the basket are in View 1 (the point on the table under each object). Whether the line separates them is left to a program. Inputs, data and training settings are exactly those of S3; A is S3's run, paired row by row. The true positions come from the coordinates and cameras stored in simulation, and the program on the true points matches all 3,409 training and validation labels.</p>
+  <pre data-l="zh">P 在一道验证题上的真实输出（第 1 张图，像素坐标）：
+
+Line: orange juice carton | salad dressing bottle
+Line points: [121, 249] [266, 158]   ← 两个锚点（真值 [123, 248] [266, 159]）
+Target point: [157, 191]             ← 布丁（真值 [155, 192]）
+Goal point: [366, 288]               ← 篮子（真值 [366, 286]）
+Separated: no                        ← 模型自己写的，错了
+Verdict: 1
+
+程序：布丁和篮子在这条线的两侧 → 隔开 → 判 0（正确）</pre>
+  <pre data-l="en">P's actual output on one validation question (View 1, pixels):
+
+Line: orange juice carton | salad dressing bottle
+Line points: [121, 249] [266, 158]   ← the two anchors (true [123, 248] [266, 159])
+Target point: [157, 191]             ← the pudding (true [155, 192])
+Goal point: [366, 288]               ← the basket (true [366, 286])
+Separated: no                        ← written by the model, wrong
+Verdict: 1
+
+Program: the pudding and the basket lie on opposite sides → separated → 0 (correct)</pre>
+  <div class="chart" id="c11">
+    <div class="ctitle"><span data-l="zh">判定准确率：S4 的 P 和之前各组</span><span data-l="en">Verdict accuracy: S4's P and the earlier arms</span></div>
+    <div class="csub"><span data-l="zh">实心条是反事实孪生验证集（1,538 题；零样本定位只跑了其中选模用的 384 题），带边框的淡色条是自然布局验证集（79 题）。P 的“程序判定”是主读数，“自己写的 Verdict”是同一次生成里模型写下的结论。零样本定位：基座模型不训练，直接指出几个物体，再交给同一个程序。</span><span data-l="en">Solid bars are the counterfactual validation twins (1,538 questions; zero-shot pointing used the 384 selection questions among them); faded outlined bars are the natural-layout validation set (79 questions). P's “program verdict” is the primary reading; “own Verdict” is the verdict the model wrote in the same generation. Zero-shot pointing: the base models, untrained, point to the objects and the same program decides.</span></div>
+    <div class="legend" id="c11-legend"></div>
+    <svg id="c11-svg" viewBox="0 0 720 324" role="img" aria-label="反事实孪生上：P 程序判定 94.0%，A 50.1%，B 50.3%，P 自己写的 Verdict 50.0%，查表 50.0%，32B 零样本定位 45.1%，3B 零样本定位 39.8%；自然布局上：P 96.2%，A 89.9%，B 88.6%，P 自己写的 Verdict 31.6%，查表 74.7%" data-aria-en="On the counterfactual twins: P program verdict 94.0%, A 50.1%, B 50.3%, P own Verdict 50.0%, lookup 50.0%, 32B zero-shot pointing 45.1%, 3B zero-shot pointing 39.8%; on natural layouts: P 96.2%, A 89.9%, B 88.6%, P own Verdict 31.6%, lookup 74.7%"></svg>
+    <details><summary><span data-l="zh">数据表</span><span data-l="en">Data table</span></summary><div class="tablewrap"><table id="c11-table"></table></div></details>
+  </div>
+  <ul class="plain" data-l="zh">
+    <li><b>差距很大，区间很窄</b>：P − A = +43.8 个百分点，95% 区间 [+41.6, +46.1]。两种答案都有的图上，一张图的题全对的比例 A 是 0.3%，P 是 81%。把该拒的判成可行的比例，P 是 6.5%。</li>
+    <li><b>点很准</b>：两个锚点和篮子的中位误差 2–4 像素，15 像素以内的锚点约 89%、篮子 98%；布丁点最难，15 像素以内的只有 69%。判错的 93 道题里，大多是布丁点或某个锚点偏了。</li>
+    <li><b>结论来自程序</b>：P 自己写的 Separated 在 1,538 道题上全是 no，Verdict 全是 1。模型学会了定位，没学会从位置算出是否隔开。所以能说的是“模型定位 + 程序判定”这个分工有效，不能说模型自己学会了推理。</li>
+    <li><b>零样本定位不够</b>：不训练时，32B 能较准地找到布丁和篮子，但锚点只对六成，用它的点跑程序是 45%。微调之后点才准到几像素。</li>
+    <li><b>局限</b>：1 个 seed，1 个任务组合，4 条验证源；位置真值来自仿真；约束仍是虚拟的连线；测试集还没有评估。</li>
+  </ul>
+  <ul class="plain" data-l="en">
+    <li><b>A large gap with a narrow interval</b>: P − A = +43.8 points, 95% interval [+41.6, +46.1]. On images carrying both answers, every question on the image is right for 0.3% of images with A and 81% with P. P calls 6.5% of infeasible questions feasible.</li>
+    <li><b>The points are accurate</b>: the two anchors and the basket have median errors of 2–4 pixels, with about 89% of anchor points and 98% of basket points within 15 pixels; the pudding is hardest, with 69% within 15 pixels. Most of the 93 wrong questions have the pudding or one anchor off.</li>
+    <li><b>The verdict comes from the program</b>: P's own Separated is “no” on all 1,538 questions and its Verdict is always 1. The model learned to locate, not to work out separation from the positions. What can be claimed is that the split “model locates, program decides” works, not that the model learned to reason.</li>
+    <li><b>Zero-shot pointing is not enough</b>: untrained, the 32B model finds the pudding and the basket fairly well but only 60% of anchors, and the program on its points gets 45%. Only after fine-tuning are the points accurate to a few pixels.</li>
+    <li><b>Limitations</b>: one seed, one task composition, four validation sources; the true positions come from simulation; the constraint is still a virtual line; the test split has not been scored.</li>
+  </ul>
+
   <h3><span data-l="zh">下一步（不扩展，每步开始前确认）</span><span data-l="en">Next (no expansion; each step confirmed before it starts)</span></h3>
   <ol class="next" data-l="zh">
-    <li><b>换事实的写法（建议）</b>：B 不再直接写“在哪一侧”，而是先写布丁、篮子和两件锚点杂货在图上的位置（落在桌面上的那一点），再由程序算出在线的哪一侧。Qwen2.5-VL 本来就练过输出物体坐标，这更接近它会做的事。先做一个便宜的零样本检查：3B 和 32B 能不能在现有训练图上指出这几样东西，真值由已存的世界坐标投影得到，约 0.5 个 GPU 小时，不用重新渲染。</li>
-    <li><b>加训练</b>：训练加到 3 个 epoch，再比一次 A 和 B，约 4–5 个 GPU 小时。这是“没练够”的直接检验，但拟合诊断没给出它会成功的迹象。</li>
-    <li><b>加俯视图或提高分辨率</b>：要重新渲染，需要另外批准数据；S1 盲看时俯视图没有帮助，还常被夹爪挡住。</li>
-    <li><b>之后</b>：方向清楚了再跑 3 个 seed，测试集只评估一次。把 verifier 接到 AEGIS 前面当闸门，仍要单独批准。</li>
+    <li><b>加 seed</b>：P 和 A 各补 714、715 两个 seed，约 11 个 GPU 小时，看 94% 对 50% 稳不稳。</li>
+    <li><b>测试集评估一次</b>：3 个 seed 和选模都冻结后，在冻结的测试集上评估 A 和 P 各一次。测试集至今没打开过。</li>
+    <li><b>可选</b>：教模型自己从位置算出是否隔开；扩到其他任务（goal、spatial）。</li>
+    <li><b>之后</b>：把 P 接到 AEGIS 前面当闸门，仍要单独批准。</li>
   </ol>
   <ol class="next" data-l="en">
-    <li><b>Write the facts differently (suggested)</b>: instead of stating “which side” directly, B first writes where the pudding, the basket and the two anchor groceries are in the image (the point where each meets the table), and a program works out the side of the line. Qwen2.5-VL was trained to output object coordinates, so this is closer to something it can do. A cheap zero-shot check comes first: can 3B and 32B point to these objects in the existing training images, with ground truth projected from the stored world coordinates? About 0.5 GPU hours, no new renders.</li>
-    <li><b>Train longer</b>: three epochs, then compare A and B again, about 4–5 GPU hours. This is the direct test of “too little training”, but the fit diagnostic gave no sign that it would work.</li>
-    <li><b>Add a top-down view or a higher resolution</b>: needs new renders and a separate data approval; in the S1 blind review a top-down view did not help and the gripper often hid the pudding.</li>
-    <li><b>After that</b>: three seeds once the direction is clear, with the test split scored once. Using the verifier as a gate in front of AEGIS still needs separate approval.</li>
+    <li><b>More seeds</b>: add seeds 714 and 715 for both P and A, about 11 GPU hours, to see whether 94% against 50% holds.</li>
+    <li><b>Score the test split once</b>: after the three seeds and model selection are frozen, score A and P once each on the frozen test split. It has not been opened yet.</li>
+    <li><b>Optional</b>: teach the model to work out separation from the positions itself; extend to other tasks (goal, spatial).</li>
+    <li><b>After that</b>: using P as a gate in front of AEGIS still needs separate approval.</li>
   </ol>
-  <p class="small" data-l="zh">盲看由 Claude 完成，不是人工审阅；它说明“仔细看图能判断”，不代表训练后模型的能力。上面的数字来自 <code>V5_STEP1_REPORT.md</code>、<code>V5_STEP2_REPORT.md</code>、<code>V5_C0_REPORT.md</code>、<code>V5_LAYOUT_PROTOCOL.md</code>、<code>V5_S0_REPORT.md</code>、<code>V5_S1_REPORT.md</code>、<code>V5_S2_REPORT.md</code>、<code>V5_S3_REPORT.md</code>、<code>V5_FIT_REPORT.md</code>。S1 盲看时 Claude 事先知道每个单元恰好有一条规则把布丁和篮子隔开。</p>
-  <p class="small" data-l="en">The blind review was done by Claude, not by a human; it shows that a careful look at the images can decide, not what a trained model will do. The numbers above come from <code>V5_STEP1_REPORT.md</code>, <code>V5_STEP2_REPORT.md</code>, <code>V5_C0_REPORT.md</code>, <code>V5_LAYOUT_PROTOCOL.md</code>, <code>V5_S0_REPORT.md</code>, <code>V5_S1_REPORT.md</code> <code>V5_S2_REPORT.md</code>, <code>V5_S3_REPORT.md</code> and <code>V5_FIT_REPORT.md</code>. In the S1 review Claude knew in advance that each unit has exactly one rule separating the pudding from the basket.</p>
+  <p class="small" data-l="zh">盲看由 Claude 完成，不是人工审阅；它说明“仔细看图能判断”，不代表训练后模型的能力。上面的数字来自 <code>V5_STEP1_REPORT.md</code>、<code>V5_STEP2_REPORT.md</code>、<code>V5_C0_REPORT.md</code>、<code>V5_LAYOUT_PROTOCOL.md</code>、<code>V5_S0_REPORT.md</code>、<code>V5_S1_REPORT.md</code>、<code>V5_S2_REPORT.md</code>、<code>V5_S3_REPORT.md</code>、<code>V5_FIT_REPORT.md</code>、<code>V5_S4_REPORT.md</code>。S1 盲看时 Claude 事先知道每个单元恰好有一条规则把布丁和篮子隔开。</p>
+  <p class="small" data-l="en">The blind review was done by Claude, not by a human; it shows that a careful look at the images can decide, not what a trained model will do. The numbers above come from <code>V5_STEP1_REPORT.md</code>, <code>V5_STEP2_REPORT.md</code>, <code>V5_C0_REPORT.md</code>, <code>V5_LAYOUT_PROTOCOL.md</code>, <code>V5_S0_REPORT.md</code>, <code>V5_S1_REPORT.md</code> <code>V5_S2_REPORT.md</code>, <code>V5_S3_REPORT.md</code>, <code>V5_FIT_REPORT.md</code> and <code>V5_S4_REPORT.md</code>. In the S1 review Claude knew in advance that each unit has exactly one rule separating the pudding from the basket.</p>
 </section>
 
 <section id="reading">
@@ -2313,6 +2364,30 @@ CHARTS.push(function(){
       (r.held.length>1?`<br>seed 713 / 714 / 715${COLON()}${r.held.map(v=>v.toFixed(1)).join(' / ')}`:''));});
   document.getElementById('c10-table').innerHTML=`<thead><tr><th>${T('运行','Run')}</th><th class="n">${T('练过的题','Practised')}</th><th class="n">${T('没练过的题','Unseen')}</th><th class="n">${T('查表（没练过的题）','Lookup (unseen)')}</th></tr></thead><tbody>`+
     R.map(r=>`<tr><td>${nm(r)}</td><td class="n">${r.fit===null?'—':mean(r.fit).toFixed(1)+'%'}</td><td class="n">${mean(r.held).toFixed(1)}%</td><td class="n">${LK.toFixed(1)}%</td></tr>`).join('')+'</tbody>';
+});
+
+// Chart 11: V5 S4, verdict accuracy of P (program) against the earlier arms; solid = counterfactual twins, faded = natural layout.
+CHARTS.push(function(){
+  const svg=clear('c11-svg');
+  document.getElementById('c11-legend').innerHTML=`<span><i class="key solid" style="background:var(--ink-2)"></i>${T('反事实孪生（验证）','Counterfactual twins (validation)')}</span>`+
+    `<span><i class="key light" style="background:var(--ink-2);color:var(--ink-2)"></i>${T('自然布局（验证）','Natural layout (validation)')}</span>`;
+  const R=[[T('P 先写位置·程序判定','P · positions, program'),'--s3',93.95,96.20,1538],[T('A 直接判断','A · direct'),'--s1',50.13,89.87,1538],
+    [T('B 写“在哪一侧”','B · which side'),'--s2',50.26,88.61,1538],[T('P 自己写的 Verdict','P · own Verdict'),'--neutral',50.0,31.65,1538],
+    [T('查表（规则 × 进度）','Lookup (rule × progress)'),'--neutral',50.0,74.68,1538],
+    [T('32B 零样本定位·程序','32B zero-shot pointing'),'--neutral',45.052,null,384],[T('3B 零样本定位·程序','3B zero-shot pointing'),'--neutral',39.84,null,384]];
+  const x0=200,x1=650,X=v=>x0+(x1-x0)*v/100,top=30,row=40,h=12,gap=4;
+  [0,25,50,75,100].forEach(v=>{el('line',{x1:X(v),x2:X(v),y1:top-8,y2:top+row*R.length-8,class:'grid'},svg);text(svg,X(v),top+row*R.length+10,v+'%','tick','middle');});
+  el('line',{x1:X(50),x2:X(50),y1:top-12,y2:top+row*R.length-8,class:'ref'},svg);text(svg,X(50),top-18,T('瞎猜 50%','chance 50%'),'lab2','middle');
+  R.forEach(([n,c,cf,nat,rows],i)=>{const y=top+i*row,yv=y+h+gap;
+    text(svg,x0-12,y+h+gap/2+5,n,'lab','end');
+    bar(svg,X(0),X(cf),y,h,c);text(svg,Math.max(X(cf),X(50))+6,y+h-1,cf.toFixed(1)+'%','val');
+    if(nat===null)text(svg,X(0)+6,yv+h-2,T('自然布局没有跑','not run on the natural layout'),'tick');
+    else{const vb=bar(svg,X(0),X(nat),yv,h,c);vb.setAttribute('fill-opacity','.38');vb.setAttribute('stroke',`var(${c})`);vb.setAttribute('stroke-width','1');
+      text(svg,Math.max(X(nat),X(50))+6,yv+h-1,nat.toFixed(1)+'%','lab2');}
+    const hit=el('rect',{x:0,y:y-6,width:720,height:row-2,class:'hit'},svg);
+    bindTip(hit,`<b>${n}</b><br>${T('反事实孪生','Counterfactual twins')} ${cf.toFixed(1)}%${paren(rows.toLocaleString('en-US')+T(' 题',' questions'))} · ${T('自然布局','Natural layout')} ${nat===null?T('没有跑','not run'):nat.toFixed(1)+'%'}`);});
+  document.getElementById('c11-table').innerHTML=`<thead><tr><th>${T('方法','Method')}</th><th class="n">${T('反事实孪生','Counterfactual twins')}</th><th class="n">${T('题数','Questions')}</th><th class="n">${T('自然布局（79 题）','Natural layout (79)')}</th></tr></thead><tbody>`+
+    R.map(([n,c,cf,nat,rows])=>`<tr><td>${n}</td><td class="n">${cf.toFixed(1)}%</td><td class="n">${rows.toLocaleString('en-US')}</td><td class="n">${nat===null?'—':nat.toFixed(1)+'%'}</td></tr>`).join('')+'</tbody>';
 });
 
 // Language switch: swap the visible copy, aria-labels, alt text and title, redraw the charts, and keep the reader's place.

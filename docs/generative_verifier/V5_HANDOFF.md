@@ -1,42 +1,76 @@
-# V5 交接（2026-10-25 更新到 S3）
+# V5 交接（2026-10-25 收尾：故事线已跑通一次）
 
 读者：接手的下一个 Claude/Codex 会话。先读 [AGENTS.md](../../AGENTS.md) 和 [CURRENT.md](../CURRENT.md)，再读本文。
 
-## 2026-10-25 交接（先读这一节）
+## 2026-10-25 收尾（先读这一节）
 
-- **S3 已完成**，见 [V5_S3_REPORT.md](V5_S3_REPORT.md)。用户 10-25 先说"可以 开始写"，新会话里又说"接着做 V5 的 S3"。
-  - 预注册读法 `both_shortcut`：反事实孪生验证上 A 0.501、B 0.503，B − A +0.001，区间 [−0.015, +0.020]。
-  - 两组都停在"规则 × 进度"先验上，连训练集都没超过查表（0.72 < 0.760）。
-  - B 的组合完全正确，错在两个"机器人侧"事实：篮子侧几乎总写 no，物体侧只比查表高 8 个百分点。
-  - 自然诊断上两组都是 0.89：只有一种自然布局，被模型记住了。
-  - 零样本 3B 和 32B 都在随机水平，而且是常数回答。
-  - 代码：实现 `904ce55`，协议冻结 `bdcf277`。运行目录 `/projects/p33100/siosio/crashbench_safelibero/verifier_training/runs/20261025T055227Z_v5-s3_bdcf277164b6`。
-- **拟合诊断已完成**（用户 10-25："做一下吧"），见 [V5_FIT_REPORT.md](V5_FIT_REPORT.md)，协议 [V5_FIT_PROTOCOL.md](V5_FIT_PROTOCOL.md)（冻结 `ea76dab`）。
-  - 预注册结论 `inconclusive`。16 行三个 seed 都背到 100%，64 行背到 94–98%；在留出的 264 行训练图上，两个事实和查表一样准（增益 +0.004）。
-  - 读法：管线没问题，B 能背但学不会读线；"没练够"的解释变弱了。
-  - 运行目录 `/projects/p33100/siosio/crashbench_safelibero/verifier_training/runs/20261025T153621Z_v5-fit_ea76dabed506`；代码 `verifier_training/v5_fit_contract.py`、`v5_fit_run.py`，启动器 `launch_v5 fit --root <S3 运行目录>`。
-- **等用户决定下一步**，选项见拟合诊断报告末尾。建议换事实写法：先写布丁、篮子、两个锚点在图上的位置（地面接触点），再用程序判定；先做零样本定位检查（3B、32B，训练图，用世界坐标投影作真值，约 0.5 GPU 小时）。
-  - S2 的 `RENDER_GEOMETRY.json` 有各物体的世界坐标包围盒，但没有相机参数；投影要用第 2 步的相机参数。
-- 没有正在运行的 CrashBench 作业。
-- 主报告页已同步到拟合诊断（第 16 版），中英文都改了。
-- **之前已完成**：
-  - S1：[V5_S1_REPORT.md](V5_S1_REPORT.md)。题目和 B 的两个事实都看得出来；S2 只用两张斜视图。
-  - S2：[V5_S2_REPORT.md](V5_S2_REPORT.md)。数据集已建好，测试已冻结。
-- **S3 代码入口**（`verifier_training/`）：
-  - `v5_contract.py`：配置、`validate()`、子集、查表、零样本提示、读法；
-  - `v5_metrics.py`：解析和读数；
-  - `v5_run.py`：preflight、train、zero-shot-3b、report；
-  - `v5_zero_shot_32b.py`：32B 零样本，用 `qwen-vlm` 环境，需要 `LD_LIBRARY_PATH` 指向该环境的 lib；
-  - `launch_v5.py`：`create`、`pilot`、`stage`。
-  - 测试：`test_v5_contract`、`test_v5_metrics`、`test_v5_encoding`。
-- **新的坑**：
-  - S2 的行按键名排序写出，事实字段的顺序是字母序，不能按 `FACT_KEYS` 的顺序比较；
-  - 32B 写事实时每行末尾带两个空格，严格格式记为不合规，但事实能解析。
-- **规矩**：
-  - 提交身份用 `git -c user.name=hanshuo-shuo -c user.email=80494218+hanshuo-shuo@users.noreply.github.com commit`。本机配置是另一个邮箱，不要用。
-  - 测试集（`test`、`test_natural`）在 3 个 seed 和选模全部冻结前不读。
-  - pilot 之后加 seed、评估测试，都要用户另行确认。
-  - 付费 API、AEGIS 闸门仍需单独批准。
+用户说："换吧 继续 然后这一步干完先收尾 反正要尽力跑通故事线"。S4 做完，本轮收尾。没有正在运行的 CrashBench 作业。
+
+### 故事线现状
+
+| 步 | 做了什么 | 反事实孪生验证（1,538 行） | 报告 |
+|---|---|---:|---|
+| S3 | A 直接判断；B 先写"布丁、篮子在线靠机器人的一侧吗"再判断 | A 0.501，B 0.503（`both_shortcut`） | [V5_S3_REPORT.md](V5_S3_REPORT.md) |
+| 拟合诊断 | B 在 16 / 64 行训练图上反复练，再看没练过的训练图 | 能背下来，但不迁移（`inconclusive`） | [V5_FIT_REPORT.md](V5_FIT_REPORT.md) |
+| S4 | P 先写两个锚点、布丁、篮子在第 1 张图上的位置，程序判断是否隔开 | **P 0.940**，P − A +0.438 [+0.416, +0.461]（`positions_ground`） | [V5_S4_REPORT.md](V5_S4_REPORT.md) |
+
+- **一句话**：
+  - 在自然分布上训练、在挡住捷径的反事实孪生上测试，直接判断只有 50%；
+  - 让模型先写出看得出来的事实（位置），再交给程序判断，是 94%；
+  - 写"在哪一侧"这种关系事实不行（50%），模型学不会读那条看不见的线。
+- **要如实说明的局限**：
+  - 1 个 seed、1 个任务组合、4 条验证源；
+  - P 自己写的 `Separated` / `Verdict` 是常数，结论来自程序；
+  - 位置真值来自仿真几何；
+  - 测试集没有评估。
+
+### 本轮的运行目录（`/projects/p33100/siosio/crashbench_safelibero/verifier_training/runs/`）
+
+| 步 | 运行目录 | 冻结 commit |
+|---|---|---|
+| S3 | `20261025T055227Z_v5-s3_bdcf277164b6` | `bdcf277`（实现 `904ce55`） |
+| 拟合诊断 | `20261025T153621Z_v5-fit_ea76dabed506` | `ea76dab`（实现 `1d9d099`） |
+| S4 | `20261025T180525Z_v5-s4_20913c71c3f3` | `20913c7`（实现 `e651c3d`） |
+
+### 代码入口（`verifier_training/`）
+
+- **S3**：
+  - `v5_contract.py`：配置、`validate()`（把测试行与 `TEST_FREEZE.json` 逐行比对后丢弃）、子集、查表、零样本提示、读法；
+  - `v5_metrics.py`、`v5_run.py`、`v5_zero_shot_32b.py`。
+- **拟合诊断**：`v5_fit_contract.py`、`v5_fit_run.py`。
+- **S4**：
+  - `v5_pos_contract.py`：投影、P 的目标、解析、程序、读法；
+  - `v5_pos_run.py`：preflight、train、report；
+  - `v5_pos_zero_shot.py`：零样本定位，3B 和 32B 都在 `qwen-vlm` 环境里跑。
+- **启动器** `launch_v5.py`：动作 `create`、`pilot`、`stage`（S3），`fit`，`s4`；GPU 作业时限 8 小时。
+- **测试**：`verifier_training/tests/test_v5_*.py`，与 V4 的测试一起共 141 个。跑法见下面的"规矩"。
+
+### 下一步（每项都要用户先确认）
+
+1. **加 seed**：P 用 714、715 各跑一次，约 9 GPU 小时。A 也补 714、715，约 2 GPU 小时，才能配对。
+2. **测试评估一次**：3 个 seed 和选模冻结后，在冻结的测试集上评估 A 和 P 各一次。
+   - 需要先写测试阶段的代码：在测试行上投影真值点、核对 `TEST_FREEZE.json`、只评估一次。
+   - 测试集至今没有读过。
+3. **可选**：
+   - P 自己写的结论是常数，可以试着教模型自己算出 `Separated`；
+   - 把 P 接到 AEGIS 前面当闸门，需要单独批准控制器改动；
+   - 扩到其他任务组合（goal、spatial），之前暂停的补源也需要另批。
+
+### 坑
+
+- **投影**：用每张图 `units/<图像编号>/CAMERA.json` 里的第一个视角。学生图是左右翻转过的，公式是 x = (1 − nx)/2·448，y = (1 − ny)/2·448。`RENDER_GEOMETRY.json` 里没有相机参数。
+- **`qwen-vlm` 环境**：要设 `LD_LIBRARY_PATH=/projects/p33100/siosio/envs/qwen-vlm/lib`，否则 Pillow 加载失败。
+- **坐标约定**：Qwen3-VL 用 0–1000 的相对坐标，Qwen2.5-VL 用输入图的绝对像素。
+- **字段顺序**：S2 的行按键名排序写出，事实字段的顺序是字母序。
+- **token 合并**：`]` 和换行会合并成一个 token，所以坐标值不能用 `encode` 的事实值区间来标记。
+- **32B 的输出格式**：写事实时每行末尾带两个空格；零样本定位时常回答 "There are none."。
+
+### 规矩
+
+- 提交身份用 `git -c user.name=hanshuo-shuo -c user.email=80494218+hanshuo-shuo@users.noreply.github.com commit`。本机配置是另一个邮箱，不要用。
+- 测试集（`test`、`test_natural`）在 3 个 seed 和选模全部冻结前不读。
+- 加 seed、评估测试、付费 API、AEGIS 闸门，都要用户另行确认。
+- 跑测试：`PYTHONPATH=/projects/p33100/siosio/crashbench_safelibero/verifier_training/assets/20261010_d94c245/packages:. /projects/p33100/siosio/envs/openpi/bin/python -m unittest <verifier_training/tests 下的模块>`。
 
 ## 用户的决定（按时间）
 
@@ -54,6 +88,7 @@
 | 10-25 | "可以 开始写然后 这个对话框很长了 我再递交给下一个你" | 开始 S3：写协议和代码；本会话写完协议后交接 |
 | 10-25 | "接着做 V5 的 S3" | 新会话实现 S3 代码、跑 smoke、冻结协议并运行 pilot |
 | 10-25 | "做一下吧" | 做 S3 报告建议的拟合诊断（B 在 16 / 64 行训练图上，只读训练集） |
+| 10-25 | "换吧 继续 然后这一步干完先收尾 反正要尽力跑通故事线" | 换成"先写位置、再用程序判定"（S4）；做完后本轮收尾 |
 
 ## 故事（当前版本）
 
