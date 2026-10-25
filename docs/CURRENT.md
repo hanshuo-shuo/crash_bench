@@ -54,7 +54,8 @@
     俯视图没有带来提升，S2 用两张斜视图。
   - S2 于 2026-10-25 完成，见 [V5_S2_REPORT.md](generative_verifier/V5_S2_REPORT.md)：
     4,643 行、1,750 对图像（`s2_dataset_ready`）；训练集的"规则 × 进度"查表 0.760，验证和测试按构造 0.500，自然诊断 0.747 / 0.912；测试已冻结。
-    S3（A 对 B 的 pilot）等用户确认。没有正在运行的 CrashBench 作业。
+    主报告页第 14 版已同步到 S2。
+  - S3（A 对 B 的 pilot）于 10-25 获批，协议草稿 [V5_S3_PROTOCOL.md](generative_verifier/V5_S3_PROTOCOL.md)；代码待下一个会话实现，步骤见 [V5_HANDOFF.md](generative_verifier/V5_HANDOFF.md) 开头。没有正在运行的 CrashBench 作业。
   - 主报告页 Ya7FQbZC9yEuNNyYhPBHHT 第 13 版加了"下一阶段：V5"一节，和上周的结论、后续工作逐条对照（结论：主线没有走偏，覆盖面暂时变窄）。精读页 DJPGiauxhPAC8BYE4L14Y5 第 5 版也有一节同样内容。
   - 没有正在运行的 CrashBench 作业。
 
