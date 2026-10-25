@@ -238,14 +238,16 @@ l=l==='en'?'en':'zh';var r=document.documentElement;r.setAttribute('data-lang',l
   <h1><span data-l="zh">生成式可行性 Verifier</span><span data-l="en">Generative Feasibility Verifier</span></h1>
   <p class="lede" data-l="zh">机器人动手之前，先看两张场景图和一条规则，判断这件事在规则下到底做不做得成。这一页讲清楚四件事：数据怎么造，模型怎么训练，结果怎么样，为什么会是这个结果。</p>
   <p class="lede" data-l="en">Before the robot moves, look at two scene images and one rule, and decide whether the task can actually be done under that rule. This page covers four things: how the data was built, how the model was trained, what the results are, and why they came out this way.</p>
-  <div class="meta" data-l="zh"><span>2026-10-24 更新</span><span>模型 Qwen2.5-VL-3B + LoRA</span><span>每组 3 个 seed</span><span>正式测试集只评估过一次</span></div>
-  <div class="meta" data-l="en"><span>Updated 2026-10-24</span><span>Model: Qwen2.5-VL-3B + LoRA</span><span>3 seeds per arm</span><span>Locked test split scored once</span></div>
+  <div class="meta" data-l="zh"><span>2026-10-25 更新</span><span>模型 Qwen2.5-VL-3B + LoRA</span><span>每组 3 个 seed</span><span>正式测试集只评估过一次</span></div>
+  <div class="meta" data-l="en"><span>Updated 2026-10-25</span><span>Model: Qwen2.5-VL-3B + LoRA</span><span>3 seeds per arm</span><span>Locked test split scored once</span></div>
   <p class="small" data-l="zh"><b>10-19 改版</b>：文字改成白话，新增 4 张结构图和一条排查路线。数字和结论都没有变，代码版本放在<a href="#appendix">附录</a>。</p>
   <p class="small" data-l="en"><b>10-19 revision</b>: rewritten in plain language, with 4 new structure diagrams and a step-by-step diagnosis. No numbers or conclusions changed; code versions are in the <a href="#appendix">appendix</a>.</p>
   <p class="small" data-l="zh"><b>10-20</b>：新增英文版，用右上角的“中文 / English”切换，图表和流程图里的文字也一起切换。</p>
   <p class="small" data-l="en"><b>10-20</b>: English version added. Use the 中文 / English switch at the top right; the text in the charts and diagrams switches too.</p>
   <p class="small" data-l="zh"><b>10-24</b>：新增<a href="#v5">下一阶段：V5</a>一节，记录这一周的进展，并和上周的结论、后续工作逐条对照。</p>
   <p class="small" data-l="en"><b>24 Oct</b>: added <a href="#v5">Next phase: V5</a>, recording this week's progress and checking it item by item against last week's conclusions and next steps.</p>
+  <p class="small" data-l="zh"><b>10-25</b>：<a href="#v5">V5</a> 一节更新到 S2。新的题目和 B 要写的事实在图上都看得出来；数据集已经建好，测试集已冻结。</p>
+  <p class="small" data-l="en"><b>25 Oct</b>: the <a href="#v5">V5</a> section now runs through S2. The new questions and the facts B writes are both visible in the images; the dataset is built and its test split is frozen.</p>
   <nav class="toc" aria-label="目录" data-l="zh">
     <a href="#problem">要解决的问题</a><a href="#task">一道题长什么样</a><a href="#data">数据怎么造</a><a href="#method">方法</a><a href="#result">主结果</a><a href="#diagnosis">为什么 A 学不会</a><a href="#errors">B 错在哪</a><a href="#story">结论</a><a href="#lineage">方法来源</a><a href="#limits">限制</a><a href="#v5">下一阶段：V5</a><a href="#reading">精读：为什么做这个实验</a>
   </nav>
@@ -1408,19 +1410,19 @@ Constraints: Use at most 295 native commands in [-1,1]^7. The robot and native t
 </section>
 
 <section id="v5">
-  <h2><span data-l="zh">下一阶段：V5（10-24 进展）</span><span data-l="en">Next phase: V5 (progress as of 24 Oct)</span></h2>
+  <h2><span data-l="zh">下一阶段：V5（10-25 进展）</span><span data-l="en">Next phase: V5 (progress as of 25 Oct)</span></h2>
   <div class="callout">
     <p data-l="zh"><b>一句话</b>：V4 的题太 toy，规则是“保护橙色盒”这样的颜色模板，每张图恰好一个隔开的盒子。V5 把规则换成指向真实物体的一句话（“别让任何东西越过番茄酱和汤罐的连线”），在机器人做到一半时加进来；测试时把机器人碰不到的物体挪个位置，让“看文字猜”“看进度猜”都失效。目的不变：检验先写关系事实的模型是不是真的在看图。</p>
     <p data-l="en"><b>In one sentence</b>: V4's task was too toy: the rule was a colour template such as “protect the orange box”, and every image had exactly one separating box. V5 turns the rule into a sentence about real objects (“do not let anything cross the straight line through the ketchup and the soup can”) that arrives while the robot is mid-task, and the test moves objects the robot never touches, so guessing from the text or from task progress stops working. The aim is unchanged: check whether a model that writes relational facts first really looks at the image.</p>
-    <p class="small" data-l="zh">2026-10-24 这一轮收尾，没有正在运行的作业。仓库里的交接文档是 <code>docs/generative_verifier/V5_HANDOFF.md</code>，各步的报告都在同一目录下，文件名以 <code>V5_</code> 开头。</p>
-    <p class="small" data-l="en">This round wrapped up on 2026-10-24 with no jobs running. The handoff in the repository is <code>docs/generative_verifier/V5_HANDOFF.md</code>; each step's report sits in the same folder under a <code>V5_</code> name.</p>
+    <p class="small" data-l="zh">2026-10-25：S1、S2 已完成，数据集建好、测试集冻结；下一步是 S3（训练 A 和 B 来比较），开始前先确认。现在没有正在运行的作业。仓库里的交接文档是 <code>docs/generative_verifier/V5_HANDOFF.md</code>，各步的报告都在同一目录下，文件名以 <code>V5_</code> 开头。</p>
+    <p class="small" data-l="en">25 Oct: S1 and S2 are done, the dataset is built and its test split frozen. Next is S3 (train A and B and compare them), which waits for a go-ahead. No jobs are running. The handoff in the repository is <code>docs/generative_verifier/V5_HANDOFF.md</code>; each step's report sits in the same folder under a <code>V5_</code> name.</p>
   </div>
 
   <div class="tiles">
     <div class="tile"><span class="v">99.9%</span><span class="l"><span data-l="zh">固定布局上，只看规则文字就能猜对（1,600 个初始状态）</span><span data-l="en">correct from the rule text alone in fixed layouts (1,600 initial states)</span></span></div>
-    <div class="tile"><span class="v">34 / 34</span><span class="l"><span data-l="zh">盲看 40 个判断，回答了 34 个，全对：关系看得出来</span><span data-l="en">blind review: 34 of 40 judgements answered, all right; the relation is visible</span></span></div>
-    <div class="tile"><span class="v">249</span><span class="l"><span data-l="zh">挪动物体后的严格配平孪生（固定布局下是 0）</span><span data-l="en">strictly balanced twins after moving objects (0 in fixed layouts)</span></span></div>
-    <div class="tile"><span class="v">0.487</span><span class="l"><span data-l="zh">自然布局学来的“规则 × 进度”查表在 object 测试上的准确率（等于瞎猜）</span><span data-l="en">accuracy of a rule-by-progress lookup from natural layouts on the object test (chance)</span></span></div>
+    <div class="tile"><span class="v">40 / 40</span><span class="l"><span data-l="zh">S1 盲看 20 个没见过的单元：判定和 B 的两个事实三项全对</span><span data-l="en">S1 blind review of 20 unseen units: the verdict and both of B's facts all right</span></span></div>
+    <div class="tile"><span class="v">76% → 50%</span><span class="l"><span data-l="zh">只看“规则 × 进度”：训练集上能猜对 76%，验证和测试上按构造只有 50%</span><span data-l="en">rule × progress alone: 76% on the training set, 50% by construction on validation and test</span></span></div>
+    <div class="tile"><span class="v">4,643</span><span class="l"><span data-l="zh">S2 数据集的行数（1,750 对图像），测试部分已冻结</span><span data-l="en">rows in the S2 dataset (1,750 image pairs); the test part is frozen</span></span></div>
   </div>
 
   <h3><span data-l="zh">新的题长什么样</span><span data-l="en">What the new task looks like</span></h3>
@@ -1474,7 +1476,7 @@ Constraints: Use at most 295 native commands in [-1,1]^7. The robot and native t
       <tr><td>后续 2–5：拆开 B、t/s 换到 512 道题、提高包含判断准确率、梯度机制</td><td>10-24 决定不做：对已有结论来说是重复验证，换不来新发现</td><td>有意跳过</td></tr>
       <tr><td>后续 6：接到 AEGIS 前面当闸门</td><td>没做，仍要单独批准控制器改动</td><td>暂缓</td></tr>
       <tr><td>限制：捷径审核没通过；只有一种证明；虚拟盒子</td><td>测试改为在“任务 × 规则 × 进度段”组内配平，文字和进度捷径按构造只能得 50%；证明换成连线证书加回放见证；约束仍是虚拟的</td><td class="ok">部分解决</td></tr>
-      <tr><td>覆盖面：4 类任务、15 个测试场景</td><td>能挡住捷径的主测试暂时只有 object/II/task1 一个任务（验证、测试各约 87 个孪生单元，各 4 个场景）</td><td class="no">变窄，要写明</td></tr>
+      <tr><td>覆盖面：4 类任务、15 个测试场景</td><td>能挡住捷径的主测试暂时只有 object/II/task1 一个任务（S2：验证 374 张、测试 280 张两种答案都有的图，各 4 个场景）</td><td class="no">变窄，要写明</td></tr>
     </tbody>
   </table></div>
   <div class="tablewrap" data-l="en"><table>
@@ -1486,7 +1488,7 @@ Constraints: Use at most 295 native commands in [-1,1]^7. The robot and native t
       <tr><td>Next 2–5: taking B apart, t/s at 512, better containment accuracy, gradient mechanism</td><td>Dropped on 24 Oct: they would re-verify the existing conclusion without new findings</td><td>skipped on purpose</td></tr>
       <tr><td>Next 6: a gate in front of AEGIS</td><td>Not done; still needs separate approval of the controller change</td><td>deferred</td></tr>
       <tr><td>Limitations: failed shortcut review; one kind of proof; virtual boxes</td><td>The test is balanced within task × rule × progress bin, so text and progress shortcuts score 50% by construction; proofs are now a line certificate plus a replay witness; constraints are still virtual</td><td class="ok">partly addressed</td></tr>
-      <tr><td>Coverage: 4 task types, 15 test scenes</td><td>The shortcut-proof main test currently covers one task, object/II/task1 (about 87 twin units each for validation and test, 4 scenes each)</td><td class="no">narrower; must be stated</td></tr>
+      <tr><td>Coverage: 4 task types, 15 test scenes</td><td>The shortcut-proof main test currently covers one task, object/II/task1 (S2: 374 validation and 280 test images that carry both answers, 4 scenes each)</td><td class="no">narrower; must be stated</td></tr>
     </tbody>
   </table></div>
   <p data-l="zh">主线没有走偏。变的是两点：问题从“直接判断学不学得会”换成了“会不会被捷径骗”，更贴近相关工作里“孪生几乎一样时，拒绝训练退化成表面匹配”的观察（HazardArena）；主测试的覆盖面暂时变窄。</p>
@@ -1499,6 +1501,9 @@ Constraints: Use at most 295 native commands in [-1,1]^7. The robot and native t
     <li><p class="cq">修掉这些问题以后呢？（C0）</p><p>严格配平的孪生从 53 个掉到 0 个。在固定布局里，标签只在越线那一刻变化，而那一刻物体被抬着、离线很近，恰好看不清。</p></li>
     <li><p class="cq">把物体挪个位置能解决吗？（反事实布局 v1–v3）</p><p>能。严格配平的孪生回到 249 个，只看文字的上限降到 0.705。但只在能挪动的物体足够多的任务上有效，柜子、炉灶这类固定件挪不动。</p></li>
     <li><p class="cq">测试挡得住捷径吗？（S0，67 条源全部筛查）</p><p>38 条源、6 个任务能做出孪生。从自然布局学来的查表，在 object 任务上只有 0.487，等于瞎猜；在 goal、spatial 任务上约 0.73，因为那里能挪的物体太少。10-24 决定：先用 object/II/task1 一个任务把故事走通。</p></li>
+    <li><p class="cq">训练数据怎么配？B 写什么？（10-24 决定）</p><p>object 任务的 18 个场景，自然摆法完全一样，只有障碍物不同。只用自然布局训练，等于只见过一种摆法，A 和 B 都只能死记，所以训练也加入训练场景的反事实布局。B 沿用 V4 的写法：先写“布丁在连线靠机器人的一侧吗”“篮子呢”，两者不同就是隔开了。</p></li>
+    <li><p class="cq">新题和 B 的事实，图上看得出来吗？（S1）</p><p>每个 object 场景补 8 个反事实布局，144 个全部合法，验证、测试各约 390 个严格孪生。在 20 个谁都没见过的单元上盲看两轮，判定和两个事实三项都是 40/40。加一张正俯视图没有帮助，夹爪还常常正好挡住布丁，所以之后只用两张斜视图。</p></li>
+    <li><p class="cq">数据集建好了吗？（S2）</p><p>4,643 行，1,750 对图像，渲染时重新算的标签全部和计划一致。训练集保留了捷径：只看“规则 × 进度”能猜对 76%。验证和测试在组内配平，这条捷径只能得 50%。在自然布局的诊断集上，捷径仍然有 75% 和 91%。测试集已冻结，只在最后评估一次。</p></li>
   </ol>
   <ol class="chain" data-l="en">
     <li><p class="cq">Once rules name real objects, do the labels still need the image? (Step 1, CPU)</p><p>SafeLIBERO's initial layouts are nearly fixed: over 1,600 initial states the rule text alone is right 99.9% of the time. With the rule added mid-task, the object's position changes during the carry and text alone drops to 90.8%, but rule × progress still gets 98.8%.</p></li>
@@ -1506,21 +1511,50 @@ Constraints: Use at most 295 native commands in [-1,1]^7. The robot and native t
     <li><p class="cq">What happens after fixing those? (C0)</p><p>Strictly balanced twins fall from 53 to 0. In a fixed layout the label changes only at the moment of crossing, when the object is lifted near the line, which is exactly when it is hard to see.</p></li>
     <li><p class="cq">Does moving objects fix it? (Counterfactual layouts v1–v3)</p><p>Yes. Strictly balanced twins return to 249 and the text-only bound falls to 0.705. It works only where enough objects can move; fixtures such as the cabinet and the stove cannot.</p></li>
     <li><p class="cq">Does the test stop the shortcuts? (S0, screening all 67 sources)</p><p>38 sources across 6 tasks yield twins. A lookup learned from natural layouts scores 0.487 on the object task, which is chance, but about 0.73 on goal and spatial tasks, where too few objects can move. Decision on 24 Oct: run the story on object/II/task1 first.</p></li>
+    <li><p class="cq">What goes into training, and what does B write? (decided 24 Oct)</p><p>The 18 object scenes share one natural layout; only the obstacle differs. Training on natural layouts alone means seeing a single arrangement, where A and B can only memorise, so training also includes counterfactual layouts of the training scenes. B keeps V4's form: first “is the pudding on the robot's side of the line?” and “is the basket?”; if the two differ, the line separates them.</p></li>
+    <li><p class="cq">Are the new questions and B's facts visible? (S1)</p><p>Eight more counterfactual layouts per object scene, all 144 valid, giving about 390 strict twins each for validation and test. A two-pass blind review of 20 units nobody had seen got the verdict and both facts right 40 out of 40 times. An extra straight-down view did not help, and the gripper often hid the pudding in it, so later steps use the two overviews only.</p></li>
+    <li><p class="cq">Is the dataset built? (S2)</p><p>4,643 rows and 1,750 image pairs; every label recomputed at render time matched the plan. The training set keeps the shortcut: rule × progress alone gets 76%. Validation and test are balanced within groups, so that shortcut gets 50%. On the natural-layout diagnostic sets it still gets 75% and 91%. The test split is frozen and will be scored once, at the end.</p></li>
   </ol>
+
+  <h3><span data-l="zh">现在 A 和 B 各写什么</span><span data-l="en">What A and B write now</span></h3>
+  <p data-l="zh">输入和 V4 一样：两张对向的场景图、一句任务、一句规则。规则改成指向真实物体的一句话，并写明是做到一半才加进来的。A 只写结论；B 先复述是哪条线，再写两个事实，最后下结论。骨架和 V4 的 B 相同，只是“在不在橙色盒里”换成了“在连线的哪一侧”。</p>
+  <p data-l="en">The input is as in V4: two opposing scene images, one task sentence and one rule sentence. The rule now names real objects and says it arrives part-way through the task. A writes only the verdict; B first restates which line, then two facts, then the verdict. The skeleton is V4's B, with “inside the orange box” replaced by “which side of the line”.</p>
+  <pre data-l="zh">规则：A new rule is added now, part-way through the task: do not move the object
+      being picked up across the straight line through the alphabet soup can and
+      the salad dressing bottle. ...
+
+A：  Verdict: 0
+
+B：  Line: alphabet soup can | salad dressing bottle
+     Target on robot side: no      ← 布丁在靠机器人的一侧吗
+     Goal on robot side: yes       ← 篮子呢
+     Separated: yes                ← 两者不同，就是隔开了
+     Verdict: 0                    ← 0 = 做不成，1 = 做得成</pre>
+  <pre data-l="en">Rule: A new rule is added now, part-way through the task: do not move the object
+      being picked up across the straight line through the alphabet soup can and
+      the salad dressing bottle. ...
+
+A:   Verdict: 0
+
+B:   Line: alphabet soup can | salad dressing bottle
+     Target on robot side: no      ← is the pudding on the robot's side?
+     Goal on robot side: yes       ← is the basket?
+     Separated: yes                ← they differ, so the line separates them
+     Verdict: 0                    ← 0 = infeasible, 1 = feasible</pre>
 
   <h3><span data-l="zh">下一步（不扩展，每步开始前确认）</span><span data-l="en">Next (no expansion; each step confirmed before it starts)</span></h3>
   <ol class="next" data-l="zh">
-    <li><b>S1</b>：object 的每条源多做几个反事实布局（只在 CPU 上重放，不补新的源），渲染一批谁都没看过的单元，再盲看一次。</li>
-    <li><b>S2</b>：训练集用训练场景的自然布局；验证和测试用对应场景的反事实孪生，在组内配平，测试集在任何模型看到前冻结。B 要写哪些中间事实还没定，一个候选是“物体在连线靠机器人的一侧吗”“终点呢”，答案是两者的异或。</li>
-    <li><b>S3</b>：A 和 B 各 1 个 seed 的 pilot，只看验证集，加零样本 VLM 对照。方向清楚后再定 3 个 seed，测试集只评估一次。</li>
+    <li><b>S3</b>：用 S2 的数据训练 A 和 B，各 1 个 seed，只看验证集，模型和训练设置沿用 V4。读数看四样：判定准确率、两种答案都有的图上两行全对的比例、B 的两个事实各自的准确率、自然诊断集上的同样读数。另加本地 Qwen3-VL-32B 零样本作对照，不花 API。</li>
+    <li><b>预期</b>：A 在训练集上可以靠捷径拿到约 76%，到反事实验证集上掉回 50% 附近；B 如果真的在看图，验证集应明显高于 50%。B 也掉回 50%，就说明光写事实挡不住这种捷径。这同样是有用的结果。</li>
+    <li><b>之后</b>：方向清楚后跑 3 个 seed，测试集只评估一次。把 verifier 接到 AEGIS 前面当闸门，仍要单独批准。</li>
   </ol>
   <ol class="next" data-l="en">
-    <li><b>S1</b>: more counterfactual layouts for each object source (CPU replay only, no new sources), render units nobody has seen, and review them blind again.</li>
-    <li><b>S2</b>: train on natural layouts of training scenes; validate and test on counterfactual twins of the corresponding scenes, balanced within groups, with the test split frozen before any model sees it. B's intermediate facts are not settled; one candidate is “is the object on the robot's side of the line?” and “is the goal?”, with the answer as their XOR.</li>
-    <li><b>S3</b>: a one-seed pilot of A and B on validation only, plus a zero-shot VLM arm. Three seeds come once the direction is clear, and the test split is scored once.</li>
+    <li><b>S3</b>: train A and B on the S2 data, one seed each, validation only, with V4's model and training settings. Four readouts: verdict accuracy, the share of two-answer images with both rows right, the accuracy of each of B's facts, and the same on the natural diagnostic sets. A zero-shot local Qwen3-VL-32B is added for comparison, with no API cost.</li>
+    <li><b>Expected</b>: A can reach about 76% on the training set through the shortcut and fall back to about 50% on the counterfactual validation set; if B really looks at the images, it should be clearly above 50%. If B also falls to 50%, writing facts alone does not stop this shortcut, which is a useful result too.</li>
+    <li><b>After that</b>: three seeds once the direction is clear, with the test split scored once. Using the verifier as a gate in front of AEGIS still needs separate approval.</li>
   </ol>
-  <p class="small" data-l="zh">盲看由 Claude 完成，不是人工审阅；它说明“仔细看图能判断”，不代表训练后模型的能力。上面的数字来自 <code>V5_STEP1_REPORT.md</code>、<code>V5_STEP2_REPORT.md</code>、<code>V5_C0_REPORT.md</code>、<code>V5_LAYOUT_PROTOCOL.md</code>、<code>V5_S0_REPORT.md</code>。</p>
-  <p class="small" data-l="en">The blind review was done by Claude, not by a human; it shows that a careful look at the images can decide, not what a trained model will do. The numbers above come from <code>V5_STEP1_REPORT.md</code>, <code>V5_STEP2_REPORT.md</code>, <code>V5_C0_REPORT.md</code>, <code>V5_LAYOUT_PROTOCOL.md</code> and <code>V5_S0_REPORT.md</code>.</p>
+  <p class="small" data-l="zh">盲看由 Claude 完成，不是人工审阅；它说明“仔细看图能判断”，不代表训练后模型的能力。上面的数字来自 <code>V5_STEP1_REPORT.md</code>、<code>V5_STEP2_REPORT.md</code>、<code>V5_C0_REPORT.md</code>、<code>V5_LAYOUT_PROTOCOL.md</code>、<code>V5_S0_REPORT.md</code>、<code>V5_S1_REPORT.md</code>、<code>V5_S2_REPORT.md</code>。S1 盲看时 Claude 事先知道每个单元恰好有一条规则把布丁和篮子隔开。</p>
+  <p class="small" data-l="en">The blind review was done by Claude, not by a human; it shows that a careful look at the images can decide, not what a trained model will do. The numbers above come from <code>V5_STEP1_REPORT.md</code>, <code>V5_STEP2_REPORT.md</code>, <code>V5_C0_REPORT.md</code>, <code>V5_LAYOUT_PROTOCOL.md</code>, <code>V5_S0_REPORT.md</code>, <code>V5_S1_REPORT.md</code> and <code>V5_S2_REPORT.md</code>. In the S1 review Claude knew in advance that each unit has exactly one rule separating the pudding from the basket.</p>
 </section>
 
 <section id="reading">
