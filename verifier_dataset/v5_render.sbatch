@@ -23,6 +23,8 @@ export SINGULARITYENV_PYTHONNOUSERSITE=1 SINGULARITYENV_PYTHONDONTWRITEBYTECODE=
 export SINGULARITYENV_OMP_NUM_THREADS=1 SINGULARITYENV_OPENBLAS_NUM_THREADS=1
 export SINGULARITYENV_MUJOCO_GL=egl SINGULARITYENV_PYOPENGL_PLATFORM=egl
 export SINGULARITYENV_PYTHONPATH="$HOME/crash_bench/third_party/vlsa-aegis/openpi/packages/openpi-client/src"
+ARGS=("$ROOT")
+if [[ -n "${SLURM_ARRAY_TASK_ID:-}" ]]; then ARGS=("$ROOT" --shard "$SLURM_ARRAY_TASK_ID" --shards "${CB_RENDER_SHARDS:?}"); fi
 singularity exec --nv --bind "/projects,/home,$ROOT:$ROOT:rw,$ROOT/source:$ROOT/source:ro" \
  /projects/p33100/siosio/crashbench_safelibero/containers/aegis-py38.sif \
- /projects/p33100/siosio/crashbench_safelibero/envs/aegis_sim/bin/python -u -m verifier_dataset.v5_render "$ROOT"
+ /projects/p33100/siosio/crashbench_safelibero/envs/aegis_sim/bin/python -u -m verifier_dataset.v5_render "${ARGS[@]}"

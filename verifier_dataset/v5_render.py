@@ -148,23 +148,25 @@ def capture(env, folder, unit, geometry, physical_hash):
     keep = np.asarray(d.cam_xpos[cid]).copy(), np.asarray(d.cam_xmat[cid]).copy()
     from .v5_scan import scene_objects
     floor = scene_objects(env, object_points)[1]
+    names = tuple(unit.get('views', VIEWS))
     views = poses(regions, unit['source'] + '|' + str(unit['unit']), float(m.cam_fovy[cid]))
     rx, ry = state['robot']
-    views.append(top_pose(regions + [([rx - .06, ry - .06, floor], [rx + .06, ry + .06, floor + .05])], float(m.cam_fovy[cid])))
+    if 'top' in names:
+        views.append(top_pose(regions + [([rx - .06, ry - .06, floor], [rx + .06, ry + .06, floor + .05])], float(m.cam_fovy[cid])))
     lines = [m.geom_name2id('v5_line_%d' % i) for i in range(len(LINE_COLORS))]
     if any(m.geom_contype[x] or m.geom_conaffinity[x] or int(m.geom_bodyid[x]) != 0 for x in lines):
         raise RuntimeError('Diagnostic line affects the physical scene')
     entities = dict(target=state['target'], goal=state['goal_body'], **state['anchors'])
     geoms = {k: body_geoms(m, int(env.env.obj_body_id[v])) for k, v in entities.items()}
     visibility = {}
-    for mode in ('student', 'diagnostic'):
+    for mode in ('student', 'diagnostic') if unit.get('diagnostic', True) else ('student',):
         for geom, rule in zip(lines, state['labels']):
             (ax, ay), (bx, by) = rule['ends']
             yaw = np.arctan2(by - ay, bx - ax)
             center = [(ax + bx) / 2, (ay + by) / 2, floor + .004] if mode == 'diagnostic' else [99., 99., 99.]
             m.geom_pos[geom] = center; d.geom_xpos[geom] = center
             d.geom_xmat[geom] = [np.cos(yaw), -np.sin(yaw), 0, np.sin(yaw), np.cos(yaw), 0, 0, 0, 1]
-        for name, pose in zip(VIEWS, views):
+        for name, pose in zip(names, views):
             d.cam_xpos[cid] = pose['position']; d.cam_xmat[cid] = pose['rotation']
             rgb, segmentation = render(env, 'agentview')
             vendor = GL.glGetString(GL.GL_VENDOR).decode()
@@ -274,21 +276,26 @@ def render_layout_case(root, index):
             env.close()
 
 
-def main(root, case_index=None):
+def main(root, case_index=None, shard=None, shards=None):
+    """One job renders every case; with shards, array task `shard` renders every shards-th case and the
+    dataset build aggregates (V5 S2)."""
     if not os.environ.get('SLURM_JOB_ID'):
         raise RuntimeError('Quest compute allocation required')
     units = read(root/'UNITS.json'); counterfactual = 'layout_case' in units[0]
     if case_index is not None:
-        return (render_layout_case if counterfactual else render_case)(root, case_index)
+        mine = read(root/('case_%03d' % case_index)/'UNITS.json')
+        return (render_layout_case if 'layout_case' in mine[0] else render_case)(root, case_index)
     device = subprocess.check_output(['nvidia-smi', '--query-gpu=name,driver_version', '--format=csv,noheader'], text=True).strip()
     write(root/'GPU.json', dict(devices=device, scope='OpenGL rendering only', slurm_job=os.environ['SLURM_JOB_ID']))
     if 'A100' not in device:
         raise RuntimeError('Exact source replay is qualified on A100 nodes only')
-    group = 'layout_case' if counterfactual else 'v4_case'
-    cases = sorted({u[group] for u in units})
+    group = lambda u: u.get('layout_case') or u['v4_case']
+    cases = sorted({group(u) for u in units})
     for index, key in enumerate(cases):
+        if shards is not None and index % shards != shard:
+            continue
         case = root/('case_%03d' % index); case.mkdir()
-        mine = [u for u in units if u[group] == key]
+        mine = [u for u in units if group(u) == key]
         row = read(Path(mine[0]['v4_case'])/'INPUT.json'); write(case/'INPUT.json', row)
         checkpoint = Path(row['evidence']['witness_root'])/'checkpoint_000'
         if row['evidence']['checkpoint_step'] != 0 or sha(checkpoint/'context.json') != row['evidence']['checkpoint_context_sha256']:
@@ -299,6 +306,10 @@ def main(root, case_index=None):
         with (case/'worker.log').open('w') as log:
             subprocess.run([sys.executable, '-u', '-m', 'verifier_dataset.v5_render', str(root), '--case-index', str(index)],
                            stdout=log, stderr=subprocess.STDOUT, check=True)
+    if shards is not None:
+        write(root/('SHARD_%d_COMPLETE.json' % shard), dict(passed=True, shard=shard, cases=sum(i % shards == shard for i in range(len(cases))),
+                                                            slurm_job=os.environ['SLURM_JOB_ID']))
+        return
     rendered = {u['review_id']: read(root/'units'/u['review_id']/'RENDER_GEOMETRY.json') for u in units}
     labels = [l for r in rendered.values() for l in r['labels']]
     write(root/'RENDER_COMPLETE.json', dict(passed=True, units=len(rendered), cases=len(cases),
@@ -311,10 +322,12 @@ def main(root, case_index=None):
 
 if __name__ == '__main__':
     p = argparse.ArgumentParser(); p.add_argument('root', type=Path); p.add_argument('--case-index', type=int)
+    p.add_argument('--shard', type=int); p.add_argument('--shards', type=int)
     a = p.parse_args()
     try:
-        main(a.root, a.case_index)
+        main(a.root, a.case_index, a.shard, a.shards)
     except BaseException as error:
-        write(a.root/('STOP_case_%s.json' % a.case_index if a.case_index is not None else 'STOP_render.json'),
+        write(a.root/('STOP_case_%s.json' % a.case_index if a.case_index is not None else
+                      'STOP_shard_%s.json' % a.shard if a.shard is not None else 'STOP_render.json'),
               dict(error=type(error).__name__, reason=str(error)))
         raise

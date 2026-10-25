@@ -3,6 +3,7 @@
 scan: step 1 CPU geometry scan. render SCAN_ROOT: step 2 render pilot on one A100.
 trace, layout/screen TRACE_ROOT: C0 retrace and counterfactual layouts. s1-layout TRACE_ROOT:
 eight layouts per object/II/task1 source. s1-render S1_LAYOUT_ROOT: blind-review renders.
+s2 S1_LAYOUT_ROOT: render the object/II/task1 dataset on two A100 shards, then build it on CPU.
 """
 import argparse
 from datetime import datetime, timezone
@@ -19,7 +20,8 @@ UPSTREAM = '2457feed5968ae803926e178c8ce8243b9ecdcf9'
 PROTOCOLS = dict(scan='docs/generative_verifier/V5_STEP1_PROTOCOL.md', render='docs/generative_verifier/V5_STEP2_PROTOCOL.md',
                  trace='docs/generative_verifier/V5_COLLECTION_PROTOCOL.md', layout='docs/generative_verifier/V5_LAYOUT_PROTOCOL.md',
                  screen='docs/generative_verifier/V5_SCREEN_PROTOCOL.md',
-                 **{'s1-layout': 'docs/generative_verifier/V5_S1_PROTOCOL.md', 's1-render': 'docs/generative_verifier/V5_S1_PROTOCOL.md'})
+                 **{'s1-layout': 'docs/generative_verifier/V5_S1_PROTOCOL.md', 's1-render': 'docs/generative_verifier/V5_S1_PROTOCOL.md',
+                    's2': 'docs/generative_verifier/V5_S2_PROTOCOL.md'})
 AUTHORIZATION = dict(
     scan='2026-10-24 user: V5 step 1 CPU geometry scan; no rendering, training, API or dataset rows',
     render='2026-10-24 user: V5 step 2 render pilot of about 20 checkpoints; no training, API or dataset rows',
@@ -27,7 +29,8 @@ AUTHORIZATION = dict(
     layout='2026-10-24 user chose counterfactual layouts (option 3); CPU smoke of relocated anchors on 8 V4 sources, no rendering, training, API or dataset rows',
     screen='2026-10-24 user: restrict V5 to twin-capable compositions, no expansion; CPU screen of all 67 V4 sources, no rendering, training, API or dataset rows',
     **{'s1-layout': '2026-10-24 user: train on object/II/task1 only and add all three S1 items; CPU, eight layouts per object source, no rendering, training, API or dataset rows',
-       's1-render': '2026-10-24 user: S1 render with a top view and a two-pass blind review on validation sources; no training, API or dataset rows'})
+       's1-render': '2026-10-24 user: S1 render with a top view and a two-pass blind review on validation sources; no training, API or dataset rows',
+       's2': '2026-10-25 user: continue with S2 (build the object/II/task1 dataset); two A100 render shards and a CPU build, no training or API'})
 
 
 def command(*args, env=None):
@@ -162,8 +165,14 @@ def main(stage, scan=None):
         raise RuntimeError('Counterfactual layouts start from a V5 trace run')
     if stage == 's1-render' and finished(scan, 'LAYOUT_COMPLETE.json')['stage'] != 'v5-s1-layout':
         raise RuntimeError('S1 renders start from an S1 layout run')
-    if stage in ('render', 's1-render'):
-        units, sheet = render_plan(scan) if stage == 'render' else layout_render_plan(scan)
+    if stage == 's2' and finished(scan, 'LAYOUT_COMPLETE.json')['stage'] != 'v5-s1-layout':
+        raise RuntimeError('S2 starts from the S1 layout run')
+    if stage in ('render', 's1-render', 's2'):
+        if stage == 's2':
+            from .v5_dataset import plan as dataset_plan
+            units = dataset_plan(scan, Path(read(scan/'CAMPAIGN.json')['trace_root']))
+        else:
+            units, sheet = render_plan(scan) if stage == 'render' else layout_render_plan(scan)
         active = command('squeue', '-h', '-u', os.environ['USER'], '-A', 'p33100', '-p', 'gengpu', '-o', '%j')
         if sum(x.startswith('cb_') for x in active.splitlines()) >= 2:
             raise RuntimeError('Two CrashBench GPU jobs already active')
@@ -184,6 +193,16 @@ def main(stage, scan=None):
         script = str(root/'source/verifier_dataset/v5_layouts.sbatch')
         job = submit(env, '--array=0-%d' % (LAYOUT_SHARDS-1), '--output='+str(root/'slurm_%A_%a.log'), script)
         receipt = dict(manifest, job=job, summarize_job=submit(env, '--dependency=afterok:'+job, '--output='+str(root/'slurm_%j.log'), script))
+    elif stage == 's2':
+        shards = 2
+        manifest.update(partition='gengpu', shards=shards, units=len(units), layout_root=str(scan),
+                        layout_hashes=read(scan/'HASHES.json'), trace_root=read(scan/'CAMPAIGN.json')['trace_root'])
+        write(root/'CAMPAIGN.json', manifest); write(root/'UNITS.json', units)
+        env['CB_RENDER_SHARDS'] = str(shards)
+        job = submit(env, '--array=0-%d' % (shards - 1), '--time=02:00:00', '--output='+str(root/'slurm_%A_%a.log'),
+                     str(root/'source/verifier_dataset/v5_render.sbatch'))
+        receipt = dict(manifest, job=job, build_job=submit(env, '--dependency=afterok:'+job, '--output='+str(root/'slurm_%j.log'),
+                                                           str(root/'source/verifier_dataset/v5_dataset.sbatch')))
     elif stage == 'scan':
         manifest.update(partition='short', shards=len(SHARDS)); write(root/'CAMPAIGN.json', manifest)
         script = str(root/'source/verifier_dataset/v5_scan.sbatch')
@@ -202,7 +221,8 @@ def main(stage, scan=None):
 
 if __name__ == '__main__':
     p = argparse.ArgumentParser()
-    p.add_argument('stage', choices=['scan', 'render', 'trace', 'layout', 'screen', 's1-layout', 's1-render']); p.add_argument('scan_root', type=Path, nargs='?')
+    p.add_argument('stage', choices=['scan', 'render', 'trace', 'layout', 'screen', 's1-layout', 's1-render', 's2'])
+    p.add_argument('scan_root', type=Path, nargs='?')
     a = p.parse_args()
     if (a.stage not in ('scan', 'trace')) != (a.scan_root is not None):
         raise SystemExit('render and layout need exactly one prior run root; scan and trace take none')
