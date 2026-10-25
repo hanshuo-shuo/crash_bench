@@ -1,21 +1,32 @@
-# V5 交接（2026-10-24 收尾）
+# V5 交接（2026-10-25 更新到 S3）
 
 读者：接手的下一个 Claude/Codex 会话。先读 [AGENTS.md](../../AGENTS.md) 和 [CURRENT.md](../CURRENT.md)，再读本文。
 
 ## 2026-10-25 交接（先读这一节）
 
-用户说："可以 开始写然后 这个对话框很长了 我再递交给下一个你"。意思是 S3 已批准开始，由下一个会话接着做。
-
-- **已完成**：
+- **S3 已完成**，见 [V5_S3_REPORT.md](V5_S3_REPORT.md)。用户 10-25 先说"可以 开始写"，新会话里又说"接着做 V5 的 S3"。
+  - 预注册读法 `both_shortcut`：反事实孪生验证上 A 0.501、B 0.503，B − A +0.001，区间 [−0.015, +0.020]。
+  - 两组都停在"规则 × 进度"先验上，连训练集都没超过查表（0.72 < 0.760）。
+  - B 的组合完全正确，错在两个"机器人侧"事实：篮子侧几乎总写 no，物体侧只比查表高 8 个百分点。
+  - 自然诊断上两组都是 0.89：只有一种自然布局，被模型记住了。
+  - 零样本 3B 和 32B 都在随机水平，而且是常数回答。
+  - 代码：实现 `904ce55`，协议冻结 `bdcf277`。运行目录 `/projects/p33100/siosio/crashbench_safelibero/verifier_training/runs/20261025T055227Z_v5-s3_bdcf277164b6`。
+- **等用户决定下一步**，选项见 S3 报告末尾。建议先做拟合诊断：B 在 16 / 64 行训练图上能不能拟合两个事实。它能分清"看不出"和"训练不够"。
+- 没有正在运行的 CrashBench 作业。
+- 主报告页已同步到 S3（第 15 版），中英文都改了。
+- **之前已完成**：
   - S1：[V5_S1_REPORT.md](V5_S1_REPORT.md)。题目和 B 的两个事实都看得出来；S2 只用两张斜视图。
   - S2：[V5_S2_REPORT.md](V5_S2_REPORT.md)。数据集已建好，测试已冻结。
-  - 主报告页第 14 版已同步到 S2，仓库副本已提交（d8f949f）。
-- **进行中：S3**。协议草稿是 [V5_S3_PROTOCOL.md](V5_S3_PROTOCOL.md)，读数、读法、训练设置都已写好，代码还没写。下一个会话按顺序做：
-  1. 按协议"要实现的代码"一节写 `verifier_training/v5_contract.py`、`v5_metrics.py`、`v5_run.py`、`v5_zero_shot_32b.py`、`launch_v5.py` 和 sbatch。`fd1000_run.encode` 只加一个可选的强制前缀参数，默认保持 V4 行为。
-  2. 写测试，跑通 V4 原有的 verifier_training 测试和新测试；在草稿目录用几行数据做一次 GPU smoke（不进入读数）。
-  3. 在协议末尾写上"冻结"、实现 commit 和日期，提交并推送。
-  4. 启动 preflight，然后 A、B 两个训练（seed 713，同时最多 2 张 GPU），再跑零样本 3B 和 32B（32B 需两张 A100-40GB 或一张 80 GB / H100）。
-  5. 写 `V5_S3_REPORT.md`；按读法给出下一步建议；同步主报告页（中英文都改）。
+- **S3 代码入口**（`verifier_training/`）：
+  - `v5_contract.py`：配置、`validate()`、子集、查表、零样本提示、读法；
+  - `v5_metrics.py`：解析和读数；
+  - `v5_run.py`：preflight、train、zero-shot-3b、report；
+  - `v5_zero_shot_32b.py`：32B 零样本，用 `qwen-vlm` 环境，需要 `LD_LIBRARY_PATH` 指向该环境的 lib；
+  - `launch_v5.py`：`create`、`pilot`、`stage`。
+  - 测试：`test_v5_contract`、`test_v5_metrics`、`test_v5_encoding`。
+- **新的坑**：
+  - S2 的行按键名排序写出，事实字段的顺序是字母序，不能按 `FACT_KEYS` 的顺序比较；
+  - 32B 写事实时每行末尾带两个空格，严格格式记为不合规，但事实能解析。
 - **规矩**：
   - 提交身份用 `git -c user.name=hanshuo-shuo -c user.email=80494218+hanshuo-shuo@users.noreply.github.com commit`。本机配置是另一个邮箱，不要用。
   - 测试集（`test`、`test_natural`）在 3 个 seed 和选模全部冻结前不读。
@@ -36,6 +47,7 @@
 | 10-25 | "要改" | 把用错身份的提交 c732956 改写为 d38420c（树相同）并强制推送 |
 | 10-25 | "继续做s2 一起更新" | 做 S2；主报告页等 S2 完成后一起更新（第 14 版） |
 | 10-25 | "可以 开始写然后 这个对话框很长了 我再递交给下一个你" | 开始 S3：写协议和代码；本会话写完协议后交接 |
+| 10-25 | "接着做 V5 的 S3" | 新会话实现 S3 代码、跑 smoke、冻结协议并运行 pilot |
 
 ## 故事（当前版本）
 
@@ -82,7 +94,7 @@ S0 的关键数字：
      - 机器人底座（约 (-0.60, 0)）离连线不到 10 cm 的只有 `alphabet_soup|orange_juice` 一条规则（5.7 cm，自然行 536/3216）；反事实布局里有 456/6404 行。
      - "图上标位置 + 程序判定"这一候选：用第 2 步渲染的相机参数，按物体可见中心的投影在图上判断哪一侧，余量 ≥ 5 cm 时只有 60/74 与真实标签一致；改用地面接触点的投影是 73/74。斜视图里的视差很大，这种事实要换俯视图或改标接触点。
    - 渲染两张对向图（gengpu A100，排除 qgpu2014）。
-3. **S3：A 和 B 的 pilot**（用户 10-25 批准开始；协议草稿 [V5_S3_PROTOCOL.md](V5_S3_PROTOCOL.md)，代码由下一个会话实现）
+3. **S3：A 和 B 的 pilot**（用户 10-25 批准开始；协议 [V5_S3_PROTOCOL.md](V5_S3_PROTOCOL.md)；2026-10-25 完成，见 [V5_S3_REPORT.md](V5_S3_REPORT.md)，读法 `both_shortcut`）
    - 各 1 个 seed，只看验证集，沿用 `verifier_training/` 的管线和损失设置；要把 `fd1000_contract` 里 V4 的事实键和强制前缀换成 V5 格式（`Line:`、`Target on robot side`、`Goal on robot side`、`Separated`）。
    - 加零样本 VLM 对照：本地 Qwen，不花 API。
    - 看到方向后再定 3 个 seed 和测试评估。测试集只评估一次。

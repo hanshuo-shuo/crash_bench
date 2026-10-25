@@ -248,6 +248,8 @@ l=l==='en'?'en':'zh';var r=document.documentElement;r.setAttribute('data-lang',l
   <p class="small" data-l="en"><b>24 Oct</b>: added <a href="#v5">Next phase: V5</a>, recording this week's progress and checking it item by item against last week's conclusions and next steps.</p>
   <p class="small" data-l="zh"><b>10-25</b>：<a href="#v5">V5</a> 一节更新到 S2。新的题目和 B 要写的事实在图上都看得出来；数据集已经建好，测试集已冻结。</p>
   <p class="small" data-l="en"><b>25 Oct</b>: the <a href="#v5">V5</a> section now runs through S2. The new questions and the facts B writes are both visible in the images; the dataset is built and its test split is frozen.</p>
+  <p class="small" data-l="zh"><b>10-25 晚些时候</b>：<a href="#v5">V5</a> 一节更新到 S3。A 和 B 在反事实孪生上都在 50% 左右，先写事实没有让 B 去看图；原因和下一步见 <a href="#v5-s3">S3 结果</a>。</p>
+  <p class="small" data-l="en"><b>25 Oct, later</b>: the <a href="#v5">V5</a> section now runs through S3. A and B both sit near 50% on the counterfactual twins; writing facts first did not make B look at the images. Reasons and next steps are under <a href="#v5-s3">S3 result</a>.</p>
   <nav class="toc" aria-label="目录" data-l="zh">
     <a href="#problem">要解决的问题</a><a href="#task">一道题长什么样</a><a href="#data">数据怎么造</a><a href="#method">方法</a><a href="#result">主结果</a><a href="#diagnosis">为什么 A 学不会</a><a href="#errors">B 错在哪</a><a href="#story">结论</a><a href="#lineage">方法来源</a><a href="#limits">限制</a><a href="#v5">下一阶段：V5</a><a href="#reading">精读：为什么做这个实验</a>
   </nav>
@@ -1414,15 +1416,15 @@ Constraints: Use at most 295 native commands in [-1,1]^7. The robot and native t
   <div class="callout">
     <p data-l="zh"><b>一句话</b>：V4 的题太 toy，规则是“保护橙色盒”这样的颜色模板，每张图恰好一个隔开的盒子。V5 把规则换成指向真实物体的一句话（“别让任何东西越过番茄酱和汤罐的连线”），在机器人做到一半时加进来；测试时把机器人碰不到的物体挪个位置，让“看文字猜”“看进度猜”都失效。目的不变：检验先写关系事实的模型是不是真的在看图。</p>
     <p data-l="en"><b>In one sentence</b>: V4's task was too toy: the rule was a colour template such as “protect the orange box”, and every image had exactly one separating box. V5 turns the rule into a sentence about real objects (“do not let anything cross the straight line through the ketchup and the soup can”) that arrives while the robot is mid-task, and the test moves objects the robot never touches, so guessing from the text or from task progress stops working. The aim is unchanged: check whether a model that writes relational facts first really looks at the image.</p>
-    <p class="small" data-l="zh">2026-10-25：S1、S2 已完成，数据集建好、测试集冻结；下一步是 S3（训练 A 和 B 来比较），开始前先确认。现在没有正在运行的作业。仓库里的交接文档是 <code>docs/generative_verifier/V5_HANDOFF.md</code>，各步的报告都在同一目录下，文件名以 <code>V5_</code> 开头。</p>
-    <p class="small" data-l="en">25 Oct: S1 and S2 are done, the dataset is built and its test split frozen. Next is S3 (train A and B and compare them), which waits for a go-ahead. No jobs are running. The handoff in the repository is <code>docs/generative_verifier/V5_HANDOFF.md</code>; each step's report sits in the same folder under a <code>V5_</code> name.</p>
+    <p class="small" data-l="zh">2026-10-25：S1、S2、S3 都已完成。S3 的结果和预期不同：A 和 B 在反事实孪生上都在 50% 左右，见下面的 <a href="#v5-s3">S3 结果</a>。下一步等确认，现在没有正在运行的作业。仓库里的交接文档是 <code>docs/generative_verifier/V5_HANDOFF.md</code>，各步的报告都在同一目录下，文件名以 <code>V5_</code> 开头。</p>
+    <p class="small" data-l="en">25 Oct: S1, S2 and S3 are done. S3 did not come out as expected: A and B both sit near 50% on the counterfactual twins; see <a href="#v5-s3">S3 result</a> below. The next step waits for a go-ahead, and no jobs are running. The handoff in the repository is <code>docs/generative_verifier/V5_HANDOFF.md</code>; each step's report sits in the same folder under a <code>V5_</code> name.</p>
   </div>
 
   <div class="tiles">
     <div class="tile"><span class="v">99.9%</span><span class="l"><span data-l="zh">固定布局上，只看规则文字就能猜对（1,600 个初始状态）</span><span data-l="en">correct from the rule text alone in fixed layouts (1,600 initial states)</span></span></div>
     <div class="tile"><span class="v">40 / 40</span><span class="l"><span data-l="zh">S1 盲看 20 个没见过的单元：判定和 B 的两个事实三项全对</span><span data-l="en">S1 blind review of 20 unseen units: the verdict and both of B's facts all right</span></span></div>
     <div class="tile"><span class="v">76% → 50%</span><span class="l"><span data-l="zh">只看“规则 × 进度”：训练集上能猜对 76%，验证和测试上按构造只有 50%</span><span data-l="en">rule × progress alone: 76% on the training set, 50% by construction on validation and test</span></span></div>
-    <div class="tile"><span class="v">4,643</span><span class="l"><span data-l="zh">S2 数据集的行数（1,750 对图像），测试部分已冻结</span><span data-l="en">rows in the S2 dataset (1,750 image pairs); the test part is frozen</span></span></div>
+    <div class="tile"><span class="v">50% / 50%</span><span class="l"><span data-l="zh">S3：A 和 B 在反事实孪生验证上的准确率，和瞎猜一样（自然布局上都约 89%）</span><span data-l="en">S3: accuracy of A and B on the counterfactual validation twins, the same as guessing (about 89% on natural layouts)</span></span></div>
   </div>
 
   <h3><span data-l="zh">新的题长什么样</span><span data-l="en">What the new task looks like</span></h3>
@@ -1493,6 +1495,8 @@ Constraints: Use at most 295 native commands in [-1,1]^7. The robot and native t
   </table></div>
   <p data-l="zh">主线没有走偏。变的是两点：问题从“直接判断学不学得会”换成了“会不会被捷径骗”，更贴近相关工作里“孪生几乎一样时，拒绝训练退化成表面匹配”的观察（HazardArena）；主测试的覆盖面暂时变窄。</p>
   <p data-l="en">The main line has not drifted. Two things changed: the question moved from “can a direct verdict be learned” to “is it fooled by shortcuts”, closer to the related-work observation that refusal training degrades into surface matching on near-identical twins (HazardArena); and the main test's coverage is narrower for now.</p>
+  <p data-l="zh"><b>10-25 补充</b>：S3 里 B 没有比 A 好，V4 的结论在 V5 上暂时没有复现。这还不推翻 V4：V4 的事实是看画上去的彩色框，V5 要在两张斜视图里判断布丁和篮子在两件真实杂货连线的哪一侧，难得多。是看不出还是没练够，要靠下面的拟合诊断分清。</p>
+  <p data-l="en"><b>25 Oct addendum</b>: in S3, B did no better than A, so the V4 conclusion has not carried over to V5 yet. This does not overturn V4: V4's facts are about drawn coloured boxes, while V5 asks which side of the line through two real groceries the pudding and the basket are on, judged from two oblique views, which is much harder. Whether the model cannot see it or has not trained enough is for the fit diagnostic below to settle.</p>
 
   <h3><span data-l="zh">这一周怎么走到这里</span><span data-l="en">How the week got here</span></h3>
   <ol class="chain" data-l="zh">
@@ -1504,6 +1508,7 @@ Constraints: Use at most 295 native commands in [-1,1]^7. The robot and native t
     <li><p class="cq">训练数据怎么配？B 写什么？（10-24 决定）</p><p>object 任务的 18 个场景，自然摆法完全一样，只有障碍物不同。只用自然布局训练，等于只见过一种摆法，A 和 B 都只能死记，所以训练也加入训练场景的反事实布局。B 沿用 V4 的写法：先写“布丁在连线靠机器人的一侧吗”“篮子呢”，两者不同就是隔开了。</p></li>
     <li><p class="cq">新题和 B 的事实，图上看得出来吗？（S1）</p><p>每个 object 场景补 8 个反事实布局，144 个全部合法，验证、测试各约 390 个严格孪生。在 20 个谁都没见过的单元上盲看两轮，判定和两个事实三项都是 40/40。加一张正俯视图没有帮助，夹爪还常常正好挡住布丁，所以之后只用两张斜视图。</p></li>
     <li><p class="cq">数据集建好了吗？（S2）</p><p>4,643 行，1,750 对图像，渲染时重新算的标签全部和计划一致。训练集保留了捷径：只看“规则 × 进度”能猜对 76%。验证和测试在组内配平，这条捷径只能得 50%。在自然布局的诊断集上，捷径仍然有 75% 和 91%。测试集已冻结，只在最后评估一次。</p></li>
+    <li><p class="cq">先写事实的 B，会因此去看图吗？（S3）</p><p>没有。在反事实孪生验证上，A 50.1%、B 50.3%，和瞎猜一样；在只有一种摆法的自然布局上，两组都约 89%。B 从事实推结论完全正确，错在两个“机器人一侧”的事实上。两组连训练集都没超过“规则 × 进度”的 76%。零样本的 3B 和 32B 也读不出这两个事实。</p></li>
   </ol>
   <ol class="chain" data-l="en">
     <li><p class="cq">Once rules name real objects, do the labels still need the image? (Step 1, CPU)</p><p>SafeLIBERO's initial layouts are nearly fixed: over 1,600 initial states the rule text alone is right 99.9% of the time. With the rule added mid-task, the object's position changes during the carry and text alone drops to 90.8%, but rule × progress still gets 98.8%.</p></li>
@@ -1514,6 +1519,7 @@ Constraints: Use at most 295 native commands in [-1,1]^7. The robot and native t
     <li><p class="cq">What goes into training, and what does B write? (decided 24 Oct)</p><p>The 18 object scenes share one natural layout; only the obstacle differs. Training on natural layouts alone means seeing a single arrangement, where A and B can only memorise, so training also includes counterfactual layouts of the training scenes. B keeps V4's form: first “is the pudding on the robot's side of the line?” and “is the basket?”; if the two differ, the line separates them.</p></li>
     <li><p class="cq">Are the new questions and B's facts visible? (S1)</p><p>Eight more counterfactual layouts per object scene, all 144 valid, giving about 390 strict twins each for validation and test. A two-pass blind review of 20 units nobody had seen got the verdict and both facts right 40 out of 40 times. An extra straight-down view did not help, and the gripper often hid the pudding in it, so later steps use the two overviews only.</p></li>
     <li><p class="cq">Is the dataset built? (S2)</p><p>4,643 rows and 1,750 image pairs; every label recomputed at render time matched the plan. The training set keeps the shortcut: rule × progress alone gets 76%. Validation and test are balanced within groups, so that shortcut gets 50%. On the natural-layout diagnostic sets it still gets 75% and 91%. The test split is frozen and will be scored once, at the end.</p></li>
+    <li><p class="cq">Does writing facts first make B look at the images? (S3)</p><p>No. On the counterfactual validation twins A gets 50.1% and B 50.3%, the same as guessing; on the natural layout, which has a single arrangement, both get about 89%. B turns facts into verdicts perfectly; its errors are in the two robot-side facts. Neither arm beats the 76% of rule × progress even on the training set. Zero-shot 3B and 32B cannot read the two facts either.</p></li>
   </ol>
 
   <h3><span data-l="zh">现在 A 和 B 各写什么</span><span data-l="en">What A and B write now</span></h3>
@@ -1542,19 +1548,62 @@ B:   Line: alphabet soup can | salad dressing bottle
      Separated: yes                ← they differ, so the line separates them
      Verdict: 0                    ← 0 = infeasible, 1 = feasible</pre>
 
+  <h3 id="v5-s3"><span data-l="zh">S3 结果：两组都停在先验上</span><span data-l="en">S3 result: both arms stay at the prior</span></h3>
+  <p data-l="zh">S3 用 S2 的数据训练了 A 和 B，各 1 个 seed（713），只看验证集，测试集没有打开。怎么读结果事先写定，启动前冻结。结果对应读法 <code>both_shortcut</code>：两组在反事实孪生上都在 50% 附近，B 没有比 A 好（B − A = +0.1 个百分点，95% 区间 [−1.5, +2.0]）。</p>
+  <p data-l="en">S3 trained A and B on the S2 data, one seed each (713), scored on validation only; the test split was not opened. How to read the result was written down and frozen before launch. The result matches the reading <code>both_shortcut</code>: both arms sit near 50% on the counterfactual twins, and B is no better than A (B − A = +0.1 points, 95% interval [−1.5, +2.0]).</p>
+  <div class="chart" id="c9">
+    <div class="ctitle"><span data-l="zh">判定准确率：反事实孪生和自然布局</span><span data-l="en">Verdict accuracy: counterfactual twins and natural layouts</span></div>
+    <div class="csub"><span data-l="zh">实心条是反事实孪生验证集（1,538 题；零样本只跑了其中选模用的 384 题），带边框的淡色条是自然布局验证集（79 题，只有一种摆法）。查表只看“规则 × 进度”，在训练集上学出。颜色和上面的图一致，灰色是基线。</span><span data-l="en">Solid bars are the counterfactual validation twins (1,538 questions; the zero-shot runs used the 384 selection questions among them); faded outlined bars are the natural-layout validation set (79 questions, a single arrangement). The lookup uses only rule × progress, learned on the training set. Colors match the charts above; gray marks baselines.</span></div>
+    <div class="legend" id="c9-legend"></div>
+    <svg id="c9-svg" viewBox="0 0 720 324" role="img" aria-label="反事实孪生上：A 50.1%，B 50.3%，查表 50.0%，32B 零样本 47.7% 和 50.0%，3B 零样本 50.0% 和 48.7%；自然布局上：A 89.9%，B 88.6%，查表 74.7%" data-aria-en="On the counterfactual twins: A 50.1%, B 50.3%, lookup 50.0%, 32B zero-shot 47.7% and 50.0%, 3B zero-shot 50.0% and 48.7%; on natural layouts: A 89.9%, B 88.6%, lookup 74.7%"></svg>
+    <details><summary><span data-l="zh">数据表</span><span data-l="en">Data table</span></summary><div class="tablewrap"><table id="c9-table"></table></div></details>
+  </div>
+  <div class="tablewrap" data-l="zh"><table>
+    <thead><tr><th>B 写出的事实（反事实孪生验证集）</th><th class="n">B</th><th class="n">只看“规则 × 进度”的查表</th></tr></thead>
+    <tbody>
+      <tr><td>布丁在靠机器人的一侧吗</td><td class="n">66.3%</td><td class="n">57.9%</td></tr>
+      <tr><td>篮子在靠机器人的一侧吗</td><td class="n">71.7%</td><td class="n">67.6%</td></tr>
+      <tr><td>两侧都写对</td><td class="n">44.1%</td><td class="n">—</td></tr>
+      <tr><td>结论</td><td class="n">50.3%</td><td class="n">50.0%</td></tr>
+    </tbody></table></div>
+  <div class="tablewrap" data-l="en"><table>
+    <thead><tr><th>Facts B writes (counterfactual validation twins)</th><th class="n">B</th><th class="n">Lookup on rule × progress only</th></tr></thead>
+    <tbody>
+      <tr><td>Is the pudding on the robot's side?</td><td class="n">66.3%</td><td class="n">57.9%</td></tr>
+      <tr><td>Is the basket on the robot's side?</td><td class="n">71.7%</td><td class="n">67.6%</td></tr>
+      <tr><td>Both sides right</td><td class="n">44.1%</td><td class="n">—</td></tr>
+      <tr><td>Verdict</td><td class="n">50.3%</td><td class="n">50.0%</td></tr>
+    </tbody></table></div>
+  <ul class="plain" data-l="zh">
+    <li><b>B 从事实推结论没有问题</b>：两侧事实都写对的 678 道题，结论全对；结论和它自己写的事实 100% 一致。</li>
+    <li><b>错在看图</b>：B 说“篮子在靠机器人的一侧”只有 1.2%，真值是 28.7%，等于一直写 no；布丁那一侧只比查表高 8 个百分点（区间 [5.3, 11.5]）。两侧同时写对的只有 44%。</li>
+    <li><b>连训练集都没学到先验以上</b>：训练拟合 A 72.3%、B 71.5%，低于只看“规则 × 进度”的 76%；B 在训练图上的两个事实也和查表差不多。一个 epoch 之后，模型还没学会读这层关系。</li>
+    <li><b>自然布局上看起来很好</b>：两组都约 89%，比查表的 74.7% 还高，因为自然摆法只有一种，被记住了。B 在自然图上常常两侧事实同时写反、结论却对，写出的事实并不反映它看到了什么。</li>
+    <li><b>零样本也读不出</b>：3B 和本地 Qwen3-VL-32B 都是常数回答（3B 全写 no，32B 99% 说布丁在机器人一侧）。S1 盲看在同样的两张图上三项都是 40/40，所以信息在图里，是这两个开源模型读不出来。</li>
+  </ul>
+  <ul class="plain" data-l="en">
+    <li><b>B turns facts into verdicts correctly</b>: on the 678 questions where it writes both sides right, every verdict is right, and its verdict always follows its own facts.</li>
+    <li><b>The errors are in seeing</b>: B says the basket is on the robot's side only 1.2% of the time against a true 28.7%, so it effectively always writes no; for the pudding it is only 8 points above the lookup (interval [5.3, 11.5]). Both sides are right on only 44% of questions.</li>
+    <li><b>Not even the training set is learned past the prior</b>: training fit is 72.3% for A and 71.5% for B, below the 76% of rule × progress alone, and B's two facts on training images are about as good as the lookup. After one epoch the models have not yet learned to read this relation.</li>
+    <li><b>Natural layouts look good</b>: both arms get about 89%, above the lookup's 74.7%, because the natural arrangement is a single layout that gets memorised. On natural images B often writes both sides wrong yet gets the verdict right, so the facts it writes do not reflect what it sees.</li>
+    <li><b>Zero-shot models cannot read it either</b>: 3B and the local Qwen3-VL-32B give constant answers (3B always writes no; 32B says the pudding is on the robot's side 99% of the time). Claude's S1 blind review got all three right 40/40 on the same two views, so the information is in the images; these two open models cannot read it.</li>
+  </ul>
+
   <h3><span data-l="zh">下一步（不扩展，每步开始前确认）</span><span data-l="en">Next (no expansion; each step confirmed before it starts)</span></h3>
   <ol class="next" data-l="zh">
-    <li><b>S3</b>：用 S2 的数据训练 A 和 B，各 1 个 seed，只看验证集，模型和训练设置沿用 V4。读数看四样：判定准确率、两种答案都有的图上两行全对的比例、B 的两个事实各自的准确率、自然诊断集上的同样读数。另加本地 Qwen3-VL-32B 零样本作对照，不花 API。</li>
-    <li><b>预期</b>：A 在训练集上可以靠捷径拿到约 76%，到反事实验证集上掉回 50% 附近；B 如果真的在看图，验证集应明显高于 50%。B 也掉回 50%，就说明光写事实挡不住这种捷径。这同样是有用的结果。</li>
-    <li><b>之后</b>：方向清楚后跑 3 个 seed，测试集只评估一次。把 verifier 接到 AEGIS 前面当闸门，仍要单独批准。</li>
+    <li><b>拟合诊断（建议先做）</b>：像 V4 第 1 步那样，让 B 在 16 道和 64 道训练题上反复练，看两个“机器人一侧”的事实能不能背下来。约 1 个 A100 小时，只读训练集。背得下来，说明是训练不够；背不下来，说明 3B 在这两张斜视图上看不出这层关系。</li>
+    <li><b>如果是训练不够</b>：训练加到 3 个 epoch，再比一次 A 和 B，约 4–5 个 GPU 小时。</li>
+    <li><b>如果是看不出</b>：换事实的写法，比如在图上标出位置、再用程序判断，或者加俯视图、提高分辨率。这要重新渲染，需要另外批准数据。</li>
+    <li><b>之后</b>：方向清楚了再跑 3 个 seed，测试集只评估一次。把 verifier 接到 AEGIS 前面当闸门，仍要单独批准。</li>
   </ol>
   <ol class="next" data-l="en">
-    <li><b>S3</b>: train A and B on the S2 data, one seed each, validation only, with V4's model and training settings. Four readouts: verdict accuracy, the share of two-answer images with both rows right, the accuracy of each of B's facts, and the same on the natural diagnostic sets. A zero-shot local Qwen3-VL-32B is added for comparison, with no API cost.</li>
-    <li><b>Expected</b>: A can reach about 76% on the training set through the shortcut and fall back to about 50% on the counterfactual validation set; if B really looks at the images, it should be clearly above 50%. If B also falls to 50%, writing facts alone does not stop this shortcut, which is a useful result too.</li>
+    <li><b>Fit diagnostic (suggested first)</b>: as in V4's Step 1, train B over and over on 16 and on 64 training questions and see whether it can memorise the two robot-side facts. About 1 A100 hour, training split only. If it can, training was too short; if it cannot, the 3B model cannot see this relation in the two oblique views.</li>
+    <li><b>If training was too short</b>: train for 3 epochs and compare A and B again, about 4–5 GPU hours.</li>
+    <li><b>If the model cannot see it</b>: change how the facts are written, for example mark positions in the image and let a program decide, or add a top-down view or a higher resolution. This needs new renders and a separate data approval.</li>
     <li><b>After that</b>: three seeds once the direction is clear, with the test split scored once. Using the verifier as a gate in front of AEGIS still needs separate approval.</li>
   </ol>
-  <p class="small" data-l="zh">盲看由 Claude 完成，不是人工审阅；它说明“仔细看图能判断”，不代表训练后模型的能力。上面的数字来自 <code>V5_STEP1_REPORT.md</code>、<code>V5_STEP2_REPORT.md</code>、<code>V5_C0_REPORT.md</code>、<code>V5_LAYOUT_PROTOCOL.md</code>、<code>V5_S0_REPORT.md</code>、<code>V5_S1_REPORT.md</code>、<code>V5_S2_REPORT.md</code>。S1 盲看时 Claude 事先知道每个单元恰好有一条规则把布丁和篮子隔开。</p>
-  <p class="small" data-l="en">The blind review was done by Claude, not by a human; it shows that a careful look at the images can decide, not what a trained model will do. The numbers above come from <code>V5_STEP1_REPORT.md</code>, <code>V5_STEP2_REPORT.md</code>, <code>V5_C0_REPORT.md</code>, <code>V5_LAYOUT_PROTOCOL.md</code>, <code>V5_S0_REPORT.md</code>, <code>V5_S1_REPORT.md</code> and <code>V5_S2_REPORT.md</code>. In the S1 review Claude knew in advance that each unit has exactly one rule separating the pudding from the basket.</p>
+  <p class="small" data-l="zh">盲看由 Claude 完成，不是人工审阅；它说明“仔细看图能判断”，不代表训练后模型的能力。上面的数字来自 <code>V5_STEP1_REPORT.md</code>、<code>V5_STEP2_REPORT.md</code>、<code>V5_C0_REPORT.md</code>、<code>V5_LAYOUT_PROTOCOL.md</code>、<code>V5_S0_REPORT.md</code>、<code>V5_S1_REPORT.md</code>、<code>V5_S2_REPORT.md</code>、<code>V5_S3_REPORT.md</code>。S1 盲看时 Claude 事先知道每个单元恰好有一条规则把布丁和篮子隔开。</p>
+  <p class="small" data-l="en">The blind review was done by Claude, not by a human; it shows that a careful look at the images can decide, not what a trained model will do. The numbers above come from <code>V5_STEP1_REPORT.md</code>, <code>V5_STEP2_REPORT.md</code>, <code>V5_C0_REPORT.md</code>, <code>V5_LAYOUT_PROTOCOL.md</code>, <code>V5_S0_REPORT.md</code>, <code>V5_S1_REPORT.md</code> <code>V5_S2_REPORT.md</code> and <code>V5_S3_REPORT.md</code>. In the S1 review Claude knew in advance that each unit has exactly one rule separating the pudding from the basket.</p>
 </section>
 
 <section id="reading">
@@ -2190,6 +2239,30 @@ CHARTS.push(function(){
     bindTip(hit,`<b>${nm(r)}</b><br>${T('平均','mean')} ${m.toFixed(1)}%<br>seed 713 / 714 / 715${COLON()}${r.v.map(v=>v.toFixed(1)).join(' / ')}`);});
   document.getElementById('c8-table').innerHTML=`<thead><tr><th>${T('级','Rung')}</th><th class="n">seed 713</th><th class="n">714</th><th class="n">715</th><th class="n">${T('平均','Mean')}</th></tr></thead><tbody>`+
     R.map(r=>`<tr><td>${nm(r)}</td>`+r.v.map(v=>`<td class="n">${v.toFixed(1)}</td>`).join('')+`<td class="n">${mean(r.v).toFixed(1)}</td></tr>`).join('')+'</tbody>';
+});
+
+// Chart 9: V5 S3, verdict accuracy on the counterfactual twins (solid) and the natural layout (faded), validation only.
+CHARTS.push(function(){
+  const svg=clear('c9-svg');
+  document.getElementById('c9-legend').innerHTML=`<span><i class="key solid" style="background:var(--ink-2)"></i>${T('反事实孪生（验证）','Counterfactual twins (validation)')}</span>`+
+    `<span><i class="key light" style="background:var(--ink-2);color:var(--ink-2)"></i>${T('自然布局（验证）','Natural layout (validation)')}</span>`;
+  const R=[[T('A 直接判断','A · direct'),'--s1',50.13,89.87,1538],[T('B 先写事实','B · facts first'),'--s2',50.26,88.61,1538],
+    [T('查表（规则 × 进度）','Lookup (rule × progress)'),'--neutral',50.0,74.68,1538],
+    [T('32B 零样本·写事实','32B zero-shot, facts'),'--neutral',47.66,null,384],[T('32B 零样本·直接','32B zero-shot, direct'),'--neutral',50.0,null,384],
+    [T('3B 零样本·写事实','3B zero-shot, facts'),'--neutral',50.0,null,384],[T('3B 零样本·直接','3B zero-shot, direct'),'--neutral',48.70,null,384]];
+  const x0=190,x1=650,X=v=>x0+(x1-x0)*v/100,top=30,row=40,h=12,gap=4;
+  [0,25,50,75,100].forEach(v=>{el('line',{x1:X(v),x2:X(v),y1:top-8,y2:top+row*R.length-8,class:'grid'},svg);text(svg,X(v),top+row*R.length+10,v+'%','tick','middle');});
+  el('line',{x1:X(50),x2:X(50),y1:top-12,y2:top+row*R.length-8,class:'ref'},svg);text(svg,X(50),top-18,T('瞎猜 50%','chance 50%'),'lab2','middle');
+  R.forEach(([n,c,cf,nat,rows],i)=>{const y=top+i*row,yv=y+h+gap;
+    text(svg,x0-12,y+h+gap/2+5,n,'lab','end');
+    bar(svg,X(0),X(cf),y,h,c);text(svg,Math.max(X(cf),X(50))+6,y+h-1,cf.toFixed(1)+'%','val');
+    if(nat===null)text(svg,X(0)+6,yv+h-2,T('自然布局没有跑','not run on the natural layout'),'tick');
+    else{const vb=bar(svg,X(0),X(nat),yv,h,c);vb.setAttribute('fill-opacity','.38');vb.setAttribute('stroke',`var(${c})`);vb.setAttribute('stroke-width','1');
+      text(svg,X(nat)+6,yv+h-1,nat.toFixed(1)+'%','lab2');}
+    const hit=el('rect',{x:0,y:y-6,width:720,height:row-2,class:'hit'},svg);
+    bindTip(hit,`<b>${n}</b><br>${T('反事实孪生','Counterfactual twins')} ${cf.toFixed(1)}%${paren(rows.toLocaleString('en-US')+T(' 题',' questions'))} · ${T('自然布局','Natural layout')} ${nat===null?T('没有跑','not run'):nat.toFixed(1)+'%'}`);});
+  document.getElementById('c9-table').innerHTML=`<thead><tr><th>${T('方法','Method')}</th><th class="n">${T('反事实孪生','Counterfactual twins')}</th><th class="n">${T('题数','Questions')}</th><th class="n">${T('自然布局（79 题）','Natural layout (79)')}</th></tr></thead><tbody>`+
+    R.map(([n,c,cf,nat,rows])=>`<tr><td>${n}</td><td class="n">${cf.toFixed(1)}%</td><td class="n">${rows.toLocaleString('en-US')}</td><td class="n">${nat===null?'—':nat.toFixed(1)+'%'}</td></tr>`).join('')+'</tbody>';
 });
 
 // Language switch: swap the visible copy, aria-labels, alt text and title, redraw the charts, and keep the reader's place.
