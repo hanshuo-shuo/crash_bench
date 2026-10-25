@@ -1,6 +1,8 @@
 """Launch V5 stages from the clean, published project checkout.
 
 scan: step 1 CPU geometry scan. render SCAN_ROOT: step 2 render pilot on one A100.
+trace, layout/screen TRACE_ROOT: C0 retrace and counterfactual layouts. s1-layout TRACE_ROOT:
+eight layouts per object/II/task1 source. s1-render S1_LAYOUT_ROOT: blind-review renders.
 """
 import argparse
 from datetime import datetime, timezone
@@ -16,13 +18,16 @@ from . import v5_geometry as g
 UPSTREAM = '2457feed5968ae803926e178c8ce8243b9ecdcf9'
 PROTOCOLS = dict(scan='docs/generative_verifier/V5_STEP1_PROTOCOL.md', render='docs/generative_verifier/V5_STEP2_PROTOCOL.md',
                  trace='docs/generative_verifier/V5_COLLECTION_PROTOCOL.md', layout='docs/generative_verifier/V5_LAYOUT_PROTOCOL.md',
-                 screen='docs/generative_verifier/V5_SCREEN_PROTOCOL.md')
+                 screen='docs/generative_verifier/V5_SCREEN_PROTOCOL.md',
+                 **{'s1-layout': 'docs/generative_verifier/V5_S1_PROTOCOL.md', 's1-render': 'docs/generative_verifier/V5_S1_PROTOCOL.md'})
 AUTHORIZATION = dict(
     scan='2026-10-24 user: V5 step 1 CPU geometry scan; no rendering, training, API or dataset rows',
     render='2026-10-24 user: V5 step 2 render pilot of about 20 checkpoints; no training, API or dataset rows',
     trace='2026-10-24 user: V5 design fixes and the V5 plan; CPU retrace of the 67 V4 sources, no rendering, training, API or dataset rows',
     layout='2026-10-24 user chose counterfactual layouts (option 3); CPU smoke of relocated anchors on 8 V4 sources, no rendering, training, API or dataset rows',
-    screen='2026-10-24 user: restrict V5 to twin-capable compositions, no expansion; CPU screen of all 67 V4 sources, no rendering, training, API or dataset rows')
+    screen='2026-10-24 user: restrict V5 to twin-capable compositions, no expansion; CPU screen of all 67 V4 sources, no rendering, training, API or dataset rows',
+    **{'s1-layout': '2026-10-24 user: train on object/II/task1 only and add all three S1 items; CPU, eight layouts per object source, no rendering, training, API or dataset rows',
+       's1-render': '2026-10-24 user: S1 render with a top view and a two-pass blind review on validation sources; no training, API or dataset rows'})
 
 
 def command(*args, env=None):
@@ -118,6 +123,29 @@ def render_plan(scan):
     return units, sheet
 
 
+def layout_render_plan(root):
+    from .v5_layouts import frozen_split, select_review_units
+    entries = read(root/'LAYOUTS.json')
+    cases = {'%s#%d' % (e['spec']['source'], e['plan']['layout']): (root/('layout_%03d' % i), e['spec']) for i, e in enumerate(entries)}
+    with gzip.open(root/'LAYOUT_ROWS.jsonl.gz', 'rt') as stream:
+        rows = [json.loads(x) for x in stream]
+    units = []
+    for unit in sorted(select_review_units(rows, frozen_split()), key=lambda u: g.digest(u['source'], u['unit'])):
+        case, spec = cases[unit['source']]
+        if not read(case/'LAYOUT.json')['valid']:
+            raise RuntimeError('Selected unit from an invalid layout')
+        unit.update(review_id='u%02d' % len(units), v4_case=spec['v4_case'], layout_case=str(case), student_task=spec['student_task'])
+        for rule in sorted(unit['rules'], key=lambda r: g.digest(unit['source'], unit['unit'], 'review', r['key'])):
+            rule.update(review_rule='r%d' % (1 + sum('review_rule' in r for r in unit['rules'])), text=g.rule_text(rule['key']))
+        units.append(unit)
+    images = lambda u, names: ['units/%s/%s.png' % (u['review_id'], n) for n in names]
+    sheet = [dict(review_id=u['review_id'], task=u['student_task'], pass1_images=images(u, ('overview_a', 'overview_b')),
+                  pass2_images=images(u, ('overview_a', 'overview_b', 'top')),
+                  rules=sorted((dict(id=r['review_rule'], text=r['text']) for r in u['rules']), key=lambda r: r['id']))
+             for u in units]
+    return units, sheet
+
+
 def finished(root, complete):
     receipt = read(root/'RECEIPT.json')
     if not read(root/complete)['passed'] or not (completed(receipt['job']) and completed(receipt['summarize_job'])):
@@ -130,10 +158,12 @@ def finished(root, complete):
 
 def main(stage, scan=None):
     repo = Path.cwd().resolve()
-    if stage in ('layout', 'screen') and finished(scan, 'TRACE_COMPLETE.json')['stage'] != 'v5-trace':
+    if stage in ('layout', 'screen', 's1-layout') and finished(scan, 'TRACE_COMPLETE.json')['stage'] != 'v5-trace':
         raise RuntimeError('Counterfactual layouts start from a V5 trace run')
-    if stage == 'render':
-        units, sheet = render_plan(scan)
+    if stage == 's1-render' and finished(scan, 'LAYOUT_COMPLETE.json')['stage'] != 'v5-s1-layout':
+        raise RuntimeError('S1 renders start from an S1 layout run')
+    if stage in ('render', 's1-render'):
+        units, sheet = render_plan(scan) if stage == 'render' else layout_render_plan(scan)
         active = command('squeue', '-h', '-u', os.environ['USER'], '-A', 'p33100', '-p', 'gengpu', '-o', '%j')
         if sum(x.startswith('cb_') for x in active.splitlines()) >= 2:
             raise RuntimeError('Two CrashBench GPU jobs already active')
@@ -146,9 +176,10 @@ def main(stage, scan=None):
         script = str(root/'source/verifier_dataset/v5_trace.sbatch')
         job = submit(env, '--array=0-%d' % (TRACE_SHARDS-1), '--output='+str(root/'slurm_%A_%a.log'), script)
         receipt = dict(manifest, job=job, summarize_job=submit(env, '--dependency=afterok:'+job, '--output='+str(root/'slurm_%j.log'), script))
-    elif stage in ('layout', 'screen'):
+    elif stage in ('layout', 'screen', 's1-layout'):
         from .v5_layouts import SHARDS as LAYOUT_SHARDS, plan
-        entries = plan(scan, 'screen' if stage == 'screen' else 'smoke'); manifest.update(partition='short', shards=LAYOUT_SHARDS, layouts=len(entries), trace_root=str(scan))
+        entries = plan(scan, dict(screen='screen', layout='smoke').get(stage, 's1'))
+        manifest.update(partition='short', shards=LAYOUT_SHARDS, layouts=len(entries), trace_root=str(scan))
         write(root/'CAMPAIGN.json', manifest); write(root/'LAYOUTS.json', entries)
         script = str(root/'source/verifier_dataset/v5_layouts.sbatch')
         job = submit(env, '--array=0-%d' % (LAYOUT_SHARDS-1), '--output='+str(root/'slurm_%A_%a.log'), script)
@@ -159,7 +190,8 @@ def main(stage, scan=None):
         job = submit(env, '--array=0-%d%%4' % (len(SHARDS)-1), '--output='+str(root/'slurm_%A_%a.log'), script)
         receipt = dict(manifest, job=job, summarize_job=submit(env, '--dependency=afterok:'+job, '--output='+str(root/'slurm_%j.log'), script))
     else:
-        manifest.update(partition='gengpu', scan_root=str(scan), scan_hashes=read(scan/'HASHES.json'), units=len(units))
+        manifest.update(partition='gengpu', units=len(units), **{('scan_root' if stage == 'render' else 'layout_root'): str(scan),
+                        ('scan_hashes' if stage == 'render' else 'layout_hashes'): read(scan/'HASHES.json')})
         write(root/'CAMPAIGN.json', manifest); write(root/'UNITS.json', units); write(root/'REVIEW_SHEET.json', sheet)
         receipt = dict(manifest, job=submit(env, '--output='+str(root/'slurm_%j.log'), str(root/'source/verifier_dataset/v5_render.sbatch')))
     write(root/'RECEIPT.json', receipt)
@@ -169,8 +201,9 @@ def main(stage, scan=None):
 
 
 if __name__ == '__main__':
-    p = argparse.ArgumentParser(); p.add_argument('stage', choices=['scan', 'render', 'trace', 'layout', 'screen']); p.add_argument('scan_root', type=Path, nargs='?')
+    p = argparse.ArgumentParser()
+    p.add_argument('stage', choices=['scan', 'render', 'trace', 'layout', 'screen', 's1-layout', 's1-render']); p.add_argument('scan_root', type=Path, nargs='?')
     a = p.parse_args()
-    if (a.stage in ('render', 'layout', 'screen')) != (a.scan_root is not None):
+    if (a.stage not in ('scan', 'trace')) != (a.scan_root is not None):
         raise SystemExit('render and layout need exactly one prior run root; scan and trace take none')
     main(a.stage, a.scan_root)

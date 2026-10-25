@@ -135,6 +135,14 @@ def label(rule, pairs):
     return int(separated), clearance
 
 
+def robot_sides(rule, start, goal, robot):
+    """B's facts for a line rule: is the target (goal) on the robot base's side? Separated iff they differ."""
+    a, b = rule['params']
+    r = line_distance(robot, a, b)
+    return dict(target_robot_side=int((signed(rule, start) > 0) == (r > 0)),
+                goal_robot_side=int((signed(rule, goal) > 0) == (r > 0)), robot_clearance=abs(r))
+
+
 def crosses(rule, start, path):
     side = signed(rule, start) > 0
     return any((signed(rule, p) > 0) != side for p in path)

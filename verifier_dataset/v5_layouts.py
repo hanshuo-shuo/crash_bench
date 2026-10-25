@@ -32,6 +32,12 @@ GOAL_GAP = .04
 TRIES = 200
 MAX_DRIFT = .01
 RESTING_LIFT = .05
+S1_TASK = 'safelibero_object/II/task1'
+S1_LAYOUTS = 8
+ROBOT_BODY = 'robot0_link0'
+ROBOT_CLEARANCE = .10
+S1_MIN_TWINS = 150
+S1_MIN_SOURCES = 3
 
 
 def radius(box):
@@ -153,6 +159,16 @@ def thin(path, step=.01):
     return out
 
 
+def place(env, layout):
+    """Shift every member of each moved stack by its recorded offset, at rest; the render replays the same placement."""
+    m, d = env.sim.model, env.sim.data
+    for rep, (dx, dy) in sorted(layout['shifts'].items()):
+        for name in layout['stacks'][rep]:
+            j = m.joint_name2id(name + '_joint0'); adr, dof = int(m.jnt_qposadr[j]), int(m.jnt_dofadr[j])
+            d.qpos[adr] += dx; d.qpos[adr + 1] += dy; d.qvel[dof:dof + 6] = 0.
+    env.sim.forward()
+
+
 def run_layout(root, index):
     import numpy as np
     from .paired_scene import make_env
@@ -191,13 +207,11 @@ def run_layout(root, index):
                                lambda lay: resting_twin(merged, stacks, lay, names, start, (region['lo'], region['hi']), lift0))
         movable = sorted(stacks)
         members = {n for rep in layout['moved'] for n in stacks[rep]}
-        for rep, (x, y) in layout['moved'].items():
-            dx, dy = x - merged[rep]['center'][0], y - merged[rep]['center'][1]
-            for name in stacks[rep]:
-                j = m.joint_name2id(name + '_joint0'); adr, dof = int(m.jnt_qposadr[j]), int(m.jnt_dofadr[j])
-                d.qpos[adr] += dx; d.qpos[adr + 1] += dy; d.qvel[dof:dof + 6] = 0.
+        layout['shifts'] = {rep: [x - merged[rep]['center'][0], y - merged[rep]['center'][1]] for rep, (x, y) in layout['moved'].items()}
         layout['stacks'] = {rep: stacks[rep] for rep in layout['moved']}
-        env.sim.forward()
+        place(env, layout)
+        layout['placed_physics_sha256'] = physical_hash(env)
+        robot_xy = np.asarray(d.body_xpos[m.body_name2id(ROBOT_BODY)])[:2].tolist()
         placed = {n: np.asarray(d.body_xpos[int(env.env.obj_body_id[n])]).copy() for n in members}
         obstacle = [n for n in objects if 'obstacle' in n and objects[n]['active']]
         protected = {x for x, n in owner.items() if n in obstacle}
@@ -219,7 +233,7 @@ def run_layout(root, index):
         def snapshot(step):
             objs, surf = scene_objects(env, object_points)
             snaps.append(dict(step=step, objects=objs, surface=surf, material=np.asarray(d.geom_xpos[geom]).tolist(),
-                              goal=goal_region(env, objs, spec['goal'][2])))
+                              goal=goal_region(env, objs, spec['goal'][2]), robot=robot_xy, physics_sha256=physical_hash(env)))
         original = env.sim.step
         def monitored(*args, **kwargs):
             result = original(*args, **kwargs)
@@ -245,11 +259,14 @@ def run_layout(root, index):
         deviation = max((math.dist(a[1:], b[1:]) for a, b in zip(path, source_path)), default=None)
         valid = success and not violations
         result = dict(layout, movable=movable, valid=valid, success=success, violations=violations[:20],
-                      maximum_anchor_drift=drift[0], maximum_path_deviation=deviation, obstacle=obstacle)
+                      maximum_anchor_drift=drift[0], maximum_path_deviation=deviation, obstacle=obstacle, robot=robot_xy,
+                      checkpoint_physics={str(s['step']): s['physics_sha256'] for s in snaps})
         write(case/'LAYOUT.json', result)
+        trace = dict(spec, source='%s#%d' % (spec['source'], plan['layout']), actions=len(tape), checkpoints=snaps, path=path)
+        with gzip.open(case/'TRACE.json.gz', 'wt') as stream:
+            json.dump(trace, stream)
         rows = []
         if valid:
-            trace = dict(spec, source='%s#%d' % (spec['source'], plan['layout']), actions=len(tape), checkpoints=snaps, path=path)
             rows = [r for r in rows_from_trace(trace) if set(r['anchors']) & members]
             for row in rows:
                 row.update(base_source=spec['source'], layout=plan['layout'])
@@ -324,8 +341,11 @@ def summarize(root):
     with gzip.open(root/'LAYOUT_ROWS.jsonl.gz', 'wt') as stream:
         stream.writelines(json.dumps(r) + '\n' for r in rows)
     summary = readouts(layouts, rows)
-    if entries and entries[0]['plan'].get('mode') == 'screen':
-        split = {x['source_id']: x['split'] for x in read(Path(__file__).resolve().parent/'frozen_sources_67.json')['sources']}
+    mode = entries[0]['plan'].get('mode') if entries else None
+    if mode == 's1':
+        summary.update(s1_supply(rows, frozen_split()))
+    if mode == 'screen':
+        split = frozen_split()
         trace_root = Path(read(root/'CAMPAIGN.json')['trace_root'])
         with gzip.open(trace_root/'TRACE_ROWS.jsonl.gz', 'rt') as stream:
             natural = [json.loads(x) for x in stream]
@@ -334,16 +354,92 @@ def summarize(root):
                        screen_reading='test_resists_natural_shortcut' if transfer['accuracy'] is not None
                        and transfer['accuracy'] <= .60 else 'shortcut_survives')
     write(root/'LAYOUT_SUMMARY.json', summary)
-    write(root/'LAYOUT_COMPLETE.json', dict(passed=True, reading=summary.get('screen_reading', summary['reading']), api_calls=0, dataset_rows=0,
+    reading = summary.get('screen_reading', summary.get('s1_reading', summary['reading']))
+    write(root/'LAYOUT_COMPLETE.json', dict(passed=True, reading=reading, api_calls=0, dataset_rows=0,
         code_commit=os.environ.get('CB_CODE_COMMIT'), slurm_job=os.environ.get('SLURM_JOB_ID')))
     write(root/'HASHES.json', {n: sha(root/n) for n in ('LAYOUTS.json', 'LAYOUT_ROWS.jsonl.gz', 'LAYOUT_SUMMARY.json', 'LAYOUT_COMPLETE.json')})
 
 
+def frozen_split():
+    return {x['source_id']: x['split'] for x in read(Path(__file__).resolve().parent/'frozen_sources_67.json')['sources']}
+
+
+def usable(row):
+    """Clears the lift-aware margin, and the robot base is far enough from the line for B's side facts."""
+    return (row['clearance'] >= g.required_clearance(g.CLEARANCES[0], row['lift'])
+            and row.get('robot_clearance', 0.) >= ROBOT_CLEARANCE)
+
+
+def strict_twins(rows):
+    """Resting checkpoints with a separating and a non-separating rule, both from (task, rule, progress-bin)
+    groups that keep both labels within these rows."""
+    from collections import defaultdict
+    units = defaultdict(list)
+    for r in g.variable([r for r in rows if r['lift'] < RESTING_LIFT], g.time_key):
+        units[(r['source'], r['unit'])].append(r)
+    return {u: rs for u, rs in units.items() if {r['label'] for r in rs} == {0, 1}}
+
+
+def s1_supply(rows, split):
+    """S1a readouts per split and the preregistered supply reading (V5_S1_PROTOCOL.md)."""
+    out = {}
+    kept = [r for r in rows if usable(r)]
+    for part in ('train', 'validation', 'test'):
+        rs = [r for r in kept if split[r['base_source']] == part]
+        twins = strict_twins(rs)
+        out[part] = dict(rows=len(rs), resting_rows=sum(r['lift'] < RESTING_LIFT for r in rs),
+                         separated_fraction=sum(r['label'] for r in rs) / len(rs) if rs else None,
+                         text_time_bound=g.text_bound(rs, g.time_key), strict_twin_units=len(twins),
+                         strict_twin_sources=len({rs_[0]['base_source'] for rs_ in twins.values()}))
+    margin = [r for r in rows if r['clearance'] >= g.required_clearance(g.CLEARANCES[0], r['lift'])]
+    out['robot_near_rows'] = sum(r.get('robot_clearance', 0.) < ROBOT_CLEARANCE for r in margin)
+    out['margin_rows'] = len(margin)
+    ok = all(out[p]['strict_twin_units'] >= S1_MIN_TWINS and out[p]['strict_twin_sources'] >= S1_MIN_SOURCES
+             for p in ('validation', 'test'))
+    out['s1_reading'] = 's1_supply_ok' if ok else 's1_supply_low'
+    return out
+
+
+def select_review_units(rows, split, n=20):
+    """S1 blind-review units: strict twins on validation sources only, round-robin over base sources,
+    an unused layout first, one separating and one non-separating rule each."""
+    from collections import defaultdict
+    pool = [r for r in rows if usable(r) and split[r['base_source']] == 'validation']
+    twins = strict_twins(pool)
+    candidates = defaultdict(set)
+    for r in pool:
+        candidates[(r['source'], r['unit'])].add(r['rule'])
+    queues = defaultdict(list)
+    for u, rs in twins.items():
+        queues[rs[0]['base_source']].append(u)
+    for queue in queues.values():
+        queue.sort(key=lambda u: g.digest(*u))
+    chosen, used = [], set()
+    while len(chosen) < n and any(queues.values()):
+        for base in sorted(queues):
+            if len(chosen) >= n or not queues[base]:
+                continue
+            fresh = [u for u in queues[base] if u[0] not in used]
+            u = (fresh or queues[base])[0]
+            queues[base].remove(u); used.add(u[0])
+            rs = twins[u]
+            pick = [min((r for r in rs if r['label'] == lab), key=lambda r: g.digest(u[0], u[1], r['rule'])) for lab in (1, 0)]
+            chosen.append(dict(source=u[0], base_source=base, layout=rs[0]['layout'], unit=u[1], task=rs[0]['task'], strict=True,
+                               rules=[dict(key=r['rule'], label=r['label'], clearance=r['clearance'],
+                                           target_robot_side=r['target_robot_side'], goal_robot_side=r['goal_robot_side'],
+                                           robot_clearance=r['robot_clearance']) for r in pick],
+                               candidate_rules=sorted(candidates[u])))
+    return chosen
+
+
 def plan(c0_root, mode='smoke'):
-    """smoke: two C0 sources per family by digest, four layouts each. screen: every C0 source, two layouts each."""
+    """smoke: two C0 sources per family by digest, four layouts each. screen: every C0 source, two layouts each.
+    s1: every object/II/task1 source, eight layouts each."""
     cases = read(c0_root/'CASES.json'); chosen = []
     if mode == 'screen':
         chosen, count, salt = list(cases), SCREEN_LAYOUTS, 'v5-layout-screen'
+    elif mode == 's1':
+        chosen, count, salt = [c for c in cases if c['task'] == S1_TASK], S1_LAYOUTS, 'v5-layout-s1'
     else:
         for family in sorted({c['family'] for c in cases}):
             pool = sorted((c for c in cases if c['family'] == family), key=lambda c: g.digest(c['source'], 'v5-layout-smoke'))

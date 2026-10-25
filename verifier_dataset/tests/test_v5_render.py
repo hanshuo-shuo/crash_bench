@@ -25,6 +25,15 @@ class Render(unittest.TestCase):
         self.assertEqual(v5_render.poses(regions, 'src|5', 45.), [a, b])
         self.assertNotEqual(v5_render.poses(regions, 'src|10', 45.)[0]['azimuth'], a['azimuth'])
 
+    def test_top_view_looks_straight_down_with_the_robot_at_the_bottom(self):
+        regions = [([0, 0, .0], [.05, .05, .1]), ([.2, .3, 0], [.3, .4, .05]), ([-.66, -.06, 0], [-.54, .06, .05])]
+        pose = v5_render.top_pose(regions, 45.)
+        R = np.asarray(pose['rotation']).reshape(3, 3)
+        np.testing.assert_allclose(R[:, 2], [0, 0, 1]); np.testing.assert_allclose(R[:, 1], [1, 0, 0])
+        local = (np.asarray([-.6, 0., 0.]) - np.asarray(pose['position'])) @ R  # camera frame: x right, y up, looking along -z
+        self.assertLess(local[1] / -local[2], 0)  # below the image centre
+        self.assertLess(pose['maximum_projected_abs'], .8)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -80,6 +80,51 @@ class Screen(unittest.TestCase):
         self.assertEqual(cap['capable_by_split'], {'train': 1, 'validation': 1, 'test': 1})
 
 
+class S1(unittest.TestCase):
+    def rows(self):
+        base = dict(task='t|x', template='line', clearance=.1, lift=.01, family='f', time_bin=0, robot_clearance=.3)
+        out = []
+        for src, split_rules in (('v1', ((0, 1), (1, 0))), ('v2', ((0, 1), (1, 0))), ('t1', ((0, 1), (1, 0)))):
+            for k, (a, b) in enumerate(split_rules):
+                for rule, label in (('line:p|q', a), ('line:p|r', b)):
+                    out.append(dict(base, source='%s#%d' % (src, k), base_source=src, layout=k, unit=0, rule=rule, label=label,
+                                    target_robot_side=1, goal_robot_side=1 - label))
+        out.append(dict(out[0], rule='line:p|s', robot_clearance=.05))  # robot base too close: unusable
+        out.append(dict(out[0], unit=5, lift=.2))                       # lifted: not a resting twin
+        return out
+
+    def test_plan_takes_eight_layouts_of_every_object_source(self):
+        import json, tempfile
+        from pathlib import Path
+        cases = [dict(source='o%d' % i, task=L.S1_TASK, family='safelibero_object') for i in range(3)] + \
+                [dict(source='g0', task='safelibero_goal/I/task1', family='safelibero_goal')]
+        with tempfile.TemporaryDirectory() as tmp:
+            Path(tmp, 'CASES.json').write_text(json.dumps(cases))
+            entries = L.plan(Path(tmp), 's1')
+        self.assertEqual(len(entries), 3 * L.S1_LAYOUTS)
+        self.assertEqual({e['spec']['source'] for e in entries}, {'o0', 'o1', 'o2'})
+        self.assertEqual(entries[0]['plan']['seed'], L.g.digest('o0', 0, 'v5-layout-s1'))
+
+    def test_supply_counts_strict_twins_per_split(self):
+        split = dict(v1='validation', v2='validation', t1='test')
+        out = L.s1_supply(self.rows(), split)
+        self.assertEqual((out['validation']['strict_twin_units'], out['validation']['strict_twin_sources']), (4, 2))
+        self.assertEqual(out['test']['strict_twin_units'], 2)
+        self.assertEqual(out['robot_near_rows'], 1)
+        self.assertEqual(out['s1_reading'], 's1_supply_low')
+
+    def test_review_units_come_from_validation_sources_round_robin(self):
+        split = dict(v1='validation', v2='validation', t1='test')
+        units = L.select_review_units(self.rows(), split, n=3)
+        self.assertEqual(len(units), 3)
+        self.assertEqual({u['base_source'] for u in units}, {'v1', 'v2'})
+        self.assertEqual(len({u['base_source'] for u in units[:2]}), 2)
+        for u in units:
+            self.assertEqual([r['label'] for r in u['rules']], [1, 0])
+            self.assertNotIn('line:p|s', u['candidate_rules'])
+        self.assertEqual(units, L.select_review_units(self.rows(), split, n=3))
+
+
 class Stacks(unittest.TestCase):
     def test_obstacle_moves_with_its_base_and_blocked_stacks_stay(self):
         objects = dict(bowl_1=obj(0, 0), moka_pot_obstacle_1=obj(.3, .2), box_base_1=obj(.3, .2, half=.05),

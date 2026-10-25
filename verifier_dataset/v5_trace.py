@@ -44,6 +44,8 @@ def rows_from_trace(trace):
                        time_bin=min(g.TIME_BINS - 1, int(g.TIME_BINS * t / actions)), suffix_crosses=crossed)
             if not separated:
                 row['witnessed'] = not crossed
+            if snap.get('robot') is not None:
+                row.update(g.robot_sides(rule, start, goal_box, snap['robot']))
             rows.append(row)
     return rows
 

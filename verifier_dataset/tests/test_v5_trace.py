@@ -29,6 +29,20 @@ class Rows(unittest.TestCase):
         self.assertEqual(rows[(5, wall)]['time_bin'], 1)
         self.assertTrue(all(r['template'] == 'line' for r in rows.values()))
 
+    def test_robot_side_facts_only_with_a_robot_and_their_xor_is_the_label(self):
+        path = [[s, x, 0, 1.] for s, x in [(1, .05), (3, .15), (5, .3), (7, .35), (9, .4)]]
+        plain = v5_trace.rows_from_trace(self.trace(path))
+        self.assertTrue(all('target_robot_side' not in r for r in plain))
+        trace = self.trace(path)
+        for snap in trace['checkpoints']:
+            snap['robot'] = [-.6, 0.]
+        rows = {(r['unit'], r['rule']): r for r in v5_trace.rows_from_trace(trace)}
+        for r in rows.values():
+            self.assertEqual(r['label'], int(r['target_robot_side'] != r['goal_robot_side']))
+        wall = rows[(0, 'line:cookies|ramekin')]  # the wall x = .2; robot and bowl on one side, plate on the other
+        self.assertEqual((wall['target_robot_side'], wall['goal_robot_side']), (1, 0))
+        self.assertAlmostEqual(wall['robot_clearance'], .8)
+
     def test_a_suffix_that_recrosses_is_not_a_witness(self):
         path = [[s, x, 0, 1.] for s, x in [(1, .05), (5, .3), (7, .1), (9, .4)]]
         rows = {(r['unit'], r['rule']): r for r in v5_trace.rows_from_trace(self.trace(path))}
