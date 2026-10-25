@@ -58,11 +58,12 @@ def prompt_item(processor,messages,vision):
     return dict(prompt=prompt,grid=vision['image_grid_thw'],vision=vision,n=len(text_ids(processor,prompt,vision['image_grid_thw'])))
 
 
-def encode(processor,row,dataset,kind,maximum,vision=None,verify=False,answer=None,keys=None):
+def encode(processor,row,dataset,kind,maximum,vision=None,verify=False,answer=None,keys=None,forced=None):
     """Supervised item; verify=True also checks the fast path against the native processor.
 
     answer/keys replace the arm's target text and its key-value fields (fit-diagnostic controls);
-    by default they are the Phase 2 target and, for facts, all four FACT_KEYS."""
+    by default they are the Phase 2 target and, for facts, all four FACT_KEYS. forced replaces the
+    forced prefix whose token boundary is checked (V5 targets start with Line:); default FORCED_PREFIX[kind]."""
     images=load_images(row,dataset) if verify else None
     vision=vision or vision_inputs(processor,row,dataset);grid=vision['image_grid_thw']
     messages=student_messages(row,'A');answer=answer or assistant_target(row,kind)
@@ -84,7 +85,7 @@ def encode(processor,row,dataset,kind,maximum,vision=None,verify=False,answer=No
     def boundary(text):
         t=text_ids(processor,prompt+text,grid);require(torch.equal(ids[:len(t)],t),'Not a token boundary: '+repr(text[-24:]));return len(t)
 
-    require(boundary(answer[:-1])==digit,'Binary decision boundary differs');boundary(FORCED_PREFIX[kind])
+    require(boundary(answer[:-1])==digit,'Binary decision boundary differs');boundary(FORCED_PREFIX[kind] if forced is None else forced)
     labels=ids.clone()[None];labels[:,:n]=-100;labels[:,end+1:]=-100
     vm=torch.zeros_like(labels,dtype=torch.bool);vm[:,digit]=True;rm=labels.ne(-100)&~vm
     eos_mask=labels.eq(eos);key=torch.zeros_like(vm);detail={}
