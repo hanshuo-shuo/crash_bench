@@ -1,4 +1,4 @@
-# 当前状态（2026-10-24 收尾）
+# 当前状态（2026-10-25）
 
 ## 正在进行：生成式可行性 verifier
 
@@ -48,6 +48,10 @@
     38 条源、6 个任务组合可用；预注册读法 `shortcut_survives`（查表 0.615 > 0.60）。
     捷径只在 goal 和 spatial 任务上残留；严格配平后能挡住捷径的测试几乎只有 object/II/task1（验证、测试各 87 个孪生单元）。
   - 用户 10-24 选择先用 object/II/task1 一个任务走通故事，本轮收尾。**交接见 [V5_HANDOFF.md](generative_verifier/V5_HANDOFF.md)**。
+  - 10-24 用户决定训练只用 object/II/task1，并采用三项建议：训练加入训练源的反事实布局；B 沿用 V4 写法（物体、篮子是否在连线靠机器人一侧）；S1 加俯视图。
+  - S1 于 2026-10-25 完成，见 [V5_S1_REPORT.md](generative_verifier/V5_S1_REPORT.md)：
+    验证、测试各 392 / 384 个严格孪生单元（`s1_supply_ok`）；两轮盲看在判定和两个事实上都是 40/40（`relation_visible`、`facts_readable`）；
+    俯视图没有带来提升，S2 用两张斜视图。S2（建数据）等用户确认。
   - 主报告页 Ya7FQbZC9yEuNNyYhPBHHT 第 13 版加了"下一阶段：V5"一节，和上周的结论、后续工作逐条对照（结论：主线没有走偏，覆盖面暂时变窄）。精读页 DJPGiauxhPAC8BYE4L14Y5 第 5 版也有一节同样内容。
   - 没有正在运行的 CrashBench 作业。
 
