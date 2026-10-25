@@ -5,7 +5,7 @@
 #SBATCH --exclude=qgpu2014
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=64G
-#SBATCH --time=05:00:00
+#SBATCH --time=08:00:00
 #SBATCH --job-name=cb_v5s3_gpu
 # Launched only by verifier_training.launch_v5 with CB_V5_ROOT and CB_V5_ARGS.
 set -euo pipefail

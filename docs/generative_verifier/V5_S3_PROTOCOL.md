@@ -1,6 +1,6 @@
 # V5 最小故事闭环：第 S3 步，A 对 B 的 pilot
 
-2026-10-25 起草，用户当天批准开始（"可以 开始写"）。**启动前必须冻结**：实现完成并通过测试后，在本文件末尾记下实现的 commit 和"冻结"字样，之后不再改读数和读法。
+2026-10-25 起草，用户当天批准开始（"可以 开始写"），新会话接着实现（"接着做 V5 的 S3"）。**已于 2026-10-25 冻结**，见文末冻结记录。
 数据见 [V5_S2_REPORT.md](V5_S2_REPORT.md)，交接见 [V5_HANDOFF.md](V5_HANDOFF.md)。
 
 ## 这一步回答什么
@@ -36,8 +36,9 @@ V4 的 C 组不做。
   - 样本顺序是按 seed 打乱的训练行排列；A 和 B 用同一个顺序。
 - **改动 2，选模评估**：在第 150、300、448 次更新时，用固定的选模子集评估。
   - 子集：验证集里两种答案都有的图像，按 `sha256(图像|v5-s3-select)` 排序取前 192 张；每张取一条分隔、一条不分隔的规则，共 384 行。
+    - "图像"指 S2 的 `image_id`；同一答案有几条规则时，取 `sha256(图像|规则|v5-s3-select)` 最小的一条。
   - 平分时选较早的 checkpoint。
-  - 选定后，在完整验证集（1,538 行）和验证自然（79 行）上各评估一次。
+  - 选定后，在完整验证集（1,538 行）、验证自然（79 行）和训练拟合子集（256 行，R5）上各评估一次。
 - **生成**：贪心解码，最多新 token 数：A 8 个，B 96 个。
 - **seed**：pilot 只用 713。方向清楚后再加 714、715，那是下一次提交，需要另行确认。
 
@@ -49,11 +50,14 @@ V4 的 C 组不做。
 | R2 孪生图全对率 | 两种答案都有的图上，这张图的所有行都对的比例 |
 | R3 B 的事实 | `Target on robot side`、`Goal on robot side`、`Separated` 各自的准确率；格式合规率；判定与"模型自己写的两个事实按程序算出的判定"一致的比例 |
 | R4 自然诊断 | 验证自然上的判定准确率 |
-| R5 训练拟合 | 固定的 256 行训练子集（按 sha256 取）上的判定准确率，对照查表上限 0.760 |
+| R5 训练拟合 | 固定的 256 行训练子集（按 `sha256(行|v5-s3-fit)` 取）上、选定 checkpoint 的判定准确率，对照查表上限 0.760 |
 | R6 零样本对照 | 在选模子集（384 行）上，用直接判断提示和写事实提示各测一次：(a) Qwen2.5-VL-3B 基座（与 V4 相同）；(b) 本地 Qwen3-VL-32B-Instruct |
+| R7 捷径一致率（解释用） | 每组的预测与训练集"规则 × 进度"查表预测相同的比例。验证集上查表本身只有 0.500；A 若接近 1，说明它学的就是捷径 |
 
 - **不确定性**：以图像为单位做 bootstrap，报告 95% 区间。验证只有 4 条源，按源聚类的区间只作参考。
-- **R6 的资源**：(b) 的权重 63 GB，需要两张 A100-40GB（`device_map=auto`）或一张 80 GB / H100。不花 API。
+- **R6 的资源**：(b) 的权重 63 GB，用两张 A100（`device_map=auto`）。不花 API。
+- **R6 的提示**：写在 `v5_contract.ZERO_SHOT_INSTRUCTIONS`。系统提示和 V4 零样本相同；直接判断提示和 V4 一样强制以 `Verdict: ` 开头；写事实提示要求同样的五行格式，并说明"机器人一侧"是连线上含机械臂底座的一侧。两个模型用同样的图（448×448）、同样的贪心解码。
+- **R7 不进入读法**，只用来解释 A、B 各自学到了什么。
 
 ## 读法（事先写定）
 
@@ -70,44 +74,44 @@ R3 用来解释原因：
 - B 的判定错了而事实对了，说明问题在组合；
 - 事实错了，要看错在物体侧还是篮子侧。篮子侧有先验，查表就能猜对 0.676。
 
-## 要实现的代码（下一个会话做）
+## 实现（2026-10-25）
 
-V4 的 `verifier_training/fd1000_*` 和 V4 格式绑得很紧。V4 的代码不改动行为，新代码另起文件：
+V4 的 `verifier_training/fd1000_*` 和 V4 格式绑得很紧，所以 V4 代码的行为不变，新代码另起文件：
 
-1. **`verifier_training/v5_contract.py`**：
-   - 配置（版本 `V5-object-AB-v1`）；
-   - `FACT_KEYS = ('line', 'target_robot_side', 'goal_robot_side', 'separated')`，B 的强制前缀 `Line:`；
-   - 目标文本直接复用 `verifier_dataset.v5_dataset.facts_text`，加上 `\nVerdict: ` 和数字；
-   - 程序判定：Separated 为 yes 时判 0；
-   - 数据校验：核对哈希，确认训练阶段不加载测试行；
-   - 样本顺序：一个 epoch、A 和 B 相同；
-   - 选模子集和训练拟合子集的选取。
-2. **`fd1000_run.encode`**：加一个可选参数，替换强制前缀的边界检查。现在写死成 V4 的 `Protected:`，V5 的目标里没有这个前缀，检查会失败。默认值保持 V4 行为不变。`answer=`、`keys=` 参数已经存在，可以直接用。
-3. **`verifier_training/v5_metrics.py`**：
-   - 解析 B 的输出，严格格式为 `Line: (.+)\nTarget on robot side: (yes|no)\nGoal on robot side: (yes|no)\nSeparated: (yes|no)\nVerdict: [01]`；
-   - 计算 R1–R5 和图像级 bootstrap。
-4. **`verifier_training/v5_run.py`**：
-   - 阶段：`preflight`（编码、token 边界、不截断、A/B 推理输入相同）、`train ARM SEED`、`zero-shot-3b`；
-   - 复用 `fd1000_run` 的 `vision_inputs`、`adapter_model`、`update`、`run_generation`、`losses`。
-5. **`verifier_training/v5_zero_shot_32b.py`**：用 `qwen-vlm` 环境（transformers 5.7）；两种提示与 3B 零样本相同。
-6. **启动器 `launch_v5.py` 和 sbatch**：
-   - 工作区干净且已发布；按 S2 根目录建运行目录；
-   - `preflight` 通过后再提交 A、B 两个训练作业，同时最多 2 张 GPU；
-   - 每个运行目录记录 commit、配置、seed、Slurm 号。
-7. **测试**：
-   - 目标文本与 S2 的 `target.rationale` 一致；
-   - 强制前缀边界；
-   - 解析器能识别格式不合规的输出；
-   - 选模子集是平衡的；
-   - 训练顺序覆盖全部训练行各一次，A 和 B 顺序相同；
-   - 训练阶段拿不到测试行。
+| 文件 | 内容 |
+|---|---|
+| `verifier_training/v5_contract.py` | 配置 `V5-object-AB-v1`；`FACT_KEYS`、B 的强制前缀 `Line:`；目标文本复用 `v5_dataset.facts_text`；程序判定（Separated 为 yes 判 0）；`validate()` 核对 S2 的 5 个文件哈希，把测试行与 `TEST_FREEZE.json` 逐行比对后丢弃；一个 epoch 的样本顺序；选模子集、训练拟合子集；"规则 × 进度"查表；零样本提示；读法函数 `s3_reading` |
+| `verifier_training/fd1000_run.py` | `encode` 加可选参数 `forced`，替换强制前缀的边界检查；默认 `None` 仍用 V4 的 `FORCED_PREFIX[kind]` |
+| `verifier_training/v5_metrics.py` | B 输出的严格解析；R1–R5、R7；按图像和按源的 bootstrap；A、B 配对差 |
+| `verifier_training/v5_run.py` | 阶段 `preflight`（CPU）、`train ARM SEED`、`zero-shot-3b`、`report`（CPU，算读法） |
+| `verifier_training/v5_zero_shot_32b.py` | `qwen-vlm` 环境（transformers 5.7），两张 A100 |
+| `verifier_training/launch_v5.py`，`v5_cpu.sbatch`、`v5_gpu.sbatch`、`v5_zero_shot_32b.sbatch` | 启动器和作业脚本 |
+| `verifier_training/tests/test_v5_contract.py`、`test_v5_metrics.py`、`test_v5_encoding.py` | 测试 |
+
+- **preflight 检查**：
+  - 用原生 processor 核对快速编码；A、B 的推理输入逐行相同；token 边界（判定数字、`Line:`、四个事实值）；不截断；
+  - 一个 epoch 覆盖每个训练行一次，A、B 顺序相同；选模子集平衡；
+  - 查表在训练、验证、验证自然上的准确率与 S2 读数一致（0.760 / 0.500 / 0.747）；
+  - 不加载测试行。
+- **启动顺序**：
+  1. `launch_v5 create`：新运行目录，提交 CPU preflight；
+  2. preflight 正常结束后，`launch_v5 pilot`：A、B 两条训练线；A 结束后跑 3B 零样本；B 和 3B 零样本都结束后跑 32B（两张卡）；全部结束后跑 report。任何时候最多 2 张 GPU。
+- **测试**：目标文本与 S2 的 `target.rationale` 一致；强制前缀边界（V4 的默认前缀在 V5 目标上会报错）；解析器能识别不合规输出；选模子集平衡；训练顺序覆盖全部训练行各一次、A 和 B 相同；训练和零样本阶段不加载测试行（静态检查）；篡改的数据在读任何行之前失败。
 
 ## 资源
 
-- 训练：每组约 1–1.5 个 A100 小时，B 的评估较慢，预计再加约 1 小时。
-- 零样本 3B 约 0.5 小时；32B 需两张卡，约 1 小时。
-- 合计约 5–6 个 GPU 小时，同时最多 2 张卡。不调付费 API。
+- 训练：每组 448 次更新，约 20 分钟。
+- 评估：B 格式正确时每行约 1.3 秒，没学会格式、生成满 96 token 时约 6 秒；A 约 0.7 秒。B 共约 3,000 次生成，预计 1–2 小时，最坏约 5 小时，所以 GPU 作业时限设为 8 小时。
+- 零样本 3B 约 0.5 小时；32B 用两张 A100，加载约 2 分钟，384 行约 0.5 小时。
+- 合计约 4–6 个 GPU 小时，同时最多 2 张卡。不调付费 API。
 
 ## 冻结记录
 
-（实现完成、测试通过、启动前在这里写：实现 commit、冻结日期。）
+**状态：已冻结**（2026-10-25）。之后不再改读数、读法、子集和训练设置。
+
+- **实现 commit**：`904ce55`（`Implement the V5 S3 A-versus-B pilot`）。冻结提交只改本协议的文字和 `v5_gpu.sbatch` 的时限（5 → 8 小时），代码不变。
+- **测试**：V4 原有 104 个加 V5 新增 20 个，共 124 个，全部通过。
+- **GPU smoke**（草稿目录，不进入读数，不读测试）：用 16 个训练行、3 张孪生图、4 行验证自然，按 `904ce55` 的源码跑了全部阶段。
+  - 作业 5253821（1 张 A100，7 分钟）：preflight、A、B（各 4 次更新）、3B 零样本、report 都正常结束。梯度探针三项非零，显存峰值约 9 GB。4 次更新后两组都还没学会输出格式，判定解析不出来，按规定计为错。
+  - 作业 5253822（两张 A100-80GB，4 分钟）：32B 零样本 2 行，两种提示都能解析；每张卡峰值约 31 GB。
+  - 32B 的写事实回答每行末尾带两个空格，严格格式记为不合规，但事实和判定都能解析。R6 报告时注明，解析器不改。
