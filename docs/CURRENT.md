@@ -69,7 +69,7 @@
     P 自己写的结论是常数，起作用的是"模型定位、程序判定"的分工。1 个 seed，只看验证集。
     交接见 [V5_HANDOFF.md](generative_verifier/V5_HANDOFF.md) 开头。
     用户 10-25："收尾下 然后让下一个agent开始干下一步"。加 seed（A、P 各补 714、715，只看验证）已获批，交给下一个 agent；测试评估仍需用户确认。
-  - 主报告页 Ya7FQbZC9yEuNNyYhPBHHT 第 13 版加了"下一阶段：V5"一节，和上周的结论、后续工作逐条对照（结论：主线没有走偏，覆盖面暂时变窄）。精读页 DJPGiauxhPAC8BYE4L14Y5 第 5 版也有一节同样内容。第 18 版（10-26）在 S4 结果后加了"3 个 seed"一节（`#v5-seeds`）。
+  - 主报告页 Ya7FQbZC9yEuNNyYhPBHHT 第 13 版加了"下一阶段：V5"一节，和上周的结论、后续工作逐条对照（结论：主线没有走偏，覆盖面暂时变窄）。精读页 DJPGiauxhPAC8BYE4L14Y5 第 5 版也有一节同样内容。第 18 版（10-26）在 S4 结果后加了"3 个 seed"一节（`#v5-seeds`）。第 19、20 版（10-26）在页首加了"现在在做什么（白话版）"：用一道真实的题讲当前任务，并说明 P 的"程序判定"是训练过的 VLM 写坐标、固定代码判定。
   - **加 seed 于 2026-10-26 完成**，见 [V5_SEEDS_REPORT.md](generative_verifier/V5_SEEDS_REPORT.md)（协议 [V5_SEEDS_PROTOCOL.md](generative_verifier/V5_SEEDS_PROTOCOL.md)，启动前冻结 `ee20b20`，实现 `1a056d6`）。
     A、P 各补 seed 714、715，只看验证；713 用 S3、S4 的记录。预注册读法 `stable`：
     P 的程序判定 0.940 / 0.947 / 0.933，A 0.501 / 0.499 / 0.500；3 个 seed 按行平均后 P − A = +0.440，图像 bootstrap 区间 [+0.427, +0.452]。

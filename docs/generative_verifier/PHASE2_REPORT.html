@@ -263,8 +263,8 @@ l=l==='en'?'en':'zh';var r=document.documentElement;r.setAttribute('data-lang',l
   <p class="small" data-l="en"><b>25 Oct, S4</b>: with B rewritten to state where objects are in the image and a program deciding whether the line separates them, accuracy on the counterfactual twins rose from 50% to 94%. The storyline ran end to end once and this round is wrapped up; see <a href="#v5-s4">S4 result</a>.</p>
   <p class="small" data-l="zh"><b>10-26 加 seed</b>：A 和 P 各补了 seed 714、715。3 个 seed 上 P 都是 93–95%，A 都是 50%，差距 44 个百分点，见 <a href="#v5-seeds">3 个 seed</a>。测试集仍未打开。</p>
   <p class="small" data-l="en"><b>26 Oct, more seeds</b>: A and P each got seeds 714 and 715. On all three seeds P scores 93–95% and A 50%, a gap of 44 points; see <a href="#v5-seeds">Three seeds</a>. The test split is still unopened.</p>
-  <p class="small" data-l="zh"><b>10-26 白话版</b>：页首新增<a href="#now">现在在做什么</a>，用一道真实的题从头讲一遍当前的任务和结果。</p>
-  <p class="small" data-l="en"><b>26 Oct, plain version</b>: added <a href="#now">What we are doing now</a> at the top, which walks through one real question to explain the current task and results.</p>
+  <p class="small" data-l="zh"><b>10-26 白话版</b>：页首新增<a href="#now">现在在做什么</a>，用一道真实的题从头讲一遍当前的任务和结果；其中<a href="#now-program">第 5 小节</a>说明“程序判定”是什么、训练了什么。</p>
+  <p class="small" data-l="en"><b>26 Oct, plain version</b>: added <a href="#now">What we are doing now</a> at the top, which walks through one real question to explain the current task and results; <a href="#now-program">part 5</a> explains what “program verdict” means and what was trained.</p>
   <nav class="toc" aria-label="目录" data-l="zh">
     <a href="#now"><b>现在在做什么</b></a><a href="#problem">要解决的问题</a><a href="#task">一道题长什么样</a><a href="#data">数据怎么造</a><a href="#method">方法</a><a href="#result">主结果</a><a href="#diagnosis">为什么 A 学不会</a><a href="#errors">B 错在哪</a><a href="#story">结论</a><a href="#lineage">方法来源</a><a href="#limits">限制</a><a href="#v5">下一阶段：V5</a><a href="#reading">精读：为什么做这个实验</a>
   </nav>
@@ -358,16 +358,62 @@ Program: pudding and basket on opposite sides → separated → 0 (right)</pre>
   <p data-l="zh">A 和 B 对两条规则给了同一个答案，所以每张这样的图只能对一题。P 把四个点都写准了，程序据此算出了两题的正确答案。不过 P 自己写的结论是错的：它学会了“东西在哪”，没学会“所以隔没隔开”，这一步是程序做的。</p>
   <p data-l="en">A and B give the same answer to both rules, so on each such photo they can only get one right. P writes all four points accurately, and the program works out the right answer for both. P's own written conclusion is wrong, though: it learned where things are, not whether that means they are separated; the program does that step.</p>
 
-  <h3><span data-l="zh">5. 结果（1,538 道挪过东西的验证题）</span><span data-l="en">5. Results (1,538 validation questions with moved objects)</span></h3>
+  <h3 id="now-program"><span data-l="zh">5. “程序判定”是什么意思？训练了什么？</span><span data-l="en">5. What does “program verdict” mean? What was trained?</span></h3>
+  <p data-l="zh"><b>A、B、P 三组都是训练出来的 VLM</b>，底子完全一样：都是 Qwen2.5-VL-3B 加 LoRA 微调，用同样的 1,792 道训练题、同样的设置各训练一遍。不同的只是“教它写什么”：</p>
+  <p data-l="en"><b>A, B and P are all trained VLMs</b> with the same base: Qwen2.5-VL-3B fine-tuned with LoRA, each trained once on the same 1,792 training questions with the same settings. They differ only in what they are taught to write:</p>
+  <div class="tablewrap" data-l="zh"><table>
+    <thead><tr><th>组</th><th>训练它输出什么</th><th>最后的答案从哪来</th></tr></thead>
+    <tbody>
+      <tr><td><b>A</b></td><td>只写 <code>Verdict: 0/1</code></td><td>模型写的 Verdict</td></tr>
+      <tr><td><b>B</b></td><td>先写“布丁在线的哪一侧、篮子在哪一侧”，再写 Verdict</td><td>模型写的 Verdict</td></tr>
+      <tr><td><b>P</b></td><td>先写四个点在第 1 张图上的像素坐标（两个锚点、布丁、篮子），再写 Separated 和 Verdict</td><td>不用模型写的结论，用下面这段代码根据四个坐标算出来</td></tr>
+    </tbody></table></div>
+  <div class="tablewrap" data-l="en"><table>
+    <thead><tr><th>Arm</th><th>What it is trained to output</th><th>Where the final answer comes from</th></tr></thead>
+    <tbody>
+      <tr><td><b>A</b></td><td>only <code>Verdict: 0/1</code></td><td>the model's Verdict</td></tr>
+      <tr><td><b>B</b></td><td>which side of the line the pudding and the basket are on, then the Verdict</td><td>the model's Verdict</td></tr>
+      <tr><td><b>P</b></td><td>the View 1 pixel coordinates of four points (two anchors, pudding, basket), then Separated and Verdict</td><td>not the model's own conclusion: the code below computes it from the four coordinates</td></tr>
+    </tbody></table></div>
+  <p data-l="zh">P 训练时用的坐标“标准答案”，是用仿真里物体的真实位置和相机参数算出来的，不需要人工标注。</p>
+  <p data-l="en">The coordinate answers P is trained on are computed from the objects' true positions in simulation and the camera parameters; no human labelling is involved.</p>
+  <p data-l="zh"><b>“程序判定”是 VLM 后面接的几行固定代码</b>，没有任何参数，不训练。它拿 VLM 写出的四个点，算布丁和篮子是不是分在两个锚点连线的两边：分在两边就是被隔开了，判 0（做不成）；在同一边，判 1（做得成）。</p>
+  <p data-l="en"><b>The “program verdict” is a few lines of fixed code after the VLM</b>, with no parameters and no training. It takes the four points the VLM wrote and checks whether the pudding and the basket fall on opposite sides of the line through the two anchors: opposite sides means separated, answer 0 (infeasible); the same side means answer 1 (feasible).</p>
+  <pre data-l="zh">def side(a, b, p):          # 点 p 在 a→b 这条线的哪一边：+1 / -1 / 0
+    v = (b[0]-a[0])*(p[1]-a[1]) - (b[1]-a[1])*(p[0]-a[0])
+    return (v > 0) - (v < 0)
+
+隔开 = side(锚点1, 锚点2, 布丁) * side(锚点1, 锚点2, 篮子) &lt; 0
+答案 = 0 if 隔开 else 1</pre>
+  <pre data-l="en">def side(a, b, p):          # which side of the line a→b point p is on: +1 / -1 / 0
+    v = (b[0]-a[0])*(p[1]-a[1]) - (b[1]-a[1])*(p[0]-a[0])
+    return (v > 0) - (v < 0)
+
+separated = side(anchor1, anchor2, pudding) * side(anchor1, anchor2, basket) &lt; 0
+answer = 0 if separated else 1</pre>
+  <ul class="plain" data-l="zh">
+    <li><b>为什么不用 VLM 自己写的结论</b>：P 的 VLM 最后也写了 Separated 和 Verdict，但它没学会这一步，1,538 道题上全写“不隔开、做得成”，只有 50%。所以 94% 说明的是：VLM 学会了“东西在哪”，“隔没隔开”这一步靠代码。不能说 VLM 自己学会了判断。</li>
+    <li><b>P 比 A 多拿了信息</b>：训练时 A 只知道答案，P 还知道每件东西的准确位置。</li>
+    <li><b>代码是按规则写的，不是学来的</b>：规则本来就是“别越过这条线”，几何是确定的，所以写成代码合理；但这部分功劳不在模型。</li>
+    <li><b>更准确的说法</b>：同样的 VLM、同样的题，只教它答“能不能”，它学不会；教它先指出东西在哪，再用几行几何代码判断，就能做到 94%。</li>
+  </ul>
+  <ul class="plain" data-l="en">
+    <li><b>Why not use the VLM's own conclusion</b>: P's VLM also writes Separated and Verdict at the end, but it never learned that step: on all 1,538 questions it writes “not separated, feasible”, which gets 50%. So the 94% shows that the VLM learned where things are, while “separated or not” is done by the code. It cannot be claimed that the VLM learned to judge by itself.</li>
+    <li><b>P gets more information than A</b>: in training, A only sees the answer, while P also sees each object's exact position.</li>
+    <li><b>The code follows the rule; it is not learned</b>: the rule itself is “do not cross this line” and its geometry is exact, so writing it as code is reasonable, but the model gets no credit for that part.</li>
+    <li><b>The accurate claim</b>: the same VLM on the same questions cannot learn to answer “feasible or not” when taught only that; taught to first point out where things are, with a few lines of geometry code deciding, it reaches 94%.</li>
+  </ul>
+
+  <h3><span data-l="zh">6. 结果（1,538 道挪过东西的验证题）</span><span data-l="en">6. Results (1,538 validation questions with moved objects)</span></h3>
   <div class="tiles">
     <div class="tile"><span class="v">50%</span><span class="l"><span data-l="zh">A 直接回答（3 个 seed 都是 50%，等于抛硬币）</span><span data-l="en">A, answering directly (50% on all three seeds, a coin flip)</span></span></div>
     <div class="tile"><span class="v">50%</span><span class="l"><span data-l="zh">B 先写“在哪一侧”（1 个 seed）</span><span data-l="en">B, writing “which side” first (one seed)</span></span></div>
-    <div class="tile"><span class="v">94%</span><span class="l"><span data-l="zh">P 先写位置、程序判断（3 个 seed 在 93–95%）</span><span data-l="en">P, writing positions with a program deciding (93–95% on three seeds)</span></span></div>
+    <div class="tile"><span class="v">94%</span><span class="l"><span data-l="zh">P 先写位置、代码判断（3 个 seed 在 93–95%）</span><span data-l="en">P, writing positions with a program deciding (93–95% on three seeds)</span></span></div>
   </div>
   <p data-l="zh"><b>结论</b>：让模型先写出它看得见的东西（物体在图上的位置），再交给程序去算，这道题才学得会；直接回答，或者写“在线的哪一侧”，模型都只会猜。这和 V4 的结论一脉相承：中间写的事实要是模型能从图上读出来的东西，组合交给规则或程序。</p>
   <p data-l="en"><b>Conclusion</b>: the task becomes learnable only when the model first writes what it can see (where objects are in the image) and a program does the working out; answering directly, or writing “which side of the line”, leaves the model guessing. This follows V4's conclusion: the intermediate facts must be things the model can read off the image, with the combination left to a rule or a program.</p>
 
-  <h3><span data-l="zh">6. 接下来</span><span data-l="en">6. What comes next</span></h3>
+  <h3><span data-l="zh">7. 接下来</span><span data-l="en">7. What comes next</span></h3>
   <ul class="plain" data-l="zh">
     <li><b>只剩一步：正式考试。</b>测试题（1,154 道挪过的题和 80 道原始摆法的题）一直锁着，没人看过。等你点头后，把 A 和 P（各 3 个 seed）在上面各考一次，考完就不再改任何设置。</li>
     <li><b>之后可选</b>：教模型自己从位置算出结论；扩到别的任务；把它接到 AEGIS 前面，在机器人动手前拦下做不成的任务（要单独批准）。</li>
