@@ -1,6 +1,8 @@
 # V5：把可行性判断的环境做得不那么 toy
 
-> **2026-10-24 范围收窄**：用户决定只保留能产出孪生的任务组合，不补源、不扩规模，先走通最小故事闭环（S0–S3），见 [V5_SCREEN_PROTOCOL.md](V5_SCREEN_PROTOCOL.md)。下文第 3–4 节的正式采集（补源、C1–C5）暂缓。
+> **2026-10-24 范围收窄**：用户决定只保留能产出孪生的任务组合，不补源、不扩规模，先走通最小故事闭环，见 [V5_SCREEN_PROTOCOL.md](V5_SCREEN_PROTOCOL.md)。下文第 3–4 节的正式采集（补源、C1–C5）暂缓。
+>
+> **进度（2026-10-26 核对）**：收窄后的步骤见第 6 节。S0–S4、拟合诊断、加 seed 都已完成，只用 object/II/task1；正在做测试集评估（只评估一次）。逐步记录以 [V5_HANDOFF.md](V5_HANDOFF.md) 开头为准。
 
 2026-10-24 起。读者：项目负责人，以及之后接手的 Codex/Claude 会话。
 V4 及其结果见 [PRELIMINARY_STORY.md](PRELIMINARY_STORY.md)，讨论过程见 [NEXT_STEPS.md](NEXT_STEPS.md) §9。
@@ -47,8 +49,8 @@ V4 及其结果见 [PRELIMINARY_STORY.md](PRELIMINARY_STORY.md)，讨论过程�
 | 0 | 只读盘点：可用的源、每个场景的锚点物体 | 登录节点轻量读取 | **2026-10-24 完成**，见 §5 |
 | 1 | CPU 几何摸底：在初始状态和轨迹 checkpoint 上算物体位置，统计各模板的标签产出和捷径风险 | `short` 分区 CPU 作业，不用 GPU、不调 API、不产生训练数据 | **2026-10-24 完成**：初始布局固定（文字 0.999），中途加规则可行，见 [V5_STEP1_REPORT.md](V5_STEP1_REPORT.md) |
 | 2 | 小样本渲染看图：约 20 个中途 checkpoint（连线孪生），确认锚点和目标在连线哪一侧从两张图里看得出 | GPU 渲染，4 分钟 | **2026-10-24 完成**：`relation_visible`，盲看回答 34/40，全对，见 [V5_STEP2_REPORT.md](V5_STEP2_REPORT.md) |
-| 3 | 正式采集 V5：重新执行源轨迹拿动作带、核验见证和证书、冻结新的锁定测试源 | GPU；缓存感知命中时不调 API | **需要单独授权数据采集** |
-| 4 | 训练与评估：自然分布训练，规则翻转孪生测试，按规则数量画深度曲线 | GPU | 待定 |
+| 3 | 正式采集 V5：重新执行源轨迹拿动作带、核验见证和证书、冻结新的锁定测试源 | GPU；缓存感知命中时不调 API | **暂缓**：C0 后改用反事实布局，10-24 范围收窄后不补源，见第 6 节 |
+| 4 | 训练与评估：自然分布训练，规则翻转孪生测试，按规则数量画深度曲线 | GPU | **改为第 6 节的 S2–S4**：只用 object/II/task1；深度曲线未做 |
 
 ### 第 1 步要回答的问题
 
@@ -87,3 +89,23 @@ V4 及其结果见 [PRELIMINARY_STORY.md](PRELIMINARY_STORY.md)，讨论过程�
 | long | 目标物、篮子或盘子 | 其余杂货、杯子，以及障碍物 |
 
 障碍物有 6 种：牛奶、摩卡壶、红咖啡杯、白色收纳盒、酒瓶、黄色书。每个场景至少有障碍物加一个干扰物，R-line 需要的两个锚点都凑得出来。
+
+## 6. 范围收窄后的实际步骤（2026-10-24 – 10-26）
+
+第 2 步之后没有按第 3–4 节做正式采集，而是先用已有的 67 条 V4 源走通最小故事：自然布局训练，挪动锚点得到的反事实孪生测试。每一步都由用户先确认。
+
+| 步 | 做了什么 | 结果（读法） | 报告 |
+|---|---|---|---|
+| C0 | 修正后重新回放 V4 的 67 条源 | 固定布局里严格孪生从 53 降到 0；改用反事实布局 | [V5_C0_REPORT.md](V5_C0_REPORT.md) |
+| 布局 smoke v1–v3 | 挪动机器人碰不到的锚点，回放同一条动作带 | 合法率 0.72，只看文字的上限 0.705；8 条源只有 4 条能产出孪生 | [V5_LAYOUT_PROTOCOL.md](V5_LAYOUT_PROTOCOL.md) |
+| S0 | 筛查 67 条源，查捷径能否迁移 | `shortcut_survives`；能挡住捷径的几乎只有 object/II/task1 | [V5_S0_REPORT.md](V5_S0_REPORT.md) |
+| S1 | object/II/task1 加布局、渲染、两轮盲看 | `s1_supply_ok`、`relation_visible`、`facts_readable` | [V5_S1_REPORT.md](V5_S1_REPORT.md) |
+| S2 | 建数据集：训练 1,792 行，验证 1,538 行，测试 1,154 行 | `s2_dataset_ready`；测试集冻结 | [V5_S2_REPORT.md](V5_S2_REPORT.md) |
+| S3 | A（直接判断）对 B（先写"在哪一侧"），seed 713，只看验证 | `both_shortcut`：A 0.501，B 0.503 | [V5_S3_REPORT.md](V5_S3_REPORT.md) |
+| 拟合诊断 | B 在 16 / 64 行训练图上反复练 | `inconclusive`：背得下来，迁移不出去 | [V5_FIT_REPORT.md](V5_FIT_REPORT.md) |
+| S4 | P 先写四个点的位置，固定代码判定，seed 713 | `positions_ground`：P 0.940，A 0.501 | [V5_S4_REPORT.md](V5_S4_REPORT.md) |
+| 加 seed | A、P 各补 714、715 | `stable`：P 0.933–0.947，A 0.499–0.501；P − A +0.440 [+0.427, +0.452] | [V5_SEEDS_REPORT.md](V5_SEEDS_REPORT.md) |
+| 测试评估 | 6 个选定的 adapter 在冻结测试集上各评估一次 | 用户 10-26 批准，进行中 | [V5_TEST_PROTOCOL.md](V5_TEST_PROTOCOL.md) |
+
+- **和第 2 节相比还没做的**：一个场景多条规则同时起作用（深度曲线）、R-zone 模板、其他任务组合（goal、spatial）、AEGIS 闭环。
+- **故事目前的说法**：在自然分布上训练、在挡住捷径的反事实孪生上测试，直接判断只有 50%；让模型先写出看得见的位置、再交给固定代码判定，是 94%。P 自己写的结论在 3 个 seed 上都是随机水平，判定来自代码。

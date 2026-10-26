@@ -392,13 +392,13 @@ Program: pudding and basket on opposite sides → separated → 0 (right)</pre>
 separated = side(anchor1, anchor2, pudding) * side(anchor1, anchor2, basket) &lt; 0
 answer = 0 if separated else 1</pre>
   <ul class="plain" data-l="zh">
-    <li><b>为什么不用 VLM 自己写的结论</b>：P 的 VLM 最后也写了 Separated 和 Verdict，但它没学会这一步，1,538 道题上全写“不隔开、做得成”，只有 50%。所以 94% 说明的是：VLM 学会了“东西在哪”，“隔没隔开”这一步靠代码。不能说 VLM 自己学会了判断。</li>
+    <li><b>为什么不用 VLM 自己写的结论</b>：P 的 VLM 最后也写了 Separated 和 Verdict，但它没学会这一步：seed 713、714 在 1,538 道题上全写“不隔开、做得成”，seed 715 有 87% 写成相反的“隔开、做不成”，三个 seed 都只有 50% 左右，和瞎猜一样。所以 94% 说明的是：VLM 学会了“东西在哪”，“隔没隔开”这一步靠代码。不能说 VLM 自己学会了判断。</li>
     <li><b>P 比 A 多拿了信息</b>：训练时 A 只知道答案，P 还知道每件东西的准确位置。</li>
     <li><b>代码是按规则写的，不是学来的</b>：规则本来就是“别越过这条线”，几何是确定的，所以写成代码合理；但这部分功劳不在模型。</li>
     <li><b>更准确的说法</b>：同样的 VLM、同样的题，只教它答“能不能”，它学不会；教它先指出东西在哪，再用几行几何代码判断，就能做到 94%。</li>
   </ul>
   <ul class="plain" data-l="en">
-    <li><b>Why not use the VLM's own conclusion</b>: P's VLM also writes Separated and Verdict at the end, but it never learned that step: on all 1,538 questions it writes “not separated, feasible”, which gets 50%. So the 94% shows that the VLM learned where things are, while “separated or not” is done by the code. It cannot be claimed that the VLM learned to judge by itself.</li>
+    <li><b>Why not use the VLM's own conclusion</b>: P's VLM also writes Separated and Verdict at the end, but it never learned that step: seeds 713 and 714 write “not separated, feasible” on all 1,538 questions, seed 715 writes the opposite (“separated, infeasible”) on 87% of them, and all three get about 50%, the level of guessing. So the 94% shows that the VLM learned where things are, while “separated or not” is done by the code. It cannot be claimed that the VLM learned to judge by itself.</li>
     <li><b>P gets more information than A</b>: in training, A only sees the answer, while P also sees each object's exact position.</li>
     <li><b>The code follows the rule; it is not learned</b>: the rule itself is “do not cross this line” and its geometry is exact, so writing it as code is reasonable, but the model gets no credit for that part.</li>
     <li><b>The accurate claim</b>: the same VLM on the same questions cannot learn to answer “feasible or not” when taught only that; taught to first point out where things are, with a few lines of geometry code deciding, it reaches 94%.</li>

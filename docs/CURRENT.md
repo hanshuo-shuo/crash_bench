@@ -102,12 +102,12 @@
   - V4 verifier 的 Phase 1 API 基线（`openai/gpt-6-luna`，384 次调用）已用 $0.4669（上限 $3），计入用户方法的每周预算。
   - key 不进入 Git，也不进入日志。
 
-## 分支（2026-10-17 整理）
+## 分支（2026-10-17 整理，10-26 核对）
 
 | 分支 | 用途 | 状态 |
 |---|---|---|
-| `main` | 默认分支，稳定线 | 快进到 verifier Phase 0–2 的最新状态 |
-| `codex/generative-verifier-pilot` | verifier 工作线 | 与 `main` 相同；后续工作可以继续在这里，或每个阶段开新分支 |
+| `main` | 默认分支，稳定线 | 停在 10-17 的 `03d7327`（verifier Phase 0–2）；之后没有再快进 |
+| `codex/generative-verifier-pilot` | verifier 工作线 | 10-18 以后的工作（第 1 步、对照、梯级、V5 全部）都在这里，10-26 时比 `main` 多 48 个提交；是否快进 `main` 由用户决定 |
 | `codex/archive-crashbench-20260926` | 2026-09-26 之前的 CrashBench 计划存档 | 只读，AGENTS.md 引用 |
 | `codex/feasibility` | 10 月初可行性研究的发布分支 | 只读；`analysis/uncertainty/`、`experiments/reach_avoid/`、`experiments/feasibility_contract/` 的启动器靠它核对来源，不要删除 |
 | `codex/paired-repeats` | paired repeats 实验，以及用户在网页上写的 `docs/new_report.md`（10-06 至 10-13） | 有 7 个独有提交，没有并入 `main`；是否合并由用户决定 |
