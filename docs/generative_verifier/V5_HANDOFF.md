@@ -10,6 +10,10 @@
 - 下一步（加 seed）已获批，交给下一个 agent 去做；
 - 测试集评估不在这次授权内，3 个 seed 都跑完后仍要用户确认。
 
+**加 seed 正在运行（2026-10-25 启动）**：协议 [V5_SEEDS_PROTOCOL.md](V5_SEEDS_PROTOCOL.md)（冻结 `ee20b20`，实现 `1a056d6`），
+运行目录 `verifier_training/runs/20261026T001735Z_v5-seeds_ee20b2033465`，作业 5343157（preflight，已通过）、5343158–5343161（A、P 的 714、715，两条 GPU 线）、5343162（report，写 `SEEDS_READING.json`）。
+跑完后：写 `V5_SEEDS_REPORT.md`，更新本节和 CURRENT.md，同步主报告页。
+
 ### 故事线现状
 
 | 步 | 做了什么 | 反事实孪生验证（1,538 行） | 报告 |

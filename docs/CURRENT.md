@@ -70,7 +70,9 @@
     交接见 [V5_HANDOFF.md](generative_verifier/V5_HANDOFF.md) 开头。
     用户 10-25："收尾下 然后让下一个agent开始干下一步"。加 seed（A、P 各补 714、715，只看验证）已获批，交给下一个 agent；测试评估仍需用户确认。
   - 主报告页 Ya7FQbZC9yEuNNyYhPBHHT 第 13 版加了"下一阶段：V5"一节，和上周的结论、后续工作逐条对照（结论：主线没有走偏，覆盖面暂时变窄）。精读页 DJPGiauxhPAC8BYE4L14Y5 第 5 版也有一节同样内容。
-  - 没有正在运行的 CrashBench 作业。
+  - **加 seed 正在运行（2026-10-25 启动）**：协议 [V5_SEEDS_PROTOCOL.md](generative_verifier/V5_SEEDS_PROTOCOL.md)，启动前冻结（`ee20b20`，实现 `1a056d6`）。
+    运行目录 `/projects/p33100/siosio/crashbench_safelibero/verifier_training/runs/20261026T001735Z_v5-seeds_ee20b2033465`；
+    作业 preflight 5343157（已通过），A_seed714 5343158 → P_seed714 5343159，A_seed715 5343160 → P_seed715 5343161，report 5343162。只看验证，不读测试。
 
 ## 已完成的研究（结果只读）
 
