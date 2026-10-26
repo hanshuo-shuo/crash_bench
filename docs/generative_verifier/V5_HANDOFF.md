@@ -1,15 +1,23 @@
-# V5 交接（2026-10-26：测试评估运行中）
+# V5 交接（2026-10-26：测试评估完成，`test_confirms`）
 
 读者：接手的下一个 Claude/Codex 会话。先读 [AGENTS.md](../../AGENTS.md) 和 [CURRENT.md](../CURRENT.md)，再读本文。
 
-## 2026-10-26 测试评估（运行中，先读这一节）
+## 2026-10-26 测试评估完成（先读这一节）
 
 - 用户 10-26 说"都改一下 然后做测试级"：先改了 3 处文档（`d964dfe`），再做测试评估。
+- **结果**见 [V5_TEST_REPORT.md](V5_TEST_REPORT.md)，预注册读法 **`test_confirms`**：
+  - 测试集（1,154 行反事实孪生，378 张图，4 条没见过的源）上，P 的程序判定 0.932 / 0.942 / 0.924（seed 713 / 714 / 715），A 0.503 / 0.501 / 0.500；
+  - 3 个 seed 按行平均后 P − A = +0.432，图像 bootstrap 95% 区间 [+0.416, +0.449]；
+  - 从验证到测试 P 只降 0.005–0.009；A 仍塌成常数；P 自己写的结论仍是随机水平（0.500 / 0.500 / 0.492）；
+  - 测试自然（80 行）：P 0.975 / 0.950 / 0.950，A 0.913 / 0.813 / 0.413。
+- 8 个作业全部 COMPLETED 0:0，没有重跑；6 个 adapter 的重新加载核对都是 32/32 逐字相同。没有正在运行的 CrashBench 作业。
+- **测试集已经用过这一次，不要再评估、重跑或拿它选模。** 下一步（见下面"下一步"）都要用户另行决定。
+- 主报告页第 22 版加了 `#v5-test` 一节和图 c13。
 - 协议 [V5_TEST_PROTOCOL.md](V5_TEST_PROTOCOL.md)，冻结于 `5594ceb`（实现 `72d825b`，TF32 修正 `f071896`）；代码 `v5_test_contract.py`、`v5_test_run.py`，启动器动作 `launch_v5 test`。
 - 6 个选定的 adapter 各评估一次（`test` 1,154 行，`test_natural` 80 行）。每个作业读测试行之前，要先在 32 行验证行上逐字复现训练时的输出。
 - **坑**：评估时要打开 TF32（`allow_tf32=True`），和训练时一样。否则 P 的 fp32 LoRA 会让坐标差几个像素，第一次 smoke 就是因为这个没复现。打开后，在 PCIe 和 SXM 两种 A100 之间也能逐字复现。
 - 运行目录 `/projects/p33100/siosio/crashbench_safelibero/verifier_training/runs/20261026T173919Z_v5-test_5594cebeb616`；作业 5433550（preflight）、5433758–5433761、5433763、5433766（评估）、5433770（report）。
-- 结束后：读 `TEST_READING.json`，写 V5_TEST_REPORT.md，同步报告页和 CURRENT。测试只评估这一次，结果不能用来改模型或设置。
+- 读数文件：运行目录下的 `TEST_READING.json`（report 作业写出）；每个 adapter 的记录在 `evaluations/<目标>/test.jsonl`、`test_natural.jsonl`，核对结果在 `RELOAD.json`、`COMPLETE.json`。
 
 ## 2026-10-26 加 seed 完成（先读这一节）
 
@@ -63,6 +71,7 @@
 | 拟合诊断 | `20261025T153621Z_v5-fit_ea76dabed506` | `ea76dab`（实现 `1d9d099`） |
 | S4 | `20261025T180525Z_v5-s4_20913c71c3f3` | `20913c7`（实现 `e651c3d`） |
 | 加 seed | `20261026T001735Z_v5-seeds_ee20b2033465` | `ee20b20`（实现 `1a056d6`） |
+| 测试评估 | `20261026T173919Z_v5-test_5594cebeb616` | `5594ceb`（实现 `72d825b`、`f071896`） |
 
 ### 代码入口（`verifier_training/`）
 
@@ -77,20 +86,21 @@
 - **加 seed**：
   - `v5_seeds_contract.py`：配置（原样嵌入 S3、S4 的配置）、新 seed 的样本顺序、3 个 seed 的行平均和图像 bootstrap（`seed_average`）、读法 `seeds_reading`；
   - `v5_seeds_run.py`：preflight、train、report；训练直接调用 `v5_run.train_arm`（A）和 `v5_pos_run.train_p`（P），这两个函数是 S3、S4 的 `train` 原样抽出的函数体。
-- **启动器** `launch_v5.py`：动作 `create`、`pilot`、`stage`（S3），`fit`，`s4`，`seeds --s3 --s4`；GPU 作业时限 8 小时。
-- **测试**：`verifier_training/tests/test_*.py` 共 153 个（V5 加 seed 新增 12 个）。跑法见下面的"规矩"。
+- **测试评估**：
+  - `v5_test_contract.py`：配置、6 个目标和两条线、旧文件清单、adapter 冻结、重新加载核对、读法 `test_reading`；
+  - `v5_test_run.py`：preflight、evaluate、report；只有这里的 `context` 会读测试行。
+- **启动器** `launch_v5.py`：动作 `create`、`pilot`、`stage`（S3），`fit`，`s4`，`seeds --s3 --s4`，`test --s3 --s4 --seeds`；GPU 作业时限 8 小时。
+- **测试**：`verifier_training/tests/test_*.py` 共 164 个（V5 测试评估新增 11 个）。跑法见下面的"规矩"。
 - **选定的 adapter**（测试评估要用）：S3 的 `A_seed713/selected_adapter`，S4 的 `P_seed713/selected_adapter`，加 seed 目录里的 `A_seed714`、`A_seed715`、`P_seed714`、`P_seed715` 下的 `selected_adapter`（选的分别是第 448、150、448、448、448、300 次更新：A 713/714/715，P 713/714/715）。
 
 ### 下一步（每项都要用户先确认）
 
-1. **测试评估一次（需要用户确认）**：3 个 seed 和选模都已冻结（加 seed 于 2026-10-26 完成，读法 `stable`）。在冻结的测试集（1,154 行加测试自然 80 行）上，用上面 6 个选定的 adapter 各评估一次。
-   - 先写测试协议并冻结：读法可沿用加 seed 的做法（每行按 3 个 seed 平均，再以图像为单位 bootstrap），门槛事先写定。
-   - 再写测试阶段的代码：`validate(include_test=True)` 只在这个阶段调用，并核对 `TEST_FREEZE.json`；在测试图上用 `v5_pos_contract.image_points` 投影真值点、核对程序与标签一致；每个 adapter 只评估一次，不再选模。
-   - 测试集至今没有读过。
-2. **可选**：
-   - P 自己写的结论在 3 个 seed 上都是随机水平，可以试着教模型自己算出 `Separated`；
-   - 把 P 接到 AEGIS 前面当闸门，需要单独批准控制器改动；
-   - 扩到其他任务组合（goal、spatial），之前暂停的补源也需要另批。
+- ~~测试评估一次~~：2026-10-26 完成，`test_confirms`，见 [V5_TEST_REPORT.md](V5_TEST_REPORT.md)。
+1. 把 P 接到 AEGIS 前面当闸门，需要单独批准控制器改动。
+2. P 自己写的结论在 3 个 seed 上都是随机水平，可以试着教模型自己算出 `Separated`。
+3. 扩到其他任务组合（goal、spatial），之前暂停的补源也需要另批，要新建验证和测试源。
+4. 整理成论文主线（V5 验证、加 seed、测试三步结论一致）。
+- S3 的 B 和零样本模型没有在测试集上评估；要评估需要另批并事先写定。
 
 ### 坑
 
@@ -104,8 +114,8 @@
 ### 规矩
 
 - 提交身份用 `git -c user.name=hanshuo-shuo -c user.email=80494218+hanshuo-shuo@users.noreply.github.com commit`。本机配置是另一个邮箱，不要用。
-- 测试集（`test`、`test_natural`）在 3 个 seed 和选模全部冻结前不读。
-- 加 seed、评估测试、付费 API、AEGIS 闸门，都要用户另行确认。
+- 测试集（`test`、`test_natural`）已在 2026-10-26 评估过一次，以后不再评估，也不用于选模或调参。
+- 付费 API、AEGIS 闸门、新数据，都要用户另行确认。
 - 跑测试：`PYTHONPATH=/projects/p33100/siosio/crashbench_safelibero/verifier_training/assets/20261010_d94c245/packages:. /projects/p33100/siosio/envs/openpi/bin/python -m unittest <verifier_training/tests 下的模块>`。
 
 ## 用户的决定（按时间）
@@ -126,6 +136,8 @@
 | 10-25 | "做一下吧" | 做 S3 报告建议的拟合诊断（B 在 16 / 64 行训练图上，只读训练集） |
 | 10-25 | "换吧 继续 然后这一步干完先收尾 反正要尽力跑通故事线" | 换成"先写位置、再用程序判定"（S4）；做完后本轮收尾 |
 | 10-25 | "收尾下 然后让下一个agent开始干下一步" | 本轮收尾；下一步（A 和 P 补 seed 714、715，只看验证）交给下一个 agent；测试评估仍需确认 |
+| 10-26 | "都改一下 然后做测试级" | 修正 3 处文档；写测试协议和代码、冻结后在测试集上评估 6 个选定的 adapter 各一次 |
+| 10-26 | "可以" | 不指定 GPU 型号（smoke 已证明打开 TF32 后不同型号逐字复现） |
 
 ## 故事（当前版本）
 

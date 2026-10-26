@@ -65,3 +65,5 @@ Each S1-S3 step still needs the user's go-ahead; no paid API without separate ap
 S3, the fit diagnostic and S4 ran on 2026-10-25; S4 (positions plus a program) reached 0.940 against
 A's 0.501 on the counterfactual validation twins and the round was wrapped up (V5_S4_REPORT.md). More seeds,
 the single test evaluation and any AEGIS gate each need the user's go-ahead.
+Seeds 714/715 and the single V5 test evaluation ran on 2026-10-26 with the user's go-ahead (reading
+test_confirms, V5_TEST_REPORT.md). Do not score the V5 test split again; any AEGIS gate still needs approval.

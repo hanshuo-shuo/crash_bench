@@ -245,8 +245,8 @@ l=l==='en'?'en':'zh';var r=document.documentElement;r.setAttribute('data-lang',l
   <h1><span data-l="zh">生成式可行性 Verifier</span><span data-l="en">Generative Feasibility Verifier</span></h1>
   <p class="lede" data-l="zh">机器人动手之前，先看两张场景图和一条规则，判断这件事在规则下到底做不做得成。这一页讲清楚四件事：数据怎么造，模型怎么训练，结果怎么样，为什么会是这个结果。</p>
   <p class="lede" data-l="en">Before the robot moves, look at two scene images and one rule, and decide whether the task can actually be done under that rule. This page covers four things: how the data was built, how the model was trained, what the results are, and why they came out this way.</p>
-  <div class="meta" data-l="zh"><span>2026-10-26 更新</span><span>模型 Qwen2.5-VL-3B + LoRA</span><span>每组 3 个 seed</span><span>正式测试集只评估过一次</span></div>
-  <div class="meta" data-l="en"><span>Updated 2026-10-26</span><span>Model: Qwen2.5-VL-3B + LoRA</span><span>3 seeds per arm</span><span>Locked test split scored once</span></div>
+  <div class="meta" data-l="zh"><span>2026-10-26 更新</span><span>模型 Qwen2.5-VL-3B + LoRA</span><span>每组 3 个 seed</span><span>V4、V5 的测试集各只评估过一次</span></div>
+  <div class="meta" data-l="en"><span>Updated 2026-10-26</span><span>Model: Qwen2.5-VL-3B + LoRA</span><span>3 seeds per arm</span><span>Locked test splits (V4, V5) each scored once</span></div>
   <p class="small" data-l="zh"><b>10-19 改版</b>：文字改成白话，新增 4 张结构图和一条排查路线。数字和结论都没有变，代码版本放在<a href="#appendix">附录</a>。</p>
   <p class="small" data-l="en"><b>10-19 revision</b>: rewritten in plain language, with 4 new structure diagrams and a step-by-step diagnosis. No numbers or conclusions changed; code versions are in the <a href="#appendix">appendix</a>.</p>
   <p class="small" data-l="zh"><b>10-20</b>：新增英文版，用右上角的“中文 / English”切换，图表和流程图里的文字也一起切换。</p>
@@ -265,6 +265,8 @@ l=l==='en'?'en':'zh';var r=document.documentElement;r.setAttribute('data-lang',l
   <p class="small" data-l="en"><b>26 Oct, more seeds</b>: A and P each got seeds 714 and 715. On all three seeds P scores 93–95% and A 50%, a gap of 44 points; see <a href="#v5-seeds">Three seeds</a>. The test split is still unopened.</p>
   <p class="small" data-l="zh"><b>10-26 白话版</b>：页首新增<a href="#now">现在在做什么</a>，用一道真实的题从头讲一遍当前的任务和结果；其中<a href="#now-program">第 5 小节</a>说明“程序判定”是什么、训练了什么。</p>
   <p class="small" data-l="en"><b>26 Oct, plain version</b>: added <a href="#now">What we are doing now</a> at the top, which walks through one real question to explain the current task and results; <a href="#now-program">part 5</a> explains what “program verdict” means and what was trained.</p>
+  <p class="small" data-l="zh"><b>10-26 正式考试</b>：6 个选定的模型在锁着的测试集上各考了一次。没见过的 4 条源上 P 是 92–94%，A 是 50%，读法 <code>test_confirms</code>，见<a href="#v5-test">正式考试</a>。测试集以后不再使用。</p>
+  <p class="small" data-l="en"><b>26 Oct, final exam</b>: the six selected models were each scored once on the locked test split. On four unseen sources P scores 92–94% and A 50%, reading <code>test_confirms</code>; see <a href="#v5-test">Final exam</a>. The test split will not be used again.</p>
   <nav class="toc" aria-label="目录" data-l="zh">
     <a href="#now"><b>现在在做什么</b></a><a href="#problem">要解决的问题</a><a href="#task">一道题长什么样</a><a href="#data">数据怎么造</a><a href="#method">方法</a><a href="#result">主结果</a><a href="#diagnosis">为什么 A 学不会</a><a href="#errors">B 错在哪</a><a href="#story">结论</a><a href="#lineage">方法来源</a><a href="#limits">限制</a><a href="#v5">下一阶段：V5</a><a href="#reading">精读：为什么做这个实验</a>
   </nav>
@@ -412,15 +414,17 @@ answer = 0 if separated else 1</pre>
   </div>
   <p data-l="zh"><b>结论</b>：让模型先写出它看得见的东西（物体在图上的位置），再交给程序去算，这道题才学得会；直接回答，或者写“在线的哪一侧”，模型都只会猜。这和 V4 的结论一脉相承：中间写的事实要是模型能从图上读出来的东西，组合交给规则或程序。</p>
   <p data-l="en"><b>Conclusion</b>: the task becomes learnable only when the model first writes what it can see (where objects are in the image) and a program does the working out; answering directly, or writing “which side of the line”, leaves the model guessing. This follows V4's conclusion: the intermediate facts must be things the model can read off the image, with the combination left to a rule or a program.</p>
+  <p data-l="zh"><b>正式考试（10-26）</b>：上面是验证题。锁着的 1,154 道测试题来自另外 4 条没见过的源，6 个模型各考了一次：A 还是 50%，P 是 93%（3 个 seed 在 92–94%），比验证只低不到 1 个百分点。见<a href="#v5-test">正式考试</a>。</p>
+  <p data-l="en"><b>Final exam (26 Oct)</b>: the numbers above are validation. The 1,154 locked test questions come from four other, unseen sources, and the six models were each scored once: A is still 50%, P is 93% (92–94% across the three seeds), less than a point below validation. See <a href="#v5-test">Final exam</a>.</p>
 
   <h3><span data-l="zh">7. 接下来</span><span data-l="en">7. What comes next</span></h3>
   <ul class="plain" data-l="zh">
-    <li><b>只剩一步：正式考试。</b>测试题（1,154 道挪过的题和 80 道原始摆法的题）一直锁着，没人看过。等你点头后，把 A 和 P（各 3 个 seed）在上面各考一次，考完就不再改任何设置。</li>
-    <li><b>之后可选</b>：教模型自己从位置算出结论；扩到别的任务；把它接到 AEGIS 前面，在机器人动手前拦下做不成的任务（要单独批准）。</li>
+    <li><b>正式考试已经考完</b>（10-26）：结果和验证集一致，测试题以后不再使用。</li>
+    <li><b>之后可选</b>：把它接到 AEGIS 前面，在机器人动手前拦下做不成的任务（要单独批准）；教模型自己从位置算出结论；扩到别的任务。</li>
   </ul>
   <ul class="plain" data-l="en">
-    <li><b>One step left: the final exam.</b> The test questions (1,154 with moved objects and 80 in the original layout) have stayed locked and unseen. Once you say go, A and P (three seeds each) are scored on them once, after which no setting changes.</li>
-    <li><b>Optional after that</b>: teach the model to work out the conclusion from the positions itself; extend to other tasks; wire it in front of AEGIS so that infeasible tasks are stopped before the robot moves (needs separate approval).</li>
+    <li><b>The final exam is done</b> (26 Oct): the result matches validation, and the test questions will not be used again.</li>
+    <li><b>Optional next</b>: wire it in front of AEGIS so that infeasible tasks are stopped before the robot moves (needs separate approval); teach the model to work out the conclusion from the positions itself; extend to other tasks.</li>
   </ul>
   <p class="small" data-l="zh">这道题是验证集的第 i1291 张图（规则 v5o_03329、v5o_03328），A、B 的输出来自 S3（seed 713），P 的来自 S4（seed 713）。细节见下面的 <a href="#v5">V5</a> 一节。</p>
   <p class="small" data-l="en">This question is validation image i1291 (rows v5o_03329 and v5o_03328); A's and B's outputs come from S3 (seed 713), P's from S4 (seed 713). Details are in the <a href="#v5">V5</a> section below.</p>
@@ -1584,8 +1588,8 @@ Constraints: Use at most 295 native commands in [-1,1]^7. The robot and native t
   <div class="callout">
     <p data-l="zh"><b>一句话</b>：V4 的题太 toy，规则是“保护橙色盒”这样的颜色模板，每张图恰好一个隔开的盒子。V5 把规则换成指向真实物体的一句话（“别让任何东西越过番茄酱和汤罐的连线”），在机器人做到一半时加进来；测试时把机器人碰不到的物体挪个位置，让“看文字猜”“看进度猜”都失效。目的不变：检验先写关系事实的模型是不是真的在看图。</p>
     <p data-l="en"><b>In one sentence</b>: V4's task was too toy: the rule was a colour template such as “protect the orange box”, and every image had exactly one separating box. V5 turns the rule into a sentence about real objects (“do not let anything cross the straight line through the ketchup and the soup can”) that arrives while the robot is mid-task, and the test moves objects the robot never touches, so guessing from the text or from task progress stops working. The aim is unchanged: check whether a model that writes relational facts first really looks at the image.</p>
-    <p class="small" data-l="zh">2026-10-25：S1、S2、S3 和之后的拟合诊断都已完成。S3 的结果和预期不同：A 和 B 在反事实孪生上都在 50% 左右，见下面的 <a href="#v5-s3">S3 结果</a>；拟合诊断显示 B 能背但学不会读线，见<a href="#v5-fit">拟合诊断</a>。之后的 S4 改成先写位置、再由程序判定，反事实孪生上到了 94%，见 <a href="#v5-s4">S4 结果</a>。10-26 又给 A 和 P 各补了两个 seed：3 个 seed 上 P 都是 93–95%，A 都是 50%，见 <a href="#v5-seeds">3 个 seed</a>。下一步是在测试集上评估一次，等确认；现在没有正在运行的作业。仓库里的交接文档是 <code>docs/generative_verifier/V5_HANDOFF.md</code>，各步的报告都在同一目录下，文件名以 <code>V5_</code> 开头。</p>
-    <p class="small" data-l="en">25 Oct: S1, S2, S3 and the follow-up fit diagnostic are done. S3 did not come out as expected: A and B both sit near 50% on the counterfactual twins; see <a href="#v5-s3">S3 result</a> below. The fit diagnostic shows that B can memorise but does not learn to read the line; see <a href="#v5-fit">Fit diagnostic</a>. S4 then switched to writing positions with a program deciding, and reached 94% on the counterfactual twins; see <a href="#v5-s4">S4 result</a>. On 26 Oct A and P each got two more seeds: on all three seeds P scores 93–95% and A 50%; see <a href="#v5-seeds">Three seeds</a>. Scoring the test split once is next and waits for a go-ahead; no jobs are running. The handoff in the repository is <code>docs/generative_verifier/V5_HANDOFF.md</code>; each step's report sits in the same folder under a <code>V5_</code> name.</p>
+    <p class="small" data-l="zh">2026-10-25：S1、S2、S3 和之后的拟合诊断都已完成。S3 的结果和预期不同：A 和 B 在反事实孪生上都在 50% 左右，见下面的 <a href="#v5-s3">S3 结果</a>；拟合诊断显示 B 能背但学不会读线，见<a href="#v5-fit">拟合诊断</a>。之后的 S4 改成先写位置、再由程序判定，反事实孪生上到了 94%，见 <a href="#v5-s4">S4 结果</a>。10-26 又给 A 和 P 各补了两个 seed：3 个 seed 上 P 都是 93–95%，A 都是 50%，见 <a href="#v5-seeds">3 个 seed</a>。10-26 在锁着的测试集上考了一次：没见过的 4 条源上 P 是 92–94%，A 是 50%，见<a href="#v5-test">正式考试</a>；现在没有正在运行的作业。仓库里的交接文档是 <code>docs/generative_verifier/V5_HANDOFF.md</code>，各步的报告都在同一目录下，文件名以 <code>V5_</code> 开头。</p>
+    <p class="small" data-l="en">25 Oct: S1, S2, S3 and the follow-up fit diagnostic are done. S3 did not come out as expected: A and B both sit near 50% on the counterfactual twins; see <a href="#v5-s3">S3 result</a> below. The fit diagnostic shows that B can memorise but does not learn to read the line; see <a href="#v5-fit">Fit diagnostic</a>. S4 then switched to writing positions with a program deciding, and reached 94% on the counterfactual twins; see <a href="#v5-s4">S4 result</a>. On 26 Oct A and P each got two more seeds: on all three seeds P scores 93–95% and A 50%; see <a href="#v5-seeds">Three seeds</a>. On 26 Oct the locked test split was scored once: on four unseen sources P scores 92–94% and A 50%; see <a href="#v5-test">Final exam</a>. No jobs are running. The handoff in the repository is <code>docs/generative_verifier/V5_HANDOFF.md</code>; each step's report sits in the same folder under a <code>V5_</code> name.</p>
   </div>
 
   <div class="tiles">
@@ -1860,19 +1864,46 @@ Program: the pudding and the basket lie on opposite sides → separated → 0 (c
     <li><b>Limitations</b>: still one task composition and four validation sources; the true positions come from simulation; the 384 selection questions are part of the validation set (as in S3 and S4); the test split is still unopened.</li>
   </ul>
 
+  <h3 id="v5-test"><span data-l="zh">正式考试：没见过的测试题上，结果和验证集一样</span><span data-l="en">Final exam: on unseen test questions, the result matches validation</span></h3>
+  <p data-l="zh">测试题从 S2 建数据集时就锁着，来自另外 4 条源（同一个任务的另外 4 个初始状态）：1,154 道挪过东西的孪生题、378 张图，另有 80 道原始摆法的题。这一步把 3 个 seed 选定的 A 和 P（共 6 个模型）在上面各考一次，不训练、不重新选模、不改任何设置。怎么读结果启动前就写定了，门槛和加 seed 时一样：3 个 seed 的 P 都要至少 65%，每个 seed 的 P − A 至少 10 个百分点，平均差距的 95% 区间整个在 0 以上；任何一个 seed 的 P 不超过 60% 就算失败。</p>
+  <p data-l="en">The test questions have been locked since the dataset was built in S2, and they come from four other sources (four other starting states of the same task): 1,154 twin questions with moved objects on 378 images, plus 80 questions in the original layout. This step scored the A and P models selected for the three seeds (six models in all) on them once each, with no training, no reselection and no setting changed. How to read the result was written down before launch, with the same thresholds as for the extra seeds: P must reach at least 65% on every seed, P − A must be at least 10 points on every seed, and the 95% interval of the averaged gap must lie entirely above 0; any seed with P at or below 60% counts as a failure.</p>
+  <p data-l="zh">考之前先核对：每个模型重新加载后，要在 32 道验证题上逐字写出和训练时一模一样的答案，才允许打开测试题。第一次演练（只用验证题）就发现了一个问题：评估时没有像训练时那样打开 TF32 矩阵乘，P 写的坐标差了几个像素。修好后 6 个模型都逐字复现，正式考试时也全部通过。</p>
+  <p data-l="en">A check came first: after reloading, each model had to write exactly the same answers as during training on 32 validation questions, word for word, before the test questions could be opened. The first rehearsal (on validation questions only) caught a problem: the evaluation did not turn on TF32 matrix multiplication the way training did, and P's coordinates shifted by a few pixels. After the fix all six models reproduced their answers exactly, and all six passed again in the real run.</p>
+  <div class="chart" id="c13">
+    <div class="ctitle"><span data-l="zh">测试集与验证集的判定准确率</span><span data-l="en">Verdict accuracy on test and on validation</span></div>
+    <div class="csub"><span data-l="zh">实心条是测试集的反事实孪生题（1,154 题，4 条没见过的源），带边框的淡色条是验证集的反事实孪生题（1,538 题），供对照；条是 3 个 seed（713、714、715）的平均，黑点是单个 seed。80 道原始摆法的测试题在数据表里。</span><span data-l="en">Solid bars are the counterfactual test twins (1,154 questions from four unseen sources); faded outlined bars are the counterfactual validation twins (1,538 questions), for comparison. Bars are the mean of the three seeds (713, 714, 715), dots single seeds. The 80 original-layout test questions are in the data table.</span></div>
+    <div class="legend" id="c13-legend"></div>
+    <svg id="c13-svg" viewBox="0 0 720 206" role="img" aria-label="测试集反事实孪生上，3 个 seed 平均：P 程序判定 93.3%（92.4% 到 94.2%），A 50.1%（50.0% 到 50.3%），P 自己写的 Verdict 49.7%；验证集上：P 94.0%，A 50.0%，P 自己写的 Verdict 50.2%" data-aria-en="On the counterfactual test twins, mean of three seeds: P program verdict 93.3% (92.4% to 94.2%), A 50.1% (50.0% to 50.3%), P own Verdict 49.7%; on validation: P 94.0%, A 50.0%, P own Verdict 50.2%"></svg>
+    <details><summary><span data-l="zh">数据表</span><span data-l="en">Data table</span></summary><div class="tablewrap"><table id="c13-table"></table></div></details>
+  </div>
+  <ul class="plain" data-l="zh">
+    <li><b>读法是“测试确认”（<code>test_confirms</code>）</b>：P 在 seed 713、714、715 上是 93.2%、94.2%、92.4%，A 是 50.3%、50.1%、50.0%。每道题先按 3 个 seed 平均，P − A = +43.2 个百分点，95% 区间 [+41.6, +44.9]。三条门槛都满足。</li>
+    <li><b>换到没见过的源几乎没掉</b>：P 从验证到测试只降了 0.5–0.9 个百分点，A 一直是 50%。按源看，P 在 4 条测试源上都在 91–95%。两种答案都有的图上，P 一张图的题全对的比例是 79–88%，A 是 0。</li>
+    <li><b>原始摆法的 80 道题</b>：P 95.0–97.5%，A 41–91%（715 仍全判“做得成”）。这里只看“规则 × 进度”就有 91%，题也少，只作参考。</li>
+    <li><b>失败方式和分工都没变</b>：A 每个 seed 仍几乎只给一个答案；P 自己写的结论仍是 50% 左右（50.0%、50.0%、49.2%），判定来自代码。P 判错的题，每一道都至少有一个点偏了 15 像素以上。</li>
+    <li><b>测试只考这一次</b>：以后不再拿测试题评估、选模或调参。局限不变：1 个任务组合、4 条测试源（同一个任务的不同初始状态）；位置真值来自仿真；约束是虚拟的连线；P 比 A 多拿了位置监督。</li>
+  </ul>
+  <ul class="plain" data-l="en">
+    <li><b>The reading is “test confirms” (<code>test_confirms</code>)</b>: P scores 93.2%, 94.2% and 92.4% on seeds 713, 714 and 715; A scores 50.3%, 50.1% and 50.0%. Averaging each question over the three seeds, P − A = +43.2 points, 95% interval [+41.6, +44.9]. All three thresholds are met.</li>
+    <li><b>Almost no drop on unseen sources</b>: P loses only 0.5–0.9 points from validation to test, and A stays at 50%. By source, P is at 91–95% on each of the four test sources. On images carrying both answers, P gets every question right on 79–88% of images; A on none.</li>
+    <li><b>The 80 original-layout questions</b>: P 95.0–97.5%, A 41–91% (seed 715 still calls everything feasible). Rule × progress alone already gets 91% here, and there are few questions, so this is for reference only.</li>
+    <li><b>The failure mode and the division of labour are unchanged</b>: within each seed A still gives nearly one answer; P's own conclusion is still about 50% (50.0%, 50.0%, 49.2%), so the verdict comes from the code. Every question P gets wrong has at least one point more than 15 pixels off.</li>
+    <li><b>The test is scored this once only</b>: the test questions will not be used again for evaluation, selection or tuning. The limitations stand: one task composition, four test sources (different starting states of the same task); the true positions come from simulation; the constraint is a virtual line; P gets position supervision that A does not.</li>
+  </ul>
+
   <h3><span data-l="zh">下一步（不扩展，每步开始前确认）</span><span data-l="en">Next (no expansion; each step confirmed before it starts)</span></h3>
   <ol class="next" data-l="zh">
-    <li><b>测试集评估一次</b>：3 个 seed 和选模都已冻结（10-26 加 seed 完成）。下一步是在冻结的测试集上评估 A 和 P，3 个 seed 各一次。要先写测试协议和测试阶段的代码，并需要确认。测试集至今没打开过。</li>
-    <li><b>可选</b>：教模型自己从位置算出是否隔开；扩到其他任务（goal、spatial）。</li>
-    <li><b>之后</b>：把 P 接到 AEGIS 前面当闸门，仍要单独批准。</li>
+    <li><b>把 P 接到 AEGIS 前面当闸门</b>：在机器人动手前拦下做不成的任务，需要单独批准控制器改动。</li>
+    <li><b>可选</b>：教模型自己从位置算出是否隔开；扩到其他任务（goal、spatial），要新建验证和测试源。</li>
+    <li><b>整理成论文主线</b>：验证、加 seed、正式考试三步的结论一致。</li>
   </ol>
   <ol class="next" data-l="en">
-    <li><b>Score the test split once</b>: the three seeds and model selection are now frozen (more seeds finished on 26 Oct). Next is scoring A and P on the frozen test split, once per seed. A test protocol and test-stage code come first, and the step needs a go-ahead. The test split has not been opened yet.</li>
-    <li><b>Optional</b>: teach the model to work out separation from the positions itself; extend to other tasks (goal, spatial).</li>
-    <li><b>After that</b>: using P as a gate in front of AEGIS still needs separate approval.</li>
+    <li><b>Use P as a gate in front of AEGIS</b>: stop infeasible tasks before the robot moves; the controller change needs separate approval.</li>
+    <li><b>Optional</b>: teach the model to work out separation from the positions itself; extend to other tasks (goal, spatial), which needs new validation and test sources.</li>
+    <li><b>Write up the main line</b>: validation, the extra seeds and the final exam all agree.</li>
   </ol>
-  <p class="small" data-l="zh">盲看由 Claude 完成，不是人工审阅；它说明“仔细看图能判断”，不代表训练后模型的能力。上面的数字来自 <code>V5_STEP1_REPORT.md</code>、<code>V5_STEP2_REPORT.md</code>、<code>V5_C0_REPORT.md</code>、<code>V5_LAYOUT_PROTOCOL.md</code>、<code>V5_S0_REPORT.md</code>、<code>V5_S1_REPORT.md</code>、<code>V5_S2_REPORT.md</code>、<code>V5_S3_REPORT.md</code>、<code>V5_FIT_REPORT.md</code>、<code>V5_S4_REPORT.md</code>、<code>V5_SEEDS_REPORT.md</code>。S1 盲看时 Claude 事先知道每个单元恰好有一条规则把布丁和篮子隔开。</p>
-  <p class="small" data-l="en">The blind review was done by Claude, not by a human; it shows that a careful look at the images can decide, not what a trained model will do. The numbers above come from <code>V5_STEP1_REPORT.md</code>, <code>V5_STEP2_REPORT.md</code>, <code>V5_C0_REPORT.md</code>, <code>V5_LAYOUT_PROTOCOL.md</code>, <code>V5_S0_REPORT.md</code>, <code>V5_S1_REPORT.md</code> <code>V5_S2_REPORT.md</code>, <code>V5_S3_REPORT.md</code>, <code>V5_FIT_REPORT.md</code>, <code>V5_S4_REPORT.md</code> and <code>V5_SEEDS_REPORT.md</code>. In the S1 review Claude knew in advance that each unit has exactly one rule separating the pudding from the basket.</p>
+  <p class="small" data-l="zh">盲看由 Claude 完成，不是人工审阅；它说明“仔细看图能判断”，不代表训练后模型的能力。上面的数字来自 <code>V5_STEP1_REPORT.md</code>、<code>V5_STEP2_REPORT.md</code>、<code>V5_C0_REPORT.md</code>、<code>V5_LAYOUT_PROTOCOL.md</code>、<code>V5_S0_REPORT.md</code>、<code>V5_S1_REPORT.md</code>、<code>V5_S2_REPORT.md</code>、<code>V5_S3_REPORT.md</code>、<code>V5_FIT_REPORT.md</code>、<code>V5_S4_REPORT.md</code>、<code>V5_SEEDS_REPORT.md</code>、<code>V5_TEST_REPORT.md</code>。S1 盲看时 Claude 事先知道每个单元恰好有一条规则把布丁和篮子隔开。</p>
+  <p class="small" data-l="en">The blind review was done by Claude, not by a human; it shows that a careful look at the images can decide, not what a trained model will do. The numbers above come from <code>V5_STEP1_REPORT.md</code>, <code>V5_STEP2_REPORT.md</code>, <code>V5_C0_REPORT.md</code>, <code>V5_LAYOUT_PROTOCOL.md</code>, <code>V5_S0_REPORT.md</code>, <code>V5_S1_REPORT.md</code>, <code>V5_S2_REPORT.md</code>, <code>V5_S3_REPORT.md</code>, <code>V5_FIT_REPORT.md</code>, <code>V5_S4_REPORT.md</code>, <code>V5_SEEDS_REPORT.md</code> and <code>V5_TEST_REPORT.md</code>. In the S1 review Claude knew in advance that each unit has exactly one rule separating the pudding from the basket.</p>
 </section>
 
 <section id="reading">
@@ -2605,6 +2636,30 @@ CHARTS.push(function(){
     bindTip(hit,`<b>${n}</b><br>${T('反事实孪生','Counterfactual twins')} ${cm.toFixed(1)}%${COLON()}${per(r.cf)}<br>${T('自然布局','Natural layout')} ${nmean.toFixed(1)}%${COLON()}${per(r.nat)}`);});
   document.getElementById('c12-table').innerHTML=`<thead><tr><th>${T('方法','Method')}</th><th class="n">${T('反事实孪生（平均）','Counterfactual twins (mean)')}</th><th class="n">${T('seed 713 / 714 / 715','Seeds 713 / 714 / 715')}</th><th class="n">${T('自然布局（平均）','Natural layout (mean)')}</th><th class="n">${T('seed 713 / 714 / 715','Seeds 713 / 714 / 715')}</th></tr></thead><tbody>`+
     R.map(r=>`<tr><td>${nm(r)}</td><td class="n">${mean(r.cf).toFixed(1)}%</td><td class="n">${r.cf.map(v=>v.toFixed(1)).join(' / ')}</td><td class="n">${mean(r.nat).toFixed(1)}%</td><td class="n">${r.nat.map(v=>v.toFixed(1)).join(' / ')}</td></tr>`).join('')+'</tbody>';
+});
+
+// Chart 13: V5 test; bar = mean of seeds, dots = single seeds; solid = counterfactual test twins, faded = counterfactual validation twins.
+CHARTS.push(function(){
+  const svg=clear('c13-svg');
+  document.getElementById('c13-legend').innerHTML=`<span><i class="key solid" style="background:var(--ink-2)"></i>${T('反事实孪生（测试）','Counterfactual twins (test)')}</span>`+
+    `<span><i class="key light" style="background:var(--ink-2);color:var(--ink-2)"></i>${T('反事实孪生（验证，对照）','Counterfactual twins (validation, reference)')}</span>`;
+  const R=[{zh:'P 先写位置·程序判定',en:'P · positions, program',c:'--s3',te:[93.241,94.194,92.374],va:[93.953,94.733,93.303],nat:[97.500,95.000,95.000]},
+    {zh:'A 直接判断',en:'A · direct',c:'--s1',te:[50.260,50.087,50.000],va:[50.130,49.935,50.000],nat:[91.250,81.250,41.250]},
+    {zh:'P 自己写的 Verdict',en:'P · own Verdict',c:'--neutral',te:[50.000,50.000,49.220],va:[50.000,50.000,50.585],nat:[41.250,41.250,85.000]}];
+  const x0=200,x1=650,X=v=>x0+(x1-x0)*v/100,top=30,row=50,h=12,gap=4,SEEDS=['713','714','715'];
+  [0,25,50,75,100].forEach(v=>{el('line',{x1:X(v),x2:X(v),y1:top-8,y2:top+row*R.length-8,class:'grid'},svg);text(svg,X(v),top+row*R.length+10,v+'%','tick','middle');});
+  el('line',{x1:X(50),x2:X(50),y1:top-12,y2:top+row*R.length-8,class:'ref'},svg);text(svg,X(50),top-18,T('瞎猜 50%','chance 50%'),'lab2','middle');
+  const dots=(vs,y)=>vs.forEach(v=>el('circle',{cx:X(v),cy:y+h/2,r:3.5,fill:'var(--ink)',stroke:'var(--bg)','stroke-width':1.5},svg));
+  const per=vs=>SEEDS.map((s,i)=>s+' '+vs[i].toFixed(1)+'%').join(' · ');
+  R.forEach((r,i)=>{const y=top+i*row,yv=y+h+gap,n=nm(r),tm=mean(r.te),vm=mean(r.va);
+    text(svg,x0-12,y+h+gap/2+5,n,'lab','end');
+    bar(svg,X(0),X(tm),y,h,r.c);dots(r.te,y);text(svg,Math.max(X(Math.max(...r.te)),X(50))+8,y+h-1,tm.toFixed(1)+'%','val');
+    const vb=bar(svg,X(0),X(vm),yv,h,r.c);vb.setAttribute('fill-opacity','.38');vb.setAttribute('stroke',`var(${r.c})`);vb.setAttribute('stroke-width','1');
+    dots(r.va,yv);text(svg,Math.max(X(Math.max(...r.va)),X(50))+8,yv+h-1,vm.toFixed(1)+'%','lab2');
+    const hit=el('rect',{x:0,y:y-6,width:720,height:row-4,class:'hit'},svg);
+    bindTip(hit,`<b>${n}</b><br>${T('测试','Test')} ${tm.toFixed(1)}%${COLON()}${per(r.te)}<br>${T('验证','Validation')} ${vm.toFixed(1)}%${COLON()}${per(r.va)}<br>${T('测试（原始摆法）','Test (original layout)')} ${mean(r.nat).toFixed(1)}%${COLON()}${per(r.nat)}`);});
+  document.getElementById('c13-table').innerHTML=`<thead><tr><th>${T('方法','Method')}</th><th class="n">${T('测试孪生（平均）','Test twins (mean)')}</th><th class="n">${T('seed 713 / 714 / 715','Seeds 713 / 714 / 715')}</th><th class="n">${T('验证孪生（平均）','Validation twins (mean)')}</th><th class="n">${T('测试原始摆法（80 题，平均）','Test original layout (80, mean)')}</th><th class="n">${T('seed 713 / 714 / 715','Seeds 713 / 714 / 715')}</th></tr></thead><tbody>`+
+    R.map(r=>`<tr><td>${nm(r)}</td><td class="n">${mean(r.te).toFixed(1)}%</td><td class="n">${r.te.map(v=>v.toFixed(1)).join(' / ')}</td><td class="n">${mean(r.va).toFixed(1)}%</td><td class="n">${mean(r.nat).toFixed(1)}%</td><td class="n">${r.nat.map(v=>v.toFixed(1)).join(' / ')}</td></tr>`).join('')+'</tbody>';
 });
 
 // Language switch: swap the visible copy, aria-labels, alt text and title, redraw the charts, and keep the reader's place.

@@ -2,7 +2,7 @@
 
 > **2026-10-24 范围收窄**：用户决定只保留能产出孪生的任务组合，不补源、不扩规模，先走通最小故事闭环，见 [V5_SCREEN_PROTOCOL.md](V5_SCREEN_PROTOCOL.md)。下文第 3–4 节的正式采集（补源、C1–C5）暂缓。
 >
-> **进度（2026-10-26 核对）**：收窄后的步骤见第 6 节。S0–S4、拟合诊断、加 seed 都已完成，只用 object/II/task1；正在做测试集评估（只评估一次）。逐步记录以 [V5_HANDOFF.md](V5_HANDOFF.md) 开头为准。
+> **进度（2026-10-26 核对）**：收窄后的步骤见第 6 节。S0–S4、拟合诊断、加 seed、测试评估都已完成，只用 object/II/task1；测试读法 `test_confirms`（[V5_TEST_REPORT.md](V5_TEST_REPORT.md)）。逐步记录以 [V5_HANDOFF.md](V5_HANDOFF.md) 开头为准。
 
 2026-10-24 起。读者：项目负责人，以及之后接手的 Codex/Claude 会话。
 V4 及其结果见 [PRELIMINARY_STORY.md](PRELIMINARY_STORY.md)，讨论过程见 [NEXT_STEPS.md](NEXT_STEPS.md) §9。
@@ -105,7 +105,7 @@ V4 及其结果见 [PRELIMINARY_STORY.md](PRELIMINARY_STORY.md)，讨论过程�
 | 拟合诊断 | B 在 16 / 64 行训练图上反复练 | `inconclusive`：背得下来，迁移不出去 | [V5_FIT_REPORT.md](V5_FIT_REPORT.md) |
 | S4 | P 先写四个点的位置，固定代码判定，seed 713 | `positions_ground`：P 0.940，A 0.501 | [V5_S4_REPORT.md](V5_S4_REPORT.md) |
 | 加 seed | A、P 各补 714、715 | `stable`：P 0.933–0.947，A 0.499–0.501；P − A +0.440 [+0.427, +0.452] | [V5_SEEDS_REPORT.md](V5_SEEDS_REPORT.md) |
-| 测试评估 | 6 个选定的 adapter 在冻结测试集上各评估一次 | 用户 10-26 批准；协议冻结于 `5594ceb`，运行中 | [V5_TEST_PROTOCOL.md](V5_TEST_PROTOCOL.md) |
+| 测试评估 | 6 个选定的 adapter 在冻结测试集上各评估一次 | `test_confirms`：P 0.924–0.942，A 0.500–0.503；P − A +0.432 [+0.416, +0.449] | [V5_TEST_REPORT.md](V5_TEST_REPORT.md) |
 
 - **和第 2 节相比还没做的**：一个场景多条规则同时起作用（深度曲线）、R-zone 模板、其他任务组合（goal、spatial）、AEGIS 闭环。
-- **故事目前的说法**：在自然分布上训练、在挡住捷径的反事实孪生上测试，直接判断只有 50%；让模型先写出看得见的位置、再交给固定代码判定，是 94%。P 自己写的结论在 3 个 seed 上都是随机水平，判定来自代码。
+- **故事目前的说法**：在自然分布上训练、在挡住捷径的反事实孪生上测试，直接判断只有 50%；让模型先写出看得见的位置、再交给固定代码判定，验证 94%、没见过的测试源 93%。P 自己写的结论在 3 个 seed 上都是随机水平，判定来自代码。
