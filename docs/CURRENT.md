@@ -1,4 +1,4 @@
-# 当前状态（2026-10-25）
+# 当前状态（2026-10-26）
 
 ## 正在进行：生成式可行性 verifier
 
@@ -6,7 +6,7 @@
 - **用户 2026-10-16 的决定**：
   - V4 的 896 行（224 个四行单元、64 条源轨迹）作为开发数据，直接用于 verifier 训练。
   - 不再要求通过 0.75 的 shortcut 闸门。闸门失败（0.780）如实披露，并作为基线报告。
-- **最新（2026-10-25）**：V5 故事线在 object/II/task1 上跑通一次（S4，见下文 V5 部分）。
+- **最新（2026-10-26）**：V5 加 seed 完成：3 个 seed 上"先写位置、再用程序判定"（P）都是 93–95%，直接判断（A）都是 50%，读法 `stable`（见下文 V5 部分）。下一步测试集评估一次，需要用户确认。
 - **当前阶段**：Phase 0–2 已于 2026-10-17 完成，见 [PHASE1_REPORT.md](generative_verifier/PHASE1_REPORT.md) 和 [PHASE2_REPORT.md](generative_verifier/PHASE2_REPORT.md)。
   - 锁定测试集（评估一次）：B（事实→判定）79.7%，A（直接）50.0%，差 +29.7 个百分点，源聚类 95% CI [+22.3, +36.8]，科学标准达成。
   - 开发里程碑未达成：B 行准确率 79.7%、单元全对 54.2%、规则翻转 64.2%，门槛分别是 85% / 70% / 90%。
@@ -69,10 +69,14 @@
     P 自己写的结论是常数，起作用的是"模型定位、程序判定"的分工。1 个 seed，只看验证集。
     交接见 [V5_HANDOFF.md](generative_verifier/V5_HANDOFF.md) 开头。
     用户 10-25："收尾下 然后让下一个agent开始干下一步"。加 seed（A、P 各补 714、715，只看验证）已获批，交给下一个 agent；测试评估仍需用户确认。
-  - 主报告页 Ya7FQbZC9yEuNNyYhPBHHT 第 13 版加了"下一阶段：V5"一节，和上周的结论、后续工作逐条对照（结论：主线没有走偏，覆盖面暂时变窄）。精读页 DJPGiauxhPAC8BYE4L14Y5 第 5 版也有一节同样内容。
-  - **加 seed 正在运行（2026-10-25 启动）**：协议 [V5_SEEDS_PROTOCOL.md](generative_verifier/V5_SEEDS_PROTOCOL.md)，启动前冻结（`ee20b20`，实现 `1a056d6`）。
-    运行目录 `/projects/p33100/siosio/crashbench_safelibero/verifier_training/runs/20261026T001735Z_v5-seeds_ee20b2033465`；
-    作业 preflight 5343157（已通过），A_seed714 5343158 → P_seed714 5343159，A_seed715 5343160 → P_seed715 5343161，report 5343162。只看验证，不读测试。
+  - 主报告页 Ya7FQbZC9yEuNNyYhPBHHT 第 13 版加了"下一阶段：V5"一节，和上周的结论、后续工作逐条对照（结论：主线没有走偏，覆盖面暂时变窄）。精读页 DJPGiauxhPAC8BYE4L14Y5 第 5 版也有一节同样内容。第 18 版（10-26）在 S4 结果后加了"3 个 seed"一节（`#v5-seeds`）。
+  - **加 seed 于 2026-10-26 完成**，见 [V5_SEEDS_REPORT.md](generative_verifier/V5_SEEDS_REPORT.md)（协议 [V5_SEEDS_PROTOCOL.md](generative_verifier/V5_SEEDS_PROTOCOL.md)，启动前冻结 `ee20b20`，实现 `1a056d6`）。
+    A、P 各补 seed 714、715，只看验证；713 用 S3、S4 的记录。预注册读法 `stable`：
+    P 的程序判定 0.940 / 0.947 / 0.933，A 0.501 / 0.499 / 0.500；3 个 seed 按行平均后 P − A = +0.440，图像 bootstrap 区间 [+0.427, +0.452]。
+    A 每个 seed 都塌成一个常数（方向随 seed 变）；P 自己写的结论在 3 个 seed 上都是随机水平，结论仍来自程序。
+    运行目录 `/projects/p33100/siosio/crashbench_safelibero/verifier_training/runs/20261026T001735Z_v5-seeds_ee20b2033465`，作业 5343157–5343162 全部 COMPLETED 0:0，约 9.8 GPU 小时。
+    下一步：在测试集上评估一次，需要用户确认，并先写测试协议和测试阶段的代码。交接见 [V5_HANDOFF.md](generative_verifier/V5_HANDOFF.md) 开头。
+  - 没有正在运行的 CrashBench 作业。
 
 ## 已完成的研究（结果只读）
 

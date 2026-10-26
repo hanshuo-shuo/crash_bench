@@ -1,18 +1,26 @@
-# V5 交接（2026-10-25 收尾：故事线已跑通一次）
+# V5 交接（2026-10-26：3 个 seed 跑完，测试评估等用户决定）
 
 读者：接手的下一个 Claude/Codex 会话。先读 [AGENTS.md](../../AGENTS.md) 和 [CURRENT.md](../CURRENT.md)，再读本文。
 
-## 2026-10-25 收尾（先读这一节）
+## 2026-10-26 加 seed 完成（先读这一节）
+
+用户 10-25 说"收尾下 然后让下一个agent开始干下一步"。接手的 agent 做完了已获批的加 seed：A、P 各补 714、715，只看验证。
+
+- **预注册读法 `stable`**，见 [V5_SEEDS_REPORT.md](V5_SEEDS_REPORT.md)（协议 [V5_SEEDS_PROTOCOL.md](V5_SEEDS_PROTOCOL.md)，冻结 `ee20b20`，实现 `1a056d6`）：
+  - P 的程序判定 0.940 / 0.947 / 0.933（seed 713 / 714 / 715），A 0.501 / 0.499 / 0.500；
+  - 3 个 seed 按行平均后 P − A = +0.440，图像 bootstrap 95% 区间 [+0.427, +0.452]。
+  - A 每个 seed 都塌成一个常数（713、714 几乎全判"不可行"，715 全判"可行"）；P 自己写的结论在 3 个 seed 上都是随机水平。
+- **下一步是测试集评估一次，需要用户确认**；要先写测试协议和测试阶段的代码（见下面"下一步"第 1 项）。测试集至今没有读过。
+- 运行目录 `verifier_training/runs/20261026T001735Z_v5-seeds_ee20b2033465`，作业 5343157–5343162 全部 COMPLETED 0:0。没有正在运行的 CrashBench 作业。
+- 主报告页已同步到第 18 版（新增 `#v5-seeds` 一节和图 c12）。
+
+## 2026-10-25 收尾
 
 用户说："换吧 继续 然后这一步干完先收尾 反正要尽力跑通故事线"。S4 做完，本轮收尾。
 
 **2026-10-25 用户："收尾下 然后让下一个agent开始干下一步"**：
 - 下一步（加 seed）已获批，交给下一个 agent 去做；
 - 测试集评估不在这次授权内，3 个 seed 都跑完后仍要用户确认。
-
-**加 seed 正在运行（2026-10-25 启动）**：协议 [V5_SEEDS_PROTOCOL.md](V5_SEEDS_PROTOCOL.md)（冻结 `ee20b20`，实现 `1a056d6`），
-运行目录 `verifier_training/runs/20261026T001735Z_v5-seeds_ee20b2033465`，作业 5343157（preflight，已通过）、5343158–5343161（A、P 的 714、715，两条 GPU 线）、5343162（report，写 `SEEDS_READING.json`）。
-跑完后：写 `V5_SEEDS_REPORT.md`，更新本节和 CURRENT.md，同步主报告页。
 
 ### 故事线现状
 
@@ -21,14 +29,15 @@
 | S3 | A 直接判断；B 先写"布丁、篮子在线靠机器人的一侧吗"再判断 | A 0.501，B 0.503（`both_shortcut`） | [V5_S3_REPORT.md](V5_S3_REPORT.md) |
 | 拟合诊断 | B 在 16 / 64 行训练图上反复练，再看没练过的训练图 | 能背下来，但不迁移（`inconclusive`） | [V5_FIT_REPORT.md](V5_FIT_REPORT.md) |
 | S4 | P 先写两个锚点、布丁、篮子在第 1 张图上的位置，程序判断是否隔开 | **P 0.940**，P − A +0.438 [+0.416, +0.461]（`positions_ground`） | [V5_S4_REPORT.md](V5_S4_REPORT.md) |
+| 加 seed | A、P 各补 714、715，和 713 一起按行平均 | **P 0.940**（各 seed 0.933–0.947），A 0.500；P − A +0.440 [+0.427, +0.452]（`stable`） | [V5_SEEDS_REPORT.md](V5_SEEDS_REPORT.md) |
 
 - **一句话**：
   - 在自然分布上训练、在挡住捷径的反事实孪生上测试，直接判断只有 50%；
   - 让模型先写出看得出来的事实（位置），再交给程序判断，是 94%；
   - 写"在哪一侧"这种关系事实不行（50%），模型学不会读那条看不见的线。
 - **要如实说明的局限**：
-  - 1 个 seed、1 个任务组合、4 条验证源；
-  - P 自己写的 `Separated` / `Verdict` 是常数，结论来自程序；
+  - 3 个 seed，只看了验证集；1 个任务组合、4 条验证源；
+  - P 自己写的 `Separated` / `Verdict` 在 3 个 seed 上都是随机水平，结论来自程序；
   - 位置真值来自仿真几何；
   - 测试集没有评估。
 
@@ -39,6 +48,7 @@
 | S3 | `20261025T055227Z_v5-s3_bdcf277164b6` | `bdcf277`（实现 `904ce55`） |
 | 拟合诊断 | `20261025T153621Z_v5-fit_ea76dabed506` | `ea76dab`（实现 `1d9d099`） |
 | S4 | `20261025T180525Z_v5-s4_20913c71c3f3` | `20913c7`（实现 `e651c3d`） |
+| 加 seed | `20261026T001735Z_v5-seeds_ee20b2033465` | `ee20b20`（实现 `1a056d6`） |
 
 ### 代码入口（`verifier_training/`）
 
@@ -50,20 +60,21 @@
   - `v5_pos_contract.py`：投影、P 的目标、解析、程序、读法；
   - `v5_pos_run.py`：preflight、train、report；
   - `v5_pos_zero_shot.py`：零样本定位，3B 和 32B 都在 `qwen-vlm` 环境里跑。
-- **启动器** `launch_v5.py`：动作 `create`、`pilot`、`stage`（S3），`fit`，`s4`；GPU 作业时限 8 小时。
-- **测试**：`verifier_training/tests/test_v5_*.py`，与 V4 的测试一起共 141 个。跑法见下面的"规矩"。
+- **加 seed**：
+  - `v5_seeds_contract.py`：配置（原样嵌入 S3、S4 的配置）、新 seed 的样本顺序、3 个 seed 的行平均和图像 bootstrap（`seed_average`）、读法 `seeds_reading`；
+  - `v5_seeds_run.py`：preflight、train、report；训练直接调用 `v5_run.train_arm`（A）和 `v5_pos_run.train_p`（P），这两个函数是 S3、S4 的 `train` 原样抽出的函数体。
+- **启动器** `launch_v5.py`：动作 `create`、`pilot`、`stage`（S3），`fit`，`s4`，`seeds --s3 --s4`；GPU 作业时限 8 小时。
+- **测试**：`verifier_training/tests/test_*.py` 共 153 个（V5 加 seed 新增 12 个）。跑法见下面的"规矩"。
+- **选定的 adapter**（测试评估要用）：S3 的 `A_seed713/selected_adapter`，S4 的 `P_seed713/selected_adapter`，加 seed 目录里的 `A_seed714`、`A_seed715`、`P_seed714`、`P_seed715` 下的 `selected_adapter`（选的分别是第 448、150、448、448、448、300 次更新：A 713/714/715，P 713/714/715）。
 
 ### 下一步（每项都要用户先确认）
 
-1. **加 seed（已获批，10-25 交给下一个 agent）**：P 用 714、715 各跑一次，约 9 GPU 小时。A 也补 714、715，约 2 GPU 小时，才能配对。
-   - **约束**：S3、S4 的运行目录和配置已经冻结（配置里 `seeds` 只有 713，`context()` 会核对配置）。不能改这两个目录；要新建一个 campaign，并写新的协议、在启动前冻结。
-   - **样本顺序**：每个 seed 用 `v5_contract.schedule` 生成，A 和 P 用同一个顺序。seed 713 时，S4 直接沿用了 S3 里 B 的顺序，它和 A 的顺序相同。
-   - **读法**：3 个 seed 先按行求平均，再以图像为单位做 bootstrap；按源的区间只作参考（可以用 `fd1000_metrics.clustered_difference` 的思路）。读法要在启动前写定。
-2. **测试评估一次**：3 个 seed 和选模冻结后，在冻结的测试集上评估 A 和 P 各一次。
-   - 需要先写测试阶段的代码：在测试行上投影真值点、核对 `TEST_FREEZE.json`、只评估一次。
+1. **测试评估一次（需要用户确认）**：3 个 seed 和选模都已冻结（加 seed 于 2026-10-26 完成，读法 `stable`）。在冻结的测试集（1,154 行加测试自然 80 行）上，用上面 6 个选定的 adapter 各评估一次。
+   - 先写测试协议并冻结：读法可沿用加 seed 的做法（每行按 3 个 seed 平均，再以图像为单位 bootstrap），门槛事先写定。
+   - 再写测试阶段的代码：`validate(include_test=True)` 只在这个阶段调用，并核对 `TEST_FREEZE.json`；在测试图上用 `v5_pos_contract.image_points` 投影真值点、核对程序与标签一致；每个 adapter 只评估一次，不再选模。
    - 测试集至今没有读过。
-3. **可选**：
-   - P 自己写的结论是常数，可以试着教模型自己算出 `Separated`；
+2. **可选**：
+   - P 自己写的结论在 3 个 seed 上都是随机水平，可以试着教模型自己算出 `Separated`；
    - 把 P 接到 AEGIS 前面当闸门，需要单独批准控制器改动；
    - 扩到其他任务组合（goal、spatial），之前暂停的补源也需要另批。
 
@@ -174,5 +185,5 @@ S0 的关键数字：
 - **容器里是 Python 3.8**（`aegis-py38.sif` 加 `envs/aegis_sim`），不要用 3.9 以后的语法。
 - **盲看纪律**：先只读 `REVIEW_SHEET.json` 和学生图，判断写进 `verifier_dataset/reviews/` 并提交，之后才读 UNITS.json、RENDER_GEOMETRY.json 和诊断图。
 - **报告页**：
-  - **主报告**是 <https://claude.ai/artifact/Ya7FQbZC9yEuNNyYhPBHHT>，源文件 `docs/generative_verifier/PHASE2_REPORT.html`，公开链接，改动立刻可见。第 13 版新增 `#v5`"下一阶段：V5"一节，和上周的结论、后续工作逐条对照。中英双语用 `data-l="zh"` / `data-l="en"`，两种语言都要改。
+  - **主报告**是 <https://claude.ai/artifact/Ya7FQbZC9yEuNNyYhPBHHT>，源文件 `docs/generative_verifier/PHASE2_REPORT.html`，公开链接，改动立刻可见。第 13 版新增 `#v5`"下一阶段：V5"一节，和上周的结论、后续工作逐条对照；第 18 版（10-26）在 `#v5-s4` 后加了 `#v5-seeds`（图 c12：3 个 seed 的 A、P）。中英双语用 `data-l="zh"` / `data-l="en"`，两种语言都要改。
   - 精读页 DJPGiauxhPAC8BYE4L14Y5（`PAPER_READING.html`）第 5 版也有一节"本周进展"。那是用户一开始给错了链接时加的，是否保留由用户决定。
