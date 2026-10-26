@@ -1,6 +1,15 @@
-# V5 交接（2026-10-26 收尾：3 个 seed 跑完，报告页加了白话版，测试评估等用户决定）
+# V5 交接（2026-10-26：测试评估运行中）
 
 读者：接手的下一个 Claude/Codex 会话。先读 [AGENTS.md](../../AGENTS.md) 和 [CURRENT.md](../CURRENT.md)，再读本文。
+
+## 2026-10-26 测试评估（运行中，先读这一节）
+
+- 用户 10-26 说"都改一下 然后做测试级"：先改了 3 处文档（`d964dfe`），再做测试评估。
+- 协议 [V5_TEST_PROTOCOL.md](V5_TEST_PROTOCOL.md)，冻结于 `5594ceb`（实现 `72d825b`，TF32 修正 `f071896`）；代码 `v5_test_contract.py`、`v5_test_run.py`，启动器动作 `launch_v5 test`。
+- 6 个选定的 adapter 各评估一次（`test` 1,154 行，`test_natural` 80 行）。每个作业读测试行之前，要先在 32 行验证行上逐字复现训练时的输出。
+- **坑**：评估时要打开 TF32（`allow_tf32=True`），和训练时一样。否则 P 的 fp32 LoRA 会让坐标差几个像素，第一次 smoke 就是因为这个没复现。打开后，在 PCIe 和 SXM 两种 A100 之间也能逐字复现。
+- 运行目录 `/projects/p33100/siosio/crashbench_safelibero/verifier_training/runs/20261026T173919Z_v5-test_5594cebeb616`；作业 5433550（preflight）、5433758–5433761、5433763、5433766（评估）、5433770（report）。
+- 结束后：读 `TEST_READING.json`，写 V5_TEST_REPORT.md，同步报告页和 CURRENT。测试只评估这一次，结果不能用来改模型或设置。
 
 ## 2026-10-26 加 seed 完成（先读这一节）
 

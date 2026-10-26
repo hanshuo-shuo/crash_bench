@@ -105,7 +105,7 @@ V4 及其结果见 [PRELIMINARY_STORY.md](PRELIMINARY_STORY.md)，讨论过程�
 | 拟合诊断 | B 在 16 / 64 行训练图上反复练 | `inconclusive`：背得下来，迁移不出去 | [V5_FIT_REPORT.md](V5_FIT_REPORT.md) |
 | S4 | P 先写四个点的位置，固定代码判定，seed 713 | `positions_ground`：P 0.940，A 0.501 | [V5_S4_REPORT.md](V5_S4_REPORT.md) |
 | 加 seed | A、P 各补 714、715 | `stable`：P 0.933–0.947，A 0.499–0.501；P − A +0.440 [+0.427, +0.452] | [V5_SEEDS_REPORT.md](V5_SEEDS_REPORT.md) |
-| 测试评估 | 6 个选定的 adapter 在冻结测试集上各评估一次 | 用户 10-26 批准，进行中 | [V5_TEST_PROTOCOL.md](V5_TEST_PROTOCOL.md) |
+| 测试评估 | 6 个选定的 adapter 在冻结测试集上各评估一次 | 用户 10-26 批准；协议冻结于 `5594ceb`，运行中 | [V5_TEST_PROTOCOL.md](V5_TEST_PROTOCOL.md) |
 
 - **和第 2 节相比还没做的**：一个场景多条规则同时起作用（深度曲线）、R-zone 模板、其他任务组合（goal、spatial）、AEGIS 闭环。
 - **故事目前的说法**：在自然分布上训练、在挡住捷径的反事实孪生上测试，直接判断只有 50%；让模型先写出看得见的位置、再交给固定代码判定，是 94%。P 自己写的结论在 3 个 seed 上都是随机水平，判定来自代码。
