@@ -94,7 +94,8 @@ def configuration():
         evaluated_splits=list(TEST_SPLITS),primary_split='test',
         adapters='The selected_adapter of each run (A: S3 A_seed713 and seed-campaign A_seed714/715; P: S4 P_seed713 and seed-campaign '
             'P_seed714/715), frozen at launch in FREEZE.json with their hashes; no reselection, no training',
-        loading='Staged base model in bf16 plus the adapter with PeftModel.from_pretrained (is_trainable=False); greedy decoding exactly as on validation',
+        loading='Staged base model in bf16 plus the adapter with PeftModel.from_pretrained (is_trainable=False); TF32 matmuls on as in the '
+            'training-time evaluation; greedy decoding exactly as on validation',
         arm_settings={'A':'S3 arm A: v5_run.item and v5_run.evaluate, reading direct_free, at most 8 new tokens',
             'P':'S4 arm P: v5_pos_run.p_item and v5_pos_run.evaluate, program verdict primary, at most 128 new tokens'},
         reload_check=dict(rows=RELOAD_ROWS,salt=RELOAD_SALT,split='validation',allowed_text_mismatches=RELOAD_TEXT_MISMATCHES,

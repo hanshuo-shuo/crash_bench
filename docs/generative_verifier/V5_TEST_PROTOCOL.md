@@ -32,7 +32,7 @@
   - 用 `v5_pos_contract.image_points` 把仿真几何投影成第 1 张图上的真值点，每一行用真值点跑程序，结论都要与标签一致；
   - 用训练集学"规则 × 进度"查表，测试集上的准确率要等于 S2 报告的值（`test` 0.500，`test_natural` 0.9125）。
 - **重新加载核对（每个 GPU 作业读测试行之前）**：
-  - 用 `PeftModel.from_pretrained` 把选定的 adapter 加载到 bf16 基座上，再在 32 行固定的验证行上重新生成（按 `sha256(行号|v5-test-reload)` 排序取前 32 行）；
+  - 用 `PeftModel.from_pretrained` 把选定的 adapter 加载到 bf16 基座上，和训练时的评估一样打开 TF32 矩阵乘，再在 32 行固定的验证行上重新生成（按 `sha256(行号|v5-test-reload)` 排序取前 32 行）；
   - 要求每一行的判定（A 的 Verdict，P 的程序判定）和输入摘要都与该 adapter 记录的验证结果相同，生成的文字最多允许 0 行不同；
   - 不满足就停止，不读测试行，写 STOP 文件。
 

@@ -116,7 +116,8 @@ class Isolation(unittest.TestCase):
         tree=ast.parse((ROOT/'verifier_training/v5_test_run.py').read_text())
         evaluate=[n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name=='evaluate'][0]
         mkdirs=[c for c in ast.walk(evaluate) if isinstance(c,ast.Call) and getattr(c.func,'attr',None)=='mkdir']
-        self.assertIn('out.mkdir()',[ast.unparse(c) for c in mkdirs]);self.assertIn("require(check['passed'], 'Reloaded adapter does not reproduce its validation outputs')",
+        self.assertIn('out.mkdir()',[ast.unparse(c) for c in mkdirs])
+        self.assertIn('torch.backends.cuda.matmul.allow_tf32 = True',[ast.unparse(n) for n in ast.walk(evaluate) if isinstance(n,ast.Assign)]);self.assertIn("require(check['passed'], 'Reloaded adapter does not reproduce its validation outputs')",
             [ast.unparse(n) for n in ast.walk(evaluate) if isinstance(n,ast.Call)])
 
     def test_launcher_checks_the_freeze_and_keeps_two_lanes(self):

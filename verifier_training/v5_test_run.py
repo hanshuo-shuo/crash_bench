@@ -124,7 +124,8 @@ def evaluate(root,target):
     require(sha(folder/'selected_adapter/adapter_model.safetensors')==frozen['adapter_sha256'] and sha(folder/'RESULT.json')==frozen['result_sha256'],
             'Selected adapter changed after the freeze')
     (root/'evaluations').mkdir(exist_ok=True);out=root/'evaluations'/target;out.mkdir();require(torch.cuda.is_available(),'Quest GPU required')
-    torch.manual_seed(seed);started=time.monotonic();processor=processor_for(assets)
+    # TF32 matmuls as in the training-time evaluation; the fp32 LoRA path otherwise shifts P's generated coordinates.
+    torch.manual_seed(seed);torch.backends.cuda.matmul.allow_tf32=True;started=time.monotonic();processor=processor_for(assets)
     model=PeftModel.from_pretrained(base_model(assets),folder/'selected_adapter',is_trainable=False);model.eval()
     require(not any(v.requires_grad for v in model.parameters()),'Adapter loaded as trainable')
     validation=[r for r in rows if r['split']=='validation'];chosen=set(reload_subset([r['sample_id'] for r in validation]))
