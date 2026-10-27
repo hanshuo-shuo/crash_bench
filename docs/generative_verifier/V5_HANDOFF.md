@@ -1,4 +1,4 @@
-# V5 交接（2026-10-27：检测器基线完成，`training_needed`）
+# V5 交接（2026-10-27：S5 完成，`self_computes`）
 
 读者：接手的人（用户本人，或下一个 Claude/Codex 会话）。先读 [AGENTS.md](../../AGENTS.md) 和 [CURRENT.md](../CURRENT.md)，再读本文的"接手指南"。后面按日期排的各节是历史记录。
 
@@ -16,24 +16,26 @@ V5 这一轮的故事线已经走完一遍，只用了 object/II/task1 一个任
 | 加 seed | 3 个 seed 上 P 0.933–0.947，A 0.50（`stable`） | [V5_SEEDS_REPORT.md](V5_SEEDS_REPORT.md) |
 | 测试评估 | 4 条没见过的测试源上 P 0.924–0.942，A 0.50；P − A +0.432 [+0.416, +0.449]（`test_confirms`） | [V5_TEST_REPORT.md](V5_TEST_REPORT.md) |
 | 检测器基线 | 不训练，AEGIS 的 GroundingDINO 找四个物体再跑同一段程序：验证 0.521，P 0.940；P − 检测器 +0.419 [+0.395, +0.443]（`training_needed`）；布丁几乎找不到 | [V5_DET_REPORT.md](V5_DET_REPORT.md) |
+| **S5** | S 写出 P 的四个点，再自己写叉积、正负号和结论，测试时没有代码：验证 0.923，A 0.501；S − A +0.421 [+0.397, +0.446]（`self_computes`）；错误 112/119 在定位，7 行在计算 | [V5_S5_REPORT.md](V5_S5_REPORT.md) |
 
-- **一句话**：在自然分布上训练、在挡住捷径的反事实孪生上测试，直接判断只有 50%；模型先写出看得见的位置、再由固定代码判定，验证 94%、测试 93%。模型负责"东西在哪"，代码负责"隔没隔开"；P 自己写的结论是随机水平。"东西在哪"不能换成现成检测器：AEGIS 自带的 GroundingDINO 加同一段程序只有 52%。
+- **一句话**：在自然分布上训练、在挡住捷径的反事实孪生上测试，直接判断只有 50%；模型先写出看得见的位置、再由固定代码判定，验证 94%、测试 93%。模型负责"东西在哪"，代码负责"隔没隔开"；P 自己写的结论是随机水平。"东西在哪"不能换成现成检测器：AEGIS 自带的 GroundingDINO 加同一段程序只有 52%。**10-27 的 S5 补上了"从位置推出结论"**：把计算（位移、叉积、正负号）写进训练目标后，模型自己写的结论是 92%，不再需要代码；乘法是近似算的，但只要正负号，够用。
 - **状态**：
   - 没有正在运行的 CrashBench 作业；队列里 p31777 账号的作业是别的项目，不要动；
-  - 工作区干净，所有工作都在 `main` 上并已推送（10-27 从 `v5-det` 分支快进；见 CURRENT.md 的分支一节）；
-  - 主报告页 <https://claude.ai/artifact/Ya7FQbZC9yEuNNyYhPBHHT> 是第 23 版（加了 `#v5-det`），与仓库里的 `PHASE2_REPORT.html` 相同。
-- **10-27 方向**：用户决定主线回到原来的想法（模型自己推理、自己下结论）。P 的"代码判定"相当于把生成标签的规则直接写给了它，P 对 A 的差距衡量的主要是定位，所以 P 只作诊断，不当作方法。用 P 做闸门或系统（下表选项 1）保留为备选；当前主线是选项 2。
+  - 工作区干净，所有工作都在 `main` 上并已推送（10-27 从 `v5-s5` 分支快进；见 CURRENT.md 的分支一节）；
+  - 主报告页 <https://claude.ai/artifact/Ya7FQbZC9yEuNNyYhPBHHT> 是第 24 版（加了 `#v5-s5`），与仓库里的 `PHASE2_REPORT.html` 相同。
+- **10-27 方向**：用户决定主线回到原来的想法（模型自己推理、自己下结论）。P 的"代码判定"相当于把生成标签的规则直接写给了它，P 对 A 的差距衡量的主要是定位，所以 P 只作诊断，不当作方法。用 P 做闸门或系统保留为备选。主线的第一步 S5（让模型自己写出计算）已完成，读法 `self_computes`（1 个 seed，只看验证）。
 - **V5 测试集已经用掉**：`test`、`test_natural` 以后不再评估，也不拿来选模或调参。新方法如果要一个没碰过的测试，需要新的留出源（要另批数据）。V4 的锁定测试集同样不再评估。
 
 ### 接下来可以做什么（每一项都要用户先点头）
 
 | 选项 | 要做什么 | 需要的批准 | 大概的量 | 从哪开始 |
 |---|---|---|---|---|
-| 1. AEGIS 闸门（10-27 起为备选） | 机器人动手前，用 P 判断新规则下任务还做不做得成，做不成就拦下。检测器基线说明感知要用 P，不能用 AEGIS 自带的检测器 | 控制器改动（AGENTS.md 的 Phase 4 规则）；如果要跑完整 AEGIS，还要付费 API 的预算批准 | 先写设计稿（10-26 建议：把规则连线作为 CBF-QP 的半空间约束；不加闸门时做不成的任务会停在线前，变成"安全但没完成"）：任务中途在线渲染同样的两张斜视图、规则何时加入、P 判"做不成"后控制器怎么做 | [REPRODUCTION.md](../REPRODUCTION.md)、[reproduction/BATCH_RUN.md](../reproduction/BATCH_RUN.md)、`setup/submit_safelibero_full.sh`；P 的输入构造在 `v5_pos_run.p_item` |
-| 2. 教模型自己算隔开（10-27 起为主线） | 新的训练目标，让模型从自己写的四个点推出 `Separated`，不再靠代码 | GPU 训练；只看验证即可，要测试就需要新的留出源 | P 每个 seed 训练约 4 小时，3 个 seed 约 12 GPU 小时 | `v5_pos_contract.py`（目标、解析、程序）、`v5_pos_run.train_p` |
-| 3. 扩到其他任务组合 | goal、spatial 任务；S0 显示这些任务上捷径还在，严格配平后孪生不够 | 补源（C1–C5、nominal 重新执行，之前暂停）需要数据批准 | CPU 回放和布局 + GPU 渲染，量取决于补多少源 | [V5_S0_REPORT.md](V5_S0_REPORT.md)、`verifier_dataset/v5_launch.py` |
-| 4. 整理论文主线 | V4 Phase 2 加 V5 的验证、加 seed、测试三步写成一条线 | 不需要算力 | 写作 | [PRELIMINARY_STORY.md](PRELIMINARY_STORY.md)、[PAPER_READING.html](PAPER_READING.html)、本目录的 `V5_*_REPORT.md` |
-| 5. 更强的现成检测器（可选） | 补 OWLv2 或 Florence-2 加同一段程序，查询词只在训练集上选 | GPU 推理；权重要先在登录节点下载放好 | 约 1 GPU 小时 | `v5_det_contract.py`、`v5_det_run.py`、`v5_det_detect.py` |
+| 1. S 加 seed（主线，推荐先做） | S 补 seed 714、715，只看验证，读法沿用 S5 协议第 5 节；看 0.92 稳不稳、比 P 低的 0.017 是不是波动 | GPU 训练 | 每个 seed 约 11 GPU 小时（大部分是生成，每次约 12 秒）；两张 GPU 并行约 11 小时 | `v5_self_contract.py`、`v5_self_run.py`、`launch_v5.py`（参照加 seed 的 `seeds` 动作写一个 S 版本） |
+| 2. 干净的测试（主线） | V5 测试集已用掉；S 要正式测试，需要新的留出源。object/II/task1 的初始状态 20–49 没用过，但没有逐步动作记录，要重新执行 nominal π0.5，再布局、渲染、建集 | 数据采集批准 | CPU 回放和布局 + GPU 渲染和执行 | [V5_S1_REPORT.md](V5_S1_REPORT.md)、[V5_S2_REPORT.md](V5_S2_REPORT.md)、`verifier_dataset/v5_launch.py` |
+| 3. AEGIS 闸门（备选） | 机器人动手前判断新规则下任务还做不做得成，做不成就拦下。感知不能用 AEGIS 自带的检测器；可以用 P（代码判定）或 S（模型自己判定） | 控制器改动（AGENTS.md 的 Phase 4 规则）；跑完整 AEGIS 还要付费 API 的预算批准 | 先写设计稿（10-26 建议：规则连线作为 CBF-QP 的半空间约束）；S 每次判断约 12 秒，要做在线闸门需要更短的写法 | [REPRODUCTION.md](../REPRODUCTION.md)、[reproduction/BATCH_RUN.md](../reproduction/BATCH_RUN.md)、`setup/submit_safelibero_full.sh`；输入构造在 `v5_pos_run.p_item`、`v5_self_run.s_item` |
+| 4. 扩到其他任务组合 | goal、spatial 任务；S0 显示这些任务上捷径还在，严格配平后孪生不够 | 补源（C1–C5、nominal 重新执行，之前暂停）需要数据批准 | CPU 回放和布局 + GPU 渲染，量取决于补多少源 | [V5_S0_REPORT.md](V5_S0_REPORT.md)、`verifier_dataset/v5_launch.py` |
+| 5. 整理论文主线 | V4 Phase 2 加 V5（A 50%、P 94%、检测器 52%、S 92%）写成一条线 | 不需要算力 | 写作 | [PRELIMINARY_STORY.md](PRELIMINARY_STORY.md)、[PAPER_READING.html](PAPER_READING.html)、本目录的 `V5_*_REPORT.md` |
+| 6. 更强的现成检测器（可选） | 补 OWLv2 或 Florence-2 加同一段程序，查询词只在训练集上选 | GPU 推理；权重要先在登录节点下载放好 | 约 1 GPU 小时 | `v5_det_contract.py`、`v5_det_run.py`、`v5_det_detect.py` |
 
 - 这次没有在测试集上评估 S3 的 B 和零样本模型，测试集用掉以后也不再补。
 
@@ -51,7 +53,7 @@ V5 这一轮的故事线已经走完一遍，只用了 object/II/task1 一个任
 - Quest：账号 p33100，GPU 分区 gengpu，CPU 分区 short，同时最多 2 张 GPU；登录节点上不跑重活；计算节点离线，资产要先放好。有 CrashBench 作业在跑时不要改源码目录。
 - 不调付费 API，除非用户另批；OpenRouter 的 key 不打印、不提交、不进日志。
 - 评估已训练的 adapter 时要打开 TF32（`torch.backends.cuda.matmul.allow_tf32=True`），否则复现不了训练时的输出。
-- 跑测试：`PYTHONPATH=/projects/p33100/siosio/crashbench_safelibero/verifier_training/assets/20261010_d94c245/packages:. /projects/p33100/siosio/envs/openpi/bin/python -m unittest <verifier_training/tests 下的模块>`（`unittest discover` 不能用）；共 174 个。
+- 跑测试：`PYTHONPATH=/projects/p33100/siosio/crashbench_safelibero/verifier_training/assets/20261010_d94c245/packages:. /projects/p33100/siosio/envs/openpi/bin/python -m unittest <verifier_training/tests 下的模块>`（`unittest discover` 不能用）；共 187 个。
 - 更多的坑见下面"坑"和"规矩"两小节。
 
 ### 关键路径
@@ -59,20 +61,25 @@ V5 这一轮的故事线已经走完一遍，只用了 object/II/task1 一个任
 | 内容 | 位置 |
 |---|---|
 | S2 数据集 | `/projects/p33100/siosio/crashbench_safelibero/verifier_dataset/20261025T013358Z_v5-s2_d1d8d4129223/dataset.jsonl`（测试冻结在同目录的 `TEST_FREEZE.json`） |
-| 运行目录 | `/projects/p33100/siosio/crashbench_safelibero/verifier_training/runs/` 下：S3 `20261025T055227Z_v5-s3_bdcf277164b6`，拟合诊断 `20261025T153621Z_v5-fit_ea76dabed506`，S4 `20261025T180525Z_v5-s4_20913c71c3f3`，加 seed `20261026T001735Z_v5-seeds_ee20b2033465`，测试 `20261026T173919Z_v5-test_5594cebeb616`，检测器基线 `20261027T031559Z_v5-det_380d63210941` |
-| 选定的 adapter | S3 的 `A_seed713`、S4 的 `P_seed713`、加 seed 目录里的 `A_seed714`、`A_seed715`、`P_seed714`、`P_seed715`，各自的 `selected_adapter/`；哈希记在测试目录的 `FREEZE.json` |
+| 运行目录 | `/projects/p33100/siosio/crashbench_safelibero/verifier_training/runs/` 下：S3 `20261025T055227Z_v5-s3_bdcf277164b6`，拟合诊断 `20261025T153621Z_v5-fit_ea76dabed506`，S4 `20261025T180525Z_v5-s4_20913c71c3f3`，加 seed `20261026T001735Z_v5-seeds_ee20b2033465`，测试 `20261026T173919Z_v5-test_5594cebeb616`，检测器基线 `20261027T031559Z_v5-det_380d63210941`，S5 `20261027T050745Z_v5-s5_f20304e222b9` |
+| 选定的 adapter | S3 的 `A_seed713`、S4 的 `P_seed713`、加 seed 目录里的 `A_seed714`、`A_seed715`、`P_seed714`、`P_seed715`，各自的 `selected_adapter/`；哈希记在测试目录的 `FREEZE.json`。S5 的 `S_seed713/selected_adapter/`（第 448 次更新，sha256 记在 `S5_READING.json` 的 `adapter_sha256`） |
 | 测试读数 | 测试目录的 `TEST_READING.json` |
 | 检测器基线读数 | 检测器基线目录的 `DET_READING.json`；原始框在 `detect/detections.jsonl` |
+| S5 读数 | S5 目录的 `S5_READING.json`；逐行输出和逐步核对在 `S_seed713/validation.jsonl` |
 | 主报告页 | <https://claude.ai/artifact/Ya7FQbZC9yEuNNyYhPBHHT>，仓库副本 `docs/generative_verifier/PHASE2_REPORT.html` |
 
-## 2026-10-27 S5 运行中
+## 2026-10-27 S5 完成（`self_computes`）
 
 - 用户定了方向（主线回到"模型自己下结论"）后说"我觉得很好 帮我开始吧"，又说"弄完后自动帮我交gpu的训练 我明早起来看"。
 - **问题**：P 能找准四个点，但自己写的结论是随机水平。S 在 P 的四行之后写出位移、两个叉积（两个乘法、一个减法）、正负号、`Separated` 和 `Verdict`，读数看模型自己写的 `Verdict`。
-- 协议 [V5_S5_PROTOCOL.md](V5_S5_PROTOCOL.md) 冻结于 `f20304e`（实现 `e62ce81`，hooks 合并修正 `017232a`）；代码 `v5_self_contract.py`、`v5_self_run.py`，`v5_pos_run.train_p` 加了可选的 `hooks`（不传时仍是 P），`v5_gpu_long.sbatch`（20 小时），启动器动作 `launch_v5 s5 --s3 --s4`。
-- 两次 smoke：第一次查出 hooks 合并时键重复的报错，第二次全部 COMPLETED 0:0（见协议第 8 节）。
-- 运行目录 `/projects/p33100/siosio/crashbench_safelibero/verifier_training/runs/20261027T050745Z_v5-s5_f20304e222b9`；作业 5554027 → 5554028 → 5554029。读法事先写定：`self_computes`（自己写的结论 ≥ 0.85）、`partial`、`no_self_compute`（≤ 0.60）、`unclear`。
-- 跑完后写 `V5_S5_REPORT.md`，同步 CURRENT、本文、V5_PLAN 第 6 节和报告页。
+- 协议 [V5_S5_PROTOCOL.md](V5_S5_PROTOCOL.md) 冻结于 `f20304e`（实现 `e62ce81`，hooks 合并修正 `017232a`）；代码 `v5_self_contract.py`、`v5_self_run.py`，`v5_pos_run.train_p` 加了可选的 `hooks`（不传时仍是 P），`v5_gpu_long.sbatch`（20 小时），启动器动作 `launch_v5 s5 --s3 --s4`。两次 smoke 见协议第 8 节。
+- **结果**见 [V5_S5_REPORT.md](V5_S5_REPORT.md)：
+  - 验证 1,538 行上 S 自己写的结论 0.923 [0.906, 0.938]，A 0.501，S − A +0.421 [+0.397, +0.446]；P 自己写的 0.500，P 的程序判定 0.940（S − P −0.017 [−0.030, −0.005]）；
+  - 自己写的结论与"用自己的点跑程序"一致 99.0%；错的 119 行里 112 行是点错，7 行是计算错；
+  - 乘积逐位正确 59%，错的中位差 0.5%；叉积正负号 3,076 个里翻了 11 个；每一步都对的行 35%；
+  - 验证自然 0.949，训练拟合 0.949；孪生图全对 0.794。
+- 运行目录 `/projects/p33100/siosio/crashbench_safelibero/verifier_training/runs/20261027T050745Z_v5-s5_f20304e222b9`；作业 5554027 → 5554028（10 小时 50 分）→ 5554029，全部 COMPLETED 0:0。
+- 主报告页第 24 版加了 `#v5-s5`。
 
 ## 2026-10-27 检测器基线完成
 

@@ -245,8 +245,8 @@ l=l==='en'?'en':'zh';var r=document.documentElement;r.setAttribute('data-lang',l
   <h1><span data-l="zh">生成式可行性 Verifier</span><span data-l="en">Generative Feasibility Verifier</span></h1>
   <p class="lede" data-l="zh">机器人动手之前，先看两张场景图和一条规则，判断这件事在规则下到底做不做得成。这一页讲清楚四件事：数据怎么造，模型怎么训练，结果怎么样，为什么会是这个结果。</p>
   <p class="lede" data-l="en">Before the robot moves, look at two scene images and one rule, and decide whether the task can actually be done under that rule. This page covers four things: how the data was built, how the model was trained, what the results are, and why they came out this way.</p>
-  <div class="meta" data-l="zh"><span>2026-10-27 更新</span><span>模型 Qwen2.5-VL-3B + LoRA</span><span>每组 3 个 seed</span><span>V4、V5 的测试集各只评估过一次</span></div>
-  <div class="meta" data-l="en"><span>Updated 2026-10-27</span><span>Model: Qwen2.5-VL-3B + LoRA</span><span>3 seeds per arm</span><span>Locked test splits (V4, V5) each scored once</span></div>
+  <div class="meta" data-l="zh"><span>2026-10-27 更新</span><span>模型 Qwen2.5-VL-3B + LoRA</span><span>A、P 各 3 个 seed，S 1 个</span><span>V4、V5 的测试集各只评估过一次</span></div>
+  <div class="meta" data-l="en"><span>Updated 2026-10-27</span><span>Model: Qwen2.5-VL-3B + LoRA</span><span>3 seeds for A and P, 1 for S</span><span>Locked test splits (V4, V5) each scored once</span></div>
   <p class="small" data-l="zh"><b>10-19 改版</b>：文字改成白话，新增 4 张结构图和一条排查路线。数字和结论都没有变，代码版本放在<a href="#appendix">附录</a>。</p>
   <p class="small" data-l="en"><b>10-19 revision</b>: rewritten in plain language, with 4 new structure diagrams and a step-by-step diagnosis. No numbers or conclusions changed; code versions are in the <a href="#appendix">appendix</a>.</p>
   <p class="small" data-l="zh"><b>10-20</b>：新增英文版，用右上角的“中文 / English”切换，图表和流程图里的文字也一起切换。</p>
@@ -269,6 +269,8 @@ l=l==='en'?'en':'zh';var r=document.documentElement;r.setAttribute('data-lang',l
   <p class="small" data-l="en"><b>26 Oct, final exam</b>: the six selected models were each scored once on the locked test split. On four unseen sources P scores 92–94% and A 50%, reading <code>test_confirms</code>; see <a href="#v5-test">Final exam</a>. The test split will not be used again.</p>
   <p class="small" data-l="zh"><b>10-27 不训练行不行</b>：把 P 的“定位”换成 AEGIS 自带的现成检测器 GroundingDINO，再跑同一段程序，验证集上只有 52%（P 是 94%），读法 <code>training_needed</code>。检测器几乎找不到布丁，见<a href="#v5-det">现成检测器</a>。</p>
   <p class="small" data-l="en"><b>27 Oct, can we skip training?</b>: replacing P's locating step with AEGIS's own off-the-shelf detector, GroundingDINO, and running the same program scores only 52% on validation (P scores 94%), reading <code>training_needed</code>. The detector almost never finds the pudding; see <a href="#v5-det">Off-the-shelf detector</a>.</p>
+  <p class="small" data-l="zh"><b>10-27 模型自己算</b>：S 先写四个点，再自己写出叉积、正负号和结论，测试时不用任何代码。验证集上模型自己写的结论 92%（A 50%，P 自己写的也是 50%），读法 <code>self_computes</code>。错误几乎都在定位上；乘法是估的，但只要正负号，够用。见<a href="#v5-s5">模型自己算</a>。1 个 seed，只看验证。</p>
+  <p class="small" data-l="en"><b>27 Oct, the model works it out itself</b>: S writes the four points, then writes out the cross products, their signs and the verdict itself, with no code at test time. On validation the model's own verdict is right 92% of the time (A 50%; P's own verdict also 50%), reading <code>self_computes</code>. Almost all errors are in locating; the multiplications are estimates, but only the signs matter, so that is enough. See <a href="#v5-s5">The model works it out</a>. One seed, validation only.</p>
   <nav class="toc" aria-label="目录" data-l="zh">
     <a href="#now"><b>现在在做什么</b></a><a href="#problem">要解决的问题</a><a href="#task">一道题长什么样</a><a href="#data">数据怎么造</a><a href="#method">方法</a><a href="#result">主结果</a><a href="#diagnosis">为什么 A 学不会</a><a href="#errors">B 错在哪</a><a href="#story">结论</a><a href="#lineage">方法来源</a><a href="#limits">限制</a><a href="#v5">下一阶段：V5</a><a href="#reading">精读：为什么做这个实验</a>
   </nav>
@@ -324,13 +326,14 @@ l=l==='en'?'en':'zh';var r=document.documentElement;r.setAttribute('data-lang',l
   <p data-l="zh">原始场景里，东西每次都摆在同样的位置。模型不用看图，只要记住“这句规则、机器人做到哪一步，答案就是什么”，就能猜对 76%。为了堵住这条捷径，验证题和测试题里，我们把这些参考物体挪到别的地方（机器人和布丁都碰不到的位置），同一句规则的答案于是会变。在这种题上，只靠记的模型只能拿 50%，和抛硬币一样。上面这张图就是挪过以后的样子。</p>
   <p data-l="en">In the original scenes, objects always sit in the same places. Without looking at the images, a model can get 76% right just by remembering “this rule at this stage of the task means this answer”. To block that shortcut, the validation and test questions move these reference objects elsewhere (where neither the robot nor the pudding touches them), so the same rule can get a different answer. On such questions a model that only remembers gets 50%, a coin flip. The photo above is one of these moved layouts.</p>
 
-  <h3><span data-l="zh">4. 三种模型怎么答（这道题的真实输出）</span><span data-l="en">4. How the three models answer (actual outputs on this question)</span></h3>
+  <h3><span data-l="zh">4. 四种模型怎么答（这道题的真实输出）</span><span data-l="en">4. How the four models answer (actual outputs on this question)</span></h3>
   <div class="tablewrap" data-l="zh"><table>
     <thead><tr><th>做法</th><th>它写出来的</th><th>红线（应为 0）</th><th>蓝线（应为 1）</th></tr></thead>
     <tbody>
       <tr><td><b>A</b> 直接回答</td><td><code>Verdict: 0</code></td><td class="ok">0 ✓</td><td class="no">0 ✗</td></tr>
       <tr><td><b>B</b> 先写“布丁、篮子在线的哪一侧”，再回答</td><td>两条规则都写“布丁在靠机器人一侧，篮子不在 → 隔开 → 0”</td><td class="ok">0 ✓</td><td class="no">0 ✗</td></tr>
       <tr><td><b>P</b> 先写四个点在图上的位置，再由程序判断</td><td>两个锚点、布丁、篮子的坐标（见下面）</td><td class="ok">0 ✓</td><td class="ok">1 ✓</td></tr>
+      <tr><td><b>S</b>（10-27）先写四个点，再自己写出计算和结论</td><td>四个坐标，加上叉积、正负号和结论（见下面）</td><td class="ok">0 ✓</td><td class="ok">1 ✓</td></tr>
     </tbody></table></div>
   <div class="tablewrap" data-l="en"><table>
     <thead><tr><th>Approach</th><th>What it writes</th><th>Red line (should be 0)</th><th>Blue line (should be 1)</th></tr></thead>
@@ -338,6 +341,7 @@ l=l==='en'?'en':'zh';var r=document.documentElement;r.setAttribute('data-lang',l
       <tr><td><b>A</b> answer directly</td><td><code>Verdict: 0</code></td><td class="ok">0 ✓</td><td class="no">0 ✗</td></tr>
       <tr><td><b>B</b> first write which side of the line the pudding and basket are on, then answer</td><td>for both rules: “pudding on the robot's side, basket not → separated → 0”</td><td class="ok">0 ✓</td><td class="no">0 ✗</td></tr>
       <tr><td><b>P</b> first write where four points are in the image, then let a program decide</td><td>coordinates of the two anchors, the pudding and the basket (below)</td><td class="ok">0 ✓</td><td class="ok">1 ✓</td></tr>
+      <tr><td><b>S</b> (27 Oct) write the four points, then write out the working and the verdict itself</td><td>the four coordinates, then cross products, signs and the verdict (below)</td><td class="ok">0 ✓</td><td class="ok">1 ✓</td></tr>
     </tbody></table></div>
   <pre data-l="zh">P 在红线这道题上写的（第 1 张图的像素坐标）：
 
@@ -361,6 +365,38 @@ Verdict: 1
 Program: pudding and basket on opposite sides → separated → 0 (right)</pre>
   <p data-l="zh">A 和 B 对两条规则给了同一个答案，所以每张这样的图只能对一题。P 把四个点都写准了，程序据此算出了两题的正确答案。不过 P 自己写的结论是错的：它学会了“东西在哪”，没学会“所以隔没隔开”，这一步是程序做的。</p>
   <p data-l="en">A and B give the same answer to both rules, so on each such photo they can only get one right. P writes all four points accurately, and the program works out the right answer for both. P's own written conclusion is wrong, though: it learned where things are, not whether that means they are separated; the program does that step.</p>
+  <pre data-l="zh">S（10-27）在同一道红线题上写的：
+
+Line: orange juice carton | wine bottle
+Line points: [250, 157] [243, 303]   ← 和 P 一样先写四个点
+Target point: [338, 215]
+Goal point: [130, 215]
+Line vector: [-7, 146]               ← 酒瓶减橙汁盒
+Target offset: [88, 58]              ← 布丁减橙汁盒
+Goal offset: [-120, 58]              ← 篮子减橙汁盒
+Target cross: -7*58 - 146*88 = -406 - 12928 = -13334   ← 146×88 其实是 12848，估的，但正负号对
+Goal cross: -7*58 - 146*(-120) = -406 - (-17520) = 17114
+Target side: negative
+Goal side: positive
+Separated: yes                       ← 一负一正 → 隔开
+Verdict: 0                           ← 模型自己写的，对了；没有代码参与</pre>
+  <pre data-l="en">What S (27 Oct) writes for the same red-line question:
+
+Line: orange juice carton | wine bottle
+Line points: [250, 157] [243, 303]   ← the four points first, as P does
+Target point: [338, 215]
+Goal point: [130, 215]
+Line vector: [-7, 146]               ← bottle minus carton
+Target offset: [88, 58]              ← pudding minus carton
+Goal offset: [-120, 58]              ← basket minus carton
+Target cross: -7*58 - 146*88 = -406 - 12928 = -13334   ← 146×88 is really 12848: an estimate, but the sign is right
+Goal cross: -7*58 - 146*(-120) = -406 - (-17520) = 17114
+Target side: negative
+Goal side: positive
+Separated: yes                       ← one negative, one positive → separated
+Verdict: 0                           ← the model's own answer, right; no code involved</pre>
+  <p data-l="zh">S 在蓝线题上也自己答对了（两个叉积都是负的 → 同一侧 → 1）。S 和 P 的实质区别只在训练目标里多了这串计算：P 学会了“东西在哪”，S 还学会了“所以隔没隔开”。</p>
+  <p data-l="en">S also gets the blue-line question right on its own (both cross products negative → same side → 1). The only real difference between S and P is this working in the training target: P learned where things are; S also learned whether that means they are separated.</p>
 
   <h3 id="now-program"><span data-l="zh">5. “程序判定”是什么意思？训练了什么？</span><span data-l="en">5. What does “program verdict” mean? What was trained?</span></h3>
   <p data-l="zh"><b>A、B、P 三组都是训练出来的 VLM</b>，底子完全一样：都是 Qwen2.5-VL-3B 加 LoRA 微调，用同样的 1,792 道训练题、同样的设置各训练一遍。不同的只是“教它写什么”：</p>
@@ -371,6 +407,7 @@ Program: pudding and basket on opposite sides → separated → 0 (right)</pre>
       <tr><td><b>A</b></td><td>只写 <code>Verdict: 0/1</code></td><td>模型写的 Verdict</td></tr>
       <tr><td><b>B</b></td><td>先写“布丁在线的哪一侧、篮子在哪一侧”，再写 Verdict</td><td>模型写的 Verdict</td></tr>
       <tr><td><b>P</b></td><td>先写四个点在第 1 张图上的像素坐标（两个锚点、布丁、篮子），再写 Separated 和 Verdict</td><td>不用模型写的结论，用下面这段代码根据四个坐标算出来</td></tr>
+      <tr><td><b>S</b>（10-27）</td><td>P 的四个坐标，再把下面这段代码的计算一步步写出来（向量、位移、两个叉积、正负号），最后写 Separated 和 Verdict</td><td>模型自己写的 Verdict，没有代码参与</td></tr>
     </tbody></table></div>
   <div class="tablewrap" data-l="en"><table>
     <thead><tr><th>Arm</th><th>What it is trained to output</th><th>Where the final answer comes from</th></tr></thead>
@@ -378,6 +415,7 @@ Program: pudding and basket on opposite sides → separated → 0 (right)</pre>
       <tr><td><b>A</b></td><td>only <code>Verdict: 0/1</code></td><td>the model's Verdict</td></tr>
       <tr><td><b>B</b></td><td>which side of the line the pudding and the basket are on, then the Verdict</td><td>the model's Verdict</td></tr>
       <tr><td><b>P</b></td><td>the View 1 pixel coordinates of four points (two anchors, pudding, basket), then Separated and Verdict</td><td>not the model's own conclusion: the code below computes it from the four coordinates</td></tr>
+      <tr><td><b>S</b> (27 Oct)</td><td>P's four coordinates, then the working of the code below written out step by step (vector, offsets, two cross products, signs), then Separated and Verdict</td><td>the model's own Verdict, with no code involved</td></tr>
     </tbody></table></div>
   <p data-l="zh">P 训练时用的坐标“标准答案”，是用仿真里物体的真实位置和相机参数算出来的，不需要人工标注。</p>
   <p data-l="en">The coordinate answers P is trained on are computed from the objects' true positions in simulation and the camera parameters; no human labelling is involved.</p>
@@ -396,13 +434,13 @@ Program: pudding and basket on opposite sides → separated → 0 (right)</pre>
 separated = side(anchor1, anchor2, pudding) * side(anchor1, anchor2, basket) &lt; 0
 answer = 0 if separated else 1</pre>
   <ul class="plain" data-l="zh">
-    <li><b>为什么不用 VLM 自己写的结论</b>：P 的 VLM 最后也写了 Separated 和 Verdict，但它没学会这一步：seed 713、714 在 1,538 道题上全写“不隔开、做得成”，seed 715 有 87% 写成相反的“隔开、做不成”，三个 seed 都只有 50% 左右，和瞎猜一样。所以 94% 说明的是：VLM 学会了“东西在哪”，“隔没隔开”这一步靠代码。不能说 VLM 自己学会了判断。</li>
+    <li><b>为什么不用 VLM 自己写的结论</b>：P 的 VLM 最后也写了 Separated 和 Verdict，但它没学会这一步：seed 713、714 在 1,538 道题上全写“不隔开、做得成”，seed 715 有 87% 写成相反的“隔开、做不成”，三个 seed 都只有 50% 左右，和瞎猜一样。所以 94% 说明的是：VLM 学会了“东西在哪”，“隔没隔开”这一步靠代码。不能说 VLM 自己学会了判断。10-27 的 S 补上了这一步，见第 6 节。</li>
     <li><b>P 比 A 多拿了信息</b>：训练时 A 只知道答案，P 还知道每件东西的准确位置。</li>
     <li><b>代码是按规则写的，不是学来的</b>：规则本来就是“别越过这条线”，几何是确定的，所以写成代码合理；但这部分功劳不在模型。</li>
     <li><b>更准确的说法</b>：同样的 VLM、同样的题，只教它答“能不能”，它学不会；教它先指出东西在哪，再用几行几何代码判断，就能做到 94%。</li>
   </ul>
   <ul class="plain" data-l="en">
-    <li><b>Why not use the VLM's own conclusion</b>: P's VLM also writes Separated and Verdict at the end, but it never learned that step: seeds 713 and 714 write “not separated, feasible” on all 1,538 questions, seed 715 writes the opposite (“separated, infeasible”) on 87% of them, and all three get about 50%, the level of guessing. So the 94% shows that the VLM learned where things are, while “separated or not” is done by the code. It cannot be claimed that the VLM learned to judge by itself.</li>
+    <li><b>Why not use the VLM's own conclusion</b>: P's VLM also writes Separated and Verdict at the end, but it never learned that step: seeds 713 and 714 write “not separated, feasible” on all 1,538 questions, seed 715 writes the opposite (“separated, infeasible”) on 87% of them, and all three get about 50%, the level of guessing. So the 94% shows that the VLM learned where things are, while “separated or not” is done by the code. It cannot be claimed that the VLM learned to judge by itself. S (27 Oct) fills in this step; see section 6.</li>
     <li><b>P gets more information than A</b>: in training, A only sees the answer, while P also sees each object's exact position.</li>
     <li><b>The code follows the rule; it is not learned</b>: the rule itself is “do not cross this line” and its geometry is exact, so writing it as code is reasonable, but the model gets no credit for that part.</li>
     <li><b>The accurate claim</b>: the same VLM on the same questions cannot learn to answer “feasible or not” when taught only that; taught to first point out where things are, with a few lines of geometry code deciding, it reaches 94%.</li>
@@ -413,6 +451,7 @@ answer = 0 if separated else 1</pre>
     <div class="tile"><span class="v">50%</span><span class="l"><span data-l="zh">A 直接回答（3 个 seed 都是 50%，等于抛硬币）</span><span data-l="en">A, answering directly (50% on all three seeds, a coin flip)</span></span></div>
     <div class="tile"><span class="v">50%</span><span class="l"><span data-l="zh">B 先写“在哪一侧”（1 个 seed）</span><span data-l="en">B, writing “which side” first (one seed)</span></span></div>
     <div class="tile"><span class="v">94%</span><span class="l"><span data-l="zh">P 先写位置、代码判断（3 个 seed 在 93–95%）</span><span data-l="en">P, writing positions with a program deciding (93–95% on three seeds)</span></span></div>
+    <div class="tile"><span class="v">92%</span><span class="l"><span data-l="zh">S 先写位置、自己算出结论，不用代码（10-27，1 个 seed）</span><span data-l="en">S, writing positions and working out the verdict itself, no code (27 Oct, one seed)</span></span></div>
   </div>
   <p data-l="zh"><b>结论</b>：让模型先写出它看得见的东西（物体在图上的位置），再交给程序去算，这道题才学得会；直接回答，或者写“在线的哪一侧”，模型都只会猜。这和 V4 的结论一脉相承：中间写的事实要是模型能从图上读出来的东西，组合交给规则或程序。</p>
   <p data-l="en"><b>Conclusion</b>: the task becomes learnable only when the model first writes what it can see (where objects are in the image) and a program does the working out; answering directly, or writing “which side of the line”, leaves the model guessing. This follows V4's conclusion: the intermediate facts must be things the model can read off the image, with the combination left to a rule or a program.</p>
@@ -420,20 +459,24 @@ answer = 0 if separated else 1</pre>
   <p data-l="en"><b>Final exam (26 Oct)</b>: the numbers above are validation. The 1,154 locked test questions come from four other, unseen sources, and the six models were each scored once: A is still 50%, P is 93% (92–94% across the three seeds), less than a point below validation. See <a href="#v5-test">Final exam</a>.</p>
   <p data-l="zh"><b>不训练行不行（10-27）</b>：P 的定位是训练出来的。如果换成 AEGIS 自带的现成检测器 GroundingDINO 去找这四样东西，再交给同一段代码，验证题只答对 52%，和瞎猜差不多。检测器几乎从来找不到布丁（392 张图里找对 3 张），所以“先找到东西”这一步必须靠训练。见<a href="#v5-det">现成检测器</a>。</p>
   <p data-l="en"><b>Can we skip training? (27 Oct)</b>: P's locating step is trained. If AEGIS's own off-the-shelf detector, GroundingDINO, finds the four objects instead and the same code decides, only 52% of the validation questions come out right, about chance. The detector almost never finds the pudding (3 of 392 images), so the locating step has to be trained. See <a href="#v5-det">Off-the-shelf detector</a>.</p>
+  <p data-l="zh"><b>模型自己算（10-27）</b>：P 的结论靠代码，所以 P 不算模型自己会判断。S 把代码的计算写进训练目标，测试时由模型自己一步步写出来：验证题上它自己写的结论答对 92%，P 自己写的只有 50%。错的 119 题里 112 题是点就找错了，算错的只有 7 题。乘法它是估的（逐位算对的乘积只有 59%，错的中位只差 0.5%），但判断只看正负号，所以够用。见<a href="#v5-s5">模型自己算</a>。</p>
+  <p data-l="en"><b>The model works it out itself (27 Oct)</b>: P's verdict comes from code, so P does not count as the model judging by itself. S puts the code's working into the training target and writes it out step by step at test time: its own verdict is right on 92% of the validation questions, where P's own verdict gets 50%. Of the 119 questions it gets wrong, 112 have a point in the wrong place; only 7 are slips in the working. It estimates the multiplications (only 59% of the products are exact, and the wrong ones are off by 0.5% at the median), but the verdict only needs the signs, so that is enough. See <a href="#v5-s5">The model works it out</a>.</p>
 
   <h3><span data-l="zh">7. 接下来</span><span data-l="en">7. What comes next</span></h3>
   <ul class="plain" data-l="zh">
     <li><b>正式考试已经考完</b>（10-26）：结果和验证集一致，测试题以后不再使用。</li>
     <li><b>现成检测器试过了</b>（10-27）：只有 52%，定位要用训练过的 P。</li>
-    <li><b>之后可选</b>：把它接到 AEGIS 前面，在机器人动手前拦下做不成的任务（先写设计稿，控制器改动要单独批准）；教模型自己从位置算出结论；扩到别的任务。</li>
+    <li><b>模型自己算试过了</b>（10-27）：S 自己写出计算和结论，92%，不用代码。这是现在的主线。</li>
+    <li><b>之后可选</b>：S 再补两个 seed，看 92% 稳不稳；S 要一次干净的正式考试，需要新的留出源（测试题已用掉）；把它接到 AEGIS 前面拦下做不成的任务（备选，控制器改动要单独批准）；扩到别的任务。</li>
   </ul>
   <ul class="plain" data-l="en">
     <li><b>The final exam is done</b> (26 Oct): the result matches validation, and the test questions will not be used again.</li>
     <li><b>The off-the-shelf detector has been tried</b> (27 Oct): only 52%, so locating needs the trained P.</li>
-    <li><b>Optional next</b>: wire it in front of AEGIS so that infeasible tasks are stopped before the robot moves (a design note first; the controller change needs separate approval); teach the model to work out the conclusion from the positions itself; extend to other tasks.</li>
+    <li><b>The model working it out itself has been tried</b> (27 Oct): S writes the working and the verdict itself and scores 92%, with no code. This is now the main line.</li>
+    <li><b>Optional next</b>: two more seeds for S, to see whether 92% holds; a clean final exam for S, which needs new held-out sources (the test questions are used up); wiring it in front of AEGIS to stop infeasible tasks (in reserve; the controller change needs separate approval); extending to other tasks.</li>
   </ul>
-  <p class="small" data-l="zh">这道题是验证集的第 i1291 张图（规则 v5o_03329、v5o_03328），A、B 的输出来自 S3（seed 713），P 的来自 S4（seed 713）。细节见下面的 <a href="#v5">V5</a> 一节。</p>
-  <p class="small" data-l="en">This question is validation image i1291 (rows v5o_03329 and v5o_03328); A's and B's outputs come from S3 (seed 713), P's from S4 (seed 713). Details are in the <a href="#v5">V5</a> section below.</p>
+  <p class="small" data-l="zh">这道题是验证集的第 i1291 张图（规则 v5o_03329、v5o_03328），A、B 的输出来自 S3（seed 713），P 的来自 S4（seed 713），S 的来自 S5（seed 713）。细节见下面的 <a href="#v5">V5</a> 一节。</p>
+  <p class="small" data-l="en">This question is validation image i1291 (rows v5o_03329 and v5o_03328); A's and B's outputs come from S3 (seed 713), P's from S4 (seed 713), S's from S5 (seed 713). Details are in the <a href="#v5">V5</a> section below.</p>
 </section>
 
 <section>
@@ -1922,19 +1965,48 @@ Program: the pudding and the basket lie on opposite sides → separated → 0 (c
     <li><b>What it means for the AEGIS gate</b>: the gate's locating step needs the trained P; AEGIS's detector cannot be reused as is. In early October, on this same task, AEGIS's VLM picked the wrong obstacle in 57 of 100 runs; this shows that even with the right object name, an off-the-shelf detector does not locate well. Limitations: one detector and one query wording only; no stronger detector (such as OWLv2 or Florence-2) and no other query words were tried.</li>
   </ul>
 
+  <h3 id="v5-s5"><span data-l="zh">模型自己算：写出计算，结论不再靠代码</span><span data-l="en">The model works it out: with the working written out, the verdict no longer needs code</span></h3>
+  <p data-l="zh">P 的 94% 里，“隔没隔开”是代码算的，P 自己写的结论只有 50%。10-27 用户决定主线回到“模型自己推理、自己下结论”。S 在 P 的四个点之后，把那段代码的计算一步步写出来：线的向量、布丁和篮子相对第一个锚点的位移、两个叉积（各是两个乘法和一个减法）、两个正负号，最后写 Separated 和 Verdict。读数只看模型自己写的 Verdict，代码只用来诊断。输入、数据、训练设置、样本顺序都和 S4 的 P（seed 713）相同；只看验证集，不调 API。怎么读事先写定：模型自己写的结论至少 85%、且比 A 高的区间下限大于 0，就算“自己会算”（<code>self_computes</code>）；不超过 60% 就算“学不会”。</p>
+  <p data-l="en">In P's 94%, “separated or not” is computed by code; P's own written verdict is 50%. On 27 Oct the user moved the main line back to the model reasoning and deciding itself. After P's four points, S writes out the code's working step by step: the line vector, the offsets of the pudding and the basket from the first anchor, two cross products (each two multiplications and a subtraction), their two signs, then Separated and Verdict. The reading uses only the model's own Verdict; the code is a diagnostic. Inputs, data, training settings and sample order are those of S4's P (seed 713); validation only, no API. The reading was fixed in advance: at least 85% for the model's own verdict, with the lower end of the interval over A above 0, counts as “works it out itself” (<code>self_computes</code>); 60% or less counts as “cannot learn it”.</p>
+  <div class="chart" id="c15">
+    <div class="ctitle"><span data-l="zh">谁下的结论，以及每一步算得怎么样</span><span data-l="en">Who decides, and how each step of the working holds up</span></div>
+    <div class="csub"><span data-l="zh">上半部分：验证集反事实孪生题（1,538 题）的判定准确率，都是 seed 713，逐题配对；S 的横线是 95% 区间。下半部分：S 写出的每一步，和它自己前面写的数逐位核对是否一致（一处错只算一次）。</span><span data-l="en">Top: verdict accuracy on the counterfactual validation twins (1,538 questions), all seed 713, paired question by question; S's line is its 95% interval. Bottom: each step S writes, checked digit for digit against the model's own earlier numbers (one slip counts once).</span></div>
+    <div class="legend" id="c15-legend"></div>
+    <svg id="c15-svg" viewBox="0 0 720 420" role="img" aria-label="验证孪生上的判定准确率：S 自己写出计算和结论 92.3%（90.6% 到 93.8%）；P 的代码判定 94.0%；P 自己写的结论 50.0%；A 直接判断 50.1%。S 每一步和自己前面的数一致的比例：向量 99.7%，两个位移 99.6%，四个乘积 58.8%，两次减法 95.1%，两个正负号 99.5%，Separated 100%，Verdict 100%" data-aria-en="Verdict accuracy on the validation twins: S, writing the working and verdict itself, 92.3% (90.6% to 93.8%); P's code verdict 94.0%; P's own written verdict 50.0%; A, direct, 50.1%. Share of S's steps consistent with its own earlier numbers: vector 99.7%, two offsets 99.6%, four products 58.8%, two subtractions 95.1%, two signs 99.5%, Separated 100%, Verdict 100%"></svg>
+    <details><summary><span data-l="zh">数据表</span><span data-l="en">Data table</span></summary><div class="tablewrap"><table id="c15-table"></table></div></details>
+  </div>
+  <ul class="plain" data-l="zh">
+    <li><b>读法是“自己会算”（<code>self_computes</code>）</b>：S 自己写的结论 92.3%，95% 区间 [90.6, 93.8]；A 是 50.1%。每道题比，S 领先 42.1 个百分点，区间 [+39.7, +44.6]。测试时没有任何代码参与判定。</li>
+    <li><b>补上的是 P 缺的那一步</b>：P 写同样的四个点，自己写的结论是 50%（全写“不隔开”）；S 多写了计算，自己写的结论和“用它自己的点跑代码”有 99.0% 一致。原本学不会的“从位置推出结论”，把中间步骤写出来以后就学会了，和 V4 的结论、Wies 等人的观点一致。</li>
+    <li><b>错几乎都错在定位上</b>：错的 119 题里，112 题是点就找错了（用它自己的点跑代码也错），只有 7 题是点对了、算错了。要再往上，要把点找得更准。</li>
+    <li><b>乘法是估的</b>：四个乘积逐位算对的只有 59%，但错的乘积中位只差 0.5%（90% 的错在 1.2% 以内）。判断只看叉积的正负号，3,076 个叉积里正负号被算错带偏的只有 11 个。每一步都逐位正确的题只有 35%。这里够用；以后如果规则要比较精确的数，就不够了。</li>
+    <li><b>比 P 的代码判定低一点</b>：低 1.7 个百分点，区间 [−3.0, −0.5]。差在定位，不在计算：S 的点用代码跑也是 92.2%。只有 1 个 seed，P 自己 3 个 seed 之间就差 1.4 个百分点，现在分不清是不是波动。</li>
+    <li><b>局限</b>：1 个 seed，只看验证集；V5 的测试题已经用掉，S 要正式考试需要新的留出源。计算的方法（叉积判两侧）仍是训练时教的，模型学会的是执行它，不是自己发现它。每次判断约 12 秒、192 个 token（P 是 4.9 秒），做在线闸门需要更短的写法。</li>
+  </ul>
+  <ul class="plain" data-l="en">
+    <li><b>The reading is “works it out itself” (<code>self_computes</code>)</b>: S's own verdict scores 92.3%, 95% interval [90.6, 93.8]; A scores 50.1%. Question by question, S leads by 42.1 points, interval [+39.7, +44.6]. No code takes part in the verdict at test time.</li>
+    <li><b>It fills in the step P was missing</b>: P writes the same four points and its own verdict is 50% (always “not separated”); S also writes the working, and its own verdict agrees with running the code on its own points 99.0% of the time. Going from positions to a verdict, which could not be learned before, is learned once the intermediate steps are written out, in line with V4's conclusion and with Wies et al.</li>
+    <li><b>Almost all errors are in locating</b>: of the 119 questions it gets wrong, 112 have a point in the wrong place (the code on its own points is wrong too); only 7 have the points right and a slip in the working. Going higher means locating better.</li>
+    <li><b>The multiplications are estimates</b>: only 59% of the products are exact, but the wrong ones are off by 0.5% at the median (90% within 1.2%). The verdict only needs the sign of each cross product, and only 11 of 3,076 signs were thrown off by the arithmetic. Only 35% of questions have every step exact. That is enough here; a rule that needs precise numbers would expose it.</li>
+    <li><b>Slightly below P's code verdict</b>: 1.7 points lower, interval [−3.0, −0.5]. The gap is in locating, not in the working: running the code on S's points also gives 92.2%. With one seed, and P's own three seeds 1.4 points apart, it cannot yet be told from seed noise.</li>
+    <li><b>Limitations</b>: one seed, validation only; V5's test questions are used up, so a final exam for S needs new held-out sources. The method of working (cross products to tell sides) is still taught in training; the model learns to carry it out, not to discover it. Each verdict takes about 12 seconds and 192 tokens (P: 4.9 seconds), so an online gate would need a shorter write-up.</li>
+  </ul>
+
   <h3><span data-l="zh">下一步（不扩展，每步开始前确认）</span><span data-l="en">Next (no expansion; each step confirmed before it starts)</span></h3>
   <ol class="next" data-l="zh">
-    <li><b>把 P 接到 AEGIS 前面当闸门</b>：在机器人动手前拦下做不成的任务。感知用 P（现成检测器不行）。先写设计稿：把规则的连线作为 CBF-QP 的半空间约束，不加闸门时做不成的任务会停在线前，变成“安全但没完成”；控制器改动需要单独批准。</li>
-    <li><b>可选</b>：补一个更强的现成检测器（OWLv2 或 Florence-2）；教模型自己从位置算出是否隔开；扩到其他任务（goal、spatial），要新建验证和测试源。</li>
-    <li><b>整理成论文主线</b>：验证、加 seed、正式考试三步的结论一致。</li>
+    <li><b>S 加 seed（主线，推荐先做）</b>：S 补 seed 714、715，只看验证，看 92% 稳不稳、比 P 低的 1.7 个百分点是不是波动。每个 seed 约 11 GPU 小时。</li>
+    <li><b>S 的正式考试</b>：测试题已用掉，需要新的留出源（同一任务没用过的初始状态，要重新执行 nominal π0.5，需要数据采集批准）。</li>
+    <li><b>备选</b>：接到 AEGIS 前面当闸门（定位不能用现成检测器；结论可以用 P 的代码或 S 自己写；控制器改动要单独批准）；补一个更强的现成检测器；扩到其他任务（goal、spatial）。</li>
+    <li><b>整理成论文主线</b>：A 50%、P 94%、现成检测器 52%、S 92%。</li>
   </ol>
   <ol class="next" data-l="en">
-    <li><b>Use P as a gate in front of AEGIS</b>: stop infeasible tasks before the robot moves, with P doing the locating (the off-the-shelf detector does not work). A design note comes first: the rule's line becomes a half-space constraint in the CBF-QP, so without the gate an infeasible task stops at the line and ends up safe but incomplete; the controller change needs separate approval.</li>
-    <li><b>Optional</b>: add a stronger off-the-shelf detector (OWLv2 or Florence-2); teach the model to work out separation from the positions itself; extend to other tasks (goal, spatial), which needs new validation and test sources.</li>
-    <li><b>Write up the main line</b>: validation, the extra seeds and the final exam all agree.</li>
+    <li><b>More seeds for S (main line, recommended first)</b>: seeds 714 and 715 for S, validation only, to see whether 92% holds and whether the 1.7-point gap to P is seed noise. About 11 GPU hours per seed.</li>
+    <li><b>A final exam for S</b>: the test questions are used up, so this needs new held-out sources (unused starting states of the same task, with nominal π0.5 run again; needs approval for data collection).</li>
+    <li><b>In reserve</b>: a gate in front of AEGIS (locating cannot use the off-the-shelf detector; the verdict can come from P's code or from S itself; the controller change needs separate approval); a stronger off-the-shelf detector; other tasks (goal, spatial).</li>
+    <li><b>Write up the main line</b>: A 50%, P 94%, off-the-shelf detector 52%, S 92%.</li>
   </ol>
-  <p class="small" data-l="zh">盲看由 Claude 完成，不是人工审阅；它说明“仔细看图能判断”，不代表训练后模型的能力。上面的数字来自 <code>V5_STEP1_REPORT.md</code>、<code>V5_STEP2_REPORT.md</code>、<code>V5_C0_REPORT.md</code>、<code>V5_LAYOUT_PROTOCOL.md</code>、<code>V5_S0_REPORT.md</code>、<code>V5_S1_REPORT.md</code>、<code>V5_S2_REPORT.md</code>、<code>V5_S3_REPORT.md</code>、<code>V5_FIT_REPORT.md</code>、<code>V5_S4_REPORT.md</code>、<code>V5_SEEDS_REPORT.md</code>、<code>V5_TEST_REPORT.md</code>、<code>V5_DET_REPORT.md</code>。S1 盲看时 Claude 事先知道每个单元恰好有一条规则把布丁和篮子隔开。</p>
-  <p class="small" data-l="en">The blind review was done by Claude, not by a human; it shows that a careful look at the images can decide, not what a trained model will do. The numbers above come from <code>V5_STEP1_REPORT.md</code>, <code>V5_STEP2_REPORT.md</code>, <code>V5_C0_REPORT.md</code>, <code>V5_LAYOUT_PROTOCOL.md</code>, <code>V5_S0_REPORT.md</code>, <code>V5_S1_REPORT.md</code>, <code>V5_S2_REPORT.md</code>, <code>V5_S3_REPORT.md</code>, <code>V5_FIT_REPORT.md</code>, <code>V5_S4_REPORT.md</code>, <code>V5_SEEDS_REPORT.md</code> and <code>V5_TEST_REPORT.md</code>, <code>V5_DET_REPORT.md</code>. In the S1 review Claude knew in advance that each unit has exactly one rule separating the pudding from the basket.</p>
+  <p class="small" data-l="zh">盲看由 Claude 完成，不是人工审阅；它说明“仔细看图能判断”，不代表训练后模型的能力。上面的数字来自 <code>V5_STEP1_REPORT.md</code>、<code>V5_STEP2_REPORT.md</code>、<code>V5_C0_REPORT.md</code>、<code>V5_LAYOUT_PROTOCOL.md</code>、<code>V5_S0_REPORT.md</code>、<code>V5_S1_REPORT.md</code>、<code>V5_S2_REPORT.md</code>、<code>V5_S3_REPORT.md</code>、<code>V5_FIT_REPORT.md</code>、<code>V5_S4_REPORT.md</code>、<code>V5_SEEDS_REPORT.md</code>、<code>V5_TEST_REPORT.md</code>、<code>V5_DET_REPORT.md</code>、<code>V5_S5_REPORT.md</code>。S1 盲看时 Claude 事先知道每个单元恰好有一条规则把布丁和篮子隔开。</p>
+  <p class="small" data-l="en">The blind review was done by Claude, not by a human; it shows that a careful look at the images can decide, not what a trained model will do. The numbers above come from <code>V5_STEP1_REPORT.md</code>, <code>V5_STEP2_REPORT.md</code>, <code>V5_C0_REPORT.md</code>, <code>V5_LAYOUT_PROTOCOL.md</code>, <code>V5_S0_REPORT.md</code>, <code>V5_S1_REPORT.md</code>, <code>V5_S2_REPORT.md</code>, <code>V5_S3_REPORT.md</code>, <code>V5_FIT_REPORT.md</code>, <code>V5_S4_REPORT.md</code>, <code>V5_SEEDS_REPORT.md</code>, <code>V5_TEST_REPORT.md</code>, <code>V5_DET_REPORT.md</code> and <code>V5_S5_REPORT.md</code>. In the S1 review Claude knew in advance that each unit has exactly one rule separating the pudding from the basket.</p>
 </section>
 
 <section id="reading">
@@ -2726,6 +2798,42 @@ CHARTS.push(function(){
     V.map(r=>`<tr><td>${nm(r)}</td><td class="n">${r.v.toFixed(1)}%</td><td class="n">${r.seeds?r.seeds.map(v=>v.toFixed(1)).join(' / '):r.ci.map(v=>v.toFixed(1)).join('–')+'%'}</td></tr>`).join('')+
     `<tr><th>${T('检测器找对物体','Detector finds the object')}</th><th class="n">${T('比例','Share')}</th><th class="n">${T('查询数','Queries')}</th></tr>`+
     O.map(r=>`<tr><td>${nm(r)}</td><td class="n">${r.v.toFixed(1)}%</td><td class="n">${r.n}</td></tr>`).join('')+'</tbody>';
+});
+
+// Chart 15: S5; top = who decides (verdict accuracy on the validation twins, seed 713, S with its interval), bottom = S's step consistency.
+CHARTS.push(function(){
+  const svg=clear('c15-svg');
+  document.getElementById('c15-legend').innerHTML=`<span><i class="key solid" style="background:var(--s4)"></i>${T('S 模型自己算','S, the model works it out')}</span>`+
+    `<span><i class="key solid" style="background:var(--s3)"></i>${T('P','P')}</span>`+
+    `<span><i class="key solid" style="background:var(--s1)"></i>${T('A 直接判断','A, direct')}</span>`;
+  const V=[{zh:'S·自己写出计算和结论',en:'S · own working and verdict',c:'--s4',v:92.263,ci:[90.593,93.783]},
+    {zh:'P·代码判定',en:'P · code decides',c:'--s3',v:93.953},
+    {zh:'P·自己写的结论',en:'P · own written verdict',c:'--s3',v:50.000,light:true},
+    {zh:'A·直接判断',en:'A · direct',c:'--s1',v:50.130}];
+  const S=[{zh:'向量',en:'Vector',v:99.675},{zh:'两个位移',en:'Two offsets',v:99.577,p:[99.545,99.610]},
+    {zh:'四个乘积',en:'Four products',v:58.810,p:[58.257,59.363],note:T('错的中位只差 0.5%','wrong ones off 0.5% (median)')},
+    {zh:'两次减法',en:'Two subtractions',v:95.059,p:[93.888,96.229]},{zh:'两个正负号',en:'Two signs',v:99.480,p:[99.350,99.610]},
+    {zh:'Separated',en:'Separated',v:100},{zh:'Verdict',en:'Verdict',v:100}];
+  const x0=200,x1=650,X=v=>x0+(x1-x0)*v/100,t1=38,r1=30,h1=14,t2=t1+r1*V.length+48,r2=26,h2=12,end2=t2+r2*S.length;
+  text(svg,0,t1-18,T('判定准确率（验证孪生 1,538 题，seed 713）','Verdict accuracy (1,538 validation twins, seed 713)'),'lab2');
+  text(svg,0,t2-18,T('S 的每一步与它自己前面的数一致（1,538 题）','S steps consistent with its own earlier numbers (1,538 questions)'),'lab2');
+  const grid=(a,b)=>[0,25,50,75,100].forEach(v=>el('line',{x1:X(v),x2:X(v),y1:a,y2:b,class:'grid'},svg));
+  grid(t1-8,t1+r1*V.length-8);grid(t2-6,end2-6);[0,25,50,75,100].forEach(v=>text(svg,X(v),end2+8,v+'%','tick','middle'));
+  el('line',{x1:X(50),x2:X(50),y1:t1-8,y2:t1+r1*V.length-8,class:'ref'},svg);text(svg,X(50),t1+r1*V.length+6,T('瞎猜 50%','chance 50%'),'lab2','middle');
+  V.forEach((r,i)=>{const y=t1+i*r1,n=nm(r);text(svg,x0-12,y+h1-2,n,'lab','end');const b=bar(svg,X(0),X(r.v),y,h1,r.c);if(r.light)b.setAttribute('opacity','.4');
+    if(r.ci){el('line',{x1:X(r.ci[0]),x2:X(r.ci[1]),y1:y+h1/2,y2:y+h1/2,stroke:'var(--ink)','stroke-width':1.5},svg);
+      [0,1].forEach(k=>el('line',{x1:X(r.ci[k]),x2:X(r.ci[k]),y1:y+2,y2:y+h1-2,stroke:'var(--ink)','stroke-width':1.5},svg));}
+    const right=Math.max(X(r.v),r.ci?X(r.ci[1]):0);text(svg,right+8,y+h1-2,r.v.toFixed(1)+'%','val');
+    const hit=el('rect',{x:0,y:y-6,width:720,height:r1-2,class:'hit'},svg);
+    bindTip(hit,`<b>${n}</b><br>${r.v.toFixed(1)}%`+(r.ci?`${COLON()}${T('95% 区间','95% interval')} ${r.ci[0].toFixed(1)}–${r.ci[1].toFixed(1)}%`:''));});
+  S.forEach((r,i)=>{const y=t2+i*r2,n=nm(r);text(svg,x0-12,y+h2-1,n,'lab','end');bar(svg,X(0),X(r.v),y,h2,'--s4');
+    text(svg,X(r.v)+8,y+h2-1,r.v.toFixed(1)+'%'+(r.note?' · '+r.note:''),r.note?'val':'lab2');
+    const hit=el('rect',{x:0,y:y-6,width:720,height:r2-2,class:'hit'},svg);
+    bindTip(hit,`<b>${n}</b><br>${r.v.toFixed(1)}%`+(r.p?`${COLON()}${T('布丁','pudding')} ${r.p[0].toFixed(1)}% · ${T('篮子','basket')} ${r.p[1].toFixed(1)}%`:'')+(r.note?`<br>${r.note}`:''));});
+  document.getElementById('c15-table').innerHTML=`<thead><tr><th>${T('判定准确率（验证孪生，seed 713）','Verdict accuracy (validation twins, seed 713)')}</th><th class="n">${T('准确率','Accuracy')}</th><th class="n">${T('95% 区间','95% interval')}</th></tr></thead><tbody>`+
+    V.map(r=>`<tr><td>${nm(r)}</td><td class="n">${r.v.toFixed(1)}%</td><td class="n">${r.ci?r.ci.map(v=>v.toFixed(1)).join('–')+'%':''}</td></tr>`).join('')+
+    `<tr><th>${T('S 的每一步','S steps')}</th><th class="n">${T('一致的比例','Consistent')}</th><th class="n">${T('布丁 / 篮子','Pudding / basket')}</th></tr>`+
+    S.map(r=>`<tr><td>${nm(r)}</td><td class="n">${r.v.toFixed(1)}%</td><td class="n">${r.p?r.p.map(v=>v.toFixed(1)).join(' / '):''}</td></tr>`).join('')+'</tbody>';
 });
 
 // Language switch: swap the visible copy, aria-labels, alt text and title, redraw the charts, and keep the reader's place.
