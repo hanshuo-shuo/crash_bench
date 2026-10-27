@@ -1,4 +1,4 @@
-# 当前状态（2026-10-26）
+# 当前状态（2026-10-27）
 
 ## 正在进行：生成式可行性 verifier
 
@@ -6,7 +6,8 @@
 - **用户 2026-10-16 的决定**：
   - V4 的 896 行（224 个四行单元、64 条源轨迹）作为开发数据，直接用于 verifier 训练。
   - 不再要求通过 0.75 的 shortcut 闸门。闸门失败（0.780）如实披露，并作为基线报告。
-- **最新（2026-10-26）**：V5 测试评估完成，预注册读法 `test_confirms`（见 [V5_TEST_REPORT.md](generative_verifier/V5_TEST_REPORT.md)）：在没见过的 4 条测试源上，"先写位置、再用程序判定"（P）3 个 seed 是 0.932 / 0.942 / 0.924，直接判断（A）都是 0.50；P − A +0.432 [+0.416, +0.449]。测试集只评估这一次，不再重评。没有正在运行的 CrashBench 作业。本轮已收尾，**接手先读 [V5_HANDOFF.md](generative_verifier/V5_HANDOFF.md) 开头的接手指南**（现状、可选的下一步、每一步的做法、关键路径）。
+- **最新（2026-10-27）**：检测器基线完成，预注册读法 `training_needed`（见 [V5_DET_REPORT.md](generative_verifier/V5_DET_REPORT.md)）：不训练、直接用 AEGIS 自带的 GroundingDINO 找四个物体再跑同一段程序，验证集只有 0.521，P 是 0.940（P − 检测器 +0.419 [+0.395, +0.443]）；主要是几乎找不到布丁（392 张图命中 3 张）。P 的位置监督是必要的，AEGIS 闸门的感知要用 P。没有正在运行的 CrashBench 作业。
+- **10-26**：V5 测试评估完成，预注册读法 `test_confirms`（见 [V5_TEST_REPORT.md](generative_verifier/V5_TEST_REPORT.md)）：在没见过的 4 条测试源上，"先写位置、再用程序判定"（P）3 个 seed 是 0.932 / 0.942 / 0.924，直接判断（A）都是 0.50；P − A +0.432 [+0.416, +0.449]。测试集只评估这一次，不再重评。没有正在运行的 CrashBench 作业。本轮已收尾，**接手先读 [V5_HANDOFF.md](generative_verifier/V5_HANDOFF.md) 开头的接手指南**（现状、可选的下一步、每一步的做法、关键路径）。
 - **当前阶段**：Phase 0–2 已于 2026-10-17 完成，见 [PHASE1_REPORT.md](generative_verifier/PHASE1_REPORT.md) 和 [PHASE2_REPORT.md](generative_verifier/PHASE2_REPORT.md)。
   - 锁定测试集（评估一次）：B（事实→判定）79.7%，A（直接）50.0%，差 +29.7 个百分点，源聚类 95% CI [+22.3, +36.8]，科学标准达成。
   - 开发里程碑未达成：B 行准确率 79.7%、单元全对 54.2%、规则翻转 64.2%，门槛分别是 85% / 70% / 90%。
@@ -82,6 +83,12 @@
     从验证到测试 P 只降 0.005–0.009；A 仍塌成常数，P 自己写的结论仍是随机水平。测试自然（80 行）P 0.958、A 0.713。
     运行目录 `/projects/p33100/siosio/crashbench_safelibero/verifier_training/runs/20261026T173919Z_v5-test_5594cebeb616`；作业 5433550–5433770 共 8 个全部 COMPLETED 0:0，约 6 GPU 小时，6 个 adapter 的重新加载核对都是 32/32 逐字相同。
     **测试集已用过这一次，不要再评估或重跑。** 下一步（AEGIS 闸门、教模型自己算隔开、扩任务组合）都要用户另行决定。主报告页第 22 版加了测试结果一节（`#v5-test`）。
+  - **检测器基线于 2026-10-27 完成**，见 [V5_DET_REPORT.md](generative_verifier/V5_DET_REPORT.md)。用户 10-26 "先做1"。协议 [V5_DET_PROTOCOL.md](generative_verifier/V5_DET_PROTOCOL.md) 冻结于 `380d632`（实现 `988f9fe`，sbatch 修正 `293a299`）。
+    问题：不训练，直接用 AEGIS 自带的 GroundingDINO（同一份权重）在第 1 张图上找布丁、篮子和两个锚点，再跑 P 的同一段程序，能不能判对孪生题。
+    预注册读法 `training_needed`：验证集 1,538 行上检测器 0.521 [0.499, 0.546]，P（3 个 seed 平均）0.940，P − 检测器 +0.419，图像区间 [+0.395, +0.443]。
+    布丁几乎找不到（最高分框命中 392 张里的 3 张，前 5 个框里有布丁的也只有 19%）；锚点命中 47%（红杯子、酒瓶、橙汁盒约九成，字母汤罐、沙拉酱瓶、黄色书 6–21%）；篮子 95%。训练集上 48 组框到点的比例都在 0.515–0.536；AEGIS 原规则 0.500。
+    运行目录 `/projects/p33100/siosio/crashbench_safelibero/verifier_training/runs/20261027T031559Z_v5-det_380d63210941`；作业 5520821（preflight）、5520823（检测，A100，15 分钟）、5520824（report）全部 COMPLETED 0:0。不调 API、不训练、不读测试集。
+    下一步（AEGIS 闸门设计稿，感知用 P；或补更强的现成检测器）要用户决定。
 
 ## 已完成的研究（结果只读）
 
@@ -111,7 +118,7 @@
 
 | 分支 | 用途 | 状态 |
 |---|---|---|
-| `main` | 默认分支，也是工作线 | 10-26 快进到 verifier 的全部工作（第 1 步、对照、梯级、V5 到测试评估），并收入了用户在网页上写的 `docs/new_report.md` |
+| `main` | 默认分支，也是工作线 | 10-26 快进到 verifier 的全部工作（第 1 步、对照、梯级、V5 到测试评估），并收入了用户在网页上写的 `docs/new_report.md`；10-27 快进到检测器基线（`v5-det` 分支） |
 | `codex/archive-crashbench-20260926` | 2026-09-26 之前的 CrashBench 计划存档 | 只读，AGENTS.md 引用；内容已在 `main` 的历史里 |
 | `codex/feasibility` | 10 月初可行性研究的发布分支 | 只读；`analysis/uncertainty/`、`experiments/reach_avoid/`、`experiments/feasibility_contract/` 等 20 多个启动器按这个名字核对来源，不要删除 |
 

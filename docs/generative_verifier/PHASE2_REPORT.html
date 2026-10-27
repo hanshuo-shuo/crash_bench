@@ -245,8 +245,8 @@ l=l==='en'?'en':'zh';var r=document.documentElement;r.setAttribute('data-lang',l
   <h1><span data-l="zh">生成式可行性 Verifier</span><span data-l="en">Generative Feasibility Verifier</span></h1>
   <p class="lede" data-l="zh">机器人动手之前，先看两张场景图和一条规则，判断这件事在规则下到底做不做得成。这一页讲清楚四件事：数据怎么造，模型怎么训练，结果怎么样，为什么会是这个结果。</p>
   <p class="lede" data-l="en">Before the robot moves, look at two scene images and one rule, and decide whether the task can actually be done under that rule. This page covers four things: how the data was built, how the model was trained, what the results are, and why they came out this way.</p>
-  <div class="meta" data-l="zh"><span>2026-10-26 更新</span><span>模型 Qwen2.5-VL-3B + LoRA</span><span>每组 3 个 seed</span><span>V4、V5 的测试集各只评估过一次</span></div>
-  <div class="meta" data-l="en"><span>Updated 2026-10-26</span><span>Model: Qwen2.5-VL-3B + LoRA</span><span>3 seeds per arm</span><span>Locked test splits (V4, V5) each scored once</span></div>
+  <div class="meta" data-l="zh"><span>2026-10-27 更新</span><span>模型 Qwen2.5-VL-3B + LoRA</span><span>每组 3 个 seed</span><span>V4、V5 的测试集各只评估过一次</span></div>
+  <div class="meta" data-l="en"><span>Updated 2026-10-27</span><span>Model: Qwen2.5-VL-3B + LoRA</span><span>3 seeds per arm</span><span>Locked test splits (V4, V5) each scored once</span></div>
   <p class="small" data-l="zh"><b>10-19 改版</b>：文字改成白话，新增 4 张结构图和一条排查路线。数字和结论都没有变，代码版本放在<a href="#appendix">附录</a>。</p>
   <p class="small" data-l="en"><b>10-19 revision</b>: rewritten in plain language, with 4 new structure diagrams and a step-by-step diagnosis. No numbers or conclusions changed; code versions are in the <a href="#appendix">appendix</a>.</p>
   <p class="small" data-l="zh"><b>10-20</b>：新增英文版，用右上角的“中文 / English”切换，图表和流程图里的文字也一起切换。</p>
@@ -267,6 +267,8 @@ l=l==='en'?'en':'zh';var r=document.documentElement;r.setAttribute('data-lang',l
   <p class="small" data-l="en"><b>26 Oct, plain version</b>: added <a href="#now">What we are doing now</a> at the top, which walks through one real question to explain the current task and results; <a href="#now-program">part 5</a> explains what “program verdict” means and what was trained.</p>
   <p class="small" data-l="zh"><b>10-26 正式考试</b>：6 个选定的模型在锁着的测试集上各考了一次。没见过的 4 条源上 P 是 92–94%，A 是 50%，读法 <code>test_confirms</code>，见<a href="#v5-test">正式考试</a>。测试集以后不再使用。</p>
   <p class="small" data-l="en"><b>26 Oct, final exam</b>: the six selected models were each scored once on the locked test split. On four unseen sources P scores 92–94% and A 50%, reading <code>test_confirms</code>; see <a href="#v5-test">Final exam</a>. The test split will not be used again.</p>
+  <p class="small" data-l="zh"><b>10-27 不训练行不行</b>：把 P 的“定位”换成 AEGIS 自带的现成检测器 GroundingDINO，再跑同一段程序，验证集上只有 52%（P 是 94%），读法 <code>training_needed</code>。检测器几乎找不到布丁，见<a href="#v5-det">现成检测器</a>。</p>
+  <p class="small" data-l="en"><b>27 Oct, can we skip training?</b>: replacing P's locating step with AEGIS's own off-the-shelf detector, GroundingDINO, and running the same program scores only 52% on validation (P scores 94%), reading <code>training_needed</code>. The detector almost never finds the pudding; see <a href="#v5-det">Off-the-shelf detector</a>.</p>
   <nav class="toc" aria-label="目录" data-l="zh">
     <a href="#now"><b>现在在做什么</b></a><a href="#problem">要解决的问题</a><a href="#task">一道题长什么样</a><a href="#data">数据怎么造</a><a href="#method">方法</a><a href="#result">主结果</a><a href="#diagnosis">为什么 A 学不会</a><a href="#errors">B 错在哪</a><a href="#story">结论</a><a href="#lineage">方法来源</a><a href="#limits">限制</a><a href="#v5">下一阶段：V5</a><a href="#reading">精读：为什么做这个实验</a>
   </nav>
@@ -416,15 +418,19 @@ answer = 0 if separated else 1</pre>
   <p data-l="en"><b>Conclusion</b>: the task becomes learnable only when the model first writes what it can see (where objects are in the image) and a program does the working out; answering directly, or writing “which side of the line”, leaves the model guessing. This follows V4's conclusion: the intermediate facts must be things the model can read off the image, with the combination left to a rule or a program.</p>
   <p data-l="zh"><b>正式考试（10-26）</b>：上面是验证题。锁着的 1,154 道测试题来自另外 4 条没见过的源，6 个模型各考了一次：A 还是 50%，P 是 93%（3 个 seed 在 92–94%），比验证只低不到 1 个百分点。见<a href="#v5-test">正式考试</a>。</p>
   <p data-l="en"><b>Final exam (26 Oct)</b>: the numbers above are validation. The 1,154 locked test questions come from four other, unseen sources, and the six models were each scored once: A is still 50%, P is 93% (92–94% across the three seeds), less than a point below validation. See <a href="#v5-test">Final exam</a>.</p>
+  <p data-l="zh"><b>不训练行不行（10-27）</b>：P 的定位是训练出来的。如果换成 AEGIS 自带的现成检测器 GroundingDINO 去找这四样东西，再交给同一段代码，验证题只答对 52%，和瞎猜差不多。检测器几乎从来找不到布丁（392 张图里找对 3 张），所以“先找到东西”这一步必须靠训练。见<a href="#v5-det">现成检测器</a>。</p>
+  <p data-l="en"><b>Can we skip training? (27 Oct)</b>: P's locating step is trained. If AEGIS's own off-the-shelf detector, GroundingDINO, finds the four objects instead and the same code decides, only 52% of the validation questions come out right, about chance. The detector almost never finds the pudding (3 of 392 images), so the locating step has to be trained. See <a href="#v5-det">Off-the-shelf detector</a>.</p>
 
   <h3><span data-l="zh">7. 接下来</span><span data-l="en">7. What comes next</span></h3>
   <ul class="plain" data-l="zh">
     <li><b>正式考试已经考完</b>（10-26）：结果和验证集一致，测试题以后不再使用。</li>
-    <li><b>之后可选</b>：把它接到 AEGIS 前面，在机器人动手前拦下做不成的任务（要单独批准）；教模型自己从位置算出结论；扩到别的任务。</li>
+    <li><b>现成检测器试过了</b>（10-27）：只有 52%，定位要用训练过的 P。</li>
+    <li><b>之后可选</b>：把它接到 AEGIS 前面，在机器人动手前拦下做不成的任务（先写设计稿，控制器改动要单独批准）；教模型自己从位置算出结论；扩到别的任务。</li>
   </ul>
   <ul class="plain" data-l="en">
     <li><b>The final exam is done</b> (26 Oct): the result matches validation, and the test questions will not be used again.</li>
-    <li><b>Optional next</b>: wire it in front of AEGIS so that infeasible tasks are stopped before the robot moves (needs separate approval); teach the model to work out the conclusion from the positions itself; extend to other tasks.</li>
+    <li><b>The off-the-shelf detector has been tried</b> (27 Oct): only 52%, so locating needs the trained P.</li>
+    <li><b>Optional next</b>: wire it in front of AEGIS so that infeasible tasks are stopped before the robot moves (a design note first; the controller change needs separate approval); teach the model to work out the conclusion from the positions itself; extend to other tasks.</li>
   </ul>
   <p class="small" data-l="zh">这道题是验证集的第 i1291 张图（规则 v5o_03329、v5o_03328），A、B 的输出来自 S3（seed 713），P 的来自 S4（seed 713）。细节见下面的 <a href="#v5">V5</a> 一节。</p>
   <p class="small" data-l="en">This question is validation image i1291 (rows v5o_03329 and v5o_03328); A's and B's outputs come from S3 (seed 713), P's from S4 (seed 713). Details are in the <a href="#v5">V5</a> section below.</p>
@@ -1891,19 +1897,44 @@ Program: the pudding and the basket lie on opposite sides → separated → 0 (c
     <li><b>The test is scored this once only</b>: the test questions will not be used again for evaluation, selection or tuning. The limitations stand: one task composition, four test sources (different starting states of the same task); the true positions come from simulation; the constraint is a virtual line; P gets position supervision that A does not.</li>
   </ul>
 
+  <h3 id="v5-det"><span data-l="zh">现成检测器：不训练，定位就做不好</span><span data-l="en">Off-the-shelf detector: without training, locating fails</span></h3>
+  <p data-l="zh">P 的结论来自代码，那模型的功劳只剩“找到东西在哪”。这一步问：这件事能不能不训练？AEGIS 自己就带一个开放词表检测器 GroundingDINO，用同一份权重在第 1 张图上分别找布丁、篮子和规则里的两个锚点（查询词就是规则文字里的物体名），把框换成桌面点，再跑和 P 一模一样的代码。框换成点的两个比例只在训练集上选，验证集上不调任何东西；不调 API，不读测试集。怎么读事先写定：检测器至少 85% 就算“接近 P”；不超过 75%、且 P 领先的区间下限至少 10 个百分点，就算“必须训练”。</p>
+  <p data-l="en">P's verdict comes from code, so the model's only contribution is finding where things are. This step asks whether that part needs training. AEGIS ships an open-vocabulary detector, GroundingDINO; with the same weights it looked for the pudding, the basket and the rule's two anchors on View 1 (each query is the object's name from the rule text), each box became a floor point, and the very same code as P's decided. The two fractions that turn a box into a point were chosen on the training split only; nothing was tuned on validation; no API, no test split. The reading was fixed in advance: at least 85% counts as “close to P”; at most 75% with P's lead at least 10 points at the lower end of its interval counts as “training needed”.</p>
+  <div class="chart" id="c14">
+    <div class="ctitle"><span data-l="zh">现成检测器加同一段代码，和训练过的 P 比</span><span data-l="en">An off-the-shelf detector with the same code, against the trained P</span></div>
+    <div class="csub"><span data-l="zh">上半部分：验证集反事实孪生题（1,538 题）的判定准确率；P 和 A 的条是 3 个 seed 的平均，黑点是单个 seed；检测器只有一次运行，横线是它的 95% 区间。下半部分：392 张验证图上，检测器分数最高的框落在要找的那个物体上的比例。</span><span data-l="en">Top: verdict accuracy on the counterfactual validation twins (1,538 questions); P and A bars are the mean of three seeds, dots are single seeds; the detector is one run, and its line is the 95% interval. Bottom: on 392 validation images, how often the detector's top-scoring box lands on the object it was asked for.</span></div>
+    <div class="legend" id="c14-legend"></div>
+    <svg id="c14-svg" viewBox="0 0 720 366" role="img" aria-label="验证孪生上的判定准确率：P 先写位置、程序判定 94.0%；GroundingDINO 加同一段程序 52.1%（49.9% 到 54.6%）；A 直接判断 50.0%。检测器找对物体的比例：布丁 0.8%，篮子 95.4%，红咖啡杯 90.4%，酒瓶 88.9%，橙汁盒 87.1%，沙拉酱瓶 21.4%，字母汤罐 11.3%，黄色书 6.4%" data-aria-en="Verdict accuracy on the validation twins: P, positions with a program, 94.0%; GroundingDINO with the same program 52.1% (49.9% to 54.6%); A, direct, 50.0%. Share of images where the detector finds the object: pudding 0.8%, basket 95.4%, red coffee mug 90.4%, wine bottle 88.9%, orange juice carton 87.1%, salad dressing bottle 21.4%, alphabet soup can 11.3%, yellow book 6.4%"></svg>
+    <details><summary><span data-l="zh">数据表</span><span data-l="en">Data table</span></summary><div class="tablewrap"><table id="c14-table"></table></div></details>
+  </div>
+  <ul class="plain" data-l="zh">
+    <li><b>读法是“必须训练”（<code>training_needed</code>）</b>：检测器加程序 52.1%，95% 区间 [49.9, 54.6]，就是瞎猜；P 是 94.0%。每道题比，P 领先 41.9 个百分点，区间 [+39.5, +44.3]。</li>
+    <li><b>几乎找不到布丁</b>：392 张图里，最高分的框落在布丁上的只有 3 张；放宽到分数前 5 的框，也只有 74 张里有布丁。将近一半落在规则物体以外的东西上（这个场景里还有烧烤酱瓶、番茄酱瓶等），其余多落在字母汤罐、酒瓶上。布丁的位置错了，这道题就只能猜。</li>
+    <li><b>锚点也只找对一半</b>：红咖啡杯、酒瓶、橙汁盒约九成；字母汤罐 11%（常被找到红咖啡杯上），沙拉酱瓶 21%（常找到酒瓶上），黄色书 6%（多半找到橙汁盒上）。篮子 95%。</li>
+    <li><b>怎么换算都救不回来</b>：训练集上 48 组“框换成点”的比例，准确率都在 51.5–53.6%；用 AEGIS 自己的取框办法（第一个分数超过 0.35 的框）是 50.0%。Qwen3-VL-32B 零样本指点再跑代码，在选模子集上是 45.1%，检测器在同样 384 题上是 52.6%。</li>
+    <li><b>对 AEGIS 闸门的意思</b>：闸门里“找东西”这一步要用训练过的 P，不能直接复用 AEGIS 的检测器。10 月初在同一个任务上，AEGIS 的 VLM 在 100 次执行里选错障碍物 57 次；这次说明，就算物体名给对了，现成检测器也定位不准。局限：只试了一个检测器、一种查询写法；没有试更强的检测器（如 OWLv2、Florence-2），也没有换查询词。</li>
+  </ul>
+  <ul class="plain" data-l="en">
+    <li><b>The reading is “training needed” (<code>training_needed</code>)</b>: the detector with the program scores 52.1%, 95% interval [49.9, 54.6], which is chance; P scores 94.0%. Question by question, P leads by 41.9 points, interval [+39.5, +44.3].</li>
+    <li><b>The pudding is almost never found</b>: on 392 images the top-scoring box lands on the pudding only 3 times; even among the five best boxes, only 74 images include it. Nearly half the time the box lands on something outside the rule's objects (the scene also has BBQ sauce and ketchup bottles, among others); most of the rest land on the alphabet soup can or the wine bottle. With the pudding in the wrong place, the question becomes a guess.</li>
+    <li><b>The anchors are found about half the time</b>: the red coffee mug, wine bottle and orange juice carton about nine times in ten; the alphabet soup can 11% (often found on the red coffee mug), the salad dressing bottle 21% (often found on the wine bottle), the yellow book 6% (mostly found on the orange juice carton). The basket 95%.</li>
+    <li><b>No conversion rescues it</b>: across the 48 box-to-point fractions on the training split, accuracy stays between 51.5% and 53.6%; AEGIS's own box rule (the first box scoring above 0.35) gives 50.0%. Qwen3-VL-32B pointing zero-shot and then running the code scores 45.1% on the selection subset, where the detector scores 52.6% on the same 384 questions.</li>
+    <li><b>What it means for the AEGIS gate</b>: the gate's locating step needs the trained P; AEGIS's detector cannot be reused as is. In early October, on this same task, AEGIS's VLM picked the wrong obstacle in 57 of 100 runs; this shows that even with the right object name, an off-the-shelf detector does not locate well. Limitations: one detector and one query wording only; no stronger detector (such as OWLv2 or Florence-2) and no other query words were tried.</li>
+  </ul>
+
   <h3><span data-l="zh">下一步（不扩展，每步开始前确认）</span><span data-l="en">Next (no expansion; each step confirmed before it starts)</span></h3>
   <ol class="next" data-l="zh">
-    <li><b>把 P 接到 AEGIS 前面当闸门</b>：在机器人动手前拦下做不成的任务，需要单独批准控制器改动。</li>
-    <li><b>可选</b>：教模型自己从位置算出是否隔开；扩到其他任务（goal、spatial），要新建验证和测试源。</li>
+    <li><b>把 P 接到 AEGIS 前面当闸门</b>：在机器人动手前拦下做不成的任务。感知用 P（现成检测器不行）。先写设计稿：把规则的连线作为 CBF-QP 的半空间约束，不加闸门时做不成的任务会停在线前，变成“安全但没完成”；控制器改动需要单独批准。</li>
+    <li><b>可选</b>：补一个更强的现成检测器（OWLv2 或 Florence-2）；教模型自己从位置算出是否隔开；扩到其他任务（goal、spatial），要新建验证和测试源。</li>
     <li><b>整理成论文主线</b>：验证、加 seed、正式考试三步的结论一致。</li>
   </ol>
   <ol class="next" data-l="en">
-    <li><b>Use P as a gate in front of AEGIS</b>: stop infeasible tasks before the robot moves; the controller change needs separate approval.</li>
-    <li><b>Optional</b>: teach the model to work out separation from the positions itself; extend to other tasks (goal, spatial), which needs new validation and test sources.</li>
+    <li><b>Use P as a gate in front of AEGIS</b>: stop infeasible tasks before the robot moves, with P doing the locating (the off-the-shelf detector does not work). A design note comes first: the rule's line becomes a half-space constraint in the CBF-QP, so without the gate an infeasible task stops at the line and ends up safe but incomplete; the controller change needs separate approval.</li>
+    <li><b>Optional</b>: add a stronger off-the-shelf detector (OWLv2 or Florence-2); teach the model to work out separation from the positions itself; extend to other tasks (goal, spatial), which needs new validation and test sources.</li>
     <li><b>Write up the main line</b>: validation, the extra seeds and the final exam all agree.</li>
   </ol>
-  <p class="small" data-l="zh">盲看由 Claude 完成，不是人工审阅；它说明“仔细看图能判断”，不代表训练后模型的能力。上面的数字来自 <code>V5_STEP1_REPORT.md</code>、<code>V5_STEP2_REPORT.md</code>、<code>V5_C0_REPORT.md</code>、<code>V5_LAYOUT_PROTOCOL.md</code>、<code>V5_S0_REPORT.md</code>、<code>V5_S1_REPORT.md</code>、<code>V5_S2_REPORT.md</code>、<code>V5_S3_REPORT.md</code>、<code>V5_FIT_REPORT.md</code>、<code>V5_S4_REPORT.md</code>、<code>V5_SEEDS_REPORT.md</code>、<code>V5_TEST_REPORT.md</code>。S1 盲看时 Claude 事先知道每个单元恰好有一条规则把布丁和篮子隔开。</p>
-  <p class="small" data-l="en">The blind review was done by Claude, not by a human; it shows that a careful look at the images can decide, not what a trained model will do. The numbers above come from <code>V5_STEP1_REPORT.md</code>, <code>V5_STEP2_REPORT.md</code>, <code>V5_C0_REPORT.md</code>, <code>V5_LAYOUT_PROTOCOL.md</code>, <code>V5_S0_REPORT.md</code>, <code>V5_S1_REPORT.md</code>, <code>V5_S2_REPORT.md</code>, <code>V5_S3_REPORT.md</code>, <code>V5_FIT_REPORT.md</code>, <code>V5_S4_REPORT.md</code>, <code>V5_SEEDS_REPORT.md</code> and <code>V5_TEST_REPORT.md</code>. In the S1 review Claude knew in advance that each unit has exactly one rule separating the pudding from the basket.</p>
+  <p class="small" data-l="zh">盲看由 Claude 完成，不是人工审阅；它说明“仔细看图能判断”，不代表训练后模型的能力。上面的数字来自 <code>V5_STEP1_REPORT.md</code>、<code>V5_STEP2_REPORT.md</code>、<code>V5_C0_REPORT.md</code>、<code>V5_LAYOUT_PROTOCOL.md</code>、<code>V5_S0_REPORT.md</code>、<code>V5_S1_REPORT.md</code>、<code>V5_S2_REPORT.md</code>、<code>V5_S3_REPORT.md</code>、<code>V5_FIT_REPORT.md</code>、<code>V5_S4_REPORT.md</code>、<code>V5_SEEDS_REPORT.md</code>、<code>V5_TEST_REPORT.md</code>、<code>V5_DET_REPORT.md</code>。S1 盲看时 Claude 事先知道每个单元恰好有一条规则把布丁和篮子隔开。</p>
+  <p class="small" data-l="en">The blind review was done by Claude, not by a human; it shows that a careful look at the images can decide, not what a trained model will do. The numbers above come from <code>V5_STEP1_REPORT.md</code>, <code>V5_STEP2_REPORT.md</code>, <code>V5_C0_REPORT.md</code>, <code>V5_LAYOUT_PROTOCOL.md</code>, <code>V5_S0_REPORT.md</code>, <code>V5_S1_REPORT.md</code>, <code>V5_S2_REPORT.md</code>, <code>V5_S3_REPORT.md</code>, <code>V5_FIT_REPORT.md</code>, <code>V5_S4_REPORT.md</code>, <code>V5_SEEDS_REPORT.md</code> and <code>V5_TEST_REPORT.md</code>, <code>V5_DET_REPORT.md</code>. In the S1 review Claude knew in advance that each unit has exactly one rule separating the pudding from the basket.</p>
 </section>
 
 <section id="reading">
@@ -2660,6 +2691,41 @@ CHARTS.push(function(){
     bindTip(hit,`<b>${n}</b><br>${T('测试','Test')} ${tm.toFixed(1)}%${COLON()}${per(r.te)}<br>${T('验证','Validation')} ${vm.toFixed(1)}%${COLON()}${per(r.va)}<br>${T('测试（原始摆法）','Test (original layout)')} ${mean(r.nat).toFixed(1)}%${COLON()}${per(r.nat)}`);});
   document.getElementById('c13-table').innerHTML=`<thead><tr><th>${T('方法','Method')}</th><th class="n">${T('测试孪生（平均）','Test twins (mean)')}</th><th class="n">${T('seed 713 / 714 / 715','Seeds 713 / 714 / 715')}</th><th class="n">${T('验证孪生（平均）','Validation twins (mean)')}</th><th class="n">${T('测试原始摆法（80 题，平均）','Test original layout (80, mean)')}</th><th class="n">${T('seed 713 / 714 / 715','Seeds 713 / 714 / 715')}</th></tr></thead><tbody>`+
     R.map(r=>`<tr><td>${nm(r)}</td><td class="n">${mean(r.te).toFixed(1)}%</td><td class="n">${r.te.map(v=>v.toFixed(1)).join(' / ')}</td><td class="n">${mean(r.va).toFixed(1)}%</td><td class="n">${mean(r.nat).toFixed(1)}%</td><td class="n">${r.nat.map(v=>v.toFixed(1)).join(' / ')}</td></tr>`).join('')+'</tbody>';
+});
+
+// Chart 14: detector baseline; top = verdict accuracy on the validation twins (bars = seed means, dots = seeds, line = detector interval), bottom = top-box hit rate per object.
+CHARTS.push(function(){
+  const svg=clear('c14-svg');
+  document.getElementById('c14-legend').innerHTML=`<span><i class="key solid" style="background:var(--s3)"></i>${T('P 训练过的定位','P, trained locating')}</span>`+
+    `<span><i class="key solid" style="background:var(--s2)"></i>${T('GroundingDINO（不训练）','GroundingDINO (no training)')}</span>`+
+    `<span><i class="key solid" style="background:var(--s1)"></i>${T('A 直接判断','A, direct')}</span>`;
+  const V=[{zh:'P 先写位置·程序判定',en:'P · positions, program',c:'--s3',v:93.997,seeds:[93.953,94.733,93.303]},
+    {zh:'GroundingDINO·同一段程序',en:'GroundingDINO · same program',c:'--s2',v:52.146,ci:[49.903,54.629]},
+    {zh:'A 直接判断',en:'A · direct',c:'--s1',v:50.022,seeds:[50.130,49.935,50.000]}];
+  const O=[{zh:'布丁',en:'Pudding',v:0.765,n:392},{zh:'篮子',en:'Basket',v:95.408,n:392},{zh:'红咖啡杯',en:'Red coffee mug',v:90.355,n:197},
+    {zh:'酒瓶',en:'Wine bottle',v:88.889,n:90},{zh:'橙汁盒',en:'Orange juice carton',v:87.080,n:387},{zh:'沙拉酱瓶',en:'Salad dressing bottle',v:21.429,n:378},
+    {zh:'字母汤罐',en:'Alphabet soup can',v:11.311,n:389},{zh:'黄色书',en:'Yellow book',v:6.383,n:94}];
+  const x0=200,x1=650,X=v=>x0+(x1-x0)*v/100,t1=38,r1=30,h1=14,t2=t1+r1*V.length+48,r2=22,h2=12,end2=t2+r2*O.length;
+  text(svg,0,t1-18,T('判定准确率（验证孪生 1,538 题）','Verdict accuracy (1,538 validation twins)'),'lab2');
+  text(svg,0,t2-18,T('最高分的框找对了物体（392 张验证图）','Top box lands on the object (392 validation images)'),'lab2');
+  const grid=(a,b)=>[0,25,50,75,100].forEach(v=>el('line',{x1:X(v),x2:X(v),y1:a,y2:b,class:'grid'},svg));
+  grid(t1-8,t1+r1*V.length-8);grid(t2-6,end2-6);[0,25,50,75,100].forEach(v=>text(svg,X(v),end2+8,v+'%','tick','middle'));
+  el('line',{x1:X(50),x2:X(50),y1:t1-8,y2:t1+r1*V.length-8,class:'ref'},svg);text(svg,X(50),t1+r1*V.length+6,T('瞎猜 50%','chance 50%'),'lab2','middle');
+  V.forEach((r,i)=>{const y=t1+i*r1,n=nm(r);text(svg,x0-12,y+h1-2,n,'lab','end');bar(svg,X(0),X(r.v),y,h1,r.c);
+    if(r.seeds)r.seeds.forEach(v=>el('circle',{cx:X(v),cy:y+h1/2,r:3.5,fill:'var(--ink)',stroke:'var(--bg)','stroke-width':1.5},svg));
+    if(r.ci){el('line',{x1:X(r.ci[0]),x2:X(r.ci[1]),y1:y+h1/2,y2:y+h1/2,stroke:'var(--ink)','stroke-width':1.5},svg);
+      [0,1].forEach(k=>el('line',{x1:X(r.ci[k]),x2:X(r.ci[k]),y1:y+2,y2:y+h1-2,stroke:'var(--ink)','stroke-width':1.5},svg));}
+    const right=Math.max(X(r.v),r.seeds?X(Math.max(...r.seeds)):0,r.ci?X(r.ci[1]):0);text(svg,right+8,y+h1-2,r.v.toFixed(1)+'%','val');
+    const hit=el('rect',{x:0,y:y-6,width:720,height:r1-2,class:'hit'},svg);
+    bindTip(hit,`<b>${n}</b><br>${r.v.toFixed(1)}%`+(r.seeds?`${COLON()}${['713','714','715'].map((s,k)=>s+' '+r.seeds[k].toFixed(1)+'%').join(' · ')}`:`${COLON()}${T('95% 区间','95% interval')} ${r.ci[0].toFixed(1)}–${r.ci[1].toFixed(1)}%`));});
+  O.forEach((r,i)=>{const y=t2+i*r2,n=nm(r);text(svg,x0-12,y+h2-1,n,'lab','end');const b=bar(svg,X(0),Math.max(X(r.v),X(0)+1),y,h2,'--s2');
+    text(svg,Math.max(X(r.v),X(0))+8,y+h2-1,r.v.toFixed(1)+'%',r.v<50?'val':'lab2');
+    const hit=el('rect',{x:0,y:y-4,width:720,height:r2-2,class:'hit'},svg);
+    bindTip(hit,`<b>${n}</b><br>${T('找对','Found')} ${r.v.toFixed(1)}%${paren(T(r.n+' 次查询',r.n+' queries'))}`);});
+  document.getElementById('c14-table').innerHTML=`<thead><tr><th>${T('判定准确率（验证孪生）','Verdict accuracy (validation twins)')}</th><th class="n">${T('准确率','Accuracy')}</th><th class="n">${T('seed 713 / 714 / 715 或区间','Seeds 713 / 714 / 715, or interval')}</th></tr></thead><tbody>`+
+    V.map(r=>`<tr><td>${nm(r)}</td><td class="n">${r.v.toFixed(1)}%</td><td class="n">${r.seeds?r.seeds.map(v=>v.toFixed(1)).join(' / '):r.ci.map(v=>v.toFixed(1)).join('–')+'%'}</td></tr>`).join('')+
+    `<tr><th>${T('检测器找对物体','Detector finds the object')}</th><th class="n">${T('比例','Share')}</th><th class="n">${T('查询数','Queries')}</th></tr>`+
+    O.map(r=>`<tr><td>${nm(r)}</td><td class="n">${r.v.toFixed(1)}%</td><td class="n">${r.n}</td></tr>`).join('')+'</tbody>';
 });
 
 // Language switch: swap the visible copy, aria-labels, alt text and title, redraw the charts, and keep the reader's place.
