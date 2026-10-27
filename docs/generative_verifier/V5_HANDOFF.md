@@ -22,14 +22,15 @@ V5 这一轮的故事线已经走完一遍，只用了 object/II/task1 一个任
   - 没有正在运行的 CrashBench 作业；队列里 p31777 账号的作业是别的项目，不要动；
   - 工作区干净，所有工作都在 `main` 上并已推送（10-27 从 `v5-det` 分支快进；见 CURRENT.md 的分支一节）；
   - 主报告页 <https://claude.ai/artifact/Ya7FQbZC9yEuNNyYhPBHHT> 是第 23 版（加了 `#v5-det`），与仓库里的 `PHASE2_REPORT.html` 相同。
+- **10-27 方向**：用户决定主线回到原来的想法（模型自己推理、自己下结论）。P 的"代码判定"相当于把生成标签的规则直接写给了它，P 对 A 的差距衡量的主要是定位，所以 P 只作诊断，不当作方法。用 P 做闸门或系统（下表选项 1）保留为备选；当前主线是选项 2。
 - **V5 测试集已经用掉**：`test`、`test_natural` 以后不再评估，也不拿来选模或调参。新方法如果要一个没碰过的测试，需要新的留出源（要另批数据）。V4 的锁定测试集同样不再评估。
 
 ### 接下来可以做什么（每一项都要用户先点头）
 
 | 选项 | 要做什么 | 需要的批准 | 大概的量 | 从哪开始 |
 |---|---|---|---|---|
-| 1. AEGIS 闸门 | 机器人动手前，用 P 判断新规则下任务还做不做得成，做不成就拦下。检测器基线说明感知要用 P，不能用 AEGIS 自带的检测器 | 控制器改动（AGENTS.md 的 Phase 4 规则）；如果要跑完整 AEGIS，还要付费 API 的预算批准 | 先写设计稿（10-26 建议：把规则连线作为 CBF-QP 的半空间约束；不加闸门时做不成的任务会停在线前，变成"安全但没完成"）：任务中途在线渲染同样的两张斜视图、规则何时加入、P 判"做不成"后控制器怎么做 | [REPRODUCTION.md](../REPRODUCTION.md)、[reproduction/BATCH_RUN.md](../reproduction/BATCH_RUN.md)、`setup/submit_safelibero_full.sh`；P 的输入构造在 `v5_pos_run.p_item` |
-| 2. 教模型自己算隔开 | 新的训练目标，让模型从自己写的四个点推出 `Separated`，不再靠代码 | GPU 训练；只看验证即可，要测试就需要新的留出源 | P 每个 seed 训练约 4 小时，3 个 seed 约 12 GPU 小时 | `v5_pos_contract.py`（目标、解析、程序）、`v5_pos_run.train_p` |
+| 1. AEGIS 闸门（10-27 起为备选） | 机器人动手前，用 P 判断新规则下任务还做不做得成，做不成就拦下。检测器基线说明感知要用 P，不能用 AEGIS 自带的检测器 | 控制器改动（AGENTS.md 的 Phase 4 规则）；如果要跑完整 AEGIS，还要付费 API 的预算批准 | 先写设计稿（10-26 建议：把规则连线作为 CBF-QP 的半空间约束；不加闸门时做不成的任务会停在线前，变成"安全但没完成"）：任务中途在线渲染同样的两张斜视图、规则何时加入、P 判"做不成"后控制器怎么做 | [REPRODUCTION.md](../REPRODUCTION.md)、[reproduction/BATCH_RUN.md](../reproduction/BATCH_RUN.md)、`setup/submit_safelibero_full.sh`；P 的输入构造在 `v5_pos_run.p_item` |
+| 2. 教模型自己算隔开（10-27 起为主线） | 新的训练目标，让模型从自己写的四个点推出 `Separated`，不再靠代码 | GPU 训练；只看验证即可，要测试就需要新的留出源 | P 每个 seed 训练约 4 小时，3 个 seed 约 12 GPU 小时 | `v5_pos_contract.py`（目标、解析、程序）、`v5_pos_run.train_p` |
 | 3. 扩到其他任务组合 | goal、spatial 任务；S0 显示这些任务上捷径还在，严格配平后孪生不够 | 补源（C1–C5、nominal 重新执行，之前暂停）需要数据批准 | CPU 回放和布局 + GPU 渲染，量取决于补多少源 | [V5_S0_REPORT.md](V5_S0_REPORT.md)、`verifier_dataset/v5_launch.py` |
 | 4. 整理论文主线 | V4 Phase 2 加 V5 的验证、加 seed、测试三步写成一条线 | 不需要算力 | 写作 | [PRELIMINARY_STORY.md](PRELIMINARY_STORY.md)、[PAPER_READING.html](PAPER_READING.html)、本目录的 `V5_*_REPORT.md` |
 | 5. 更强的现成检测器（可选） | 补 OWLv2 或 Florence-2 加同一段程序，查询词只在训练集上选 | GPU 推理；权重要先在登录节点下载放好 | 约 1 GPU 小时 | `v5_det_contract.py`、`v5_det_run.py`、`v5_det_detect.py` |
@@ -218,6 +219,7 @@ V5 这一轮的故事线已经走完一遍，只用了 object/II/task1 一个任
 | 10-26 | "可以" | 不指定 GPU 型号（smoke 已证明打开 TF32 后不同型号逐字复现） |
 | 10-26 | "现在收尾下 我接下来接手知道怎么继续" | 测试评估后收尾；本文开头写接手指南，之后每一步都等用户决定 |
 | 10-26 | "先做1" | 做检测器基线：AEGIS 的 GroundingDINO 加 P 的程序，只看验证，只做推理（读法 `training_needed`） |
+| 10-27 | "我还是觉得应该是先继续原来的想法 但是2可以保留下" | 主线回到生成式 verifier（模型自己下结论）；P 只作诊断；闸门或系统保留为备选。此前用户问"p似乎有点作弊"：代码就是生成标签的规则，P 的 94% 主要衡量定位 |
 
 ## 故事（当前版本）
 

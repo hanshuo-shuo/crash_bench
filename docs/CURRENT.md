@@ -6,7 +6,8 @@
 - **用户 2026-10-16 的决定**：
   - V4 的 896 行（224 个四行单元、64 条源轨迹）作为开发数据，直接用于 verifier 训练。
   - 不再要求通过 0.75 的 shortcut 闸门。闸门失败（0.780）如实披露，并作为基线报告。
-- **最新（2026-10-27）**：检测器基线完成，预注册读法 `training_needed`（见 [V5_DET_REPORT.md](generative_verifier/V5_DET_REPORT.md)）：不训练、直接用 AEGIS 自带的 GroundingDINO 找四个物体再跑同一段程序，验证集只有 0.521，P 是 0.940（P − 检测器 +0.419 [+0.395, +0.443]）；主要是几乎找不到布丁（392 张图命中 3 张）。P 的位置监督是必要的，AEGIS 闸门的感知要用 P。没有正在运行的 CrashBench 作业。
+- **方向（2026-10-27，用户决定）**："我还是觉得应该是先继续原来的想法 但是2可以保留下"。主线回到生成式 verifier：模型自己推理、自己下结论。P（模型定位、代码判定）不当作方法，只作诊断（它说明找位置学得会，卡在"从位置推出结论"）；用 P 做 AEGIS 闸门或系统保留为备选。下一步的候选是让模型自己写出从位置到结论的计算（交接里的选项 2），开始前要用户确认。
+- **10-27**：检测器基线完成，预注册读法 `training_needed`（见 [V5_DET_REPORT.md](generative_verifier/V5_DET_REPORT.md)）：不训练、直接用 AEGIS 自带的 GroundingDINO 找四个物体再跑同一段程序，验证集只有 0.521，P 是 0.940（P − 检测器 +0.419 [+0.395, +0.443]）；主要是几乎找不到布丁（392 张图命中 3 张）。P 的位置监督是必要的，AEGIS 闸门的感知要用 P。没有正在运行的 CrashBench 作业。
 - **10-26**：V5 测试评估完成，预注册读法 `test_confirms`（见 [V5_TEST_REPORT.md](generative_verifier/V5_TEST_REPORT.md)）：在没见过的 4 条测试源上，"先写位置、再用程序判定"（P）3 个 seed 是 0.932 / 0.942 / 0.924，直接判断（A）都是 0.50；P − A +0.432 [+0.416, +0.449]。测试集只评估这一次，不再重评。没有正在运行的 CrashBench 作业。本轮已收尾，**接手先读 [V5_HANDOFF.md](generative_verifier/V5_HANDOFF.md) 开头的接手指南**（现状、可选的下一步、每一步的做法、关键路径）。
 - **当前阶段**：Phase 0–2 已于 2026-10-17 完成，见 [PHASE1_REPORT.md](generative_verifier/PHASE1_REPORT.md) 和 [PHASE2_REPORT.md](generative_verifier/PHASE2_REPORT.md)。
   - 锁定测试集（评估一次）：B（事实→判定）79.7%，A（直接）50.0%，差 +29.7 个百分点，源聚类 95% CI [+22.3, +36.8]，科学标准达成。
