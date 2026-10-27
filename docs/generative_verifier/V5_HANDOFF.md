@@ -1,8 +1,70 @@
-# V5 交接（2026-10-26：测试评估完成，`test_confirms`）
+# V5 交接（2026-10-26 收尾：测试评估完成，`test_confirms`）
 
-读者：接手的下一个 Claude/Codex 会话。先读 [AGENTS.md](../../AGENTS.md) 和 [CURRENT.md](../CURRENT.md)，再读本文。
+读者：接手的人（用户本人，或下一个 Claude/Codex 会话）。先读 [AGENTS.md](../../AGENTS.md) 和 [CURRENT.md](../CURRENT.md)，再读本文的"接手指南"。后面按日期排的各节是历史记录。
 
-## 2026-10-26 测试评估完成（先读这一节）
+## 接手指南（2026-10-26 收尾，先读这一节）
+
+### 现在在哪
+
+V5 这一轮的故事线已经走完一遍，只用了 object/II/task1 一个任务组合：
+
+| 步 | 结论 | 报告 |
+|---|---|---|
+| S3 | 直接判断（A）和先写"在哪一侧"（B）在反事实孪生验证上都是 50%（`both_shortcut`） | [V5_S3_REPORT.md](V5_S3_REPORT.md) |
+| 拟合诊断 | B 能背下训练图，但不迁移（`inconclusive`） | [V5_FIT_REPORT.md](V5_FIT_REPORT.md) |
+| S4 | P 先写四个点的位置、固定代码判定：验证 0.940，A 0.501（`positions_ground`） | [V5_S4_REPORT.md](V5_S4_REPORT.md) |
+| 加 seed | 3 个 seed 上 P 0.933–0.947，A 0.50（`stable`） | [V5_SEEDS_REPORT.md](V5_SEEDS_REPORT.md) |
+| 测试评估 | 4 条没见过的测试源上 P 0.924–0.942，A 0.50；P − A +0.432 [+0.416, +0.449]（`test_confirms`） | [V5_TEST_REPORT.md](V5_TEST_REPORT.md) |
+
+- **一句话**：在自然分布上训练、在挡住捷径的反事实孪生上测试，直接判断只有 50%；模型先写出看得见的位置、再由固定代码判定，验证 94%、测试 93%。模型负责"东西在哪"，代码负责"隔没隔开"；P 自己写的结论是随机水平。
+- **状态**：
+  - 没有正在运行的 CrashBench 作业；队列里 p31777 账号的作业是别的项目，不要动；
+  - 工作区干净，`codex/generative-verifier-pilot` 已推送（最后一个提交是本次收尾）；
+  - 主报告页 <https://claude.ai/artifact/Ya7FQbZC9yEuNNyYhPBHHT> 是第 22 版，与仓库里的 `PHASE2_REPORT.html` 相同。
+- **V5 测试集已经用掉**：`test`、`test_natural` 以后不再评估，也不拿来选模或调参。新方法如果要一个没碰过的测试，需要新的留出源（要另批数据）。V4 的锁定测试集同样不再评估。
+
+### 接下来可以做什么（每一项都要用户先点头）
+
+| 选项 | 要做什么 | 需要的批准 | 大概的量 | 从哪开始 |
+|---|---|---|---|---|
+| 1. AEGIS 闸门 | 机器人动手前，用 P 判断新规则下任务还做不做得成，做不成就拦下 | 控制器改动（AGENTS.md 的 Phase 4 规则）；如果要跑完整 AEGIS，还要付费 API 的预算批准 | 先要设计：任务中途在线渲染同样的两张斜视图、规则何时加入、P 判"做不成"后控制器怎么做 | [REPRODUCTION.md](../REPRODUCTION.md)、[reproduction/BATCH_RUN.md](../reproduction/BATCH_RUN.md)、`setup/submit_safelibero_full.sh`；P 的输入构造在 `v5_pos_run.p_item` |
+| 2. 教模型自己算隔开 | 新的训练目标，让模型从自己写的四个点推出 `Separated`，不再靠代码 | GPU 训练；只看验证即可，要测试就需要新的留出源 | P 每个 seed 训练约 4 小时，3 个 seed 约 12 GPU 小时 | `v5_pos_contract.py`（目标、解析、程序）、`v5_pos_run.train_p` |
+| 3. 扩到其他任务组合 | goal、spatial 任务；S0 显示这些任务上捷径还在，严格配平后孪生不够 | 补源（C1–C5、nominal 重新执行，之前暂停）需要数据批准 | CPU 回放和布局 + GPU 渲染，量取决于补多少源 | [V5_S0_REPORT.md](V5_S0_REPORT.md)、`verifier_dataset/v5_launch.py` |
+| 4. 整理论文主线 | V4 Phase 2 加 V5 的验证、加 seed、测试三步写成一条线 | 不需要算力 | 写作 | [PRELIMINARY_STORY.md](PRELIMINARY_STORY.md)、[PAPER_READING.html](PAPER_READING.html)、本目录的 `V5_*_REPORT.md` |
+
+- 另外两件等用户决定的仓库事务：
+  - `main` 还停在 10-17 的 `03d7327`，工作分支比它多 50 多个提交（都是线性追加，`main` 之后没有别的提交），要不要快进由用户决定；
+  - `codex/paired-repeats` 的 7 个独有提交要不要合并。
+- 这次没有在测试集上评估 S3 的 B 和零样本模型，测试集用掉以后也不再补。
+
+### 每一步的做法（V5 一直这样做）
+
+1. 先写协议 `docs/generative_verifier/V5_<步>_PROTOCOL.md`：问题、设计、读数、事先写定的读法和门槛、资源估计。
+2. 写代码和单元测试（`verifier_training/v5_<步>_contract.py`、`v5_<步>_run.py`，启动器 `launch_v5.py` 加一个动作，测试放在 `verifier_training/tests/`）。
+3. 在草稿目录里跑 smoke，只用开发数据；把 smoke 的结果写进协议的冻结记录，冻结协议后提交、推送。
+4. 用 `launch_v5` 从干净、已推送的 commit 启动；每次新建运行目录（`<UTC>_v5-<步>_<commit>`），源码归档、收据和哈希都在里面。
+5. 结束后写 `V5_<步>_REPORT.md`，同步 CURRENT、本文、V5_PLAN 第 6 节、主报告页（中英文都改，用 `url` 发布仓库里的文件），再提交、推送。
+
+### 要记住的规矩和坑
+
+- 提交身份：`git -c user.name=hanshuo-shuo -c user.email=80494218+hanshuo-shuo@users.noreply.github.com commit`。
+- Quest：账号 p33100，GPU 分区 gengpu，CPU 分区 short，同时最多 2 张 GPU；登录节点上不跑重活；计算节点离线，资产要先放好。有 CrashBench 作业在跑时不要改源码目录。
+- 不调付费 API，除非用户另批；OpenRouter 的 key 不打印、不提交、不进日志。
+- 评估已训练的 adapter 时要打开 TF32（`torch.backends.cuda.matmul.allow_tf32=True`），否则复现不了训练时的输出。
+- 跑测试：`PYTHONPATH=/projects/p33100/siosio/crashbench_safelibero/verifier_training/assets/20261010_d94c245/packages:. /projects/p33100/siosio/envs/openpi/bin/python -m unittest <verifier_training/tests 下的模块>`（`unittest discover` 不能用）；共 164 个。
+- 更多的坑见下面"坑"和"规矩"两小节。
+
+### 关键路径
+
+| 内容 | 位置 |
+|---|---|
+| S2 数据集 | `/projects/p33100/siosio/crashbench_safelibero/verifier_dataset/20261025T013358Z_v5-s2_d1d8d4129223/dataset.jsonl`（测试冻结在同目录的 `TEST_FREEZE.json`） |
+| 运行目录 | `/projects/p33100/siosio/crashbench_safelibero/verifier_training/runs/` 下：S3 `20261025T055227Z_v5-s3_bdcf277164b6`，拟合诊断 `20261025T153621Z_v5-fit_ea76dabed506`，S4 `20261025T180525Z_v5-s4_20913c71c3f3`，加 seed `20261026T001735Z_v5-seeds_ee20b2033465`，测试 `20261026T173919Z_v5-test_5594cebeb616` |
+| 选定的 adapter | S3 的 `A_seed713`、S4 的 `P_seed713`、加 seed 目录里的 `A_seed714`、`A_seed715`、`P_seed714`、`P_seed715`，各自的 `selected_adapter/`；哈希记在测试目录的 `FREEZE.json` |
+| 测试读数 | 测试目录的 `TEST_READING.json` |
+| 主报告页 | <https://claude.ai/artifact/Ya7FQbZC9yEuNNyYhPBHHT>，仓库副本 `docs/generative_verifier/PHASE2_REPORT.html` |
+
+## 2026-10-26 测试评估完成
 
 - 用户 10-26 说"都改一下 然后做测试级"：先改了 3 处文档（`d964dfe`），再做测试评估。
 - **结果**见 [V5_TEST_REPORT.md](V5_TEST_REPORT.md)，预注册读法 **`test_confirms`**：
@@ -19,7 +81,7 @@
 - 运行目录 `/projects/p33100/siosio/crashbench_safelibero/verifier_training/runs/20261026T173919Z_v5-test_5594cebeb616`；作业 5433550（preflight）、5433758–5433761、5433763、5433766（评估）、5433770（report）。
 - 读数文件：运行目录下的 `TEST_READING.json`（report 作业写出）；每个 adapter 的记录在 `evaluations/<目标>/test.jsonl`、`test_natural.jsonl`，核对结果在 `RELOAD.json`、`COMPLETE.json`。
 
-## 2026-10-26 加 seed 完成（先读这一节）
+## 2026-10-26 加 seed 完成
 
 用户 10-25 说"收尾下 然后让下一个agent开始干下一步"。接手的 agent 做完了已获批的加 seed：A、P 各补 714、715，只看验证。
 
@@ -27,14 +89,14 @@
   - P 的程序判定 0.940 / 0.947 / 0.933（seed 713 / 714 / 715），A 0.501 / 0.499 / 0.500；
   - 3 个 seed 按行平均后 P − A = +0.440，图像 bootstrap 95% 区间 [+0.427, +0.452]。
   - A 每个 seed 都塌成一个常数（713、714 几乎全判"不可行"，715 全判"可行"）；P 自己写的结论在 3 个 seed 上都是随机水平。
-- **下一步是测试集评估一次，需要用户确认**；要先写测试协议和测试阶段的代码（见下面"下一步"第 1 项）。测试集至今没有读过。
+- 当时的下一步是测试集评估一次（已于 10-26 完成，见上一节）。
 - 运行目录 `verifier_training/runs/20261026T001735Z_v5-seeds_ee20b2033465`，作业 5343157–5343162 全部 COMPLETED 0:0。没有正在运行的 CrashBench 作业。
 - 主报告页已同步到第 18 版（新增 `#v5-seeds` 一节和图 c12）。
 - **10-26 报告页白话版（第 19、20 版）**：用户说当前任务"好抽象"，又问"这个 p 程序判定是啥意思啊 我训练了 vlm 吗"，最后说"写清楚吧 然后这个收尾"。
   - 页首新增 `#now`"现在在做什么（白话版）"：用验证图 i1291 的两条规则从头讲一遍。内容有原图、标注图、为什么挪东西、A/B/P 的真实输出、结果和下一步。
   - 第 5 小节 `#now-program` 讲清楚：三组都是训练过的 Qwen2.5-VL-3B + LoRA；P 的"程序判定"是 VLM 写出四个坐标后，一段固定的几何代码判断是否隔开，不训练；P 自己写的结论在 3 个 seed 上都是随机水平（713、714 全写"不隔开、可行"，715 有 87% 写"隔开、不可行"），判定来自代码；P 比 A 多拿了位置监督。
   - 以后向用户解释 P 时用这套说法：模型负责"东西在哪"，代码负责"隔没隔开"。不要说模型自己学会了判断。
-- **本轮到此收尾**，没有正在运行的作业。下一步只有测试集评估一次，等用户确认。
+- 当时到此收尾；之后的测试评估见上一节。
 
 ## 2026-10-25 收尾
 
@@ -138,6 +200,7 @@
 | 10-25 | "收尾下 然后让下一个agent开始干下一步" | 本轮收尾；下一步（A 和 P 补 seed 714、715，只看验证）交给下一个 agent；测试评估仍需确认 |
 | 10-26 | "都改一下 然后做测试级" | 修正 3 处文档；写测试协议和代码、冻结后在测试集上评估 6 个选定的 adapter 各一次 |
 | 10-26 | "可以" | 不指定 GPU 型号（smoke 已证明打开 TF32 后不同型号逐字复现） |
+| 10-26 | "现在收尾下 我接下来接手知道怎么继续" | 测试评估后收尾；本文开头写接手指南，之后每一步都等用户决定 |
 
 ## 故事（当前版本）
 
@@ -146,6 +209,7 @@
 - 训练数据用自然布局。这里只看文字或"规则 × 进度"就能猜对大部分标签。
 - 测试用反事实布局：挪动机器人碰不到的锚点，同样的动作带回放仍是合法见证；同一张图配两条规则，一条分隔、一条不分隔。
 - 预期：直接判断（A）学到的是捷径，在反事实孪生上失败；先写关系事实的模型（B）必须看图，能够推广。
+- **实际结果（10-25 – 10-26）**：A 如预期是 50%；但 B 也是 50%，写"在哪一侧"没有让它去看图。换成先写位置、再由固定代码判定（P）后，验证 94%、测试 93%。见上面的接手指南。
 
 这延续了 V4 的主线（关系事实监督 vs 直接判断），也对应 HazardArena 的"孪生几乎一样时，拒绝训练退化成表面匹配"。走偏检查见主报告 <https://claude.ai/artifact/Ya7FQbZC9yEuNNyYhPBHHT> 的"下一阶段：V5"一节（第 13 版）。
 

@@ -6,7 +6,7 @@
 - **用户 2026-10-16 的决定**：
   - V4 的 896 行（224 个四行单元、64 条源轨迹）作为开发数据，直接用于 verifier 训练。
   - 不再要求通过 0.75 的 shortcut 闸门。闸门失败（0.780）如实披露，并作为基线报告。
-- **最新（2026-10-26）**：V5 测试评估完成，预注册读法 `test_confirms`（见 [V5_TEST_REPORT.md](generative_verifier/V5_TEST_REPORT.md)）：在没见过的 4 条测试源上，"先写位置、再用程序判定"（P）3 个 seed 是 0.932 / 0.942 / 0.924，直接判断（A）都是 0.50；P − A +0.432 [+0.416, +0.449]。测试集只评估这一次，不再重评。没有正在运行的 CrashBench 作业。
+- **最新（2026-10-26）**：V5 测试评估完成，预注册读法 `test_confirms`（见 [V5_TEST_REPORT.md](generative_verifier/V5_TEST_REPORT.md)）：在没见过的 4 条测试源上，"先写位置、再用程序判定"（P）3 个 seed 是 0.932 / 0.942 / 0.924，直接判断（A）都是 0.50；P − A +0.432 [+0.416, +0.449]。测试集只评估这一次，不再重评。没有正在运行的 CrashBench 作业。本轮已收尾，**接手先读 [V5_HANDOFF.md](generative_verifier/V5_HANDOFF.md) 开头的接手指南**（现状、可选的下一步、每一步的做法、关键路径）。
 - **当前阶段**：Phase 0–2 已于 2026-10-17 完成，见 [PHASE1_REPORT.md](generative_verifier/PHASE1_REPORT.md) 和 [PHASE2_REPORT.md](generative_verifier/PHASE2_REPORT.md)。
   - 锁定测试集（评估一次）：B（事实→判定）79.7%，A（直接）50.0%，差 +29.7 个百分点，源聚类 95% CI [+22.3, +36.8]，科学标准达成。
   - 开发里程碑未达成：B 行准确率 79.7%、单元全对 54.2%、规则翻转 64.2%，门槛分别是 85% / 70% / 90%。
@@ -112,7 +112,7 @@
 | 分支 | 用途 | 状态 |
 |---|---|---|
 | `main` | 默认分支，稳定线 | 停在 10-17 的 `03d7327`（verifier Phase 0–2）；之后没有再快进 |
-| `codex/generative-verifier-pilot` | verifier 工作线 | 10-18 以后的工作（第 1 步、对照、梯级、V5 全部）都在这里，10-26 时比 `main` 多 48 个提交；是否快进 `main` 由用户决定 |
+| `codex/generative-verifier-pilot` | verifier 工作线 | 10-18 以后的工作（第 1 步、对照、梯级、V5 全部）都在这里，10-26 收尾时比 `main` 多 50 多个提交；是否快进 `main` 由用户决定 |
 | `codex/archive-crashbench-20260926` | 2026-09-26 之前的 CrashBench 计划存档 | 只读，AGENTS.md 引用 |
 | `codex/feasibility` | 10 月初可行性研究的发布分支 | 只读；`analysis/uncertainty/`、`experiments/reach_avoid/`、`experiments/feasibility_contract/` 的启动器靠它核对来源，不要删除 |
 | `codex/paired-repeats` | paired repeats 实验，以及用户在网页上写的 `docs/new_report.md`（10-06 至 10-13） | 有 7 个独有提交，没有并入 `main`；是否合并由用户决定 |
