@@ -21,4 +21,4 @@ export SINGULARITYENV_CB_CODE_COMMIT="$(cat "$CB_V5_ROOT/SOURCE_COMMIT")"
 export SINGULARITYENV_PYTHONNOUSERSITE=1 SINGULARITYENV_PYTHONDONTWRITEBYTECODE=1 SINGULARITYENV_OMP_NUM_THREADS=4
 export SINGULARITYENV_HF_HUB_OFFLINE=1 SINGULARITYENV_TRANSFORMERS_OFFLINE=1 SINGULARITYENV_TOKENIZERS_PARALLELISM=false
 # CB_V5_ARGS is the script path relative to the source followed by plain path arguments (no spaces).
-singularity exec --nv --bind "/projects,/home,/gpfs""$A/containers/aegis-py38.sif" "$A/envs/aegis_sim/bin/python" -I -u $CB_V5_ARGS
+singularity exec --nv --bind "/projects,/home,/gpfs" "$A/containers/aegis-py38.sif" "$A/envs/aegis_sim/bin/python" -I -u $CB_V5_ARGS

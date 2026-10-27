@@ -84,6 +84,7 @@ class Configuration(unittest.TestCase):
         self.assertIn("detector['checkpoint_sha256']",text)
         sbatch=(ROOT/'verifier_training/v5_det_gpu.sbatch').read_text()
         self.assertIn('aegis-py38.sif.sha256',sbatch);self.assertIn('-I -u $CB_V5_ARGS',sbatch);self.assertIn('--gres=gpu:a100:1',sbatch)
+        self.assertIn('singularity exec --nv --bind "/projects,/home,/gpfs" "$A/containers/aegis-py38.sif" "$A/envs/aegis_sim/bin/python" -I -u $CB_V5_ARGS',sbatch)
 
 
 if __name__=='__main__':
