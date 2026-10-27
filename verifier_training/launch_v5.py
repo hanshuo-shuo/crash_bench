@@ -14,6 +14,9 @@ python -m verifier_training.launch_v5 seeds --s3 S3_RUN --s4 S4_RUN
 python -m verifier_training.launch_v5 test --s3 S3_RUN --s4 S4_RUN --seeds SEEDS_RUN
                                                           the one test evaluation (docs/generative_verifier/V5_TEST_PROTOCOL.md):
                                                           CPU preflight, two GPU lanes over the six frozen adapters, report last
+python -m verifier_training.launch_v5 det --s3 S3_RUN --s4 S4_RUN --seeds SEEDS_RUN
+                                                          detector baseline (docs/generative_verifier/V5_DET_PROTOCOL.md): CPU
+                                                          preflight, one GPU job in the AEGIS container, then the report
 
 At most two GPUs at any time: the two training lanes, then the 32B stage (two GPUs) once both lanes end.
 """
@@ -27,16 +30,20 @@ from .launch import command
 from .launch_verdict_diagnostic import ASSETS
 from .launch_fd1000 import published_commit,archive,stamp
 from .v5_contract import configuration,validate,DATASET,DATASET_HASHES
-from . import v5_fit_contract,v5_pos_contract,v5_seeds_contract,v5_test_contract
+from . import v5_fit_contract,v5_pos_contract,v5_seeds_contract,v5_test_contract,v5_det_contract
 
 PROTOCOL='docs/generative_verifier/V5_S3_PROTOCOL.md'
-SCRIPTS={'cpu':'v5_cpu.sbatch','gpu':'v5_gpu.sbatch','gpu2':'v5_zero_shot_32b.sbatch'}
+SCRIPTS={'cpu':'v5_cpu.sbatch','gpu':'v5_gpu.sbatch','gpu2':'v5_zero_shot_32b.sbatch','det':'v5_det_gpu.sbatch'}
 STAGES={'preflight':('cpu',['verifier_training.v5_run','preflight']),'zero-shot-3b':('gpu',['verifier_training.v5_run','zero-shot-3b']),
     'zero-shot-32b':('gpu2',['verifier_training.v5_zero_shot_32b']),'report':('cpu',['verifier_training.v5_run','report'])}
 FIT_PROTOCOL='docs/generative_verifier/V5_FIT_PROTOCOL.md'
 S4_PROTOCOL='docs/generative_verifier/V5_S4_PROTOCOL.md'
 SEEDS_PROTOCOL='docs/generative_verifier/V5_SEEDS_PROTOCOL.md'
 TEST_PROTOCOL='docs/generative_verifier/V5_TEST_PROTOCOL.md'
+DET_PROTOCOL='docs/generative_verifier/V5_DET_PROTOCOL.md'
+DET_AUTHORIZATION=('2026-10-26 user ("先做1") chose the recommended detector baseline after the V5 test evaluation: GroundingDINO '
+    '(the AEGIS weights) plus the S4 program on View 1, validation only, inference only, two fractions chosen on the training rows; '
+    'no training, no API, no controller change, no test')
 TEST_AUTHORIZATION=('2026-10-26 user ("都改一下 然后做测试级") approved the one test evaluation after the seed campaign read stable: '
     'the six selected adapters (A and P, seeds 713-715) scored once on the frozen test and test_natural splits; no training, '
     'no reselection, no API')
@@ -77,7 +84,7 @@ def submit(root,label,args,kind,after=(),dependency='afterany',spec=None):
         str(root/'source/verifier_training'/SCRIPTS[kind])],env=env,text=True).strip().split(';')[0]
     require(job.isdigit(),'Invalid Slurm receipt')
     result=dict(label=label,job=job,root=str(root),args=args,source_commit=read(root/'RECEIPT.json')['source_commit'],
-        partition='short' if kind=='cpu' else 'gengpu',gpus={'cpu':0,'gpu':1,'gpu2':2}[kind],account='p33100',after=list(after),
+        partition='short' if kind=='cpu' else 'gengpu',gpus={'cpu':0,'gpu':1,'gpu2':2,'det':1}[kind],account='p33100',after=list(after),
         dependency=spec or (dependency if after else None),api_calls=0)
     write(root/(label+'_SUBMISSION.json'),result);print(result,flush=True);return job
 
@@ -246,8 +253,43 @@ def test(s3,s4,seeds_root):
     test_jobs(root)
 
 
+def det(s3,s4,seeds_root):
+    """Detector baseline: a new campaign over the finished S3, S4 and seed runs; CPU preflight, one GPU detection job, CPU report."""
+    commit=published_commit();repo=Path.cwd();runs=(BASE/'verifier_training/runs').resolve()
+    roots={k:Path(os.path.abspath(v)) for k,v in (('s3',s3),('s4',s4),('seeds',seeds_root))}
+    for path in roots.values():path.resolve().relative_to(runs)
+    require('状态：已冻结' in (repo/DET_PROTOCOL).read_text(),'Freeze the detector protocol before launching')
+    r3,r4,rs=(read(roots[k]/'RECEIPT.json') for k in ('s3','s4','seeds'))
+    require((r3['stage'],r4['stage'],rs['stage'])==('v5-s3-pilot','v5-s4','v5-seeds'),'Unexpected prior runs')
+    same=lambda a,b:Path(a).resolve()==Path(b).resolve()
+    require(same(r4['s3_root'],roots['s3']) and same(rs['s3_root'],roots['s3']) and same(rs['s4_root'],roots['s4']),'Prior runs do not chain')
+    require(read(roots['seeds']/'SEEDS_READING.json')['reading']=='stable','The seed campaign did not read stable')
+    for key,labels in (('s3',('preflight','A_seed713','report')),('s4',('preflight','zero_shot','P_seed713','report')),
+                       ('seeds',('preflight','A_seed714','A_seed715','P_seed714','P_seed715','report'))):
+        for label in labels:require(completed(read(roots[key]/(label+'_SUBMISSION.json'))['job']),'Prior job did not finish normally: %s %s'%(key,label))
+    require(active_gpus()==0,'Another CrashBench GPU job is active')
+    config=v5_det_contract.configuration();require(read(roots['seeds']/'config.json')==config['seeds_configuration'],'Seed-campaign configuration differs')
+    staged=read(BASE/'staging.json')['stages'];detector=config['detector'];container=BASE/'containers/aegis-py38.sif'
+    require(staged['groundingdino']['sha256']==detector['checkpoint_sha256'] and staged['bert']['revision']==detector['bert_revision'],
+            'Detector staging differs from the AEGIS reproduction')
+    assets=dict(checkpoint=staged['groundingdino']['path'],checkpoint_sha256=detector['checkpoint_sha256'],
+        config=str(BASE/'GroundingDINO'/detector['config']),config_sha256=sha(BASE/'GroundingDINO'/detector['config']),bert=staged['bert']['path'],
+        bert_revision=detector['bert_revision'],container=str(container),
+        container_sha256=(BASE/'containers/aegis-py38.sif.sha256').read_text().split()[0],environment_ready_sha256=sha(BASE/'envs/aegis_sim/READY.json'))
+    root=BASE/'verifier_training/runs'/(stamp()+'_v5-det_'+commit[:12]);archive(root,commit);write(root/'config.json',config)
+    files={'s3':v5_det_contract.S3_FILES,'s4':v5_det_contract.S4_FILES,'seeds':v5_det_contract.SEEDS_FILES}
+    receipt=dict(stage='v5-det',source_commit=commit,upstream_commit=UPSTREAM,run_root=str(root),**{k+'_root':str(v) for k,v in roots.items()},
+        **{k+'_files':{f:sha(roots[k]/f) for f in names} for k,names in files.items()},dataset=str(DATASET),dataset_hashes=dict(DATASET_HASHES),
+        detector_assets=assets,configuration_sha256=sha(root/'config.json'),protocol=DET_PROTOCOL,protocol_sha256=sha(root/'source'/DET_PROTOCOL),
+        api_calls=0,authorization=DET_AUTHORIZATION,scope='GroundingDINO plus the S4 program on View 1; validation only; nothing trained; the test split is not read')
+    write(root/'RECEIPT.json',receipt)
+    pre=submit(root,'preflight',['verifier_training.v5_det_run','preflight',str(root)],'cpu')
+    found=submit(root,'detect',['verifier_training/v5_det_detect.py',str(root)],'det',after=(pre,),dependency='afterok')
+    submit(root,'report',['verifier_training.v5_det_run','report',str(root)],'cpu',after=(found,))
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('action',choices=('create','pilot','stage','fit','s4','seeds','test'))
+    p=argparse.ArgumentParser();p.add_argument('action',choices=('create','pilot','stage','fit','s4','seeds','test','det'))
     p.add_argument('--root',type=Path);p.add_argument('--s3',type=Path);p.add_argument('--s4',type=Path);p.add_argument('--seeds',type=Path)
     p.add_argument('--stage');p.add_argument('--arm');p.add_argument('--seed',type=int)
     p.add_argument('--after',default='')
@@ -258,4 +300,5 @@ if __name__=='__main__':
     elif a.action=='s4':s4(a.root)
     elif a.action=='seeds':seeds(a.s3,a.s4)
     elif a.action=='test':test(a.s3,a.s4,a.seeds)
+    elif a.action=='det':det(a.s3,a.s4,a.seeds)
     else:stage(a.root,a.stage,a.arm,a.seed,tuple(x for x in a.after.split(',') if x))
