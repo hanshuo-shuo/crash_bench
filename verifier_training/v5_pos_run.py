@@ -140,12 +140,14 @@ def train(root,arm,seed):
 
 
 def train_p(root,arm,seed,receipt,config,dataset,assets,rows,staged,hashes,points,subsets,lookup,provenance=None,
-            scope='Validation-only pilot of arm P; one seed; the test split is not read'):
+            scope='Validation-only pilot of arm P; one seed; the test split is not read',hooks=None):
     """Arm P for one seed with the S4 settings in config (S4 above; the V5 seed campaign, v5_seeds_run).
 
     The caller has checked its campaign, the planned seed and the preflight gate; root holds ORDERS.json with a P order
-    for the seed. provenance adds campaign fields to PROVENANCE.json."""
-    require(arm=='P','Unplanned run')
+    for the seed. provenance adds campaign fields to PROVENANCE.json. hooks replaces the arm name, the item builder, the
+    evaluation, the summary and the reading used for selection (V5 S5's arm S, v5_self_run); without it this is P."""
+    h=dict(arm='P',item=p_item,evaluate=evaluate,summary=summary,selection='program',**(hooks or {}))
+    require(arm==h['arm'],'Unplanned run')
     out=root/f'{arm}_seed{seed}';out.mkdir();require(torch.cuda.is_available(),'Quest GPU required');base=config['s3_configuration']
     torch.manual_seed(seed);np.random.seed(seed);random.seed(seed);torch.backends.cuda.matmul.allow_tf32=True
     processor=processor_for(assets);model,targets=adapter_model(assets,base,seed)
@@ -160,7 +162,7 @@ def train_p(root,arm,seed,receipt,config,dataset,assets,rows,staged,hashes,point
     items={}
     for image,members in by_image(train_rows+validation+natural).items():
         vision=vision_inputs(processor,members[0],dataset)
-        for row in members:items[row['sample_id']]=p_item(processor,row,dataset,config,vision,points[image]['points'])
+        for row in members:items[row['sample_id']]=h['item'](processor,row,dataset,config,vision,points[image]['points'])
     require(all(input_digest(v)==hashes[s] for s,v in items.items()),'Real training input differs from preflight')
     keyed={(s,'facts'):v for s,v in items.items()}
     order=read(root/'ORDERS.json')[str(seed)][arm];require(len(order)==base['optimizer_updates'],'Incomplete update schedule')
@@ -183,11 +185,11 @@ def train_p(root,arm,seed,receipt,config,dataset,assets,rows,staged,hashes,point
         with (out/'curve.jsonl').open('a') as f:f.write(json.dumps(dict(step=step,seconds=time.monotonic()-started,**totals))+'\n')
         if step%10==0:print(arm,seed,step,json.dumps(totals),flush=True)
         if step in base['evaluation_updates']:
-            measured=summary(evaluate(model,processor,selection,items,config,hashes,lookups,points,out/f'selection_step_{step}.jsonl'))
-            value=measured['program']['verdict_accuracy'];checkpoints.append(dict(step=step,selection_value=value,scores=measured))
+            measured=h['summary'](h['evaluate'](model,processor,selection,items,config,hashes,lookups,points,out/f'selection_step_{step}.jsonl'))
+            value=measured[h['selection']]['verdict_accuracy'];checkpoints.append(dict(step=step,selection_value=value,scores=measured))
             states[step]={k:v.detach().cpu().clone() for k,v in get_peft_model_state_dict(model).items()}
             model.save_pretrained(out/f'checkpoint_{step}');write(out/'SELECTION_SCORES.json',checkpoints)
-            print(arm,seed,'step',step,'program',value,'model',measured['model']['verdict_accuracy'],flush=True)
+            print(arm,seed,'step',step,h['selection'],value,'model',measured['model']['verdict_accuracy'],flush=True)
     best=max(checkpoints,key=lambda c:(c['selection_value'],-c['step']));selected=best['step']
     set_peft_model_state_dict(model,states[selected]);restored=get_peft_model_state_dict(model)
     require(set(restored)==set(states[selected]) and all(torch.equal(v.detach().cpu(),states[selected][k]) for k,v in restored.items()),
@@ -196,7 +198,7 @@ def train_p(root,arm,seed,receipt,config,dataset,assets,rows,staged,hashes,point
     model.save_pretrained(out/'selected_adapter');processor.save_pretrained(out/'selected_adapter')
     scores={}
     for name,part in (('validation',validation),('validation_natural',natural),('training_fit',fit_rows)):
-        scores[name]=summary(evaluate(model,processor,part,items,config,hashes,lookups,points,out/f'{name}.jsonl'))
+        scores[name]=h['summary'](h['evaluate'](model,processor,part,items,config,hashes,lookups,points,out/f'{name}.jsonl'))
         print(arm,seed,name,'program',scores[name]['program']['verdict_accuracy'],'model',scores[name]['model']['verdict_accuracy'],flush=True)
     write(out/'RESULT.json',dict(passed=True,arm=arm,seed=seed,steps=len(order),selected_step=selected,selection_value=best['selection_value'],
         checkpoint_values={c['step']:c['selection_value'] for c in checkpoints},

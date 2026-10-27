@@ -17,6 +17,9 @@ python -m verifier_training.launch_v5 test --s3 S3_RUN --s4 S4_RUN --seeds SEEDS
 python -m verifier_training.launch_v5 det --s3 S3_RUN --s4 S4_RUN --seeds SEEDS_RUN
                                                           detector baseline (docs/generative_verifier/V5_DET_PROTOCOL.md): CPU
                                                           preflight, one GPU job in the AEGIS container, then the report
+python -m verifier_training.launch_v5 s5 --s3 S3_RUN --s4 S4_RUN
+                                                          S5 (docs/generative_verifier/V5_S5_PROTOCOL.md): CPU preflight, one
+                                                          20-hour GPU job for arm S seed 713, then the report
 
 At most two GPUs at any time: the two training lanes, then the 32B stage (two GPUs) once both lanes end.
 """
@@ -30,10 +33,10 @@ from .launch import command
 from .launch_verdict_diagnostic import ASSETS
 from .launch_fd1000 import published_commit,archive,stamp
 from .v5_contract import configuration,validate,DATASET,DATASET_HASHES
-from . import v5_fit_contract,v5_pos_contract,v5_seeds_contract,v5_test_contract,v5_det_contract
+from . import v5_fit_contract,v5_pos_contract,v5_seeds_contract,v5_test_contract,v5_det_contract,v5_self_contract
 
 PROTOCOL='docs/generative_verifier/V5_S3_PROTOCOL.md'
-SCRIPTS={'cpu':'v5_cpu.sbatch','gpu':'v5_gpu.sbatch','gpu2':'v5_zero_shot_32b.sbatch','det':'v5_det_gpu.sbatch'}
+SCRIPTS={'cpu':'v5_cpu.sbatch','gpu':'v5_gpu.sbatch','gpu2':'v5_zero_shot_32b.sbatch','det':'v5_det_gpu.sbatch','gpulong':'v5_gpu_long.sbatch'}
 STAGES={'preflight':('cpu',['verifier_training.v5_run','preflight']),'zero-shot-3b':('gpu',['verifier_training.v5_run','zero-shot-3b']),
     'zero-shot-32b':('gpu2',['verifier_training.v5_zero_shot_32b']),'report':('cpu',['verifier_training.v5_run','report'])}
 FIT_PROTOCOL='docs/generative_verifier/V5_FIT_PROTOCOL.md'
@@ -41,6 +44,10 @@ S4_PROTOCOL='docs/generative_verifier/V5_S4_PROTOCOL.md'
 SEEDS_PROTOCOL='docs/generative_verifier/V5_SEEDS_PROTOCOL.md'
 TEST_PROTOCOL='docs/generative_verifier/V5_TEST_PROTOCOL.md'
 DET_PROTOCOL='docs/generative_verifier/V5_DET_PROTOCOL.md'
+S5_PROTOCOL='docs/generative_verifier/V5_S5_PROTOCOL.md'
+S5_AUTHORIZATION=('2026-10-27 user set the main line back to the model deciding itself ("我还是觉得应该是先继续原来的想法 但是2可以保留下") '
+    'and approved this step ("我觉得很好 帮我开始吧"): arm S writes the positions, the side computation and its own verdict, with the S4 '
+    'settings and seed 713, validation only, against the S3 A and S4 P records; no test, no API, no new data')
 DET_AUTHORIZATION=('2026-10-26 user ("先做1") chose the recommended detector baseline after the V5 test evaluation: GroundingDINO '
     '(the AEGIS weights) plus the S4 program on View 1, validation only, inference only, two fractions chosen on the training rows; '
     'no training, no API, no controller change, no test')
@@ -84,7 +91,7 @@ def submit(root,label,args,kind,after=(),dependency='afterany',spec=None):
         str(root/'source/verifier_training'/SCRIPTS[kind])],env=env,text=True).strip().split(';')[0]
     require(job.isdigit(),'Invalid Slurm receipt')
     result=dict(label=label,job=job,root=str(root),args=args,source_commit=read(root/'RECEIPT.json')['source_commit'],
-        partition='short' if kind=='cpu' else 'gengpu',gpus={'cpu':0,'gpu':1,'gpu2':2,'det':1}[kind],account='p33100',after=list(after),
+        partition='short' if kind=='cpu' else 'gengpu',gpus={'cpu':0,'gpu':1,'gpu2':2,'det':1,'gpulong':1}[kind],account='p33100',after=list(after),
         dependency=spec or (dependency if after else None),api_calls=0)
     write(root/(label+'_SUBMISSION.json'),result);print(result,flush=True);return job
 
@@ -288,8 +295,35 @@ def det(s3,s4,seeds_root):
     submit(root,'report',['verifier_training.v5_det_run','report',str(root)],'cpu',after=(found,))
 
 
+def s5(s3,s4):
+    """S5: a new campaign over the finished S3 and S4 runs; CPU preflight, one long GPU job for arm S, CPU report."""
+    commit=published_commit();repo=Path.cwd();runs=(BASE/'verifier_training/runs').resolve()
+    s3=Path(os.path.abspath(s3));s4=Path(os.path.abspath(s4));s3.resolve().relative_to(runs);s4.resolve().relative_to(runs)
+    require('状态：已冻结' in (repo/S5_PROTOCOL).read_text(),'Freeze the S5 protocol before launching')
+    r3=read(s3/'RECEIPT.json');r4=read(s4/'RECEIPT.json')
+    require(r3['stage']=='v5-s3-pilot' and r4['stage']=='v5-s4' and Path(r4['s3_root']).resolve()==s3.resolve(),'Needs the finished S3 and S4 runs')
+    require(read(s3/'S3_READING.json')['passed'] is True and read(s4/'S4_READING.json')['passed'] is True,'S3 or S4 reading missing')
+    for prior,labels in ((s3,('preflight','A_seed713','report')),(s4,('preflight','P_seed713','report'))):
+        for label in labels:require(completed(read(prior/(label+'_SUBMISSION.json'))['job']),'Prior job did not finish normally: %s %s'%(prior.name,label))
+    require(read(ASSETS/'STAGED.json')['model_id']==MODEL_ID and r3['assets']==r4['assets']==str(ASSETS),'Wrong staged VLM; no substitution permitted')
+    require(active_gpus()==0,'Another CrashBench GPU job is active')
+    config=v5_self_contract.configuration()
+    require(read(s3/'config.json')==config['s3_configuration'] and read(s4/'config.json')==config['s4_configuration'],'S3 or S4 configuration differs')
+    root=BASE/'verifier_training/runs'/(stamp()+'_v5-s5_'+commit[:12]);archive(root,commit);write(root/'config.json',config)
+    receipt=dict(stage='v5-s5',source_commit=commit,upstream_commit=UPSTREAM,run_root=str(root),s3_root=str(s3),s3_source_commit=r3['source_commit'],
+        s4_root=str(s4),s4_source_commit=r4['source_commit'],s3_files={f:sha(s3/f) for f in v5_self_contract.S3_FILES},
+        s4_files={f:sha(s4/f) for f in v5_self_contract.S4_FILES},dataset=str(DATASET),dataset_hashes=dict(DATASET_HASHES),assets=str(ASSETS),
+        assets_stage_sha256=sha(ASSETS/'STAGED.json'),configuration_sha256=sha(root/'config.json'),protocol=S5_PROTOCOL,
+        protocol_sha256=sha(root/'source'/S5_PROTOCOL),seeds=config['seeds'],arms=[config['arm']],api_calls=0,authorization=S5_AUTHORIZATION,
+        scope='Arm S (positions, computation, own verdict) against the S3 A and S4 P records; validation only; the test split is not read')
+    write(root/'RECEIPT.json',receipt);module='verifier_training.v5_self_run';seed=str(config['seeds'][0])
+    pre=submit(root,'preflight',[module,'preflight',str(root)],'cpu')
+    tr=submit(root,'S_seed'+seed,[module,'train',str(root),config['arm'],seed],'gpulong',after=(pre,),dependency='afterok')
+    submit(root,'report',[module,'report',str(root)],'cpu',after=(tr,))
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('action',choices=('create','pilot','stage','fit','s4','seeds','test','det'))
+    p=argparse.ArgumentParser();p.add_argument('action',choices=('create','pilot','stage','fit','s4','seeds','test','det','s5'))
     p.add_argument('--root',type=Path);p.add_argument('--s3',type=Path);p.add_argument('--s4',type=Path);p.add_argument('--seeds',type=Path)
     p.add_argument('--stage');p.add_argument('--arm');p.add_argument('--seed',type=int)
     p.add_argument('--after',default='')
@@ -301,4 +335,5 @@ if __name__=='__main__':
     elif a.action=='seeds':seeds(a.s3,a.s4)
     elif a.action=='test':test(a.s3,a.s4,a.seeds)
     elif a.action=='det':det(a.s3,a.s4,a.seeds)
+    elif a.action=='s5':s5(a.s3,a.s4)
     else:stage(a.root,a.stage,a.arm,a.seed,tuple(x for x in a.after.split(',') if x))

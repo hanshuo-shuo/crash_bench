@@ -1,0 +1,113 @@
+# V5 S5：模型自己算出是否隔开（组 S）
+
+2026-10-27 起草。用户先定了方向（"我还是觉得应该是先继续原来的想法 但是2可以保留下"），看完这一步的建议后说："我觉得很好 帮我开始吧"。
+**状态：草稿**，smoke 之后在文末写冻结记录。本文件和 `verifier_training/v5_self_contract.py` 在作业提交前一起提交。
+前情见 [V5_S4_REPORT.md](V5_S4_REPORT.md)、[V5_SEEDS_REPORT.md](V5_SEEDS_REPORT.md) 和 [V5_DET_REPORT.md](V5_DET_REPORT.md)。
+
+## 1. 要回答的问题
+
+- P 能把四个点找准（锚点、篮子的中位误差 2–5 像素），但它自己写的 `Separated`、`Verdict` 在 3 个 seed 上都是随机水平，结论靠一段代码。代码就是生成标签的规则，所以 P 不当作方法，只作诊断（10-27 的决定）。
+- 这一步问：**把"从四个点到是否隔开"的计算一步步写进训练目标**（相对位移、叉积、正负号），模型能不能在测试时自己算出来、自己下结论？
+- 这是生成式 verifier 的主线：**读数看模型自己写的 `Verdict`**，代码只用来诊断。
+- 思路和精读页里的 Wies 等人一致：中间步骤有监督，原本学不会的组合可能学得会。计算步骤是训练时教的，就像 V4 的 B 的事实也是教的；但测试时每一步和最后的结论都由模型自己写。
+
+- **授权**：用户 2026-10-27（见上）。
+- **不做的事**：
+  - 不读测试集（`test`、`test_natural` 已在 10-26 用过一次）；
+  - 不采集新数据，不重新渲染，位置用 S4 的 `POINTS.json`；
+  - 不调用 API；
+  - 不做超参数搜索；只用 seed 713。
+
+## 2. S 的目标
+
+输入和 S3、S4 完全相同：两张图、任务、规则。preflight 逐行核对，S 的推理输入与 S3 的 A、S4 的 P 逐字节相同。
+
+```
+Line: alphabet soup can | orange juice carton
+Line points: [137, 193] [283, 212]
+Target point: [282, 263]
+Goal point: [203, 153]
+Line vector: [146, 19]
+Target offset: [145, 70]
+Goal offset: [66, -40]
+Target cross: 146*70 - 19*145 = 10220 - 2755 = 7465
+Goal cross: 146*(-40) - 19*66 = -5840 - 1254 = -7094
+Target side: positive
+Goal side: negative
+Separated: yes
+Verdict: 0
+```
+
+- **前四行和 P 完全相同**：第 1 张图上的像素坐标，四个桌面点，取整（S4 协议第 2 节）。
+- **计算**（记两个线点为 A、B，布丁点 T，篮子点 G）：
+  - `Line vector` = B − A；`Target offset` = T − A；`Goal offset` = G − A；
+  - `cross` = 向量的 x × 位移的 y − 向量的 y × 位移的 x，写成"两个乘法、一个减法"；
+  - `side`：cross 大于 0 写 `positive`，小于 0 写 `negative`，等于 0 写 `zero`；
+  - `Separated`：一个 `positive`、一个 `negative` 时写 `yes`，否则 `no`；`Verdict`：隔开写 0，否则写 1。
+  - 这和 S4 的程序是同一个判定（叉积同号或有零就不算隔开）。
+- **负数的写法**：乘号后面的负数、减号后面的负数加括号，例如 `146*(-40)`、`10220 - (-2755)`；开头的负数和结果不加括号。
+- **核对**：preflight 在全部训练、验证行上，用取整后的真值点算出这一串，要求每一步自洽、`Verdict` 等于标签，并且两个 cross 都不为 0。
+- 长度：上面这个例子是 189 个 token，P 的目标是 69 个。
+
+## 3. 训练与评估（沿用 S4）
+
+- **与 S4 的 P 完全相同**：
+  - 模型、LoRA、优化器、损失（0.5 判定 + 0.5 其余 token）；
+  - 448 次更新（一个 epoch），用 S4 为 P 的 seed 713 存下的样本顺序；
+  - 选模时刻 150 / 300 / 448，选模子集 384 行，训练拟合子集 256 行，都用 S3 的 `SUBSETS.json`；
+  - 贪心解码，不给任何金标前缀；生成代码不变。
+- **只改三项**：
+  - 目标文本换成上面的写法；
+  - 最长生成 256 个 token（P 是 128）；
+  - **选模值是模型自己写的 `Verdict` 的准确率**（P 用的是程序判定）。平分时选较早的 checkpoint。
+- **对照**：直接用 S3 的 A（seed 713）和 S4 的 P（seed 713）在完整验证集上的记录，不重训。输入相同、行相同，可以配对比较。
+
+## 4. 读数（只看验证）
+
+| 读数 | 定义 |
+|---|---|
+| R1 | 完整验证集（1,538 行反事实孪生）上，**模型自己写的 `Verdict` 的准确率**（主读数）；与 A、P 的程序判定、P 自己写的 `Verdict` 逐行配对比较 |
+| R2 | 孪生图全对率（按自己写的 `Verdict`） |
+| R3 | 计算有没有算对：按模型自己写出的数，逐步核对向量、两个位移、四个乘法、两个减法、两个正负号、`Separated`、`Verdict`，给出每一步的正确率和全部正确的比例；自己写的 `Verdict` 和"用自己写的点跑程序"一致的比例；四个点的像素误差（同 S4 R3）；用 S 的点跑程序的准确率（诊断） |
+| R4 | 验证自然（79 行）上自己写的 `Verdict` 的准确率 |
+| R5 | 训练拟合子集（256 行）上自己写的 `Verdict` 的准确率 |
+| R6 | 判错的行分两类：点就找错了（用自己的点跑程序也错），还是点对了但算错了（程序对、自己写的错）；另记"点错了但结论碰巧对"的行数 |
+
+- **不确定性**：以图像为单位做 bootstrap，95% 区间，1,000 次，seed 1014。
+
+## 5. 读法（事先写定）
+
+设 S 为 R1 的准确率，A 为 S3 的 A 在同一验证集上的准确率（0.501），区间指 S − A 的图像 bootstrap 95% 区间。
+
+| 读法 | 条件 | 含义 |
+|---|---|---|
+| `self_computes` | S ≥ 0.85，且区间下限 > 0 | 模型能自己算出结论，生成式 verifier 在 V5 站住。下一步是 3 个 seed；要正式测试，需要新的留出源（另批） |
+| `partial` | 0.65 ≤ S < 0.85，且区间下限 > 0 | 部分学会；看 R3、R6 断在哪一步 |
+| `no_self_compute` | S ≤ 0.60 | 写出计算步骤也学不会；如实报告断在哪一步 |
+| `unclear` | 其余情况 | 报告后讨论 |
+
+## 6. 运行与资源
+
+- **启动**：`python -m verifier_training.launch_v5 s5 --s3 <S3 运行目录> --s4 <S4 运行目录>`。
+  - 新建 `verifier_training/runs/<UTC>_v5-s5_<commit>/` 并归档源码；
+  - `RECEIPT.json` 记录读取的 S3、S4 文件的哈希；旧目录只读。
+- **作业**（任何时候 1 张 GPU）：
+  1. CPU preflight：跑单元测试；重算真值点并要求与 S4 的 `POINTS.json` 相同；逐行构造 S 的输入（原生 processor 核对），要求与 S3 的输入摘要相同；核对计算链和标签；写样本顺序。
+  2. GPU 训练和评估（1 张 A100，时限 20 小时，preflight 成功后才开始）。
+  3. CPU report：写 `S5_READING.json`。
+- **预计用量**：训练约 20 分钟；评估约 3,025 次生成（选模 3 × 384，最后验证 1,538、验证自然 79、训练拟合 256），每次约 13 秒（P 是 4.9 秒、69 个 token，S 约 189 个 token），合计约 11 小时；一共约 12 GPU 小时。preflight 约半小时 CPU。
+
+## 7. 新代码
+
+| 文件 | 内容 |
+|---|---|
+| `verifier_training/v5_self_contract.py` | 配置 `V5-object-S-v1`、目标文本、解析和逐步核对、读法 `s5_reading` |
+| `verifier_training/v5_self_run.py` | 阶段 `preflight`、`train`、`report` |
+| `verifier_training/v5_pos_run.py` | `train_p` 加一个可选参数 `hooks`（组名、构造输入、评估、汇总、选模读法）；不传时行为不变 |
+| `verifier_training/v5_gpu_long.sbatch` | 和 `v5_gpu.sbatch` 相同，时限 20 小时 |
+| `verifier_training/launch_v5.py` | 新动作 `s5` |
+| `verifier_training/tests/test_v5_self_contract.py` | 目标往返、逐步核对、解析的各种错误输出、读法、配置；静态检查不读测试行 |
+
+## 8. 冻结记录
+
+（smoke 后填写）
