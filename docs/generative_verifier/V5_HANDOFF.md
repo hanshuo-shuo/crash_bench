@@ -65,6 +65,15 @@ V5 这一轮的故事线已经走完一遍，只用了 object/II/task1 一个任
 | 检测器基线读数 | 检测器基线目录的 `DET_READING.json`；原始框在 `detect/detections.jsonl` |
 | 主报告页 | <https://claude.ai/artifact/Ya7FQbZC9yEuNNyYhPBHHT>，仓库副本 `docs/generative_verifier/PHASE2_REPORT.html` |
 
+## 2026-10-27 S5 运行中
+
+- 用户定了方向（主线回到"模型自己下结论"）后说"我觉得很好 帮我开始吧"，又说"弄完后自动帮我交gpu的训练 我明早起来看"。
+- **问题**：P 能找准四个点，但自己写的结论是随机水平。S 在 P 的四行之后写出位移、两个叉积（两个乘法、一个减法）、正负号、`Separated` 和 `Verdict`，读数看模型自己写的 `Verdict`。
+- 协议 [V5_S5_PROTOCOL.md](V5_S5_PROTOCOL.md) 冻结于 `f20304e`（实现 `e62ce81`，hooks 合并修正 `017232a`）；代码 `v5_self_contract.py`、`v5_self_run.py`，`v5_pos_run.train_p` 加了可选的 `hooks`（不传时仍是 P），`v5_gpu_long.sbatch`（20 小时），启动器动作 `launch_v5 s5 --s3 --s4`。
+- 两次 smoke：第一次查出 hooks 合并时键重复的报错，第二次全部 COMPLETED 0:0（见协议第 8 节）。
+- 运行目录 `/projects/p33100/siosio/crashbench_safelibero/verifier_training/runs/20261027T050745Z_v5-s5_f20304e222b9`；作业 5554027 → 5554028 → 5554029。读法事先写定：`self_computes`（自己写的结论 ≥ 0.85）、`partial`、`no_self_compute`（≤ 0.60）、`unclear`。
+- 跑完后写 `V5_S5_REPORT.md`，同步 CURRENT、本文、V5_PLAN 第 6 节和报告页。
+
 ## 2026-10-27 检测器基线完成
 
 - 用户 10-26 先和 Claude 对了一遍故事线和报告页，然后说"先做1"：不训练，直接用 AEGIS 自带的 GroundingDINO 定位，再跑 P 的同一段程序，看能不能判对孪生题。
