@@ -92,9 +92,13 @@ class Code(unittest.TestCase):
     def fn(self,path,name):
         return [n for n in ast.parse((ROOT/path).read_text()).body if isinstance(n,ast.FunctionDef) and n.name==name][0]
 
-    def test_train_p_defaults_are_p(self):
-        text=ast.unparse(self.fn('verifier_training/v5_pos_run.py','train_p'))
-        self.assertIn("h = dict(arm='P', item=p_item, evaluate=evaluate, summary=summary, selection='program', **hooks or {})",text)
+    def test_train_p_defaults_are_p_and_hooks_replace_them(self):
+        from verifier_training import v5_pos_run as R
+        from verifier_training.v5_self_run import s_item,evaluate_s,summary_s
+        self.assertEqual(R.arm_hooks(),dict(arm='P',item=R.p_item,evaluate=R.evaluate,summary=R.summary,selection='program'))
+        h=R.arm_hooks(dict(arm='S',item=s_item,evaluate=evaluate_s,summary=summary_s,selection='model'))
+        self.assertEqual(h,dict(arm='S',item=s_item,evaluate=evaluate_s,summary=summary_s,selection='model'))
+        self.assertIn("h = arm_hooks(hooks)",ast.unparse(self.fn('verifier_training/v5_pos_run.py','train_p')))
 
     def test_launcher_checks_the_freeze_and_waits_for_the_preflight(self):
         text=ast.unparse(self.fn('verifier_training/launch_v5.py','s5'))

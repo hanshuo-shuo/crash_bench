@@ -139,6 +139,11 @@ def train(root,arm,seed):
     train_p(root,arm,seed,receipt,config,dataset,assets,rows,staged,hashes,points,subsets,lookup)
 
 
+def arm_hooks(hooks=None):
+    """P's arm name, item builder, evaluation, summary and selection reading, with any of them replaced by hooks."""
+    return {'arm':'P','item':p_item,'evaluate':evaluate,'summary':summary,'selection':'program',**(hooks or {})}
+
+
 def train_p(root,arm,seed,receipt,config,dataset,assets,rows,staged,hashes,points,subsets,lookup,provenance=None,
             scope='Validation-only pilot of arm P; one seed; the test split is not read',hooks=None):
     """Arm P for one seed with the S4 settings in config (S4 above; the V5 seed campaign, v5_seeds_run).
@@ -146,8 +151,7 @@ def train_p(root,arm,seed,receipt,config,dataset,assets,rows,staged,hashes,point
     The caller has checked its campaign, the planned seed and the preflight gate; root holds ORDERS.json with a P order
     for the seed. provenance adds campaign fields to PROVENANCE.json. hooks replaces the arm name, the item builder, the
     evaluation, the summary and the reading used for selection (V5 S5's arm S, v5_self_run); without it this is P."""
-    h=dict(arm='P',item=p_item,evaluate=evaluate,summary=summary,selection='program',**(hooks or {}))
-    require(arm==h['arm'],'Unplanned run')
+    h=arm_hooks(hooks);require(arm==h['arm'],'Unplanned run')
     out=root/f'{arm}_seed{seed}';out.mkdir();require(torch.cuda.is_available(),'Quest GPU required');base=config['s3_configuration']
     torch.manual_seed(seed);np.random.seed(seed);random.seed(seed);torch.backends.cuda.matmul.allow_tf32=True
     processor=processor_for(assets);model,targets=adapter_model(assets,base,seed)
