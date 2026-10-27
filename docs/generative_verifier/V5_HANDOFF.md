@@ -19,7 +19,7 @@ V5 这一轮的故事线已经走完一遍，只用了 object/II/task1 一个任
 - **一句话**：在自然分布上训练、在挡住捷径的反事实孪生上测试，直接判断只有 50%；模型先写出看得见的位置、再由固定代码判定，验证 94%、测试 93%。模型负责"东西在哪"，代码负责"隔没隔开"；P 自己写的结论是随机水平。
 - **状态**：
   - 没有正在运行的 CrashBench 作业；队列里 p31777 账号的作业是别的项目，不要动；
-  - 工作区干净，`codex/generative-verifier-pilot` 已推送（最后一个提交是本次收尾）；
+  - 工作区干净，所有工作都在 `main` 上并已推送（10-26 快进；`codex/generative-verifier-pilot` 已删除，见 CURRENT.md 的分支一节）；
   - 主报告页 <https://claude.ai/artifact/Ya7FQbZC9yEuNNyYhPBHHT> 是第 22 版，与仓库里的 `PHASE2_REPORT.html` 相同。
 - **V5 测试集已经用掉**：`test`、`test_natural` 以后不再评估，也不拿来选模或调参。新方法如果要一个没碰过的测试，需要新的留出源（要另批数据）。V4 的锁定测试集同样不再评估。
 
@@ -32,9 +32,6 @@ V5 这一轮的故事线已经走完一遍，只用了 object/II/task1 一个任
 | 3. 扩到其他任务组合 | goal、spatial 任务；S0 显示这些任务上捷径还在，严格配平后孪生不够 | 补源（C1–C5、nominal 重新执行，之前暂停）需要数据批准 | CPU 回放和布局 + GPU 渲染，量取决于补多少源 | [V5_S0_REPORT.md](V5_S0_REPORT.md)、`verifier_dataset/v5_launch.py` |
 | 4. 整理论文主线 | V4 Phase 2 加 V5 的验证、加 seed、测试三步写成一条线 | 不需要算力 | 写作 | [PRELIMINARY_STORY.md](PRELIMINARY_STORY.md)、[PAPER_READING.html](PAPER_READING.html)、本目录的 `V5_*_REPORT.md` |
 
-- 另外两件等用户决定的仓库事务：
-  - `main` 还停在 10-17 的 `03d7327`，工作分支比它多 50 多个提交（都是线性追加，`main` 之后没有别的提交），要不要快进由用户决定；
-  - `codex/paired-repeats` 的 7 个独有提交要不要合并。
 - 这次没有在测试集上评估 S3 的 B 和零样本模型，测试集用掉以后也不再补。
 
 ### 每一步的做法（V5 一直这样做）
@@ -42,8 +39,8 @@ V5 这一轮的故事线已经走完一遍，只用了 object/II/task1 一个任
 1. 先写协议 `docs/generative_verifier/V5_<步>_PROTOCOL.md`：问题、设计、读数、事先写定的读法和门槛、资源估计。
 2. 写代码和单元测试（`verifier_training/v5_<步>_contract.py`、`v5_<步>_run.py`，启动器 `launch_v5.py` 加一个动作，测试放在 `verifier_training/tests/`）。
 3. 在草稿目录里跑 smoke，只用开发数据；把 smoke 的结果写进协议的冻结记录，冻结协议后提交、推送。
-4. 用 `launch_v5` 从干净、已推送的 commit 启动；每次新建运行目录（`<UTC>_v5-<步>_<commit>`），源码归档、收据和哈希都在里面。
-5. 结束后写 `V5_<步>_REPORT.md`，同步 CURRENT、本文、V5_PLAN 第 6 节、主报告页（中英文都改，用 `url` 发布仓库里的文件），再提交、推送。
+4. 新工作先从 `main` 开分支；用 `launch_v5` 从干净、已推送的 commit 启动；每次新建运行目录（`<UTC>_v5-<步>_<commit>`），源码归档、收据和哈希都在里面。
+5. 结束后写 `V5_<步>_REPORT.md`，同步 CURRENT、本文、V5_PLAN 第 6 节、主报告页（中英文都改，用 `url` 发布仓库里的文件），再提交、推送，并快进 `main`。
 
 ### 要记住的规矩和坑
 

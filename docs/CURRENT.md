@@ -107,18 +107,20 @@
   - V4 verifier 的 Phase 1 API 基线（`openai/gpt-6-luna`，384 次调用）已用 $0.4669（上限 $3），计入用户方法的每周预算。
   - key 不进入 Git，也不进入日志。
 
-## 分支（2026-10-17 整理，10-26 核对）
+## 分支（2026-10-26 清理）
 
 | 分支 | 用途 | 状态 |
 |---|---|---|
-| `main` | 默认分支，稳定线 | 停在 10-17 的 `03d7327`（verifier Phase 0–2）；之后没有再快进 |
-| `codex/generative-verifier-pilot` | verifier 工作线 | 10-18 以后的工作（第 1 步、对照、梯级、V5 全部）都在这里，10-26 收尾时比 `main` 多 50 多个提交；是否快进 `main` 由用户决定 |
-| `codex/archive-crashbench-20260926` | 2026-09-26 之前的 CrashBench 计划存档 | 只读，AGENTS.md 引用 |
-| `codex/feasibility` | 10 月初可行性研究的发布分支 | 只读；`analysis/uncertainty/`、`experiments/reach_avoid/`、`experiments/feasibility_contract/` 的启动器靠它核对来源，不要删除 |
-| `codex/paired-repeats` | paired repeats 实验，以及用户在网页上写的 `docs/new_report.md`（10-06 至 10-13） | 有 7 个独有提交，没有并入 `main`；是否合并由用户决定 |
+| `main` | 默认分支，也是工作线 | 10-26 快进到 verifier 的全部工作（第 1 步、对照、梯级、V5 到测试评估），并收入了用户在网页上写的 `docs/new_report.md` |
+| `codex/archive-crashbench-20260926` | 2026-09-26 之前的 CrashBench 计划存档 | 只读，AGENTS.md 引用；内容已在 `main` 的历史里 |
+| `codex/feasibility` | 10 月初可行性研究的发布分支 | 只读；`analysis/uncertainty/`、`experiments/reach_avoid/`、`experiments/feasibility_contract/` 等 20 多个启动器按这个名字核对来源，不要删除 |
 
-Quest 上只在本地存在的 `agent/task-phase-transfer`（1 个独有提交和 1 个 stash）保留未动。
-三个已完全并入、远端已删除的本地分支已删除，不丢任何提交：`codex-repo-hygiene-provenance`、`codex/glass-recovery-d0-fprime-rescue`、`codex/odur-repair`。
+- **以后的新工作**：从 `main` 开一个新分支，做完、推送后再快进 `main`。V5 的启动器只要求 commit 在某个 `origin/` 分支上，`main` 就满足。
+- **10-26 用户决定的清理**（"main 直接推进吧"，"删了吧 就这样清理"），不丢任何提交：
+  - 删除 `codex/generative-verifier-pilot`（本地和远端）：快进后和 `main` 完全相同。以前记录里的 commit 号都还在 `main` 上。
+  - 删除 `codex/paired-repeats`（远端）：它比 `main` 多的 7 个提交只改了 `docs/new_report.md`，已用 cherry-pick 放进 `main`（作者保留为 CG）。原来的分支头保存为标签 `archive/paired-repeats-20261013`。旧的 paired-repeats 启动器按名字读取 `origin/codex/paired-repeats`，现在跑不了；要复跑需先改启动器，并需要用户批准。
+  - 删除只在本地的 `agent/task-phase-transfer`，以及两个 7 月的 stash、一个 8 月的游离工作树 `~/crashbench-pilotb-repair-20260811`。删除前都存成了标签并推到 GitHub：`archive/task-phase-transfer-20260719`、`archive/stash-selfreport-probe-20260719`、`archive/stash-cluster-notes-20260725`（stash 用 `git stash apply <标签>` 恢复）、`archive/pilotb-repair-20260811`（8 个不在任何分支上的 Pilot B 修复提交）。
+- 更早（10-17）删除的三个已并入的本地分支：`codex-repo-hygiene-provenance`、`codex/glass-recovery-d0-fprime-rescue`、`codex/odur-repair`。
 
 ## 历史与清理记录
 

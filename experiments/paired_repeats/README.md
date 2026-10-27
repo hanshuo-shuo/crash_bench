@@ -35,6 +35,7 @@ episode 0、1，各方法一次，核对 RNG 回执、qpos 和首个策略 chunk
 
 复跑：先运行 `python3 -m unittest discover -s experiments/paired_repeats -p 'test_*.py' -v`
 及既有 `tests/`，发布 clean commit 到 `codex/paired-repeats`。
+（2026-10-26：`codex/paired-repeats` 已删除，分支头保存为标签 `archive/paired-repeats-20261013`；启动器按名字读取该分支，复跑前要先改启动器，并需要用户批准。）
 Quest 先 `scripts/quest_sync.sh check`。通过 `scripts/quest_sync.sh exec` 只 fetch 发布提交、
 `git archive <commit>` 到新的 `/projects/p33100/siosio/crashbench_safelibero/paired_repeats/<唯一ID>/source`，
 根目录写 `SOURCE_COMMIT`；**不 merge/sync 活跃 checkout**。

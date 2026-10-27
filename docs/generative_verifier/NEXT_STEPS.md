@@ -28,7 +28,7 @@
 
 ## 2. 和整体研究方向的关系
 
-`docs/new_report.md`（在 `codex/paired-repeats` 分支上）里的 Direction 1 要区分三种情况：
+`docs/new_report.md`（原在 `codex/paired-repeats` 分支上，10-26 起在 `main`）里的 Direction 1 要区分三种情况：
 
 - (a) 任务一开始就不可行；
 - (b) 还能恢复，但当前策略不会；
