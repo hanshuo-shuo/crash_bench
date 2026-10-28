@@ -24,13 +24,15 @@ V5 这一轮的故事线已经走完一遍，只用了 object/II/task1 一个任
   - 工作区干净，所有工作都在 `main` 上并已推送（10-27 从 `v5-s5` 分支快进；见 CURRENT.md 的分支一节）；
   - 主报告页 <https://claude.ai/artifact/Ya7FQbZC9yEuNNyYhPBHHT> 是第 24 版（加了 `#v5-s5`），与仓库里的 `PHASE2_REPORT.html` 相同。
 - **10-27 方向**：用户决定主线回到原来的想法（模型自己推理、自己下结论）。P 的"代码判定"相当于把生成标签的规则直接写给了它，P 对 A 的差距衡量的主要是定位，所以 P 只作诊断，不当作方法。用 P 做闸门或系统保留为备选。主线的第一步 S5（让模型自己写出计算）已完成，读法 `self_computes`（1 个 seed，只看验证）。
+- **10-27 晚：导师的问题与 HIL 设计**：导师问 "How robust is the VLA toward humans in the (mid-trajectory) loop intervention?"。分析见 [V5_HIL_PROTOCOL.md](V5_HIL_PROTOCOL.md) 第 0 节：不换题，把它当系统论文的动机和基线行——V5 的中途规则就是一次人的干预，S5 回答了 verifier 能否判断它，没回答 π0.5 自己会怎样。设计（策略孪生：同一状态、同一种子、四条提示 C0 无规则 / C1 中性句 / C2 可行规则 / C3 不可行规则，160 个状态 × 4 = 640 次 π0.5 执行，读法 `ignores_rule` / `obeys_rule` / `breaks_on_prompt`）已由用户批准，**未实现、未 smoke**。下一个 agent 从选项 7 开始。
 - **V5 测试集已经用掉**：`test`、`test_natural` 以后不再评估，也不拿来选模或调参。新方法如果要一个没碰过的测试，需要新的留出源（要另批数据）。V4 的锁定测试集同样不再评估。
 
 ### 接下来可以做什么（每一项都要用户先点头）
 
 | 选项 | 要做什么 | 需要的批准 | 大概的量 | 从哪开始 |
 |---|---|---|---|---|
-| 1. S 加 seed（主线，推荐先做） | S 补 seed 714、715，只看验证，读法沿用 S5 协议第 5 节；看 0.92 稳不稳、比 P 低的 0.017 是不是波动 | GPU 训练 | 每个 seed 约 11 GPU 小时（大部分是生成，每次约 12 秒）；两张 GPU 并行约 11 小时 | `v5_self_contract.py`、`v5_self_run.py`、`launch_v5.py`（参照加 seed 的 `seeds` 动作写一个 S 版本） |
+| 7. HIL：π0.5 对中途规则的鲁棒性（用户 10-27 批准设计，推荐先做） | 按 [V5_HIL_PROTOCOL.md](V5_HIL_PROTOCOL.md) 实现运行器和测试，草稿目录 smoke 16 次，填第 10 节并冻结，正式 640 次，写 `V5_HIL_REPORT.md` | 实现不需再批；smoke 和正式批次启动前向用户确认一次（新 π0.5 执行）；不调 API | 约 11 GPU 小时，两张卡一晚 | `verifier_dataset/v5_layouts.py`（`place`、回放）、`experiments/feasibility/runtime.py` 与 `serve.py`（钩子、策略服务）、`experiments/red_enclosure/policy_prompt.py`（提示拼法）、`v5_geometry.line_signed`；建议 `verifier_dataset/v5_hil_run.py` + `v5_hil.sbatch` + `launch_v5 hil` |
+| 1. S 加 seed（主线） | S 补 seed 714、715，只看验证，读法沿用 S5 协议第 5 节；看 0.92 稳不稳、比 P 低的 0.017 是不是波动 | GPU 训练 | 每个 seed 约 11 GPU 小时（大部分是生成，每次约 12 秒）；两张 GPU 并行约 11 小时 | `v5_self_contract.py`、`v5_self_run.py`、`launch_v5.py`（参照加 seed 的 `seeds` 动作写一个 S 版本） |
 | 2. 干净的测试（主线） | V5 测试集已用掉；S 要正式测试，需要新的留出源。object/II/task1 的初始状态 20–49 没用过，但没有逐步动作记录，要重新执行 nominal π0.5，再布局、渲染、建集 | 数据采集批准 | CPU 回放和布局 + GPU 渲染和执行 | [V5_S1_REPORT.md](V5_S1_REPORT.md)、[V5_S2_REPORT.md](V5_S2_REPORT.md)、`verifier_dataset/v5_launch.py` |
 | 3. AEGIS 闸门（备选） | 机器人动手前判断新规则下任务还做不做得成，做不成就拦下。感知不能用 AEGIS 自带的检测器；可以用 P（代码判定）或 S（模型自己判定） | 控制器改动（AGENTS.md 的 Phase 4 规则）；跑完整 AEGIS 还要付费 API 的预算批准 | 先写设计稿（10-26 建议：规则连线作为 CBF-QP 的半空间约束）；S 每次判断约 12 秒，要做在线闸门需要更短的写法 | [REPRODUCTION.md](../REPRODUCTION.md)、[reproduction/BATCH_RUN.md](../reproduction/BATCH_RUN.md)、`setup/submit_safelibero_full.sh`；输入构造在 `v5_pos_run.p_item`、`v5_self_run.s_item` |
 | 4. 扩到其他任务组合 | goal、spatial 任务；S0 显示这些任务上捷径还在，严格配平后孪生不够 | 补源（C1–C5、nominal 重新执行，之前暂停）需要数据批准 | CPU 回放和布局 + GPU 渲染，量取决于补多少源 | [V5_S0_REPORT.md](V5_S0_REPORT.md)、`verifier_dataset/v5_launch.py` |
@@ -67,6 +69,14 @@ V5 这一轮的故事线已经走完一遍，只用了 object/II/task1 一个任
 | 检测器基线读数 | 检测器基线目录的 `DET_READING.json`；原始框在 `detect/detections.jsonl` |
 | S5 读数 | S5 目录的 `S5_READING.json`；逐行输出和逐步核对在 `S_seed713/validation.jsonl` |
 | 主报告页 | <https://claude.ai/artifact/Ya7FQbZC9yEuNNyYhPBHHT>，仓库副本 `docs/generative_verifier/PHASE2_REPORT.html` |
+
+## 2026-10-27 导师问题与 HIL 设计（交接）
+
+- 用户问怎么看导师的 "How robust is VLA toward humans in the (mid-trajectory) loop intervention"，并要求仔细分析该不该在这个主题上继续。
+- 分析结论：三种读法（动机 / 换题 / 系统扩展）。文献上 VLA 忽略语言已是公认（LIBERO-Plus、LangGap：π0.5 只换目标 0%），中途干预的工作多用于微调；纯测评论文结论可预测且需要多策略、多干预、多任务的广度，不值得换题。但导师的问题戳到真实缺口：verifier 不管"可行却不遵守"，S5 的位置 + 叉积可以兼作运行时监视器。推荐把问题吸收为系统论文的动机与基线行。
+- 用户说"可以 这个方向上 我们先设计一个衡量这个的robustness的实验"。Claude 核对了基础设施（V5 回放与布局重建、`experiments/feasibility` 钩子、π0.5 `max_token_len`=200、red enclosure 的提示拼法、S2 里可用的孪生图数量）后给出"策略孪生"设计；用户"可以 然后收尾 我让新的agent去做"。
+- 产出：[V5_HIL_PROTOCOL.md](V5_HIL_PROTOCOL.md)（草稿，未实现、未 smoke）、[V5_TWIN_EPISODE2.png](V5_TWIN_EPISODE2.png)（episode2 两个布局的孪生图，S4 的点叠在 S2 的图上）。没有运行任何作业，没有调 API。
+- 给导师的英文回答要点已给用户：中途规则就是干预；已知 VLA 忽略语言；verifier 补的是策略做不到的判断；本周可以直接测。
 
 ## 2026-10-27 S5 完成（`self_computes`）
 

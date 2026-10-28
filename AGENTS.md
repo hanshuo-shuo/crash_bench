@@ -67,3 +67,10 @@ A's 0.501 on the counterfactual validation twins and the round was wrapped up (V
 the single test evaluation and any AEGIS gate each need the user's go-ahead.
 Seeds 714/715 and the single V5 test evaluation ran on 2026-10-26 with the user's go-ahead (reading
 test_confirms, V5_TEST_REPORT.md). Do not score the V5 test split again; any AEGIS gate still needs approval.
+
+HIL (2026-10-27): the user approved the design of the mid-task intervention
+robustness experiment (docs/generative_verifier/V5_HIL_PROTOCOL.md): pi0.5 alone,
+policy twins on object/II/task1, no verifier, no paid API. Implementation and unit
+tests need no further approval; the GPU smoke and the formal batch are new pi0.5
+executions and need the user's go-ahead before launch. Test sources episode0/8/9/15
+stay untouched.
