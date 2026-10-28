@@ -1,4 +1,4 @@
-# V5 交接（2026-10-27：S5 完成，`self_computes`）
+# V5 交接（2026-10-27：HIL 完成，`ignores_rule`；S5 完成，`self_computes`）
 
 读者：接手的人（用户本人，或下一个 Claude/Codex 会话）。先读 [AGENTS.md](../../AGENTS.md) 和 [CURRENT.md](../CURRENT.md)，再读本文的"接手指南"。后面按日期排的各节是历史记录。
 
@@ -17,21 +17,24 @@ V5 这一轮的故事线已经走完一遍，只用了 object/II/task1 一个任
 | 测试评估 | 4 条没见过的测试源上 P 0.924–0.942，A 0.50；P − A +0.432 [+0.416, +0.449]（`test_confirms`） | [V5_TEST_REPORT.md](V5_TEST_REPORT.md) |
 | 检测器基线 | 不训练，AEGIS 的 GroundingDINO 找四个物体再跑同一段程序：验证 0.521，P 0.940；P − 检测器 +0.419 [+0.395, +0.443]（`training_needed`）；布丁几乎找不到 | [V5_DET_REPORT.md](V5_DET_REPORT.md) |
 | **S5** | S 写出 P 的四个点，再自己写叉积、正负号和结论，测试时没有代码：验证 0.923，A 0.501；S − A +0.421 [+0.397, +0.446]（`self_computes`）；错误 112/119 在定位，7 行在计算 | [V5_S5_REPORT.md](V5_S5_REPORT.md) |
+| **HIL** | π0.5 单独（无 verifier）：160 个中途状态 × 4 条提示（同一种子）。不可行规则下 160/160 抓着布丁越线、156 次照样完成；不给规则完成 157/160；可行与不可行规则结果相同 0.950（`ignores_rule`）；加一句话会改变动作，句子内容几乎不起作用 | [V5_HIL_REPORT.md](V5_HIL_REPORT.md) |
 
-- **一句话**：在自然分布上训练、在挡住捷径的反事实孪生上测试，直接判断只有 50%；模型先写出看得见的位置、再由固定代码判定，验证 94%、测试 93%。模型负责"东西在哪"，代码负责"隔没隔开"；P 自己写的结论是随机水平。"东西在哪"不能换成现成检测器：AEGIS 自带的 GroundingDINO 加同一段程序只有 52%。**10-27 的 S5 补上了"从位置推出结论"**：把计算（位移、叉积、正负号）写进训练目标后，模型自己写的结论是 92%，不再需要代码；乘法是近似算的，但只要正负号，够用。
+- **一句话**：在自然分布上训练、在挡住捷径的反事实孪生上测试，直接判断只有 50%；模型先写出看得见的位置、再由固定代码判定，验证 94%、测试 93%。模型负责"东西在哪"，代码负责"隔没隔开"；P 自己写的结论是随机水平。"东西在哪"不能换成现成检测器：AEGIS 自带的 GroundingDINO 加同一段程序只有 52%。**10-27 的 S5 补上了"从位置推出结论"**：把计算（位移、叉积、正负号）写进训练目标后，模型自己写的结论是 92%，不再需要代码；乘法是近似算的，但只要正负号，够用。**10-27 晚的 HIL 补上了"没有 verifier 时会怎样"**：π0.5 不理会任务中途用语言加入的规则，不可行时 100% 越线，绝大多数照样完成。
 - **状态**：
   - 没有正在运行的 CrashBench 作业；队列里 p31777 账号的作业是别的项目，不要动；
-  - 工作区干净，所有工作都在 `main` 上并已推送（10-27 从 `v5-s5` 分支快进；见 CURRENT.md 的分支一节）；
-  - 主报告页 <https://claude.ai/artifact/Ya7FQbZC9yEuNNyYhPBHHT> 是第 24 版（加了 `#v5-s5`），与仓库里的 `PHASE2_REPORT.html` 相同。
+  - 工作区干净，所有工作都在 `main` 上并已推送（10-27 从 `v5-hil` 分支快进；见 CURRENT.md 的分支一节）；
+  - 主报告页 <https://claude.ai/artifact/Ya7FQbZC9yEuNNyYhPBHHT> 是第 24 版（加了 `#v5-s5`），与仓库里的 `PHASE2_REPORT.html` 相同；**还没有 HIL 一节**，要不要加由用户决定。
 - **10-27 方向**：用户决定主线回到原来的想法（模型自己推理、自己下结论）。P 的"代码判定"相当于把生成标签的规则直接写给了它，P 对 A 的差距衡量的主要是定位，所以 P 只作诊断，不当作方法。用 P 做闸门或系统保留为备选。主线的第一步 S5（让模型自己写出计算）已完成，读法 `self_computes`（1 个 seed，只看验证）。
-- **10-27 晚：导师的问题与 HIL 设计**：导师问 "How robust is the VLA toward humans in the (mid-trajectory) loop intervention?"。分析见 [V5_HIL_PROTOCOL.md](V5_HIL_PROTOCOL.md) 第 0 节：不换题，把它当系统论文的动机和基线行——V5 的中途规则就是一次人的干预，S5 回答了 verifier 能否判断它，没回答 π0.5 自己会怎样。设计（策略孪生：同一状态、同一种子、四条提示 C0 无规则 / C1 中性句 / C2 可行规则 / C3 不可行规则，160 个状态 × 4 = 640 次 π0.5 执行，读法 `ignores_rule` / `obeys_rule` / `breaks_on_prompt`）已由用户批准，**未实现、未 smoke**。下一个 agent 从选项 7 开始。
+- **10-27 晚：导师的问题与 HIL 设计**：导师问 "How robust is the VLA toward humans in the (mid-trajectory) loop intervention?"。分析见 [V5_HIL_PROTOCOL.md](V5_HIL_PROTOCOL.md) 第 0 节：不换题，把它当系统论文的动机和基线行——V5 的中途规则就是一次人的干预，S5 回答了 verifier 能否判断它，没回答 π0.5 自己会怎样。设计（策略孪生：同一状态、同一种子、四条提示 C0 无规则 / C1 中性句 / C2 可行规则 / C3 不可行规则，160 个状态 × 4 = 640 次 π0.5 执行，读法 `ignores_rule` / `obeys_rule` / `breaks_on_prompt`）已由用户批准；**10-27 晚已实现、smoke、冻结并跑完正式 640 次**，读法 `ignores_rule`，见 [V5_HIL_REPORT.md](V5_HIL_REPORT.md) 和下面"2026-10-27 HIL 完成"一节。
 - **V5 测试集已经用掉**：`test`、`test_natural` 以后不再评估，也不拿来选模或调参。新方法如果要一个没碰过的测试，需要新的留出源（要另批数据）。V4 的锁定测试集同样不再评估。
 
 ### 接下来可以做什么（每一项都要用户先点头）
 
 | 选项 | 要做什么 | 需要的批准 | 大概的量 | 从哪开始 |
 |---|---|---|---|---|
-| 7. HIL：π0.5 对中途规则的鲁棒性（用户 10-27 批准设计，推荐先做） | 按 [V5_HIL_PROTOCOL.md](V5_HIL_PROTOCOL.md) 实现运行器和测试，草稿目录 smoke 16 次，填第 10 节并冻结，正式 640 次，写 `V5_HIL_REPORT.md` | 实现不需再批；smoke 和正式批次启动前向用户确认一次（新 π0.5 执行）；不调 API | 约 11 GPU 小时，两张卡一晚 | `verifier_dataset/v5_layouts.py`（`place`、回放）、`experiments/feasibility/runtime.py` 与 `serve.py`（钩子、策略服务）、`experiments/red_enclosure/policy_prompt.py`（提示拼法）、`v5_geometry.line_signed`；建议 `verifier_dataset/v5_hil_run.py` + `v5_hil.sbatch` + `launch_v5 hil` |
+| ~~7. HIL~~（10-27 完成，`ignores_rule`） | 见 [V5_HIL_REPORT.md](V5_HIL_REPORT.md) | — | 实际约 3.1 GPU 小时（每次执行约 17 秒），两张卡 1 小时 40 分 | 运行器 `verifier_dataset/v5_hil_run.py`，启动器 `v5_launch hil` |
+| 8. HIL 补"可行却不遵守"（可选） | 这次的可行规则都不需要绕路（C0 自然越线 0/160），没测到"可行却不遵守"。补可行但要绕路的规则（锚点挪到原路线上），或规则给出后再挪锚点的物理干预 | 新的 π0.5 执行；可能要新布局（数据批准） | 每 160 个状态约 3 GPU 小时 | `v5_hil.py`（`pool`、`plan`）、`v5_hil_run.py`、`v5_layouts.py` |
+| 9. HIL 加策略或种子（可选） | 同一套运行器换 OpenVLA-OFT 等策略或加种子，扩大基线的覆盖面 | 新的策略执行；OFT 的策略服务要另写 | 每个策略约 3 GPU 小时 | `v5_hil.sbatch`（策略服务那一段） |
 | 1. S 加 seed（主线） | S 补 seed 714、715，只看验证，读法沿用 S5 协议第 5 节；看 0.92 稳不稳、比 P 低的 0.017 是不是波动 | GPU 训练 | 每个 seed 约 11 GPU 小时（大部分是生成，每次约 12 秒）；两张 GPU 并行约 11 小时 | `v5_self_contract.py`、`v5_self_run.py`、`launch_v5.py`（参照加 seed 的 `seeds` 动作写一个 S 版本） |
 | 2. 干净的测试（主线） | V5 测试集已用掉；S 要正式测试，需要新的留出源。object/II/task1 的初始状态 20–49 没用过，但没有逐步动作记录，要重新执行 nominal π0.5，再布局、渲染、建集 | 数据采集批准 | CPU 回放和布局 + GPU 渲染和执行 | [V5_S1_REPORT.md](V5_S1_REPORT.md)、[V5_S2_REPORT.md](V5_S2_REPORT.md)、`verifier_dataset/v5_launch.py` |
 | 3. AEGIS 闸门（备选） | 机器人动手前判断新规则下任务还做不做得成，做不成就拦下。感知不能用 AEGIS 自带的检测器；可以用 P（代码判定）或 S（模型自己判定） | 控制器改动（AGENTS.md 的 Phase 4 规则）；跑完整 AEGIS 还要付费 API 的预算批准 | 先写设计稿（10-26 建议：规则连线作为 CBF-QP 的半空间约束）；S 每次判断约 12 秒，要做在线闸门需要更短的写法 | [REPRODUCTION.md](../REPRODUCTION.md)、[reproduction/BATCH_RUN.md](../reproduction/BATCH_RUN.md)、`setup/submit_safelibero_full.sh`；输入构造在 `v5_pos_run.p_item`、`v5_self_run.s_item` |
@@ -68,7 +71,20 @@ V5 这一轮的故事线已经走完一遍，只用了 object/II/task1 一个任
 | 测试读数 | 测试目录的 `TEST_READING.json` |
 | 检测器基线读数 | 检测器基线目录的 `DET_READING.json`；原始框在 `detect/detections.jsonl` |
 | S5 读数 | S5 目录的 `S5_READING.json`；逐行输出和逐步核对在 `S_seed713/validation.jsonl` |
+| HIL | 运行目录 `/projects/p33100/siosio/crashbench_safelibero/verifier_dataset/20261028T024002Z_v5-hil_8d06be7c60a4`：`HIL_READING.json`（读数）、`RUNS.jsonl.gz`（640 次执行一行一个）、`state_<i>/<条件>/`（`ROW.json`、逐步记录 `STEPS.jsonl.gz`、`POLICY.jsonl`、策略输入图）；两次 smoke 在同级目录 `…_v5-hil-smoke_5eb71fba294b`、`…_v5-hil-smoke_a9c99ebcc97f` |
 | 主报告页 | <https://claude.ai/artifact/Ya7FQbZC9yEuNNyYhPBHHT>，仓库副本 `docs/generative_verifier/PHASE2_REPORT.html` |
+
+## 2026-10-27 HIL 完成（`ignores_rule`）
+
+- 用户："写运行器和测试 → 草稿目录 smoke 16 次 → 填第 10 节、冻结 → 正式 640 次 → V5_HIL_REPORT.md"（一次确认了 smoke 和正式批次）。
+- **结果**见 [V5_HIL_REPORT.md](V5_HIL_REPORT.md)：不可行规则下 160/160 抓着布丁越线（156 次照样完成）；不给规则完成 157/160；中性句 156/160；可行规则 156/160；可行与不可行规则结果相同 0.950 [0.904, 0.987]；各进度段 R1 都是 1.000。可行规则"不越线"只是原路线本来就不越（C0 自然越线 0/160）。探索性：加一句话让第一个动作块变化约 0.17、末端约 18 步后分开；中性句对不可行规则只差约 0.02，97/160 整程没分开。
+- 代码：`verifier_dataset/v5_hil.py`（纯函数，Python 3.8）、`v5_hil_run.py`（容器里的运行器和汇总）、`v5_hil.sbatch`、`v5_hil_summary.sbatch`、`v5_hil_figures.py`（报告的两张图），启动器 `python -m verifier_dataset.v5_launch hil-smoke|hil S2_ROOT`（`hil` 要求协议已冻结）。测试 `verifier_dataset/tests/test_v5_hil.py` 23 个，连同原有 V5 数据测试共 64 个。
+- 协议 [V5_HIL_PROTOCOL.md](V5_HIL_PROTOCOL.md) 冻结于 `8d06be7`（实现 `5eb71fb`、`2f81374`、`0105502`）；作业 5697456（两个 A100 分片）→ 5697474，全部 COMPLETED 0:0。
+- **坑**：
+  - 源带的物理哈希是在更新末端标记（`eef_marker`，位置算进哈希）**之前**算的，S1a 布局运行的是在**之后**算的；自然布局要先核对再更新（第一次 smoke 就停在这里）；
+  - π0.5 在 GPU 上跨作业不能逐位复现：同一输入、同一 RNG key，第一个动作块差约 0.002，轨迹几十步后会分开；结果率不受影响，"分开的步数"要对照这个噪声底读；
+  - π0.5 输出的动作约 31% 的步有某一维超出 [−1, 1]，官方循环原样送入环境（robosuite 内部裁剪），这里也一样，只记录；
+  - 每次执行一个新进程，约 17 秒（含从头回放到 t）；每个作业的第一次因 JIT 约 60 秒。
 
 ## 2026-10-27 导师问题与 HIL 设计（交接）
 
