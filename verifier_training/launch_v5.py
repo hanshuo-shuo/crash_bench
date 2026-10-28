@@ -20,6 +20,10 @@ python -m verifier_training.launch_v5 det --s3 S3_RUN --s4 S4_RUN --seeds SEEDS_
 python -m verifier_training.launch_v5 s5 --s3 S3_RUN --s4 S4_RUN
                                                           S5 (docs/generative_verifier/V5_S5_PROTOCOL.md): CPU preflight, one
                                                           20-hour GPU job for arm S seed 713, then the report
+python -m verifier_training.launch_v5 gate --hil HIL_RUN --s3 S3_RUN --s4 S4_RUN --seeds SEEDS_RUN --s5 S5_RUN --test TEST_RUN
+                                                          offline gate (docs/generative_verifier/V5_GATE_OFFLINE_PROTOCOL.md):
+                                                          CPU preflight, then the CPU report; the test run's receipt is read
+                                                          only for its hashes of the A and P validation records
 
 At most two GPUs at any time: the two training lanes, then the 32B stage (two GPUs) once both lanes end.
 """
@@ -33,7 +37,7 @@ from .launch import command
 from .launch_verdict_diagnostic import ASSETS
 from .launch_fd1000 import published_commit,archive,stamp
 from .v5_contract import configuration,validate,DATASET,DATASET_HASHES
-from . import v5_fit_contract,v5_pos_contract,v5_seeds_contract,v5_test_contract,v5_det_contract,v5_self_contract
+from . import v5_fit_contract,v5_pos_contract,v5_seeds_contract,v5_test_contract,v5_det_contract,v5_self_contract,v5_gate_contract
 
 PROTOCOL='docs/generative_verifier/V5_S3_PROTOCOL.md'
 SCRIPTS={'cpu':'v5_cpu.sbatch','gpu':'v5_gpu.sbatch','gpu2':'v5_zero_shot_32b.sbatch','det':'v5_det_gpu.sbatch','gpulong':'v5_gpu_long.sbatch'}
@@ -45,6 +49,10 @@ SEEDS_PROTOCOL='docs/generative_verifier/V5_SEEDS_PROTOCOL.md'
 TEST_PROTOCOL='docs/generative_verifier/V5_TEST_PROTOCOL.md'
 DET_PROTOCOL='docs/generative_verifier/V5_DET_PROTOCOL.md'
 S5_PROTOCOL='docs/generative_verifier/V5_S5_PROTOCOL.md'
+GATE_PROTOCOL='docs/generative_verifier/V5_GATE_OFFLINE_PROTOCOL.md'
+GATE_AUTHORIZATION=('2026-10-28 user approved the recommended offline gate after the HIL report ("开始吧"): the 60 HIL states from '
+    'validation sources (120 questions) read with the stored A, P and S validation verdicts and the HIL pi0.5 runs; no new execution, '
+    'training, API call or controller change; the test split is not read')
 S5_AUTHORIZATION=('2026-10-27 user set the main line back to the model deciding itself ("我还是觉得应该是先继续原来的想法 但是2可以保留下") '
     'and approved this step ("我觉得很好 帮我开始吧"): arm S writes the positions, the side computation and its own verdict, with the S4 '
     'settings and seed 713, validation only, against the S3 A and S4 P records; no test, no API, no new data')
@@ -322,9 +330,57 @@ def s5(s3,s4):
     submit(root,'report',[module,'report',str(root)],'cpu',after=(tr,))
 
 
+def gate_root(root,commit,roots,witness):
+    """An offline-gate campaign root: source archive, configuration and the receipt with every evidence file's hash."""
+    archive(root,commit);write(root/'config.json',v5_gate_contract.configuration())
+    receipt=dict(stage='v5-gate-offline',source_commit=commit,upstream_commit=UPSTREAM,run_root=str(root),**{k+'_root':str(v) for k,v in roots.items()},
+        **{k+'_files':{f:sha(roots[k]/f) for f in names} for k,names in v5_gate_contract.FILES.items()},hash_witness=str(witness),
+        hash_witness_sha256=sha(witness),configuration_sha256=sha(root/'config.json'),protocol=GATE_PROTOCOL,
+        protocol_sha256=sha(root/'source'/GATE_PROTOCOL),executions=0,training=0,api_calls=0,authorization=GATE_AUTHORIZATION,
+        scope='pi0.5 plus A, P, S or truth gates on the 60 validation-source HIL states, from stored records; the test split is not read')
+    write(root/'RECEIPT.json',receipt)
+
+
+def gate_jobs(root):
+    module='verifier_training.v5_gate_run';pre=submit(root,'preflight',[module,'preflight',str(root)],'cpu')
+    submit(root,'report',[module,'report',str(root)],'cpu',after=(pre,),dependency='afterok')
+
+
+def gate_roots(hil,s3,s4,seeds_root,s5,test_run):
+    """Check the finished HIL, S3, S4, seed and S5 runs and their chain; the A and P records must match the test run's hashes."""
+    roots=dict(hil=hil,s3=s3,s4=s4,seeds=seeds_root,s5=s5);roots={k:Path(os.path.abspath(v)) for k,v in roots.items()};test_run=Path(os.path.abspath(test_run))
+    roots['hil'].resolve().relative_to((BASE/'verifier_dataset').resolve())
+    for k in ('s3','s4','seeds','s5'):roots[k].resolve().relative_to((BASE/'verifier_training/runs').resolve())
+    rh,r3,r4,rs,r5,rt=(read(p/'RECEIPT.json') for p in (roots['hil'],roots['s3'],roots['s4'],roots['seeds'],roots['s5'],test_run))
+    require((rh['stage'],rh['mode'],r3['stage'],r4['stage'],rs['stage'],r5['stage'],rt['stage'])==('v5-hil','formal','v5-s3-pilot','v5-s4','v5-seeds','v5-s5','v5-test'),
+            'Unexpected prior runs')
+    same=lambda a,b:Path(a).resolve()==Path(b).resolve()
+    require(same(r4['s3_root'],roots['s3']) and same(rs['s3_root'],roots['s3']) and same(rs['s4_root'],roots['s4']) and same(r5['s3_root'],roots['s3'])
+            and same(r5['s4_root'],roots['s4']) and same(rt['seeds_root'],roots['seeds']),'Prior runs do not chain')
+    require(read(roots['hil']/'HIL_COMPLETE.json')['passed'] and completed(rh['job']) and completed(rh['summarize_job']),'HIL batch did not finish normally')
+    require(read(roots['seeds']/'SEEDS_READING.json')['reading']=='stable' and read(roots['s5']/'S5_READING.json')['passed'] is True,'Seed or S5 reading missing')
+    for key,labels in (('s3',('A_seed713','report')),('s4',('P_seed713','report')),('seeds',('A_seed714','A_seed715','P_seed714','P_seed715','report')),
+                       ('s5',('S_seed713','report'))):
+        for label in labels:require(completed(read(roots[key]/(label+'_SUBMISSION.json'))['job']),'Prior job did not finish normally: %s %s'%(key,label))
+    for key in ('s3','s4','seeds'):
+        names=v5_gate_contract.FILES[key];require(all(n in rt['evidence'][key] for n in names if n.endswith('validation.jsonl')),'No prior hash for a record file')
+        for name in names:
+            if name in rt['evidence'][key]:require(sha(roots[key]/name)==rt['evidence'][key][name],'Record changed since the test campaign: %s %s'%(key,name))
+    return roots,test_run/'RECEIPT.json'
+
+
+def gate(hil,s3,s4,seeds_root,s5,test_run):
+    """Offline gate: a new CPU campaign over the finished HIL batch and the stored validation verdicts."""
+    commit=published_commit();repo=Path.cwd()
+    require('状态：已冻结' in (repo/GATE_PROTOCOL).read_text(),'Freeze the offline-gate protocol before launching')
+    roots,witness=gate_roots(hil,s3,s4,seeds_root,s5,test_run)
+    root=BASE/'verifier_training/runs'/(stamp()+'_v5-gate-offline_'+commit[:12]);gate_root(root,commit,roots,witness);gate_jobs(root)
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('action',choices=('create','pilot','stage','fit','s4','seeds','test','det','s5'))
+    p=argparse.ArgumentParser();p.add_argument('action',choices=('create','pilot','stage','fit','s4','seeds','test','det','s5','gate'))
     p.add_argument('--root',type=Path);p.add_argument('--s3',type=Path);p.add_argument('--s4',type=Path);p.add_argument('--seeds',type=Path)
+    p.add_argument('--hil',type=Path);p.add_argument('--s5',type=Path);p.add_argument('--test',type=Path)
     p.add_argument('--stage');p.add_argument('--arm');p.add_argument('--seed',type=int)
     p.add_argument('--after',default='')
     a=p.parse_args()
@@ -336,4 +392,5 @@ if __name__=='__main__':
     elif a.action=='test':test(a.s3,a.s4,a.seeds)
     elif a.action=='det':det(a.s3,a.s4,a.seeds)
     elif a.action=='s5':s5(a.s3,a.s4)
+    elif a.action=='gate':gate(a.hil,a.s3,a.s4,a.seeds,a.s5,a.test)
     else:stage(a.root,a.stage,a.arm,a.seed,tuple(x for x in a.after.split(',') if x))
