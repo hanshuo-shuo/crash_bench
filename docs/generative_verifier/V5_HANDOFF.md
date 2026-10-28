@@ -1,8 +1,8 @@
-# V5 交接（2026-10-27：HIL 完成，`ignores_rule`；S5 完成，`self_computes`）
+# V5 交接（2026-10-28：离线闸门完成，`gate_prevents`；10-27 HIL `ignores_rule`、S5 `self_computes`）
 
 读者：接手的人（用户本人，或下一个 Claude/Codex 会话）。先读 [AGENTS.md](../../AGENTS.md) 和 [CURRENT.md](../CURRENT.md)，再读本文的"接手指南"。后面按日期排的各节是历史记录。
 
-## 接手指南（2026-10-27 更新，先读这一节）
+## 接手指南（2026-10-28 更新，先读这一节）
 
 ### 现在在哪
 
@@ -18,12 +18,13 @@ V5 这一轮的故事线已经走完一遍，只用了 object/II/task1 一个任
 | 检测器基线 | 不训练，AEGIS 的 GroundingDINO 找四个物体再跑同一段程序：验证 0.521，P 0.940；P − 检测器 +0.419 [+0.395, +0.443]（`training_needed`）；布丁几乎找不到 | [V5_DET_REPORT.md](V5_DET_REPORT.md) |
 | **S5** | S 写出 P 的四个点，再自己写叉积、正负号和结论，测试时没有代码：验证 0.923，A 0.501；S − A +0.421 [+0.397, +0.446]（`self_computes`）；错误 112/119 在定位，7 行在计算 | [V5_S5_REPORT.md](V5_S5_REPORT.md) |
 | **HIL** | π0.5 单独（无 verifier）：160 个中途状态 × 4 条提示（同一种子）。不可行规则下 160/160 抓着布丁越线、156 次照样完成；不给规则完成 157/160；可行与不可行规则结果相同 0.950（`ignores_rule`）；加一句话会改变动作，句子内容几乎不起作用 | [V5_HIL_REPORT.md](V5_HIL_REPORT.md) |
+| **离线闸门** | HIL 的 60 个验证源状态（120 道题）上用已有判定拼出"π0.5 + 闸门"（判不可行就停）：π0.5 单独越线 60/60、完成 59/60；加 S 越线 5/60（0.083）、完成 52/60（0.867），`gate_prevents`，完成率只比门槛多 1 道题；A 每个 seed 塌成全拦或全放；P（诊断）越线 0.056、完成 0.917 | [V5_GATE_REPORT.md](V5_GATE_REPORT.md) |
 
-- **一句话**：在自然分布上训练、在挡住捷径的反事实孪生上测试，直接判断只有 50%；模型先写出看得见的位置、再由固定代码判定，验证 94%、测试 93%。模型负责"东西在哪"，代码负责"隔没隔开"；P 自己写的结论是随机水平。"东西在哪"不能换成现成检测器：AEGIS 自带的 GroundingDINO 加同一段程序只有 52%。**10-27 的 S5 补上了"从位置推出结论"**：把计算（位移、叉积、正负号）写进训练目标后，模型自己写的结论是 92%，不再需要代码；乘法是近似算的，但只要正负号，够用。**10-27 晚的 HIL 补上了"没有 verifier 时会怎样"**：π0.5 不理会任务中途用语言加入的规则，不可行时 100% 越线，绝大多数照样完成。
+- **一句话**：在自然分布上训练、在挡住捷径的反事实孪生上测试，直接判断只有 50%；模型先写出看得见的位置、再由固定代码判定，验证 94%、测试 93%。模型负责"东西在哪"，代码负责"隔没隔开"；P 自己写的结论是随机水平。"东西在哪"不能换成现成检测器：AEGIS 自带的 GroundingDINO 加同一段程序只有 52%。**10-27 的 S5 补上了"从位置推出结论"**：把计算（位移、叉积、正负号）写进训练目标后，模型自己写的结论是 92%，不再需要代码；乘法是近似算的，但只要正负号，够用。**10-27 晚的 HIL 补上了"没有 verifier 时会怎样"**：π0.5 不理会任务中途用语言加入的规则，不可行时 100% 越线，绝大多数照样完成。**10-28 的离线闸门把两者接起来**：规则到达时 S 判一次、判不可行就停，60 个验证源状态上违规从 100% 降到 8%，可行任务完成从 98% 降到 87%（`gate_prevents`，余量 1 道题；离线拼接，不是在线控制器）。
 - **状态**：
   - 没有正在运行的 CrashBench 作业；队列里 p31777 账号的作业是别的项目，不要动；
-  - 工作区干净，所有工作都在 `main` 上并已推送（10-27 从 `v5-hil` 分支快进；见 CURRENT.md 的分支一节）；
-  - 主报告页 <https://claude.ai/artifact/Ya7FQbZC9yEuNNyYhPBHHT> 是第 25 版（10-27 晚用户"加上然后写下一步"：加了 `#v5-hil`、图 c16 和新的 `#v5-next` 下一步），与仓库里的 `PHASE2_REPORT.html` 相同。
+  - 工作区干净，所有工作都在 `main` 上并已推送（10-28 从 `v5-gate` 分支快进；见 CURRENT.md 的分支一节）；
+  - 主报告页 <https://claude.ai/artifact/Ya7FQbZC9yEuNNyYhPBHHT> 是第 26 版（10-28：加了 `#v5-gate`、图 c17，更新了 `#v5-next`），与仓库里的 `PHASE2_REPORT.html` 相同。
 - **10-27 方向**：用户决定主线回到原来的想法（模型自己推理、自己下结论）。P 的"代码判定"相当于把生成标签的规则直接写给了它，P 对 A 的差距衡量的主要是定位，所以 P 只作诊断，不当作方法。用 P 做闸门或系统保留为备选。主线的第一步 S5（让模型自己写出计算）已完成，读法 `self_computes`（1 个 seed，只看验证）。
 - **10-27 晚：导师的问题与 HIL 设计**：导师问 "How robust is the VLA toward humans in the (mid-trajectory) loop intervention?"。分析见 [V5_HIL_PROTOCOL.md](V5_HIL_PROTOCOL.md) 第 0 节：不换题，把它当系统论文的动机和基线行——V5 的中途规则就是一次人的干预，S5 回答了 verifier 能否判断它，没回答 π0.5 自己会怎样。设计（策略孪生：同一状态、同一种子、四条提示 C0 无规则 / C1 中性句 / C2 可行规则 / C3 不可行规则，160 个状态 × 4 = 640 次 π0.5 执行，读法 `ignores_rule` / `obeys_rule` / `breaks_on_prompt`）已由用户批准；**10-27 晚已实现、smoke、冻结并跑完正式 640 次**，读法 `ignores_rule`，见 [V5_HIL_REPORT.md](V5_HIL_REPORT.md) 和下面"2026-10-27 HIL 完成"一节。
 - **V5 测试集已经用掉**：`test`、`test_natural` 以后不再评估，也不拿来选模或调参。新方法如果要一个没碰过的测试，需要新的留出源（要另批数据）。V4 的锁定测试集同样不再评估。
@@ -33,7 +34,7 @@ V5 这一轮的故事线已经走完一遍，只用了 object/II/task1 一个任
 | 选项 | 要做什么 | 需要的批准 | 大概的量 | 从哪开始 |
 |---|---|---|---|---|
 | ~~7. HIL~~（10-27 完成，`ignores_rule`） | 见 [V5_HIL_REPORT.md](V5_HIL_REPORT.md) | — | 实际约 3.1 GPU 小时（每次执行约 17 秒），两张卡 1 小时 40 分 | 运行器 `verifier_dataset/v5_hil_run.py`，启动器 `v5_launch hil` |
-| **10. 离线闸门（推荐先做）** | HIL 的 60 个验证源状态（120 道题）上，用 S5 / P / A 已有的验证判定拼出"π0.5 + 闸门"：判不可行就停，判可行就用 HIL 里那次执行的结果；比较违规率和完成率 | 新的分析步骤，用户点头即可；不是控制器改动，没有新执行 | CPU 几分钟 | 协议草稿 [V5_GATE_OFFLINE_PROTOCOL.md](V5_GATE_OFFLINE_PROTOCOL.md)；记录在 HIL、S3、加 seed、S4、S5 运行目录 |
+| ~~10. 离线闸门~~（10-28 完成，`gate_prevents`） | 见 [V5_GATE_REPORT.md](V5_GATE_REPORT.md) | — | 实际 CPU 约 1 分钟 | `verifier_training/v5_gate_contract.py`、`v5_gate_run.py`，启动器 `launch_v5 gate`；S 加 seed 后可以按 3 个 seed 重算（不用新执行） |
 | 8. HIL 补"可行却不遵守"（可选） | 这次的可行规则都不需要绕路（C0 自然越线 0/160）。直线规则做不到（可行 = 同侧，半平面是凸的），要换成禁区规则（"离某物体至少几厘米"），物体挪到原路线上、留出绕行空间；或规则给出后再挪锚点的物理干预 | 新的 π0.5 执行；要新布局（数据批准） | 每 160 个状态约 3 GPU 小时 | `v5_hil.py`（`pool`、`plan`）、`v5_hil_run.py`、`v5_layouts.py`、`v5_geometry.rules`（已有 zone 模板） |
 | 9. HIL 加策略或种子（可选） | 同一套运行器换 OpenVLA-OFT 等策略或加种子，扩大基线的覆盖面 | 新的策略执行；OFT 的策略服务要另写 | 每个策略约 3 GPU 小时 | `v5_hil.sbatch`（策略服务那一段） |
 | 1. S 加 seed（主线） | S 补 seed 714、715，只看验证，读法沿用 S5 协议第 5 节；看 0.92 稳不稳、比 P 低的 0.017 是不是波动 | GPU 训练 | 每个 seed 约 11 GPU 小时（大部分是生成，每次约 12 秒）；两张 GPU 并行约 11 小时 | `v5_self_contract.py`、`v5_self_run.py`、`launch_v5.py`（参照加 seed 的 `seeds` 动作写一个 S 版本） |
@@ -59,7 +60,7 @@ V5 这一轮的故事线已经走完一遍，只用了 object/II/task1 一个任
 - Quest：账号 p33100，GPU 分区 gengpu，CPU 分区 short，同时最多 2 张 GPU；登录节点上不跑重活；计算节点离线，资产要先放好。有 CrashBench 作业在跑时不要改源码目录。
 - 不调付费 API，除非用户另批；OpenRouter 的 key 不打印、不提交、不进日志。
 - 评估已训练的 adapter 时要打开 TF32（`torch.backends.cuda.matmul.allow_tf32=True`），否则复现不了训练时的输出。
-- 跑测试：`PYTHONPATH=/projects/p33100/siosio/crashbench_safelibero/verifier_training/assets/20261010_d94c245/packages:. /projects/p33100/siosio/envs/openpi/bin/python -m unittest <verifier_training/tests 下的模块>`（`unittest discover` 不能用）；共 187 个。
+- 跑测试：`PYTHONPATH=/projects/p33100/siosio/crashbench_safelibero/verifier_training/assets/20261010_d94c245/packages:. /projects/p33100/siosio/envs/openpi/bin/python -m unittest <verifier_training/tests 下的模块>`（`unittest discover` 不能用）；`verifier_training/tests` 共 205 个（`verifier_dataset/tests` 另有 64 个）。
 - 更多的坑见下面"坑"和"规矩"两小节。
 
 ### 关键路径
@@ -74,6 +75,19 @@ V5 这一轮的故事线已经走完一遍，只用了 object/II/task1 一个任
 | S5 读数 | S5 目录的 `S5_READING.json`；逐行输出和逐步核对在 `S_seed713/validation.jsonl` |
 | HIL | 运行目录 `/projects/p33100/siosio/crashbench_safelibero/verifier_dataset/20261028T024002Z_v5-hil_8d06be7c60a4`：`HIL_READING.json`（读数）、`RUNS.jsonl.gz`（640 次执行一行一个）、`state_<i>/<条件>/`（`ROW.json`、逐步记录 `STEPS.jsonl.gz`、`POLICY.jsonl`、策略输入图）；两次 smoke 在同级目录 `…_v5-hil-smoke_5eb71fba294b`、`…_v5-hil-smoke_a9c99ebcc97f` |
 | 主报告页 | <https://claude.ai/artifact/Ya7FQbZC9yEuNNyYhPBHHT>，仓库副本 `docs/generative_verifier/PHASE2_REPORT.html` |
+
+## 2026-10-28 离线闸门完成（`gate_prevents`）
+
+- 用户："开始吧"（回复推荐先做离线闸门的那条消息）。
+- **结果**见 [V5_GATE_REPORT.md](V5_GATE_REPORT.md)：60 个验证源状态（4 条源，全是静置段），每个状态 C2 可行、C3 不可行两道题；
+  - π0.5 单独：G1（不可行题越线）1.000，G2（可行题完成）0.983（59/60），G3（做对了）0.492；
+  - S 闸门：G1 0.083（5/60）[0.017, 0.150]，G2 0.867（52/60）[0.783, 0.950]，G3 0.892；门槛 G1 ≤ 0.15、G2 ≥ 0.836（51/60），读法 `gate_prevents`；G2 只多 1 道题，区间跨过门槛；
+  - A：713 拦 116/120，714 全拦，715 全放；P（诊断）3 个 seed 平均 G1 0.056、G2 0.917、G3 0.931；真值 G1 0、G2 0.983、G3 0.992；
+  - 没有解析不了的输出，fail-closed 与 fail-open 相同；S 在这 120 道题上判对 108（0.900），误拦 7、漏放 5，其中 9 道至少一个 P 种子也错。
+- 代码：`verifier_training/v5_gate_contract.py`（纯函数）、`v5_gate_run.py`（preflight 只按键对题、不读判定；report 读判定），启动器 `python -m verifier_training.launch_v5 gate --hil --s3 --s4 --seeds --s5 --test`（测试评估的收据只用来核对 A、P 验证记录的哈希）。测试 `verifier_training/tests/test_v5_gate_contract.py` 18 个；连同原有共 205 个。
+- 协议 [V5_GATE_OFFLINE_PROTOCOL.md](V5_GATE_OFFLINE_PROTOCOL.md) 冻结于 `ed616d1`（实现 `85bfd41`）；smoke 5706780 → 5706781（草稿目录，不读判定）；正式 5707174 → 5707176，COMPLETED 0:0。运行目录 `/projects/p33100/siosio/crashbench_safelibero/verifier_training/runs/20261028T054139Z_v5-gate-offline_ed616d1aaff5`（`GATE_READING.json`、`GATE_QUESTIONS.jsonl`）。
+- **坑**：S5 的 `S_seed713/validation.jsonl` 以前没有记过哈希，这次在 report 里从整个文件重算 S 的准确率并与 `RESULT.json`、`S5_READING.json` 对上；它的哈希现在记在本次收据的 `s5_files` 里。
+- 主报告页第 26 版加了 `#v5-gate`。
 
 ## 2026-10-27 HIL 完成（`ignores_rule`）
 
