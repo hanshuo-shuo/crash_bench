@@ -76,20 +76,21 @@ def run_condition(root, index, condition, port):
         low, high = map(np.asarray, env.env.action_spec); obs = None; checked = 0
         for item in tape[:t]:
             obs, _, done, _ = env.step(np.clip(item['applied'], low, high).tolist())
-            update_marker(obs)
+            # The source tape hashed each step before the marker update (as v5_render does); S1a after it.
             if layout is None:
                 if physical_hash(env) != item['physics_after_sha256'] or bool(done) != item['success']:
                     raise RuntimeError('Replay differs from the source at step %d' % item['step'])
                 checked += 1
-            elif str(item['step']) in layout['checkpoint_physics']:
+            update_marker(obs)
+            if layout is not None and str(item['step']) in layout['checkpoint_physics']:
                 if physical_hash(env) != layout['checkpoint_physics'][str(item['step'])]:
                     raise RuntimeError('Replay differs from the S1a layout run at step %d' % item['step'])
                 checked += 1
         at = physical_hash(env)
-        expected = (layout['checkpoint_physics'][str(t)] if layout is not None else
-                    tape[t - 1]['physics_after_sha256'] if t else context['physical_sha256'])
-        if at != expected:
-            raise RuntimeError('State at the checkpoint differs from the recorded physics')
+        if layout is not None and at != layout['checkpoint_physics'][str(t)]:
+            raise RuntimeError('State at the checkpoint differs from the S1a layout run')
+        if layout is None and checked != t:
+            raise RuntimeError('Natural replay did not check every step')
         if obs is None:
             obs = env.env._get_observations(force_update=True)
         objects, surface = scene_objects(env, object_points)

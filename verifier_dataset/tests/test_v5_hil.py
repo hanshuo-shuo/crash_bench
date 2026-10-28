@@ -208,6 +208,12 @@ class Static(unittest.TestCase):
         for needle in ('--account=p33100', '--partition=short', 'unset OPENROUTER_API_KEY', ':ro" \\\n', '--summarize'):
             self.assertIn(needle, cpu)
 
+    def test_natural_replay_checks_the_source_hash_before_the_marker_update(self):
+        text = (ROOT/'verifier_dataset/v5_hil_run.py').read_text()
+        loop = text[text.index('for item in tape[:t]:'):text.index('at = physical_hash(env)')]
+        self.assertLess(loop.index("item['physics_after_sha256']"), loop.index('update_marker(obs)'))
+        self.assertLess(loop.index('update_marker(obs)'), loop.index("layout['checkpoint_physics'][str(item['step'])]"))
+
     def test_launcher_skips_test_rows_unparsed_and_requires_a_frozen_protocol(self):
         text = (ROOT/'verifier_dataset/v5_launch.py').read_text()
         self.assertIn('if \'"split": "test\' in line:', text)
