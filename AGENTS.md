@@ -74,3 +74,10 @@ policy twins on object/II/task1, no verifier, no paid API. Implementation and un
 tests need no further approval; the GPU smoke and the formal batch are new pi0.5
 executions and need the user's go-ahead before launch. Test sources episode0/8/9/15
 stay untouched.
+
+Detour HIL (2026-10-28): the user chose the next step: test whether pi0.5 follows a
+feasible mid-task rule that requires a detour (keep-out zone rule, policy twins on
+object/II/task1); brief in docs/generative_verifier/V5_HANDOFF.md. The protocol draft and
+CPU checks on existing HIL records need no further approval; show the user the protocol.
+New layouts are new data, and the GPU smoke and formal batch are new pi0.5 executions;
+each needs the user's go-ahead. No paid API; test sources episode0/8/9/15 stay untouched.
