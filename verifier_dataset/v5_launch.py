@@ -4,6 +4,8 @@ scan: step 1 CPU geometry scan. render SCAN_ROOT: step 2 render pilot on one A10
 trace, layout/screen TRACE_ROOT: C0 retrace and counterfactual layouts. s1-layout TRACE_ROOT:
 eight layouts per object/II/task1 source. s1-render S1_LAYOUT_ROOT: blind-review renders.
 s2 S1_LAYOUT_ROOT: render the object/II/task1 dataset on two A100 shards, then build it on CPU.
+hil-smoke S2_ROOT / hil S2_ROOT: the HIL policy twins (4 smoke states, or the frozen 160-state batch on two
+A100 shards), then the CPU summary.
 """
 import argparse
 from datetime import datetime, timezone
@@ -21,7 +23,11 @@ PROTOCOLS = dict(scan='docs/generative_verifier/V5_STEP1_PROTOCOL.md', render='d
                  trace='docs/generative_verifier/V5_COLLECTION_PROTOCOL.md', layout='docs/generative_verifier/V5_LAYOUT_PROTOCOL.md',
                  screen='docs/generative_verifier/V5_SCREEN_PROTOCOL.md',
                  **{'s1-layout': 'docs/generative_verifier/V5_S1_PROTOCOL.md', 's1-render': 'docs/generative_verifier/V5_S1_PROTOCOL.md',
-                    's2': 'docs/generative_verifier/V5_S2_PROTOCOL.md'})
+                    's2': 'docs/generative_verifier/V5_S2_PROTOCOL.md', 'hil': 'docs/generative_verifier/V5_HIL_PROTOCOL.md',
+                    'hil-smoke': 'docs/generative_verifier/V5_HIL_PROTOCOL.md'})
+HIL_AUTHORIZATION = ('2026-10-27 user approved the HIL policy-twin design (V5_HIL_PROTOCOL.md) and asked to implement it, smoke '
+                     '16 runs in a draft directory, freeze, then run the formal 640 and report ("写运行器和测试 -> 草稿目录 smoke 16 次 -> '
+                     '填第 10 节、冻结 -> 正式 640 次 -> V5_HIL_REPORT.md"); pi0.5 alone, no verifier, no API, test sources untouched')
 AUTHORIZATION = dict(
     scan='2026-10-24 user: V5 step 1 CPU geometry scan; no rendering, training, API or dataset rows',
     render='2026-10-24 user: V5 step 2 render pilot of about 20 checkpoints; no training, API or dataset rows',
@@ -30,7 +36,9 @@ AUTHORIZATION = dict(
     screen='2026-10-24 user: restrict V5 to twin-capable compositions, no expansion; CPU screen of all 67 V4 sources, no rendering, training, API or dataset rows',
     **{'s1-layout': '2026-10-24 user: train on object/II/task1 only and add all three S1 items; CPU, eight layouts per object source, no rendering, training, API or dataset rows',
        's1-render': '2026-10-24 user: S1 render with a top view and a two-pass blind review on validation sources; no training, API or dataset rows',
-       's2': '2026-10-25 user: continue with S2 (build the object/II/task1 dataset); two A100 render shards and a CPU build, no training or API'})
+       's2': '2026-10-25 user: continue with S2 (build the object/II/task1 dataset); two A100 render shards and a CPU build, no training or API',
+       'hil-smoke': HIL_AUTHORIZATION + '; smoke: 4 states x 4 prompts in a draft run, results only in protocol section 10',
+       'hil': HIL_AUTHORIZATION + '; formal: 160 states x 4 prompts after the protocol is frozen'})
 
 
 def command(*args, env=None):
@@ -159,6 +167,61 @@ def finished(root, complete):
     return receipt
 
 
+def prompt_tokens(texts):
+    """Prompt length in pi0.5's own tokenizer (PaliGemma, BOS + text + newline, max_token_len 200)."""
+    import sys
+    os.environ.setdefault('OPENPI_DATA_HOME', str(ASSETS/'openpi_assets'))
+    sys.path.insert(0, str(Path.cwd()/'third_party/vlsa-aegis/openpi/src'))
+    from openpi.models.tokenizer import PaligemmaTokenizer
+    tokenizer = PaligemmaTokenizer(200)
+    return {t: int(tokenizer.tokenize(t)[1].sum()) for t in sorted(set(texts))}
+
+
+def hil_plan(s2, mode):
+    """Check the S2 and S1a runs, then pick the HIL states and record every prompt's token count."""
+    from . import v5_hil as H
+    receipt = read(s2/'RECEIPT.json')
+    if receipt['stage'] != 'v5-s2' or not read(s2/'S2_COMPLETE.json')['passed'] or not (completed(receipt['job']) and completed(receipt['build_job'])):
+        raise RuntimeError('A finished V5 S2 run is required')
+    for name, digest in read(s2/'HASHES.json').items():
+        if sha(s2/name) != digest:
+            raise RuntimeError('S2 output changed: ' + name)
+    campaign = read(s2/'CAMPAIGN.json'); layout_root = Path(campaign['layout_root'])
+    if finished(layout_root, 'LAYOUT_COMPLETE.json')['stage'] != 'v5-s1-layout' or read(layout_root/'HASHES.json') != campaign['layout_hashes']:
+        raise RuntimeError('S2 layout root changed')
+    rows = []
+    with (s2/'dataset.jsonl').open() as stream:
+        for line in stream:
+            if '"split": "test' in line:
+                continue  # the test splits are skipped unparsed
+            row = json.loads(line)
+            if row['split'].startswith('test'):
+                raise RuntimeError('Test row passed the filter')
+            rows.append(H.flatten(row))
+    units = {u['review_id']: u for u in read(s2/'UNITS.json') if u['split'] in H.SPLITS}
+    specs = {e['spec']['source']: e['spec'] for e in read(layout_root/'LAYOUTS.json')}
+    candidates = H.pool(rows); groups = H.strata(candidates); states = H.plan(candidates, mode)
+    for s in states:
+        u = units[s['image']]
+        if u['source'] != s['image_source'] or u['unit'] != s['checkpoint'] or u['v4_case'] != specs[s['base_source']]['v4_case']:
+            raise RuntimeError('S2 unit disagrees with its rows: ' + s['image'])
+        s.update(layout_case=u.get('layout_case'), spec=specs[s['base_source']])
+        if (s['layout'] is None) != (s['layout_case'] is None) or s['base_source'] in H.TEST_SOURCES:
+            raise RuntimeError('Bad state: ' + s['image'])
+    tokens = prompt_tokens(p for s in states for p in s['prompts'].values())
+    for s in states:
+        s['prompt_tokens'] = {c: tokens[s['prompts'][c]] for c in H.CONDITIONS}
+    if max(tokens.values()) >= H.MAX_TOKENS:
+        raise RuntimeError('A prompt reaches max_token_len and would be truncated')
+    return dict(mode=mode, plan_salt=H.PLAN_SALT, seed_salt=H.SEED_SALT, candidates=len(candidates),
+                supply={'%s/%s/bin%d' % k: len(v) for k, v in sorted(groups.items())},
+                quotas={'%s/%s/bin%d' % k: n for k, n in sorted(H.quotas(groups).items())},
+                prompt_tokens={c: dict(min=min(s['prompt_tokens'][c] for s in states), max=max(s['prompt_tokens'][c] for s in states))
+                               for c in H.CONDITIONS},
+                tokenizer_sha256=sha(ASSETS/'openpi_assets/big_vision/paligemma_tokenizer.model'),
+                s2_root=str(s2), layout_root=str(layout_root), states=states)
+
+
 def main(stage, scan=None):
     repo = Path.cwd().resolve()
     if stage in ('layout', 'screen', 's1-layout') and finished(scan, 'TRACE_COMPLETE.json')['stage'] != 'v5-trace':
@@ -167,6 +230,13 @@ def main(stage, scan=None):
         raise RuntimeError('S1 renders start from an S1 layout run')
     if stage == 's2' and finished(scan, 'LAYOUT_COMPLETE.json')['stage'] != 'v5-s1-layout':
         raise RuntimeError('S2 starts from the S1 layout run')
+    if stage == 'hil' and '状态：已冻结' not in (repo/PROTOCOLS['hil']).read_text():
+        raise RuntimeError('Freeze the HIL protocol before the formal batch')
+    if stage in ('hil', 'hil-smoke'):
+        plan_record = hil_plan(scan, 'formal' if stage == 'hil' else 'smoke'); shards = 2 if stage == 'hil' else 1
+        active = command('squeue', '-h', '-u', os.environ['USER'], '-A', 'p33100', '-p', 'gengpu', '-o', '%j')
+        if sum(x.startswith('cb_') for x in active.splitlines()) + shards > 2:
+            raise RuntimeError('At most two CrashBench GPUs at a time')
     if stage in ('render', 's1-render', 's2'):
         if stage == 's2':
             from .v5_dataset import plan as dataset_plan
@@ -203,6 +273,18 @@ def main(stage, scan=None):
                      str(root/'source/verifier_dataset/v5_render.sbatch'))
         receipt = dict(manifest, job=job, build_job=submit(env, '--dependency=afterok:'+job, '--output='+str(root/'slurm_%j.log'),
                                                            str(root/'source/verifier_dataset/v5_dataset.sbatch')))
+    elif stage in ('hil', 'hil-smoke'):
+        manifest.update(partition='gengpu', mode=plan_record['mode'], shards=shards, states=len(plan_record['states']),
+                        runs=4 * len(plan_record['states']), seed='per state: v5_hil.policy_seed, shared by the four prompts',
+                        policy='pi05_libero', policy_checkpoint=str(ASSETS/'openpi_assets/openpi-assets/checkpoints/pi05_libero'),
+                        s2_root=str(scan), s2_hashes=read(scan/'HASHES.json'), layout_root=plan_record['layout_root'],
+                        layout_hashes=read(Path(plan_record['layout_root'])/'HASHES.json'))
+        write(root/'CAMPAIGN.json', manifest); write(root/'PLAN.json', plan_record)
+        env['CB_HIL_SHARDS'] = str(shards)
+        job = submit(env, '--array=0-%d' % (shards - 1), '--time=%s' % ('12:00:00' if stage == 'hil' else '02:00:00'),
+                     '--output='+str(root/'slurm_%A_%a.log'), str(root/'source/verifier_dataset/v5_hil.sbatch'))
+        receipt = dict(manifest, job=job, summarize_job=submit(env, '--dependency=afterok:'+job, '--output='+str(root/'slurm_%j.log'),
+                                                               str(root/'source/verifier_dataset/v5_hil_summary.sbatch')))
     elif stage == 'scan':
         manifest.update(partition='short', shards=len(SHARDS)); write(root/'CAMPAIGN.json', manifest)
         script = str(root/'source/verifier_dataset/v5_scan.sbatch')
@@ -221,7 +303,7 @@ def main(stage, scan=None):
 
 if __name__ == '__main__':
     p = argparse.ArgumentParser()
-    p.add_argument('stage', choices=['scan', 'render', 'trace', 'layout', 'screen', 's1-layout', 's1-render', 's2'])
+    p.add_argument('stage', choices=['scan', 'render', 'trace', 'layout', 'screen', 's1-layout', 's1-render', 's2', 'hil-smoke', 'hil'])
     p.add_argument('scan_root', type=Path, nargs='?')
     a = p.parse_args()
     if (a.stage not in ('scan', 'trace')) != (a.scan_root is not None):
