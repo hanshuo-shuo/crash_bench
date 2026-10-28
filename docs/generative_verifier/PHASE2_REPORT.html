@@ -271,6 +271,8 @@ l=l==='en'?'en':'zh';var r=document.documentElement;r.setAttribute('data-lang',l
   <p class="small" data-l="en"><b>27 Oct, can we skip training?</b>: replacing P's locating step with AEGIS's own off-the-shelf detector, GroundingDINO, and running the same program scores only 52% on validation (P scores 94%), reading <code>training_needed</code>. The detector almost never finds the pudding; see <a href="#v5-det">Off-the-shelf detector</a>.</p>
   <p class="small" data-l="zh"><b>10-27 模型自己算</b>：S 先写四个点，再自己写出叉积、正负号和结论，测试时不用任何代码。验证集上模型自己写的结论 92%（A 50%，P 自己写的也是 50%），读法 <code>self_computes</code>。错误几乎都在定位上；乘法是估的，但只要正负号，够用。见<a href="#v5-s5">模型自己算</a>。1 个 seed，只看验证。</p>
   <p class="small" data-l="en"><b>27 Oct, the model works it out itself</b>: S writes the four points, then writes out the cross products, their signs and the verdict itself, with no code at test time. On validation the model's own verdict is right 92% of the time (A 50%; P's own verdict also 50%), reading <code>self_computes</code>. Almost all errors are in locating; the multiplications are estimates, but only the signs matter, so that is enough. See <a href="#v5-s5">The model works it out</a>. One seed, validation only.</p>
+  <p class="small" data-l="zh"><b>10-27 晚 π0.5 自己会不会听</b>：导师问 VLA 对任务中途人的干预有多鲁棒。从 160 个中途状态出发，同一个种子、只换提示，让 π0.5 接着做 640 次：给了不可行的规则，它 160 次全都越线，156 次照样把任务做完；给不给规则、规则可不可行，结果都一样，读法 <code>ignores_rule</code>。见 <a href="#v5-hil">π0.5 自己会不会听</a>。</p>
+  <p class="small" data-l="en"><b>27 Oct, evening: does π0.5 itself listen?</b> The advisor asked how robust a VLA is to a human intervening mid-task. From 160 mid-task states, with the same seed and only the prompt changed, π0.5 carried on 640 times: given an infeasible rule it crossed the line in all 160 runs and still finished the task in 156; with or without a rule, feasible or not, the outcome is the same, reading <code>ignores_rule</code>. See <a href="#v5-hil">Does π0.5 itself listen?</a></p>
   <nav class="toc" aria-label="目录" data-l="zh">
     <a href="#now"><b>现在在做什么</b></a><a href="#problem">要解决的问题</a><a href="#task">一道题长什么样</a><a href="#data">数据怎么造</a><a href="#method">方法</a><a href="#result">主结果</a><a href="#diagnosis">为什么 A 学不会</a><a href="#errors">B 错在哪</a><a href="#story">结论</a><a href="#lineage">方法来源</a><a href="#limits">限制</a><a href="#v5">下一阶段：V5</a><a href="#reading">精读：为什么做这个实验</a>
   </nav>
@@ -1992,21 +1994,54 @@ Program: the pudding and the basket lie on opposite sides → separated → 0 (c
     <li><b>Limitations</b>: one seed, validation only; V5's test questions are used up, so a final exam for S needs new held-out sources. The method of working (cross products to tell sides) is still taught in training; the model learns to carry it out, not to discover it. Each verdict takes about 12 seconds and 192 tokens (P: 4.9 seconds), so an online gate would need a shorter write-up.</li>
   </ul>
 
-  <h3><span data-l="zh">下一步（不扩展，每步开始前确认）</span><span data-l="en">Next (no expansion; each step confirmed before it starts)</span></h3>
+  <h3 id="v5-hil"><span data-l="zh">π0.5 自己会不会听：任务中途加一条规则</span><span data-l="en">Does π0.5 itself listen? A rule added mid-task</span></h3>
+  <p data-l="zh">导师 10-27 问：VLA 对任务中途人的干预有多鲁棒？V5 里做到一半加进来的规则，本身就是一次这样的干预。前面几步回答的是 verifier 能不能判断它，这一步回答 π0.5 自己会怎样，verifier 不参与。从 160 个中途状态出发（S2 的孪生图，来自训练源和验证源，不碰测试源），每个状态用同一个策略种子、只换提示，让 π0.5 接着做 4 次：C0 只有原任务句；C1 加一句提到同样两个物体的中性说明；C2 加一条可行的规则；C3 加一条不可行的规则（C2、C3 就是这张图上的两道孪生题）。共 640 次执行，不调 API。读法事先写定，预测是“不理会规则”（<code>ignores_rule</code>）。</p>
+  <p data-l="en">On 27 Oct the advisor asked how robust a VLA is to a human intervening mid-task. The rule V5 adds halfway through is exactly such an intervention. The earlier steps asked whether a verifier can judge it; this step asks what π0.5 itself does, with no verifier involved. From 160 mid-task states (S2 twin images from the training and validation sources, never the test sources), each state was continued four times with the same policy seed and only the prompt changed: C0 is the task sentence alone; C1 adds a neutral note naming the same two objects; C2 adds a feasible rule; C3 adds an infeasible rule (C2 and C3 are the image's two twin questions). 640 runs in all, no API. The reading was fixed in advance, with “ignores the rule” (<code>ignores_rule</code>) predicted.</p>
+  <div class="chart" id="c16">
+    <div class="ctitle"><span data-l="zh">同一个状态、同一个种子，只换句子</span><span data-l="en">Same state, same seed, only the sentence changes</span></div>
+    <div class="csub"><span data-l="zh">上半部分：160 个状态里，π0.5 完成任务的比例，和布丁越过不可行规则（C3）那条线的比例；横线是按源回合聚类的 95% 区间。下半部分（探索性，事先没写定）：换提示后，π0.5 规则到达时输出的第一个动作块变了多少（10 步 × 7 维的最大绝对差，160 个状态的中位数，横线是四分位）。</span><span data-l="en">Top: across 160 states, the share where π0.5 finished the task, and the share where the pudding crossed the infeasible rule's (C3) line; lines are 95% intervals clustered by source episode. Bottom (exploratory, not fixed in advance): how much the first action chunk π0.5 outputs when the rule arrives changes between prompts (largest absolute difference over 10 steps × 7 dimensions; median over 160 states, lines are quartiles).</span></div>
+    <div class="legend" id="c16-legend"></div>
+    <svg id="c16-svg" viewBox="0 0 720 432" role="img" aria-label="完成任务的比例：C0 无规则 98.1%，C1 中性说明 97.5%，C2 可行规则 97.5%，C3 不可行规则 97.5%。布丁越过不可行规则那条线的比例：C0 100%，C1 100%，C2 99.4%，C3 100%。第一个动作块的变化（中位）：C0 对 C1 0.166，C0 对 C2 0.171，C0 对 C3 0.171，C1 对 C3 0.023，C2 对 C3 0.036，同一提示在两个作业里 0.0024" data-aria-en="Share that finished the task: C0 no rule 98.1%, C1 neutral note 97.5%, C2 feasible rule 97.5%, C3 infeasible rule 97.5%. Share where the pudding crossed the infeasible rule's line: C0 100%, C1 100%, C2 99.4%, C3 100%. Change in the first action chunk (median): C0 vs C1 0.166, C0 vs C2 0.171, C0 vs C3 0.171, C1 vs C3 0.023, C2 vs C3 0.036, same prompt in two jobs 0.0024"></svg>
+    <details><summary><span data-l="zh">数据表</span><span data-l="en">Data table</span></summary><div class="tablewrap"><table id="c16-table"></table></div></details>
+  </div>
+  <ul class="plain" data-l="zh">
+    <li><b>读法是“不理会规则”（<code>ignores_rule</code>），和预测一致</b>：给了不可行规则（C3），160 次里 160 次都抓着布丁越过了那条线，156 次照样把任务做完；不给规则（C0）完成 157 次。同一个状态下，可行规则和不可行规则的结果（越没越线、完没完成）相同的比例是 95.0%，区间 [90.4, 98.7]。</li>
+    <li><b>没有被提示搞乱</b>：加一句中性说明（C1）后完成 156 次，比 C0 只少 0.6 个百分点，区间 [−3.4, +2.0]。</li>
+    <li><b>“守规矩”是假象</b>：C2 从不越过自己那条线，但不给规则时 C0 也从不越过它（0/160）。对直线规则，“可行”就是布丁和篮子在线的同一侧，原来的路线本来就不用越线。所以“可行却不遵守”这次测不到。</li>
+    <li><b>什么时候加都一样</b>：还没靠近、正在靠近、已经抓起搬运中，四段的越线率都是 100%。没完成的 15 次里有 14 次是抓着布丁悬停在篮子上方、到第 300 步也没放下，四个条件差不多；剩下 1 次是可行规则下整程没拿起布丁。</li>
+    <li><b>加一句话会改变动作，句子说了什么几乎不起作用</b>（探索性）：只要多一句话，第一个动作块就变化约 0.17，末端大约 18 步后分开 2 cm 以上；但中性说明和不可行规则之间只差 0.023，160 对里 97 对整程没分开 2 cm。同一提示在两个作业里跑，因为 GPU 上的数值误差也会差 0.002。中性说明和不可行规则提到的是同样两个物体，反而比两条规则之间更接近：模型对物体名词比对“这是不是规则”更敏感。</li>
+    <li><b>对主线的意义</b>：“不可行却继续”这种失效，π0.5 自己不会停，要靠外面的 verifier 管。这就是系统论文的动机和基线行。</li>
+    <li><b>局限</b>：单个策略（π0.5）、单个任务、仿真里的文字干预、1 个种子；状态来自 verifier 的训练源和验证源，所以这一步只测 π0.5，不和 verifier 比较。</li>
+  </ul>
+  <ul class="plain" data-l="en">
+    <li><b>The reading is “ignores the rule” (<code>ignores_rule</code>), as predicted</b>: given an infeasible rule (C3), π0.5 carried the pudding across the line in 160 of 160 runs and still finished the task in 156; with no rule (C0) it finished 157. In the same state, the feasible and infeasible rules give the same outcome (crossed or not, finished or not) 95.0% of the time, interval [90.4, 98.7].</li>
+    <li><b>The prompt change does not throw it off</b>: with a neutral note (C1) it finished 156 times, only 0.6 points below C0, interval [−3.4, +2.0].</li>
+    <li><b>Its “obedience” is an illusion</b>: C2 never crosses its own line, but without any rule C0 never crosses it either (0/160). For a line rule, “feasible” means the pudding and the basket are on the same side, so the original route never had to cross. “Feasible but not followed” cannot be measured here.</li>
+    <li><b>Timing makes no difference</b>: before approaching, while approaching, and while carrying, the crossing rate is 100% in all four stages. Of the 15 unfinished runs, 14 held the pudding above the basket without releasing it until step 300, spread evenly over the conditions; the other one never picked the pudding up, under the feasible rule.</li>
+    <li><b>Adding a sentence changes the motion; what it says barely matters</b> (exploratory): any added sentence changes the first action chunk by about 0.17, and the end effector drifts more than 2 cm apart after about 18 steps. Between the neutral note and the infeasible rule the change is only 0.023, and 97 of 160 pairs never drift 2 cm apart. The same prompt run in two jobs differs by 0.002 from GPU numerics alone. The neutral note and the infeasible rule name the same two objects, and they are closer to each other than the two rules are: the model reacts more to the object nouns than to whether the sentence is a rule.</li>
+    <li><b>What it means for the main line</b>: π0.5 does not stop on its own when a rule makes the task impossible; that failure has to be caught outside the policy, by a verifier. This is the motivation and the baseline row of the systems paper.</li>
+    <li><b>Limitations</b>: one policy (π0.5), one task, text interventions in simulation, one seed; the states come from the verifier's training and validation sources, so this step tests π0.5 alone and does not compare it with the verifier.</li>
+  </ul>
+
+  <h3 id="v5-next"><span data-l="zh">下一步（每步开始前确认）</span><span data-l="en">Next (each step confirmed before it starts)</span></h3>
   <ol class="next" data-l="zh">
-    <li><b>S 加 seed（主线，推荐先做）</b>：S 补 seed 714、715，只看验证，看 92% 稳不稳、比 P 低的 1.7 个百分点是不是波动。每个 seed 约 11 GPU 小时。</li>
+    <li><b>离线拼一个“π0.5 + 闸门”（推荐先做，不用新算力）</b>：HIL 里有 60 个状态来自验证源，它们的 120 道题正好都在 S5、P、A 的验证记录里。规则到达时先让 verifier 判断：判“不可行”就停下，判“可行”就用 HIL 里 π0.5 对应那次执行的结果。把 π0.5 单独、加 A、加 P、加 S、加真值几行并排：不可行的规则下还会越线多少，可行的规则下还能完成多少。只读已有记录，CPU 几分钟；读法先冻结再算，预测是 S 闸门挡住大部分违规、几乎不误拦。协议草稿 <code>V5_GATE_OFFLINE_PROTOCOL.md</code>。</li>
+    <li><b>S 加 seed（主线）</b>：S 补 seed 714、715，只看验证，看 92% 稳不稳、比 P 低的 1.7 个百分点是不是波动。每个 seed 约 11 GPU 小时。</li>
+    <li><b>补“可行却不遵守”</b>：直线规则做不到（可行就意味着原路线不用越线），要换成“离某个物体至少几厘米”这类禁区规则，把物体挪到原路线上、旁边留出绕行的空间。需要新布局和新的 π0.5 执行，要数据批准。</li>
     <li><b>S 的正式考试</b>：测试题已用掉，需要新的留出源（同一任务没用过的初始状态，要重新执行 nominal π0.5，需要数据采集批准）。</li>
-    <li><b>备选</b>：接到 AEGIS 前面当闸门（定位不能用现成检测器；结论可以用 P 的代码或 S 自己写；控制器改动要单独批准）；补一个更强的现成检测器；扩到其他任务（goal、spatial）。</li>
-    <li><b>整理成论文主线</b>：A 50%、P 94%、现成检测器 52%、S 92%。</li>
+    <li><b>备选</b>：在线的 AEGIS 闸门（控制器改动要单独批准；S 每次判断约 12 秒，要更短的写法）；同一套 HIL 运行器换其他策略（如 OpenVLA-OFT）；扩到其他任务。</li>
+    <li><b>整理成论文主线</b>：A 50%、P 94%、现成检测器 52%、S 92%，加上 π0.5 不理会中途规则（不可行时 100% 越线）。</li>
   </ol>
   <ol class="next" data-l="en">
-    <li><b>More seeds for S (main line, recommended first)</b>: seeds 714 and 715 for S, validation only, to see whether 92% holds and whether the 1.7-point gap to P is seed noise. About 11 GPU hours per seed.</li>
+    <li><b>An offline “π0.5 + gate” (recommended first; no new compute)</b>: 60 of the HIL states come from validation sources, and their 120 questions are all in the S5, P and A validation records. When the rule arrives, the verifier decides first: on “infeasible” the robot stops; on “feasible” the outcome is π0.5's matching HIL run. Rows side by side: π0.5 alone, plus A, plus P, plus S, plus the true label; how often the line is still crossed under infeasible rules, and how often the task is still finished under feasible ones. Existing records only, a few CPU minutes; the reading is frozen before anything is computed, and the prediction is that the S gate blocks most violations while rarely stopping a feasible task. Draft protocol: <code>V5_GATE_OFFLINE_PROTOCOL.md</code>.</li>
+    <li><b>More seeds for S (main line)</b>: seeds 714 and 715 for S, validation only, to see whether 92% holds and whether the 1.7-point gap to P is seed noise. About 11 GPU hours per seed.</li>
+    <li><b>Measure “feasible but not followed”</b>: line rules cannot do it (feasible means the original route never has to cross), so this needs keep-out rules such as “stay a few centimetres away from an object”, with the object moved onto the original route and room left to go around it. Needs new layouts and new π0.5 runs, so approval for new data.</li>
     <li><b>A final exam for S</b>: the test questions are used up, so this needs new held-out sources (unused starting states of the same task, with nominal π0.5 run again; needs approval for data collection).</li>
-    <li><b>In reserve</b>: a gate in front of AEGIS (locating cannot use the off-the-shelf detector; the verdict can come from P's code or from S itself; the controller change needs separate approval); a stronger off-the-shelf detector; other tasks (goal, spatial).</li>
-    <li><b>Write up the main line</b>: A 50%, P 94%, off-the-shelf detector 52%, S 92%.</li>
+    <li><b>In reserve</b>: an online AEGIS gate (the controller change needs separate approval; S takes about 12 seconds per verdict, so it needs a shorter write-up); the same HIL runner with other policies (such as OpenVLA-OFT); other tasks.</li>
+    <li><b>Write up the main line</b>: A 50%, P 94%, off-the-shelf detector 52%, S 92%, plus π0.5 ignoring a mid-task rule (100% crossing when the rule is infeasible).</li>
   </ol>
-  <p class="small" data-l="zh">盲看由 Claude 完成，不是人工审阅；它说明“仔细看图能判断”，不代表训练后模型的能力。上面的数字来自 <code>V5_STEP1_REPORT.md</code>、<code>V5_STEP2_REPORT.md</code>、<code>V5_C0_REPORT.md</code>、<code>V5_LAYOUT_PROTOCOL.md</code>、<code>V5_S0_REPORT.md</code>、<code>V5_S1_REPORT.md</code>、<code>V5_S2_REPORT.md</code>、<code>V5_S3_REPORT.md</code>、<code>V5_FIT_REPORT.md</code>、<code>V5_S4_REPORT.md</code>、<code>V5_SEEDS_REPORT.md</code>、<code>V5_TEST_REPORT.md</code>、<code>V5_DET_REPORT.md</code>、<code>V5_S5_REPORT.md</code>。S1 盲看时 Claude 事先知道每个单元恰好有一条规则把布丁和篮子隔开。</p>
-  <p class="small" data-l="en">The blind review was done by Claude, not by a human; it shows that a careful look at the images can decide, not what a trained model will do. The numbers above come from <code>V5_STEP1_REPORT.md</code>, <code>V5_STEP2_REPORT.md</code>, <code>V5_C0_REPORT.md</code>, <code>V5_LAYOUT_PROTOCOL.md</code>, <code>V5_S0_REPORT.md</code>, <code>V5_S1_REPORT.md</code>, <code>V5_S2_REPORT.md</code>, <code>V5_S3_REPORT.md</code>, <code>V5_FIT_REPORT.md</code>, <code>V5_S4_REPORT.md</code>, <code>V5_SEEDS_REPORT.md</code>, <code>V5_TEST_REPORT.md</code>, <code>V5_DET_REPORT.md</code> and <code>V5_S5_REPORT.md</code>. In the S1 review Claude knew in advance that each unit has exactly one rule separating the pudding from the basket.</p>
+  <p class="small" data-l="zh">盲看由 Claude 完成，不是人工审阅；它说明“仔细看图能判断”，不代表训练后模型的能力。上面的数字来自 <code>V5_STEP1_REPORT.md</code>、<code>V5_STEP2_REPORT.md</code>、<code>V5_C0_REPORT.md</code>、<code>V5_LAYOUT_PROTOCOL.md</code>、<code>V5_S0_REPORT.md</code>、<code>V5_S1_REPORT.md</code>、<code>V5_S2_REPORT.md</code>、<code>V5_S3_REPORT.md</code>、<code>V5_FIT_REPORT.md</code>、<code>V5_S4_REPORT.md</code>、<code>V5_SEEDS_REPORT.md</code>、<code>V5_TEST_REPORT.md</code>、<code>V5_DET_REPORT.md</code>、<code>V5_S5_REPORT.md</code>、<code>V5_HIL_REPORT.md</code>。S1 盲看时 Claude 事先知道每个单元恰好有一条规则把布丁和篮子隔开。</p>
+  <p class="small" data-l="en">The blind review was done by Claude, not by a human; it shows that a careful look at the images can decide, not what a trained model will do. The numbers above come from <code>V5_STEP1_REPORT.md</code>, <code>V5_STEP2_REPORT.md</code>, <code>V5_C0_REPORT.md</code>, <code>V5_LAYOUT_PROTOCOL.md</code>, <code>V5_S0_REPORT.md</code>, <code>V5_S1_REPORT.md</code>, <code>V5_S2_REPORT.md</code>, <code>V5_S3_REPORT.md</code>, <code>V5_FIT_REPORT.md</code>, <code>V5_S4_REPORT.md</code>, <code>V5_SEEDS_REPORT.md</code>, <code>V5_TEST_REPORT.md</code>, <code>V5_DET_REPORT.md</code>, <code>V5_S5_REPORT.md</code> and <code>V5_HIL_REPORT.md</code>. In the S1 review Claude knew in advance that each unit has exactly one rule separating the pudding from the basket.</p>
 </section>
 
 <section id="reading">
@@ -2834,6 +2869,43 @@ CHARTS.push(function(){
     V.map(r=>`<tr><td>${nm(r)}</td><td class="n">${r.v.toFixed(1)}%</td><td class="n">${r.ci?r.ci.map(v=>v.toFixed(1)).join('–')+'%':''}</td></tr>`).join('')+
     `<tr><th>${T('S 的每一步','S steps')}</th><th class="n">${T('一致的比例','Consistent')}</th><th class="n">${T('布丁 / 篮子','Pudding / basket')}</th></tr>`+
     S.map(r=>`<tr><td>${nm(r)}</td><td class="n">${r.v.toFixed(1)}%</td><td class="n">${r.p?r.p.map(v=>v.toFixed(1)).join(' / '):''}</td></tr>`).join('')+'</tbody>';
+});
+
+// Chart 16: HIL; top = completion and crossing of the infeasible (C3) line per prompt (160 states, source-clustered 95% intervals),
+// bottom = first action chunk difference between prompts (exploratory; median and quartiles over 160 states, noise from the smoke's 8 same-prompt pairs).
+CHARTS.push(function(){
+  const svg=clear('c16-svg');
+  document.getElementById('c16-legend').innerHTML=`<span><i class="key solid" style="background:var(--s1)"></i>${T('完成任务','Finished the task')}</span>`+
+    `<span><i class="key solid" style="background:var(--s2)"></i>${T('布丁越过不可行规则（C3）的线','Pudding crossed the infeasible (C3) line')}</span>`;
+  const C=[{zh:'C0 无规则',en:'C0 no rule',done:[98.125,95.21,100],cross:[100,100,100],n:[157,160]},
+    {zh:'C1 中性说明',en:'C1 neutral note',done:[97.5,95.09,99.41],cross:[100,100,100],n:[156,160]},
+    {zh:'C2 可行规则',en:'C2 feasible rule',done:[97.5,94.58,100],cross:[99.375,98.12,100],n:[156,159]},
+    {zh:'C3 不可行规则',en:'C3 infeasible rule',done:[97.5,95.09,99.41],cross:[100,100,100],n:[156,160]}];
+  const D=[{zh:'C0 对 C1',en:'C0 vs C1',v:0.1657,q:[0.1108,0.2061]},{zh:'C0 对 C2',en:'C0 vs C2',v:0.1712,q:[0.1098,0.2133]},
+    {zh:'C0 对 C3',en:'C0 vs C3',v:0.1707,q:[0.1115,0.2124]},{zh:'C1 对 C3',en:'C1 vs C3',v:0.0229,q:[0.0179,0.0338]},
+    {zh:'C2 对 C3',en:'C2 vs C3',v:0.0360,q:[0.0236,0.0514]},
+    {zh:'同一提示·两个作业',en:'Same prompt · two jobs',v:0.0024,q:[0.0020,0.0025],noise:true}];
+  const x0=200,x1=650,X=v=>x0+(x1-x0)*v/100,X2=v=>x0+(x1-x0)*v/0.25,t1=38,r1=40,h1=12,t2=t1+r1*C.length+52,r2=26,h2=12,end2=t2+r2*D.length;
+  text(svg,0,t1-18,T('160 个状态的比例（95% 区间）','Share of 160 states (95% interval)'),'lab2');
+  text(svg,0,t2-18,T('第一个动作块的变化（最大绝对差，中位与四分位；探索性）','Change in the first action chunk (largest absolute difference, median and quartiles; exploratory)'),'lab2');
+  [0,25,50,75,100].forEach(v=>{el('line',{x1:X(v),x2:X(v),y1:t1-8,y2:t1+r1*C.length-10,class:'grid'},svg);text(svg,X(v),t1+r1*C.length+6,v+'%','tick','middle');});
+  [0,0.05,0.1,0.15,0.2,0.25].forEach(v=>{el('line',{x1:X2(v),x2:X2(v),y1:t2-6,y2:end2-6,class:'grid'},svg);text(svg,X2(v),end2+8,v===0?'0':v.toFixed(2),'tick','middle');});
+  const whisk=(a,b,y,h,scale)=>{el('line',{x1:scale(a),x2:scale(b),y1:y+h/2,y2:y+h/2,stroke:'var(--ink)','stroke-width':1.5},svg);
+    [a,b].forEach(v=>el('line',{x1:scale(v),x2:scale(v),y1:y+2,y2:y+h-2,stroke:'var(--ink)','stroke-width':1.5},svg));};
+  C.forEach((r,i)=>{const y=t1+i*r1,n=nm(r);text(svg,x0-12,y+h1+4,n,'lab','end');
+    [[r.done,'--s1',0,T('完成','finished'),r.n[0]],[r.cross,'--s2',h1+3,T('越过 C3 线','crossed C3 line'),r.n[1]]].forEach(([v,c,dy,what,k])=>{
+      bar(svg,X(0),X(v[0]),y+dy,h1,c);if(v[1]<v[0]||v[2]>v[0])whisk(v[1],v[2],y+dy,h1,X);
+      text(svg,Math.max(X(v[0]),X(v[2]))+8,y+dy+h1-2,v[0].toFixed(1)+'%','val');});
+    const hit=el('rect',{x:0,y:y-4,width:720,height:r1-4,class:'hit'},svg);
+    bindTip(hit,`<b>${n}</b><br>${T('完成','Finished')} ${r.n[0]}/160 = ${r.done[0].toFixed(1)}%${paren(r.done[1].toFixed(1)+'–'+r.done[2].toFixed(1)+'%')}<br>${T('越过 C3 线','Crossed the C3 line')} ${r.n[1]}/160 = ${r.cross[0].toFixed(1)}%`);});
+  D.forEach((r,i)=>{const y=t2+i*r2,n=nm(r);text(svg,x0-12,y+h2-1,n,'lab','end');const b=bar(svg,X2(0),Math.max(X2(r.v),X2(0)+2),y,h2,r.noise?'--neutral':'--s3');
+    whisk(r.q[0],r.q[1],y,h2,X2);text(svg,Math.max(X2(r.v),X2(r.q[1]))+8,y+h2-1,r.v.toFixed(r.noise?4:3),'val');
+    const hit=el('rect',{x:0,y:y-6,width:720,height:r2-2,class:'hit'},svg);
+    bindTip(hit,`<b>${n}</b><br>${T('中位','Median')} ${r.v.toFixed(4)}${COLON()}${T('四分位','quartiles')} ${r.q[0].toFixed(4)}–${r.q[1].toFixed(4)}`+(r.noise?`<br>${T('smoke 里 8 对，同一状态、同一种子、同一提示','8 pairs from the smoke: same state, seed and prompt')}`:''));});
+  document.getElementById('c16-table').innerHTML=`<thead><tr><th>${T('条件（160 个状态）','Condition (160 states)')}</th><th class="n">${T('完成','Finished')}</th><th class="n">${T('越过 C3 线','Crossed C3 line')}</th></tr></thead><tbody>`+
+    C.map(r=>`<tr><td>${nm(r)}</td><td class="n">${r.n[0]}/160 · ${r.done[0].toFixed(1)}% (${r.done[1].toFixed(1)}–${r.done[2].toFixed(1)})</td><td class="n">${r.n[1]}/160 · ${r.cross[0].toFixed(1)}%</td></tr>`).join('')+
+    `<tr><th>${T('第一个动作块的变化（探索性）','Change in the first action chunk (exploratory)')}</th><th class="n">${T('中位','Median')}</th><th class="n">${T('四分位','Quartiles')}</th></tr>`+
+    D.map(r=>`<tr><td>${nm(r)}</td><td class="n">${r.v.toFixed(4)}</td><td class="n">${r.q[0].toFixed(4)}–${r.q[1].toFixed(4)}</td></tr>`).join('')+'</tbody>';
 });
 
 // Language switch: swap the visible copy, aria-labels, alt text and title, redraw the charts, and keep the reader's place.

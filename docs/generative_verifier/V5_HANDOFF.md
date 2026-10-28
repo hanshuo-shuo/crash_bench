@@ -23,7 +23,7 @@ V5 这一轮的故事线已经走完一遍，只用了 object/II/task1 一个任
 - **状态**：
   - 没有正在运行的 CrashBench 作业；队列里 p31777 账号的作业是别的项目，不要动；
   - 工作区干净，所有工作都在 `main` 上并已推送（10-27 从 `v5-hil` 分支快进；见 CURRENT.md 的分支一节）；
-  - 主报告页 <https://claude.ai/artifact/Ya7FQbZC9yEuNNyYhPBHHT> 是第 24 版（加了 `#v5-s5`），与仓库里的 `PHASE2_REPORT.html` 相同；**还没有 HIL 一节**，要不要加由用户决定。
+  - 主报告页 <https://claude.ai/artifact/Ya7FQbZC9yEuNNyYhPBHHT> 是第 25 版（10-27 晚用户"加上然后写下一步"：加了 `#v5-hil`、图 c16 和新的 `#v5-next` 下一步），与仓库里的 `PHASE2_REPORT.html` 相同。
 - **10-27 方向**：用户决定主线回到原来的想法（模型自己推理、自己下结论）。P 的"代码判定"相当于把生成标签的规则直接写给了它，P 对 A 的差距衡量的主要是定位，所以 P 只作诊断，不当作方法。用 P 做闸门或系统保留为备选。主线的第一步 S5（让模型自己写出计算）已完成，读法 `self_computes`（1 个 seed，只看验证）。
 - **10-27 晚：导师的问题与 HIL 设计**：导师问 "How robust is the VLA toward humans in the (mid-trajectory) loop intervention?"。分析见 [V5_HIL_PROTOCOL.md](V5_HIL_PROTOCOL.md) 第 0 节：不换题，把它当系统论文的动机和基线行——V5 的中途规则就是一次人的干预，S5 回答了 verifier 能否判断它，没回答 π0.5 自己会怎样。设计（策略孪生：同一状态、同一种子、四条提示 C0 无规则 / C1 中性句 / C2 可行规则 / C3 不可行规则，160 个状态 × 4 = 640 次 π0.5 执行，读法 `ignores_rule` / `obeys_rule` / `breaks_on_prompt`）已由用户批准；**10-27 晚已实现、smoke、冻结并跑完正式 640 次**，读法 `ignores_rule`，见 [V5_HIL_REPORT.md](V5_HIL_REPORT.md) 和下面"2026-10-27 HIL 完成"一节。
 - **V5 测试集已经用掉**：`test`、`test_natural` 以后不再评估，也不拿来选模或调参。新方法如果要一个没碰过的测试，需要新的留出源（要另批数据）。V4 的锁定测试集同样不再评估。
@@ -33,7 +33,8 @@ V5 这一轮的故事线已经走完一遍，只用了 object/II/task1 一个任
 | 选项 | 要做什么 | 需要的批准 | 大概的量 | 从哪开始 |
 |---|---|---|---|---|
 | ~~7. HIL~~（10-27 完成，`ignores_rule`） | 见 [V5_HIL_REPORT.md](V5_HIL_REPORT.md) | — | 实际约 3.1 GPU 小时（每次执行约 17 秒），两张卡 1 小时 40 分 | 运行器 `verifier_dataset/v5_hil_run.py`，启动器 `v5_launch hil` |
-| 8. HIL 补"可行却不遵守"（可选） | 这次的可行规则都不需要绕路（C0 自然越线 0/160），没测到"可行却不遵守"。补可行但要绕路的规则（锚点挪到原路线上），或规则给出后再挪锚点的物理干预 | 新的 π0.5 执行；可能要新布局（数据批准） | 每 160 个状态约 3 GPU 小时 | `v5_hil.py`（`pool`、`plan`）、`v5_hil_run.py`、`v5_layouts.py` |
+| **10. 离线闸门（推荐先做）** | HIL 的 60 个验证源状态（120 道题）上，用 S5 / P / A 已有的验证判定拼出"π0.5 + 闸门"：判不可行就停，判可行就用 HIL 里那次执行的结果；比较违规率和完成率 | 新的分析步骤，用户点头即可；不是控制器改动，没有新执行 | CPU 几分钟 | 协议草稿 [V5_GATE_OFFLINE_PROTOCOL.md](V5_GATE_OFFLINE_PROTOCOL.md)；记录在 HIL、S3、加 seed、S4、S5 运行目录 |
+| 8. HIL 补"可行却不遵守"（可选） | 这次的可行规则都不需要绕路（C0 自然越线 0/160）。直线规则做不到（可行 = 同侧，半平面是凸的），要换成禁区规则（"离某物体至少几厘米"），物体挪到原路线上、留出绕行空间；或规则给出后再挪锚点的物理干预 | 新的 π0.5 执行；要新布局（数据批准） | 每 160 个状态约 3 GPU 小时 | `v5_hil.py`（`pool`、`plan`）、`v5_hil_run.py`、`v5_layouts.py`、`v5_geometry.rules`（已有 zone 模板） |
 | 9. HIL 加策略或种子（可选） | 同一套运行器换 OpenVLA-OFT 等策略或加种子，扩大基线的覆盖面 | 新的策略执行；OFT 的策略服务要另写 | 每个策略约 3 GPU 小时 | `v5_hil.sbatch`（策略服务那一段） |
 | 1. S 加 seed（主线） | S 补 seed 714、715，只看验证，读法沿用 S5 协议第 5 节；看 0.92 稳不稳、比 P 低的 0.017 是不是波动 | GPU 训练 | 每个 seed 约 11 GPU 小时（大部分是生成，每次约 12 秒）；两张 GPU 并行约 11 小时 | `v5_self_contract.py`、`v5_self_run.py`、`launch_v5.py`（参照加 seed 的 `seeds` 动作写一个 S 版本） |
 | 2. 干净的测试（主线） | V5 测试集已用掉；S 要正式测试，需要新的留出源。object/II/task1 的初始状态 20–49 没用过，但没有逐步动作记录，要重新执行 nominal π0.5，再布局、渲染、建集 | 数据采集批准 | CPU 回放和布局 + GPU 渲染和执行 | [V5_S1_REPORT.md](V5_S1_REPORT.md)、[V5_S2_REPORT.md](V5_S2_REPORT.md)、`verifier_dataset/v5_launch.py` |
