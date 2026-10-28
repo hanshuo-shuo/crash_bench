@@ -281,7 +281,7 @@ def main(stage, scan=None):
                         layout_hashes=read(Path(plan_record['layout_root'])/'HASHES.json'))
         write(root/'CAMPAIGN.json', manifest); write(root/'PLAN.json', plan_record)
         env['CB_HIL_SHARDS'] = str(shards)
-        job = submit(env, '--array=0-%d' % (shards - 1), '--time=%s' % ('12:00:00' if stage == 'hil' else '02:00:00'),
+        job = submit(env, '--array=0-%d' % (shards - 1), '--time=%s' % ('06:00:00' if stage == 'hil' else '02:00:00'),
                      '--output='+str(root/'slurm_%A_%a.log'), str(root/'source/verifier_dataset/v5_hil.sbatch'))
         receipt = dict(manifest, job=job, summarize_job=submit(env, '--dependency=afterok:'+job, '--output='+str(root/'slurm_%j.log'),
                                                                str(root/'source/verifier_dataset/v5_hil_summary.sbatch')))
