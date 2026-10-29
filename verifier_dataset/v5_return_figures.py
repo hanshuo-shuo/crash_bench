@@ -78,7 +78,7 @@ def distance_figure(root, path):
     ax.text(2, 100 * R.HOME + 1, 'home radius 5 cm', fontsize=8, color=INK_2)
     ax.set_xlabel('steps after the instruction changes (t)', fontsize=9, color=INK_2)
     ax.set_ylabel('end effector to start (cm)', fontsize=9, color=INK_2); ax.set_ylim(bottom=0)
-    ax.legend(frameon=False, fontsize=8, loc='upper right', labelcolor=INK)
+    ax.legend(frameon=False, fontsize=8, loc='lower center', bbox_to_anchor=(.5, 1.), ncol=3, labelcolor=INK)
     fig.tight_layout(); fig.savefig(path, facecolor=SURFACE, bbox_inches='tight'); plt.close(fig)
 
 
