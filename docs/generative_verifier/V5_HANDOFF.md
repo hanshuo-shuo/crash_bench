@@ -6,6 +6,8 @@
 
 ### 下一步（2026-10-28 用户选定）：测"可行但要绕路"
 
+**10-29 进展**：CPU 扫描做完（[v5_detour_scan.py](../../verifier_dataset/v5_detour_scan.py)，`python -m verifier_dataset.v5_detour_scan HIL_ROOT OUT_JSON`）。已有 HIL 记录在任何半径下最多 3–4 个可用状态（所有物体都算最多 14 个），不造新布局做不了。协议草稿 [V5_DETOUR_PROTOCOL.md](V5_DETOUR_PROTOCOL.md) 第 2 节是扫描结果，第 4 节是新布局（锚点放到原路线上 + 脚本化绕行见证），第 13 节是实现清单。下一步：用户批准新布局后先写代码和单测，跑布局 smoke，结果给用户看再跑全量布局。
+
 用户 10-28 问"我们现在不是要看 how robust VLA is in the human in the loop 吗，所以下一步是啥，整个故事线是啥"。Claude 给出下面的故事线和建议后，用户："先收尾吧 然后 hand off 给下一个 agent。我觉得下一步……补第 1 步的空缺，测'可行但要绕路'就做这个"。
 
 **整条故事线：三个问题。** 导师的问题（"How robust is the VLA toward humans in the (mid-trajectory) loop intervention?"）是入口，不换题；verifier 和闸门是对它的回答。
