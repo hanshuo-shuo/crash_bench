@@ -81,3 +81,10 @@ object/II/task1); brief in docs/generative_verifier/V5_HANDOFF.md. The protocol 
 CPU checks on existing HIL records need no further approval; show the user the protocol.
 New layouts are new data, and the GPU smoke and formal batch are new pi0.5 executions;
 each needs the user's go-ahead. No paid API; test sources episode0/8/9/15 stay untouched.
+
+Return HIL (2026-10-29): the user asked to add the simplest mid-task intervention: part-way
+through the task the instruction changes to "move the arm back to its starting position"
+(docs/generative_verifier/V5_RETURN_PROTOCOL.md): pi0.5 alone on the 160 existing HIL states,
+no new layouts, no verifier, no paid API. The protocol draft, implementation and unit tests need
+no further approval; the GPU smoke and formal batch are new pi0.5 executions and need the user's
+go-ahead. Test sources episode0/8/9/15 stay untouched.
