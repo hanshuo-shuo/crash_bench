@@ -87,4 +87,5 @@ through the task the instruction changes to "move the arm back to its starting p
 (docs/generative_verifier/V5_RETURN_PROTOCOL.md): pi0.5 alone on the 160 existing HIL states,
 no new layouts, no verifier, no paid API. The protocol draft, implementation and unit tests need
 no further approval; the GPU smoke and formal batch are new pi0.5 executions and need the user's
-go-ahead. Test sources episode0/8/9/15 stay untouched.
+go-ahead. Test sources episode0/8/9/15 stay untouched. On 2026-10-29 the user approved both
+("gpu都可以直接用 开始吧"): 12-run smoke, freeze, formal 480 runs, report. Detour layouts still need approval.

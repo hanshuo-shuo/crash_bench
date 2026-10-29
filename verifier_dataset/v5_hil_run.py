@@ -6,6 +6,8 @@ tape to the checkpoint t, and match the physics hash recorded at t (the S1a layo
 source tape's for a natural layout). Both rule labels and clearances are recomputed at t. The
 policy RNG is reset to the state's seed, then pi0.5 (experiments/feasibility/serve.py on
 127.0.0.1:PORT) is queried every five steps with the condition's prompt until success or step 300.
+The conditions and prompts come from the plan (the HIL four when it names none); each run also
+records the end-effector position at step 0, after the layout is placed and before the replay.
 
 ROOT --shard K --shards N --port P runs every N-th state; ROOT --state-index I --condition C --port P
 runs one execution; ROOT --summarize aggregates.
@@ -48,8 +50,10 @@ def run_condition(root, index, condition, port):
     from .paired_policy import policy_input
     from .replay import assert_trace
     from .v5_scan import goal_region, scene_objects
-    case = root/('state_%03d' % index); spec = read(case/'STATE.json'); folder = case/condition; folder.mkdir()
-    prompt = spec['prompts'][condition]; t = spec['checkpoint']
+    case = root/('state_%03d' % index); spec = read(case/'STATE.json')
+    if condition not in spec['prompts']:
+        raise RuntimeError('Condition not in the plan: ' + condition)
+    folder = case/condition; folder.mkdir(); prompt = spec['prompts'][condition]; t = spec['checkpoint']
     if spec['prompt_tokens'][condition] >= H.MAX_TOKENS:
         raise RuntimeError('Prompt would be truncated')
     env = client = None; started = time.monotonic()
@@ -68,6 +72,7 @@ def run_condition(root, index, condition, port):
             L.place(env, layout)
             if physical_hash(env) != layout['placed_physics_sha256']:
                 raise RuntimeError('Placed layout differs from the S1a layout run')
+        start = np.asarray(d.site_xpos[env.env.robots[0].eef_site_id]).tolist()
         tape_path = Path(source['root'])/'steps.jsonl'
         if sha(tape_path) != source['tape_sha256']:
             raise RuntimeError('Original source tape changed')
@@ -117,6 +122,8 @@ def run_condition(root, index, condition, port):
         if ack.get('seed') != spec['seed'] or ack.get('run_id') != run_id or ack.get('requests') != 0:
             raise RuntimeError('Policy RNG reset acknowledgement mismatch')
         trace = [record(t, obs, None, False)]; queue = collections.deque(); requests = []; images = []
+        if t == 0 and np.linalg.norm(np.subtract(start, trace[0]['eef'])) > 1e-9:
+            raise RuntimeError('Starting position differs from the observation at step 0')
         step, done, outside, first = t, False, 0, None
         log = (folder/'POLICY.jsonl').open('w')
         while step < H.HORIZON and not done:
@@ -143,7 +150,7 @@ def run_condition(root, index, condition, port):
             stream.writelines(json.dumps(x) + '\n' for x in trace)
         np.savez_compressed(folder/'policy_images.npz', agentview=np.stack(images))
         row = dict(state=spec['state'], condition=condition, image=spec['image'], prompt=prompt, prompt_tokens=spec['prompt_tokens'][condition],
-                   seed=spec['seed'], checkpoint=t, horizon=H.HORIZON - t, physics_at_checkpoint=at, checked_hashes=checked,
+                   seed=spec['seed'], checkpoint=t, horizon=H.HORIZON - t, start_eef=start, physics_at_checkpoint=at, checked_hashes=checked,
                    lines=lines, lift_at_checkpoint=lift, rng_reset=ack, policy_requests=len(requests),
                    first_inference_step=requests[0]['step'], first_policy_input_sha256=first['with_prompt'],
                    policy_input_state_sha256=first['state'], replayed_outputs=sum(r['output_replayed'] for r in requests),
@@ -159,23 +166,23 @@ def run_condition(root, index, condition, port):
             env.close()
 
 
-def twin_check(case):
-    """The four runs of a state started from one observation and one policy RNG key."""
-    rows = [read(case/c/'ROW.json') for c in H.CONDITIONS]
-    for field in ('physics_at_checkpoint', 'policy_input_state_sha256', 'first_inference_step'):
+def twin_check(case, conditions):
+    """The runs of a state started from one observation, one starting position and one policy RNG key."""
+    rows = [read(case/c/'ROW.json') for c in conditions]
+    for field in ('physics_at_checkpoint', 'policy_input_state_sha256', 'first_inference_step', 'start_eef'):
         if len({json.dumps(r[field]) for r in rows}) != 1:
             raise RuntimeError('Twin runs differ in ' + field)
     if len({r['rng_reset']['key_hex'] for r in rows}) != 1:
         raise RuntimeError('Twin runs differ in the policy RNG key')
     if len({r['first_policy_input_sha256'] for r in rows}) != len(rows):
         raise RuntimeError('Two conditions sent the same first policy input')
-    write(case/'COMPLETE.json', dict(passed=True, state=rows[0]['state'], conditions=list(H.CONDITIONS),
+    write(case/'COMPLETE.json', dict(passed=True, state=rows[0]['state'], conditions=list(conditions),
                                      elapsed_seconds={r['condition']: r['elapsed_seconds'] for r in rows},
                                      slurm_job=os.environ.get('SLURM_JOB_ID')))
 
 
 def run(root, shard, shards, port):
-    states = read(root/'PLAN.json')['states']; done = 0
+    plan = read(root/'PLAN.json'); states = plan['states']; conditions = plan.get('conditions', H.CONDITIONS); done = 0
     for index, spec in enumerate(states):
         if index % shards != shard:
             continue
@@ -187,11 +194,11 @@ def run(root, shard, shards, port):
         shutil.copyfile(checkpoint/'context.json', case/'CANONICAL_CONTEXT.json')
         shutil.copyfile(checkpoint/'physics.npz', case/'CANONICAL_PHYSICS.npz')
         write(case/'STATE.json', spec)
-        for condition in H.CONDITIONS:
+        for condition in conditions:
             with (case/(condition + '.log')).open('w') as log:
                 subprocess.run([sys.executable, '-u', '-m', 'verifier_dataset.v5_hil_run', str(root), '--state-index', str(index),
                                 '--condition', condition, '--port', str(port)], stdout=log, stderr=subprocess.STDOUT, check=True)
-        twin_check(case); done += 1
+        twin_check(case, conditions); done += 1
         write(root/('PROGRESS_%d.json' % shard), dict(shard=shard, states_done=done, last=spec['state'], slurm_job=os.environ.get('SLURM_JOB_ID')))
     write(root/('SHARD_%d_COMPLETE.json' % shard), dict(passed=True, shard=shard, states=done, slurm_job=os.environ.get('SLURM_JOB_ID')))
 
@@ -244,7 +251,7 @@ def summarize(root):
 if __name__ == '__main__':
     p = argparse.ArgumentParser(); p.add_argument('root', type=Path)
     p.add_argument('--shard', type=int); p.add_argument('--shards', type=int); p.add_argument('--port', type=int)
-    p.add_argument('--state-index', type=int); p.add_argument('--condition', choices=H.CONDITIONS)
+    p.add_argument('--state-index', type=int); p.add_argument('--condition')
     p.add_argument('--summarize', action='store_true')
     a = p.parse_args()
     try:

@@ -5,7 +5,8 @@ trace, layout/screen TRACE_ROOT: C0 retrace and counterfactual layouts. s1-layou
 eight layouts per object/II/task1 source. s1-render S1_LAYOUT_ROOT: blind-review renders.
 s2 S1_LAYOUT_ROOT: render the object/II/task1 dataset on two A100 shards, then build it on CPU.
 hil-smoke S2_ROOT / hil S2_ROOT: the HIL policy twins (4 smoke states, or the frozen 160-state batch on two
-A100 shards), then the CPU summary.
+A100 shards), then the CPU summary. return-smoke HIL_SMOKE_ROOT / return HIL_ROOT: the return-home policy twins on
+the HIL run's states (3 prompts each), same runner and shards, then the return summary.
 """
 import argparse
 from datetime import datetime, timezone
@@ -24,10 +25,15 @@ PROTOCOLS = dict(scan='docs/generative_verifier/V5_STEP1_PROTOCOL.md', render='d
                  screen='docs/generative_verifier/V5_SCREEN_PROTOCOL.md',
                  **{'s1-layout': 'docs/generative_verifier/V5_S1_PROTOCOL.md', 's1-render': 'docs/generative_verifier/V5_S1_PROTOCOL.md',
                     's2': 'docs/generative_verifier/V5_S2_PROTOCOL.md', 'hil': 'docs/generative_verifier/V5_HIL_PROTOCOL.md',
-                    'hil-smoke': 'docs/generative_verifier/V5_HIL_PROTOCOL.md'})
+                    'hil-smoke': 'docs/generative_verifier/V5_HIL_PROTOCOL.md', 'return': 'docs/generative_verifier/V5_RETURN_PROTOCOL.md',
+                    'return-smoke': 'docs/generative_verifier/V5_RETURN_PROTOCOL.md'})
 HIL_AUTHORIZATION = ('2026-10-27 user approved the HIL policy-twin design (V5_HIL_PROTOCOL.md) and asked to implement it, smoke '
                      '16 runs in a draft directory, freeze, then run the formal 640 and report ("写运行器和测试 -> 草稿目录 smoke 16 次 -> '
                      '填第 10 节、冻结 -> 正式 640 次 -> V5_HIL_REPORT.md"); pi0.5 alone, no verifier, no API, test sources untouched')
+RETURN_AUTHORIZATION = ('2026-10-29 user asked for the return-home intervention (V5_RETURN_PROTOCOL.md) and, after the plan '
+                        '(code and tests, 12-run GPU smoke, freeze, formal 480 runs, V5_RETURN_REPORT.md), approved the GPU runs: '
+                        '"gpu都可以直接用 开水吧" (开始吧); pi0.5 alone on the existing HIL states, no new layouts, no verifier, no API, '
+                        'test sources untouched')
 AUTHORIZATION = dict(
     scan='2026-10-24 user: V5 step 1 CPU geometry scan; no rendering, training, API or dataset rows',
     render='2026-10-24 user: V5 step 2 render pilot of about 20 checkpoints; no training, API or dataset rows',
@@ -38,7 +44,9 @@ AUTHORIZATION = dict(
        's1-render': '2026-10-24 user: S1 render with a top view and a two-pass blind review on validation sources; no training, API or dataset rows',
        's2': '2026-10-25 user: continue with S2 (build the object/II/task1 dataset); two A100 render shards and a CPU build, no training or API',
        'hil-smoke': HIL_AUTHORIZATION + '; smoke: 4 states x 4 prompts in a draft run, results only in protocol section 10',
-       'hil': HIL_AUTHORIZATION + '; formal: 160 states x 4 prompts after the protocol is frozen'})
+       'hil': HIL_AUTHORIZATION + '; formal: 160 states x 4 prompts after the protocol is frozen',
+       'return-smoke': RETURN_AUTHORIZATION + '; smoke: the 4 HIL smoke states x 3 prompts in a draft run, results only in protocol section 10',
+       'return': RETURN_AUTHORIZATION + '; formal: the 160 HIL states x 3 prompts after the protocol is frozen'})
 
 
 def command(*args, env=None):
@@ -222,6 +230,27 @@ def hil_plan(s2, mode):
                 s2_root=str(s2), layout_root=str(layout_root), states=states)
 
 
+def return_plan(hil, mode):
+    """Check the HIL run, then copy its states, seeds and horizons with the three return prompts."""
+    from . import v5_hil as H
+    from . import v5_return as R
+    receipt = finished(hil, 'HIL_COMPLETE.json')
+    if receipt['stage'] != ('v5-hil' if mode == 'formal' else 'v5-hil-smoke') or read(hil/'HIL_COMPLETE.json')['mode'] != mode:
+        raise RuntimeError('The return %s batch starts from the HIL %s run' % (mode, mode))
+    source = read(hil/'PLAN.json'); states = R.plan(source['states'])
+    tokens = prompt_tokens(p for s in states for p in s['prompts'].values())
+    for s in states:
+        s['prompt_tokens'] = {c: tokens[s['prompts'][c]] for c in R.CONDITIONS}
+    if max(tokens.values()) >= H.MAX_TOKENS:
+        raise RuntimeError('A prompt reaches max_token_len and would be truncated')
+    return dict(mode=mode, experiment='return', conditions=list(R.CONDITIONS), hil_root=str(hil), hil_plan_sha256=sha(hil/'PLAN.json'),
+                hil_hashes=read(hil/'HASHES.json'), seed_salt=source['seed_salt'],
+                prompt_tokens={c: dict(min=min(s['prompt_tokens'][c] for s in states), max=max(s['prompt_tokens'][c] for s in states))
+                               for c in R.CONDITIONS},
+                tokenizer_sha256=sha(ASSETS/'openpi_assets/big_vision/paligemma_tokenizer.model'),
+                s2_root=source['s2_root'], layout_root=source['layout_root'], states=states)
+
+
 def main(stage, scan=None):
     repo = Path.cwd().resolve()
     if stage in ('layout', 'screen', 's1-layout') and finished(scan, 'TRACE_COMPLETE.json')['stage'] != 'v5-trace':
@@ -232,8 +261,11 @@ def main(stage, scan=None):
         raise RuntimeError('S2 starts from the S1 layout run')
     if stage == 'hil' and '状态：已冻结' not in (repo/PROTOCOLS['hil']).read_text():
         raise RuntimeError('Freeze the HIL protocol before the formal batch')
-    if stage in ('hil', 'hil-smoke'):
-        plan_record = hil_plan(scan, 'formal' if stage == 'hil' else 'smoke'); shards = 2 if stage == 'hil' else 1
+    if stage == 'return' and '状态：已冻结' not in (repo/PROTOCOLS['return']).read_text():
+        raise RuntimeError('Freeze the return protocol before the formal batch')
+    if stage in ('hil', 'hil-smoke', 'return', 'return-smoke'):
+        formal = stage in ('hil', 'return'); shards = 2 if formal else 1
+        plan_record = (hil_plan if stage.startswith('hil') else return_plan)(scan, 'formal' if formal else 'smoke')
         active = command('squeue', '-h', '-u', os.environ['USER'], '-A', 'p33100', '-p', 'gengpu', '-o', '%j')
         if sum(x.startswith('cb_') for x in active.splitlines()) + shards > 2:
             raise RuntimeError('At most two CrashBench GPUs at a time')
@@ -273,18 +305,26 @@ def main(stage, scan=None):
                      str(root/'source/verifier_dataset/v5_render.sbatch'))
         receipt = dict(manifest, job=job, build_job=submit(env, '--dependency=afterok:'+job, '--output='+str(root/'slurm_%j.log'),
                                                            str(root/'source/verifier_dataset/v5_dataset.sbatch')))
-    elif stage in ('hil', 'hil-smoke'):
+    elif stage in ('hil', 'hil-smoke', 'return', 'return-smoke'):
+        from .v5_hil import CONDITIONS
+        hil = stage.startswith('hil'); conditions = plan_record.get('conditions', list(CONDITIONS))
         manifest.update(partition='gengpu', mode=plan_record['mode'], shards=shards, states=len(plan_record['states']),
-                        runs=4 * len(plan_record['states']), seed='per state: v5_hil.policy_seed, shared by the four prompts',
+                        conditions=conditions, runs=len(conditions) * len(plan_record['states']),
+                        seed='per state: v5_hil.policy_seed, shared by the %d prompts' % len(conditions),
                         policy='pi05_libero', policy_checkpoint=str(ASSETS/'openpi_assets/openpi-assets/checkpoints/pi05_libero'),
-                        s2_root=str(scan), s2_hashes=read(scan/'HASHES.json'), layout_root=plan_record['layout_root'],
+                        s2_root=plan_record['s2_root'], s2_hashes=read(Path(plan_record['s2_root'])/'HASHES.json'),
+                        layout_root=plan_record['layout_root'],
                         layout_hashes=read(Path(plan_record['layout_root'])/'HASHES.json'))
+        if not hil:
+            manifest.update(hil_root=plan_record['hil_root'], hil_hashes=plan_record['hil_hashes'])
         write(root/'CAMPAIGN.json', manifest); write(root/'PLAN.json', plan_record)
         env['CB_HIL_SHARDS'] = str(shards)
-        job = submit(env, '--array=0-%d' % (shards - 1), '--time=%s' % ('06:00:00' if stage == 'hil' else '02:00:00'),
-                     '--output='+str(root/'slurm_%A_%a.log'), str(root/'source/verifier_dataset/v5_hil.sbatch'))
+        job = submit(env, '--array=0-%d' % (shards - 1), '--time=%s' % ('06:00:00' if formal else '02:00:00'),
+                     '--job-name=' + ('cb_v5_hil' if hil else 'cb_v5_return'), '--output='+str(root/'slurm_%A_%a.log'),
+                     str(root/'source/verifier_dataset/v5_hil.sbatch'))
+        summary = 'v5_hil_summary.sbatch' if hil else 'v5_return_summary.sbatch'
         receipt = dict(manifest, job=job, summarize_job=submit(env, '--dependency=afterok:'+job, '--output='+str(root/'slurm_%j.log'),
-                                                               str(root/'source/verifier_dataset/v5_hil_summary.sbatch')))
+                                                               str(root/'source/verifier_dataset'/summary)))
     elif stage == 'scan':
         manifest.update(partition='short', shards=len(SHARDS)); write(root/'CAMPAIGN.json', manifest)
         script = str(root/'source/verifier_dataset/v5_scan.sbatch')
@@ -303,7 +343,8 @@ def main(stage, scan=None):
 
 if __name__ == '__main__':
     p = argparse.ArgumentParser()
-    p.add_argument('stage', choices=['scan', 'render', 'trace', 'layout', 'screen', 's1-layout', 's1-render', 's2', 'hil-smoke', 'hil'])
+    p.add_argument('stage', choices=['scan', 'render', 'trace', 'layout', 'screen', 's1-layout', 's1-render', 's2', 'hil-smoke', 'hil',
+                                     'return-smoke', 'return'])
     p.add_argument('scan_root', type=Path, nargs='?')
     a = p.parse_args()
     if (a.stage not in ('scan', 'trace')) != (a.scan_root is not None):
