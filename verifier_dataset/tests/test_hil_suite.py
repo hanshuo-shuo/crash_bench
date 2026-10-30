@@ -144,7 +144,7 @@ def fake(units, sw_rule, c0=True, intervention=False):
         b = sw_rule(u) if u['condition'] == 'SW' else False
         a = (not b) if u['condition'] == 'SW' else (c0 if u['condition'] in ('C0', 'C0R') else not intervention)
         out[u['id']] = dict(a_done=a, b_done=b, b_at_checkpoint=False if u['condition'] == 'SW' else None, stopped=intervention and u['condition'] == 'STOP',
-                            home=intervention and u['condition'] == 'RETURN')
+                            home=intervention and u['condition'] == 'RETURN', start_gap=.05 if u['phase'] == .25 and u['init'] == 0 else .2)
     return out
 
 
@@ -161,6 +161,7 @@ class Readings(unittest.TestCase):
         s2 = S.stage2(self.units, o)
         self.assertEqual({c: s2[c]['reading'] for c in S.INTERVENTIONS}, dict(STOP='ignores', RETURN='ignores', CANCEL='ignores'))
         self.assertEqual(S.claims(s1, s2)['form'], 'strong')
+        self.assertEqual(s2['RETURN']['near_start'], 12); self.assertEqual(s2['RETURN']['follow']['n'], 228); self.assertEqual(s2['STOP']['follow']['n'], 240)
 
     def test_follow_everywhere(self):
         o = fake(self.units, lambda u: True, intervention=True)

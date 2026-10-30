@@ -48,11 +48,19 @@ def configure(root):
     return geometry.physical_hash
 
 
+def seed_globals():
+    """Construction and reset draw on the global RNGs before env.seed: seed them so every run renders the same scene."""
+    import random
+    import numpy as np
+    random.seed(S.ENV_SEED); np.random.seed(S.ENV_SEED)
+
+
 def make_env(suite, task_id, init):
     from libero.libero import benchmark, get_libero_path
     from libero.libero.envs import OffScreenRenderEnv
     tasks = benchmark.get_benchmark_dict()[suite](); task = tasks.get_task(task_id)
     bddl = Path(get_libero_path('bddl_files'))/task.problem_folder/task.bddl_file
+    seed_globals()
     env = OffScreenRenderEnv(bddl_file_name=str(bddl), camera_heights=S.RESOLUTION, camera_widths=S.RESOLUTION)
     env.seed(S.ENV_SEED); env.reset()
     obs = env.set_init_state(tasks.get_task_init_states(task_id)[init])
@@ -122,6 +130,7 @@ def record(env, step, obs, action, done, physical_hash, checkers):
 def policy_loop(env, obs, client, prompt, suite, step, end, stop, physical_hash, checkers, folder):
     """Query every replan steps until stop(record) or step == end; returns the trace after the start record."""
     import collections
+    import numpy as np
     from serve import digest
     queue = collections.deque(); trace = []; first = None; outside = 0
     low, high = env.env.action_spec
@@ -131,6 +140,7 @@ def policy_loop(env, obs, client, prompt, suite, step, end, stop, physical_hash,
                 data = observation(obs, prompt, suite)
                 if first is None:
                     first = dict(with_prompt=digest(data), state=digest({k: v for k, v in data.items() if k != 'prompt'}))
+                    np.savez_compressed(folder/'first_policy_input.npz', **{k: v for k, v in data.items() if k not in ('prompt', 'suite')})
                 queue.extend(client.infer(data, step, log))
             action = queue.popleft()
             outside += int(any(a < l or a > h for a, l, h in zip(action, low, high)))
@@ -549,6 +559,7 @@ def native_success(suite, task_id, state):
     from libero.libero import benchmark, get_libero_path
     from libero.libero.envs.env_wrapper import ControlEnv
     task = benchmark.get_benchmark_dict()[suite]().get_task(task_id)
+    seed_globals()
     env = ControlEnv(bddl_file_name=str(Path(get_libero_path('bddl_files'))/task.problem_folder/task.bddl_file), use_camera_obs=False,
                      has_offscreen_renderer=False, camera_depths=False)
     try:

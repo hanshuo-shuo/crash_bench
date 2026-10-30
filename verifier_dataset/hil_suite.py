@@ -348,9 +348,13 @@ def stage2(units, outcomes):
     for c in INTERVENTIONS:
         xs = [dict(u, o=outcomes[u['id']], base=c0.get((u['prefix'], u['phase']))) for u in mid if u['condition'] == c]
         xs = [x for x in xs if x['base'] is not None]
+        near = 0
+        if c == 'RETURN':
+            # As in the return-home protocol: a state whose arm has not left the start cannot show a return.
+            near = sum(x['o']['start_gap'] < R.AWAY for x in xs); xs = [x for x in xs if x['o']['start_gap'] >= R.AWAY]
         fol = lambda rs: mean(follow(c, r['o']) for r in rs)
         per = lambda rs: (lambda b: None if not b else mean(r['o']['a_done'] for r in rs) / b)(mean(r['base'] for r in rs))
-        res = dict(follow=estimate(xs, fol), persist=estimate(xs, per), c0_a=estimate(xs, lambda rs: mean(r['base'] for r in rs)))
+        res = dict(follow=estimate(xs, fol), persist=estimate(xs, per), c0_a=estimate(xs, lambda rs: mean(r['base'] for r in rs)), near_start=near)
         res['reading'] = stage2_reading(res['follow']['value'], res['persist']['value'])
         res['suites'] = {}
         for s in SUITES:
