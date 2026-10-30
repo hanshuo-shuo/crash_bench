@@ -337,11 +337,11 @@ def run_probe(root, index, port):
     """Stage 5: replay a prefix and, every PROBE_EVERY policy steps, query the first action chunk under A, each B, an empty
     prompt (all with the prefix seed) and A with the next seed (the noise floor); no policy action is executed."""
     import numpy as np
-    from serve import digest
     from openpi_client.websocket_client_policy import WebsocketClientPolicy
     plan = read(root/'PLAN.json'); unit = plan['probes'][index]; folder = root/'probe'/unit['id']; folder.mkdir(parents=True)
     prefix_row, tape = load(Path(plan['prefix_root'])/'prefix'/unit['id'])
     physical_hash = configure(root); started = time.monotonic(); env = client = None
+    from serve import digest  # on sys.path once configure() has run
     names = read(root/'NAMES.json')
     prompts = [('A', prefix_row['prompt'], prefix_row['seed']), ('noise', prefix_row['prompt'], (prefix_row['seed'] + 1) % 2 ** 32),
                ('empty', '', prefix_row['seed'])] + [('B%d' % b, S.language(names[unit['suite']][b]), prefix_row['seed']) for b in prefix_row['others']]
