@@ -2,7 +2,7 @@
 
 smoke: three prefixes and their branches in one draft run on one A100 (protocol section 9).
 prefix: the formal prefixes of stages 0-2 on two A100 shards, then the CPU prefix summary (stage 0 gate).
-branch PREFIX_ROOT: the formal branches of a finished, env_ok prefix run on two A100 shards, then the CPU summary.
+branch PREFIX_ROOT: the formal branches of a finished, env_ok prefix run on six shards, two A100s at a time, then the CPU summary.
 physical-smoke / physical PREFIX_ROOT BRANCH_ROOT: stage 3 perturbations (C0 baselines from the stage 1-2 branch run).
 probe-smoke / probe PREFIX_ROOT BRANCH_ROOT: stage 5 action-sensitivity probe along the stage-1 prefixes.
 --policy pi05_libero (default), pi0_libero or openvla_oft picks the policy (stage 4).
@@ -103,7 +103,8 @@ def main(stage, policy, prefix_root=None, branch_root=None):
     repo = Path.cwd().resolve(); names = S.task_names((repo/'third_party/LIBERO/libero/libero/benchmark/libero_suite_task_map.py').read_text())
     if FROZEN[stage] is not None and FROZEN[stage] not in (repo/PROTOCOL).read_text():
         raise RuntimeError('Freeze the protocol before a formal batch')
-    shards = 1 if stage.endswith('smoke') else 2
+    # Six branch shards keep the slowest node's worst case (27 h of branches on two shards) under the 12 h limit.
+    shards = 1 if stage.endswith('smoke') else 6 if stage == 'branch' else 2
     if stage.startswith(('physical', 'probe')):
         finished_prefix(prefix_root, policy); hashes = finished_branch(branch_root, prefix_root)
         prefixes = read(prefix_root/'PREFIXES.json'); mode = 'smoke' if stage.endswith('smoke') else 'formal'
@@ -129,7 +130,7 @@ def main(stage, policy, prefix_root=None, branch_root=None):
     plan['prompt_tokens'] = None if policy == 'openvla_oft' else prompt_tokens(texts)
     if plan['prompt_tokens'] and max(plan['prompt_tokens'].values()) >= S.MAX_TOKENS:
         raise RuntimeError('A prompt would be truncated')
-    gpu_room(shards)
+    gpu_room(min(shards, 2))
     root, manifest = prepare(stage, policy, repo)
     write(root/'NAMES.json', names)
     manifest.update(partition='gengpu', mode=plan['mode'], shards=shards, prefixes=len(plan.get('prefixes', [])),
@@ -147,7 +148,7 @@ def main(stage, policy, prefix_root=None, branch_root=None):
         receipt = dict(manifest, job=submit(env, '--time=03:00:00', '--output=' + str(root/'slurm_%j.log'), script))
     else:
         hours = dict(prefix='04', branch='12', physical='06', probe='04').get(stage, '03')
-        job = submit(env, '--array=0-%d' % (shards - 1), '--time=%s:00:00' % hours, '--output=' + str(root/'slurm_%A_%a.log'), script)
+        job = submit(env, '--array=0-%d%%2' % (shards - 1), '--time=%s:00:00' % hours, '--output=' + str(root/'slurm_%A_%a.log'), script)
         env['CB_SUITE_SUMMARY'] = 'summarize-prefix' if stage == 'prefix' else 'summarize'
         receipt = dict(manifest, job=job, summarize_job=submit(env, '--dependency=afterok:' + job, '--output=' + str(root/'slurm_%j.log'),
                                                                str(root/'source/verifier_dataset/hil_suite_summary.sbatch')))
