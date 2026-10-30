@@ -44,7 +44,7 @@ if [ "$CB_POLICY_CONFIG" = openvla_oft ]; then
   --openpi "$CB_UPSTREAM/openpi" --checkpoint "${CB_POLICY_CHECKPOINT:?}" > "$ROOT/policy_${PHASE}_${SHARD}.log" 2>&1 &
 else
  /projects/p33100/siosio/envs/openpi/bin/python "$SOURCE/experiments/feasibility/serve.py" --port "$PORT" --config "$CB_POLICY_CONFIG" \
-  --checkpoint "$CB_ASSETS/openpi_assets/openpi-assets/checkpoints/$CB_POLICY_CONFIG" > "$ROOT/policy_${PHASE}_${SHARD}.log" 2>&1 &
+  --checkpoint "${CB_POLICY_CHECKPOINT:?}" > "$ROOT/policy_${PHASE}_${SHARD}.log" 2>&1 &
 fi
 SERVER_PID=$!
 /projects/p33100/siosio/envs/openpi/bin/python - "$PORT" "$SERVER_PID" <<'PY'

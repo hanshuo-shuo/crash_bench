@@ -4,9 +4,15 @@ Runs in the openvla-oft environment. Observations carry the raw 180-degree-rotat
 8-d state, the prompt and the LIBERO suite (for the action un-normalisation key); resizing, the model call and the gripper
 post-processing follow openvla-oft's experiments/robot/libero/run_libero_eval.py. The L1-regression head is deterministic,
 so the RNG reset only restarts the request counter and the reported key is the seed.
+
+get_vla rewrites a local checkpoint's config.json (with a timestamped backup) and copies ./prismatic's modeling code into it on
+every load, so concurrent shards would race on those files. The downloaded checkpoint already has the auto_map that
+update_auto_map writes, and its modeling_prismatic.py differs from the repo copy only in _run_diffusion_prediction, which the
+L1 head never calls; both writers are replaced by a read-only check and the checkpoint stays as downloaded.
 """
 import argparse
 import hashlib
+import json
 import sys
 import threading
 from pathlib import Path
@@ -14,12 +20,21 @@ from types import SimpleNamespace
 import numpy as np
 from serve import digest
 
+AUTO_MAP = {'AutoConfig': 'configuration_prismatic.OpenVLAConfig', 'AutoModelForVision2Seq': 'modeling_prismatic.OpenVLAForActionPrediction'}
+
+
+def check_checkpoint(path):
+    if json.loads((Path(path)/'config.json').read_text()).get('auto_map') != AUTO_MAP:
+        raise RuntimeError('Checkpoint config.json lacks the OpenVLA auto_map')
+
 
 class OFTPolicy:
     def __init__(self, checkpoint, oft_root):
         sys.path.insert(0, oft_root)
+        import experiments.robot.openvla_utils as utils
         from experiments.robot.openvla_utils import get_action_head, get_processor, get_proprio_projector, resize_image_for_policy
         from experiments.robot.robot_utils import get_action, get_image_resize_size, get_model, invert_gripper_action, normalize_gripper_action
+        utils.update_auto_map = utils.check_model_logic_mismatch = check_checkpoint
         # GenerateConfig defaults of run_libero_eval.py for the LIBERO checkpoints (L1 regression, two images, proprio, centre crop).
         self.cfg = SimpleNamespace(model_family='openvla', pretrained_checkpoint=checkpoint, use_l1_regression=True, use_diffusion=False,
                                    num_diffusion_steps_train=50, num_diffusion_steps_inference=50, use_film=False, num_images_in_input=2,

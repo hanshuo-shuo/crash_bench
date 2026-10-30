@@ -30,10 +30,12 @@ DETAIL = dict(smoke='smoke: 3 prefixes and their branches in a draft run, result
                  'probe': 'stage 5 formal: every stage-1a/1b prefix after appendix B is frozen'})
 OFT_CHECKPOINT = '/projects/p33100/siosio/openvla_checkpoints/openvla-7b-oft-finetuned-libero-spatial-object-goal-10@638918f3d1c2'
 OFT_COMMIT = 'e4287e94541f459edc4feabc4e181f537cd569a8'
+# gs://openpi-assets/checkpoints/pi0_libero as fetched on 2026-07-07; its 19 files match the bucket's sizes and MD5s (2026-10-30).
+PI0_CHECKPOINT = '/projects/p33100/siosio/openpi_assets/openpi-assets/checkpoints/pi0_libero'
 
 
 def checkpoint_path(policy):
-    return OFT_CHECKPOINT if policy == 'openvla_oft' else str(ASSETS/'openpi_assets/openpi-assets/checkpoints'/policy)
+    return dict(openvla_oft=OFT_CHECKPOINT, pi0_libero=PI0_CHECKPOINT).get(policy, str(ASSETS/'openpi_assets/openpi-assets/checkpoints'/policy))
 
 
 def prepare(stage, policy, repo):
@@ -126,9 +128,10 @@ def main(stage, policy, prefix_root=None, branch_root=None):
         prefixes = S.prefix_plan(names, 'smoke' if stage == 'smoke' else 'formal')
         plan = dict(mode='smoke' if stage == 'smoke' else 'formal', shards=shards, prefixes=prefixes)
     texts = [u['prompt'] for u in plan.get('branches', plan.get('prefixes', plan.get('probes')))] + [S.STOP, S.RETURN]
-    # Prompt lengths in pi0.5's tokenizer; OFT's Llama prompt has no such cap in its LIBERO evaluation.
+    # Prompt lengths in openpi's PaliGemma tokenizer against the policy's max_token_len (pi0.5 200, pi0 48); OFT's Llama
+    # prompt has no such cap in its LIBERO evaluation.
     plan['prompt_tokens'] = None if policy == 'openvla_oft' else prompt_tokens(texts)
-    if plan['prompt_tokens'] and max(plan['prompt_tokens'].values()) >= S.MAX_TOKENS:
+    if plan['prompt_tokens'] and max(plan['prompt_tokens'].values()) >= dict(pi0_libero=48).get(policy, S.MAX_TOKENS):
         raise RuntimeError('A prompt would be truncated')
     gpu_room(min(shards, 2))
     root, manifest = prepare(stage, policy, repo)
@@ -167,4 +170,8 @@ if __name__ == '__main__':
     need = 0 if a.stage in ('smoke', 'prefix') else 1 if a.stage == 'branch' else 2
     if len(a.roots) != need:
         raise SystemExit('%s takes %d run roots' % (a.stage, need))
-    main(a.stage, a.policy, *[r.resolve() for r in a.roots])
+    # Keep the /projects spelling: the container binds /projects, not the /gpfs/projects target of its symlink.
+    roots = [Path(os.path.abspath(r)) for r in a.roots]
+    if any(ASSETS/'hil_suite' not in r.parents for r in roots):
+        raise SystemExit('Run roots must be given under ' + str(ASSETS/'hil_suite'))
+    main(a.stage, a.policy, *roots)
