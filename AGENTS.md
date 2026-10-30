@@ -97,3 +97,9 @@ report (V5_DETOUR_PROTOCOL.md section 12). pi0.5 alone, no verifier, no paid API
 untouched. Stop and ask if the layout stage reads layouts_thin or layouts_insufficient. All ran on 2026-10-29
 (layouts_ready; reading ignores_detour, V5_DETOUR_REPORT.md). Any further step (more seeds, an online gate or
 rule executor, physical interventions) needs the user's go-ahead.
+
+HIL suite (2026-10-29 late): the user asked for a more concrete analysis of how to show that VLA robustness to
+human-in-the-loop interventions is poor, with more scenarios and tasks. The draft is
+docs/generative_verifier/HIL_SUITE_PLAN.md (standard LIBERO four suites, LIBERO-Goal mid-task switch with t = 0 ceilings,
+untrained commands, physical interventions, pi0 and OpenVLA-OFT). It is a plan only: the design, each GPU stage and the
+OFT checkpoint download each need the user's go-ahead. No paid API; SafeLIBERO test sources episode0/8/9/15 untouched.
