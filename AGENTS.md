@@ -89,4 +89,9 @@ no new layouts, no verifier, no paid API. The protocol draft, implementation and
 no further approval; the GPU smoke and formal batch are new pi0.5 executions and need the user's
 go-ahead. Test sources episode0/8/9/15 stay untouched. On 2026-10-29 the user approved both
 ("gpu都可以直接用 开始吧"): 12-run smoke, freeze, formal 480 runs, report. All ran on 2026-10-29
-(reading ignores_instruction for R and RA, V5_RETURN_REPORT.md). Detour layouts still need approval.
+(reading ignores_instruction for R and RA, V5_RETURN_REPORT.md).
+
+Detour approval (2026-10-29): after the return report the user approved the detour HIL ("可以 绕路吧 你看着办
+这个应该很好实现 也没啥歧义"): new on-route layouts (CPU), the 12-run GPU smoke and the formal batch, then the
+report (V5_DETOUR_PROTOCOL.md section 12). pi0.5 alone, no verifier, no paid API, test sources episode0/8/9/15
+untouched. Stop and ask if the layout stage reads layouts_thin or layouts_insufficient.

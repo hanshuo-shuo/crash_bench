@@ -7,6 +7,9 @@ s2 S1_LAYOUT_ROOT: render the object/II/task1 dataset on two A100 shards, then b
 hil-smoke S2_ROOT / hil S2_ROOT: the HIL policy twins (4 smoke states, or the frozen 160-state batch on two
 A100 shards), then the CPU summary. return-smoke HIL_SMOKE_ROOT / return HIL_ROOT: the return-home policy twins on
 the HIL run's states (3 prompts each), same runner and shards, then the return summary.
+detour-layouts-smoke TRACE_ROOT / detour-layouts TRACE_ROOT: on-route anchor layouts with replay and detour witness
+(CPU; 2 sources x 4 candidates, or 14 x 16). detour-smoke DETOUR_LAYOUT_ROOT / detour DETOUR_LAYOUT_ROOT: the
+detour policy twins (4 smoke states, or the frozen formal batch on two A100 shards), same runner, then the detour summary.
 """
 import argparse
 from datetime import datetime, timezone
@@ -26,7 +29,8 @@ PROTOCOLS = dict(scan='docs/generative_verifier/V5_STEP1_PROTOCOL.md', render='d
                  **{'s1-layout': 'docs/generative_verifier/V5_S1_PROTOCOL.md', 's1-render': 'docs/generative_verifier/V5_S1_PROTOCOL.md',
                     's2': 'docs/generative_verifier/V5_S2_PROTOCOL.md', 'hil': 'docs/generative_verifier/V5_HIL_PROTOCOL.md',
                     'hil-smoke': 'docs/generative_verifier/V5_HIL_PROTOCOL.md', 'return': 'docs/generative_verifier/V5_RETURN_PROTOCOL.md',
-                    'return-smoke': 'docs/generative_verifier/V5_RETURN_PROTOCOL.md'})
+                    'return-smoke': 'docs/generative_verifier/V5_RETURN_PROTOCOL.md',
+                    **{k: 'docs/generative_verifier/V5_DETOUR_PROTOCOL.md' for k in ('detour-layouts-smoke', 'detour-layouts', 'detour-smoke', 'detour')}})
 HIL_AUTHORIZATION = ('2026-10-27 user approved the HIL policy-twin design (V5_HIL_PROTOCOL.md) and asked to implement it, smoke '
                      '16 runs in a draft directory, freeze, then run the formal 640 and report ("写运行器和测试 -> 草稿目录 smoke 16 次 -> '
                      '填第 10 节、冻结 -> 正式 640 次 -> V5_HIL_REPORT.md"); pi0.5 alone, no verifier, no API, test sources untouched')
@@ -34,6 +38,10 @@ RETURN_AUTHORIZATION = ('2026-10-29 user asked for the return-home intervention 
                         '(code and tests, 12-run GPU smoke, freeze, formal 480 runs, V5_RETURN_REPORT.md), approved the GPU runs: '
                         '"gpu都可以直接用 开水吧" (开始吧); pi0.5 alone on the existing HIL states, no new layouts, no verifier, no API, '
                         'test sources untouched')
+DETOUR_AUTHORIZATION = ('2026-10-29 user approved the detour HIL (V5_DETOUR_PROTOCOL.md) after the return report asked about its '
+                        'new layouts: "可以 绕路吧 你看着办 这个应该很好实现 也没啥歧义"; covers the on-route layouts (CPU), the GPU smoke and '
+                        'the formal batch; pi0.5 alone, no verifier, no API, test sources untouched')
+DETOUR_LAYOUT_SHARDS = dict(smoke=2, formal=8)
 AUTHORIZATION = dict(
     scan='2026-10-24 user: V5 step 1 CPU geometry scan; no rendering, training, API or dataset rows',
     render='2026-10-24 user: V5 step 2 render pilot of about 20 checkpoints; no training, API or dataset rows',
@@ -46,7 +54,11 @@ AUTHORIZATION = dict(
        'hil-smoke': HIL_AUTHORIZATION + '; smoke: 4 states x 4 prompts in a draft run, results only in protocol section 10',
        'hil': HIL_AUTHORIZATION + '; formal: 160 states x 4 prompts after the protocol is frozen',
        'return-smoke': RETURN_AUTHORIZATION + '; smoke: the 4 HIL smoke states x 3 prompts in a draft run, results only in protocol section 10',
-       'return': RETURN_AUTHORIZATION + '; formal: the 160 HIL states x 3 prompts after the protocol is frozen'})
+       'return': RETURN_AUTHORIZATION + '; formal: the 160 HIL states x 3 prompts after the protocol is frozen',
+       'detour-layouts-smoke': DETOUR_AUTHORIZATION + '; layout smoke: 2 sources x 4 candidates in a draft run, for bug fixing only',
+       'detour-layouts': DETOUR_AUTHORIZATION + '; layouts: 14 development sources x 16 candidates, replay and witness on CPU',
+       'detour-smoke': DETOUR_AUTHORIZATION + '; smoke: 4 states x 3 prompts in a draft run, results only in protocol section 11',
+       'detour': DETOUR_AUTHORIZATION + '; formal: the accepted layouts x 2 checkpoints x 3 prompts after the protocol is frozen'})
 
 
 def command(*args, env=None):
@@ -251,9 +263,76 @@ def return_plan(hil, mode):
                 s2_root=source['s2_root'], layout_root=source['layout_root'], states=states)
 
 
+def detour_layout_plan(trace, mode):
+    """Check the C0 retrace, then sample every candidate placement on the development object/II/task1 sources
+    (smoke: the first development source of each split by digest, four candidates each). Test sources are never read."""
+    from . import v5_detour as D
+    from . import v5_hil as H
+    from .v5_layouts import frozen_split
+    split = frozen_split(); cases = read(trace/'CASES.json')
+    sources = [(i, c) for i, c in enumerate(cases) if c['task'] == D.TASK_ID and c['source'] not in H.TEST_SOURCES]
+    if any(split[c['source']] not in H.SPLITS for _, c in sources):
+        raise RuntimeError('A non-test object/II/task1 source outside the development splits')
+    if mode == 'smoke':
+        keep = {sorted((c['source'] for _, c in sources if split[c['source']] == part), key=lambda s: g.digest(s, D.SMOKE_SALT))[0]
+                for part in H.SPLITS}
+        sources = [(i, c) for i, c in sources if c['source'] in keep]
+    out = []
+    for i, c in sources:
+        case = trace/('case_%03d' % i)
+        with gzip.open(case/'TRACE.json.gz', 'rt') as stream:
+            retrace = json.load(stream)
+        snap = retrace['checkpoints'][0]
+        if snap['step'] != 0 or retrace['final_success'] is not True:
+            raise RuntimeError('Retrace unusable: ' + c['source'])
+        rows = D.candidates(c['source'], snap['objects'], snap['surface'], retrace['path'])
+        out += [dict(r, spec=c, split=split[c['source']], c0_case=str(case), objects=snap['objects'], surface=snap['surface'])
+                for r in (rows[:4] if mode == 'smoke' else rows)]
+    return out
+
+
+def detour_plan(layouts, mode):
+    """Check the detour layout run, then pick the states, record each state's zone and lift at t from the layout
+    replay, and every prompt's token count."""
+    from . import v5_detour as D
+    from . import v5_hil as H
+    from .v5_layouts import frozen_split
+    receipt = finished(layouts, 'DETOUR_LAYOUT_COMPLETE.json')
+    complete = read(layouts/'DETOUR_LAYOUT_COMPLETE.json')
+    if receipt['stage'] != 'v5-detour-layouts' or complete['reading'] != 'layouts_ready':
+        raise RuntimeError('The detour batches start from a formal layout run that reads layouts_ready')
+    entries = read(layouts/'CANDIDATES.json'); index = {(e['source'], e['candidate']): i for i, e in enumerate(entries)}
+    states = D.plan_states(read(layouts/'CANDIDATE_ROWS.json'), frozen_split(), mode)
+    for s in states:
+        i = index[(s['base_source'], s['layout'])]; case = layouts/('candidate_%03d' % i)
+        if not (read(case/'COMPLETE.json')['accepted'] and read(case/'LAYOUT.json')['valid']):
+            raise RuntimeError('State on a layout that was not accepted: ' + s['image'])
+        with gzip.open(case/'TRACE.json.gz', 'rt') as stream:
+            snap = [c for c in json.load(stream)['checkpoints'] if c['step'] == s['checkpoint']]
+        if len(snap) != 1:
+            raise RuntimeError('No layout snapshot at the checkpoint: ' + s['image'])
+        snap = snap[0]; zone = D.zone_record(snap['objects'], s['anchor'], snap['material'])
+        s.update(layout_case=str(case), spec=entries[i]['spec'], lift=max(0., snap['material'][2] - snap['surface']), zone=zone)
+        if s['lift'] >= H.RESTING_LIFT or zone['start_gap'] <= D.ENTRY or zone['basket_gap'] < D.GOAL_GAP or s['base_source'] in H.TEST_SOURCES:
+            raise RuntimeError('Bad state: ' + s['image'])
+    tokens = prompt_tokens(p for s in states for p in s['prompts'].values())
+    for s in states:
+        s['prompt_tokens'] = {c: tokens[s['prompts'][c]] for c in D.CONDITIONS}
+    if max(tokens.values()) >= H.MAX_TOKENS:
+        raise RuntimeError('A prompt reaches max_token_len and would be truncated')
+    return dict(mode=mode, experiment='detour', conditions=list(D.CONDITIONS), seed_salt=D.SEED_SALT, layout_root=str(layouts),
+                layout_reading=complete['reading'],
+                prompt_tokens={c: dict(min=min(s['prompt_tokens'][c] for s in states), max=max(s['prompt_tokens'][c] for s in states))
+                               for c in D.CONDITIONS},
+                tokenizer_sha256=sha(ASSETS/'openpi_assets/big_vision/paligemma_tokenizer.model'), states=states)
+
+
+GPU_STAGES = ('hil', 'hil-smoke', 'return', 'return-smoke', 'detour', 'detour-smoke')
+
+
 def main(stage, scan=None):
     repo = Path.cwd().resolve()
-    if stage in ('layout', 'screen', 's1-layout') and finished(scan, 'TRACE_COMPLETE.json')['stage'] != 'v5-trace':
+    if stage in ('layout', 'screen', 's1-layout', 'detour-layouts', 'detour-layouts-smoke') and finished(scan, 'TRACE_COMPLETE.json')['stage'] != 'v5-trace':
         raise RuntimeError('Counterfactual layouts start from a V5 trace run')
     if stage == 's1-render' and finished(scan, 'LAYOUT_COMPLETE.json')['stage'] != 'v5-s1-layout':
         raise RuntimeError('S1 renders start from an S1 layout run')
@@ -263,9 +342,11 @@ def main(stage, scan=None):
         raise RuntimeError('Freeze the HIL protocol before the formal batch')
     if stage == 'return' and '状态：已冻结' not in (repo/PROTOCOLS['return']).read_text():
         raise RuntimeError('Freeze the return protocol before the formal batch')
-    if stage in ('hil', 'hil-smoke', 'return', 'return-smoke'):
-        formal = stage in ('hil', 'return'); shards = 2 if formal else 1
-        plan_record = (hil_plan if stage.startswith('hil') else return_plan)(scan, 'formal' if formal else 'smoke')
+    if stage == 'detour' and '状态：已冻结' not in (repo/PROTOCOLS['detour']).read_text():
+        raise RuntimeError('Freeze the detour protocol before the formal batch')
+    if stage in GPU_STAGES:
+        formal = stage in ('hil', 'return', 'detour'); shards = 2 if formal else 1
+        plan_record = {'hil': hil_plan, 'return': return_plan, 'detour': detour_plan}[stage.split('-')[0]](scan, 'formal' if formal else 'smoke')
         active = command('squeue', '-h', '-u', os.environ['USER'], '-A', 'p33100', '-p', 'gengpu', '-o', '%j')
         if sum(x.startswith('cb_') for x in active.splitlines()) + shards > 2:
             raise RuntimeError('At most two CrashBench GPUs at a time')
@@ -295,6 +376,14 @@ def main(stage, scan=None):
         script = str(root/'source/verifier_dataset/v5_layouts.sbatch')
         job = submit(env, '--array=0-%d' % (LAYOUT_SHARDS-1), '--output='+str(root/'slurm_%A_%a.log'), script)
         receipt = dict(manifest, job=job, summarize_job=submit(env, '--dependency=afterok:'+job, '--output='+str(root/'slurm_%j.log'), script))
+    elif stage in ('detour-layouts', 'detour-layouts-smoke'):
+        mode = 'smoke' if stage.endswith('smoke') else 'formal'; entries = detour_layout_plan(scan, mode); shards = DETOUR_LAYOUT_SHARDS[mode]
+        manifest.update(partition='short', mode=mode, shards=shards, candidates=len(entries), trace_root=str(scan),
+                        trace_hashes=read(scan/'HASHES.json'))
+        write(root/'CAMPAIGN.json', manifest); write(root/'CANDIDATES.json', entries)
+        env['CB_LAYOUT_SHARDS'] = str(shards); script = str(root/'source/verifier_dataset/v5_detour_layouts.sbatch')
+        job = submit(env, '--array=0-%d' % (shards - 1), '--output='+str(root/'slurm_%A_%a.log'), script)
+        receipt = dict(manifest, job=job, summarize_job=submit(env, '--dependency=afterok:'+job, '--output='+str(root/'slurm_%j.log'), script))
     elif stage == 's2':
         shards = 2
         manifest.update(partition='gengpu', shards=shards, units=len(units), layout_root=str(scan),
@@ -305,24 +394,24 @@ def main(stage, scan=None):
                      str(root/'source/verifier_dataset/v5_render.sbatch'))
         receipt = dict(manifest, job=job, build_job=submit(env, '--dependency=afterok:'+job, '--output='+str(root/'slurm_%j.log'),
                                                            str(root/'source/verifier_dataset/v5_dataset.sbatch')))
-    elif stage in ('hil', 'hil-smoke', 'return', 'return-smoke'):
+    elif stage in GPU_STAGES:
         from .v5_hil import CONDITIONS
-        hil = stage.startswith('hil'); conditions = plan_record.get('conditions', list(CONDITIONS))
+        experiment = stage.split('-')[0]; conditions = plan_record.get('conditions', list(CONDITIONS))
         manifest.update(partition='gengpu', mode=plan_record['mode'], shards=shards, states=len(plan_record['states']),
                         conditions=conditions, runs=len(conditions) * len(plan_record['states']),
-                        seed='per state: v5_hil.policy_seed, shared by the %d prompts' % len(conditions),
-                        policy='pi05_libero', policy_checkpoint=str(ASSETS/'openpi_assets/openpi-assets/checkpoints/pi05_libero'),
-                        s2_root=plan_record['s2_root'], s2_hashes=read(Path(plan_record['s2_root'])/'HASHES.json'),
-                        layout_root=plan_record['layout_root'],
-                        layout_hashes=read(Path(plan_record['layout_root'])/'HASHES.json'))
-        if not hil:
+                        seed='per state: v5_%s.policy_seed, shared by the %d prompts' % ('detour' if experiment == 'detour' else 'hil', len(conditions)),
+                        policy='pi05_libero', policy_checkpoint=str(ASSETS/'openpi_assets/openpi-assets/checkpoints/pi05_libero'))
+        if experiment != 'detour':
+            manifest.update(s2_root=plan_record['s2_root'], s2_hashes=read(Path(plan_record['s2_root'])/'HASHES.json'))
+        manifest.update(layout_root=plan_record['layout_root'], layout_hashes=read(Path(plan_record['layout_root'])/'HASHES.json'))
+        if experiment == 'return':
             manifest.update(hil_root=plan_record['hil_root'], hil_hashes=plan_record['hil_hashes'])
         write(root/'CAMPAIGN.json', manifest); write(root/'PLAN.json', plan_record)
         env['CB_HIL_SHARDS'] = str(shards)
         job = submit(env, '--array=0-%d' % (shards - 1), '--time=%s' % ('06:00:00' if formal else '02:00:00'),
-                     '--job-name=' + ('cb_v5_hil' if hil else 'cb_v5_return'), '--output='+str(root/'slurm_%A_%a.log'),
+                     '--job-name=cb_v5_' + experiment, '--output='+str(root/'slurm_%A_%a.log'),
                      str(root/'source/verifier_dataset/v5_hil.sbatch'))
-        summary = 'v5_hil_summary.sbatch' if hil else 'v5_return_summary.sbatch'
+        summary = 'v5_%s_summary.sbatch' % experiment
         receipt = dict(manifest, job=job, summarize_job=submit(env, '--dependency=afterok:'+job, '--output='+str(root/'slurm_%j.log'),
                                                                str(root/'source/verifier_dataset'/summary)))
     elif stage == 'scan':
@@ -344,7 +433,7 @@ def main(stage, scan=None):
 if __name__ == '__main__':
     p = argparse.ArgumentParser()
     p.add_argument('stage', choices=['scan', 'render', 'trace', 'layout', 'screen', 's1-layout', 's1-render', 's2', 'hil-smoke', 'hil',
-                                     'return-smoke', 'return'])
+                                     'return-smoke', 'return', 'detour-layouts-smoke', 'detour-layouts', 'detour-smoke', 'detour'])
     p.add_argument('scan_root', type=Path, nargs='?')
     a = p.parse_args()
     if (a.stage not in ('scan', 'trace')) != (a.scan_root is not None):

@@ -7,7 +7,9 @@ source tape's for a natural layout). Both rule labels and clearances are recompu
 policy RNG is reset to the state's seed, then pi0.5 (experiments/feasibility/serve.py on
 127.0.0.1:PORT) is queried every five steps with the condition's prompt until success or step 300.
 The conditions and prompts come from the plan (the HIL four when it names none); each run also
-records the end-effector position at step 0, after the layout is placed and before the replay.
+records the end-effector position at step 0, after the layout is placed and before the replay. A detour
+state (one with a 'zone', v5_detour.py) checks its keep-out zone at t instead of the two lines and records
+the pudding's depth in the zone, the anchor's position and anchor contacts at every step.
 
 ROOT --shard K --shards N --port P runs every N-th state; ROOT --state-index I --condition C --port P
 runs one execution; ROOT --summarize aggregates.
@@ -101,10 +103,21 @@ def run_condition(root, index, condition, port):
         objects, surface = scene_objects(env, object_points)
         goal = goal_region(env, objects, spec['spec']['receiver'])
         material = np.asarray(d.geom_xpos[geom]).tolist(); lift = max(0., material[2] - surface)
-        lines = lines_at(env, spec, objects, goal, material)
-        for k in H.LINES:
-            if lines[k]['label'] != spec['rules'][k]['label'] or abs(lines[k]['clearance'] - spec['rules'][k]['clearance']) > 1e-6:
-                raise RuntimeError('Twin label differs at the checkpoint: ' + k)
+        detour = 'zone' in spec
+        if detour:
+            from . import v5_detour as D
+            from .v5_render import body_geoms
+            zone = D.zone_record(objects, spec['anchor'], material)
+            if not D.same_zone(zone, spec['zone']):
+                raise RuntimeError('Keep-out zone differs at the checkpoint')
+            anchor_body = int(env.env.obj_body_id[spec['anchor']]); anchor_geoms = set(body_geoms(m, anchor_body))
+            movers = set(body_geoms(m, int(env.env.obj_body_id[spec['spec']['target']]))) | {
+                x for x in range(m.ngeom) if (m.body_id2name(int(m.geom_bodyid[x])) or '').startswith(('robot0_', 'gripper0_'))}
+        else:
+            lines = lines_at(env, spec, objects, goal, material)
+            for k in H.LINES:
+                if lines[k]['label'] != spec['rules'][k]['label'] or abs(lines[k]['clearance'] - spec['rules'][k]['clearance']) > 1e-6:
+                    raise RuntimeError('Twin label differs at the checkpoint: ' + k)
         if abs(lift - spec['lift']) > 1e-6:
             raise RuntimeError('Lift differs at the checkpoint')
         if physical_hash(env) != at:
@@ -112,10 +125,17 @@ def run_condition(root, index, condition, port):
 
         def record(step, observation, action, done):
             p = np.asarray(d.geom_xpos[geom])
-            return dict(step=step, eef=np.asarray(observation['robot0_eef_pos']).tolist(), material=p.tolist(),
-                        lift=max(0., float(p[2]) - surface), gripper=np.asarray(observation['robot0_gripper_qpos']).tolist(),
-                        command=None if action is None else float(action[6]),
-                        d={k: g.line_distance(p[:2], *lines[k]['ends']) for k in H.LINES}, done=bool(done))
+            x = dict(step=step, eef=np.asarray(observation['robot0_eef_pos']).tolist(), material=p.tolist(),
+                     lift=max(0., float(p[2]) - surface), gripper=np.asarray(observation['robot0_gripper_qpos']).tolist(),
+                     command=None if action is None else float(action[6]))
+            if detour:
+                touching = ((int(c.geom1), int(c.geom2)) for c in d.contact[:d.ncon] if c.dist <= 0)
+                x.update(d=D.distances(p[:2].tolist(), zone), anchor=np.asarray(d.body_xpos[anchor_body])[:2].tolist(),
+                         contact=any((a in anchor_geoms and b in movers) or (b in anchor_geoms and a in movers) for a, b in touching))
+            else:
+                x['d'] = {k: g.line_distance(p[:2], *lines[k]['ends']) for k in H.LINES}
+            x['done'] = bool(done)
+            return x
         run_id = '%s_%s_%s' % (os.environ['SLURM_JOB_ID'], spec['state'], condition)
         client = WebsocketClientPolicy('127.0.0.1', port)
         ack = client.infer({'__paired_reset_rng__': spec['seed'], 'run_id': run_id})
@@ -151,11 +171,11 @@ def run_condition(root, index, condition, port):
         np.savez_compressed(folder/'policy_images.npz', agentview=np.stack(images))
         row = dict(state=spec['state'], condition=condition, image=spec['image'], prompt=prompt, prompt_tokens=spec['prompt_tokens'][condition],
                    seed=spec['seed'], checkpoint=t, horizon=H.HORIZON - t, start_eef=start, physics_at_checkpoint=at, checked_hashes=checked,
-                   lines=lines, lift_at_checkpoint=lift, rng_reset=ack, policy_requests=len(requests),
+                   **(dict(zone=zone) if detour else dict(lines=lines)), lift_at_checkpoint=lift, rng_reset=ack, policy_requests=len(requests),
                    first_inference_step=requests[0]['step'], first_policy_input_sha256=first['with_prompt'],
                    policy_input_state_sha256=first['state'], replayed_outputs=sum(r['output_replayed'] for r in requests),
                    maximum_native_difference=max(r['native_output_linf_difference'] for r in requests),
-                   actions_outside_spec=outside, outcome=H.outcome(trace), elapsed_seconds=time.monotonic() - started,
+                   actions_outside_spec=outside, outcome=(D.outcome if detour else H.outcome)(trace), elapsed_seconds=time.monotonic() - started,
                    api_calls=0, code_commit=os.environ.get('CB_CODE_COMMIT'), slurm_job=os.environ.get('SLURM_JOB_ID'))
         write(folder/'ROW.json', row)
         write(folder/'HASHES.json', {p.name: sha(p) for p in sorted(folder.iterdir()) if p.is_file() and p.name != 'HASHES.json'})
@@ -203,7 +223,7 @@ def run(root, shard, shards, port):
     write(root/('SHARD_%d_COMPLETE.json' % shard), dict(passed=True, shard=shard, states=done, slurm_job=os.environ.get('SLURM_JOB_ID')))
 
 
-def load(root, index, condition):
+def load(root, index, condition, outcome=H.outcome):
     folder = root/('state_%03d' % index)/condition
     for name, digest in read(folder/'HASHES.json').items():
         if sha(folder/name) != digest:
@@ -211,7 +231,7 @@ def load(root, index, condition):
     with gzip.open(folder/'STEPS.jsonl.gz', 'rt') as stream:
         trace = [json.loads(x) for x in stream]
     row = read(folder/'ROW.json')
-    if H.outcome(trace) != row['outcome']:
+    if outcome(trace) != row['outcome']:
         raise RuntimeError('Recomputed outcome differs: %s' % folder)
     return row, trace
 

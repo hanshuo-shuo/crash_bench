@@ -156,7 +156,8 @@ class Static(unittest.TestCase):
             self.assertIn(needle, cpu)
         text = (ROOT/'verifier_dataset/v5_launch.py').read_text()
         self.assertIn("'状态：已冻结' not in (repo/PROTOCOLS['return']).read_text()", text)
-        self.assertIn("'--job-name=' + ('cb_v5_hil' if hil else 'cb_v5_return')", text)
+        self.assertIn("'--job-name=cb_v5_' + experiment", text)
+        self.assertIn("{'hil': hil_plan, 'return': return_plan, 'detour': detour_plan}[stage.split('-')[0]]", text)
 
 
 if __name__ == '__main__':
