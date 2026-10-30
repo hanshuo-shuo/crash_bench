@@ -51,12 +51,12 @@ class ControlledPolicy:
    return raw
 
 def main():
- p=argparse.ArgumentParser();p.add_argument('--port',type=int,required=True);p.add_argument('--checkpoint',required=True);p.add_argument('--cache');a=p.parse_args()
+ p=argparse.ArgumentParser();p.add_argument('--port',type=int,required=True);p.add_argument('--checkpoint',required=True);p.add_argument('--cache');p.add_argument('--config',default='pi05_libero',choices=['pi05_libero','pi0_libero']);a=p.parse_args()
  import jax
  from openpi.policies import policy_config
  from openpi.training import config
  from openpi.serving.websocket_policy_server import WebsocketPolicyServer
- policy=policy_config.create_trained_policy(config.get_config('pi05_libero'),a.checkpoint)
+ policy=policy_config.create_trained_policy(config.get_config(a.config),a.checkpoint)
  if policy._is_pytorch_model:raise RuntimeError('JAX policy required')
  WebsocketPolicyServer(ControlledPolicy(policy,jax,a.cache),host='127.0.0.1',port=a.port,metadata=policy.metadata).serve_forever()
 if __name__=='__main__':main()

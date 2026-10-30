@@ -103,3 +103,6 @@ human-in-the-loop interventions is poor, with more scenarios and tasks. The draf
 docs/generative_verifier/HIL_SUITE_PLAN.md (standard LIBERO four suites, LIBERO-Goal mid-task switch with t = 0 ceilings,
 untrained commands, physical interventions, pi0 and OpenVLA-OFT). It is a plan only: the design, each GPU stage and the
 OFT checkpoint download each need the user's go-ahead. No paid API; SafeLIBERO test sources episode0/8/9/15 untouched.
+On 2026-10-29 late the user approved all of it ("都可以 同意 干吧"): the design and readings, every stage (0-5) including its
+GPU smoke and formal batch, pi0 and OpenVLA-OFT, and the OFT checkpoint download. Still pi0.5/pi0/OFT alone, no verifier,
+no paid API, at most two GPUs; freeze each stage's readings after its smoke and before its formal batch.
