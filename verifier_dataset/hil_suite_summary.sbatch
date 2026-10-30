@@ -8,6 +8,7 @@
 #SBATCH --time=02:00:00
 #SBATCH --job-name=cb_hil_suite_summary
 set -euo pipefail
+head_commit() { local h; h="$(cat "$1/.git/HEAD")"; case "$h" in "ref: "*) cat "$1/.git/${h#ref: }";; *) echo "$h";; esac; }
 ROOT="${CB_FD_ROOT:?}"
 cd "$ROOT/source"
 sha256sum --quiet -c "$ROOT/source.sha256"
@@ -19,7 +20,7 @@ export SINGULARITYENV_CB_POLICY_CONFIG="${CB_POLICY_CONFIG:?}"
 export SINGULARITYENV_SLURM_JOB_ID="$SLURM_JOB_ID"
 export SINGULARITYENV_PYTHONNOUSERSITE=1 SINGULARITYENV_PYTHONDONTWRITEBYTECODE=1
 export SINGULARITYENV_CB_LIBERO="$HOME/crash_bench/third_party/LIBERO"
-test "$(git -C "$HOME/crash_bench/third_party/LIBERO" rev-parse HEAD)" = 8f1084e3132a39270c3a13ebe37270a43ece2a01
+test "$(head_commit "$HOME/crash_bench/third_party/LIBERO")" = 8f1084e3132a39270c3a13ebe37270a43ece2a01
 export SINGULARITYENV_MUJOCO_GL=glx SINGULARITYENV_PYOPENGL_PLATFORM=glx
 export SINGULARITYENV_PYTHONPATH="$HOME/crash_bench/third_party/vlsa-aegis/openpi/packages/openpi-client/src"
 singularity exec --bind "/projects,/home,$ROOT:$ROOT:rw,$ROOT/source:$ROOT/source:ro" \

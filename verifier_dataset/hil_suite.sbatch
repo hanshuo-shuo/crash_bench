@@ -10,6 +10,7 @@
 #SBATCH --time=12:00:00
 #SBATCH --job-name=cb_hil_suite
 set -euo pipefail
+head_commit() { local h; h="$(cat "$1/.git/HEAD")"; case "$h" in "ref: "*) cat "$1/.git/${h#ref: }";; *) echo "$h";; esac; }
 ROOT="${CB_FD_ROOT:?}"
 SOURCE="$ROOT/source"
 cd "$SOURCE"
@@ -19,8 +20,8 @@ export CB_ASSETS=/projects/p33100/siosio/crashbench_safelibero
 export CB_UPSTREAM="$HOME/crash_bench/third_party/vlsa-aegis"
 export CB_LIBERO="$HOME/crash_bench/third_party/LIBERO"
 test "$(cat "$CB_UPSTREAM/.git/HEAD")" = 2457feed5968ae803926e178c8ce8243b9ecdcf9
-test "$(git -C "$CB_LIBERO" rev-parse HEAD)" = 8f1084e3132a39270c3a13ebe37270a43ece2a01
-test -z "$(git -C "$CB_LIBERO" status --porcelain --untracked-files=no)"
+# Compute nodes have no git: the launcher checked both checkouts are clean at submission; here the pinned commits are read directly.
+test "$(head_commit "$CB_LIBERO")" = 8f1084e3132a39270c3a13ebe37270a43ece2a01
 PHASE="${CB_SUITE_PHASE:?}"
 export CB_POLICY_CONFIG="${CB_POLICY_CONFIG:?}"
 unset OPENROUTER_API_KEY
@@ -38,7 +39,7 @@ trap 'if [ -n "$SERVER_PID" ]; then kill "$SERVER_PID" 2>/dev/null || true; wait
 nvidia-smi --query-gpu=name,driver_version --format=csv,noheader > "$ROOT/GPU_${PHASE}_${SHARD}.txt"
 if [ "$CB_POLICY_CONFIG" = openvla_oft ]; then
  OFT=/projects/p33100/siosio/third_party/openvla-oft
- test "$(git -C "$OFT" rev-parse HEAD)" = e4287e94541f459edc4feabc4e181f537cd569a8
+ test "$(head_commit "$OFT")" = e4287e94541f459edc4feabc4e181f537cd569a8
  /projects/p33100/siosio/envs/openvla-oft/bin/python "$SOURCE/experiments/feasibility/serve_oft.py" --port "$PORT" --oft-root "$OFT" \
   --openpi "$CB_UPSTREAM/openpi" --checkpoint "${CB_POLICY_CHECKPOINT:?}" > "$ROOT/policy_${PHASE}_${SHARD}.log" 2>&1 &
 else
