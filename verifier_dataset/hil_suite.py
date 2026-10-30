@@ -56,6 +56,11 @@ KEEPS_TASK = .8
 OBEYS = .8
 BREAKS = .5
 SUITES_NEEDED = 3
+# Twin observations: physics and proprioception must match exactly; GPU rendering differs between processes by at most one
+# intensity level on a few pixels (smoke 5976811), so images may differ by IMAGE_LEVELS on at most IMAGE_FRACTION of pixels.
+IMAGE_LEVELS = 1
+IMAGE_FRACTION = .001
+REPEAT_INITS = (0, 1)
 SEED_SALT = 'hil-suite-seed'
 BOOTSTRAP = 10000
 BOOTSTRAP_SEED = 1029
@@ -159,12 +164,19 @@ def branch_plan(names, prefixes, mode):
                     add(2, '2', p, f, c)
             for c in AT_START:
                 add(2, '2', p, 0, c)
-    if mode == 'smoke':
-        # Same unit twice in one job: the determinism check of protocol section 4.
-        p = by[SMOKE['prefixes'][0]]
-        if p['success']:
+    # The same unit run twice: the noise floor of protocol section 4 (one prefix in the smoke; inits 0 and 1 of every task formally).
+    repeat = [by[SMOKE['prefixes'][0]]] if mode == 'smoke' else [p for p in prefixes if p['init'] in REPEAT_INITS]
+    for p in repeat:
+        if p['success'] and any(u['prefix'] == p['id'] and u['phase'] == .5 and u['condition'] == 'C0' for u in units):
             add(0, 'repeat', p, .5, 'C0R')
     return units, excluded
+
+
+def images_match(a, b):
+    """Two rendered uint8 images agree up to rendering noise (IMAGE_LEVELS on at most IMAGE_FRACTION of the values)."""
+    import numpy as np
+    d = np.abs(np.asarray(a, dtype=np.int64) - np.asarray(b, dtype=np.int64))
+    return a.shape == b.shape and int(d.max(initial=0)) <= IMAGE_LEVELS and int((d > 0).sum()) <= IMAGE_FRACTION * d.size, int(d.max(initial=0)), int((d > 0).sum())
 
 
 def first(trace, key, other=None):

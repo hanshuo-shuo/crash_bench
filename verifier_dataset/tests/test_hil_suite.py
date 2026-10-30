@@ -88,7 +88,9 @@ class Plans(unittest.TestCase):
 
     def test_branches(self):
         units, excluded = S.branch_plan(NAMES, formal_prefixes(), 'formal')
-        self.assertEqual(len(units), 2500); self.assertEqual(excluded, []); self.assertEqual(len({u['id'] for u in units}), 2500)
+        count = lambda f: sum(1 for u in units if f(u))
+        self.assertEqual(len(units), 2532); self.assertEqual(excluded, []); self.assertEqual(len({u['id'] for u in units}), 2532)
+        self.assertEqual(count(lambda u: u['condition'] == 'C0R'), 32)
         count = lambda f: sum(1 for u in units if f(u))
         self.assertEqual(count(lambda u: u['condition'] == 'SW'), 880)
         self.assertEqual(count(lambda u: u['condition'] == 'C0' and 1 in u['stages']), 520)
@@ -102,13 +104,21 @@ class Plans(unittest.TestCase):
                 self.assertIn(u['other'], u['record'])
         twins = {}
         for u in units:
-            twins.setdefault((u['prefix'], u['checkpoint']), []).append(u['prompt'])
+            if u['condition'] != 'C0R':
+                twins.setdefault((u['prefix'], u['checkpoint']), []).append(u['prompt'])
         self.assertTrue(all(len(set(v)) == len(v) for v in twins.values()))
 
     def test_failed_prefix_is_excluded(self):
         units, excluded = S.branch_plan(NAMES, formal_prefixes(fail={('libero_goal', 8, 3)}), 'formal')
         self.assertFalse(any(u['prefix'] == S.prefix_id('libero_goal', 8, 3) for u in units))
         self.assertEqual(len(excluded), 2)
+
+    def test_images_match(self):
+        import numpy as np
+        a = np.zeros((224, 224, 3), np.uint8); b = a.copy(); b[0, 0, 0] = 1
+        self.assertEqual(S.images_match(a, b), (True, 1, 1))
+        b[0, 1, 0] = 2; self.assertFalse(S.images_match(a, b)[0])
+        c = a.copy(); c[:2, :, :] = 1; self.assertFalse(S.images_match(a, c)[0])
 
     def test_smoke_branches(self):
         units, _ = S.branch_plan(NAMES, [prefix(s, k, i) for s, k, i in S.SMOKE['prefixes']], 'smoke')

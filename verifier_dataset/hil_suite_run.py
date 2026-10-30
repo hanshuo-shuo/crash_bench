@@ -417,21 +417,33 @@ def summarize_prefix(root):
     return gate
 
 
-def twin_check(units, rows):
-    """Branches of one prefix and checkpoint started from one physics state, one policy observation and one RNG key."""
-    groups = {}
+def twin_check(root, units, rows):
+    """Branches of one prefix and checkpoint started from one physics state, one proprioceptive state, observations equal
+    up to rendering noise (hil_suite.images_match) and one RNG key; returns the group count and the image differences seen."""
+    import numpy as np
+    groups = {}; noise = dict(groups_with_difference=0, max_levels=0, max_values=0)
     for u in units:
         groups.setdefault((u['prefix'], u['checkpoint']), []).append(rows[u['id']])
     for key, rs in groups.items():
-        for field in ('physics_at_checkpoint', 'policy_input_state_sha256'):
-            if len({r[field] for r in rs}) != 1:
-                raise RuntimeError('Twin runs differ in %s at %s' % (field, key))
+        if len({r['physics_at_checkpoint'] for r in rs}) != 1:
+            raise RuntimeError('Twin runs differ in physics at %s' % (key,))
+        inputs = [np.load(root/'branch'/r['id']/'first_policy_input.npz') for r in rs if 'policy_input_state_sha256' in r]
+        seen = False
+        for x in inputs[1:]:
+            if not np.array_equal(x['observation/state'], inputs[0]['observation/state']):
+                raise RuntimeError('Twin runs differ in proprioception at %s' % (key,))
+            for name in ('observation/image', 'observation/wrist_image'):
+                ok, levels, values = S.images_match(x[name], inputs[0][name])
+                if not ok:
+                    raise RuntimeError('Twin images differ beyond rendering noise at %s: %d levels on %d values' % (key, levels, values))
+                seen |= values > 0; noise['max_levels'] = max(noise['max_levels'], levels); noise['max_values'] = max(noise['max_values'], values)
+        noise['groups_with_difference'] += seen
         if len({r['rng_reset']['key_hex'] for r in rs}) != 1:
             raise RuntimeError('Twin runs differ in the policy RNG key at %s' % (key,))
         prompts = [r['prompt'] for r in rs if r['condition'] != 'C0R']
         if len(set(prompts)) != len(prompts):
             raise RuntimeError('Two conditions share a prompt at %s' % (key,))
-    return len(groups)
+    return dict(noise, groups=len(groups))
 
 
 def reference_distances(units, traces):
@@ -527,7 +539,7 @@ def summarize(root):
         if S.outcome(trace, u, start) != row['outcome']:
             raise RuntimeError('Recomputed outcome differs: ' + u['id'])
         rows[u['id']], traces[u['id']], outcomes[u['id']] = row, trace, row['outcome']
-    twins = twin_check(units, rows)
+    twins = twin_check(root, units, rows)
     distances = reference_distances(units, traces)
     runs = [dict({k: u[k] for k in ('id', 'stages', 'group', 'suite', 'task', 'other', 'init', 'phase', 'checkpoint', 'condition')},
                  elapsed_seconds=rows[u['id']]['elapsed_seconds'], replayed_outputs=rows[u['id']]['replayed_outputs'],
@@ -545,8 +557,10 @@ def summarize(root):
         for u in repeats:
             twin = next(v for v in units if v['prefix'] == u['prefix'] and v['checkpoint'] == u['checkpoint'] and v['condition'] == 'C0')
             pairs.append(dict(unit=u['id'], same_trace=[x['physics'] for x in traces[u['id']]] == [x['physics'] for x in traces[twin['id']]],
-                              same_outcome=outcomes[u['id']] == outcomes[twin['id']]))
-        reading['repeat_check'] = pairs
+                              same_a=outcomes[u['id']]['a_done'] == outcomes[twin['id']]['a_done'], same_outcome=outcomes[u['id']] == outcomes[twin['id']],
+                              max_eef_gap=max(math.dist(x['eef'], y['eef']) for x, y in zip(traces[u['id']], traces[twin['id']]))))
+        reading['repeat_check'] = dict(pairs=len(pairs), same_a=sum(p['same_a'] for p in pairs), same_trace=sum(p['same_trace'] for p in pairs),
+                                       max_eef_gap=S.H.distribution(p['max_eef_gap'] for p in pairs), rows=pairs)
     write(root/'SUITE_READING.json', reading)
     write(root/'SUITE_COMPLETE.json', dict(passed=True, mode=plan['mode'], runs=len(runs), claims=reading['claims'], **provenance()))
     write(root/'HASHES.json', {n: sha(root/n) for n in ('PLAN.json', 'RUNS.jsonl.gz', 'SUITE_READING.json', 'SUITE_COMPLETE.json')})
