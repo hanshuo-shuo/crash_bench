@@ -94,4 +94,6 @@ go-ahead. Test sources episode0/8/9/15 stay untouched. On 2026-10-29 the user ap
 Detour approval (2026-10-29): after the return report the user approved the detour HIL ("可以 绕路吧 你看着办
 这个应该很好实现 也没啥歧义"): new on-route layouts (CPU), the 12-run GPU smoke and the formal batch, then the
 report (V5_DETOUR_PROTOCOL.md section 12). pi0.5 alone, no verifier, no paid API, test sources episode0/8/9/15
-untouched. Stop and ask if the layout stage reads layouts_thin or layouts_insufficient.
+untouched. Stop and ask if the layout stage reads layouts_thin or layouts_insufficient. All ran on 2026-10-29
+(layouts_ready; reading ignores_detour, V5_DETOUR_REPORT.md). Any further step (more seeds, an online gate or
+rule executor, physical interventions) needs the user's go-ahead.
