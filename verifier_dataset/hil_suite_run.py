@@ -490,7 +490,8 @@ def summarize_probe(root):
     reading = dict(mode=plan['mode'], points=len(points), groups={})
     for g in sorted({p['group'] for p in points}):
         ps = [p for p in points if p['group'] == g]; near = [p for p in ps if p['to_B_path'] is not None and p['d_noise'] > 0]
-        reading['groups'][g] = dict(points=len(ps), by_progress=S.probe_summary(ps),
+        by = S.probe_summary(ps)
+        reading['groups'][g] = dict(points=len(ps), by_progress=by, reading=S.probe_reading(by),
                                     path_correlation=S.estimate(near, lambda xs: S.spearman([x['to_B_path'] for x in xs], [x['d_B'] / x['d_noise'] for x in xs])))
     with gzip.open(root/'POINTS.jsonl.gz', 'wt') as stream:
         stream.writelines(json.dumps(p) + '\n' for p in points)

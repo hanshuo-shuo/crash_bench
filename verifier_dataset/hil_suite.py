@@ -481,3 +481,9 @@ def probe_summary(points):
                            B_over_noise=med(p['d_B'] / p['d_noise'] for p in ps if p['d_noise'] > 0),
                            empty_over_noise=med(p['d_empty'] / p['d_noise'] for p in ps if p['d_noise'] > 0))
     return out
+
+
+def probe_reading(by_progress):
+    """`fades` when the last progress bin's median d_B / d_noise is below half the first bin's (appendix B.3)."""
+    a, z = by_progress['0']['B_over_noise'], by_progress[str(PROBE_BINS - 1)]['B_over_noise']
+    return None if a is None or z is None else ('fades' if z < a / 2 else 'persists')

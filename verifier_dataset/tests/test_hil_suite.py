@@ -218,6 +218,8 @@ class Probe(unittest.TestCase):
         pts = [dict(progress=k / 10, d_B=1. - k / 10, d_empty=.5, d_noise=.1) for k in range(10)]
         out = S.probe_summary(pts)
         self.assertEqual(out['0']['n'], 2); self.assertGreater(out['0']['B_over_noise'], out['4']['B_over_noise'])
+        self.assertEqual(S.probe_reading(out), 'fades')
+        self.assertEqual(S.probe_reading(S.probe_summary([dict(p, d_B=1.) for p in pts])), 'persists')
 
 
 
