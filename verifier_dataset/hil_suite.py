@@ -17,6 +17,9 @@ SUITES = dict(libero_spatial=220, libero_object=280, libero_goal=300, libero_10=
 WAIT = 10
 DUMMY = [0.] * 6 + [-1.]
 REPLAN = 5
+# Actions executed per policy query: openpi's LIBERO evaluation replans every 5 steps; openvla-oft runs its 8-step chunk.
+REPLANS = dict(pi05_libero=5, pi0_libero=5, openvla_oft=8)
+POLICIES = tuple(REPLANS)
 ENV_SEED = 7
 RESOLUTION = 256
 MAX_TOKENS = 200
@@ -369,3 +372,112 @@ def claims(s1, s2):
     late = s1.get('1a', {}).get('phases', {}).get(str(PHASES[-1]), {}).get('reading')
     h2 = late in ('commits', 'derails')
     return dict(H1=h1, H2=h2, late_reading=late, form='strong' if h1 and h2 else ('weak' if h1 else 'not_supported'))
+
+
+# Stage 3: physical interventions with the human's intent unchanged (protocol appendix A).
+STAGE3 = (('libero_spatial', 0), ('libero_spatial', 1), ('libero_object', 0), ('libero_object', 1),
+          ('libero_goal', 8), ('libero_goal', 1), ('libero_10', 0), ('libero_10', 1))
+STAGE3_STATES = 10
+PERTURB = dict(OBJ=.25, DROP=.5, PUSH=.5, GOAL=.5)
+SHIFT = .06
+DROP_OFFSET = .08
+CLEARANCE = .07
+RESTING = .01
+LIFTED = .02
+OVER = .08
+PUSH_OFFSET = (-.07, 0., .07)
+PUSH_STEPS = 15
+PUSH_GAIN = .05
+PENETRATION = -.005
+RECOVERS = .8
+FRAGILE = .5
+DIRECTIONS = tuple((math.cos(k * math.pi / 4), math.sin(k * math.pi / 4)) for k in range(8))
+
+
+def goal_parts(goal_state):
+    """Moved objects and receptacles of a BDDL goal: (In|On obj place) gives obj and place's object name."""
+    moved, places = [], []
+    for state in goal_state:
+        if state[0].lower() in ('in', 'on') and len(state) == 3:
+            moved.append(state[1])
+            place = state[2]
+            for suffix in ('_contain_region', '_top_region', '_cook_region', '_top_side', '_region'):
+                if place.endswith(suffix):
+                    place = place[:-len(suffix)]; break
+            places.append(place)
+    return moved, places
+
+
+def best_shift(xy, others, distance, clearance=CLEARANCE):
+    """The compass shift of length distance whose destination is farthest from every other object, if clear enough."""
+    best = None
+    for dx, dy in DIRECTIONS:
+        p = (xy[0] + distance * dx, xy[1] + distance * dy)
+        gap = min((math.dist(p, q) for q in others), default=float('inf'))
+        if best is None or gap > best[0] + 1e-12:
+            best = (gap, p, (dx, dy))
+    return None if best[0] < clearance else dict(to=list(best[1]), direction=list(best[2]), gap=best[0])
+
+
+def stage3_plan(prefixes, mode):
+    """Perturbation units on the stage-3 tasks; C0 at the same checkpoint comes from the stage 1-2 branch run."""
+    by = {(p['suite'], p['task'], p['init']): p for p in prefixes}
+    tasks = STAGE3[:2] if mode == 'smoke' else STAGE3; n = 1 if mode == 'smoke' else STAGE3_STATES
+    units, excluded = [], []
+    for s, k in tasks:
+        for i in range(n):
+            p = by[(s, k, i)]
+            if not p['success']:
+                excluded.append(dict(stage=3, prefix=p['id'], reason='prefix task failed')); continue
+            for c, f in PERTURB.items():
+                t = checkpoint(p, f)
+                units.append(dict(id='%s_s%03d_%s' % (p['id'], t, c), stages=[3], group='3', prefix=p['id'], suite=s, task=k, init=i, other=None,
+                                  phase=f, checkpoint=t, condition=c, prompt=p['prompt'], seed=p['seed'], budget=SUITES[s], stop_on='A',
+                                  record=[]))
+    return units, excluded
+
+
+def stage3_reading(rho):
+    if rho is None:
+        return None
+    return 'recovers' if rho >= RECOVERS else ('fragile' if rho <= FRAGILE else 'partial')
+
+
+def stage3(units, outcomes, baseline):
+    """Per perturbation: applied count, recovery (A success after) over C0's A success at the same prefix and checkpoint."""
+    out = {}
+    for c in PERTURB:
+        xs = [dict(u, o=outcomes[u['id']], base=baseline.get((u['prefix'], u['checkpoint']))) for u in units if u['condition'] == c]
+        applied = [x for x in xs if x['o']['applied'] and x['base'] is not None]
+        rho = lambda rs: (lambda b: None if not b else mean(r['o']['a_done'] for r in rs) / b)(mean(r['base'] for r in rs))
+        res = dict(units=len(xs), applied=len(applied), not_applicable={}, rho=estimate(applied, rho),
+                   success=estimate(applied, lambda rs: mean(r['o']['a_done'] for r in rs)), c0_a=estimate(applied, lambda rs: mean(r['base'] for r in rs)))
+        for x in xs:
+            if not x['o']['applied']:
+                res['not_applicable'][x['o']['reason']] = res['not_applicable'].get(x['o']['reason'], 0) + 1
+        res['reading'] = stage3_reading(res['rho']['value'])
+        res['suites'] = {s: dict(n=len(ss), rho=rho(ss)) for s in SUITES for ss in [[x for x in applied if x['suite'] == s]] if ss}
+        out[c] = res
+    return out
+
+
+# Stage 5: action-sensitivity probe along stage-1 prefixes (protocol appendix B).
+PROBE_EVERY = 10
+PROBE_BINS = 5
+
+
+def probe_points(prefix):
+    """Tape steps at which the probe queries the policy: every PROBE_EVERY policy steps before A succeeds."""
+    return [WAIT + k for k in range(0, prefix['policy_steps'], PROBE_EVERY)]
+
+
+def probe_summary(points):
+    """Median ratios to the noise floor by progress bin; points carry progress in [0, 1), d_B, d_empty, d_noise."""
+    out = {}
+    for b in range(PROBE_BINS):
+        ps = [p for p in points if b / PROBE_BINS <= p['progress'] < (b + 1) / PROBE_BINS]
+        med = lambda xs: H.distribution(xs).get('median')
+        out[str(b)] = dict(n=len(ps), d_B=med(p['d_B'] for p in ps), d_empty=med(p['d_empty'] for p in ps), d_noise=med(p['d_noise'] for p in ps),
+                           B_over_noise=med(p['d_B'] / p['d_noise'] for p in ps if p['d_noise'] > 0),
+                           empty_over_noise=med(p['d_empty'] / p['d_noise'] for p in ps if p['d_noise'] > 0))
+    return out

@@ -36,12 +36,19 @@ PORT=$((20000 + SLURM_JOB_ID % 30000))
 SERVER_PID=""
 trap 'if [ -n "$SERVER_PID" ]; then kill "$SERVER_PID" 2>/dev/null || true; wait "$SERVER_PID" 2>/dev/null || true; fi' EXIT
 nvidia-smi --query-gpu=name,driver_version --format=csv,noheader > "$ROOT/GPU_${PHASE}_${SHARD}.txt"
-/projects/p33100/siosio/envs/openpi/bin/python "$SOURCE/experiments/feasibility/serve.py" --port "$PORT" --config "$CB_POLICY_CONFIG" \
- --checkpoint "$CB_ASSETS/openpi_assets/openpi-assets/checkpoints/$CB_POLICY_CONFIG" > "$ROOT/policy_${PHASE}_${SHARD}.log" 2>&1 &
+if [ "$CB_POLICY_CONFIG" = openvla_oft ]; then
+ OFT=/projects/p33100/siosio/third_party/openvla-oft
+ test "$(git -C "$OFT" rev-parse HEAD)" = e4287e94541f459edc4feabc4e181f537cd569a8
+ /projects/p33100/siosio/envs/openvla-oft/bin/python "$SOURCE/experiments/feasibility/serve_oft.py" --port "$PORT" --oft-root "$OFT" \
+  --openpi "$CB_UPSTREAM/openpi" --checkpoint "${CB_POLICY_CHECKPOINT:?}" > "$ROOT/policy_${PHASE}_${SHARD}.log" 2>&1 &
+else
+ /projects/p33100/siosio/envs/openpi/bin/python "$SOURCE/experiments/feasibility/serve.py" --port "$PORT" --config "$CB_POLICY_CONFIG" \
+  --checkpoint "$CB_ASSETS/openpi_assets/openpi-assets/checkpoints/$CB_POLICY_CONFIG" > "$ROOT/policy_${PHASE}_${SHARD}.log" 2>&1 &
+fi
 SERVER_PID=$!
 /projects/p33100/siosio/envs/openpi/bin/python - "$PORT" "$SERVER_PID" <<'PY'
 import os,socket,sys,time
-for _ in range(300):
+for _ in range(600):
  try:
   with socket.create_connection(('127.0.0.1',int(sys.argv[1])),timeout=1):break
  except OSError:os.kill(int(sys.argv[2]),0);time.sleep(2)

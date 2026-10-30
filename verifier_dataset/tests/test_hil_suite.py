@@ -1,4 +1,5 @@
 import ast
+import math
 from pathlib import Path
 import re
 import unittest
@@ -28,7 +29,7 @@ def step(t, eef=(0., 0., 1.), a=False, b=False, other=1):
 
 
 def prefix(suite, task, init, steps=100, success=True):
-    return dict(id=S.prefix_id(suite, task, init), suite=suite, task=task, init=init, seed=S.policy_seed(suite, task, init),
+    return dict(id=S.prefix_id(suite, task, init), suite=suite, task=task, init=init, seed=S.policy_seed(suite, task, init), prompt=S.language(NAMES[suite][task]),
                 others=sorted({b for _, s, a, b in S.PAIRS if (s, a) == (suite, task)}), success=success,
                 policy_steps=steps if success else None)
 
@@ -182,6 +183,42 @@ class Readings(unittest.TestCase):
         self.assertAlmostEqual(S.spearman([1, 2, 3, 4], [4, 3, 2, 1]), -1.)
         self.assertAlmostEqual(S.spearman([1, 2, 3, 4], [0, 0, 1, 1]), S.spearman([1, 2, 3, 4], [0, 0, 1, 1]))
         self.assertIsNone(S.spearman([1, 1, 1], [0, 1, 0]))
+
+
+class Physical(unittest.TestCase):
+    def test_plan_has_baselines(self):
+        prefixes = formal_prefixes(); units, _ = S.stage3_plan(prefixes, 'formal'); branches, _ = S.branch_plan(NAMES, prefixes, 'formal')
+        self.assertEqual(len(units), 320); self.assertEqual(len({u['id'] for u in units}), 320)
+        c0 = {(u['prefix'], u['checkpoint']) for u in branches if u['condition'] == 'C0'}
+        self.assertTrue(all((u['prefix'], u['checkpoint']) in c0 for u in units))
+        self.assertEqual({u['condition']: u['phase'] for u in units}, S.PERTURB)
+        self.assertEqual(len(S.stage3_plan(prefixes, 'smoke')[0]), 8)
+
+    def test_goal_parts_and_shift(self):
+        self.assertEqual(S.goal_parts([['In', 'alphabet_soup_1', 'basket_1_contain_region'], ['On', 'akita_black_bowl_1', 'plate_1'], ['Turnon', 'flat_stove_1']]),
+                         (['alphabet_soup_1', 'akita_black_bowl_1'], ['basket_1', 'plate_1']))
+        shift = S.best_shift((0., 0.), [(.06, 0.), (0., .06)], .06)
+        self.assertAlmostEqual(math.dist(shift['to'], (0., 0.)), .06); self.assertLess(shift['to'][0], 0); self.assertLess(shift['to'][1], 0)
+        self.assertIsNone(S.best_shift((0., 0.), [(.06 * dx, .06 * dy) for dx, dy in S.DIRECTIONS], .06))
+        self.assertIsNotNone(S.best_shift((0., 0.), [], .06))
+
+    def test_reading(self):
+        prefixes = formal_prefixes(); units, _ = S.stage3_plan(prefixes, 'formal')
+        out = {u['id']: dict(applied=u['condition'] != 'GOAL' or u['suite'] != 'libero_goal', reason='fixed receptacle', a_done=u['condition'] != 'DROP')
+               for u in units}
+        base = {(u['prefix'], u['checkpoint']): True for u in units}
+        r = S.stage3(units, out, base)
+        self.assertEqual(r['OBJ']['reading'], 'recovers'); self.assertEqual(r['DROP']['reading'], 'fragile')
+        self.assertEqual(r['GOAL']['applied'], 60); self.assertEqual(r['GOAL']['not_applicable'], {'fixed receptacle': 20})
+
+
+class Probe(unittest.TestCase):
+    def test_points_and_summary(self):
+        self.assertEqual(S.probe_points(dict(policy_steps=35)), [10, 20, 30, 40])
+        pts = [dict(progress=k / 10, d_B=1. - k / 10, d_empty=.5, d_noise=.1) for k in range(10)]
+        out = S.probe_summary(pts)
+        self.assertEqual(out['0']['n'], 2); self.assertGreater(out['0']['B_over_noise'], out['4']['B_over_noise'])
+
 
 
 if __name__ == '__main__':

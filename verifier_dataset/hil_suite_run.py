@@ -26,6 +26,7 @@ from .inventory import read, sha, write
 from . import hil_suite as S
 
 LIBERO_COMMIT = '8f1084e3132a39270c3a13ebe37270a43ece2a01'
+UNITS = dict(prefix='prefixes', branch='branches', probe='probes')
 
 
 def configure(root):
@@ -71,6 +72,21 @@ def goal_checker(env, suite, task_id):
     return lambda: all([env.env._eval_predicate(state) for state in goal])
 
 
+def replan_steps():
+    return S.REPLANS[os.environ['CB_POLICY_CONFIG']]
+
+
+def observation(obs, prompt, suite):
+    """The policy's input: openpi's LIBERO element, or for OFT the raw rotated 256 px images plus the suite (serve_oft.py)."""
+    import numpy as np
+    from .paired_policy import policy_input
+    data = policy_input(obs, prompt)
+    if os.environ['CB_POLICY_CONFIG'] == 'openvla_oft':
+        data.update({'observation/image': np.ascontiguousarray(obs['agentview_image'][::-1, ::-1]),
+                     'observation/wrist_image': np.ascontiguousarray(obs['robot0_eye_in_hand_image'][::-1, ::-1]), 'suite': suite})
+    return data
+
+
 class Client:
     """The policy stream for one run, with the RNG reset and the per-request identity checks of the HIL runner."""
     def __init__(self, port, seed, run_id):
@@ -83,14 +99,14 @@ class Client:
     def infer(self, data, step, log):
         import numpy as np
         from serve import digest
-        result = self.client.infer(data); info = result['diagnostic']; actions = np.asarray(result['actions'])
+        result = self.client.infer(data); info = result['diagnostic']; actions = np.asarray(result['actions']); replan = replan_steps()
         if (info['run_id'] != self.run_id or info['request_index'] != len(self.requests) + 1 or info['input_sha256'] != digest(data)
-                or actions.ndim != 2 or actions.shape[1] != 7 or len(actions) < S.REPLAN or not np.isfinite(actions).all()):
+                or actions.ndim != 2 or actions.shape[1] != 7 or len(actions) < replan or not np.isfinite(actions).all()):
             raise RuntimeError('Policy stream, input or action shape mismatch')
         self.requests.append(dict(step=step, **{k: info[k] for k in ('request_index', 'input_sha256', 'rng_before', 'rng_after',
                                   'output_replayed', 'native_output_linf_difference', 'native_chunk_sha256')}))
         log.write(json.dumps(dict(self.requests[-1], actions=actions.tolist())) + '\n'); log.flush()
-        return actions[:S.REPLAN]
+        return actions[:replan]
 
     def close(self):
         self.client._ws.close()
@@ -103,17 +119,16 @@ def record(env, step, obs, action, done, physical_hash, checkers):
                 a=bool(env.env._check_success()), others={str(k): bool(f()) for k, f in checkers.items()}, done=bool(done))
 
 
-def policy_loop(env, obs, client, prompt, step, end, stop, physical_hash, checkers, folder):
-    """Query every REPLAN steps until stop(record) or step == end; returns the trace after the start record."""
+def policy_loop(env, obs, client, prompt, suite, step, end, stop, physical_hash, checkers, folder):
+    """Query every replan steps until stop(record) or step == end; returns the trace after the start record."""
     import collections
     from serve import digest
-    from .paired_policy import policy_input
     queue = collections.deque(); trace = []; first = None; outside = 0
     low, high = env.env.action_spec
     with (folder/'POLICY.jsonl').open('w') as log:
         while step < end:
             if not queue:
-                data = policy_input(obs, prompt)
+                data = observation(obs, prompt, suite)
                 if first is None:
                     first = dict(with_prompt=digest(data), state=digest({k: v for k, v in data.items() if k != 'prompt'}))
                 queue.extend(client.infer(data, step, log))
@@ -160,7 +175,7 @@ def run_prefix(root, index, port):
         for step in range(1, S.WAIT + 1):
             obs, _, done, _ = env.step(S.DUMMY); trace.append(record(env, step, obs, S.DUMMY, done, physical_hash, checkers))
         client = Client(port, unit['seed'], '%s_prefix_%s' % (os.environ['SLURM_JOB_ID'], unit['id']))
-        tail, first, outside = policy_loop(env, obs, client, unit['prompt'], S.WAIT, S.WAIT + unit['max_steps'], lambda x: x['done'],
+        tail, first, outside = policy_loop(env, obs, client, unit['prompt'], unit['suite'], S.WAIT, S.WAIT + unit['max_steps'], lambda x: x['done'],
                                            physical_hash, checkers, folder)
         trace += tail; success = trace[-1]['done']
         row = dict(unit, success=success, policy_steps=trace[-1]['step'] - S.WAIT if success else None, steps=trace[-1]['step'],
@@ -175,6 +190,83 @@ def run_prefix(root, index, port):
             env.close()
 
 
+def perturb(env, unit, obs, rest, last_action, physical_hash):
+    """Stage 3: apply the unit's physical intervention at the checkpoint (protocol appendix A).
+
+    Returns (obs, info, scripted) where scripted lists the PUSH steps' records; info['applied'] is False with a reason when the
+    intervention does not apply to this state (nothing resting or lifted, no clear destination, a fixed receptacle, penetration).
+    """
+    import numpy as np
+    m, d = env.sim.model, env.sim.data; e = env.env
+    moved, places = S.goal_parts(e.parsed_problem['goal_state'])
+    eef = np.asarray(obs['robot0_eef_pos']); xyz = lambda n: np.asarray(d.body_xpos[e.obj_body_id[n]]).tolist()
+    names = sorted(set(e.objects_dict) | set(e.fixtures_dict))
+    others = lambda skip: [xyz(n)[:2] for n in names if n not in skip and n in e.obj_body_id]
+    if unit['condition'] == 'PUSH':
+        target = eef + np.asarray(S.PUSH_OFFSET); scripted = []; low, high = e.action_spec
+        for k in range(S.PUSH_STEPS):
+            delta = (target - np.asarray(obs['robot0_eef_pos'])) / S.PUSH_GAIN
+            action = np.clip(np.concatenate([delta, np.zeros(3), [last_action[6]]]), low, high)
+            obs, _, done, _ = env.step(action.tolist())
+            scripted.append(record(env, unit['checkpoint'] + k + 1, obs, action, done, physical_hash, {}))
+            scripted[-1]['scripted'] = True
+        moved_by = float(np.linalg.norm(np.asarray(obs['robot0_eef_pos']) - eef))
+        return obs, dict(applied=True, reason=None, eef_from=eef.tolist(), eef_to=np.asarray(obs['robot0_eef_pos']).tolist(), displacement=moved_by), scripted
+
+    def move(name, xy, z, quat=None):
+        j = m.joint_name2id(name + '_joint0'); adr, dof = int(m.jnt_qposadr[j]), int(m.jnt_dofadr[j])
+        before = d.qpos[adr:adr + 7].copy()
+        d.qpos[adr:adr + 3] = [xy[0], xy[1], z]
+        if quat is not None:
+            d.qpos[adr + 3:adr + 7] = quat
+        d.qvel[dof:dof + 6] = 0.; env.sim.forward()
+        geoms = {g for g in range(m.ngeom) if int(m.geom_bodyid[g]) == e.obj_body_id[name] or
+                 (m.body_id2name(int(m.geom_bodyid[g])) or '').startswith(name)}
+        deep = [c for c in d.contact[:d.ncon] if (int(c.geom1) in geoms or int(c.geom2) in geoms) and c.dist < S.PENETRATION]
+        return before.tolist(), len(deep)
+
+    def finish(name, before, penetrating, extra):
+        info = dict(applied=penetrating == 0, reason=None if penetrating == 0 else 'penetration', object=name, qpos_before=before, **extra)
+        return env.env._get_observations(force_update=True), info, []
+
+    lifted = [n for n in moved if n in rest and xyz(n)[2] - rest[n]['z'] >= S.LIFTED]
+    if unit['condition'] == 'OBJ':
+        resting = sorted((n for n in moved if n in rest and abs(xyz(n)[2] - rest[n]['z']) < S.RESTING), key=lambda n: np.linalg.norm(np.asarray(xyz(n)) - eef))
+        if not resting:
+            return obs, dict(applied=False, reason='nothing resting'), []
+        n = resting[0]; shift = S.best_shift(xyz(n)[:2], others({n}), S.SHIFT)
+        if shift is None:
+            return obs, dict(applied=False, reason='no clear destination'), []
+        before, deep = move(n, shift['to'], xyz(n)[2])
+        return finish(n, before, deep, dict(shift=shift))
+    if unit['condition'] == 'DROP':
+        if not lifted:
+            return obs, dict(applied=False, reason='nothing lifted'), []
+        n = min(lifted, key=lambda x: np.linalg.norm(np.asarray(xyz(x)) - eef)); shift = S.best_shift(eef[:2].tolist(), others({n}), S.DROP_OFFSET)
+        if shift is None:
+            return obs, dict(applied=False, reason='no clear destination'), []
+        before, deep = move(n, shift['to'], rest[n]['z'], rest[n]['quat'])
+        return finish(n, before, deep, dict(shift=shift))
+    receptacle = places[0] if places else None
+    if receptacle not in e.objects_dict:
+        return obs, dict(applied=False, reason='fixed receptacle'), []
+    if not lifted:
+        return obs, dict(applied=False, reason='nothing lifted'), []
+    if any(np.linalg.norm(np.asarray(xyz(n))[:2] - np.asarray(xyz(receptacle))[:2]) < S.OVER for n in lifted):
+        return obs, dict(applied=False, reason='already over the receptacle'), []
+    shift = S.best_shift(xyz(receptacle)[:2], others({receptacle} | set(lifted)), S.SHIFT)
+    if shift is None:
+        return obs, dict(applied=False, reason='no clear destination'), []
+    before, deep = move(receptacle, shift['to'], xyz(receptacle)[2])
+    return finish(receptacle, before, deep, dict(shift=shift))
+
+
+def outcome3(trace, unit, start, info):
+    if not info['applied']:
+        return dict(applied=False, reason=info['reason'], a_done=None)
+    return dict(applied=True, reason=None, **S.outcome(trace, unit, start))
+
+
 def run_branch(root, index, port):
     plan = read(root/'PLAN.json'); unit = plan['branches'][index]
     folder = root/'branch'/unit['id']; folder.mkdir(parents=True)
@@ -186,23 +278,39 @@ def run_branch(root, index, port):
         env, task, obs = make_env(unit['suite'], unit['task'], unit['init'])
         if physical_hash(env) != tape[0]['physics']:
             raise RuntimeError('Initial state differs from the prefix')
+        rest = {}
         for item in tape[1:unit['checkpoint'] + 1]:
             obs, _, done, _ = env.step(item['action'])
             if physical_hash(env) != item['physics'] or bool(done) != item['done'] or done:
                 raise RuntimeError('Replay differs from the prefix at step %d' % item['step'])
+            if item['step'] == S.WAIT and unit['condition'] in S.PERTURB:
+                # Objects at rest after the wait steps: the heights and orientations a dropped object returns to.
+                rest = {n: dict(z=float(env.sim.data.body_xpos[i][2]), quat=env.sim.data.qpos[env.sim.model.jnt_qposadr[env.sim.model.joint_name2id(n + '_joint0')] + 3:
+                                                                                         env.sim.model.jnt_qposadr[env.sim.model.joint_name2id(n + '_joint0')] + 7].tolist())
+                        for n, i in env.env.obj_body_id.items() if n in env.env.objects_dict}
         at = physical_hash(env)
         checkers = {k: goal_checker(env, unit['suite'], k) for k in unit['record']}
         start = record(env, unit['checkpoint'], obs, None, False, physical_hash, checkers)
         if start['physics'] != at:
             raise RuntimeError('Checkpoint readout mutated physics')
+        info, scripted = None, []
+        if unit['condition'] in S.PERTURB:
+            obs, info, scripted = perturb(env, unit, obs, rest, tape[unit['checkpoint']]['action'], physical_hash)
+            if not info['applied']:
+                trace = [start]
+                row = dict(unit, physics_at_checkpoint=at, perturbation=info, outcome=outcome3(trace, unit, prefix_row['start_eef'], info),
+                           elapsed_seconds=time.monotonic() - started, **provenance())
+                save(folder, trace, row); return
         client = Client(port, unit['seed'], '%s_%s' % (os.environ['SLURM_JOB_ID'], unit['id']))
         other = None if unit['other'] is None else str(unit['other'])
         stop = (lambda x: x['others'][other]) if unit['stop_on'] == 'B' else (lambda x: x['done'])
-        tail, first, outside = policy_loop(env, obs, client, unit['prompt'], unit['checkpoint'], unit['checkpoint'] + unit['budget'], stop,
+        begin = unit['checkpoint'] + len(scripted)
+        tail, first, outside = policy_loop(env, obs, client, unit['prompt'], unit['suite'], begin, unit['checkpoint'] + unit['budget'], stop,
                                            physical_hash, checkers, folder)
-        trace = [start] + tail
-        row = dict(unit, physics_at_checkpoint=at, final_state=[float(x) for x in env.sim.get_state().flatten()], prefix_steps=tape[-1]['step'], start_eef=prefix_row['start_eef'],
-                   outcome=S.outcome(trace, unit, prefix_row['start_eef']), first_policy_input_sha256=first['with_prompt'],
+        trace = [start] + scripted + tail
+        result = S.outcome(trace, unit, prefix_row['start_eef']) if info is None else outcome3(trace, unit, prefix_row['start_eef'], info)
+        row = dict(unit, physics_at_checkpoint=at, final_state=[float(x) for x in env.sim.get_state().flatten()], perturbation=info, prefix_steps=tape[-1]['step'], start_eef=prefix_row['start_eef'],
+                   outcome=result, first_policy_input_sha256=first['with_prompt'],
                    policy_input_state_sha256=first['state'], rng_reset=client.ack, policy_requests=len(client.requests),
                    replayed_outputs=sum(r['output_replayed'] for r in client.requests),
                    maximum_native_difference=max(r['native_output_linf_difference'] for r in client.requests),
@@ -215,15 +323,61 @@ def run_branch(root, index, port):
             env.close()
 
 
+def run_probe(root, index, port):
+    """Stage 5: replay a prefix and, every PROBE_EVERY policy steps, query the first action chunk under A, each B, an empty
+    prompt (all with the prefix seed) and A with the next seed (the noise floor); no policy action is executed."""
+    import numpy as np
+    from serve import digest
+    from openpi_client.websocket_client_policy import WebsocketClientPolicy
+    plan = read(root/'PLAN.json'); unit = plan['probes'][index]; folder = root/'probe'/unit['id']; folder.mkdir(parents=True)
+    prefix_row, tape = load(Path(plan['prefix_root'])/'prefix'/unit['id'])
+    physical_hash = configure(root); started = time.monotonic(); env = client = None
+    names = read(root/'NAMES.json')
+    prompts = [('A', prefix_row['prompt'], prefix_row['seed']), ('noise', prefix_row['prompt'], (prefix_row['seed'] + 1) % 2 ** 32),
+               ('empty', '', prefix_row['seed'])] + [('B%d' % b, S.language(names[unit['suite']][b]), prefix_row['seed']) for b in prefix_row['others']]
+    try:
+        env, task, obs = make_env(unit['suite'], unit['task'], unit['init'])
+        if physical_hash(env) != tape[0]['physics']:
+            raise RuntimeError('Initial state differs from the prefix')
+        client = WebsocketClientPolicy('127.0.0.1', port); points = set(S.probe_points(prefix_row)); rows = []
+        for item in tape[1:max(points) + 1]:
+            obs, _, done, _ = env.step(item['action'])
+            if physical_hash(env) != item['physics'] or done:
+                raise RuntimeError('Replay differs from the prefix at step %d' % item['step'])
+            if item['step'] not in points:
+                continue
+            chunks = {}
+            for name, text, seed in prompts:
+                run_id = '%s_probe_%s_%d_%s' % (os.environ['SLURM_JOB_ID'], unit['id'], item['step'], name)
+                ack = client.infer({'__paired_reset_rng__': seed, 'run_id': run_id})
+                if ack.get('seed') != seed or ack.get('requests') != 0:
+                    raise RuntimeError('Policy RNG reset acknowledgement mismatch')
+                data = observation(obs, text, unit['suite']); result = client.infer(data); info = result['diagnostic']
+                if info['run_id'] != run_id or info['request_index'] != 1 or info['input_sha256'] != digest(data):
+                    raise RuntimeError('Probe stream mismatch')
+                chunks[name] = np.asarray(result['actions'])[:replan_steps()]
+            gap = lambda k: float(np.linalg.norm(chunks[k] - chunks['A']))
+            rows.append(dict(step=item['step'], progress=(item['step'] - S.WAIT) / prefix_row['policy_steps'], eef=item['eef'],
+                             d_noise=gap('noise'), d_empty=gap('empty'), d_B={k[1:]: gap(k) for k in chunks if k.startswith('B')},
+                             chunks={k: v.tolist() for k, v in chunks.items()}))
+        write(folder/'PROBE.json', dict(unit=unit, points=rows, elapsed_seconds=time.monotonic() - started, **provenance()))
+        write(folder/'HASHES.json', {'PROBE.json': sha(folder/'PROBE.json')})
+    finally:
+        if client is not None:
+            client._ws.close()
+        if env is not None:
+            env.close()
+
+
 def shard_units(plan, phase, shard, shards):
     """Prefixes round-robin; a prefix's branches all go to that prefix's shard, so twins share one node."""
     order = {p['id']: k for k, p in enumerate(plan['prefix_order'])} if phase == 'branch' else None
-    units = plan['prefixes'] if phase == 'prefix' else plan['branches']
-    return [i for i, u in enumerate(units) if (i if phase == 'prefix' else order[u['prefix']]) % shards == shard]
+    units = plan[UNITS[phase]]
+    return [i for i, u in enumerate(units) if (order[u['prefix']] if phase == 'branch' else i) % shards == shard]
 
 
 def run(root, phase, shard, shards, port):
-    plan = read(root/'PLAN.json'); units = plan['prefixes' if phase == 'prefix' else 'branches']; done = 0
+    plan = read(root/'PLAN.json'); units = plan[UNITS[phase]]; done = 0
     for i in shard_units(plan, phase, shard, shards):
         (root/'logs').mkdir(exist_ok=True)
         with (root/'logs'/('%s_%s.log' % (phase, units[i]['id']))).open('w') as log:
@@ -278,8 +432,80 @@ def reference_distances(units, traces):
             for u in units if u['condition'] == 'SW' and u['phase'] and key(u) in reference}
 
 
+def summarize_physical(root):
+    """Stage 3: recovery after each perturbation against C0 at the same prefix and checkpoint in the stage 1-2 branch run."""
+    plan = read(root/'PLAN.json'); units = plan['branches']; base_root = Path(plan['baseline_root'])
+    for k in range(plan['shards']):
+        if not read(root/('SHARD_branch_%d_COMPLETE.json' % k))['passed']:
+            raise RuntimeError('Branch shard %d incomplete' % k)
+    for n, digest in plan['baseline_hashes'].items():
+        if sha(base_root/n) != digest:
+            raise RuntimeError('Baseline run output changed: ' + n)
+    with gzip.open(base_root/'RUNS.jsonl.gz', 'rt') as stream:
+        baseline = {}
+        for r in map(json.loads, stream):
+            if r['condition'] == 'C0':
+                baseline[(S.prefix_id(r['suite'], r['task'], r['init']), r['checkpoint'])] = r['a_done']
+    rows, outcomes = {}, {}
+    for u in units:
+        row, trace = load(root/'branch'/u['id'])
+        if outcome3(trace, u, row['start_eef'] if 'start_eef' in row else None, row['perturbation']) != row['outcome']:
+            raise RuntimeError('Recomputed outcome differs: ' + u['id'])
+        rows[u['id']], outcomes[u['id']] = row, row['outcome']
+    runs = [dict({k: u[k] for k in ('id', 'suite', 'task', 'init', 'phase', 'checkpoint', 'condition')}, perturbation=rows[u['id']]['perturbation'],
+                 elapsed_seconds=rows[u['id']]['elapsed_seconds'], **outcomes[u['id']]) for u in units]
+    with gzip.open(root/'RUNS.jsonl.gz', 'wt') as stream:
+        stream.writelines(json.dumps(r) + '\n' for r in runs)
+    reading = dict(mode=plan['mode'], stage3=S.stage3(units, outcomes, baseline), runs=len(runs), excluded=plan['excluded'],
+                   seconds_per_run=S.H.distribution(r['elapsed_seconds'] for r in runs), total_run_hours=sum(r['elapsed_seconds'] for r in runs) / 3600.)
+    write(root/'SUITE_READING.json', reading)
+    write(root/'SUITE_COMPLETE.json', dict(passed=True, mode=plan['mode'], experiment='physical', runs=len(runs),
+                                           readings={c: v['reading'] for c, v in reading['stage3'].items()}, **provenance()))
+    write(root/'HASHES.json', {n: sha(root/n) for n in ('PLAN.json', 'RUNS.jsonl.gz', 'SUITE_READING.json', 'SUITE_COMPLETE.json')})
+
+
+def summarize_probe(root):
+    """Stage 5: ratios to the noise floor by progress bin, per group, with A's distance to B's reference path at each point."""
+    plan = read(root/'PLAN.json')
+    for k in range(plan['shards']):
+        if not read(root/('SHARD_probe_%d_COMPLETE.json' % k))['passed']:
+            raise RuntimeError('Probe shard %d incomplete' % k)
+    reference = {}
+    with gzip.open(Path(plan['branch_root'])/'RUNS.jsonl.gz', 'rt') as stream:
+        ids = [r['id'] for r in map(json.loads, stream) if r['condition'] == 'SW' and r['phase'] == 0]
+    for i in ids:
+        row, trace = load(Path(plan['branch_root'])/'branch'/i)
+        reference[(row['suite'], row['task'], row['other'], row['init'])] = [x['eef'] for x in trace]
+    points = []
+    for u in plan['probes']:
+        folder = root/'probe'/u['id']
+        if sha(folder/'PROBE.json') != read(folder/'HASHES.json')['PROBE.json']:
+            raise RuntimeError('Probe output changed: ' + u['id'])
+        for x in read(folder/'PROBE.json')['points']:
+            for b, d in x['d_B'].items():
+                ref = reference.get((u['suite'], u['task'], int(b), u['init']))
+                points.append(dict(suite=u['suite'], task=u['task'], init=u['init'], other=int(b), group=u['group'], progress=x['progress'],
+                                   d_B=d, d_empty=x['d_empty'], d_noise=x['d_noise'],
+                                   to_B_path=None if ref is None else min(math.dist(x['eef'], q) for q in ref)))
+    reading = dict(mode=plan['mode'], points=len(points), groups={})
+    for g in sorted({p['group'] for p in points}):
+        ps = [p for p in points if p['group'] == g]; near = [p for p in ps if p['to_B_path'] is not None and p['d_noise'] > 0]
+        reading['groups'][g] = dict(points=len(ps), by_progress=S.probe_summary(ps),
+                                    path_correlation=S.estimate(near, lambda xs: S.spearman([x['to_B_path'] for x in xs], [x['d_B'] / x['d_noise'] for x in xs])))
+    with gzip.open(root/'POINTS.jsonl.gz', 'wt') as stream:
+        stream.writelines(json.dumps(p) + '\n' for p in points)
+    write(root/'SUITE_READING.json', reading)
+    write(root/'SUITE_COMPLETE.json', dict(passed=True, mode=plan['mode'], experiment='probe', points=len(points), **provenance()))
+    write(root/'HASHES.json', {n: sha(root/n) for n in ('PLAN.json', 'POINTS.jsonl.gz', 'SUITE_READING.json', 'SUITE_COMPLETE.json')})
+
+
 def summarize(root):
-    plan = read(root/'PLAN.json'); units = plan['branches']
+    plan = read(root/'PLAN.json')
+    if plan.get('experiment') == 'physical':
+        return summarize_physical(root)
+    if plan.get('experiment') == 'probe':
+        return summarize_probe(root)
+    units = plan['branches']
     for k in range(plan['shards']):
         if not read(root/('SHARD_branch_%d_COMPLETE.json' % k))['passed']:
             raise RuntimeError('Branch shard %d incomplete' % k)
@@ -362,7 +588,7 @@ def plan_branches(root):
 
 if __name__ == '__main__':
     p = argparse.ArgumentParser(); p.add_argument('root', type=Path)
-    p.add_argument('--phase', choices=['prefix', 'branch']); p.add_argument('--shard', type=int); p.add_argument('--shards', type=int)
+    p.add_argument('--phase', choices=['prefix', 'branch', 'probe']); p.add_argument('--shard', type=int); p.add_argument('--shards', type=int)
     p.add_argument('--index', type=int); p.add_argument('--port', type=int)
     p.add_argument('--summarize-prefix', action='store_true'); p.add_argument('--plan-branches', action='store_true')
     p.add_argument('--summarize', action='store_true'); p.add_argument('--smoke', action='store_true')
@@ -374,14 +600,16 @@ if __name__ == '__main__':
         elif a.plan_branches:
             plan_branches(a.root)
         elif a.summarize:
-            summarize(a.root); state_check(a.root, limit=400)
+            summarize(a.root)
+            if read(a.root/'PLAN.json').get('experiment', 'switch') == 'switch':
+                state_check(a.root, limit=400)
         elif a.state_check:
             state_check(a.root)
         elif a.smoke:
             run(a.root, 'prefix', 0, 1, a.port); summarize_prefix(a.root); plan_branches(a.root); run(a.root, 'branch', 0, 1, a.port)
             summarize(a.root); state_check(a.root)
         elif a.index is not None:
-            (run_prefix if a.phase == 'prefix' else run_branch)(a.root, a.index, a.port)
+            dict(prefix=run_prefix, branch=run_branch, probe=run_probe)[a.phase](a.root, a.index, a.port)
         else:
             run(a.root, a.phase, a.shard, a.shards, a.port)
     except BaseException as error:
