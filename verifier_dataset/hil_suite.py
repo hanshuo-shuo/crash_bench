@@ -56,9 +56,10 @@ KEEPS_TASK = .8
 OBEYS = .8
 BREAKS = .5
 SUITES_NEEDED = 3
-# Twin observations: physics and proprioception must match exactly; GPU rendering differs between processes by at most one
-# intensity level on a few pixels (smoke 5976811), so images may differ by IMAGE_LEVELS on at most IMAGE_FRACTION of pixels.
-IMAGE_LEVELS = 1
+# Twin observations: physics and proprioception must match exactly. GPU rendering differs between processes: over 270 twin
+# image pairs in three smokes at most 2 intensity levels on at most 4 of 150,528 values; a real scene difference would change
+# thousands. Images may differ by IMAGE_LEVELS on at most IMAGE_FRACTION of values.
+IMAGE_LEVELS = 8
 IMAGE_FRACTION = .001
 REPEAT_INITS = (0, 1)
 SEED_SALT = 'hil-suite-seed'

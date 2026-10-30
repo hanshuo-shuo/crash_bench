@@ -117,7 +117,7 @@ class Plans(unittest.TestCase):
         import numpy as np
         a = np.zeros((224, 224, 3), np.uint8); b = a.copy(); b[0, 0, 0] = 1
         self.assertEqual(S.images_match(a, b), (True, 1, 1))
-        b[0, 1, 0] = 2; self.assertFalse(S.images_match(a, b)[0])
+        b[0, 1, 0] = 8; self.assertTrue(S.images_match(a, b)[0]); b[0, 1, 0] = 9; self.assertFalse(S.images_match(a, b)[0])
         c = a.copy(); c[:2, :, :] = 1; self.assertFalse(S.images_match(a, c)[0])
 
     def test_smoke_branches(self):
