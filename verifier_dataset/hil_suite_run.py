@@ -567,8 +567,9 @@ def summarize(root):
     return reading
 
 
-def native_success(suite, task_id, state):
-    """A task's own LIBERO success check, in a headless environment of that task set to a recorded physics state."""
+def native_values(suite, task_id, state, others=()):
+    """In a headless environment of task_id set to a recorded physics state (set_state, then forward): the task's own LIBERO
+    success check and the other tasks' goals evaluated with this environment's predicates."""
     import numpy as np
     from libero.libero import benchmark, get_libero_path
     from libero.libero.envs.env_wrapper import ControlEnv
@@ -578,30 +579,35 @@ def native_success(suite, task_id, state):
                      has_offscreen_renderer=False, camera_depths=False)
     try:
         env.seed(S.ENV_SEED); env.reset(); env.set_init_state(np.asarray(state))
-        return bool(env.env._check_success())
+        return bool(env.env._check_success()), {k: bool(goal_checker(env, suite, k)()) for k in others}
     finally:
         env.close()
 
 
 def state_check(root, limit=None):
-    """Recorded final goal values against native checks: B in B's own scene-identical environment (groups 1a, 1b), A in A's."""
+    """Cross-environment goal check (protocol section 3.2): at each checked run's final physics state, B's goal evaluated in
+    A's environment must equal B's own environment's success check (groups 1a, 1b, which share one scene). Recorded in-run
+    values may differ from these set-state re-evaluations, because a step's contacts precede its integration; that count is
+    reported, not failed."""
     configure(root); plan = read(root/'PLAN.json'); units = plan['branches']
     if limit is not None and len(units) > limit:
         units = units[::-(-len(units) // limit)]
     rows = []
     for u in units:
         row, trace = load(root/'branch'/u['id']); last = trace[-1]
-        checks = [('A', u['task'], last['a'])]
-        if u['condition'] == 'SW' and u['group'] in ('1a', '1b'):
-            checks.append(('B', u['other'], last['others'][str(u['other'])]))
-        for which, task, recorded in checks:
-            native = native_success(u['suite'], task, row['final_state'])
-            rows.append(dict(unit=u['id'], which=which, recorded=recorded, native=native))
-    mismatches = [r for r in rows if r['recorded'] != r['native']]
-    write(root/'STATE_CHECK.json', dict(passed=not mismatches, checked=len(rows), b_checks=sum(r['which'] == 'B' for r in rows),
-                                        recorded_true=sum(r['recorded'] for r in rows), mismatches=mismatches, **provenance()))
-    if mismatches:
-        raise RuntimeError('Recorded goal values differ from native checks: %d' % len(mismatches))
+        shared = [k for k in u['record'] if u['group'] in ('1a', '1b')]
+        own_a, via_a = native_values(u['suite'], u['task'], row['final_state'], shared)
+        rows.append(dict(unit=u['id'], which='A', recorded=last['a'], reevaluated=own_a))
+        for k in shared:
+            own_b, _ = native_values(u['suite'], k, row['final_state'])
+            rows.append(dict(unit=u['id'], which='B%d' % k, recorded=last['others'][str(k)], reevaluated=via_a[k],
+                             native=own_b, cross_match=(via_a[k] == own_b)))
+    cross = [r for r in rows if 'cross_match' in r]; bad = [r for r in cross if not r['cross_match']]
+    write(root/'STATE_CHECK.json', dict(passed=not bad, runs=len(units), cross_checks=len(cross), cross_true=sum(r['native'] for r in cross),
+                                        cross_mismatches=bad, recorded_vs_reevaluated=sum(r['recorded'] != r['reevaluated'] for r in rows),
+                                        rows=rows, **provenance()))
+    if bad:
+        raise RuntimeError('B evaluated in A differs from B native: %d' % len(bad))
 
 
 def plan_branches(root):
