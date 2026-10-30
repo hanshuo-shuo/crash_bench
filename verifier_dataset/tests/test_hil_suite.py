@@ -199,11 +199,14 @@ class Readings(unittest.TestCase):
 class Physical(unittest.TestCase):
     def test_plan_has_baselines(self):
         prefixes = formal_prefixes(); units, _ = S.stage3_plan(prefixes, 'formal'); branches, _ = S.branch_plan(NAMES, prefixes, 'formal')
-        self.assertEqual(len(units), 320); self.assertEqual(len({u['id'] for u in units}), 320)
+        self.assertEqual(len(units), 480); self.assertEqual(len({u['id'] for u in units}), 480)
         c0 = {(u['prefix'], u['checkpoint']) for u in branches if u['condition'] == 'C0'}
-        self.assertTrue(all((u['prefix'], u['checkpoint']) in c0 for u in units))
-        self.assertEqual({u['condition']: u['phase'] for u in units}, S.PERTURB)
-        self.assertEqual(len(S.stage3_plan(prefixes, 'smoke')[0]), 8)
+        fixed = [u for u in units if u['trigger'] is None]; event = [u for u in units if u['trigger'] is not None]
+        self.assertTrue(all((u['prefix'], u['checkpoint']) in c0 for u in fixed))
+        self.assertEqual({u['condition']: u['phase'] for u in fixed}, {c: f for c, f in S.PERTURB.items() if f is not None})
+        self.assertTrue(all(u['checkpoint'] is None for u in event))
+        self.assertEqual(sorted({u['condition'] for u in event}), ['C0_DROP', 'C0_GOAL', 'DROP', 'GOAL'])
+        self.assertEqual(len(S.stage3_plan(prefixes, 'smoke')[0]), 12)
 
     def test_goal_parts_and_shift(self):
         self.assertEqual(S.goal_parts([['In', 'alphabet_soup_1', 'basket_1_contain_region'], ['On', 'akita_black_bowl_1', 'plate_1'], ['Turnon', 'flat_stove_1']]),
@@ -215,12 +218,16 @@ class Physical(unittest.TestCase):
 
     def test_reading(self):
         prefixes = formal_prefixes(); units, _ = S.stage3_plan(prefixes, 'formal')
-        out = {u['id']: dict(applied=u['condition'] != 'GOAL' or u['suite'] != 'libero_goal', reason='fixed receptacle', a_done=u['condition'] != 'DROP')
-               for u in units}
-        base = {(u['prefix'], u['checkpoint']): True for u in units}
+        fixed = lambda u: u['trigger'] == 'GOAL' and u['suite'] == 'libero_goal'
+        out = {u['id']: dict(applied=not fixed(u), reason='fixed receptacle', a_done=None if fixed(u) else u['condition'] != 'DROP') for u in units}
+        base = {(u['prefix'], u['checkpoint']): True for u in units if u['trigger'] is None}
         r = S.stage3(units, out, base)
         self.assertEqual(r['OBJ']['reading'], 'recovers'); self.assertEqual(r['DROP']['reading'], 'fragile')
         self.assertEqual(r['GOAL']['applied'], 60); self.assertEqual(r['GOAL']['not_applicable'], {'fixed receptacle': 20})
+        # An event unit's baseline is its own control: controls failing half the time halve GOAL's denominator.
+        out.update({u['id']: dict(out[u['id']], a_done=u['init'] % 2 == 0) for u in units if u['condition'] == 'C0_GOAL' and not fixed(u)})
+        out.update({u['id']: dict(out[u['id']], a_done=True) for u in units if u['condition'] == 'GOAL'})
+        self.assertAlmostEqual(S.stage3(units, out, base)['GOAL']['rho']['value'], 2.)
 
 
 class Probe(unittest.TestCase):

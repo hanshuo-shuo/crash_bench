@@ -395,7 +395,13 @@ def claims(s1, s2):
 STAGE3 = (('libero_spatial', 0), ('libero_spatial', 1), ('libero_object', 0), ('libero_object', 1),
           ('libero_goal', 8), ('libero_goal', 1), ('libero_10', 0), ('libero_10', 1))
 STAGE3_STATES = 10
-PERTURB = dict(OBJ=.25, DROP=.5, PUSH=.5, GOAL=.5)
+# Switch time per intervention; None marks an event trigger found while replaying the prefix (appendix A.2): DROP once a
+# target has stayed lifted for HOLD steps, GOAL at the first step a target is lifted and not yet over its receptacle. Each
+# event unit has a control (CONTROL + condition) that takes over at the same step with no intervention.
+PERTURB = dict(OBJ=.25, DROP=None, PUSH=.5, GOAL=None)
+HOLD = 5
+CONTROL = 'C0_'
+STAGE3_SMOKE = (('libero_spatial', 0), ('libero_goal', 1))
 SHIFT = .06
 DROP_OFFSET = .08
 CLEARANCE = .07
@@ -437,20 +443,24 @@ def best_shift(xy, others, distance, clearance=CLEARANCE):
 
 
 def stage3_plan(prefixes, mode):
-    """Perturbation units on the stage-3 tasks; C0 at the same checkpoint comes from the stage 1-2 branch run."""
+    """Perturbation units on the stage-3 tasks. A fixed-time unit's C0 at the same checkpoint comes from the stage 1-2 branch
+    run; an event unit (checkpoint None, found at run time) comes with its own control unit at the same trigger."""
     by = {(p['suite'], p['task'], p['init']): p for p in prefixes}
-    tasks = STAGE3[:2] if mode == 'smoke' else STAGE3; n = 1 if mode == 'smoke' else STAGE3_STATES
+    tasks = STAGE3_SMOKE if mode == 'smoke' else STAGE3; n = 1 if mode == 'smoke' else STAGE3_STATES
     units, excluded = [], []
     for s, k in tasks:
         for i in range(n):
             p = by[(s, k, i)]
             if not p['success']:
                 excluded.append(dict(stage=3, prefix=p['id'], reason='prefix task failed')); continue
+            common = dict(stages=[3], group='3', prefix=p['id'], suite=s, task=k, init=i, other=None, prompt=p['prompt'], seed=p['seed'],
+                          budget=SUITES[s], stop_on='A', record=[])
             for c, f in PERTURB.items():
-                t = checkpoint(p, f)
-                units.append(dict(id='%s_s%03d_%s' % (p['id'], t, c), stages=[3], group='3', prefix=p['id'], suite=s, task=k, init=i, other=None,
-                                  phase=f, checkpoint=t, condition=c, prompt=p['prompt'], seed=p['seed'], budget=SUITES[s], stop_on='A',
-                                  record=[]))
+                if f is not None:
+                    t = checkpoint(p, f)
+                    units.append(dict(common, id='%s_s%03d_%s' % (p['id'], t, c), phase=f, checkpoint=t, condition=c, trigger=None))
+                else:
+                    units += [dict(common, id='%s_e_%s' % (p['id'], x), phase=None, checkpoint=None, condition=x, trigger=c) for x in (c, CONTROL + c)]
     return units, excluded
 
 
@@ -461,10 +471,14 @@ def stage3_reading(rho):
 
 
 def stage3(units, outcomes, baseline):
-    """Per perturbation: applied count, recovery (A success after) over C0's A success at the same prefix and checkpoint."""
+    """Per perturbation: applied count, recovery (A success after) over the A success of C0 at the same prefix and checkpoint
+    (fixed-time units, from baseline) or of the unit's own control at the same trigger (event units)."""
     out = {}
+    control = {(u['prefix'], u['trigger']): outcomes[u['id']] for u in units if u['condition'].startswith(CONTROL)}
+    base = lambda u: (baseline.get((u['prefix'], u['checkpoint'])) if u['trigger'] is None else
+                      (lambda o: o['a_done'] if o['applied'] else None)(control[(u['prefix'], u['trigger'])]))
     for c in PERTURB:
-        xs = [dict(u, o=outcomes[u['id']], base=baseline.get((u['prefix'], u['checkpoint']))) for u in units if u['condition'] == c]
+        xs = [dict(u, o=outcomes[u['id']], base=base(u)) for u in units if u['condition'] == c]
         applied = [x for x in xs if x['o']['applied'] and x['base'] is not None]
         rho = lambda rs: (lambda b: None if not b else mean(r['o']['a_done'] for r in rs) / b)(mean(r['base'] for r in rs))
         res = dict(units=len(xs), applied=len(applied), not_applicable={}, rho=estimate(applied, rho),

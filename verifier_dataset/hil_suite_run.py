@@ -271,6 +271,21 @@ def perturb(env, unit, obs, rest, last_action, physical_hash):
     return finish(receptacle, before, deep, dict(shift=shift))
 
 
+def event(env, trigger, rest, held):
+    """Appendix A.2 trigger after one replayed step: (held, fires), where held counts consecutive steps with a target lifted
+    and fires is None when the trigger can never fire (GOAL with a fixed receptacle)."""
+    import numpy as np
+    e = env.env; d = env.sim.data; moved, places = S.goal_parts(e.parsed_problem['goal_state'])
+    xyz = lambda n: np.asarray(d.body_xpos[e.obj_body_id[n]])
+    lifted = [n for n in moved if n in rest and xyz(n)[2] - rest[n]['z'] >= S.LIFTED]; held = held + 1 if lifted else 0
+    if trigger == 'DROP':
+        return held, held >= S.HOLD
+    receptacle = places[0] if places else None
+    if receptacle not in e.objects_dict:
+        return held, None
+    return held, bool(lifted) and not any(np.linalg.norm(xyz(n)[:2] - xyz(receptacle)[:2]) < S.OVER for n in lifted)
+
+
 def outcome3(trace, unit, start, info):
     if not info['applied']:
         return dict(applied=False, reason=info['reason'], a_done=None)
@@ -281,31 +296,45 @@ def run_branch(root, index, port):
     plan = read(root/'PLAN.json'); unit = plan['branches'][index]
     folder = root/'branch'/unit['id']; folder.mkdir(parents=True)
     prefix_row, tape = load(Path(plan['prefix_root'])/'prefix'/unit['prefix'])
-    if not prefix_row['success'] or not S.WAIT <= unit['checkpoint'] < tape[-1]['step']:
+    trigger = unit.get('trigger')
+    if not prefix_row['success'] or not (trigger is not None or S.WAIT <= unit['checkpoint'] < tape[-1]['step']):
         raise RuntimeError('Checkpoint outside the successful prefix')
     physical_hash = configure(root); started = time.monotonic(); env = client = None
     try:
         env, task, obs = make_env(unit['suite'], unit['task'], unit['init'])
         if physical_hash(env) != tape[0]['physics']:
             raise RuntimeError('Initial state differs from the prefix')
-        rest = {}
-        for item in tape[1:unit['checkpoint'] + 1]:
+        rest = {}; held = 0; fires = False
+        # An event unit replays until its trigger fires, at the latest one step before the prefix's success.
+        for item in tape[1:(unit['checkpoint'] if trigger is None else tape[-1]['step'] - 1) + 1]:
             obs, _, done, _ = env.step(item['action'])
             if physical_hash(env) != item['physics'] or bool(done) != item['done'] or done:
                 raise RuntimeError('Replay differs from the prefix at step %d' % item['step'])
-            if item['step'] == S.WAIT and unit['condition'] in S.PERTURB:
+            if item['step'] == S.WAIT and (unit['condition'] in S.PERTURB or trigger is not None):
                 # Objects at rest after the wait steps: the heights and orientations a dropped object returns to.
                 rest = {n: dict(z=float(env.sim.data.body_xpos[i][2]), quat=env.sim.data.qpos[env.sim.model.jnt_qposadr[env.sim.model.joint_name2id(n + '_joint0')] + 3:
                                                                                          env.sim.model.jnt_qposadr[env.sim.model.joint_name2id(n + '_joint0')] + 7].tolist())
                         for n, i in env.env.obj_body_id.items() if n in env.env.objects_dict}
+            if trigger is not None and item['step'] > S.WAIT:
+                held, fires = event(env, trigger, rest, held)
+                if fires is not False:
+                    break
+        if trigger is not None:
+            if not fires:
+                info = dict(applied=False, reason='fixed receptacle' if fires is None else 'never triggered')
+                row = dict(unit, perturbation=info, outcome=outcome3([], unit, None, info), elapsed_seconds=time.monotonic() - started, **provenance())
+                save(folder, [], row); return
+            unit = dict(unit, checkpoint=item['step'])
         at = physical_hash(env)
         checkers = {k: goal_checker(env, unit['suite'], k) for k in unit['record']}
         start = record(env, unit['checkpoint'], obs, None, False, physical_hash, checkers)
         if start['physics'] != at:
             raise RuntimeError('Checkpoint readout mutated physics')
-        info, scripted = None, []
+        info, scripted = (None if trigger is None else dict(applied=True, reason=None, trigger_step=unit['checkpoint'])), []
         if unit['condition'] in S.PERTURB:
             obs, info, scripted = perturb(env, unit, obs, rest, tape[unit['checkpoint']]['action'], physical_hash)
+            if trigger is not None:
+                info['trigger_step'] = unit['checkpoint']
             if not info['applied']:
                 trace = [start]
                 row = dict(unit, physics_at_checkpoint=at, perturbation=info, outcome=outcome3(trace, unit, prefix_row['start_eef'], info),
@@ -474,11 +503,14 @@ def summarize_physical(root):
         if outcome3(trace, u, row['start_eef'] if 'start_eef' in row else None, row['perturbation']) != row['outcome']:
             raise RuntimeError('Recomputed outcome differs: ' + u['id'])
         rows[u['id']], outcomes[u['id']] = row, row['outcome']
-    runs = [dict({k: u[k] for k in ('id', 'suite', 'task', 'init', 'phase', 'checkpoint', 'condition')}, perturbation=rows[u['id']]['perturbation'],
-                 elapsed_seconds=rows[u['id']]['elapsed_seconds'], **outcomes[u['id']]) for u in units]
+    # An event unit's checkpoint is the trigger step found at run time (None when it never fired).
+    runs = [dict({k: rows[u['id']].get(k) for k in ('id', 'suite', 'task', 'init', 'phase', 'checkpoint', 'condition', 'trigger', 'prefix_steps')},
+                 perturbation=rows[u['id']]['perturbation'], elapsed_seconds=rows[u['id']]['elapsed_seconds'], **outcomes[u['id']]) for u in units]
     with gzip.open(root/'RUNS.jsonl.gz', 'wt') as stream:
         stream.writelines(json.dumps(r) + '\n' for r in runs)
-    reading = dict(mode=plan['mode'], stage3=S.stage3(units, outcomes, baseline), runs=len(runs), excluded=plan['excluded'],
+    triggers = {c: S.H.distribution((r['checkpoint'] - S.WAIT) / (r['prefix_steps'] - S.WAIT) for r in runs
+                                    if r['condition'] == c and r['checkpoint'] is not None and r['prefix_steps']) for c in S.PERTURB if S.PERTURB[c] is None}
+    reading = dict(mode=plan['mode'], stage3=S.stage3(units, outcomes, baseline), trigger_progress=triggers, runs=len(runs), excluded=plan['excluded'],
                    seconds_per_run=S.H.distribution(r['elapsed_seconds'] for r in runs), total_run_hours=sum(r['elapsed_seconds'] for r in runs) / 3600.)
     write(root/'SUITE_READING.json', reading)
     write(root/'SUITE_COMPLETE.json', dict(passed=True, mode=plan['mode'], experiment='physical', runs=len(runs),

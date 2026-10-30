@@ -24,8 +24,8 @@ AUTHORIZATION = ('2026-10-29 late: the user asked for a more concrete analysis o
                  'policies alone, no verifier, no API, at most two GPUs')
 DETAIL = dict(smoke='smoke: 3 prefixes and their branches in a draft run, results only in protocol section 9',
               prefix='formal: stage 0-2 prefixes after the protocol is frozen', branch='formal: stage 1-2 branches of an env_ok prefix run',
-              **{'physical-smoke': 'stage 3 smoke: 2 tasks x 1 state x 4 perturbations in a draft run, results only in appendix A',
-                 'physical': 'stage 3 formal: 8 tasks x 10 states x 4 perturbations after appendix A is frozen',
+              **{'physical-smoke': 'stage 3 smoke: 2 tasks x 1 state x (4 perturbations + 2 event controls) in a draft run, results only in appendix A',
+                 'physical': 'stage 3 formal: 8 tasks x 10 states x (4 perturbations + 2 event controls) after appendix A is frozen',
                  'probe-smoke': 'stage 5 smoke: 2 prefixes in a draft run, results only in appendix B',
                  'probe': 'stage 5 formal: every stage-1a/1b prefix after appendix B is frozen'})
 OFT_CHECKPOINT = '/projects/p33100/siosio/openvla_checkpoints/openvla-7b-oft-finetuned-libero-spatial-object-goal-10@638918f3d1c2'
