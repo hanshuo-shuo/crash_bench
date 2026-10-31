@@ -106,3 +106,7 @@ OFT checkpoint download each need the user's go-ahead. No paid API; SafeLIBERO t
 On 2026-10-29 late the user approved all of it ("都可以 同意 干吧"): the design and readings, every stage (0-5) including its
 GPU smoke and formal batch, pi0 and OpenVLA-OFT, and the OFT checkpoint download. Still pi0.5/pi0/OFT alone, no verifier,
 no paid API, at most two GPUs; freeze each stage's readings after its smoke and before its formal batch.
+All ran by 2026-10-31 (docs/generative_verifier/HIL_SUITE_REPORT.md): pi0.5 stages 0-3 and 5, OpenVLA-OFT stages 0-2
+(H1 holds for both; pi0.5 weak form, OFT strong form; pi0.5 recovers from all four physical interventions). pi0 read
+env_suspect at stage 0 (LIBERO-10 0.84 < 0.85), so by the frozen rule its branches were not run; running them, OFT
+stages 3/5, or an online gate with an outside executor each need the user's go-ahead.

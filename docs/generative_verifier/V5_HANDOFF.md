@@ -1,8 +1,16 @@
-# V5 交接（2026-10-29：绕路 HIL `ignores_detour`，第 1 个问题三种情形都有结果；回原点 HIL `ignores_instruction`；10-28 离线闸门 `gate_prevents`；10-27 HIL `ignores_rule`、S5 `self_computes`）
+# V5 交接（2026-10-31：HIL 套件完成，π0.5、OFT 都不听中途的人话、π0.5 能从推挪中恢复；10-29：绕路 HIL `ignores_detour`，第 1 个问题三种情形都有结果；回原点 HIL `ignores_instruction`；10-28 离线闸门 `gate_prevents`；10-27 HIL `ignores_rule`、S5 `self_computes`）
 
 读者：接手的人（用户本人，或下一个 Claude/Codex 会话）。先读 [AGENTS.md](../../AGENTS.md) 和 [CURRENT.md](../CURRENT.md)，再读本文的"接手指南"。后面按日期排的各节是历史记录。
 
-## 接手指南（2026-10-29 更新，先读这一节）
+## 接手指南（2026-10-31 更新，先读这一节）
+
+### 10-31：HIL 套件已完成
+
+[HIL_SUITE_REPORT.md](HIL_SUITE_REPORT.md)；协议 [HIL_SUITE_PROTOCOL.md](HIL_SUITE_PROTOCOL.md)（第 1–9 节冻结 `f519338`，附录 A、B 冻结 `c28d400`）。
+- **范围**：标准 LIBERO 四个套件，策略孪生（同一前缀回放到中途状态、同一种子，只换干预）。π0.5 跑了阶段 0–3、5；OpenVLA-OFT 跑了阶段 0–2；π0 停在阶段 0（`env_suspect`，LIBERO-10 0.84，与其公布的 85.2% 一致）。
+- **结果**：训练外的命令（停、回原点、别做了）两个策略都不听，H1 跨策略成立；中途换成训练过的原句，π0.5 在 LIBERO-Goal 早换能换过去、越晚越差（弱形式），OFT 只有同一物体换目的地时能换、75% 时 `commits`（强形式），LIBERO-10 场景 2 两个都换不过去；π0.5 对四种动手干预都 `recovers`；探针显示句子改变了动作，但没改成命令要的动作。
+- **代码**：`hil_suite.py`（纯函数）、`hil_suite_run.py`（运行器）、`hil_suite_launch.py`（启动器，`smoke`、`prefix`、`branch`、`physical(-smoke)`、`probe(-smoke)`，`--policy pi05_libero|pi0_libero|openvla_oft`）、`hil_suite.sbatch`、`hil_suite_figures.py`、`experiments/feasibility/serve_oft.py`。测试 `test_hil_suite`。
+- **下一步（要用户决定）**：π0 分支作为写明的偏离补跑（约 10 GPU 小时）；OFT 的阶段 3、5；在线闸门 + 外部执行器（控制器改动要单独批准）。
 
 ### 10-29 晚：绕路 HIL 已完成（`ignores_detour`）
 
@@ -19,7 +27,7 @@
 1. **S 加 seed（主线）**：714、715，只看验证，每个 seed 约 11 GPU 小时；做完后闸门读数按 3 个 seed 重算。
 2. **在线闸门 + 规则执行**：控制器改动要单独批准。两条设计约束：判不可行由控制器停下（回原点），判可行由策略外面执行规则（绕路）。先定执行器和它用的感知；绕路的脚本见证（`v5_detour_layouts.run_part` 的 `witness-near`/`witness-far` 部分）用的是真实位置，可作上限参照。
 3. **"动手"式干预**（备选）：在第 t 步挪动物体，或接管机械臂再交回，用同一套运行器；要另外设计。
-4. **HIL 套件（10-29 晚用户要求的分析，草稿）**：[HIL_SUITE_PLAN.md](HIL_SUITE_PLAN.md)。标准 LIBERO 四个套件、三个策略；核心是 LIBERO-Goal 同场景中途换成训练过的指令，配 t = 0 能力上限；"动手"式干预并入其阶段 3。设计和每个 GPU 阶段都要用户点头。
+4. **HIL 套件**：10-29 晚批准，10-31 完成，见本指南开头和 [HIL_SUITE_REPORT.md](HIL_SUITE_REPORT.md)。"动手"式干预（第 3 项）已作为其阶段 3 在标准 LIBERO 上做了。
 
 ### 10-28 用户选定的那一步：测"可行但要绕路"（10-29 已完成，见上）
 
