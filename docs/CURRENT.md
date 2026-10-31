@@ -6,6 +6,10 @@
 - **用户 2026-10-16 的决定**：
   - V4 的 896 行（224 个四行单元、64 条源轨迹）作为开发数据，直接用于 verifier 训练。
   - 不再要求通过 0.75 的 shortcut 闸门。闸门失败（0.780）如实披露，并作为基线报告。
+- **10-31：HIL 发现的文献定位**（报告 [literature/reports/VLA 中途人类干预文献定位.md](literature/reports/VLA%20中途人类干预文献定位.md)，五份检索笔记在 [literature/research_notes/](literature/research_notes/)；精读页 [PAPER_READING.html](generative_verifier/PAPER_READING.html) 第 6 版加了 `#hil-lit`）。
+  - **用户**："帮我开始做一点文献调研吧 放在之前有个文献调研的网站 如何去place这个发现呢"。
+  - **结论**：约一半已有先例。t = 0 不看指令（LIBERO-PRO、LIBERO-Plus、Grant et al.）；中途换训练过的指令越晚越难（SwitchVLA 2506.03574、ReSteer 2603.17300、Causeway 2609.30913，最强替代解释是 task islands）；物理扰动后恢复（Diffusion Policy、VLA-Corrector 2609.06508）；MotorMind 2609.38078 表 5 已有 π0.5 挪物体 70% vs 换说法 20% 的小样本不对称。没找到先例的：训练外的停下 / 回原点 / 取消、中途加空间规则、同一时刻并排比较说话和动手、按种子噪声归一化的探针，以及"人善意的话不执行"作为在策略外执行的理由。
+  - **推荐主张**："现成的、按基准微调的 VLA，被推开能恢复，被叫停却不停"；物理一半当对照，只说 π0.5；措辞收窄到"自然、善意的人话"。CPU 重算（按配对类型的原始切换率、时点换算、STOP 窗口）和候选新实验都等用户决定。不调 API，没有新执行。
 - **10-31：HIL 套件完成**（见 [HIL_SUITE_REPORT.md](generative_verifier/HIL_SUITE_REPORT.md)，协议 [HIL_SUITE_PROTOCOL.md](generative_verifier/HIL_SUITE_PROTOCOL.md)，第 1–9 节冻结 `f519338`，附录 A、B 冻结 `c28d400`）。
   - **批准**：用户看过计划后："都可以 同意 干吧"（设计、读法、阶段 0–5 的 smoke 和正式批次、π0 和 OFT、OFT 权重下载）。
   - **结果**：

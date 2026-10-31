@@ -173,6 +173,19 @@ details[open] summary{margin-bottom:8px}
 ol.refs{margin:0;padding-left:1.6em;display:flex;flex-direction:column;gap:4px;font-size:13.5px}
 ol.refs li{overflow-wrap:anywhere}
 .foot{font-size:13px;color:var(--muted)}
+.pmap{display:grid;grid-template-columns:minmax(118px,.8fr) minmax(0,1.25fr) minmax(0,1.6fr);gap:6px;min-width:600px;font-size:13.5px}
+.pmap .hd{font-size:13px;color:var(--ink-2);font-weight:500;padding:0 4px}
+.pmap .rl{font-weight:700;line-height:1.5;padding:8px 4px;display:flex;flex-direction:column;justify-content:center}
+.pmap .rl span.en{font-weight:500}
+.pmap .cell{background:var(--panel);border-radius:6px;padding:8px;display:flex;flex-wrap:wrap;gap:5px;align-content:center;align-items:center;min-width:0}
+.pmap .cell.none{color:var(--muted);justify-content:center}
+.pmap .cell.gap{background:transparent;border:1.5px dashed var(--bad)}
+.chip{display:inline-block;font-size:12.5px;line-height:1.45;padding:2px 9px;border-radius:12px;border:1px solid var(--base);background:var(--bg);color:var(--ink);font-variant-numeric:tabular-nums}
+.chip.us{background:var(--accent);border-color:var(--accent);color:var(--bg);font-weight:500}
+:root[data-lang="both"] .chip.us span.en.inl::before{color:inherit}
+.gapnote{flex-basis:100%;font-size:12.5px;color:var(--bad)}
+.gapnote.soft{color:var(--ink-2)}
+@media (max-width:620px){.pmap{grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);min-width:0}.pmap .hd:first-child{display:none}.pmap .rl{grid-column:1/-1;padding:10px 2px 0}}
 @media (max-width:520px){h1{font-size:27px}h2{font-size:22px}.gist{font-size:17.5px}dl.gloss{grid-template-columns:minmax(0,1fr);gap:2px 0}dl.gloss dd{margin-bottom:8px}.tile .v{font-size:24px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -180,11 +193,11 @@ ol.refs li{overflow-wrap:anywhere}
 <main class="page">
 <header style="display:flex;flex-direction:column;gap:14px">
   <div class="eyebrow">CrashBench · <span class="zh">生成式 Verifier · 背景论文</span><span class="en inl">Generative Verifier · Background papers</span></div>
-  <h1><span class="zh">五篇论文的白话精读</span><span class="en">Five papers, read closely in plain words</span></h1>
+  <h1><span class="zh">五篇论文的白话精读，和一份文献定位</span><span class="en">Five papers, read closely in plain words, plus a literature map</span></h1>
   <div class="lang" role="group" aria-label="语言 / Language"><button type="button" id="lang-zh" data-set="zh">中文</button><button type="button" id="lang-en" data-set="en">English</button><button type="button" id="lang-both" data-set="both">中英对照</button></div>
-  <p class="lede zh">我们的 verifier 有四个关键设计：做不成的题要有证明，只看图判断几何上做不做得成，先写事实再下结论，以及为什么先写事实能让学不会的题变得学得会。每个设计都借自一篇（或一组）论文。这一页把它们逐篇拆开讲：它要解决什么，具体怎么做，用一个小例子走一遍，结果多少，哪里容易读错，对我们意味着什么。第五篇 HazardArena 是 10 月 20 日加的，作为下一步的参考，讲 verifier 接到机器人前面以后实验怎么做。最后一节是 10 月 24 日这一周的进展（V5），以及和上周计划的对照。</p>
-  <p class="lede en">Our verifier rests on four design choices: an infeasible task needs a proof; geometric feasibility can be judged from images alone; the model writes facts before its verdict; and writing those facts is what turns an unlearnable task into a learnable one. Each choice is borrowed from one paper or pair of papers. This page takes them apart one at a time: what problem each solves, how it works, a small worked example, the results, what is easy to misread, and what it means for us. The fifth, HazardArena, was added on 20 Oct as a reference for the next step, on how to test the verifier once it sits in front of the robot. The last section covers the week of 24 Oct (V5) and checks it against last week's plan.</p>
-  <div class="meta"><span><span class="zh">2026-10-19，10-20 加入 HazardArena，10-24 加入本周进展</span><span class="en inl">19 Oct 2026; HazardArena added 20 Oct; this week's progress added 24 Oct</span></span><span><span class="zh">五篇原文都读了全文，逐条核对</span><span class="en inl">all five papers read in full and checked</span></span><span><span class="zh">每个数字都标了出处（图、表、页或节）</span><span class="en inl">every number cites its figure, table, page or section</span></span><span><a href="https://claude.ai/artifact/Ya7FQbZC9yEuNNyYhPBHHT" target="_blank" rel="noopener"><span class="zh">主报告：生成式可行性 Verifier</span><span class="en inl">main report</span></a></span></div>
+  <p class="lede zh">我们的 verifier 有四个关键设计：做不成的题要有证明，只看图判断几何上做不做得成，先写事实再下结论，以及为什么先写事实能让学不会的题变得学得会。每个设计都借自一篇（或一组）论文。这一页把它们逐篇拆开讲：它要解决什么，具体怎么做，用一个小例子走一遍，结果多少，哪里容易读错，对我们意味着什么。第五篇 HazardArena 是 10 月 20 日加的，作为下一步的参考，讲 verifier 接到机器人前面以后实验怎么做。接着是 10 月 24 日这一周的进展（V5），以及和上周计划的对照。10 月 31 日加了一节文献定位：HIL 套件的发现（VLA 推开能恢复，叫停却不停）在已有文献里的位置，哪些别人做过，哪些是新的。</p>
+  <p class="lede en">Our verifier rests on four design choices: an infeasible task needs a proof; geometric feasibility can be judged from images alone; the model writes facts before its verdict; and writing those facts is what turns an unlearnable task into a learnable one. Each choice is borrowed from one paper or pair of papers. This page takes them apart one at a time: what problem each solves, how it works, a small worked example, the results, what is easy to misread, and what it means for us. The fifth, HazardArena, was added on 20 Oct as a reference for the next step, on how to test the verifier once it sits in front of the robot. Next comes the week of 24 Oct (V5), checked against last week's plan. A section added on 31 Oct maps the HIL suite's finding (VLAs recover when pushed but don't stop when told to) onto the literature: what others have already shown and what is new.</p>
+  <div class="meta"><span><span class="zh">2026-10-19，10-20 加入 HazardArena，10-24 加入本周进展，10-31 加入 HIL 文献定位</span><span class="en inl">19 Oct 2026; HazardArena added 20 Oct; this week's progress added 24 Oct; HIL literature map added 31 Oct</span></span><span><span class="zh">五篇原文都读了全文，逐条核对</span><span class="en inl">all five papers read in full and checked</span></span><span><span class="zh">每个数字都标了出处（图、表、页或节）</span><span class="en inl">every number cites its figure, table, page or section</span></span><span><a href="https://claude.ai/artifact/Ya7FQbZC9yEuNNyYhPBHHT" target="_blank" rel="noopener"><span class="zh">主报告：生成式可行性 Verifier</span><span class="en inl">main report</span></a></span></div>
   <nav class="toc" aria-label="目录 / Contents">
     <a href="#map"><span class="zh">四个设计</span><span class="en inl">Four choices</span></a>
     <a href="#lidantam"><span class="zh">怎么证明没有路</span><span class="en inl">Proving no path</span></a>
@@ -194,6 +207,7 @@ ol.refs li{overflow-wrap:anywhere}
     <a href="#together"><span class="zh">合起来</span><span class="en inl">Together</span></a>
     <a href="#hazardarena"><span class="zh">下一步：会不会拒绝</span><span class="en inl">Next: refusing</span></a>
     <a href="#v5"><span class="zh">本周进展：V5</span><span class="en inl">This week: V5</span></a>
+    <a href="#hil-lit"><span class="zh">文献定位：叫不停</span><span class="en inl">Literature: told, won't stop</span></a>
     <a href="#sync"><span class="zh">主报告要改的几处</span><span class="en inl">Fixes for the report</span></a>
     <a href="#refs"><span class="zh">原文</span><span class="en inl">Papers</span></a>
   </nav>
@@ -1964,6 +1978,134 @@ x7 is 0 or 1 with equal odds → still 50% correct</pre>
   </div>
   <p class="foot zh">本节数字来自仓库里的 V5_STEP1_REPORT、V5_STEP2_REPORT、V5_C0_REPORT、V5_LAYOUT_PROTOCOL 和 V5_S0_REPORT（docs/generative_verifier/）。盲看由 Claude 完成，不是人工审阅。</p>
   <p class="foot en">Numbers in this section come from V5_STEP1_REPORT, V5_STEP2_REPORT, V5_C0_REPORT, V5_LAYOUT_PROTOCOL and V5_S0_REPORT in the repository (docs/generative_verifier/). The blind review was done by Claude, not by a human.</p>
+</section>
+
+<section id="hil-lit">
+  <span class="tag"><span class="zh">文献定位 · 10-31</span><span class="en inl">LITERATURE MAP · 31 OCT</span></span>
+  <h2><span class="zh">推得回来，叫不停：HIL 发现放在文献的哪里</span><span class="en">Pushed, it recovers; told, it doesn't stop: where the HIL finding sits</span></h2>
+  <p class="gist"><span class="zh">大约一半别人做过：VLA 开局就不太看指令，中途换成另一条训练过的指令越晚越难，被推开能恢复。另一半没找到先例：任务做到一半叫它停下、回原点、别做了，或者加一条空间规则，现成的 VLA 都不执行。</span><span class="en">About half is already known: VLAs barely read the instruction even at the start, switching mid-task to another trained instruction gets harder the later it comes, and closed-loop policies recover from pushes. The other half has no precedent we could find: tell an off-the-shelf VLA part-way through to stop, go back or cancel, or add a spatial rule, and it does not act on it.</span></p>
+  <p class="zh">HIL 套件跑完后，10 月 31 日做了一轮检索，分五个方向：VLA 忽略语言；中途的语言纠正；人工干预学习和物理扰动；探针；安全与停止。五组各自独立检索到 2026 年 10 月底。本节用到的 24 篇都在 arXiv 上对过编号和标题，最关键的两处（MotorMind 表 5、Causeway 摘要）又单独打开核对。完整报告在仓库的 docs/literature/reports/。</p>
+  <p class="en">After the HIL suite finished, a search on 31 Oct covered five directions: VLAs ignoring language; mid-task language corrections; human-intervention learning and physical perturbation; probes; safety and stopping. The five searches ran independently up to the end of October 2026. All 24 papers used in this section were checked against arXiv for ID and title, and the two most important points (MotorMind's Table 5 and the Causeway abstract) were opened and checked again. The full report is in the repository under docs/literature/reports/.</p>
+
+  <h3><span class="zh">一张图：别人做到哪，我们在哪</span><span class="en">One map: what others did, where we sit</span></h3>
+  <figure>
+    <div class="tablewrap"><div class="pmap">
+      <div class="hd"></div>
+      <div class="hd"><span class="zh">开局就说（t = 0）</span><span class="en">At the start (t = 0)</span></div>
+      <div class="hd"><span class="zh">任务做到一半</span><span class="en">Mid-task</span></div>
+
+      <div class="rl"><span class="zh">换成另一条训练过的指令</span><span class="en">Switch to another trained instruction</span></div>
+      <div class="cell"><span class="chip">LIBERO-PRO · π0.5 0.00–0.01</span><span class="chip">LIBERO-CF · OFT 2.0%</span><span class="chip">LIBERO-Plus</span></div>
+      <div class="cell"><span class="chip">SwitchVLA · π0 40.7 → 8.3</span><span class="chip">ReSteer</span><span class="chip">Causeway · π0.5 26.0% · OFT 3.4%</span><span class="chip us">π0.5 .84 / .78 / .70</span><span class="chip us">OFT .50 / .50 / .20</span></div>
+
+      <div class="rl"><span class="zh">中途纠正、插话、换说法</span><span class="en">Corrections, interjections, new wording</span></div>
+      <div class="cell none">—</div>
+      <div class="cell"><span class="chip">Hi Robot · <span class="zh">扁平 π0 不理</span><span class="en inl">flat π0 ignores</span></span><span class="chip">Park et al. · 68.2% vs 69.4%</span><span class="chip">MotorMind · π0.5 20%</span></div>
+
+      <div class="rl"><span class="zh">训练外的命令：停下、回原点、别做了</span><span class="en">Untrained commands: stop, go back, cancel</span></div>
+      <div class="cell"><span class="chip">Grant et al. · “do not” 96.7%</span><span class="chip">LIBERO-VIFO · STOP sign</span><span class="chip us">π0.5 STOP · 0/118</span></div>
+      <div class="cell gap"><span class="chip us">π0.5 1/236 · 0/235 · 1/236</span><span class="chip us">OFT 0/230 · 0/229 · 2/230</span><span class="gapnote"><span class="zh">没找到先例</span><span class="en inl">no precedent found</span></span></div>
+
+      <div class="rl"><span class="zh">加一条空间规则</span><span class="en">Add a spatial rule</span></div>
+      <div class="cell"><span class="chip">What Not to Do · <span class="zh">要加训练</span><span class="en inl">needs training</span></span></div>
+      <div class="cell gap"><span class="chip us">π0.5 <span class="zh">越线</span><span class="en inl">crossed</span> 160/160</span><span class="chip us">π0.5 <span class="zh">进禁区</span><span class="en inl">entered</span> 168/168</span><span class="gapnote"><span class="zh">没找到先例</span><span class="en inl">no precedent found</span></span></div>
+
+      <div class="rl"><span class="zh">动手：挪物体、拿走、推手臂</span><span class="en">Hands-on: move, take away, push</span></div>
+      <div class="cell"><span class="chip">LIBERO-Plus · OFT 97.1 → 37.2</span></div>
+      <div class="cell"><span class="chip">Diffusion Policy</span><span class="chip">π0 / π0.5 <span class="zh">博客</span><span class="en inl">blogs</span></span><span class="chip">VLA-Corrector · π0.5 ≈ .84</span><span class="chip">MotorMind · π0.5 70%</span><span class="chip">ReViP · OFT 19%</span><span class="chip us">π0.5 .93–1.00</span></div>
+
+      <div class="rl"><span class="zh">新指令读到了没有</span><span class="en">Was the new instruction read?</span></div>
+      <div class="cell"><span class="chip">Grant et al. · probe &gt; 99%</span><span class="chip">Chen et al. · KV 109/200</span><span class="chip">Encoded but Not in Control</span></div>
+      <div class="cell"><span class="chip us">π0.5 · 2.4–9.4× <span class="zh">种子噪声</span><span class="en inl">seed noise</span></span><span class="gapnote soft"><span class="zh">输出层、随进度变化的读数没找到先例</span><span class="en inl">output-level, over progress: no precedent found</span></span></div>
+    </div></div>
+    <figcaption><span class="zh">灰色是别人的工作，数字是他们报告的；蓝色是我们；红色虚线框是这轮检索没找到先例的格子。MotorMind 的 20% 放在第二行，因为它换上的是训练外的新说法，不是原句。各篇的成功定义、时点和配对都不同，数字不能横着直接比，下面的表和“审稿人会问的问题”分别说明。</span><span class="en">Grey is other people's work, with the numbers they report; blue is ours; a red dashed box marks a cell where this search found no precedent. MotorMind's 20% sits in the second row because its new instruction is untrained wording, not a training sentence. Success definitions, timing and task pairs differ between papers, so numbers cannot be compared across a row directly; the table and the reviewer questions below explain.</span></figcaption>
+  </figure>
+
+  <h3><span class="zh">最近的几篇，逐个看</span><span class="en">The closest papers, one by one</span></h3>
+  <div class="tablewrap"><table>
+    <thead><tr><th><span class="zh">论文</span><span class="en">Paper</span></th><th><span class="zh">做了什么</span><span class="en">What it did</span></th><th><span class="zh">数字</span><span class="en">Numbers</span></th><th><span class="zh">和我们的关系</span><span class="en">Relation to us</span></th></tr></thead>
+    <tbody>
+      <tr><td>SwitchVLA<br><span class="cite">2506.03574 · 2025-06</span></td><td><span class="zh">LIBERO-Goal 上把 A 中途换成 B，接触前 / 接触中 / 动作后三个时点；π0、OFT</span><span class="en">On LIBERO-Goal, switch A to B before contact, during contact or after the action; π0 and OFT</span></td><td><span class="zh">早 / 中 / 晚：π0 40.7 / 8.3 / 10.2，OFT 40.6 / 11.1 / 13.0（不换 92.3 / 98.0）。每格 12 次；要求 A 先收尾再做 B</span><span class="en">Early / mid / late: π0 40.7 / 8.3 / 10.2, OFT 40.6 / 11.1 / 13.0 (no switch 92.3 / 98.0). 12 trials per cell; A must be wrapped up before B counts</span></td><td><span class="zh">阶段 1 的直接先例</span><span class="en">Direct precedent for stage 1</span></td></tr>
+      <tr><td>ReSteer<br><span class="cite">2603.17300 · 2026-03</span></td><td><span class="zh">LIBERO-Goal，从中间状态换指令；π0.5、OFT、MolmoAct</span><span class="en">LIBERO-Goal, instruction changed from intermediate states; π0.5, OFT, MolmoAct</span></td><td><span class="zh">原话：换任务 “feasible only early in execution”</span><span class="en">In their words, switching is “feasible only early in execution”</span></td><td><span class="zh">同上；从中间状态开始评估，相当于 twin</span><span class="en">Same; starting from intermediate states is in effect a twin design</span></td></tr>
+      <tr><td>Causeway<br><span class="cite">2609.30913 · 2026-09</span></td><td><span class="zh">LIBERO-Goal 71 个跨物体对、三个时点；π0.5、OFT、GR00T N1.5</span><span class="en">71 cross-object LIBERO-Goal pairs at three timings; π0.5, OFT, GR00T N1.5</span></td><td><span class="zh">裸切换平均：π0.5 26.0%，OFT 3.4%，GR00T 9.9%（摘要：三个模型 3–26%）</span><span class="en">Mean bare-switch success: π0.5 26.0%, OFT 3.4%, GR00T 9.9% (abstract: 3–26% across models)</span></td><td><span class="zh">提出 “task islands”，是对阶段 1 最强的替代解释</span><span class="en">Proposes “task islands”, the strongest alternative explanation for stage 1</span></td></tr>
+      <tr><td>MotorMind<br><span class="cite">2609.38078 · 2026-09</span></td><td><span class="zh">一篇 VLM 脚手架论文里的附表（表 5）</span><span class="en">A side table (Table 5) in a paper about a VLM scaffold</span></td><td><span class="zh">π0.5：指令不变、中途挪物体 70%（10 个任务）；中途换成新说法 20%（5 个任务）。每任务次数没写</span><span class="en">π0.5: object moved mid-task, instruction unchanged, 70% (10 tasks); instruction replaced with new wording, 20% (5 tasks). Trials per task not stated</span></td><td><span class="zh">“推得回、说不动”的小样本先例，必须引用</span><span class="en">A small-sample precedent for “push recovers, words don't”; must be cited</span></td></tr>
+      <tr><td>Grant et al.<br><span class="cite">2603.19233 · 2026-03</span></td><td><span class="zh">π0.5 等在 LIBERO 上的机制分析</span><span class="en">Mechanistic study of π0.5 and others on LIBERO</span></td><td><span class="zh">线性探针读出指令 &gt; 99%；开局说 “do not {task}”，π0.5 仍做 96.7%（n = 30）</span><span class="en">Linear probes read the instruction at &gt; 99%; told “do not {task}” at the start, π0.5 still does it 96.7% (n = 30)</span></td><td><span class="zh">“读到了不照做”在表征层已有人说过</span><span class="en">“Reads it but doesn't act” is already shown at the representation level</span></td></tr>
+      <tr><td>Chen et al.<br><span class="cite">2609.39971 · 2026-09</span></td><td><span class="zh">π0.5 / LIBERO：指令是在“调取熟悉的轨迹”</span><span class="en">π0.5 / LIBERO: the instruction retrieves a familiar trajectory</span></td><td><span class="zh">换进目标任务的 prefix KV，109/200 转向目标物，对照 0/200</span><span class="en">Swapping in the target task's prefix KV turns 109/200 rollouts toward the target object, against 0/200 for controls</span></td><td><span class="zh">同上；原话 “language is not simply ignored”</span><span class="en">Same; in their words, “language is not simply ignored”</span></td></tr>
+      <tr><td>Hi Robot · Park et al.<br><span class="cite">2502.19417 · 2610.21251</span></td><td><span class="zh">中途插话；每 8 步由 VLM 插入纠正</span><span class="en">Mid-task interjections; a VLM inserts corrections every 8 steps</span></td><td><span class="zh">Hi Robot：扁平 π0 “does not react to real-time feedback”。Park et al.：有纠正 68.2%，没纠正 69.4%</span><span class="en">Hi Robot: a flat π0 “does not react to real-time feedback”. Park et al.: 68.2% with corrections, 69.4% without</span></td><td><span class="zh">中途的话不起作用，定性上已知</span><span class="en">Mid-task words have no effect; known qualitatively</span></td></tr>
+      <tr><td>VLA-Corrector<br><span class="cite">2609.06508 · 2026-09</span></td><td><span class="zh">冻结的 pi05_libero，中途把目标物挪 10 cm，每个条件 1,000 次</span><span class="en">Frozen pi05_libero, target object moved 10 cm mid-task, 1,000 episodes per condition</span></td><td><span class="zh">93.7% → 78.3%，约为不扰时的 0.84（这个比值是我们算的）</span><span class="en">93.7% → 78.3%, about 0.84 of the clean rate (our ratio, not the paper's)</span></td><td><span class="zh">物理恢复已有计数，和我们同向</span><span class="en">Physical recovery already counted, same direction as ours</span></td></tr>
+      <tr><td>ReViP · LIBERO-Plus<br><span class="cite">2601.16667 · 2510.13626</span></td><td><span class="zh">强制让抓着的物体掉落等；开局扰动机械臂关节</span><span class="en">Grasped objects forcibly dropped and similar; robot joints perturbed at the start</span></td><td><span class="zh">ReViP 平均：OFT 19%，π0 36%。LIBERO-Plus：OFT 97.1 → 37.2，π0 94.2 → 6.6</span><span class="en">ReViP mean: OFT 19%, π0 36%. LIBERO-Plus: OFT 97.1 → 37.2, π0 94.2 → 6.6</span></td><td><span class="zh">反例：物理恢复只能说到 π0.5</span><span class="en">Counter-evidence: physical recovery holds only for π0.5</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <h3><span class="zh">审稿人会问的四个问题</span><span class="en">Four questions a reviewer will ask</span></h3>
+  <ul class="fixes">
+    <li><b><span class="zh">“换不过去也许是够不着，不是没听。”（Causeway 的 task islands）</span><span class="en">“Maybe it can't reach B from there, rather than not listening.” (Causeway's task islands)</span></b>
+      <span class="zh">阶段 1 确实部分支持它：t 时刻末端离 B 的参考路线越远，越换不过去（Spearman：π0.5 −0.39，OFT −0.67）。阶段 2 不受这个解释影响：停下和回原点在任何状态下都做得到。但 STOP 开局也不听，所以阶段 2 只能说“用这些话停不下它”，“中途”本身的效应要看阶段 1。</span><span class="en">Stage 1 partly supports it: the farther the end effector is from B's reference path at time t, the less often the switch succeeds (Spearman: π0.5 −0.39, OFT −0.67). Stage 2 is immune to it, because holding still and going back are possible from any state. But STOP is ignored even at the start, so stage 2 only shows “these words don't stop it”; the effect of “mid-task” itself has to come from stage 1.</span></li>
+    <li><b><span class="zh">“为什么你们的切换数字比三篇竞品高这么多？”</span><span class="en">“Why are your switch numbers so much higher than the three competitors'?”</span></b>
+      <span class="zh">主要是配对不同。我们 8 对里有 4 对是“同一个碗换目的地”，能换过去的几乎都是这 4 对；OFT 在其余 4 对上从 25% 起就换不过去，和 Causeway 里 OFT 的 3.4% 一致。π0.5 在两对跨物体的配对上早换仍有 0.75–0.80，高于 Causeway 的平均。剩下的差距要靠时点定义（进度比例、第 30 / 60 步、接触阶段）和成功判据去对齐。要补一张不归一化、按配对类型分列的表。</span><span class="en">Mostly the pairs. Four of our eight pairs keep the same bowl and change only its destination, and those four account for nearly all successful switches; OFT fails the other four from 25% on, matching Causeway's 3.4% for OFT. π0.5 still reaches 0.75–0.80 on the two cross-object pairs when switched early, above Causeway's mean. The remaining gap has to be aligned through the timing definition (progress fraction, step 30 / 60, contact phase) and the success criterion. We should add an unnormalized table split by pair type.</span></li>
+    <li><b><span class="zh">“LIBERO-Plus 开局扰一下就崩，为什么你们推一把没事？”</span><span class="en">“LIBERO-Plus collapses under a start-state perturbation; why does your push not matter?”</span></b>
+      <span class="zh">LIBERO-Plus 没测 π0.5，扰的是开局的关节角；同一个 pi05_libero 在 VLA-Corrector 的中途挪动里也保住约 0.84。但 ReViP 里 OFT 只有 19%，真机上 π0.5 也会掉，这些是真反例。所以只写“π0.5、仿真、中等幅度的脚本扰动”，OFT、π0 和真机列为没覆盖。</span><span class="en">LIBERO-Plus did not test π0.5 and perturbs starting joint angles; the same pi05_libero keeps about 0.84 under VLA-Corrector's mid-task shifts. But OFT's 19% in ReViP, and π0.5's drop on a real robot, are real counter-examples. So the claim is limited to “π0.5, simulation, moderate scripted perturbations”, with OFT, π0 and real robots listed as not covered.</span></li>
+    <li><b><span class="zh">“攻击论文说文字能操纵 VLA，你们怎么说它不听语言？”</span><span class="en">“Attack papers show text can steer VLAs; how can you say they ignore language?”</span></b>
+      <span class="zh">确实能操纵：Jones et al. 用优化过的文本让 VLA 做出任意动作；FreezeVLA 的对抗图像还能让 VLA 不理后面的指令。我们的探针也显示新句子改变了动作块。所以措辞要收窄成“不执行自然、善意的人话”：优化过的文本是攻击面，善意的叫停却不是安全手柄。</span><span class="en">They can: Jones et al. drive VLAs to arbitrary actions with optimized text, and FreezeVLA's adversarial images make VLAs ignore later instructions. Our probe also shows the new sentence changes the action chunk. So the wording must narrow to “does not act on natural, benign human commands”: optimized text is an attack surface, while a benign “stop” is not a safety lever.</span></li>
+  </ul>
+
+  <h3><span class="zh">这个发现怎么接上主线</span><span class="en">How the finding connects to the main line</span></h3>
+  <div class="flow">
+    <span class="step"><span class="zh">诊断文献：VLA 不太看指令</span><span class="en">Diagnosis papers: VLAs barely read the instruction</span></span><span class="arr">→</span>
+    <span class="step"><span class="zh">我们：好人中途叫停，它不停；推开却能恢复</span><span class="en">Us: a person says stop mid-task and it doesn't; pushed, it recovers</span></span><span class="arr">→</span>
+    <span class="step"><span class="zh">外部执行文献：理由原本是“没保证”“会被越狱”</span><span class="en">Enforce-outside papers: until now argued from “no guarantees” or “jailbreaks”</span></span><span class="arr">→</span>
+    <span class="step"><span class="zh">verifier + gate：人的话在策略外执行</span><span class="en">Verifier + gate: what people say is enforced outside the policy</span></span>
+  </div>
+  <p class="zh">诊断 VLA 忽略语言的论文只说“它不看”，不谈后果。主张在策略外执行安全约束的论文（AEGIS/VLSA、RoboGuard、Safety Chip、What Can One Sentence Fix?）理由都是“学到的策略没有保证”或“会被越狱”，没有一篇是从“人善意地叫它停，它不执行”出发的。现有的外部防护分两类：Safety Chip、RoboGuard 把自然语言规则交给外部检查器，但管的是 LLM 规划器；AEGIS 这类直接管 VLA，但只处理几何约束。能接收人在中途说的规则或停止命令、再施加到 VLA 上的防护层，这轮没找到。我们的 verifier + gate 正好落在这个空位上。</p>
+  <p class="en">Papers that diagnose language neglect in VLAs only say “it doesn't read”, and stop short of the consequence. Papers that argue for enforcing safety outside the policy (AEGIS/VLSA, RoboGuard, Safety Chip, What Can One Sentence Fix?) argue from “learned policies have no guarantees” or “they can be jailbroken”; none starts from “a person benignly says stop, and it doesn't”. Existing outside guards come in two kinds: Safety Chip and RoboGuard hand natural-language rules to an outside checker, but guard LLM planners; AEGIS-style layers guard VLAs directly, but only with geometric constraints. This search found no guard that takes a rule or stop command a person says mid-task and enforces it on a VLA. Our verifier plus gate sits in exactly that gap.</p>
+
+  <div class="take"><b><span class="zh">推荐的写法</span><span class="en inl">Recommended framing</span></b>
+    <ul>
+      <li><span class="zh"><b>一句话主张</b>：现成的、按基准微调的 VLA，被推开能恢复，被叫停却不停；所以纠正和停止要在策略外执行。英文可以写成 “Pushed, they recover; told, they don't stop.”</span><span class="en"><b>One-sentence claim</b>: off-the-shelf, benchmark-fine-tuned VLAs recover when pushed but do not stop when told to, so corrections and stops must be enforced outside the policy. In a title: “Pushed, they recover; told, they don't stop.”</span></li>
+      <li><span class="zh"><b>新的放前面</b>：训练外的停下 / 回原点 / 别做了，以及“原任务照样完成”这个主指标；中途加的空间规则；同一时刻并排比较说话和动手，配同步对照；按种子噪声归一化、随进度变化的探针。</span><span class="en"><b>Lead with what is new</b>: untrained stop / go-back / cancel commands, with “the original task is still completed” as the main metric; spatial rules added mid-task; speaking and hands-on interventions compared at the same step with matched controls; a probe normalized by seed noise and tracked over progress.</span></li>
+      <li><span class="zh"><b>已知的当复现和对照</b>：阶段 1 是 SwitchVLA、ReSteer、Causeway 的复现加扩展（twin、t = 0 上限、进度曲线、四个套件）；物理那一半是对照，作用是排除“这个策略中途根本不会反应”。</span><span class="en"><b>Treat the known half as replication and control</b>: stage 1 replicates and extends SwitchVLA, ReSteer and Causeway (twins, t = 0 ceilings, a progress curve, four suites); the physical half is a control that rules out “this policy cannot react mid-task at all”.</span></li>
+      <li><span class="zh"><b>别这样写</b>：“首次证明 VLA 编码了指令却不执行”（Grant、Chen 已说过）；“VLA 忽略语言”（攻击论文和我们的探针都会反驳）；“在策略内部做不到”（SwitchVLA、Causeway 等已部分做到，Interactive Language 2022 年就用约 60 万条带语言的片段训练出能实时改口令的策略）；“VLA 对物理扰动鲁棒”（只测了 π0.5）。</span><span class="en"><b>Avoid</b>: “first to show VLAs encode instructions they don't follow” (Grant, Chen said it first); “VLAs ignore language” (attack papers and our own probe refute it); “impossible inside the policy” (SwitchVLA, Causeway and others partly do it, and Interactive Language trained a policy that follows real-time instruction changes in 2022, using about 600K language-annotated clips); “VLAs are robust to physical perturbation” (only π0.5 was tested).</span></li>
+      <li><span class="zh"><b>接安全标准</b>：据二手摘要，ISO 10218 的 2025 版把“正常停止”列为单独的安全功能，急停按 ISO 13850 走独立的物理通道。口头的“停下”应该路由到控制器的停止功能，而不是写进策略的提示词。</span><span class="en"><b>Tie to safety standards</b>: according to secondary summaries, the 2025 edition of ISO 10218 adds “normal stop” as its own safety function, and the emergency stop under ISO 13850 is a separate physical channel. A spoken “stop” should be routed to the controller's stop function, not written into the policy prompt.</span></li>
+    </ul>
+  </div>
+
+  <h3><span class="zh">下一步（都等你定）</span><span class="en">Next steps (all your call)</span></h3>
+  <ul class="plain">
+    <li><span class="zh"><b>只用现有记录、在 CPU 上重算</b>：不归一化的切换成功率，按配对类型分列（同一个碗换目的地、同一个酒瓶换目的地、跨物体）；把 25 / 50 / 75% 换算成绝对步数和接触阶段，并按 SwitchVLA 的严格判据再判一次；写明 STOP 的判定窗口跨了几次重新推理，堵住“只是延迟”的质疑。</span><span class="en"><b>CPU recomputation on existing records only</b>: unnormalized switch success split by pair type (same bowl, new destination; same bottle, new destination; cross-object); convert 25 / 50 / 75% into absolute steps and contact phases and re-score with SwitchVLA's strict criterion; state how many re-plans the STOP window spans, to rule out “it was only latency”.</span></li>
+    <li><span class="zh"><b>候选新实验，每项都要你批准</b>：OFT 的阶段 3 和 5（物理恢复和“读到不做”是不是也属于 OFT）；Causeway 式的跨物体配对、按绝对步数换；位移幅度梯度（6 cm 对 10 cm）；“推一下，意思是停”；换指令时加语言 CFG。</span><span class="en"><b>Candidate new runs, each needing your approval</b>: OFT stages 3 and 5 (do physical recovery and “reads but doesn't act” hold for OFT); Causeway-style cross-object pairs switched at absolute steps; a displacement-size gradient (6 cm vs 10 cm); “a push that means stop”; language CFG at the switch.</span></li>
+    <li><span class="zh"><b>要盯的撞车</b>：Grant et al. 定义了中途换提示词的条件，但没找到它的结果；GitHub 上有一个 SmolVLA 的 stop 实验只跑过 smoke；2608.13474、2605.11567 两篇只在搜索结果里出现，还没打开。</span><span class="en"><b>Possible collisions to watch</b>: Grant et al. define a mid-episode prompt-switch condition, but its results were not found; a GitHub project testing “stop” on SmolVLA has only run a smoke test; 2608.13474 and 2605.11567 appeared only in search results and were not opened.</span></li>
+  </ul>
+
+  <details><summary><span class="zh">这一节引用的论文（24 篇）</span><span class="en inl">Papers cited in this section (24)</span></summary>
+  <ol class="refs">
+    <li>Li et al. SwitchVLA: Execution-Aware Task Switching for Vision-Language-Action Models. 2025. <a href="https://arxiv.org/abs/2506.03574" target="_blank" rel="noopener">arXiv 2506.03574</a></li>
+    <li>Chen et al. ReSteer: Quantifying and Refining the Steerability of Multitask Robot Policies. 2026. <a href="https://arxiv.org/abs/2603.17300" target="_blank" rel="noopener">arXiv 2603.17300</a></li>
+    <li>Wang et al. Causeway: Restoring Task Accessibility for Instruction Switching in VLA Policies. 2026. <a href="https://arxiv.org/abs/2609.30913" target="_blank" rel="noopener">arXiv 2609.30913</a></li>
+    <li>Li et al. MotorMind: Scaffolding General Vision Language Models for Zero-Shot Robot Manipulation. 2026. <a href="https://arxiv.org/abs/2609.38078" target="_blank" rel="noopener">arXiv 2609.38078</a></li>
+    <li>Grant et al. Not All Features Are Created Equal: A Mechanistic Study of Vision-Language-Action Models. 2026. <a href="https://arxiv.org/abs/2603.19233" target="_blank" rel="noopener">arXiv 2603.19233</a></li>
+    <li>Chen et al. When Instructions Retrieve Trajectories: Diagnosing and Mitigating Generalization Failures in VLA Models. 2026. <a href="https://arxiv.org/abs/2609.39971" target="_blank" rel="noopener">arXiv 2609.39971</a></li>
+    <li>Jiang et al. Encoded but Not in Control: Revealing the Grounding Gap in Vision-Language Robot Policies. 2026. <a href="https://arxiv.org/abs/2610.06235" target="_blank" rel="noopener">arXiv 2610.06235</a></li>
+    <li>Shi et al. Hi Robot: Open-Ended Instruction Following with Hierarchical Vision-Language-Action Models. 2025. <a href="https://arxiv.org/abs/2502.19417" target="_blank" rel="noopener">arXiv 2502.19417</a></li>
+    <li>Park et al. Do VLAs Really Follow Instructions? Diagnosing How-Level Instruction Following in Vision-Language-Action Models. 2026. <a href="https://arxiv.org/abs/2610.21251" target="_blank" rel="noopener">arXiv 2610.21251</a></li>
+    <li>Zhou et al. LIBERO-PRO: Towards Robust and Fair Evaluation of Vision-Language-Action Models Beyond Memorization. 2025. <a href="https://arxiv.org/abs/2510.03827" target="_blank" rel="noopener">arXiv 2510.03827</a></li>
+    <li>Fei et al. LIBERO-Plus: In-depth Robustness Analysis of Vision-Language-Action Models. 2025. <a href="https://arxiv.org/abs/2510.13626" target="_blank" rel="noopener">arXiv 2510.13626</a></li>
+    <li>Fang et al. When Vision Overrides Language: Evaluating and Mitigating Counterfactual Failures in VLAs (LIBERO-CF). 2026. <a href="https://arxiv.org/abs/2602.17659" target="_blank" rel="noopener">arXiv 2602.17659</a></li>
+    <li>Qian et al. LIBERO-VIFO: Benchmarking the Capability and Safety of Visual Cue Following in Vision-Language-Action Models. 2026. <a href="https://arxiv.org/abs/2608.17600" target="_blank" rel="noopener">arXiv 2608.17600</a></li>
+    <li>Li et al. Tell Robot What Not to Do: A Negation Understanding Perspective. 2026. <a href="https://arxiv.org/abs/2610.11952" target="_blank" rel="noopener">arXiv 2610.11952</a></li>
+    <li>Song et al. VLA-Corrector: Stage-Aware Observable State Understanding for Prompt-Based Closed-Loop Recovery of Vision-Language-Action Policies. 2026. <a href="https://arxiv.org/abs/2609.06508" target="_blank" rel="noopener">arXiv 2609.06508</a></li>
+    <li>Li et al. ReViP: Mitigating False Completion in Vision-Language-Action Models with Vision-Proprioception Rebalance. 2026. <a href="https://arxiv.org/abs/2601.16667" target="_blank" rel="noopener">arXiv 2601.16667</a></li>
+    <li>Chi et al. Diffusion Policy: Visuomotor Policy Learning via Action Diffusion. RSS 2023. <a href="https://arxiv.org/abs/2303.04137" target="_blank" rel="noopener">arXiv 2303.04137</a></li>
+    <li>Jones et al. Adversarial Attacks on Robotic Vision Language Action Models. 2025. <a href="https://arxiv.org/abs/2506.03350" target="_blank" rel="noopener">arXiv 2506.03350</a></li>
+    <li>Wang et al. FreezeVLA: Action-Freezing Attacks against Vision-Language-Action Models. 2025. <a href="https://arxiv.org/abs/2509.19870" target="_blank" rel="noopener">arXiv 2509.19870</a></li>
+    <li>Hu et al. VLSA: Vision-Language-Action Models with Plug-and-Play Safety Constraint Layer (AEGIS). 2025. <a href="https://arxiv.org/abs/2512.11891" target="_blank" rel="noopener">arXiv 2512.11891</a></li>
+    <li>Ravichandran et al. Safety Guardrails for LLM-Enabled Robots (RoboGuard). 2025. <a href="https://arxiv.org/abs/2503.07885" target="_blank" rel="noopener">arXiv 2503.07885</a></li>
+    <li>Yang et al. Plug in the Safety Chip: Enforcing Constraints for LLM-driven Robot Agents. 2023. <a href="https://arxiv.org/abs/2309.09919" target="_blank" rel="noopener">arXiv 2309.09919</a></li>
+    <li>Kwon et al. What Can One Sentence Fix? A Failure Taxonomy and a Minimal Language Correction for Frozen VLA Policies. 2026. <a href="https://arxiv.org/abs/2608.29967" target="_blank" rel="noopener">arXiv 2608.29967</a></li>
+    <li>Lynch et al. Interactive Language: Talking to Robots in Real Time. 2022. <a href="https://arxiv.org/abs/2210.06407" target="_blank" rel="noopener">arXiv 2210.06407</a></li>
+  </ol>
+  </details>
+  <p class="foot zh">本节依据 docs/literature/reports/ 下的文献报告和五份检索笔记（2026-10-31）。检索由 Claude 分五路完成，不是人工检索。笔记里标为推断、只在图里或只见过搜索摘要的数字没有放进本节，ISO 标准的内容来自二手摘要。我们自己的数字来自 HIL_SUITE_REPORT、V5_HIL_REPORT 和 V5_DETOUR_REPORT。</p>
+  <p class="foot en">This section draws on the literature report and five search notes under docs/literature/reports/ and research_notes/ (31 Oct 2026). The search was done by Claude in five strands, not by a person. Numbers the notes mark as inferred, read only from figures or seen only in search summaries are left out of this section; the ISO content comes from secondary summaries. Our own numbers come from HIL_SUITE_REPORT, V5_HIL_REPORT and V5_DETOUR_REPORT.</p>
 </section>
 
 <section id="sync">
