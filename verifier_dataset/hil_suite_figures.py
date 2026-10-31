@@ -4,10 +4,12 @@ python -m verifier_dataset.hil_suite_figures OUT_DIR --switch POLICY=BRANCH_ROOT
 HIL_SUITE_SWITCH.png (stage 1: B success after a mid-task switch to another trained instruction, by switch time, with
 the t = 0 ceiling, per group and policy), HIL_SUITE_COMMANDS.png (stage 2: share of runs that did what the untrained
 command asked, and A completion relative to C0, per suite), HIL_SUITE_PHYSICAL.png (stage 3 recovery) and
-HIL_SUITE_PROBE.png (stage 5 prompt sensitivity by progress).
+HIL_SUITE_PROBE.png (stage 5 prompt sensitivity by progress) and, from pi0.5's switch run and the physical run,
+HIL_SUITE_OVERVIEW.png (spoken interventions: share that did what was asked; physical ones: share that still finished).
 """
 import argparse
 from pathlib import Path
+from matplotlib.patches import Patch
 from .inventory import read
 from . import hil_suite as S
 from .v5_hil_figures import GRID, INK, INK_2, SERIES, SURFACE, style
@@ -62,7 +64,10 @@ def commands_figure(runs, path):
         for j, (policy, r) in enumerate(readings.items()):
             suites = [s for s in S.SUITES if s in r[c]['suites']]
             xs = [i + (j - (len(readings) - 1) / 2) * width for i in range(len(suites))]
-            ax.bar(xs, [r[c]['suites'][s]['follow'] for s in suites], width * .9, color=SERIES[j % len(SERIES)], label=POLICY.get(policy, policy), zorder=2)
+            follow = [r[c]['suites'][s]['follow'] for s in suites]
+            ax.bar(xs, follow, width * .9, color=SERIES[j % len(SERIES)], label=POLICY.get(policy, policy), zorder=2)
+            for x, v in zip(xs, follow):
+                ax.text(x, v + .02, '%.0f%%' % (100 * v), ha='center', fontsize=6, color=SERIES[j % len(SERIES)])
             ax.scatter(xs, [r[c]['suites'][s]['persist'] for s in suites], marker='_', s=120, color=INK, zorder=3,
                        label='finished A ÷ C0' if j == 0 else None)
         ax.set_xticks(range(len(S.SUITES))); ax.set_xticklabels([SUITE[s] for s in S.SUITES], fontsize=8); ax.set_ylim(0, 1.15)
@@ -100,7 +105,33 @@ def probe_figure(root, path):
                 label='%s: empty prompt' % GROUPS[g].split(' (')[0])
     ax.axhline(1, color=GRID, linewidth=1, linestyle=':'); ax.set_yscale('log')
     ax.set_xlabel('progress of A when probed', fontsize=8, color=INK_2); ax.set_ylabel('first-chunk change ÷ seed noise (median)', fontsize=8, color=INK_2)
-    ax.legend(frameon=False, fontsize=7, labelcolor=INK)
+    ax.legend(frameon=False, fontsize=7, labelcolor=INK, loc='upper left', bbox_to_anchor=(1.02, 1))
+    fig.tight_layout(); fig.savefig(path, facecolor=SURFACE, bbox_inches='tight'); p.close(fig)
+
+
+def overview_figure(branch_root, physical_root, path):
+    p = plt(); r = read(Path(branch_root)/'SUITE_READING.json'); phys = read(Path(physical_root)/'SUITE_READING.json')['stage3']
+    spoken = [('STOP "stop moving … and hold still"', r['stage2']['STOP']['follow']),
+              ('RETURN "… back to its starting position"', r['stage2']['RETURN']['follow']),
+              ('CANCEL "do not <task>, stop doing it now"', r['stage2']['CANCEL']['follow']),
+              ('switch task at 75%: LIBERO-Goal', r['stage1']['1a']['phases']['0.75']['sw_b']),
+              ('switch task at 75%: LIBERO-10 scene 2', r['stage1']['1b']['phases']['0.75']['sw_b'])]
+    names = dict(OBJ='shift the resting target 6 cm', DROP='knock the lifted object out', PUSH='push the arm 10 cm', GOAL='shift the receptacle 6 cm')
+    rows = [(n, e, SERIES[1]) for n, e in spoken] + [(names[c], phys[c]['success'], SERIES[0]) for c in S.PERTURB]
+    fig, ax = p.subplots(figsize=(7.2, 4.0), dpi=200); fig.patch.set_facecolor(SURFACE); style(ax)
+    ys = list(range(len(rows)))[::-1]
+    for y, (n, e, color) in zip(ys, rows):
+        ax.barh(y, e['value'], .62, color=color, zorder=2)
+        if e['interval'] is not None:
+            ax.plot(e['interval'], [y, y], color=INK, linewidth=1, zorder=3)
+        share = '%.1f%%' % (100 * e['value']) if 0 < e['value'] < .01 else '%.0f%%' % (100 * e['value'])
+        ax.text(max(e['value'], (e['interval'] or [0, 0])[1]) + .02, y, '%s  (n=%d)' % (share, e['n']), va='center', fontsize=7, color=INK_2)
+    ax.set_yticks(ys); ax.set_yticklabels([n for n, _, _ in rows], fontsize=7.5); ax.set_xlim(0, 1.18)
+    ax.axhline(len(S.PERTURB) - .5, color=GRID, linewidth=1)
+    ax.legend(handles=[Patch(color=SERIES[1], label='spoken intervention: did what the person asked'),
+                       Patch(color=SERIES[0], label='physical intervention (same instruction): still finished the task')],
+              frameon=False, fontsize=7.5, loc='lower left', bbox_to_anchor=(0, 1.01), labelcolor=INK)
+    ax.set_xlabel('share of runs (π0.5, standard LIBERO)', fontsize=8, color=INK_2); ax.grid(axis='y', visible=False)
     fig.tight_layout(); fig.savefig(path, facecolor=SURFACE, bbox_inches='tight'); p.close(fig)
 
 
@@ -114,3 +145,5 @@ if __name__ == '__main__':
         physical_figure(x.physical, x.out/'HIL_SUITE_PHYSICAL.png')
     if x.probe:
         probe_figure(x.probe, x.out/'HIL_SUITE_PROBE.png')
+    if x.physical and 'pi05_libero' in dict(runs):
+        overview_figure(dict(runs)['pi05_libero'], x.physical, x.out/'HIL_SUITE_OVERVIEW.png')
