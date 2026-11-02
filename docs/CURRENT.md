@@ -1,4 +1,4 @@
-# 当前状态（2026-10-31）
+# 当前状态（2026-11-02）
 
 ## 正在进行：生成式可行性 verifier
 
@@ -6,6 +6,10 @@
 - **用户 2026-10-16 的决定**：
   - V4 的 896 行（224 个四行单元、64 条源轨迹）作为开发数据，直接用于 verifier 训练。
   - 不再要求通过 0.75 的 shortcut 闸门。闸门失败（0.780）如实披露，并作为基线报告。
+- **11-02：论文方向底稿**（[generative_verifier/PAPER_DIRECTIONS.md](generative_verifier/PAPER_DIRECTIONS.md)，双语页面 [PAPER_DIRECTIONS.html](generative_verifier/PAPER_DIRECTIONS.html)，线上 https://claude.ai/artifact/W8q3zbrUkhhoJubzt6E36D）。
+  - **用户**："仔细阅读到目前为止的结果 还有找到的一些文献 现在给我几个接下来可以出论文的方向 我到时候找导师讨论 然后如果这个方法能行 最后的论文会长啥样子……我的导师最近给我的题目是 how robust is vla or vlm in human in the loop"。
+  - **做法**：三轮多代理（6 个读者 → 事实包；7 个提案 + 每方向 3 位核查者 + 排名；前两名各由两位写手、一位编辑、三位批评者（领域主席、数字审计、打开原文查重）写成成稿样貌，修订改为补丁式再核对一轮，中文译文由补丁翻译而来）。所有数字只来自 docs/generative_verifier/*.md 和由它们生成的事实包。只读，没有新执行，不调 API。
+  - **结论**：先写论文 1（VLA 半边，RSS 2027 扩展摘要 12-04，零新 GPU；标题线 "Stop Doesn't Stop"；物理半边改称"状态反应性对照"，不再说"被推会恢复、被叫不停"的不对称；摘要写明 t = 0 混淆和"越晚说分量越轻"），再写论文 2（VLM 半边：判官；三个生死测试 ≈ 73–90 GPU h 先跑；CoRL 2027 仅当 12 月中前加第二类规则或在线门控，否则 IROS / RA-L）；其余五个方向折进前两篇或暂缓。每个 GPU 段、新数据、付费 API、控制器改动仍要用户单独点头；用户尚未选择。
 - **10-31：HIL 发现的文献定位**（报告 [literature/reports/VLA 中途人类干预文献定位.md](literature/reports/VLA%20中途人类干预文献定位.md)，五份检索笔记在 [literature/research_notes/](literature/research_notes/)；精读页 [PAPER_READING.html](generative_verifier/PAPER_READING.html) 第 6 版加了 `#hil-lit`）。
   - **用户**："帮我开始做一点文献调研吧 放在之前有个文献调研的网站 如何去place这个发现呢"。
   - **结论**：约一半已有先例。t = 0 不看指令（LIBERO-PRO、LIBERO-Plus、Grant et al.）；中途换训练过的指令越晚越难（SwitchVLA 2506.03574、ReSteer 2603.17300、Causeway 2609.30913，最强替代解释是 task islands）；物理扰动后恢复（Diffusion Policy、VLA-Corrector 2609.06508）；MotorMind 2609.38078 表 5 已有 π0.5 挪物体 70% vs 换说法 20% 的小样本不对称。没找到先例的：训练外的停下 / 回原点 / 取消、中途加空间规则、同一时刻并排比较说话和动手、按种子噪声归一化的探针，以及"人善意的话不执行"作为在策略外执行的理由。
