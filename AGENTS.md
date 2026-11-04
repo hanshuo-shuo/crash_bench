@@ -120,3 +120,12 @@ access. At most two GPUs; existing Quest publishing and source-dependency rules 
 Completed by 2026-11-04 (LANGUAGE_ABLATION_REPORT.md): 1,240 formal runs, original/empty/random success
 96.75%/50.25%/53.75%; Goal 96%/9%/8%. All integrity checks passed, no API or locked-test access.
 Further seeds, policies or conditions need the user's go-ahead; do not silently rerun this completed batch.
+
+Mechanism pilot (2026-11-04): after discussing with their advisor, the user chose to deepen the HIL line into a mechanism
+study of mid-task switching in pi0.5, and after a literature check said "开始改吧". That approves turning
+docs/generative_verifier/HIL_MECHANISM_IDEA.md into the pilot plan, the P0 state selection (read-only, stage 1 records)
+and the P1 patching code and unit tests (experiments/mechanism/). Each GPU stage (P1 smoke, formal open-loop batch,
+closed-loop runs), any new runner, and the P5 repair intervention each need the user's go-ahead. pi0.5 alone, inference
+only on stored HIL suite inputs. No training, no paid API, no new data, SafeLIBERO test sources untouched, at most two GPUs.
+On 2026-11-04 the user approved the P1 smoke ("跑一下吧"): 24 states, one GPU, open-loop inference on stored inputs via
+experiments/mechanism/launch.py smoke. The formal 240-state batch still needs a separate go-ahead after section 7 is frozen.

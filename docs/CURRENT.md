@@ -2,6 +2,17 @@
 
 ## 正在进行：生成式可行性 verifier
 
+- **11-04：中途切换的机制研究，pilot 方案 + P0 + P1 代码**（[HIL_MECHANISM_IDEA.md](generative_verifier/HIL_MECHANISM_IDEA.md)）。
+  - **背景**：用户和导师讨论后决定把 HIL 做深；用户看过外部评论和文献核对后说"开始改吧"。
+  - **定位**：t = 0 的语言 → 动作接口已有人做过（Goodfire 2610.20750，π0.5 DROID 检查点、只在第一步；Causeway 只在输出层测衰减），只作正对照。
+    空位是：中途状态、同一检查点上成功和失败切换的差别、神经元层面的可证伪解释、不用 re-entry 位姿的选择性修复。
+  - **P0（只读）**：从 HIL 阶段 1 存档选出 240 个切换状态，任务对 1→8（正对照）、7→8（动作差衰减）、2→9（一直弱）× 4 个时点 × 20 个初始布置，不按结果挑。
+  - **探索性 CPU 重读**：阶段 5 按任务对拆开，7→8 的 A/B 动作差约衰减 8 倍，碗换目的地的几对不衰减；合在一起读的 `persists` 掩盖了这一点。
+  - **P1 代码**：`experiments/mechanism/`，在 openpi JAX 原生模型上做接口 / backbone patching 和 gaps。
+    不等长指令按 B 的掩码读 B 的 K/V，并做 RoPE 重旋转。测试：CPU 玩具模型 11 项 + 选状态 / 指标 9 项，全部通过。
+  - **P1 smoke 已获批准**（用户："跑一下吧"；24 个状态，一张 GPU，只推理）。正式批次、闭环和 P5 修复仍要用户单独点头。
+    不训练、不调 API、不碰 SafeLIBERO 测试源。
+
 - **11-04：π0.5 从头语言消融已完成**（[报告](generative_verifier/LANGUAGE_ABLATION_REPORT.md)，[协议](generative_verifier/LANGUAGE_ABLATION_PROTOCOL.md)）。
   用户指出停止 / 回原点 / 绕路是分布外命令，要求在已有任务上改用随机 A–F / + 字符串，看文字有多重要。
   标准 LIBERO 四套 40 任务，各官方初始状态 0–9，原指令 / 空指令 / 随机文字从 t = 0 起给定，
