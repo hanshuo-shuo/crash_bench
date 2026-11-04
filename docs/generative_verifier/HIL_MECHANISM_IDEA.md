@@ -2,10 +2,13 @@
 
 2026-11-04。由同日的 idea 讨论稿改成 pilot 方案。依据是导师讨论、一份外部评论和文献核对（第 2 节）。
 状态：
-- **P0 已完成**：只读已有记录。
-- **P1 smoke 已完成**，读成 `tool_ok`；t = 0 初步读成 `interface_found`（第 11 节）。
-- **第 7 节已冻结**。
-- **240 个状态的正式批次**等用户点头。
+- P0 已完成；P1 smoke 读成 `tool_ok`；第 7 节已冻结。
+- **正式批次已完成**，报告见 [HIL_MECHANISM_REPORT.md](HIL_MECHANISM_REPORT.md)：
+  - P1 `tool_ok`；
+  - P2 `interface_partial`（1→8 在 t = 0 可读状态少）；
+  - R2 `mixed`（失败格全部变淡，成功格 .25 的区间下界 0.86）；
+  - R3 `gap_does_not_predict`。
+- 下一步要用户点头。
 
 ## 0. 批准与边界
 
