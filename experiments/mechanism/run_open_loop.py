@@ -176,9 +176,12 @@ def summarize(root):
         if values:
             best[pair] = max(values)
     backbone_names = sorted({n for r in rows for n in r['backbone']})
+    route, route_cells = M.route_reading(rows)
     summary = dict(
         tool=tool, tool_detail=detail, states=len(rows),
         interface_reading=M.interface_reading(best) if best and tool == 'tool_ok' else None, best_window_f0=best,
+        route_reading=route if tool == 'tool_ok' else None, route_cells=route_cells,
+        switch_auc=M.switch_auc(rows) if tool == 'tool_ok' else None, reading_inits=list(M.READING_INITS),
         native_vs_logged=dict(a_twin_sha_equal=sum(r['native_vs_logged']['a_twin_sha_equal'] for r in rows),
                               b_sha_equal=sum(r['native_vs_logged']['b_sha_equal'] for r in rows),
                               a_twin_linf_max=max(r['native_vs_logged']['a_twin_linf'] for r in rows),
@@ -192,7 +195,7 @@ def summarize(root):
               for p in sorted({r['pair'] for r in rows}) for f in sorted({r['phase'] for r in rows})},
         **provenance())
     write(root/'SUMMARY.json', summary)
-    print(json.dumps({k: summary[k] for k in ('tool', 'tool_detail', 'interface_reading', 'best_window_f0', 'native_vs_logged')},
+    print(json.dumps({k: summary[k] for k in ('tool', 'tool_detail', 'interface_reading', 'best_window_f0', 'route_reading', 'switch_auc', 'native_vs_logged')},
                      indent=1))
     return summary
 

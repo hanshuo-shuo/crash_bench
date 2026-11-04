@@ -100,5 +100,40 @@ class Metrics(unittest.TestCase):
         self.assertEqual(ci['n'], 4); self.assertLessEqual(ci['lo'], ci['median']); self.assertLessEqual(ci['median'], ci['hi'])
 
 
+def rows_for(scale, done=lambda pair, phase, init: True):
+    """Synthetic summary rows: band gap = 1 at f = 0 and scale(pair, phase, init) later (image and text alike)."""
+    rows = []
+    for pair in ('1->8', '7->8', '2->9'):
+        for phase in S.PHASES:
+            for init in range(20):
+                g = 1.0 if phase == 0 else scale(pair, phase, init)
+                rows.append(dict(pair=pair, phase=phase, init=init, b_done=done(pair, phase, init),
+                                 gaps=dict(image=[9.0] * 12 + [g] * 6, text=[1.0] * 18)))
+    return rows
+
+
+class P3Readings(unittest.TestCase):
+    def test_route_fades_only_where_switching_fails(self):
+        fade = lambda pair, phase, init: (1.0 + .01 * init) if pair == '1->8' else .5 + .01 * init
+        reading, cells = M.route_reading(rows_for(fade))
+        self.assertEqual(reading, 'image_route_fades'); self.assertEqual(cells['7->8 f=0.5']['n'], 18)  # inits 0-1 left out
+        self.assertEqual(M.route_reading(rows_for(lambda *a: 1.0))[0], 'image_route_kept')
+        self.assertEqual(M.route_reading(rows_for(lambda p, f, i: .5 if p == '2->9' else 1.0))[0], 'mixed')
+        self.assertEqual(M.route_reading([r for r in rows_for(fade) if r['init'] < 2])[0], 'insufficient')
+
+    def test_band_gap_uses_layers_12_to_17(self):
+        row = dict(gaps=dict(image=[9.0] * 12 + [2.0] * 6)); self.assertEqual(M.band_gap(row), 2.0)
+
+    def test_switch_auc(self):
+        split = lambda pair, phase, init: init % 2 == 0
+        good = M.switch_auc(rows_for(lambda p, f, i: 1.0 + (i % 2 == 0), split))
+        self.assertEqual(good['reading'], 'gap_predicts_switch'); self.assertAlmostEqual(good['auroc'], 1.0)
+        self.assertEqual({c['success'] for c in good['cells']}, {9})
+        flat = M.switch_auc(rows_for(lambda p, f, i: 1.0 + .001 * i, split))
+        self.assertEqual(flat['reading'], 'gap_does_not_predict')
+        self.assertEqual(M.switch_auc(rows_for(lambda *a: 1.0))['reading'], 'insufficient')
+        self.assertAlmostEqual(M.auroc([1, 2], [0, 2]), .625)
+
+
 if __name__ == '__main__':
     unittest.main()
