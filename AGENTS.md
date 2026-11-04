@@ -129,3 +129,6 @@ closed-loop runs), any new runner, and the P5 repair intervention each need the 
 only on stored HIL suite inputs. No training, no paid API, no new data, SafeLIBERO test sources untouched, at most two GPUs.
 On 2026-11-04 the user approved the P1 smoke ("跑一下吧"): 24 states, one GPU, open-loop inference on stored inputs via
 experiments/mechanism/launch.py smoke. The formal 240-state batch still needs a separate go-ahead after section 7 is frozen.
+After the smoke read tool_ok and section 7 was frozen (3fb6a44), the user approved the formal open-loop batch on
+2026-11-04 ("开始跑吧"): 240 states, two GPUs, launch.py formal with the smoke root. P2b closed-loop, further P3 tools,
+P4 neurons and P5 still each need a separate go-ahead.
