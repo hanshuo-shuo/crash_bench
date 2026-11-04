@@ -64,4 +64,4 @@ export SINGULARITYENV_PYTHONPATH="$CB_UPSTREAM/openpi/packages/openpi-client/src
 if [ "$PHASE" = smoke ]; then ARGS=(--smoke --port "$PORT"); else ARGS=(--phase "$PHASE" --shard "$SHARD" --shards "${CB_SUITE_SHARDS:?}" --port "$PORT"); fi
 singularity exec --nv --bind "/projects,/home,$ROOT:$ROOT:rw,$SOURCE:$SOURCE:ro" \
  "$CB_ASSETS/containers/aegis-py38.sif" "$CB_ASSETS/envs/aegis_sim/bin/python" \
- -u -m verifier_dataset.hil_suite_run "$ROOT" "${ARGS[@]}"
+ -u -m "${CB_SUITE_RUNNER:-verifier_dataset.hil_suite_run}" "$ROOT" "${ARGS[@]}"

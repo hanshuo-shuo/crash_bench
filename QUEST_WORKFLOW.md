@@ -23,6 +23,12 @@ Quest 的通道，不代表某个项目；真正的项目隔离由 **Quest 目�
 
 ## 每次开始时，你只需要做一件事
 
+若 Codex 会话已经在 Quest 的 `quser*` / `qlogin*` 登录节点、且当前目录就是规范的
+`$HOME/crash_bench`，可显式使用 `QUEST_LOCAL=1 scripts/quest_sync.sh check`，
+后续 `queue / push / exec` 同样加该环境变量。这会直接在当前 Quest checkout 操作，
+仍核对主机、规范路径、origin、干净状态和已发布提交，不需要回连 SSH。
+本机工作流默认不变。`pull-result` 等跨主机传输命令仍只用于默认 SSH 模式。
+
 在本机终端完成密码/Duo 认证并建立统一连接：
 
 ```bash

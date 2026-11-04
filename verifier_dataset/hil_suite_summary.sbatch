@@ -25,4 +25,4 @@ export SINGULARITYENV_MUJOCO_GL=glx SINGULARITYENV_PYOPENGL_PLATFORM=glx
 export SINGULARITYENV_PYTHONPATH="$HOME/crash_bench/third_party/vlsa-aegis/openpi/packages/openpi-client/src"
 singularity exec --bind "/projects,/home,$ROOT:$ROOT:rw,$ROOT/source:$ROOT/source:ro" \
  /projects/p33100/siosio/crashbench_safelibero/containers/aegis-py38.sif \
- /projects/p33100/siosio/crashbench_safelibero/envs/aegis_sim/bin/python -u -m verifier_dataset.hil_suite_run "$ROOT" "--${CB_SUITE_SUMMARY:?}"
+ /projects/p33100/siosio/crashbench_safelibero/envs/aegis_sim/bin/python -u -m "${CB_SUITE_RUNNER:-verifier_dataset.hil_suite_run}" "$ROOT" "--${CB_SUITE_SUMMARY:?}"

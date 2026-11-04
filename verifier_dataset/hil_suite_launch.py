@@ -38,7 +38,7 @@ def checkpoint_path(policy):
     return dict(openvla_oft=OFT_CHECKPOINT, pi0_libero=PI0_CHECKPOINT).get(policy, str(ASSETS/'openpi_assets/openpi-assets/checkpoints'/policy))
 
 
-def prepare(stage, policy, repo):
+def prepare(stage, policy, repo, *, protocol=PROTOCOL, authorization=None, family='hil_suite'):
     if repo != (Path.home()/'crash_bench').resolve():
         raise RuntimeError('Wrong project checkout')
     if command('git', 'status', '--porcelain', '--untracked-files=all'):
@@ -54,7 +54,7 @@ def prepare(stage, policy, repo):
     libero = repo/'third_party/LIBERO'
     if command('git', '-C', str(libero), 'rev-parse', 'HEAD') != LIBERO_COMMIT or command('git', '-C', str(libero), 'status', '--porcelain', '--untracked-files=no'):
         raise RuntimeError('LIBERO checkout changed')
-    root = ASSETS/'hil_suite'/('%s_%s_%s_%s' % (datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ'), stage, policy, commit[:12]))
+    root = ASSETS/family/('%s_%s_%s_%s' % (datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ'), stage, policy, commit[:12]))
     root.mkdir(parents=True, exist_ok=False); (root/'source').mkdir()
     with (root/'source.tar').open('wb') as stream:
         subprocess.run(['git', 'archive', commit], stdout=stream, check=True)
@@ -65,7 +65,8 @@ def prepare(stage, policy, repo):
                     policy=policy, policy_checkpoint=checkpoint_path(policy), replan_steps=S.REPLANS[policy],
                     oft_commit=OFT_COMMIT if policy == 'openvla_oft' else None,
                     seed='per prefix: hil_suite.policy_seed (salt %s), shared by every branch of the prefix' % S.SEED_SALT,
-                    env_seed=S.ENV_SEED, protocol=PROTOCOL, protocol_sha256=sha(repo/PROTOCOL), authorization=AUTHORIZATION + '; ' + DETAIL[stage],
+                    env_seed=S.ENV_SEED, protocol=protocol, protocol_sha256=sha(repo/protocol),
+                    authorization=authorization if authorization is not None else AUTHORIZATION + '; ' + DETAIL[stage],
                     api_calls=0, account='p33100')
     return root, manifest
 

@@ -12,6 +12,7 @@ QUEST_HOST="${QUEST_HOST:-quest.northwestern.edu}"
 QUEST_REMOTE_DIR="${QUEST_REMOTE_DIR:-crash_bench}"
 QUEST_SOCKET="${QUEST_SOCKET:-/tmp/quest.sock}"
 EXPECTED_GITHUB_REPO="hanshuo-shuo/crash_bench"
+QUEST_LOCAL="${QUEST_LOCAL:-0}"
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SSH_OPTS=(-S "$QUEST_SOCKET" -o BatchMode=yes -o ConnectTimeout=10)
@@ -38,6 +39,7 @@ Commands:
 
 Environment overrides:
   QUEST_HOST, QUEST_REMOTE_DIR, QUEST_SOCKET
+  QUEST_LOCAL=1 runs in the existing Quest checkout without SSH (Quest login nodes only).
 
 push never rsyncs the project tree. It requires local HEAD to be published to its
 upstream and advances a clean Quest checkout through Git. Ignored envs/, third_party/,
@@ -51,6 +53,11 @@ die() {
 }
 
 check_connection() {
+  if [[ "$QUEST_LOCAL" == 1 ]]; then
+    [[ "$(hostname -s)" =~ ^(quser|qlogin)[0-9]+$ ]] || die "local mode requires a Quest login node"
+    [[ "$ROOT" == "$(cd "$HOME/crash_bench" && pwd -P)" ]] || die "local mode requires the canonical Quest checkout"
+    return
+  fi
   [[ -S "$QUEST_SOCKET" ]] || die "SSH socket not found: $QUEST_SOCKET"
   ssh "${SSH_OPTS[@]}" "$QUEST_HOST" true \
     || die "Quest connection unavailable; authenticate the SSH master session first"
@@ -74,6 +81,10 @@ origin_matches_project() {
 
 remote_in_project() {
   local command="$1"
+  if [[ "$QUEST_LOCAL" == 1 ]]; then
+    (cd "$ROOT" && bash -c "$command")
+    return
+  fi
   ssh "${SSH_OPTS[@]}" "$QUEST_HOST" \
     "cd \"\$HOME/$QUEST_REMOTE_DIR\" && $command"
 }
@@ -89,7 +100,11 @@ check_project_identity() {
   origin_matches_project "$local_origin" \
     || die "local origin is not $EXPECTED_GITHUB_REPO: $local_origin"
 
-  remote_home="$(ssh "${SSH_OPTS[@]}" "$QUEST_HOST" 'cd "$HOME" && pwd -P')"
+  if [[ "$QUEST_LOCAL" == 1 ]]; then
+    remote_home="$(cd "$HOME" && pwd -P)"
+  else
+    remote_home="$(ssh "${SSH_OPTS[@]}" "$QUEST_HOST" 'cd "$HOME" && pwd -P')"
+  fi
   remote_pwd="$(remote_in_project 'pwd -P')"
   [[ "$remote_pwd" == "$remote_home/$QUEST_REMOTE_DIR" ]] \
     || die "unexpected Quest project path: $remote_pwd"
@@ -204,7 +219,7 @@ case "$command" in
   queue)
     check_connection
     check_project_identity
-    ssh "${SSH_OPTS[@]}" "$QUEST_HOST" 'squeue -u "$USER"'
+    remote_in_project 'squeue -u "$USER"'
     ;;
   exec)
     [[ -n "${2:-}" ]] || die "exec expects one quoted command"

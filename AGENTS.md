@@ -110,3 +110,10 @@ All ran by 2026-10-31 (docs/generative_verifier/HIL_SUITE_REPORT.md): pi0.5 stag
 (H1 holds for both; pi0.5 weak form, OFT strong form; pi0.5 recovers from all four physical interventions). pi0 read
 env_suspect at stage 0 (LIBERO-10 0.84 < 0.85), so by the frozen rule its branches were not run; running them, OFT
 stages 3/5, or an online gate with an outside executor each need the user's go-ahead.
+
+Language ablation (2026-11-03): the user requested testing whether task language matters by replacing existing-task
+instructions with randomly generated A/B/C/D/E/F/+ strings. Execute the current pi0.5 on unchanged standard LIBERO's
+40 tasks, from t=0: original / empty / random prompts, 10 initial states per task, plus 40 original-prompt repeats.
+The 16-run pipeline smoke, protocol freeze, formal 1,240 runs and report are within this request's scope
+(docs/generative_verifier/LANGUAGE_ABLATION_PROTOCOL.md). No paid API, verifier, training, new layouts or locked-test
+access. At most two GPUs; existing Quest publishing and source-dependency rules still apply.
