@@ -16,7 +16,12 @@ from . import language_ablation as A
 
 
 def run_one(root, index, port):
-    unit = read(root/'PLAN.json')['units'][index]
+    plan = read(root/'PLAN.json')
+    if plan['mode'] == 'formal':
+        gate = read(root/'GATE.json')
+        if not gate['passed'] or gate['formal_plan_sha256'] != sha(root/'PLAN.json'):
+            raise RuntimeError('Formal inference requires a passed integrity gate for this exact plan')
+    unit = plan['units'][index]
     folder = root/'run'/unit['id']; folder.mkdir(parents=True, exist_ok=False)
     physical_hash = R.configure(root); started = time.monotonic(); env = client = None
     try:

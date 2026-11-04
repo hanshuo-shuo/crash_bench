@@ -1,6 +1,7 @@
 # 从头不给任务信息：π0.5 的语言消融
 
-2026-11-03。状态：草稿，GPU smoke 后冻结再跑正式批次。
+2026-11-03。状态：已冻结。单元测试通过后、任何 GPU 执行前冻结设置和统计。
+GPU smoke 仅检查管线；通过完整性 gate 后自动启动正式批次，不据 smoke 成功率修改设计。
 
 ## 1. 用户问题与授权
 
@@ -9,7 +10,7 @@
 “在现有的任务上……给它一些 random 的指令……先做一个这样子的一个实验吧”。
 
 本次执行范围：当前 π0.5 `pi05_libero`，原指令 / 空指令 / 随机字符，从 t = 0 起给定，
-小规模管线 smoke 后冻结，正式评测和报告。标准 LIBERO 四套 40 个已有任务，
+冻结设计，小规模管线 smoke、完整性 gate、正式评测和报告。标准 LIBERO 四套 40 个已有任务，
 不改场景、不加任务，不训练、不接 verifier、不调付费 API。最多两张 A100。
 本实验不读 SafeLIBERO 源轨迹或 V4/V5 锁定测试集。
 
@@ -98,10 +99,20 @@ smoke 不按成功率挑参数或重选任务，不用它选择随机文本。�
 输出根 `/projects/p33100/siosio/crashbench_safelibero/language_ablation/`；
 每次独立源码快照、配置、提示银行、逐次轨迹 / 服务端记录及哈希、配对表和汇总。
 
-smoke：`python -m verifier_dataset.language_ablation_launch smoke`。
-成功后填第 8 节并冻结发布，再 `python -m verifier_dataset.language_ablation_launch formal SMOKE_ROOT`。
-报告写 `LANGUAGE_ABLATION_REPORT.md`。正式阶段只在 smoke 完整性通过后启动。
+自动流水线：`python -m verifier_dataset.language_ablation_launch pipeline`。
+在登录节点先从同一个已发布提交创建 smoke 和正式运行的独立源码快照，
+再提交 smoke（1 张 GPU）→ CPU 完整性 gate → 正式 array（4 分片、最多 2 张 GPU 同时运行）→ CPU 汇总 / 报告。
+每分片最多 8 小时；分成四片是为避免旧 HIL 批次遇到的慢节点触及单作业时限。
+正式作业虽预先进入队列，只有 gate 成功才能开始；运行器也要求本计划哈希对应的 `GATE.json`。
+无效依赖自动取消；smoke 或 gate 失败不会执行正式推理。计算节点无需 Git 或网络。
+作业活跃期间不改 checkout。报告自动写到正式输出根 `REPORT.md`，本地 results 内有链接。
+完成后再把 smoke 和最终报告归档到本文第 8 节与 `LANGUAGE_ABLATION_REPORT.md`。
+
+亦可分别 `...language_ablation_launch smoke` 和 `...language_ablation_launch formal SMOKE_ROOT`。
 
 ## 8. GPU smoke 与冻结
 
-待填。smoke 前不声称任何结果。
+第一个提交 `bdf07b4` 的 smoke 作业 `7108220` 仅排队，未开始（Elapsed 0），
+为改成上述完整依赖流水线主动取消，原目录保留：
+`20261104T003117Z_smoke_pi05_libero_bdf07b490e19`。没有看过任何 GPU 结果。
+本版在正式 smoke 之前冻结全部读数；后续不改阈值或按结果调参数。

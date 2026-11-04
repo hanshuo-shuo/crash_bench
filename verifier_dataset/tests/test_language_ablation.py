@@ -1,8 +1,12 @@
 from collections import Counter
 from pathlib import Path
+import tempfile
 import unittest
+from unittest.mock import patch
 from verifier_dataset import hil_suite as S
 from verifier_dataset import language_ablation as A
+from verifier_dataset import language_ablation_gate as G
+from verifier_dataset.inventory import read, sha, write
 
 ROOT = Path(__file__).resolve().parents[2]
 NAMES = S.task_names((ROOT/'third_party/LIBERO/libero/libero/benchmark/libero_suite_task_map.py').read_text())
@@ -74,6 +78,42 @@ class Statistics(unittest.TestCase):
         self.assertIsNone(stats['contrasts']['EMPTY']['ratio']['value'])
         self.assertIsNone(stats['contrasts']['EMPTY']['ratio']['ci'])
         self.assertEqual(stats['contrasts']['EMPTY']['difference']['value'], 1.)
+
+
+class IntegrityGate(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory(); self.addCleanup(self.tmp.cleanup)
+        self.base = Path(self.tmp.name); self.smoke = self.base/'language_ablation/smoke'; self.formal = self.base/'language_ablation/formal'
+        self.smoke.mkdir(parents=True); self.formal.mkdir()
+        campaign = dict(policy='pi05_libero', code_commit='commit', protocol_sha256='protocol', upstream_commit='upstream',
+                        libero_commit='libero', policy_checkpoint='checkpoint')
+        for root, mode in ((self.smoke, 'smoke'), (self.formal, 'formal')):
+            write(root/'PLAN.json', dict(mode=mode, units=A.plan(NAMES, mode), smoke_root=str(self.smoke) if mode == 'formal' else None))
+            write(root/'CAMPAIGN.json', campaign); write(root/'NAMES.json', NAMES)
+        write(self.smoke/'COMPLETE.json', dict(passed=True, mode='smoke', runs=16, states=4))
+        write(self.smoke/'SUMMARY.json', {}); (self.smoke/'RUNS.jsonl.gz').write_bytes(b'fixture')
+        write(self.smoke/'HASHES.json', {n: sha(self.smoke/n) for n in ('PLAN.json', 'COMPLETE.json', 'SUMMARY.json', 'RUNS.jsonl.gz')})
+        self.mock = patch.object(G, 'ASSETS', self.base); self.mock.start(); self.addCleanup(self.mock.stop)
+
+    def test_only_completed_matching_smoke_admits_exact_formal_plan(self):
+        G.validate(self.smoke, self.formal)
+        gate = read(self.formal/'GATE.json')
+        self.assertTrue(gate['passed']); self.assertEqual(gate['formal_plan_sha256'], sha(self.formal/'PLAN.json'))
+        plan = read(self.formal/'PLAN.json'); plan['units'][0]['prompt'] = 'changed after freezing'
+        write(self.formal/'PLAN.json', plan)
+        with self.assertRaises(RuntimeError): G.validate(self.smoke, self.formal)
+
+    def test_corrupted_smoke_cannot_admit_formal(self):
+        write(self.smoke/'SUMMARY.json', dict(changed=True))
+        with self.assertRaises(RuntimeError): G.validate(self.smoke, self.formal)
+
+    def test_failure_or_changed_policy_cannot_admit_formal(self):
+        campaign = read(self.formal/'CAMPAIGN.json'); campaign['policy'] = 'other'
+        write(self.formal/'CAMPAIGN.json', campaign)
+        with self.assertRaises(RuntimeError): G.validate(self.smoke, self.formal)
+        campaign['policy'] = 'pi05_libero'; write(self.formal/'CAMPAIGN.json', campaign)
+        write(self.smoke/'STOP_test.json', dict(failed=True))
+        with self.assertRaises(RuntimeError): G.validate(self.smoke, self.formal)
 
 
 if __name__ == '__main__':

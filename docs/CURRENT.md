@@ -2,10 +2,12 @@
 
 ## 正在进行：生成式可行性 verifier
 
-- **11-03：π0.5 从头语言消融，准备 smoke**（[协议](generative_verifier/LANGUAGE_ABLATION_PROTOCOL.md)）。
+- **11-03：π0.5 从头语言消融，自动流水线**（[协议](generative_verifier/LANGUAGE_ABLATION_PROTOCOL.md)）。
   用户指出停止 / 回原点 / 绕路是分布外命令，要求在已有任务上改用随机 A–F / + 字符串，看文字有多重要。
   当前范围：标准 LIBERO 四套 40 任务，各官方初始状态 0–9，原指令 / 空指令 / 随机文字从 t = 0 起给定，
-  共 1,200 次，另 40 次原指令重复执行。smoke 用每套 task 0 的状态 40，共 16 次，之后冻结再正式运行。
+  共 1,200 次，另 40 次原指令重复执行。GPU 执行前冻结设置；smoke 用每套 task 0 的状态 40，共 16 次，
+  CPU gate 验证完整性后才启动正式 array，随后自动汇总并生成报告。首个排队 smoke 7108220 未运行即取消，目录保留。
+  最新提交回执 / 作业编号见 `results/language_ablation/*/RECEIPT.json`；自动报告在正式运行根的 `REPORT.md`（results 内有链接）。
   沿用 π0.5、原场景 / 任务 / 检查点，最多两张 GPU，无 API、不读锁定测试。结果按套件和任务分别报告。
   随机文字本身也分布外，本实验测已有任务的语言依赖程度，不能直接消除旧 HIL 命令的分布外解释。
 
