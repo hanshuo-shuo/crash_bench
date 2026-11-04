@@ -117,3 +117,6 @@ instructions with randomly generated A/B/C/D/E/F/+ strings. Execute the current 
 The 16-run pipeline smoke, protocol freeze, formal 1,240 runs and report are within this request's scope
 (docs/generative_verifier/LANGUAGE_ABLATION_PROTOCOL.md). No paid API, verifier, training, new layouts or locked-test
 access. At most two GPUs; existing Quest publishing and source-dependency rules still apply.
+Completed by 2026-11-04 (LANGUAGE_ABLATION_REPORT.md): 1,240 formal runs, original/empty/random success
+96.75%/50.25%/53.75%; Goal 96%/9%/8%. All integrity checks passed, no API or locked-test access.
+Further seeds, policies or conditions need the user's go-ahead; do not silently rerun this completed batch.
