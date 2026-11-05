@@ -148,6 +148,153 @@ class Patching(unittest.TestCase):
         self.assertEqual(len(names), 19); self.assertEqual(int(layer[0]), -1)
 
 
+class Steering(unittest.TestCase):
+    """patching.steer_cache / Patcher.steer (closed-loop intervention) on the toy."""
+
+    @classmethod
+    def setUpClass(cls):
+        from openpi.policies import policy as policy_module
+        cls.config, cls.model = toy()
+        cls.policy = policy_module.Policy(cls.model)
+        cls.patcher = P.Patcher(cls.policy)
+        rng = np.random.default_rng(1)
+        cls.a = data(cls.config, rng.integers(2, 1000, TOKENS), 8)
+        cls.b = data(cls.config, rng.integers(2, 1000, TOKENS), 6)
+        cls.layers = np.isin(np.arange(cls.patcher.depth), [0, 1])
+        cls.sample = jax.random.split(jax.random.key(835866137))[1]
+        cls.direction = jax.random.key(5)
+
+    def steer(self, scale, mode, layers=None, old=None):
+        return self.patcher.steer(self.b, self.a if old is None else old, self.sample, self.layers if layers is None else layers,
+                                  scale, mode, self.direction)
+
+    def test_scale_zero_is_openpis_policy_infer_on_the_running_prompt(self):
+        plain, stats = self.steer(0., P.AMPLIFY)
+        self.policy._rng = jax.random.key(835866137)
+        np.testing.assert_allclose(plain, self.policy.infer(self.b)['actions'], atol=2e-5, rtol=0)
+        self.assertEqual(stats[0], 0); self.assertEqual(stats[3], 0); self.assertGreater(stats[1], 0); self.assertGreater(stats[4], 0)
+        np.testing.assert_array_equal(self.steer(0., P.RANDOM)[0], plain)
+
+    def test_amplify_and_random_move_by_the_same_norm_and_change_the_actions(self):
+        plain, _ = self.steer(0., P.AMPLIFY)
+        amp, s_amp = self.steer(3., P.AMPLIFY); rand, s_rand = self.steer(3., P.RANDOM)
+        for s in (s_amp, s_rand):
+            np.testing.assert_allclose([s[0], s[3]], [3 * s[1], 3 * s[4]], rtol=1e-5)
+        np.testing.assert_allclose(s_amp[[1, 2, 4, 5]], s_rand[[1, 2, 4, 5]], rtol=0)
+        self.assertGreater(np.abs(amp - plain).max(), 1e-4); self.assertGreater(np.abs(rand - plain).max(), 1e-4)
+        self.assertGreater(np.abs(amp - rand).max(), 1e-4)
+        np.testing.assert_array_equal(self.patcher.steer(self.b, self.a, self.sample, self.layers, 3., P.RANDOM, jax.random.key(5))[0], rand)
+
+    def test_no_layers_or_the_same_prompt_is_a_no_op(self):
+        plain, _ = self.steer(0., P.AMPLIFY)
+        np.testing.assert_array_equal(self.steer(3., P.AMPLIFY, layers=np.zeros(self.patcher.depth, bool))[0], plain)
+        same, stats = self.steer(3., P.RANDOM, old=self.b)
+        np.testing.assert_array_equal(same, plain); self.assertEqual(stats[0], 0); self.assertEqual(stats[1], 0)
+
+    def test_steer_cache_touches_only_the_valid_image_rows_of_the_chosen_layers(self):
+        shape = (3, 1, 6, 1, 4)
+        donor = dict(k=jax.random.normal(jax.random.key(1), shape), v=jax.random.normal(jax.random.key(2), shape),
+                     mask=jnp.asarray([[True, True, False, True, True, False]]))
+        base = dict(k=jax.random.normal(jax.random.key(3), shape), v=jax.random.normal(jax.random.key(4), shape), mask=donor['mask'])
+        image = jnp.asarray([True, True, True, False, False, False]); layers = jnp.asarray([False, True, False])
+        k, v, stats = P.steer_cache(donor, base, layers, image, 2., P.AMPLIFY, jax.random.key(0))
+        changed = np.zeros(shape[:3], bool); changed[1, 0, :2] = True
+        for x, y, z in ((k, donor['k'], base['k']), (v, donor['v'], base['v'])):
+            np.testing.assert_array_equal(np.asarray(x)[~changed], np.asarray(y)[~changed])
+            np.testing.assert_allclose(np.asarray(x)[changed], 3 * np.asarray(y)[changed] - 2 * np.asarray(z)[changed], rtol=1e-6)
+        k, v, stats = P.steer_cache(donor, base, layers, image, 2., P.RANDOM, jax.random.key(0))
+        moved = np.linalg.norm(np.asarray(k - donor['k']), axis=-1)[..., 0]
+        np.testing.assert_allclose(moved[changed], 2 * np.linalg.norm(np.asarray(donor['k'] - base['k']), axis=-1)[..., 0][changed], rtol=1e-5)
+        np.testing.assert_array_equal(moved[~changed], 0)
+
+
+class SteeringServer(unittest.TestCase):
+    """serve_steer.SteeredPolicy on the toy behind a LIBERO-shaped input transform."""
+
+    @classmethod
+    def setUpClass(cls):
+        import tempfile
+        from openpi.policies import policy as policy_module
+        import serve_steer
+        cls.config, model = toy()
+        cls.policy = policy_module.Policy(model, transforms=[libero_like(cls.config)], output_transforms=[lambda d: dict(d, actions=d['actions'][:, :7])])
+        cls.tmp = tempfile.TemporaryDirectory()
+        cls.server = serve_steer.SteeredPolicy(cls.policy, P.Patcher(cls.policy), cls.tmp.name)
+        rng = np.random.default_rng(3)
+        cls.obs = {'observation/image': rng.integers(0, 255, (224, 224, 3), dtype=np.uint8),
+                   'observation/wrist_image': rng.integers(0, 255, (224, 224, 3), dtype=np.uint8),
+                   'observation/state': rng.normal(size=8), 'prompt': 'put the bowl on the plate'}
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.server.close(); cls.tmp.cleanup()
+
+    def arm(self, kind='native', lam=1.):
+        return dict(name=kind, kind=kind, lam=lam, layers=[0, 1], prompt_a='turn on the stove', direction_seed=9)
+
+    def requests(self, run_id, arm, n=2, seed=77):
+        ack = self.server.infer({'__paired_reset_rng__': seed, 'run_id': run_id, '__mech_arm__': arm})
+        self.assertEqual(ack['arm'], arm); self.assertEqual(ack['requests'], 0)
+        return [self.server.infer(dict(self.obs)) for _ in range(n)]
+
+    def log(self, run_id):
+        with open(Path(self.tmp.name)/(run_id + '.jsonl')) as stream:
+            return [json.loads(x) for x in stream]
+
+    def test_native_arm_follows_policy_infer_request_by_request(self):
+        out = self.requests('native_run', self.arm())
+        self.policy._rng = jax.random.key(77); keys = []
+        for r in out:
+            keys.append(np.asarray(jax.random.key_data(self.policy._rng), '<u4').tobytes().hex())
+            np.testing.assert_allclose(r['actions'], self.policy.infer(dict(self.obs))['actions'], atol=2e-5, rtol=0)
+        self.assertEqual([r['diagnostic']['rng_before'] for r in out], keys)
+        self.assertEqual([r['diagnostic']['request_index'] for r in out], [1, 2])
+        log = self.log('native_run')
+        self.assertEqual(len(log), 2); self.assertLess(log[0]['fidelity_linf'], 2e-5); self.assertEqual(log[0]['first_shift_linf'], 0)
+        self.assertEqual(log[0]['delta_k'], 0); self.assertGreater(log[0]['diff_v'], 0)
+
+    def test_steered_arms_share_the_noise_and_move_by_lam_minus_one(self):
+        native = self.requests('twin_native', self.arm())
+        amp = self.requests('twin_amp', self.arm('amp', 3.))
+        self.assertEqual([r['diagnostic']['rng_after'] for r in amp], [r['diagnostic']['rng_after'] for r in native])
+        log = self.log('twin_amp')
+        self.assertGreater(log[0]['first_shift_linf'], 0)
+        for e in log:
+            self.assertAlmostEqual(e['delta_k'] / e['diff_k'], 2., places=4); self.assertAlmostEqual(e['delta_v'] / e['diff_v'], 2., places=4)
+        np.testing.assert_allclose(log[0]['plain_actions'], native[0]['actions'], atol=0, rtol=0)
+
+    def test_rejects_bad_arms_resets_and_prompts(self):
+        import serve_steer
+        with self.assertRaises(ValueError):
+            self.server.infer({'__paired_reset_rng__': 1, 'run_id': 'no_arm'})
+        for bad in (dict(self.arm(), lam=2.), dict(self.arm('amp', 1.)), dict(self.arm(), layers=[1, 0]), dict(self.arm(), layers=[99]),
+                    dict(self.arm(), extra=1), dict(self.arm('amp', 2)), dict(self.arm(), kind='other')):
+            with self.assertRaises(ValueError):
+                serve_steer.check_arm(bad, 18)
+        self.server.infer({'__paired_reset_rng__': 1, 'run_id': 'same_prompt', '__mech_arm__': self.arm()})
+        with self.assertRaises(RuntimeError):
+            self.server.infer(dict(self.obs, prompt='turn on the stove'))
+        with self.assertRaises(FileExistsError):
+            self.server.infer({'__paired_reset_rng__': 1, 'run_id': 'same_prompt', '__mech_arm__': self.arm()})
+
+    def test_warm_up_restores_the_rng(self):
+        import serve_steer
+        self.server.infer({'__paired_reset_rng__': 5, 'run_id': 'warm', '__mech_arm__': self.arm()})
+        before = self.server.key(); self.server.warm_up(serve_steer.example_input()); self.assertEqual(self.server.key(), before)
+
+
+def libero_like(config):
+    """A LIBERO-shaped input transform for the toy: words hashed to token ids, the two cameras, the state padded."""
+    def to_model(d):
+        words = d['prompt'].split()
+        prompt = np.zeros(TOKENS, np.int32); prompt[:len(words)] = [(sum(map(ord, w)) % 900) + 2 for w in words]
+        state = np.zeros(config.action_dim, np.float32); state[:8] = d['observation/state']
+        return dict(image={'base_0_rgb': d['observation/image'], 'left_wrist_0_rgb': d['observation/wrist_image'],
+                           'right_wrist_0_rgb': np.zeros_like(d['observation/image'])},
+                    image_mask={'base_0_rgb': np.True_, 'left_wrist_0_rgb': np.True_, 'right_wrist_0_rgb': np.False_},
+                    state=state, tokenized_prompt=prompt, tokenized_prompt_mask=np.arange(TOKENS) < len(words))
+    return to_model
+
 class Runner(unittest.TestCase):
     """run_open_loop.run_state and summarize end to end on the toy, behind a LIBERO-shaped input transform."""
 

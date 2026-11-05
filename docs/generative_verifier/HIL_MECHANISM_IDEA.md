@@ -8,7 +8,7 @@
   - P2 `interface_partial`（1→8 在 t = 0 可读状态少）；
   - R2 `mixed`（失败格全部变淡，成功格 .25 的区间下界 0.86）；
   - R3 `gap_does_not_predict`。
-- 下一步要用户点头。
+- 下一步要用户点头。用户选了第 1 项闭环因果检验（"先做第一项吧"），方案见 [HIL_MECHANISM_CLOSED_LOOP.md](HIL_MECHANISM_CLOSED_LOOP.md)。
 
 ## 0. 批准与边界
 

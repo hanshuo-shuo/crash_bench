@@ -96,12 +96,17 @@ def observation(obs, prompt, suite):
 
 
 class Client:
-    """The policy stream for one run, with the RNG reset and the per-request identity checks of the HIL runner."""
-    def __init__(self, port, seed, run_id):
+    """The policy stream for one run, with the RNG reset and the per-request identity checks of the HIL runner. A unit's
+    `arm` (mechanism pilot, experiments/mechanism/serve_steer.py) rides on the reset and must be acknowledged unchanged."""
+    def __init__(self, port, seed, run_id, arm=None):
         from openpi_client.websocket_client_policy import WebsocketClientPolicy
         self.client = WebsocketClientPolicy('127.0.0.1', port); self.run_id = run_id; self.requests = []
-        self.ack = self.client.infer({'__paired_reset_rng__': seed, 'run_id': run_id})
-        if self.ack.get('seed') != seed or self.ack.get('run_id') != run_id or self.ack.get('requests') != 0:
+        reset = {'__paired_reset_rng__': seed, 'run_id': run_id}
+        if arm is not None:
+            reset['__mech_arm__'] = arm
+        self.ack = self.client.infer(reset)
+        if (self.ack.get('seed') != seed or self.ack.get('run_id') != run_id or self.ack.get('requests') != 0
+                or (arm is not None and self.ack.get('arm') != arm)):
             raise RuntimeError('Policy RNG reset acknowledgement mismatch')
 
     def infer(self, data, step, log):
@@ -340,7 +345,7 @@ def run_branch(root, index, port):
                 row = dict(unit, physics_at_checkpoint=at, perturbation=info, outcome=outcome3(trace, unit, prefix_row['start_eef'], info),
                            elapsed_seconds=time.monotonic() - started, **provenance())
                 save(folder, trace, row); return
-        client = Client(port, unit['seed'], '%s_%s' % (os.environ['SLURM_JOB_ID'], unit['id']))
+        client = Client(port, unit['seed'], '%s_%s' % (os.environ['SLURM_JOB_ID'], unit['id']), arm=unit.get('arm'))
         other = None if unit['other'] is None else str(unit['other'])
         stop = (lambda x: x['others'][other]) if unit['stop_on'] == 'B' else (lambda x: x['done'])
         begin = unit['checkpoint'] + len(scripted)

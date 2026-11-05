@@ -10,6 +10,8 @@ Prompts of different token counts are handled for the interface. A patched group
 donor's keys are re-rotated by the count difference. Every key thus keeps the position it had relative to the action tokens
 in the donor run (RoPE logits depend on relative position only). Backbone patching of text tokens needs equal counts;
 image tokens are always aligned.
+A third method, steer, is the closed-loop intervention (HIL_MECHANISM_CLOSED_LOOP.md): the expert reads the running prompt's
+image-token keys/values at chosen layers moved further from the old prompt's, or by a random vector of the same norm.
 
 All runs of one request (base, donor, each spec) go through the same traced program. A no-op spec therefore reproduces the
 base bit for bit, and a full interface spec reproduces the donor (bit for bit at equal counts). Fidelity to openpi's own
@@ -82,6 +84,32 @@ def mix_interface(base, donor, layers, groups, image_slots):
     return k, v, masks
 
 
+AMPLIFY, RANDOM = 0, 1
+
+
+def steer_cache(donor, base, layers, image, scale, mode, key):
+    """Closed-loop steering (HIL_MECHANISM_CLOSED_LOOP.md): the keys/values the action expert reads when, at `layers` [L] on
+    the valid image tokens, the running prompt's (donor, B) vectors move by `scale` times their difference from the old
+    prompt's (base, A) on the same observation. mode AMPLIFY moves along that difference; mode RANDOM moves along a random
+    direction with the same norm per vector (per layer, token and key/value head). scale 0 leaves the donor's cache exact.
+    donor/base: dict(k, v [L, b, s, kh, h], mask [b, s]). Returns (k, v, stats [6]): for keys then values, the norm of the
+    applied change, of the donor-base difference and of the donor, all over the steered vectors."""
+    rows = (layers[:, None, None] & (image[None, :] & donor['mask'])[None])[..., None, None]
+    keys = jax.random.split(key)
+    out, stats = [], []
+    for name, k in zip(('k', 'v'), keys):
+        x = donor[name].astype(jnp.float32)
+        diff = x - base[name].astype(jnp.float32)
+        size = jnp.sqrt((diff ** 2).sum(-1, keepdims=True))
+        noise = jax.random.normal(k, diff.shape, jnp.float32)
+        noise = noise / jnp.maximum(jnp.sqrt((noise ** 2).sum(-1, keepdims=True)), 1e-30) * size
+        delta = jnp.where(rows, scale * jnp.where(mode == RANDOM, noise, diff), 0.)
+        out.append((x + delta).astype(donor[name].dtype))
+        norm = lambda y: jnp.sqrt((jnp.where(rows, y, 0.) ** 2).sum())
+        stats += [norm(delta), norm(diff), norm(x)]
+    return out[0], out[1], jnp.stack(stats)
+
+
 # ---------------------------------------------------------------- nnx methods installed on openpi's Pi0
 def _cache(self, observation):
     """openpi's prefix pass (Pi0.sample_actions): native keys/values, the valid mask and the valid count."""
@@ -136,6 +164,19 @@ def _mech_interface(self, base_obs, donor_obs, noise, layers, groups, num_steps=
         return run(k, v, masks, b['count'])
     return jnp.concatenate([jnp.stack([run(*_full(b, depth), b['count']), run(*_full(d, depth), d['count'])]),
                             jax.lax.map(one, (layers, groups))])
+
+
+def _mech_steer(self, obs, old_obs, noise, layers, scale, mode, key, num_steps=10):
+    """Model-space actions [b, H, D] for `obs` (the running prompt B) with the action expert's image-token conditioning at
+    `layers` steered away from `old_obs` (same observation, old prompt A) by steer_cache; plus steer_cache's stats."""
+    from openpi.models import model as model_module
+    obs = model_module.preprocess_observation(None, obs, train=False)
+    old_obs = model_module.preprocess_observation(None, old_obs, train=False)
+    d, b = _cache(self, obs), _cache(self, old_obs)
+    depth = d['k'].shape[0]
+    k, v, stats = steer_cache(d, b, layers, _image_slots(obs, d['mask'].shape[1]), scale, mode, key)
+    masks = jnp.broadcast_to(d['mask'][None], (depth,) + d['mask'].shape)
+    return _denoise(self, obs, k, v, masks, d['count'], noise, num_steps), stats
 
 
 def _mech_backbone(self, base_obs, donor_obs, noise, layer, groups, num_steps=10):
@@ -202,6 +243,7 @@ def install():
     pi0.Pi0.mech_interface = _mech_interface
     pi0.Pi0.mech_backbone = _mech_backbone
     pi0.Pi0.mech_gaps = _mech_gaps
+    pi0.Pi0.mech_steer = _mech_steer
     _INSTALLED = True
 
 
@@ -245,6 +287,16 @@ class Patcher:
         self._interface = nnx_utils.module_jit(model.mech_interface)
         self._backbone = nnx_utils.module_jit(model.mech_backbone)
         self._gaps = nnx_utils.module_jit(model.mech_gaps)
+        self._steer = nnx_utils.module_jit(model.mech_steer)
+
+    def steer(self, data, old, sample_key, layers, scale, mode, direction_key):
+        """One closed-loop request: environment actions [H, 7] for `data` (prompt B) with steer_cache applied against `old`
+        (the same observation under prompt A), and the stats [6]. The noise is the one openpi's Policy.infer draws from
+        `sample_key` (Pi0.sample_actions: normal(rng, (1, H, D)))."""
+        (ob, tb), (oa, _) = self.observation(data), self.observation(old)
+        noise = jax.random.normal(sample_key, (1, self.horizon, self.dim))
+        raw, stats = self._steer(ob, oa, noise, jnp.asarray(layers, bool), jnp.float32(scale), jnp.int32(mode), direction_key)
+        return self.actions(raw[0], tb), np.asarray(stats)
 
     def gaps(self, base, donor):
         """Per-layer relative value difference donor vs base [L, 2] (image tokens, mean text token)."""

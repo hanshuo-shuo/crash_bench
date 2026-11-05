@@ -23,6 +23,10 @@
       换得过去的 1→8 中途一直走第 14 层的图像路；换不过去的格里图像路几乎消失，B 的影响改走第 16 层的文字路，或在任何 3 层窗口里都找不到。
       同一格内这一现象不区分成败；2→9 中的 B 影响传到了，切换仍然失败。图像路变淡和失败之间的因果关系还没测。
     - 下一步（要用户点头）：在失败格闭环恢复第 14 层的图像路；P2b；P4 神经元；改选正对照。
+  - **闭环因果检验：方案和代码完成，smoke 待跑**（用户选第 1 项："先做第一项吧"；[方案](generative_verifier/HIL_MECHANISM_CLOSED_LOOP.md)）。
+    - 重跑阶段 1 的 SW 分支，只改动作专家在第 12–14 层图像 token 上读到的 K/V：沿 B − A 放大到 2 倍、4 倍，或同样大小的随机方向，另加 native 臂。
+    - 失败格（7→8 的 .5、.75，2→9 三个时点）跑五个臂；成功格和起点格跑 native、amp2、amp4，用来看选择性。
+    - smoke 86 次（初始布置 0、1），正式 774 次（初始布置 2–19）；第 5 节读法在 smoke 后冻结。
     不训练、不调 API、不碰 SafeLIBERO 测试源。
 
 - **11-04：π0.5 从头语言消融已完成**（[报告](generative_verifier/LANGUAGE_ABLATION_REPORT.md)，[协议](generative_verifier/LANGUAGE_ABLATION_PROTOCOL.md)）。
