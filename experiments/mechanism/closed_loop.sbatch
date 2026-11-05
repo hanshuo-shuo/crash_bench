@@ -37,8 +37,10 @@ PORT=$((20000 + SLURM_JOB_ID % 30000))
 SERVER_PID=""
 trap 'if [ -n "$SERVER_PID" ]; then kill "$SERVER_PID" 2>/dev/null || true; wait "$SERVER_PID" 2>/dev/null || true; fi' EXIT
 nvidia-smi --query-gpu=name,driver_version --format=csv,noheader > "$ROOT/GPU_branch_${SHARD}.txt"
+NEURONS=()
+if [ -f "$ROOT/NEURON_SETS.json" ]; then NEURONS=(--neurons "$ROOT/NEURON_SETS.json"); fi
 /projects/p33100/siosio/envs/openpi/bin/python -u "$SOURCE/experiments/mechanism/serve_steer.py" --port "$PORT" \
- --checkpoint "${CB_POLICY_CHECKPOINT:?}" --log-dir "$ROOT/server" > "$ROOT/policy_branch_${SHARD}.log" 2>&1 &
+ --checkpoint "${CB_POLICY_CHECKPOINT:?}" --log-dir "$ROOT/server" "${NEURONS[@]}" > "$ROOT/policy_branch_${SHARD}.log" 2>&1 &
 SERVER_PID=$!
 /projects/p33100/siosio/envs/openpi/bin/python - "$PORT" "$SERVER_PID" <<'PY'
 import os,socket,sys,time
