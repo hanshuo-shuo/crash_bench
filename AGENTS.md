@@ -138,3 +138,6 @@ image-token conditioning amplified or randomly moved (serve_steer.py), and cover
 runner hand-off, the 86-run smoke, then (smoke tool_ok, section 5 frozen) the formal 774 runs on two GPUs and the report.
 Stop and ask if the smoke fails for a non-code reason. P2b, P4 neurons and P5 repair still each need a separate go-ahead.
 The user explicitly allowed recording this entry here ("允许的").
+Completed on 2026-11-04 (HIL_MECHANISM_CLOSED_LOOP_REPORT.md): lam 2 reads restores_switch and selective (failure cells
+amp2 64/90 vs native 17/90, rand2 22/90); lam 4 reads no_restore and damages. Do not rerun this completed batch; an
+action-matched control, P5, P4 and P2b each still need the user's go-ahead.

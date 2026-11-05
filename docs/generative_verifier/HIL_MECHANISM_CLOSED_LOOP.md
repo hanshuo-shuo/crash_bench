@@ -2,7 +2,7 @@
 
 2026-11-04。接 [HIL_MECHANISM_REPORT.md](HIL_MECHANISM_REPORT.md) 的"下一步 1"。开环批次发现：换不过去的格里，图像 token 上的任务印记降到 t = 0 的 0.51–0.71 倍，第 14 层几乎读不到 B；换得过去的 1→8 一直保持。但这只是相关（R3 读成 `gap_does_not_predict`），本检验用闭环干预来测因果。
 
-状态：smoke 读成 `tool_ok`（第 8 节），第 5 节已冻结；正式批次待跑。
+状态：smoke 读成 `tool_ok`（第 8 节），第 5 节已冻结；**正式批次已完成**，报告见 [HIL_MECHANISM_CLOSED_LOOP_REPORT.md](HIL_MECHANISM_CLOSED_LOOP_REPORT.md)：λ = 2 读成 `restores_switch`、`selective`；λ = 4 读成 `no_restore`、`damages`。
 
 ## 0. 批准与边界
 

@@ -8,7 +8,9 @@
   - P2 `interface_partial`（1→8 在 t = 0 可读状态少）；
   - R2 `mixed`（失败格全部变淡，成功格 .25 的区间下界 0.86）；
   - R3 `gap_does_not_predict`。
-- 下一步要用户点头。用户选了第 1 项闭环因果检验（"先做第一项吧"），方案见 [HIL_MECHANISM_CLOSED_LOOP.md](HIL_MECHANISM_CLOSED_LOOP.md)。
+- 用户选了第 1 项闭环因果检验（"先做第一项吧"），方案见 [HIL_MECHANISM_CLOSED_LOOP.md](HIL_MECHANISM_CLOSED_LOOP.md)。
+- **闭环因果检验已完成**，报告见 [HIL_MECHANISM_CLOSED_LOOP_REPORT.md](HIL_MECHANISM_CLOSED_LOOP_REPORT.md)：在失败格把第 12–14 层图像 token 的 B − A 差放大到 2 倍，切换由 17/90 升到 64/90，随机方向 22/90（`restores_switch`）；成功格和起点格不受影响（`selective`）；4 倍过量（`no_restore`、`damages`）。
+- 下一步（P5 修复、P4 神经元、动作匹配的随机对照等）每项都要用户点头。
 
 ## 0. 批准与边界
 
