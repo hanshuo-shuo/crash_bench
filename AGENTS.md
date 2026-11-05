@@ -154,3 +154,10 @@ Completed on 2026-11-05 (HIL_MECHANISM_REPAIR_REPORT.md): R6 direction_specific 
 nonspecific and derails restores_switch (both predictions wrong; the P5 pass condition was not met), R8 selective, R9 amp_better
 for actdiff, rephrase and ampall. Do not rerun this completed batch; P4, held-out open-loop localization, a held-out dose and P2b
 each still need the user's go-ahead.
+
+P4 neurons (2026-11-05): after the repair report Claude listed three next steps with P4 neurons first; the user replied "可以 开始下一步吧
+点头了". Scope (docs/generative_verifier/HIL_MECHANISM_NEURONS.md): the protocol, the neuron hooks and tests, the open-loop smoke,
+then (section 6 frozen) the formal open-loop batch on stored stage 1 inputs, the closed-loop smoke, gate and formal batch (reruns of
+stage 1 switch branches with neuron-level arms), the blind explanation test with a fresh subagent, and the report. pi0.5 alone, no
+training, no paid API, no new layouts, SafeLIBERO untouched, at most two GPUs. Stop and ask if a smoke or gate fails for a non-code
+reason. Held-out open-loop localization, a held-out dose and P2b still each need a separate go-ahead.
