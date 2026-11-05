@@ -2,9 +2,35 @@
 
 读者：接手的人（用户本人，或下一个 Claude/Codex 会话）。先读 [AGENTS.md](../../AGENTS.md) 和 [CURRENT.md](../CURRENT.md)，再读本文的"接手指南"。后面按日期排的各节是历史记录。
 
-## 接手指南（2026-11-04 更新，先读这一节）
+## 接手指南（2026-11-05 更新，先读这一节）
 
-### 11-04：机制研究，闭环因果检验已完成（最新）
+### 11-05：修复批次已完成（最新）
+
+- **文档**：方案 [HIL_MECHANISM_REPAIR.md](HIL_MECHANISM_REPAIR.md)（第 5 节在提交前冻结于 `6199b28`）→ 报告 [HIL_MECHANISM_REPAIR_REPORT.md](HIL_MECHANISM_REPAIR_REPORT.md)。批准记录在 [AGENTS.md](../../AGENTS.md) 的 Repair batch 一段。
+- **做了什么**：一个批次回答两件事，2,024 次闭环运行，代码冻结后没改。
+  - 动作匹配的随机对照（actrand）；
+  - 不改设置（第 12–14 层，λ = 2），用到留出任务对上（P5），并和三种不需要定位的修复比较：
+    - actdiff：输出层 B − A 外推；
+    - rephrase：改写提示；
+    - ampall：全部 18 层放大。
+- **读法**：
+  - R6 `direction_specific`：amp2 65/90 对 actrand 21/90。"推一把也行"被排除。
+  - R7：commits `nonspecific`（2 → 9/52），derails `restores_switch`（19 → 39/86）。两条预测都错了。
+  - R8 `selective`（−0.003）。
+  - R9 三个 `amp_better`。
+- **还要注意的**：
+  - P5 的预先通过条件没有达到；
+  - 留出的效果约为试点对的四成，而且随任务对变化：Object 1→0 .5 七个臂全是 0/18；
+  - 格的分类（commits / derails）不能预测哪里有效。
+- **运行目录**：`/projects/p33100/siosio/crashbench_safelibero/mechanism/20261105T052651Z_mech-repair-formal_pi05_libero_6199b280f028`（smoke 在同目录旁的 `20261105T052648Z_mech-repair-smoke_…`）。
+- **代码**：`experiments/mechanism/`：
+  - `repair.py`（计划、汇总、读法）、`launch_repair.py`、`repair_summary.sbatch`；
+  - `serve_steer.py` 新加 `actrand`、`actdiff` 两种臂。
+  - 测试 `test_repair.py`（13 项），`test_patching.py` 新加 3 项。
+- **不要重跑**：这个正式批次已完成。
+- **下一步（要用户决定）**：P4 神经元；留出对上的开环定位；为留出对定剂量。详见报告最后一节。
+
+### 11-04：机制研究，闭环因果检验已完成
 
 - **文档顺序**：方案 [HIL_MECHANISM_IDEA.md](HIL_MECHANISM_IDEA.md)（第 7 节冻结 `3fb6a44`）→ 开环报告 [HIL_MECHANISM_REPORT.md](HIL_MECHANISM_REPORT.md) → 闭环方案 [HIL_MECHANISM_CLOSED_LOOP.md](HIL_MECHANISM_CLOSED_LOOP.md)（第 5 节冻结 `9447b29`）→ 闭环报告 [HIL_MECHANISM_CLOSED_LOOP_REPORT.md](HIL_MECHANISM_CLOSED_LOOP_REPORT.md)。批准记录在 [AGENTS.md](../../AGENTS.md) 的 Mechanism pilot 一段。
 - **问题**：HIL 套件阶段 1 里，π0.5 在 LIBERO-Goal 中途换指令，1→8（碗：炉子 → 盘子）换得过去，7→8（开炉子 → 碗放盘子）、2→9（酒瓶：柜顶 → 架子）换不过去。换不过去时，新指令在模型里断在哪？
@@ -43,13 +69,10 @@
 
 ### 下一步（要用户决定）
 
-11-04 Claude 建议先做 1，再做 2，两者可以合成一个批次；P4 放在后面。
-1. **动作上匹配的随机对照**（约 1 GPU 小时）：在失败格里给动作块加随机扰动，大小匹配放大 2 倍时请求 1 的动作改动。用来排除"在动作上推一把也行"。
-2. **P5 选择性修复**：在"指令被换"事件后放大 2 倍。
-   - 在没用来选层窗口的 LIBERO-Goal 任务对上留出检验；
-   - 配方案第 7 节的对照：改写提示、普通 steering、随机同幅度；
-   - 剂量在验证用的初始布置上定，再在留出状态上读一次。
-3. **P4 神经元**：在第 8–13 层找中途不再把 B 写进图像块的 GeGLU 神经元。首轮 top 10，配盲测和反例。
+11-04 的第 1、2 项（动作匹配对照、P5 留出）已在 11-05 的修复批次里做完，见上面。
+1. **P4 神经元**：在第 8–13 层找中途不再把 B 写进图像块的 GeGLU 神经元。首轮 top 10，配盲测和反例。修复批次里无效的留出对（LIBERO-10 1→0、Object 1→0）可作反例。
+2. **留出对上的开环定位**：在 LIBERO-10 0→1、1→0 和 Object 1→0 上重做开环 P2 / gap，只推理。用来区分"窗口只适合试点对"和"留出格本来更难"。
+3. **留出对的剂量**：在验证用的初始布置上定 λ，再在留出状态上读一次。这是原 P5 的设计，修复批次为了不调剂量省掉了。
 4. **其他仍开放的**：
    - S 加 seed；
    - 在线闸门加外部执行器；
@@ -424,6 +447,7 @@ V5 这一轮的故事线已经走完一遍，只用了 object/II/task1 一个任
 | 11-04 | "先做第一项吧"、"允许的" | 闭环因果检验：方案、服务、smoke、冻结后正式 774 次和报告；允许把这条批准写进 AGENTS.md |
 | 11-04 | "先把报告加到网站吧 然后先收尾 我明天给下一个agent" | 报告网页第 31 版加机制一节；收尾，下一步等用户和下一个 agent 决定 |
 | 11-04 | "你在这里补上吧" | 报告网页第 32 版补上语言消融一节 |
+| 11-04 | "合成一个批次先做，P4 神经元放在后面"、"可以 这个直接开始正式的吧 反正gpu够用" | 修复批次：动作匹配对照 + P5 留出 + 三种替代修复；smoke → 闸门 → 正式 2,024 次 → 报告，一次提交（11-05 完成） |
 
 ## 故事（当前版本）
 

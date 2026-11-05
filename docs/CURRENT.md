@@ -35,12 +35,22 @@
     - 按冻结规则：图像路变淡是中途换不过去的一个因果环节，可以有选择地补回来，可作 P5 依据。随机对照只在 K/V 上匹配，动作上匹配的对照没有。
     - 下一步（要用户点头）：动作匹配的随机对照；P5 修复（留出任务对）；P4 神经元。
     不训练、不调 API、不碰 SafeLIBERO 测试源。
-  - **修复批次（运行中）**（用户："把'动作上匹配的随机对照'和'P5 修复（在别的任务对上检验）'合成一个批次先做，P4 神经元放在后面"，"可以 这个直接开始正式的吧 反正gpu够用"；[方案](generative_verifier/HIL_MECHANISM_REPAIR.md)）。
+  - **修复批次已完成：R6 `direction_specific`；R7 commits `nonspecific`、derails `restores_switch`；R8 `selective`；R9 三个 `amp_better`**（用户："把'动作上匹配的随机对照'和'P5 修复（在别的任务对上检验）'合成一个批次先做，P4 神经元放在后面"，"可以 这个直接开始正式的吧 反正gpu够用"；[方案](generative_verifier/HIL_MECHANISM_REPAIR.md)，[报告](generative_verifier/HIL_MECHANISM_REPAIR_REPORT.md)）。
     - 一个批次两件事：
       - 闭环的五个失败格上加动作匹配的随机推动（actrand），每行每组大小等于 amp2 的动作改动、方向整局固定；
       - P5 留出：不改任何设置（第 12–14 层、λ = 2），用到没参与选窗口的任务对和套件（Goal 1→4、4→8、8→1、8→7、9→2，LIBERO-10 0→1、1→0，Object 1→0），另比三种不需要定位的修复（输出层 B − A 外推、改写提示、全部 18 层放大）。
     - 格只按阶段 1 结果预先分类；预测 commits 型失败格（native 失败时把 A 做完）能救、derails 型（两边都没做成）不能。
     - 读法在提交前冻结；smoke 230 次 → 闸门 → 正式 2,024 次 → 汇总，一次提交，用 Slurm 依赖串起来，最多两张 GPU。
+    - smoke 7255552 → 闸门 7255567（`tool_ok`）→ 正式 7255569 四个分片 → 汇总 7255570，全部 COMPLETED 0:0；代码 `6199b28`，冻结后没改。
+    - 动作对照：闭环失败格 amp2 **65**/90，actrand 21，native 19；amp2 − actrand +0.49 [0.39, 0.59]。推一把能打断 A，但不会变成做 B。
+    - 留出（LIBERO-10 0→1、1→0，Goal 8→7，Object 1→0）：
+      - derails 19/86 → **39**/86（rand2 21），增益 +0.23 [0.13, 0.35]；
+      - commits 2/52 → 9/52（rand2 4），特异性区间跨 0；
+      - 合并（只报告）增益 +0.20，约为试点对的四成。
+      - 事后分对：LIBERO-10 0→1 和 Goal 8→7 有效，LIBERO-10 1→0 弱，Object 1→0 的 .5 七个臂全是 0/18。
+    - P5 的预先通过条件（commits `restores_switch`）没有达到；"只救继续做 A"的描述要改。选择性：留出成功格加起点格改变 −0.003。
+    - 替代修复（142 个状态）：amp2 74，ampall 49，rephrase 25，actdiff 23。事后看，rephrase 只在 7→8、ampall 只在 2→9 上接近 amp2。
+    - 下一步（要用户点头）：P4 神经元；留出对上的开环定位；为留出对在验证初始布置上定剂量。
 
 - **11-04：π0.5 从头语言消融已完成**（[报告](generative_verifier/LANGUAGE_ABLATION_REPORT.md)，[协议](generative_verifier/LANGUAGE_ABLATION_PROTOCOL.md)）。
   用户指出停止 / 回原点 / 绕路是分布外命令，要求在已有任务上改用随机 A–F / + 字符串，看文字有多重要。

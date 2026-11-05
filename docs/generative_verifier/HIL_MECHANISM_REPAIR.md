@@ -187,4 +187,21 @@
 
 ## 8. 结果
 
-（运行后填写。）
+**smoke**（作业 7255552，两个分片，57 分 36 秒和 50 分 33 秒；闸门 7255567，26 秒，COMPLETED 0:0）：
+- 运行目录 `/projects/p33100/siosio/crashbench_safelibero/mechanism/20261105T052648Z_mech-repair-smoke_pi05_libero_6199b280f028`，230 次运行，70 个状态，初始布置 0、1。
+- C1 `tool_ok`：
+  - 物理哈希 230/230 相同；
+  - λ = 1 时与 `Policy.infer` 的 L∞ 差为 0；
+  - K/V 改动大小的相对误差最大 1.6 × 10⁻⁷；
+  - actrand 推动大小的匹配误差最大 4.4 × 10⁻¹⁶；
+  - 指令全部正确。
+- native 与阶段 1：67/70 结果相同。API 调用 0 次，合计 1.6 GPU 小时。
+- 描述（不进读数）：闭环失败格 amp2 − native +0.4，actrand − native +0.1（各 10 个状态）。
+
+**正式**（作业 7255569，四个分片 → 汇总 7255570，COMPLETED 0:0）：
+- C1 `tool_ok`。
+- R6 `direction_specific`。
+- R7：commits `nonspecific`，derails `restores_switch`。两条预测都没对上。
+- R8 `selective`。
+- R9：三种替代修复都是 `amp_better`。
+- 见 [HIL_MECHANISM_REPAIR_REPORT.md](HIL_MECHANISM_REPAIR_REPORT.md)。冻结后读法和代码都没有改。
