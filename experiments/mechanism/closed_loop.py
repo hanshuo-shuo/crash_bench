@@ -199,11 +199,27 @@ def server_log(root, run_id, client_requests):
     return entries
 
 
+def same_outcome(x, y):
+    """Recomputed vs recorded outcome: flags and step counts exactly, distances to 1e-9 (the runner's Python 3.8 and the
+    summary's Python 3.11 round math.dist differently in the last bit)."""
+    import math
+    if set(x) != set(y):
+        return False
+    for k in x:
+        a, b = x[k], y[k]
+        if isinstance(a, float) and isinstance(b, float) and not isinstance(a, bool):
+            if not math.isclose(a, b, rel_tol=1e-9, abs_tol=1e-12):
+                return False
+        elif type(a) is not type(b) or a != b:
+            return False
+    return True
+
+
 def run_row(root, u, stage1_root):
     from verifier_dataset import hil_suite as S
     from verifier_dataset import hil_suite_run as H
     row, trace = H.load(Path(root)/'branch'/u['id'])
-    if S.outcome(trace, u, row['start_eef']) != row['outcome']:
+    if not same_outcome(S.outcome(trace, u, row['start_eef']), row['outcome']):
         raise RuntimeError('Recomputed outcome differs: ' + u['id'])
     if row['rng_reset'].get('arm') != u['arm']:
         raise RuntimeError('Arm not acknowledged: ' + u['id'])

@@ -132,3 +132,9 @@ experiments/mechanism/launch.py smoke. The formal 240-state batch still needs a 
 After the smoke read tool_ok and section 7 was frozen (3fb6a44), the user approved the formal open-loop batch on
 2026-11-04 ("开始跑吧"): 240 states, two GPUs, launch.py formal with the smoke root. P2b closed-loop, further P3 tools,
 P4 neurons and P5 still each need a separate go-ahead.
+After the formal open-loop report the user chose next step 1 on 2026-11-04 ("先做第一项吧"): the closed-loop causal
+test (docs/generative_verifier/HIL_MECHANISM_CLOSED_LOOP.md). It reruns stage 1 switch branches with the layer 12-14
+image-token conditioning amplified or randomly moved (serve_steer.py), and covers the protocol, the new server and
+runner hand-off, the 86-run smoke, then (smoke tool_ok, section 5 frozen) the formal 774 runs on two GPUs and the report.
+Stop and ask if the smoke fails for a non-code reason. P2b, P4 neurons and P5 repair still each need a separate go-ahead.
+The user explicitly allowed recording this entry here ("允许的").

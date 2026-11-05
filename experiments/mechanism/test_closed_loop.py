@@ -170,6 +170,15 @@ class Summary(unittest.TestCase):
                 C.summarize(root)
 
 
+class Outcome(unittest.TestCase):
+    def test_same_outcome_tolerates_last_bit_distances_only(self):
+        x = dict(b_done=True, b_after=30, a_after=None, stop_path=0.3830529717522603, start_gap=.19106342706898555)
+        self.assertTrue(C.same_outcome(x, dict(x, stop_path=0.38305297175226016, start_gap=.19106342706898552)))
+        for k, v in (('b_done', False), ('b_after', 31), ('a_after', 3), ('stop_path', .3831), ('b_done', 1)):
+            self.assertFalse(C.same_outcome(x, dict(x, **{k: v})))
+        self.assertFalse(C.same_outcome(x, dict(x, extra=1)))
+
+
 class ClientArm(unittest.TestCase):
     """hil_suite_run.Client sends a unit's arm on the reset and refuses an acknowledgement without it."""
 
