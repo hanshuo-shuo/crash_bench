@@ -8,6 +8,13 @@ nothing moved. Every arm draws its noise exactly as openpi's Policy.infer does a
 of each request. On request 1 of each run the server also runs openpi's own Policy.infer and the steering program at
 lam 1 on the same input and noise (the tool check). Every request is logged to LOG_DIR/<run_id>.jsonl.
 
+Two action-space arms of the repair batch (HIL_MECHANISM_REPAIR.md) reuse the same program and touch no key/value:
+  actrand  each request computes amp's chunk and the native chunk (same noise); the output is the native chunk plus, on every
+           row and action group (translation, rotation, gripper), a push of the same norm as amp's change of that row and
+           group, along one random direction per group fixed for the whole run (from direction_seed).
+  actdiff  the native chunks under B and under the old prompt A (same noise); the output extrapolates B away from A,
+           a_B + (lam - 1)(a_B - a_A), like classifier-free guidance on the output chunk.
+
 Usage: serve_steer.py --port P --checkpoint DIR --log-dir DIR (openpi environment, pinned openpi on PYTHONPATH)
 """
 import argparse
@@ -24,7 +31,8 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE)); sys.path.insert(0, str(HERE.parent/'feasibility'))
 from serve import digest  # noqa: E402
 
-KINDS = ('native', 'amp', 'rand')
+KINDS = ('native', 'amp', 'rand', 'actrand', 'actdiff')
+ACTION_GROUPS = ((0, 3), (3, 6), (6, 7))   # environment action: translation, rotation, gripper
 ARM_KEYS = {'name', 'kind', 'lam', 'layers', 'prompt_a', 'direction_seed'}
 
 
@@ -42,6 +50,26 @@ def check_arm(arm, depth):
     return arm
 
 
+def push_directions(seed):
+    """actrand: one random unit direction per action group, fixed for a run (a sign for the one-dimensional gripper)."""
+    rng = np.random.default_rng(seed)
+    return [u / np.linalg.norm(u) for u in (rng.standard_normal(hi - lo) for lo, hi in ACTION_GROUPS)]
+
+
+def action_push(plain, delta, directions):
+    """plain + a push that has, on every row and action group, the norm of delta's row group, along the group's direction.
+    Returns (actions in plain's dtype, the largest absolute norm mismatch of the returned push)."""
+    plain = np.asarray(plain); delta = np.asarray(delta, np.float64)
+    push = np.zeros(plain.shape, np.float64)
+    for (lo, hi), u in zip(ACTION_GROUPS, directions):
+        push[:, lo:hi] = np.linalg.norm(delta[:, lo:hi], axis=1, keepdims=True) * u
+    actions = (plain.astype(np.float64) + push).astype(plain.dtype)
+    moved = actions.astype(np.float64) - plain.astype(np.float64)
+    error = max(float(np.abs(np.linalg.norm(moved[:, lo:hi], axis=1) - np.linalg.norm(delta[:, lo:hi], axis=1)).max())
+                for lo, hi in ACTION_GROUPS)
+    return actions, error
+
+
 def chunk_sha(actions):
     return hashlib.sha256(np.ascontiguousarray(actions).tobytes()).hexdigest()
 
@@ -51,7 +79,7 @@ class SteeredPolicy:
         import jax
         self.policy, self.patcher, self.jax = policy, patcher, jax
         self.directory = Path(log_dir); self.directory.mkdir(parents=True, exist_ok=True)
-        self.lock = threading.Lock(); self.run = None; self.arm = None; self.n = 0; self.log = None
+        self.lock = threading.Lock(); self.run = None; self.arm = None; self.n = 0; self.log = None; self.push = None
 
     def key(self, rng=None):
         return np.asarray(self.jax.random.key_data(self.policy._rng if rng is None else rng), dtype='<u4').tobytes().hex()
@@ -64,6 +92,7 @@ class SteeredPolicy:
         if self.log is not None:
             self.log.close()
         self.policy._rng = self.jax.random.key(seed); self.run = obs['run_id']; self.n = 0; self.arm = arm
+        self.push = push_directions(arm['direction_seed']) if arm['kind'] == 'actrand' else None
         self.log = (self.directory/(str(self.run) + '.jsonl')).open('x')
         return {'seed': seed, 'run_id': self.run, 'requests': 0, 'key_hex': self.key(), 'arm': arm}
 
@@ -82,11 +111,24 @@ class SteeredPolicy:
             layers = np.isin(np.arange(self.patcher.depth), arm['layers'])
             mode = 1 if arm['kind'] == 'rand' else 0
             direction = jax.random.fold_in(jax.random.key(arm['direction_seed']), self.n)
-            old = dict(obs, prompt=arm['prompt_a'])
-            actions, stats = self.patcher.steer(dict(obs), old, sample, layers, arm['lam'] - 1., mode, direction)
+            old = dict(obs, prompt=arm['prompt_a']); scale = arm['lam'] - 1.; extra = {}
+            if arm['kind'] in ('native', 'amp', 'rand'):
+                actions, stats = self.patcher.steer(dict(obs), old, sample, layers, scale, mode, direction)
+            elif arm['kind'] == 'actrand':
+                amp, stats = self.patcher.steer(dict(obs), old, sample, layers, scale, 0, direction)
+                plain, _ = self.patcher.steer(dict(obs), old, sample, layers, 0., 0, direction)
+                actions, error = action_push(plain, np.asarray(amp, np.float64) - np.asarray(plain, np.float64), self.push)
+                extra = dict(amp_shift_l2=float(np.linalg.norm(np.asarray(amp, np.float64) - plain)),
+                             push_l2=float(np.linalg.norm(actions.astype(np.float64) - plain)), push_match_error=error)
+            else:  # actdiff: nothing moved under B, and the same program under A for the native chunk of the old prompt
+                plain, stats = self.patcher.steer(dict(obs), old, sample, layers, 0., 0, direction)
+                under_a, _ = self.patcher.steer(dict(old), dict(obs), sample, layers, 0., 0, direction)
+                gap = np.asarray(plain, np.float64) - np.asarray(under_a, np.float64)
+                actions = (np.asarray(plain, np.float64) + scale * gap).astype(np.asarray(plain).dtype)
+                extra = dict(ab_action_l2=float(np.linalg.norm(gap)), ab_action_linf=float(np.abs(gap).max()))
             entry = dict(request_index=self.n, run_id=self.run, arm=arm['name'], input_sha256=ih, rng_before=before, rng_after=after,
                          delta_k=float(stats[0]), diff_k=float(stats[1]), norm_k=float(stats[2]),
-                         delta_v=float(stats[3]), diff_v=float(stats[4]), norm_v=float(stats[5]), chunk_sha256=chunk_sha(actions))
+                         delta_v=float(stats[3]), diff_v=float(stats[4]), norm_v=float(stats[5]), chunk_sha256=chunk_sha(actions), **extra)
             if self.n == 1:
                 plain, _ = self.patcher.steer(dict(obs), old, sample, layers, 0., 0, direction)
                 self.policy._rng = start

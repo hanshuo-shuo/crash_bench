@@ -282,6 +282,46 @@ class SteeringServer(unittest.TestCase):
         self.server.infer({'__paired_reset_rng__': 5, 'run_id': 'warm', '__mech_arm__': self.arm()})
         before = self.server.key(); self.server.warm_up(serve_steer.example_input()); self.assertEqual(self.server.key(), before)
 
+    def test_actrand_pushes_by_amps_change_along_fixed_directions(self):
+        import serve_steer
+        native = self.requests('push_native', self.arm(), n=3, seed=55)
+        amp = self.requests('push_amp', self.arm('amp', 2.), n=3, seed=55)
+        act = self.requests('push_act', self.arm('actrand', 2.), n=3, seed=55)
+        self.assertEqual([r['diagnostic']['rng_after'] for r in act], [r['diagnostic']['rng_after'] for r in native])
+        directions = serve_steer.push_directions(9)
+        for a, n, p in zip(act, native, amp):
+            moved = np.asarray(a['actions'], np.float64) - n['actions']; change = np.asarray(p['actions'], np.float64) - n['actions']
+            self.assertGreater(np.abs(change).max(), 0)
+            for (lo, hi), u in zip(serve_steer.ACTION_GROUPS, directions):
+                size = np.linalg.norm(change[:, lo:hi], axis=1, keepdims=True)
+                np.testing.assert_allclose(moved[:, lo:hi], size * u, atol=1e-5, rtol=0)
+        log = self.log('push_act')
+        self.assertLess(max(e['push_match_error'] for e in log), 1e-5); self.assertGreater(log[0]['first_shift_linf'], 0)
+        for e in log:
+            self.assertAlmostEqual(e['delta_k'] / e['diff_k'], 1., places=4); self.assertAlmostEqual(e['push_l2'], e['amp_shift_l2'], places=4)
+
+    def test_actdiff_extrapolates_b_away_from_a(self):
+        out = self.requests('diff_run', self.arm('actdiff', 2.), n=2, seed=66)
+        self.policy._rng = jax.random.key(66)
+        for r in out:
+            start = self.policy._rng
+            b = np.asarray(self.policy.infer(dict(self.obs))['actions'], np.float64); after = self.policy._rng
+            self.policy._rng = start
+            a = np.asarray(self.policy.infer(dict(self.obs, prompt='turn on the stove'))['actions'], np.float64)
+            self.assertEqual(np.asarray(jax.random.key_data(self.policy._rng)).tolist(), np.asarray(jax.random.key_data(after)).tolist())
+            self.assertGreater(np.abs(b - a).max(), 1e-3)
+            np.testing.assert_allclose(r['actions'], 2 * b - a, atol=1e-4, rtol=0)
+        log = self.log('diff_run')
+        self.assertEqual(log[0]['delta_k'], 0); self.assertEqual(log[1]['delta_v'], 0); self.assertGreater(log[0]['ab_action_l2'], 0)
+        self.assertGreater(log[0]['first_shift_linf'], 0)
+
+    def test_action_arms_need_a_dose(self):
+        import serve_steer
+        for kind in ('actrand', 'actdiff'):
+            serve_steer.check_arm(self.arm(kind, 2.), 18)
+            with self.assertRaises(ValueError):
+                serve_steer.check_arm(self.arm(kind, 1.), 18)
+
 
 def libero_like(config):
     """A LIBERO-shaped input transform for the toy: words hashed to token ids, the two cameras, the state padded."""

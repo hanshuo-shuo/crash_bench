@@ -141,3 +141,12 @@ The user explicitly allowed recording this entry here ("允许的").
 Completed on 2026-11-04 (HIL_MECHANISM_CLOSED_LOOP_REPORT.md): lam 2 reads restores_switch and selective (failure cells
 amp2 64/90 vs native 17/90, rand2 22/90); lam 4 reads no_restore and damages. Do not rerun this completed batch; an
 action-matched control, P5, P4 and P2b each still need the user's go-ahead.
+
+Repair batch (2026-11-04): after the closed-loop report the user chose to run the action-matched random control and P5
+repair on held-out stage 1 pairs as one batch, P4 later ("把'动作上匹配的随机对照'和'P5 修复（在别的任务对上检验）'合成一个批次先做，
+P4 神经元放在后面"), agreed to online action matching, a fixed lam 2 and an output-level B - A extrapolation control, and said
+to start the formal batch directly ("可以 这个直接开始正式的吧 反正gpu够用"). Scope: docs/generative_verifier/HIL_MECHANISM_REPAIR.md,
+the new server arms and tests, then smoke -> integrity gate -> formal 2,024 runs -> report, chained without a stop (readings
+frozen before submission). pi0.5 alone, reruns of stage 1 switch branches, no training, no paid API, no new layouts,
+SafeLIBERO untouched, at most two GPUs. Stop and ask if the gate fails for a non-code reason. P4 and P2b still each need
+a separate go-ahead.
