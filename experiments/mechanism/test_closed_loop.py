@@ -70,7 +70,7 @@ def runs_for(rate):
                 for arm in C.CELL_ARMS[kind]:
                     out.append(dict(sw='%s_%s_%d' % (pair, phase, init), pair=pair, phase=phase, init=init, arm=arm,
                                     b_done=bool((init * 7919 + len(arm)) % 100 < 100 * rate(kind, arm)), a_done=False, b_after=50,
-                                    gap_first=.5, gap_run=.4))
+                                    gap_first=.5, gap_run=.4, first_shift_linf=0. if arm == 'native' else .1))
     return out
 
 
@@ -106,6 +106,8 @@ class Readings(unittest.TestCase):
         t = C.tables(runs_for(lambda k, a: .5), self.inits)
         self.assertEqual(set(t['7->8 f=0.5']), set(C.CELL_ARMS['failure'])); self.assertEqual(t['7->8 f=0.5']['amp2']['n'], 18)
         self.assertEqual(set(t['1->8 f=0']), set(C.CELL_ARMS['start']))
+        self.assertEqual(t['7->8 f=0.5']['rand4']['first_shift_median'], .1)
+        self.assertEqual(C.readings(runs_for(lambda k, a: .5), self.inits)['amp2_vs_rand4']['n'], 90)
 
     def test_tool_reading(self):
         good = dict(physics_equal=True, fidelity_linf=.002, max_delta=0., first_shift_linf=0., scale_error=0., arm='native')

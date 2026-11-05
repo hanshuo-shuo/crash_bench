@@ -165,8 +165,9 @@ def tool_reading(runs):
 
 
 def tables(runs, inits):
-    """Per cell and arm: switch rate, A completions among the failed switches, median steps to B, and the image-route
-    gap at LAYERS on request 1 and its median over the run (|V_B - V_A| / |V_B|)."""
+    """Per cell and arm: switch rate, A completions among the failed switches, median steps to B, the median first-chunk
+    change against lam 1 (L-inf), and the image-route gap at LAYERS on request 1 and its median over the run
+    (|V_B - V_A| / |V_B|)."""
     out = {}
     for key in sorted({(r['pair'], r['phase']) for r in runs}):
         cell = {}
@@ -176,13 +177,17 @@ def tables(runs, inits):
                 failed = [r for r in rs if not r['b_done']]; after = [r['b_after'] for r in rs if r['b_done']]
                 cell[arm] = dict(n=len(rs), b_done=sum(r['b_done'] for r in rs), a_done_when_failed=sum(r['a_done'] for r in failed),
                                  b_after_median=float(np.median(after)) if after else None,
+                                 first_shift_median=float(np.median([r['first_shift_linf'] for r in rs])),
                                  gap_first=float(np.median([r['gap_first'] for r in rs])), gap_run=float(np.median([r['gap_run'] for r in rs])))
         out['%s f=%s' % key] = cell
     return out
 
 
 def readings(runs, inits):
+    # Reported, not a gate (added after the smoke, before freezing): the rand arms match amp's key/value change, but move
+    # the first chunk far less (smoke median L-inf .018 rand2, .085 rand4, .18 amp2); rand4 is the closer match in actions.
     return dict(restoration={'lam%d' % d: restoration(runs, d, inits) for d in DOSES},
+                amp2_vs_rand4=paired(runs, 'amp2', 'rand4', FAILURE, inits),
                 selectivity={'lam%d' % d: selectivity(runs, d, inits) for d in DOSES}, tables=tables(runs, inits))
 
 
