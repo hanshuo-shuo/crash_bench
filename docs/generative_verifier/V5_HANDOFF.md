@@ -1,8 +1,63 @@
-# V5 交接（2026-10-31：HIL 套件完成，π0.5、OFT 都不听中途的人话、π0.5 能从推挪中恢复；10-29：绕路 HIL `ignores_detour`，第 1 个问题三种情形都有结果；回原点 HIL `ignores_instruction`；10-28 离线闸门 `gate_prevents`；10-27 HIL `ignores_rule`、S5 `self_computes`）
+# V5 交接（2026-11-04：机制研究闭环检验完成，补回第 12–14 层图像路后中途换成功 19% → 71%，`restores_switch`、`selective`；2026-10-31：HIL 套件完成，π0.5、OFT 都不听中途的人话、π0.5 能从推挪中恢复；10-29：绕路 HIL `ignores_detour`，第 1 个问题三种情形都有结果；回原点 HIL `ignores_instruction`；10-28 离线闸门 `gate_prevents`；10-27 HIL `ignores_rule`、S5 `self_computes`）
 
 读者：接手的人（用户本人，或下一个 Claude/Codex 会话）。先读 [AGENTS.md](../../AGENTS.md) 和 [CURRENT.md](../CURRENT.md)，再读本文的"接手指南"。后面按日期排的各节是历史记录。
 
-## 接手指南（2026-10-31 更新，先读这一节）
+## 接手指南（2026-11-04 更新，先读这一节）
+
+### 11-04：机制研究，闭环因果检验已完成（最新）
+
+- **文档顺序**：方案 [HIL_MECHANISM_IDEA.md](HIL_MECHANISM_IDEA.md)（第 7 节冻结 `3fb6a44`）→ 开环报告 [HIL_MECHANISM_REPORT.md](HIL_MECHANISM_REPORT.md) → 闭环方案 [HIL_MECHANISM_CLOSED_LOOP.md](HIL_MECHANISM_CLOSED_LOOP.md)（第 5 节冻结 `9447b29`）→ 闭环报告 [HIL_MECHANISM_CLOSED_LOOP_REPORT.md](HIL_MECHANISM_CLOSED_LOOP_REPORT.md)。批准记录在 [AGENTS.md](../../AGENTS.md) 的 Mechanism pilot 一段。
+- **问题**：HIL 套件阶段 1 里，π0.5 在 LIBERO-Goal 中途换指令，1→8（碗：炉子 → 盘子）换得过去，7→8（开炉子 → 碗放盘子）、2→9（酒瓶：柜顶 → 架子）换不过去。换不过去时，新指令在模型里断在哪？
+- **开环**（240 个状态，只推理，作业 7209966/7209967）：
+  - 读法：P1 `tool_ok`，P2 `interface_partial`，R2 `mixed`，R3 `gap_does_not_predict`。
+  - 动作专家第 14 层从图像块读任务，第 16 层读文字。
+  - 失败格里，图像块上的任务印记降到 t = 0 的 0.51–0.71 倍。
+- **闭环**（774 次，作业 7245356/7245357，运行目录 `/projects/p33100/siosio/crashbench_safelibero/mechanism/20261105T020853Z_mech-closed-formal_pi05_libero_9447b29d54d3`）：在第 12–14 层图像块上，把动作专家读到的 K/V 的 B − A 放大到 2 倍。
+  - 失败格：17/90 → 64/90；同样大小的随机方向 22/90。读法 `restores_switch`。
+  - 成功格加起点格：108 个只丢 1 个。读法 `selective`。
+  - 4 倍过量：`no_restore`、`damages`。
+  - 还没排除的解释："在动作空间里适度推一把也行"。随机对照只在 K/V 改动大小上匹配，对动作的影响比放大小得多。
+- **代码**：
+  - `experiments/mechanism/` 下：
+    - `patching.py`：`steer_cache`、`Patcher.steer`；
+    - `serve_steer.py`：策略服务，重置时带 arm，逐请求写日志；
+    - `closed_loop.py`：计划、汇总、C1/R4/R5 读法；
+    - `launch_closed.py`、`closed_loop.sbatch`、`closed_loop_summary.sbatch`；
+    - 开环部分：`launch.py`、`selection.py`。
+  - 运行器：`verifier_dataset/hil_suite_run.py` 的 `Client(arm=…)`。
+  - 测试：`experiments/mechanism/test_patching.py`（19 项）、`test_closed_loop.py`（11 项）、`verifier_dataset/tests/test_hil_suite`（20 项）。
+- **坑**：
+  - 运行器在容器里用 Python 3.8，汇总用 3.11，两边 `math.dist` 的末位舍入不同。所以结果核对时，距离用 1e-9 容差（`closed_loop.same_outcome`）。
+  - openpi 的 websocket 服务在推理时会阻塞事件循环。如果首个请求才编译，客户端的 keepalive 会断开。所以 `serve_steer.py` 在开端口前先预编译。
+  - π0.5 约 6 成的步超出 LIBERO 的动作范围，由环境截断。这是常态，不是干预造成的。
+  - 闭环 native 与阶段 1 的结局约 93% 相同，差别来自跨节点的数值噪声。对照一律用同批次的 native 臂。
+- **不要重跑**：开环和闭环的正式批次都已完成。
+- **报告网页**：第 31 版（11-04）加了 `#hil-mech`，含示意图和图 c21。
+
+### 11-03/04：语言消融已完成
+
+见 [LANGUAGE_ABLATION_REPORT.md](LANGUAGE_ABLATION_REPORT.md)。
+- 做法：标准 LIBERO 40 个任务，从 t = 0 起分别给原指令、空指令、随机字符串。
+- 结果：成功率 96.75% / 50.25% / 53.75%；Goal 套件为 96 / 9 / 8%。
+- 还没加到报告网页上。
+
+### 下一步（要用户决定）
+
+11-04 Claude 建议先做 1，再做 2，两者可以合成一个批次；P4 放在后面。
+1. **动作上匹配的随机对照**（约 1 GPU 小时）：在失败格里给动作块加随机扰动，大小匹配放大 2 倍时请求 1 的动作改动。用来排除"在动作上推一把也行"。
+2. **P5 选择性修复**：在"指令被换"事件后放大 2 倍。
+   - 在没用来选层窗口的 LIBERO-Goal 任务对上留出检验；
+   - 配方案第 7 节的对照：改写提示、普通 steering、随机同幅度；
+   - 剂量在验证用的初始布置上定，再在留出状态上读一次。
+3. **P4 神经元**：在第 8–13 层找中途不再把 B 写进图像块的 GeGLU 神经元。首轮 top 10，配盲测和反例。
+4. **其他仍开放的**：
+   - S 加 seed；
+   - 在线闸门加外部执行器；
+   - π0 分支补跑；
+   - OFT 的阶段 3、5；
+   - P2b；
+   - 改选 t = 0 正对照。
+5. **论文方向**：见 [PAPER_DIRECTIONS.md](PAPER_DIRECTIONS.md)（11-02），用户还没选。
 
 ### 10-31：HIL 套件已完成
 
@@ -363,6 +418,11 @@ V5 这一轮的故事线已经走完一遍，只用了 object/II/task1 一个任
 | 10-26 | "现在收尾下 我接下来接手知道怎么继续" | 测试评估后收尾；本文开头写接手指南，之后每一步都等用户决定 |
 | 10-26 | "先做1" | 做检测器基线：AEGIS 的 GroundingDINO 加 P 的程序，只看验证，只做推理（读法 `training_needed`） |
 | 10-27 | "我还是觉得应该是先继续原来的想法 但是2可以保留下" | 主线回到生成式 verifier（模型自己下结论）；P 只作诊断；闸门或系统保留为备选。此前用户问"p似乎有点作弊"：代码就是生成标签的规则，P 的 94% 主要衡量定位 |
+| 10-27 – 11-03 | （见 AGENTS.md 的日期条目） | HIL、闸门、回原点、绕路、HIL 套件、语言消融，每项的批准原话都记在 AGENTS.md |
+| 11-04 | "开始改吧" | 机制研究：方案、P0 选状态、P1 代码和单测 |
+| 11-04 | "跑一下吧"、"开始跑吧" | P1 smoke（24 个状态），然后正式开环批次（240 个状态） |
+| 11-04 | "先做第一项吧"、"允许的" | 闭环因果检验：方案、服务、smoke、冻结后正式 774 次和报告；允许把这条批准写进 AGENTS.md |
+| 11-04 | "先把报告加到网站吧 然后先收尾 我明天给下一个agent" | 报告网页第 31 版加机制一节；收尾，下一步等用户和下一个 agent 决定 |
 
 ## 故事（当前版本）
 

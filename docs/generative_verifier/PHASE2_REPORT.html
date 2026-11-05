@@ -245,8 +245,8 @@ l=l==='en'?'en':'zh';var r=document.documentElement;r.setAttribute('data-lang',l
   <h1><span data-l="zh">生成式可行性 Verifier</span><span data-l="en">Generative Feasibility Verifier</span></h1>
   <p class="lede" data-l="zh">机器人动手之前，先看两张场景图和一条规则，判断这件事在规则下到底做不做得成。这一页讲清楚四件事：数据怎么造，模型怎么训练，结果怎么样，为什么会是这个结果。</p>
   <p class="lede" data-l="en">Before the robot moves, look at two scene images and one rule, and decide whether the task can actually be done under that rule. This page covers four things: how the data was built, how the model was trained, what the results are, and why they came out this way.</p>
-  <div class="meta" data-l="zh"><span>2026-10-31 更新</span><span>模型 Qwen2.5-VL-3B + LoRA</span><span>A、P 各 3 个 seed，S 1 个</span><span>V4、V5 的测试集各只评估过一次</span></div>
-  <div class="meta" data-l="en"><span>Updated 2026-10-31</span><span>Model: Qwen2.5-VL-3B + LoRA</span><span>3 seeds for A and P, 1 for S</span><span>Locked test splits (V4, V5) each scored once</span></div>
+  <div class="meta" data-l="zh"><span>2026-11-04 更新</span><span>模型 Qwen2.5-VL-3B + LoRA</span><span>A、P 各 3 个 seed，S 1 个</span><span>V4、V5 的测试集各只评估过一次</span></div>
+  <div class="meta" data-l="en"><span>Updated 2026-11-04</span><span>Model: Qwen2.5-VL-3B + LoRA</span><span>3 seeds for A and P, 1 for S</span><span>Locked test splits (V4, V5) each scored once</span></div>
   <p class="small" data-l="zh"><b>10-19 改版</b>：文字改成白话，新增 4 张结构图和一条排查路线。数字和结论都没有变，代码版本放在<a href="#appendix">附录</a>。</p>
   <p class="small" data-l="en"><b>10-19 revision</b>: rewritten in plain language, with 4 new structure diagrams and a step-by-step diagnosis. No numbers or conclusions changed; code versions are in the <a href="#appendix">appendix</a>.</p>
   <p class="small" data-l="zh"><b>10-20</b>：新增英文版，用右上角的“中文 / English”切换，图表和流程图里的文字也一起切换。</p>
@@ -283,6 +283,8 @@ l=l==='en'?'en':'zh';var r=document.documentElement;r.setAttribute('data-lang',l
   <p class="small" data-l="en"><b>29 Oct, later: feasible but needs a detour</b>: with the user's approval, new layouts put one object under the pudding's carrying route, and the rule “keep it at least 10 cm away; do not carry it over the object; go around it” arrives mid-task. A scripted controller shows every layout can be detoured. 504 runs on 168 states with the same seed: under the rule π0.5 entered the zone 168 times and obeyed 0 times, the same as with no rule or a neutral note, with a paired difference of 0.00 cm in the deepest point. Reading <code>ignores_detour</code>, as predicted; see <a href="#v5-detour">Feasible but needs a detour</a>. All three cases of question ① now have results.</p>
   <p class="small" data-l="zh"><b>10-31 HIL 套件</b>：用户要“多弄点场景任务”，于是换到标准 LIBERO 的四个套件、两个策略（π0.5、OpenVLA-OFT）做了一整套中途干预，共 6,171 次执行。“停下”“回原点”“别做了”两个策略都几乎不照做（≤ 1%），原任务照样完成；换成训练过的指令只在早换时管用（OpenVLA-OFT 75% 时只剩 20%）；推开机械臂、挪物体，π0.5 能恢复（93–100%）。π0 卡在环境门槛上没跑分支。见 <a href="#hil-suite">换到标准 LIBERO</a>。</p>
   <p class="small" data-l="en"><b>31 Oct, HIL suite</b>: the user asked for more scenarios and tasks, so a full suite of mid-task interventions ran on the four standard LIBERO suites with two policies (π0.5 and OpenVLA-OFT), 6,171 runs in all. Neither policy follows “stop”, “go back to the start” or “do not do the task” (1% or less), and both still finish the task; switching to a trained instruction only works early (OpenVLA-OFT drops to 20% at 75%); π0.5 recovers from being pushed or having things moved (93–100%). π0 stopped at the environment gate. See <a href="#hil-suite">Standard LIBERO</a>.</p>
+  <p class="small" data-l="zh"><b>11-04 机制：补回图像这条路就换得过去</b>：往 π0.5 里面看了一层。中途换不过去时，新指令进了模型，但动作专家从图像块读到的那部分变淡了。在第 12–14 层把它放大到 2 倍，失败格的换成功从 17/90 升到 64/90；同样大小的随机改动只有 22/90；原本换得过去的 108 个只丢 1 个。读法 <code>restores_switch</code>、<code>selective</code>，见<a href="#hil-mech">机制</a>。</p>
+  <p class="small" data-l="en"><b>4 Nov, mechanism: restoring the image route makes the switch work</b>: a look one level inside π0.5. When a mid-task switch fails, the new instruction does reach the model, but the part the action expert reads from the image patches has faded. Amplifying it 2× at layers 12–14 raises switch success in the failing cells from 17/90 to 64/90; a random change of the same size gives 22/90; of the 108 states that already switched, only 1 is lost. Readings <code>restores_switch</code> and <code>selective</code>; see <a href="#hil-mech">Mechanism</a>.</p>
   <nav class="toc" aria-label="目录" data-l="zh">
     <a href="#now"><b>现在在做什么</b></a><a href="#problem">要解决的问题</a><a href="#task">一道题长什么样</a><a href="#data">数据怎么造</a><a href="#method">方法</a><a href="#result">主结果</a><a href="#diagnosis">为什么 A 学不会</a><a href="#errors">B 错在哪</a><a href="#story">结论</a><a href="#lineage">方法来源</a><a href="#limits">限制</a><a href="#v5">下一阶段：V5</a><a href="#reading">精读：为什么做这个实验</a>
   </nav>
@@ -2145,25 +2147,134 @@ Program: the pudding and the basket lie on opposite sides → separated → 0 (c
     <li><b>Limitations</b>: simulation only; physical interventions and the probe only on π0.5; one seed per state (noise measured by repeat runs). Commands like “stop” are not among the training instructions, so that group cannot separate “ignores mid-task language” from “never learned it”; the effect of mid-task timing itself comes from the switch group.</li>
   </ul>
 
+  <h3 id="hil-mech"><span data-l="zh">机制：中途换不过去时，π0.5 里断的是哪条路？补回来就换得过去</span><span data-l="en">Mechanism: which route breaks inside π0.5 when a mid-task switch fails? Restoring it makes the switch work</span></h3>
+  <p data-l="zh">HIL 套件里，π0.5 在 LIBERO-Goal 上中途换指令，有的任务对换得过去，有的换不过去。11-04 用户和导师商量后决定往里看一层：换不过去时，新指令的信息在模型里断在哪儿？挑了三对任务：1→8（碗从放炉子改成放盘子，换得过去，作对照）、7→8（开炉子改成把碗放盘子）、2→9（酒瓶从放柜顶改成放架子），后两对中途基本换不过去。所有状态都取自 HIL 套件阶段 1 存下的执行，不新采数据；只用 π0.5 本身，不训练，不调 API。</p>
+  <p data-l="en">In the HIL suite, π0.5 on LIBERO-Goal could switch instructions mid-task for some task pairs and not for others. On 4 Nov the user and their advisor decided to look one level deeper: when the switch fails, where inside the model does the new instruction get lost? Three pairs were chosen: 1→8 (the bowl goes to the plate instead of the stove; it switches, so it is the control), 7→8 (from turning on the stove to putting the bowl on the plate) and 2→9 (the wine bottle goes to the rack instead of the cabinet top). The last two mostly fail to switch mid-task. Every state comes from runs stored by stage 1 of the HIL suite, so no new data was collected; π0.5 alone, no training, no API calls.</p>
+  <p data-l="zh">先说 π0.5 怎么出动作。它分两部分：一个大的视觉语言模型（VLM）读两张相机图和指令，在每一层为每个图像块、每个字留下一份“摘要”（K/V）；一个小的动作专家再逐层读这些摘要，生成接下来的一段动作。指令会在 VLM 的中间层被写进图像块的摘要里，所以动作专家也能从图像块读到任务。</p>
+  <p data-l="en">First, how π0.5 produces actions. It has two parts. A large vision-language model (VLM) reads the two camera images and the instruction, and at every layer leaves a “summary” (keys and values, K/V) for every image patch and every word. A small action expert then reads these summaries layer by layer and produces the next chunk of actions. The instruction is written into the image patches' summaries in the VLM's middle layers, so the action expert can also read the task from the image patches.</p>
+  <figure class="diagram">
+    <div class="dscroll">
+    <svg viewBox="0 0 760 290" role="img" aria-label="π0.5 的结构：指令和两张相机图进入 VLM，第 4 到 13 层把指令写进图像块；VLM 留下文字的 K/V 和图像块的 K/V；动作专家在第 16 层读文字、在第 14 层读图像块，输出下一段动作。中途换不过去时，图像块上新任务的印记降到 t = 0 的 0.51 到 0.71 倍；闭环检验在第 12 到 14 层把图像块上 B 减 A 的差放大到 2 倍。" data-aria-en="π0.5's structure: the instruction and two camera images enter the VLM, whose layers 4 to 13 write the instruction into the image patches; the VLM leaves K/V for the words and for the image patches; the action expert reads the words at layer 16 and the image patches at layer 14 and outputs the next action chunk. When a mid-task switch fails, the new task's imprint on the image patches drops to 0.51 to 0.71 of its t = 0 size; the closed-loop test amplifies the B minus A difference on the image patches at layers 12 to 14 to 2 times.">
+      <defs><marker id="ah21" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="d-ah"/></marker><marker id="ah21b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="d-ahc"/></marker></defs>
+      <rect class="d-box" x="0" y="30" width="150" height="50" rx="6"/>
+      <text class="d-t" x="12" y="51" data-l="zh">指令 A 或 B</text>
+      <text class="d-s" x="12" y="70" data-l="zh">中途从 A 换成 B</text>
+      <text class="d-t" x="12" y="51" data-l="en">Instruction A or B</text>
+      <text class="d-s" x="12" y="70" data-l="en">switched A → B mid-task</text>
+      <rect class="d-box" x="0" y="110" width="150" height="50" rx="6"/>
+      <text class="d-t" x="12" y="131" data-l="zh">两张相机图</text>
+      <text class="d-s" x="12" y="150" data-l="zh">主视角 + 腕部</text>
+      <text class="d-t" x="12" y="131" data-l="en">Two camera images</text>
+      <text class="d-s" x="12" y="150" data-l="en">main view + wrist</text>
+      <rect class="d-box" x="185" y="30" width="170" height="130" rx="6"/>
+      <text class="d-b" x="199" y="54" data-l="zh">VLM（18 层）</text>
+      <text class="d-s" x="199" y="80" data-l="zh">第 4–13 层：</text>
+      <text class="d-s" x="199" y="98" data-l="zh">指令经注意力</text>
+      <text class="d-s" x="199" y="116" data-l="zh">写进图像块</text>
+      <text class="d-b" x="199" y="54" data-l="en">VLM (18 layers)</text>
+      <text class="d-s" x="199" y="80" data-l="en">Layers 4–13:</text>
+      <text class="d-s" x="199" y="98" data-l="en">attention writes the</text>
+      <text class="d-s" x="199" y="116" data-l="en">instruction into the</text>
+      <text class="d-s" x="199" y="134" data-l="en">image patches</text>
+      <rect class="d-box" x="390" y="30" width="160" height="50" rx="6"/>
+      <text class="d-t" x="402" y="51" data-l="zh">文字的 K/V</text>
+      <text class="d-s" x="402" y="70" data-l="zh">指令本身</text>
+      <text class="d-t" x="402" y="51" data-l="en">Word K/V</text>
+      <text class="d-s" x="402" y="70" data-l="en">the instruction itself</text>
+      <rect class="d-key" x="390" y="110" width="160" height="50" rx="6"/>
+      <text class="d-t" x="402" y="131" data-l="zh">图像块的 K/V</text>
+      <text class="d-s" x="402" y="150" data-l="zh">512 个，带着任务</text>
+      <text class="d-t" x="402" y="131" data-l="en">Image-patch K/V</text>
+      <text class="d-s" x="402" y="150" data-l="en">512 patches, carry the task</text>
+      <rect class="d-box" x="630" y="30" width="130" height="130" rx="6"/>
+      <text class="d-b" x="644" y="54" data-l="zh">动作专家</text>
+      <text class="d-s" x="644" y="80" data-l="zh">逐层读 K/V</text>
+      <text class="d-s" x="644" y="98" data-l="zh">→ 下一段动作</text>
+      <text class="d-b" x="644" y="54" data-l="en">Action expert</text>
+      <text class="d-s" x="644" y="80" data-l="en">reads K/V</text>
+      <text class="d-s" x="644" y="98" data-l="en">layer by layer</text>
+      <text class="d-s" x="644" y="116" data-l="en">→ next actions</text>
+      <path class="d-ln" d="M150,55 H182" marker-end="url(#ah21)"/>
+      <path class="d-ln" d="M150,135 H182" marker-end="url(#ah21)"/>
+      <path class="d-ln" d="M355,55 H387" marker-end="url(#ah21)"/>
+      <path class="d-ln" d="M355,135 H387" marker-end="url(#ah21)"/>
+      <path class="d-ln" d="M550,55 H627" marker-end="url(#ah21)"/>
+      <path class="d-lna" d="M550,135 H627" marker-end="url(#ah21b)"/>
+      <text class="d-s" x="590" y="47" text-anchor="middle" data-l="zh">第 16 层读</text>
+      <text class="d-s" x="590" y="47" text-anchor="middle" data-l="en">layer 16</text>
+      <text class="d-acc" x="590" y="127" text-anchor="middle" data-l="zh">第 14 层读</text>
+      <text class="d-acc" x="590" y="127" text-anchor="middle" data-l="en">layer 14</text>
+      <rect class="d-warn" x="230" y="205" width="320" height="76" rx="6"/>
+      <text class="d-t" x="244" y="228" data-l="zh">换不过去时（开环测得）</text>
+      <text class="d-s" x="244" y="248" data-l="zh">图像块上新任务的印记</text>
+      <text class="d-s" x="244" y="266" data-l="zh">降到 t = 0 的 0.51–0.71 倍</text>
+      <text class="d-t" x="244" y="228" data-l="en">When the switch fails (open loop)</text>
+      <text class="d-s" x="244" y="248" data-l="en">the new task's imprint on the patches</text>
+      <text class="d-s" x="244" y="266" data-l="en">drops to 0.51–0.71 of its t = 0 size</text>
+      <rect class="d-key" x="570" y="205" width="190" height="76" rx="6"/>
+      <text class="d-t" x="584" y="228" data-l="zh">闭环检验</text>
+      <text class="d-s" x="584" y="248" data-l="zh">第 12–14 层图像块上</text>
+      <text class="d-s" x="584" y="266" data-l="zh">把 B − A 放大到 2 倍</text>
+      <text class="d-t" x="584" y="228" data-l="en">Closed-loop test</text>
+      <text class="d-s" x="584" y="248" data-l="en">image patches, layers 12–14:</text>
+      <text class="d-s" x="584" y="266" data-l="en">B − A amplified to 2×</text>
+      <path class="d-ln" d="M470,205 V163" marker-end="url(#ah21)"/>
+      <path class="d-lna" d="M610,205 V139" marker-end="url(#ah21b)"/>
+    </svg>
+    </div>
+    <figcaption><span data-l="zh">π0.5 的两部分和两条读任务的路。蓝色是图像这条路：开环发现它在换不过去时变淡，闭环检验把它补回来。</span><span data-l="en">The two parts of π0.5 and the two routes by which the task is read. Blue marks the image route: the open-loop study found it fades when the switch fails, and the closed-loop test restores it.</span></figcaption>
+  </figure>
+  <p data-l="zh"><b>开环先看到的</b>（240 个状态，只推理，不跑仿真）：动作专家主要在第 14 层从图像块读任务，在第 16 层直接读文字，和已发表的 π0.5 研究（Goodfire，DROID 检查点，只看第一步）一致。换得过去的 1→8 中途一直走图像这条路；换不过去的五个格里，图像块上的任务印记降到 t = 0 的 0.51–0.71 倍，第 14 层几乎读不到新任务。但同一格内，印记的高低不区分成败，所以这一步只是相关。</p>
+  <p data-l="en"><b>What the open-loop study saw first</b> (240 states, inference only, no simulation): the action expert reads the task mainly from the image patches at layer 14 and directly from the words at layer 16, matching published work on π0.5 (Goodfire, DROID checkpoint, first step only). The 1→8 pair, which switches, keeps using the image route mid-task; in the five failing cells the task's imprint on the image patches drops to 0.51–0.71 of its t = 0 size, and layer 14 barely reads the new task. Within a cell, however, the imprint does not separate successes from failures, so this step only shows a correlation.</p>
+  <p data-l="zh"><b>闭环检验</b>：重跑这些切换，从存下的状态接着做最多 300 步。每次推理用同一帧画面算两遍 VLM（新指令 B、旧指令 A），只改动作专家在第 12–14 层图像块上读到的 K/V。一共五种做法：不改；沿 B − A 放大到 2 倍或 4 倍；沿随机方向改同样大小，作为对照。同一状态的几种做法共用同样的噪声。失败格跑全部五种，原本换得过去的格（成功格和从头就给 B 的起点格）跑不改、2 倍、4 倍，看会不会被搞坏。正式批次 774 次执行，读法和门槛在 86 次的 smoke 之后、正式批次之前冻结。</p>
+  <p data-l="en"><b>The closed-loop test</b>: rerun those switches, carrying on from the stored state for up to 300 steps. At every inference the VLM runs twice on the same frame (new instruction B and old instruction A), and only the K/V the action expert reads on the image patches at layers 12–14 is changed. There are five arms: unchanged; B − A amplified to 2× or 4×; or a random direction of the same size, as a control. All arms of a state share the same noise. Failing cells run all five; cells that already switch (success cells, and start cells where B is given from the beginning) run unchanged, 2× and 4×, to see whether the change breaks them. The formal batch is 774 runs; readings and thresholds were frozen after an 86-run smoke and before the formal batch.</p>
+  <div class="chart" id="c21">
+    <div class="ctitle"><span data-l="zh">放大 2 倍：换不过去的大多换过去了，原本换得过去的不受影响</span><span data-l="en">Amplified 2×: most failing switches now succeed, and switches that already worked are untouched</span></div>
+    <div class="csub"><span data-l="zh">上、中：每种做法的结局，按状态数的比例。下：同一状态两种做法的配对差（百分点），横线是 95% 区间（按格分层的 bootstrap，2000 次）；虚线是事先写定的门槛。</span><span data-l="en">Top and middle: outcome of each arm, as a share of states. Bottom: paired differences between two arms on the same states (points); lines are 95% intervals (cell-stratified bootstrap, 2,000 draws); dashed lines are the thresholds fixed in advance.</span></div>
+    <div class="legend" id="c21-legend"></div>
+    <svg id="c21-svg" viewBox="0 0 720 600" role="img" aria-label="失败格 90 个状态，做成新任务 B 的：不干预 17（19%），放大 2 倍 64（71%），随机 2 倍 22（24%），放大 4 倍 16（18%），随机 4 倍 28（31%）。只把旧任务 A 做完的：59、12、57、23、45。原本换得过去的 108 个状态：不干预 108，放大 2 倍 107，放大 4 倍 65。配对差：放大 2 倍减不干预 +52 [41, 63]；放大 2 倍减随机 2 倍 +47 [34, 59]；放大 4 倍减不干预 −1 [−12, 10]；放大 4 倍减随机 4 倍 −13 [−26, −1]；放大 2 倍减随机 4 倍 +40 [29, 51]；原本换得过去的，放大 2 倍减不干预 −1 [−3, 0]，放大 4 倍减不干预 −40 [−48, −32]。" data-aria-en="Failing cells, 90 states, did the new task B: no change 17 (19%), amplified 2× 64 (71%), random 2× 22 (24%), amplified 4× 16 (18%), random 4× 28 (31%). Only finished the old task A: 59, 12, 57, 23, 45. The 108 states that already switch: no change 108, amplified 2× 107, amplified 4× 65. Paired differences: amplified 2× minus no change +52 [41, 63]; amplified 2× minus random 2× +47 [34, 59]; amplified 4× minus no change −1 [−12, 10]; amplified 4× minus random 4× −13 [−26, −1]; amplified 2× minus random 4× +40 [29, 51]; for states that already switch, amplified 2× minus no change −1 [−3, 0] and amplified 4× minus no change −40 [−48, −32]."></svg>
+    <details><summary><span data-l="zh">数据表</span><span data-l="en">Data table</span></summary><div class="tablewrap"><table id="c21-table"></table></div></details>
+  </div>
+  <ul class="plain" data-l="zh">
+    <li><b>放大 2 倍，换得过去了</b>：失败格换成功从 17/90 升到 64/90，增益 +52 个百分点 [41, 63]；同样大小的随机方向只有 22/90，放大比它高 +47 [34, 59]。读作 <code>restores_switch</code>。配对看，50 个状态由失败变成功，3 个反过来。两对各自都成立：7→8 由 9/36 到 27/36，2→9 由 8/54 到 37/54。</li>
+    <li><b>把“继续做 A”变成“去做 B”</b>：不改时 73 次失败里有 59 次是把旧任务 A 做完了；放大 2 倍后只剩 12 次，全在 2→9 的 75%（那一格只救回 4/18，机器人在旧任务上已经走得太远）。两个都没做成的仍是 14 次，和不改一样，所以放大没有让机器人乱动。</li>
+    <li><b>不伤原本换得过去的</b>：成功格 54/54 → 54/54，起点格 54/54 → 53/54，变化 −1 [−3, 0]，读作 <code>selective</code>。成功格里，放大 2 倍换成功用的步数中位还少 5 步。</li>
+    <li><b>4 倍是过量</b>：失败格没有增益（16/90），51 次两个都没做成；原本换得过去的只剩 65/108，起点格 2→9 只剩 2/18。读作 <code>no_restore</code>、<code>damages</code>，按事先的规则只报告为剂量上限。4 倍对第一个动作块的改动比 2 倍大得多，却没有用，所以不是“推得越多越好”。</li>
+    <li><b>核对</b>：774 次全部完成；切换那一步的物理状态和阶段 1 逐位相同；不改的那一臂与 openpi 原生推理逐位相同；每次改动的大小与设定的相对误差不超过 2 × 10<sup>−7</sup>。不改的那一臂与阶段 1 的结局 185/198 相同，差别来自跨节点的数值噪声，所以对照用同一批次里不改的那一臂。</li>
+    <li><b>对主线的意义</b>：第 ① 个问题从“它不听”往前走了一步：中途换不过去时，新指令其实进了模型，但动作专家从图像块读到的那部分变淡了；按事先写定的规则，这是换不过去的一个因果环节，而且可以有选择地补回来。这可以作为“只在人换指令时介入”的修复依据（还要单独批准）。“停下”“回原点”这类训练外的命令不在这次范围里。</li>
+    <li><b>局限</b>：随机对照只在 K/V 的改动大小上匹配，对动作的影响比放大小得多，“在动作上适度推一把也行”还没排除；层窗口是在同样三对任务上选的，没在别的任务对上检验；只试了 2 倍、4 倍两个剂量，2 倍是事先定的，没调；干预要知道旧指令，人中途改口时系统是知道的；一个检查点，仿真，每格 18 个状态。</li>
+  </ul>
+  <ul class="plain" data-l="en">
+    <li><b>Amplified 2×, the switch works</b>: switch success in the failing cells rises from 17/90 to 64/90, a gain of +52 points [41, 63]; a random direction of the same size gives only 22/90, and amplifying beats it by +47 [34, 59]. Reading <code>restores_switch</code>. Paired by state, 50 states go from failure to success and 3 the other way. It holds for each pair: 7→8 from 9/36 to 27/36 and 2→9 from 8/54 to 37/54.</li>
+    <li><b>“Keep doing A” becomes “do B”</b>: with no change, 59 of the 73 failures finished the old task A; amplified 2×, only 12 do, all in 2→9 at 75% (that cell recovers only 4/18; the robot is already too far into the old task). Runs that did neither stay at 14, as with no change, so amplifying does not make the robot flail.</li>
+    <li><b>Switches that already work are untouched</b>: success cells 54/54 → 54/54 and start cells 54/54 → 53/54, a change of −1 [−3, 0], reading <code>selective</code>. In the success cells, amplifying 2× is also 5 steps faster on median.</li>
+    <li><b>4× is an overdose</b>: no gain in the failing cells (16/90), with 51 runs doing neither; states that already switch fall to 65/108, and the 2→9 start cell to 2/18. Readings <code>no_restore</code> and <code>damages</code>; by the rule fixed in advance this is reported only as the dose ceiling. 4× moves the first action chunk much more than 2× and still does not help, so “the harder the push, the better” is not what is going on.</li>
+    <li><b>Checks</b>: all 774 runs finished; the physics at the switch step matches stage 1 bit for bit; the unchanged arm matches openpi's own inference bit for bit; every change has the set size to within a relative error of 2 × 10<sup>−7</sup>. The unchanged arm matches stage 1's outcome in 185/198 runs; the differences are numerical noise across nodes, so the control is the unchanged arm in the same batch.</li>
+    <li><b>What it means for the main line</b>: question ① moves one step past “it does not listen”. When the mid-task switch fails, the new instruction does reach the model, but the part the action expert reads from the image patches has faded. By the rule fixed in advance, this is a causal link in the failure, and it can be restored selectively. That is grounds for a repair that steps in only when a human changes the instruction (which needs separate approval). Untrained commands such as “stop” or “go back” are outside this test.</li>
+    <li><b>Limitations</b>: the random control matches the size of the K/V change, not its effect on actions, which is much smaller than amplifying, so “a moderate push in action space would do as well” is not yet ruled out; the layer window was chosen on the same three pairs and has not been checked on other pairs; only two doses were tried, with 2× fixed in advance and not tuned; the change needs to know the old instruction, which the system does know when a human changes it mid-task; one checkpoint, simulation, 18 states per cell.</li>
+  </ul>
+
   <h3 id="v5-next"><span data-l="zh">下一步（每步开始前确认）</span><span data-l="en">Next (each step confirmed before it starts)</span></h3>
-  <p data-l="zh"><b>整条线是三个问题</b>（10-28 和用户对齐）。① 人在任务中途干预，VLA 会怎样？π0.5 不听：加一条规则，任务做不成了也照样越线；把指令换成“回原点”，照样把任务做完；规则做得到、只要绕一点路，也照样从物体上方过。② 加了规则以后，谁来判断任务还做不做得成？训练过的 S 能判对 92%。③ 把这个判断放在 VLA 前面，能不能挡住？离线拼接下，违规从 100% 降到 8%；“回原点”的结果说明，真要停下得靠控制器接管，不能靠一句话。10-29 补上了第 ① 个问题的另一半：规则做得到、只要绕一点路，它也不守（168 次全部进禁区）。所以不管判可行还是不可行，执行都要在策略外面：停下由控制器做，绕开也由控制器做。10-31 的 HIL 套件把第 ① 个问题扩到标准 LIBERO 四个套件、两个策略（π0.5、OpenVLA-OFT），并补上了“动手”式干预：说话停不下它，推它、挪东西它能恢复。</p>
-  <p data-l="en"><b>The whole line is three questions</b> (agreed with the user on 28 Oct). ① When a human intervenes mid-task, what does the VLA do? π0.5 does not listen: given a rule, it crosses the line even when the task has become impossible; told to go back to its start, it finishes the task anyway; given a rule it could follow with a small detour, it still carries the pudding over the object. ② Once a rule is added, who decides whether the task can still be done? The trained S gets it right 92% of the time. ③ With that judgment in front of the VLA, are violations stopped? Stitched together offline, violations fall from 100% to 8%; the go-back result shows that actually stopping has to be done by taking over at the controller, not by a sentence. On 29 Oct the other half of question ① was filled in: when the rule can be followed with a small detour, π0.5 still does not follow it (all 168 runs entered the zone). So whether the verdict is feasible or infeasible, acting on it happens outside the policy: the controller stops, and the controller detours. The HIL suite of 31 Oct extends question ① to the four standard LIBERO suites and two policies (π0.5 and OpenVLA-OFT), and adds physical interventions: words do not stop it, while it recovers from being pushed or having things moved.</p>
+  <p data-l="zh"><b>整条线是三个问题</b>（10-28 和用户对齐）。① 人在任务中途干预，VLA 会怎样？π0.5 不听：加一条规则，任务做不成了也照样越线；把指令换成“回原点”，照样把任务做完；规则做得到、只要绕一点路，也照样从物体上方过。② 加了规则以后，谁来判断任务还做不做得成？训练过的 S 能判对 92%。③ 把这个判断放在 VLA 前面，能不能挡住？离线拼接下，违规从 100% 降到 8%；“回原点”的结果说明，真要停下得靠控制器接管，不能靠一句话。10-29 补上了第 ① 个问题的另一半：规则做得到、只要绕一点路，它也不守（168 次全部进禁区）。所以不管判可行还是不可行，执行都要在策略外面：停下由控制器做，绕开也由控制器做。10-31 的 HIL 套件把第 ① 个问题扩到标准 LIBERO 四个套件、两个策略（π0.5、OpenVLA-OFT），并补上了“动手”式干预：说话停不下它，推它、挪东西它能恢复。11-04 的机制研究往里看了一层：中途换不过去时，新指令进了模型，但动作专家从图像块读到的那部分变淡了；在第 12–14 层把它放大到 2 倍，失败格的换成功从 19% 升到 71%，原本换得过去的不受影响。</p>
+  <p data-l="en"><b>The whole line is three questions</b> (agreed with the user on 28 Oct). ① When a human intervenes mid-task, what does the VLA do? π0.5 does not listen: given a rule, it crosses the line even when the task has become impossible; told to go back to its start, it finishes the task anyway; given a rule it could follow with a small detour, it still carries the pudding over the object. ② Once a rule is added, who decides whether the task can still be done? The trained S gets it right 92% of the time. ③ With that judgment in front of the VLA, are violations stopped? Stitched together offline, violations fall from 100% to 8%; the go-back result shows that actually stopping has to be done by taking over at the controller, not by a sentence. On 29 Oct the other half of question ① was filled in: when the rule can be followed with a small detour, π0.5 still does not follow it (all 168 runs entered the zone). So whether the verdict is feasible or infeasible, acting on it happens outside the policy: the controller stops, and the controller detours. The HIL suite of 31 Oct extends question ① to the four standard LIBERO suites and two policies (π0.5 and OpenVLA-OFT), and adds physical interventions: words do not stop it, while it recovers from being pushed or having things moved. On 4 Nov the mechanism study looked one level inside: when the mid-task switch fails, the new instruction reaches the model, but the part the action expert reads from the image patches has faded; amplifying it 2× at layers 12–14 raises switch success in the failing cells from 19% to 71%, and switches that already worked are untouched.</p>
   <ol class="next" data-l="zh">
     <li><b>S 加 seed（主线）</b>：S 补 seed 714、715，只看验证，看 92% 稳不稳、比 P 低的 1.7 个百分点是不是波动。每个 seed 约 11 GPU 小时。做完以后闸门的读数可以按 3 个 seed 重算，不用新跑机器人；现在完成率只比门槛多 1 道题，这一步也能说明它稳不稳。</li>
     <li><b>S 的正式考试</b>：测试题已用掉，需要新的留出源（同一任务没用过的初始状态，要重新执行 nominal π0.5，需要数据采集批准）。</li>
     <li><b>在线闸门</b>：真的在机器人运行时接上 S（控制器改动要单独批准）。S 每次判断约 12 秒，要更短的写法。停下以后机器人做什么也要决定；“回原点”的结果说明这一步得由控制器来做（停住，或用脚本退回），不能靠换提示。“绕路”的结果说明判“可行”时也一样：规则要由策略外面执行（像脚本见证那样的路点控制器，或给 π0.5 的目标位置加约束），先要定执行器和它用的感知。</li>
     <li><b>HIL 套件的后续（备选）</b>：π0 的分支作为写明的偏离补跑（约 10 GPU 小时）；给 OpenVLA-OFT 补动手干预和探针，看“推得动、说不动”是否也跨策略。</li>
-    <li><b>整理成论文主线</b>：A 50%、P 94%、现成检测器 52%、S 92%；π0.5 不理会中途规则（不可行时 100% 越线），也不理会中途换的指令（回原点 0/133，照样完成 98%），也不理会可行、只需绕一点路的规则（进禁区 168/168，遵守 0）；标准 LIBERO 上 π0.5、OpenVLA-OFT 对“停下”“回原点”“别做了”照做都不到 1%，π0.5 对动手干预恢复 93–100%；加上 S 闸门后越线 8%、完成 87%。</li>
+    <li><b>机制研究的后续</b>：动作上匹配的随机对照（约 1 GPU 小时），排除“在动作上适度推一把也行”；P5 修复：在没用来选层的任务对上，留出检验“人换指令时放大 2 倍”，配改写提示等对照；P4：找第 8–13 层里中途不再把新指令写进图像块的神经元。每项都要用户点头。</li>
+    <li><b>整理成论文主线</b>：A 50%、P 94%、现成检测器 52%、S 92%；π0.5 不理会中途规则（不可行时 100% 越线），也不理会中途换的指令（回原点 0/133，照样完成 98%），也不理会可行、只需绕一点路的规则（进禁区 168/168，遵守 0）；标准 LIBERO 上 π0.5、OpenVLA-OFT 对“停下”“回原点”“别做了”照做都不到 1%，π0.5 对动手干预恢复 93–100%；加上 S 闸门后越线 8%、完成 87%；机制上，补回第 12–14 层的图像路，中途换成功从 19% 升到 71%，原本换得过去的不受影响。</li>
   </ol>
   <ol class="next" data-l="en">
     <li><b>More seeds for S (main line)</b>: seeds 714 and 715 for S, validation only, to see whether 92% holds and whether the 1.7-point gap to P is seed noise. About 11 GPU hours per seed. Afterwards the gate readout can be recomputed over three seeds with no new robot runs; completion currently clears its bar by one question, so this also shows whether that holds.</li>
     <li><b>A final exam for S</b>: the test questions are used up, so this needs new held-out sources (unused starting states of the same task, with nominal π0.5 run again; needs approval for data collection).</li>
     <li><b>An online gate</b>: actually connect S while the robot runs (the controller change needs separate approval). S takes about 12 seconds per verdict, so it needs a shorter write-up. What the robot does after stopping must also be decided; the go-back result shows this has to be done by the controller (hold still, or a scripted retreat), not by changing the prompt. The detour result shows the same holds when the verdict is feasible: the rule has to be carried out outside the policy (a waypoint controller like the scripted witness, or constraints on π0.5's target positions), so the executor and its perception come first.</li>
     <li><b>HIL suite follow-ups (in reserve)</b>: run π0's branches as a stated deviation (about 10 GPU hours); add the physical interventions and the probe for OpenVLA-OFT, to see whether “recovers from pushes, ignores words” also holds across policies.</li>
-    <li><b>Write up the main line</b>: A 50%, P 94%, off-the-shelf detector 52%, S 92%; π0.5 ignoring a mid-task rule (100% crossing when the rule is infeasible), a changed mid-task instruction (back at the start 0/133, task still finished 98%) and a feasible rule that needs only a small detour (entered the zone 168/168, obeyed 0); on standard LIBERO, π0.5 and OpenVLA-OFT follow “stop”, “go back” and “do not” less than 1% of the time, while π0.5 recovers from physical interventions at 93–100%; with the S gate in front, 8% crossing and 87% completion.</li>
+    <li><b>Mechanism follow-ups</b>: a random control matched in action space (about 1 GPU hour), to rule out “a moderate push in action space would do as well”; P5 repair: test “amplify 2× when a human changes the instruction” on task pairs not used to choose the layers, with controls such as rewording the prompt; P4: find the neurons in layers 8–13 that stop writing the new instruction into the image patches mid-task. Each needs the user's go-ahead.</li>
+    <li><b>Write up the main line</b>: A 50%, P 94%, off-the-shelf detector 52%, S 92%; π0.5 ignoring a mid-task rule (100% crossing when the rule is infeasible), a changed mid-task instruction (back at the start 0/133, task still finished 98%) and a feasible rule that needs only a small detour (entered the zone 168/168, obeyed 0); on standard LIBERO, π0.5 and OpenVLA-OFT follow “stop”, “go back” and “do not” less than 1% of the time, while π0.5 recovers from physical interventions at 93–100%; with the S gate in front, 8% crossing and 87% completion; and, on the mechanism side, restoring the image route at layers 12–14 raises mid-task switch success from 19% to 71% without harming switches that already worked.</li>
   </ol>
-  <p class="small" data-l="zh">盲看由 Claude 完成，不是人工审阅；它说明“仔细看图能判断”，不代表训练后模型的能力。上面的数字来自 <code>V5_STEP1_REPORT.md</code>、<code>V5_STEP2_REPORT.md</code>、<code>V5_C0_REPORT.md</code>、<code>V5_LAYOUT_PROTOCOL.md</code>、<code>V5_S0_REPORT.md</code>、<code>V5_S1_REPORT.md</code>、<code>V5_S2_REPORT.md</code>、<code>V5_S3_REPORT.md</code>、<code>V5_FIT_REPORT.md</code>、<code>V5_S4_REPORT.md</code>、<code>V5_SEEDS_REPORT.md</code>、<code>V5_TEST_REPORT.md</code>、<code>V5_DET_REPORT.md</code>、<code>V5_S5_REPORT.md</code>、<code>V5_HIL_REPORT.md</code>、<code>V5_GATE_REPORT.md</code>、<code>V5_RETURN_REPORT.md</code>、<code>V5_DETOUR_REPORT.md</code>、<code>HIL_SUITE_REPORT.md</code>。S1 盲看时 Claude 事先知道每个单元恰好有一条规则把布丁和篮子隔开。</p>
-  <p class="small" data-l="en">The blind review was done by Claude, not by a human; it shows that a careful look at the images can decide, not what a trained model will do. The numbers above come from <code>V5_STEP1_REPORT.md</code>, <code>V5_STEP2_REPORT.md</code>, <code>V5_C0_REPORT.md</code>, <code>V5_LAYOUT_PROTOCOL.md</code>, <code>V5_S0_REPORT.md</code>, <code>V5_S1_REPORT.md</code>, <code>V5_S2_REPORT.md</code>, <code>V5_S3_REPORT.md</code>, <code>V5_FIT_REPORT.md</code>, <code>V5_S4_REPORT.md</code>, <code>V5_SEEDS_REPORT.md</code>, <code>V5_TEST_REPORT.md</code>, <code>V5_DET_REPORT.md</code>, <code>V5_S5_REPORT.md</code>, <code>V5_HIL_REPORT.md</code>, <code>V5_GATE_REPORT.md</code>, <code>V5_RETURN_REPORT.md</code>, <code>V5_DETOUR_REPORT.md</code> and <code>HIL_SUITE_REPORT.md</code>. In the S1 review Claude knew in advance that each unit has exactly one rule separating the pudding from the basket.</p>
+  <p class="small" data-l="zh">盲看由 Claude 完成，不是人工审阅；它说明“仔细看图能判断”，不代表训练后模型的能力。上面的数字来自 <code>V5_STEP1_REPORT.md</code>、<code>V5_STEP2_REPORT.md</code>、<code>V5_C0_REPORT.md</code>、<code>V5_LAYOUT_PROTOCOL.md</code>、<code>V5_S0_REPORT.md</code>、<code>V5_S1_REPORT.md</code>、<code>V5_S2_REPORT.md</code>、<code>V5_S3_REPORT.md</code>、<code>V5_FIT_REPORT.md</code>、<code>V5_S4_REPORT.md</code>、<code>V5_SEEDS_REPORT.md</code>、<code>V5_TEST_REPORT.md</code>、<code>V5_DET_REPORT.md</code>、<code>V5_S5_REPORT.md</code>、<code>V5_HIL_REPORT.md</code>、<code>V5_GATE_REPORT.md</code>、<code>V5_RETURN_REPORT.md</code>、<code>V5_DETOUR_REPORT.md</code>、<code>HIL_SUITE_REPORT.md</code>、<code>HIL_MECHANISM_REPORT.md</code>、<code>HIL_MECHANISM_CLOSED_LOOP_REPORT.md</code>。S1 盲看时 Claude 事先知道每个单元恰好有一条规则把布丁和篮子隔开。</p>
+  <p class="small" data-l="en">The blind review was done by Claude, not by a human; it shows that a careful look at the images can decide, not what a trained model will do. The numbers above come from <code>V5_STEP1_REPORT.md</code>, <code>V5_STEP2_REPORT.md</code>, <code>V5_C0_REPORT.md</code>, <code>V5_LAYOUT_PROTOCOL.md</code>, <code>V5_S0_REPORT.md</code>, <code>V5_S1_REPORT.md</code>, <code>V5_S2_REPORT.md</code>, <code>V5_S3_REPORT.md</code>, <code>V5_FIT_REPORT.md</code>, <code>V5_S4_REPORT.md</code>, <code>V5_SEEDS_REPORT.md</code>, <code>V5_TEST_REPORT.md</code>, <code>V5_DET_REPORT.md</code>, <code>V5_S5_REPORT.md</code>, <code>V5_HIL_REPORT.md</code>, <code>V5_GATE_REPORT.md</code>, <code>V5_RETURN_REPORT.md</code>, <code>V5_DETOUR_REPORT.md</code>, <code>HIL_SUITE_REPORT.md</code>, <code>HIL_MECHANISM_REPORT.md</code> and <code>HIL_MECHANISM_CLOSED_LOOP_REPORT.md</code>. In the S1 review Claude knew in advance that each unit has exactly one rule separating the pudding from the basket.</p>
 </section>
 
 <section id="reading">
@@ -3198,6 +3309,57 @@ CHARTS.push(function(){
     G2.map(r=>`<tr><td>${nm(r)}</td>`+r.v.map((v,j)=>`<td class="n">${v[0].toFixed(1)}% (${v[1].toFixed(1)}–${v[2].toFixed(1)}) · ${T(RD[r.r[j]][0],RD[r.r[j]][1])}</td>`).join('')+'</tr>').join('')+
     hd(T('动手干预（完成 ÷ 对照）','Physical intervention (finished ÷ control)'),'π0.5',T('适用','Applied'))+
     G3.map(r=>`<tr><td>${nm(r)}</td><td class="n">${r.v[0].toFixed(1)}% (${r.v[1].toFixed(1)}–${r.v[2].toFixed(1)})</td><td class="n">${r.n}</td></tr>`).join('')+'</tbody>';
+});
+
+// Chart 21: mechanism closed-loop test (HIL_MECHANISM_CLOSED_LOOP_REPORT.md). Outcome per arm in the failing cells (90 states) and in the
+// cells that already switch (108 states), then paired differences between arms with cell-stratified bootstrap 95% intervals.
+CHARTS.push(function(){
+  const svg=clear('c21-svg');
+  const OUT=[{zh:'做成新任务 B',en:'Did the new task B',c:'--s1'},{zh:'只把旧任务 A 做完',en:'Only finished the old task A',c:'--s2'},{zh:'两个都没做成',en:'Did neither',c:'--neutral'}];
+  legend('c21-legend',OUT);
+  const ARM={native:['不改','No change'],amp2:['放大 2 倍','Amplified 2×'],rand2:['随机 2 倍','Random 2×'],amp4:['放大 4 倍','Amplified 4×'],rand4:['随机 4 倍','Random 4×']};
+  const P1=[['native',17,59,14],['amp2',64,12,14],['rand2',22,57,11],['amp4',16,23,51],['rand4',28,45,17]];
+  const P2=[['native',108,0,0],['amp2',107,0,1],['amp4',65,1,42]];
+  const D=[{g:1,zh:'放大 2 倍 − 不改',en:'Amplify 2× − no change',v:[52.2,41.1,63.3],o:[50,3],rd:['λ = 2 增益 → restores_switch','λ = 2 gain → restores_switch']},
+    {g:1,zh:'放大 2 倍 − 随机 2 倍',en:'Amplify 2× − random 2×',v:[46.7,34.4,58.9],o:[47,5],rd:['λ = 2 特异性','λ = 2 specificity']},
+    {g:1,zh:'放大 4 倍 − 不改',en:'Amplify 4× − no change',v:[-1.1,-12.2,10.0],o:[15,16],rd:['λ = 4 增益 → no_restore','λ = 4 gain → no_restore']},
+    {g:1,zh:'放大 4 倍 − 随机 4 倍',en:'Amplify 4× − random 4×',v:[-13.3,-25.6,-1.1],o:[15,27],rd:['λ = 4 特异性','λ = 4 specificity']},
+    {g:1,zh:'放大 2 倍 − 随机 4 倍',en:'Amplify 2× − random 4×',v:[40.0,28.9,51.1],o:[40,4],rd:['只报告，不作门槛','reported only, not a gate']},
+    {g:2,zh:'放大 2 倍 − 不改',en:'Amplify 2× − no change',v:[-0.9,-2.8,0.0],o:[0,1],rd:['λ = 2 选择性 → selective','λ = 2 selectivity → selective']},
+    {g:2,zh:'放大 4 倍 − 不改',en:'Amplify 4× − no change',v:[-39.8,-48.1,-32.4],o:[0,43],rd:['λ = 4 选择性 → damages','λ = 4 selectivity → damages']}];
+  const x0=180,x1=640,h=13,r=24,r3=22,Xp=v=>x0+(x1-x0)*v/100,X3=v=>x0+(x1-x0)*(v+50)/125;
+  const t1=40,end1=t1+r*P1.length,t2=end1+62,end2=t2+r*P2.length,t3=end2+70;
+  const g1=D.filter(d=>d.g===1),g2=D.filter(d=>d.g===2),a1=t3+18,b1=a1+r3*g1.length,a2=b1+36,b2=a2+r3*g2.length;
+  text(svg,0,t1-18,T('失败格（7→8 的 .5、.75；2→9 的 .25、.5、.75），90 个状态','Failing cells (7→8 at .5, .75; 2→9 at .25, .5, .75), 90 states'),'lab2');
+  text(svg,0,t2-18,T('原本换得过去的（1→8 的 .25、.5、.75；三对从头给 B），108 个状态','States that already switch (1→8 at .25, .5, .75; all three pairs from the start), 108 states'),'lab2');
+  text(svg,0,t3-18,T('配对差（百分点）：同一批状态，两种做法相减','Paired differences (points): two arms on the same states'),'lab2');
+  [[t1,end1],[t2,end2]].forEach(([a,b])=>[0,25,50,75,100].forEach(v=>{el('line',{x1:Xp(v),x2:Xp(v),y1:a-8,y2:b-6,class:'grid'},svg);text(svg,Xp(v),b+8,v+'%','tick','middle');}));
+  const stack=(rows,t,total)=>rows.forEach((row,i)=>{const y=t+i*r,name=T(ARM[row[0]][0],ARM[row[0]][1]);let x=Xp(0);
+    text(svg,x0-12,y+h-1,name,'lab','end');
+    row.slice(1).forEach((n,j)=>{const w=(x1-x0)*n/total;if(w>0)el('rect',{x,y,width:w,height:h,fill:`var(${OUT[j].c})`,stroke:'var(--bg)','stroke-width':1},svg);x+=w;});
+    const pct=Math.round(100*row[1]/total);text(svg,x1+8,y+h-1,pct+'%','val');
+    bindTip(el('rect',{x:0,y:y-5,width:720,height:r-2,class:'hit'},svg),`<b>${name}</b>`+OUT.map((o,j)=>`<br>${nm(o)}${COLON()}${row[j+1]}/${total}`).join(''));});
+  stack(P1,t1,90);stack(P2,t2,108);
+  [-50,-25,0,25,50,75].forEach(v=>{el('line',{x1:X3(v),x2:X3(v),y1:a1-8,y2:b2-6,class:v===0?'axis':'grid'},svg);text(svg,X3(v),b2+16,(v>0?'+':v<0?'−':'')+Math.abs(v),'tick','middle');});
+  text(svg,0,a1-8,T('失败格（90 个状态）','Failing cells (90 states)'),'tick');
+  text(svg,0,a2-8,T('原本换得过去的（108 个状态）','Already switch (108 states)'),'tick');
+  el('line',{x1:X3(15),x2:X3(15),y1:a1+2,y2:b1-4,class:'ref','stroke-dasharray':'4 3'},svg);text(svg,X3(15),a1-8,T('+15：恢复门槛','+15: restore bar'),'lab2','middle');
+  el('line',{x1:X3(-10),x2:X3(-10),y1:a2+2,y2:b2-4,class:'ref','stroke-dasharray':'4 3'},svg);text(svg,X3(-10),a2-8,T('−10：选择性门槛','−10: selectivity bar'),'lab2','middle');
+  const sg=v=>(v>0?'+':v<0?'−':'')+Math.abs(v).toFixed(0);
+  const fm=v=>(v<0?'−':'')+Math.abs(v).toFixed(0);
+  const forest=(rows,a)=>rows.forEach((d,i)=>{const y=a+i*r3+r3/2,name=nm(d),v=d.v;text(svg,x0-12,y+4,name,'lab','end');
+    el('line',{x1:X3(v[1]),x2:X3(v[2]),y1:y,y2:y,stroke:'var(--ink)','stroke-width':1.5},svg);
+    [v[1],v[2]].forEach(u=>el('line',{x1:X3(u),x2:X3(u),y1:y-4,y2:y+4,stroke:'var(--ink)','stroke-width':1.5},svg));
+    el('circle',{cx:X3(v[0]),cy:y,r:4.5,fill:'var(--ink)'},svg);
+    text(svg,X3(Math.max(v[0],v[2]))+10,y+4,`${sg(v[0])} [${fm(v[1])}, ${fm(v[2])}]`,'val');
+    bindTip(el('rect',{x:0,y:y-r3/2,width:720,height:r3-1,class:'hit'},svg),`<b>${name}</b><br>${sg(v[0])} ${T('个百分点','points')}${paren(v[1].toFixed(1)+' – '+v[2].toFixed(1))}<br>${T('只有前者成功 / 只有后者成功','only the first succeeded / only the second')}${COLON()}${d.o[0]} / ${d.o[1]}<br>${T(d.rd[0],d.rd[1])}`);});
+  forest(g1,a1);forest(g2,a2);
+  const hd=(a,b,c,dd)=>`<tr><th>${a}</th><th class="n">${b}</th><th class="n">${c}</th><th class="n">${dd}</th></tr>`;
+  const outRows=(rows,total)=>rows.map(r=>`<tr><td>${T(ARM[r[0]][0],ARM[r[0]][1])}</td>`+r.slice(1).map(n=>`<td class="n">${n}/${total}</td>`).join('')+'</tr>').join('');
+  document.getElementById('c21-table').innerHTML=`<thead>${hd(T('失败格（90 个状态）','Failing cells (90 states)'),nm(OUT[0]),nm(OUT[1]),nm(OUT[2]))}</thead><tbody>`+outRows(P1,90)+
+    hd(T('原本换得过去的（108 个状态）','Already switch (108 states)'),nm(OUT[0]),nm(OUT[1]),nm(OUT[2]))+outRows(P2,108)+
+    hd(T('配对差（百分点）','Paired difference (points)'),T('均值 [95% 区间]','Mean [95% interval]'),T('只有前者 / 只有后者成功','Only first / only second'),T('读法','Reading'))+
+    D.map(d=>`<tr><td>${d.g===2?T('原本换得过去的：','Already switch: '):''}${nm(d)}</td><td class="n">${d.v[0].toFixed(1)} [${d.v[1].toFixed(1)}, ${d.v[2].toFixed(1)}]</td><td class="n">${d.o[0]} / ${d.o[1]}</td><td class="n">${T(d.rd[0],d.rd[1])}</td></tr>`).join('')+'</tbody>';
 });
 
 // Language switch: swap the visible copy, aria-labels, alt text and title, redraw the charts, and keep the reader's place.
