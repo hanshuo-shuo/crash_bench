@@ -161,3 +161,7 @@ then (section 6 frozen) the formal open-loop batch on stored stage 1 inputs, the
 stage 1 switch branches with neuron-level arms), the blind explanation test with a fresh subagent, and the report. pi0.5 alone, no
 training, no paid API, no new layouts, SafeLIBERO untouched, at most two GPUs. Stop and ask if a smoke or gate fails for a non-code
 reason. Held-out open-loop localization, a held-out dose and P2b still each need a separate go-ahead.
+Completed on 2026-11-05 (HIL_MECHANISM_NEURONS_REPORT.md): N0 mlp_route, N1 moderate (k* 1,000-3,000), N2 mixed, N3 nonspecific
+(nrn2 31/90 vs native 20, random direction 26; all-MLP 59, amp2 67), N4 selective, N5 weakly_necessary (one cell), N6 interpretable
+(17/23). Do not rerun these batches or the blind test; any further step (larger k or dose, other units, held-out localization or dose,
+P2b) needs the user's go-ahead.

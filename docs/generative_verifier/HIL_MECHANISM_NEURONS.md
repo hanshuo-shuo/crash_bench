@@ -1,7 +1,7 @@
 # P4 神经元方案：是哪些 VLM 神经元把新指令写进动作专家要读的图像 token
 
 2026-11-05。接 [修复批次报告](HIL_MECHANISM_REPAIR_REPORT.md)的"下一步 1"，和 [机制方案](HIL_MECHANISM_IDEA.md)第 7 节的 P4。
-状态：开环 smoke 读成 `tool_ok`（第 9 节），第 6 节已冻结。
+状态：已完成（2026-11-05）。第 6 节在开环 smoke 之后冻结于 `34680dc`；结果见第 9 节和[报告](HIL_MECHANISM_NEURONS_REPORT.md)。
 
 ## 0. 批准与边界
 
@@ -268,3 +268,25 @@
   - 单个头名神经元的 ρ 约 0.02，AtP 估计 0.018；
   - 逐层的 ρ_mlp 从第 7 层起变大，第 13 层最大（0.37）。
 - 这些描述没有用来改读法或门槛。
+
+**开环正式**（2026-11-05，代码 `34680dc`，第 6 节冻结之后）：
+- 运行目录 `/projects/p33100/siosio/crashbench_safelibero/mechanism/20261105T192633Z_mech-neurons-formal_pi05_libero_34680dc8f85f`，240 个状态，发现集 30 个。
+- 作业：筛选 7334232 → 选择 7334234 → 测量 7334236（两个分片）→ 汇总 7334238，全部 COMPLETED 0:0。
+- 工具核对 `tool_ok`：恒等式最大偏差 1.2 × 10⁻⁷，钩子差 0，path 差中位 0.0088 噪声底、最大 0.034。
+- **N0 `mlp_route`**：ρ_mlp 中位 1→8 0.914、2→9 0.919、7→8 0.940。
+- **N1 `moderate`**：k* 为 1→8 3,000、2→9 1,000、7→8 3,000；随机集到 1 万个 ≤ 0.05；单个头名 ≤ 0.02。
+- **N2 `mixed`**：五个失败格 γ 中位 0.35–0.76，上界都 < 1；成功格 1→8 .25 为 0.895 [0.839, 0.942]，下界不到 0.9。
+
+**盲测**（2026-11-05，代码 `34680dc`）：
+- 目录 `/projects/p33100/siosio/crashbench_safelibero/mechanism/20261105T210000Z_mech-neurons-blind_34680dc8f85f`（`PROVENANCE.json` 记出处和哈希）。
+- 23 个神经元各 24 题，三个新开的子代理作答。
+- **N6 `interpretable`**：17/23 解释成立，平均正确率 0.80，平凡基线 0.52。
+
+**闭环 smoke + 闸门、正式**（2026-11-05，代码 `34680dc`）：
+- smoke `20261105T200725Z_mech-nrnloop-smoke_pi05_libero_34680dc8f85f`（7340319 → 闸门 7340320，120 次，`tool_ok`）；
+- 正式 `20261105T200728Z_mech-nrnloop-formal_pi05_libero_34680dc8f85f`（7340321 四个分片 → 汇总 7340322，1,080 次，`tool_ok`），全部 COMPLETED 0:0。
+- **N3 `nonspecific`**：失败格 nrn2 31/90，native 20，nrnrand2 20，nrndir2 26；增益 +0.12 [0.01, 0.23]，对随机方向 +0.06 [−0.06, 0.18]。
+- **N4 `selective`**：成功格加起点格 nrn2 107/108，native 105/108。
+- **N5 `weakly_necessary`**：nrnout 89/108，nrnoutrand 105/108；下降 +0.148 [0.10, 0.19]，全部来自 1→8 .75（1/18）。
+- 只报告：amp2 67/90，mlpall2 59/90；mlpallout 0/108（103 次做完 A）。
+- 解读见[报告](HIL_MECHANISM_NEURONS_REPORT.md)。冻结后代码和读法没有改动，没有重跑。

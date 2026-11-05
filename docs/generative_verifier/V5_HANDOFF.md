@@ -2,9 +2,33 @@
 
 读者：接手的人（用户本人，或下一个 Claude/Codex 会话）。先读 [AGENTS.md](../../AGENTS.md) 和 [CURRENT.md](../CURRENT.md)，再读本文的"接手指南"。后面按日期排的各节是历史记录。
 
-## 接手指南（2026-11-05 更新，先读这一节）
+## 接手指南（2026-11-05 晚更新，先读这一节）
 
-### 11-05：修复批次已完成（最新）
+### 11-05：P4 神经元已完成（最新）
+
+- **文档**：方案 [HIL_MECHANISM_NEURONS.md](HIL_MECHANISM_NEURONS.md)（第 6 节在开环 smoke 之后冻结于 `34680dc`）→ 报告 [HIL_MECHANISM_NEURONS_REPORT.md](HIL_MECHANISM_NEURONS_REPORT.md)。批准记录在 [AGENTS.md](../../AGENTS.md) 的 P4 neurons 一段。
+- **做了什么**：追问第 12–14 层图像 K/V 上 B − A 的差，是 VLM 第 0–13 层图像行上哪些 GeGLU 神经元写进去的。
+  - 开环 240 个状态：只换 MLP、前 k 名、同层随机、逐个替换；
+  - 闭环 1,080 次：前 k* 名放大 / 压回 A，配同层随机集、随机方向、全部 MLP；
+  - 盲测：23 个神经元的解释，三个新开的子代理作答。
+- **读法**：N0 `mlp_route`（ρ_mlp 0.91–0.94），N1 `moderate`（k* 1,000–3,000），N2 `mixed`，N3 `nonspecific`（nrn2 31/90，native 20，随机方向 26），N4 `selective`，N5 `weakly_necessary`（只在 1→8 .75），N6 `interpretable`（17/23）。
+- **要点**：
+  - 全部 MLP 放大 59/90，接近 amp2 67/90；全部压回 A 则 0/108，机器人做完 A；
+  - 但效果分散在几千个神经元上，前 10 名说得清，却各自只补回约 2%，不是修复位置；
+  - 开环里补回 K/V 差的比例（ρ）高估了对动作的作用。
+- **运行目录**（`/projects/p33100/siosio/crashbench_safelibero/mechanism/` 下）：
+  - 开环 `20261105T192633Z_mech-neurons-formal_pi05_libero_34680dc8f85f`；
+  - 闭环 `20261105T200728Z_mech-nrnloop-formal_pi05_libero_34680dc8f85f`（smoke 在旁边的 `20261105T200725Z_…`）；
+  - 盲测 `20261105T210000Z_mech-neurons-blind_34680dc8f85f`。
+- **代码**：`experiments/mechanism/`：
+  - `neurons.py`（钩子）、`neuron_readings.py`、`run_neurons.py`、`launch_neurons.py`；
+  - `neuron_loop.py`、`launch_neuron_loop.py`，`serve_steer.py` 新加 `nrn` 臂；
+  - `blind.py`。
+  - 测试 `test_neurons.py`、`test_run_neurons.py`、`test_neuron_loop.py`、`test_blind.py`，每个模块单独跑，登录节点上一起跑会内存不够。
+- **不要重跑**：开环、闭环正式批次和盲测都已完成。
+- **下一步（要用户决定）**：见下面"下一步"。
+
+### 11-05：修复批次已完成
 
 - **文档**：方案 [HIL_MECHANISM_REPAIR.md](HIL_MECHANISM_REPAIR.md)（第 5 节在提交前冻结于 `6199b28`）→ 报告 [HIL_MECHANISM_REPAIR_REPORT.md](HIL_MECHANISM_REPAIR_REPORT.md)。批准记录在 [AGENTS.md](../../AGENTS.md) 的 Repair batch 一段。
 - **做了什么**：一个批次回答两件事，2,024 次闭环运行，代码冻结后没改。
@@ -69,8 +93,11 @@
 
 ### 下一步（要用户决定）
 
-11-04 的第 1、2 项（动作匹配对照、P5 留出）已在 11-05 的修复批次里做完，见上面。
-1. **P4 神经元**：在第 8–13 层找中途不再把 B 写进图像块的 GeGLU 神经元。首轮 top 10，配盲测和反例。修复批次里无效的留出对（LIBERO-10 1→0、Object 1→0）可作反例。
+11-04 的第 1、2 项（动作匹配对照、P5 留出）已在 11-05 的修复批次里做完；P4 神经元也在 11-05 做完，见上面。
+1. **P4 引出的**：
+   - 增大 k（1 万、3 万）或调剂量，看前 k 名的闭环增益是否接近全部 MLP 放大；
+   - 查 1→8 .75 为什么前 k* 名压回 A 就失败；
+   - 换单位：注意力头，或第 9–13 层 MLP 输出上的少数方向。
 2. **留出对上的开环定位**：在 LIBERO-10 0→1、1→0 和 Object 1→0 上重做开环 P2 / gap，只推理。用来区分"窗口只适合试点对"和"留出格本来更难"。
 3. **留出对的剂量**：在验证用的初始布置上定 λ，再在留出状态上读一次。这是原 P5 的设计，修复批次为了不调剂量省掉了。
 4. **其他仍开放的**：
@@ -448,6 +475,7 @@ V5 这一轮的故事线已经走完一遍，只用了 object/II/task1 一个任
 | 11-04 | "先把报告加到网站吧 然后先收尾 我明天给下一个agent" | 报告网页第 31 版加机制一节；收尾，下一步等用户和下一个 agent 决定 |
 | 11-04 | "你在这里补上吧" | 报告网页第 32 版补上语言消融一节 |
 | 11-04 | "合成一个批次先做，P4 神经元放在后面"、"可以 这个直接开始正式的吧 反正gpu够用" | 修复批次：动作匹配对照 + P5 留出 + 三种替代修复；smoke → 闸门 → 正式 2,024 次 → 报告，一次提交（11-05 完成） |
+| 11-05 | "可以 开始下一步吧 点头了" | P4 神经元：方案、钩子和测试；开环 smoke → 冻结 → 开环正式；闭环 smoke → 闸门 → 正式 1,080 次；盲测；报告（11-05 完成） |
 
 ## 故事（当前版本）
 

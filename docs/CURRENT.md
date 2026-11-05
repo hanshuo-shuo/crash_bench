@@ -1,4 +1,4 @@
-# 当前状态（2026-11-04）
+# 当前状态（2026-11-05）
 
 ## 正在进行：生成式可行性 verifier
 
@@ -51,6 +51,13 @@
     - P5 的预先通过条件（commits `restores_switch`）没有达到；"只救继续做 A"的描述要改。选择性：留出成功格加起点格改变 −0.003。
     - 替代修复（142 个状态）：amp2 74，ampall 49，rephrase 25，actdiff 23。事后看，rephrase 只在 7→8、ampall 只在 2→9 上接近 amp2。
     - 下一步（要用户点头）：P4 神经元；留出对上的开环定位；为留出对在验证初始布置上定剂量。
+  - **P4 神经元已完成：N0 `mlp_route`，N1 `moderate`，N2 `mixed`，N3 `nonspecific`，N4 `selective`，N5 `weakly_necessary`，N6 `interpretable`**（用户："可以 开始下一步吧 点头了"；[方案](generative_verifier/HIL_MECHANISM_NEURONS.md)，[报告](generative_verifier/HIL_MECHANISM_NEURONS_REPORT.md)）。
+    - 问的是：第 12–14 层图像 K/V 上 B − A 的差，是 VLM 里哪些神经元写进图像 token 的。钩子在第 0–13 层图像行的 GeGLU 隐藏单元（229,376 个）上。
+    - 开环（240 个状态）：只换 MLP 就补回 91–94%，主要在第 9–13 层；补回一半要前 1,000–3,000 名；前 10 名约 5%，单个 ≤ 2%。失败格里这些神经元上的 B − A 差中途降到 0.35–0.76。
+    - 闭环（1,080 次）：失败格 nrn2（前 k* 名放大）31/90，native 20，同层随机集 20，同一批神经元随机方向 26，全部 MLP 放大 59，amp2 67。全部 MLP 压回 A：0/108，103 次做完 A。前 k* 名压回 A 只在 1→8 .75 致命（1/18）。
+    - 盲测：前 10 名的并集 23 个神经元里 17 个的解释在留出的初始布置上成立（0.80 对基线 0.52）。
+    - 结论：新指令经图像行上的 MLP 神经元整体写入、在闭环里起作用，但分散在几千个神经元上；说得清的前 10 名不是修复位置。
+    - 下一步（要用户点头）：留出对上的开环定位；留出对的剂量；更大的 k 或剂量；换单位（注意力头、MLP 输出上的少数方向）；P2b。
 
 - **11-04：π0.5 从头语言消融已完成**（[报告](generative_verifier/LANGUAGE_ABLATION_REPORT.md)，[协议](generative_verifier/LANGUAGE_ABLATION_PROTOCOL.md)）。
   用户指出停止 / 回原点 / 绕路是分布外命令，要求在已有任务上改用随机 A–F / + 字符串，看文字有多重要。
