@@ -76,7 +76,10 @@ def chunk_sha(actions):
     return hashlib.sha256(np.asarray(actions).tobytes()).hexdigest()
 
 
-def run_state(patcher, policy, state, seeds_per_state, folder):
+def run_state(patcher, policy, state, seeds_per_state, folder, extra=None):
+    """One state's open-loop measures. `extra` (optional; HIL_MECHANISM_HELDOUT_OPEN.md) is called as
+    extra(data_a, data_b, seeds, native) before anything is written and returns (row fields, arrays) added to ROW.json and
+    ACTIONS.npz; without it the output is the pilot's."""
     from serve import digest
     import patching as P
     started = time.monotonic()
@@ -110,10 +113,12 @@ def run_state(patcher, policy, state, seeds_per_state, folder):
         noop_max_abs=float(np.abs(iface[2] - iface[0]).max()), full_e=[float(e) for e, d in zip(full, ok) if d],
         interface=M.state_effects(iface, names)['state'], backbone=M.state_effects(backbone, bnames)['state'],
         gaps=dict(image=gaps[:, 0].tolist(), text=gaps[:, 1].tolist()),
-        elapsed_seconds=time.monotonic() - started, **provenance())
+        **provenance())
+    fields, arrays = extra(data_a, data_b, seeds, nat) if extra is not None else ({}, {})
+    row.update(fields, elapsed_seconds=time.monotonic() - started)
     folder.mkdir(parents=True, exist_ok=True)
     np.savez_compressed(folder/'ACTIONS.npz', interface=iface, backbone=backbone, native_a_twin=nat['a_twin'], native_a=nat['a'],
-                        native_b=nat['b'], seeds=np.asarray(seeds, np.uint64), gaps=gaps)
+                        native_b=nat['b'], seeds=np.asarray(seeds, np.uint64), gaps=gaps, **arrays)
     write(folder/'SPECS.json', dict(interface=names, backbone=bnames))
     write(folder/'ROW.json', row)
     write(folder/'HASHES.json', {p.name: sha(p) for p in sorted(folder.iterdir()) if p.name != 'HASHES.json'})

@@ -165,3 +165,11 @@ Completed on 2026-11-05 (HIL_MECHANISM_NEURONS_REPORT.md): N0 mlp_route, N1 mode
 (nrn2 31/90 vs native 20, random direction 26; all-MLP 59, amp2 67), N4 selective, N5 weakly_necessary (one cell), N6 interpretable
 (17/23). Do not rerun these batches or the blind test; any further step (larger k or dose, other units, held-out localization or dose,
 P2b) needs the user's go-ahead.
+
+Held-out open-loop localization (2026-11-05): after the P4 report Claude recommended this as the next step (inference only on
+stored inputs, about 1-2 GPU hours) and the user replied "可以 先继续吧". Scope (docs/generative_verifier/HIL_MECHANISM_HELDOUT_OPEN.md):
+the protocol with readings frozen before submission, the code and tests, then smoke (70 states) -> integrity gate -> formal (614
+states: the eight held-out pairs of the repair batch with the pilot's open-loop measures, plus the open-loop push of the repair on
+the five pilot failure cells) on at most two GPUs, and the report. pi0.5 alone, inference only on stored HIL suite stage 1 inputs,
+no simulator, no training, no paid API, no new layouts, SafeLIBERO untouched. Stop and ask if the gate fails for a non-code reason.
+A per-pair window or a held-out dose in closed loop, and P2b, still each need the user's go-ahead.
