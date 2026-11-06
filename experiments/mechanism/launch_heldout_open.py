@@ -15,8 +15,8 @@ sys.path.insert(0, str(REPO)); sys.path.insert(0, str(Path(__file__).resolve().p
 from verifier_dataset.inventory import read, sha, write  # noqa: E402
 from verifier_dataset.v5_launch import command, submit  # noqa: E402
 from verifier_dataset.hil_suite_launch import checkpoint_path, finished_branch, gpu_room, prepare  # noqa: E402
+from launch import BRANCH_ROOT  # noqa: E402  (before heldout_open, which puts experiments/feasibility, with its own launch.py, first)
 import heldout_open as H  # noqa: E402
-from launch import BRANCH_ROOT  # noqa: E402
 
 PROTOCOL = 'docs/generative_verifier/HIL_MECHANISM_HELDOUT_OPEN.md'
 FROZEN = '第 5 节状态：已冻结'
