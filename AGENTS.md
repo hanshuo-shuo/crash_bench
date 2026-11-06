@@ -173,3 +173,7 @@ states: the eight held-out pairs of the repair batch with the pilot's open-loop 
 the five pilot failure cells) on at most two GPUs, and the report. pi0.5 alone, inference only on stored HIL suite stage 1 inputs,
 no simulator, no training, no paid API, no new layouts, SafeLIBERO untouched. Stop and ask if the gate fails for a non-code reason.
 A per-pair window or a held-out dose in closed loop, and P2b, still each need the user's go-ahead.
+Completed on 2026-11-05 (HIL_MECHANISM_HELDOUT_OPEN_REPORT.md): H1 differs (every readable held-out pair reads B at layers 14-16;
+the two weak pairs are image_window, the effective 8->7 and LIBERO-10 0->1 elsewhere), H2 image_route_fades (failure 0.55, success
+1.13), H3 proxy_fails (rho -0.13), H4 nothing_to_push for both weak pairs (but the effective LIBERO-10 0->1 is equally unreadable).
+Do not rerun this batch; a closed-loop window or dose on held-out pairs, and P2b, each still need the user's go-ahead.

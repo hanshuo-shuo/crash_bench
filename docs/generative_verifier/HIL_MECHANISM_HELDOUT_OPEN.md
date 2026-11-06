@@ -198,4 +198,18 @@
 
 ## 8. 结果
 
-（运行后填写。）
+**smoke**（作业 7378669，一个分片，13 分 0 秒，qgpu0205 A100-PCIE-40GB；闸门 7378670，8 秒，COMPLETED 0:0）：
+- 运行目录 `/projects/p33100/siosio/crashbench_safelibero/mechanism/20261106T041208Z_mech-hold-smoke_pi05_libero_c4cbd3ec2f15`，70 个状态。
+- C1 `tool_ok`：
+  - 开环推动程序与 `Policy.infer` 的 L∞ 差为 0；
+  - K/V 改动的相对误差最大 1.2 × 10⁻⁷；
+  - 替换程序与原生的差为噪声底的 0.0086 倍。
+- 第一次启动在 import 时失败（启动脚本拿错了 `launch` 模块），没有建目录、没有提交作业；修好后（`c4cbd3e`）重新启动。
+
+**正式**（作业 7378671，两个分片，43 分 57 秒和 40 分 1 秒 → 汇总 7378672，40 秒，COMPLETED 0:0）：
+- C1 `tool_ok`。
+- H1 `differs`：Goal 8→7、LIBERO-10 0→1 是 `elsewhere`，其余可读的对是 `image_window`，Goal 8→1 读不出来。
+- H2 `image_route_fades`。
+- H3 `proxy_fails`。
+- H4 两对都是 `nothing_to_push`。
+- 见 [HIL_MECHANISM_HELDOUT_OPEN_REPORT.md](HIL_MECHANISM_HELDOUT_OPEN_REPORT.md)。冻结后读法和代码都没有改。
