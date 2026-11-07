@@ -191,4 +191,13 @@
 
 ## 8. 结果
 
-（运行后填写。）
+**smoke**（作业 7502979，7 分 20 秒，qgpu2004 A100-SXM4-80GB；闸门 7502980，15 秒，COMPLETED 0:0）：
+- 运行目录 `/projects/p33100/siosio/crashbench_safelibero/mechanism/20261107T062711Z_mech-units-smoke_pi05_libero_8c2e708fb0fa`，24 个状态；
+- C1 `tool_ok`：挂钩子、可求导去噪都与原版逐位相同，与 `Policy.infer` 的差中位 0.009 个噪声底。
+
+**正式**（216 个状态）：
+- 分片 0：7502981_0，17 分 46 秒。
+- 分片 1：第一次（7502981_1）被分到 40 GB 卡，显存不够，在第一个状态就失败，没有写出状态。在同一目录、同一源码下加 `--constraint=sxm` 重交（7512425_1，17 分 56 秒）。
+- 汇总：7512427，替换依赖失效的 7502999。
+- 记录见运行目录 `RESUBMIT.json`。
+- 读数：C1 `tool_ok`，R1 `moderate`（中位 1 万），R2 `moderate`（中位 300）。见 [HIL_MECHANISM_UNITS_REPORT.md](HIL_MECHANISM_UNITS_REPORT.md)。冻结后读法和代码都没有改；`units.sbatch` 事后加了 80 GB 约束，只影响以后的运行。

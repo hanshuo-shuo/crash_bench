@@ -4,6 +4,7 @@
 #SBATCH --account=p33100
 #SBATCH --partition=gengpu
 #SBATCH --gres=gpu:a100:1
+#SBATCH --constraint=sxm  # 80 GB: units.unit_scores needs ~27 GiB scratch on top of the model (a 40 GB card ran out; HIL_MECHANISM_UNITS_REPORT.md)
 #SBATCH --exclude=qgpu2014
 #SBATCH --nodes=1
 #SBATCH --ntasks=1

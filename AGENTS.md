@@ -185,3 +185,7 @@ neuron x image-row units by their attributed effect on the action. The user repl
 code and tests, then smoke (24 states) -> integrity gate -> formal (216 pilot open-loop states) on at most two GPUs, and the report.
 pi0.5 alone, inference only on stored HIL suite stage 1 inputs, no simulator, no training, no paid API, no new data, SafeLIBERO
 untouched. Stop and ask if the gate fails for a non-code reason. Using such unit sets in closed loop needs a separate go-ahead.
+Completed on 2026-11-07 (HIL_MECHANISM_UNITS_REPORT.md): C1 tool_ok; R1 moderate (half the sufficiency effect needs a median of
+10,000 neuron x image-row units, on the boundary; P4's ranking needs ~5 million), R2 moderate (half the necessity effect needs a
+median of 300 units). Formal shard 1 first ran out of memory on a 40 GB card and was resubmitted on 80 GB (RESUBMIT.json in the root).
+Do not rerun this batch; a closed-loop necessity test with such units needs the user's go-ahead.

@@ -2,9 +2,31 @@
 
 读者：接手的人（用户本人，或下一个 Claude/Codex 会话）。先读 [AGENTS.md](../../AGENTS.md) 和 [CURRENT.md](../CURRENT.md)，再读本文的"接手指南"。后面按日期排的各节是历史记录。
 
-## 接手指南（2026-11-05 深夜更新，先读这一节）
+## 接手指南（2026-11-07 更新，先读这一节）
 
-### 11-05：留出对开环定位已完成（最新）
+### 11-07：Goodfire 对照的更正和单元补测已完成（最新）
+
+- **起因**：用户让对照 Goodfire 的随笔"Neural Networks Are Already Clean"。那篇文章说的是单个神经元可读，不是"行为只靠少数神经元"。P4 把两者混在一起，已在 P4 报告、CURRENT、本文和报告网页里更正。
+- **补测**：方案 [HIL_MECHANISM_UNITS.md](HIL_MECHANISM_UNITS.md)（读法提交前冻结于 `05faa9e`），报告 [HIL_MECHANISM_UNITS_REPORT.md](HIL_MECHANISM_UNITS_REPORT.md)。
+  - 按对动作的作用，给"层 × 图像块 × 神经元"单元排名，再真的替换；
+  - 状态是试点开环的 216 个。
+- **读法**：
+  - R1 `moderate`：写进新指令到一半要中位 1 万个单元，正好在分界上；
+  - R2 `moderate`：挡住一半要中位 300 个。
+- **要点**：
+  - P4 的做法折成单元约 500 万，所以"分散"大半是方法造成的，主要因为按整个神经元排；
+  - 作用集中在第 9–13 层、腕部相机的少数图像块上；
+  - 归因与真实替换 Spearman 0.89–0.96。
+- **运行目录**：`/projects/p33100/siosio/crashbench_safelibero/mechanism/20261107T062715Z_mech-units-formal_pi05_libero_8c2e708fb0fa`（smoke 在旁边）。
+  - 分片 1 第一次被分到 40 GB 卡，显存不够，在 80 GB 卡上重交，见 `RESUBMIT.json`；
+  - `units.sbatch` 现在要求 80 GB。
+- **代码**：
+  - `experiments/mechanism/units.py`、`run_units.py`、`launch_units.py`，以及两个 sbatch；
+  - `neurons.py` 的钩子可以按图像块选择；
+  - 测试 `test_units.py`，要在计算节点上跑。
+- **不要重跑**。下一步要用户决定：写作；闭环里的必要性测试。
+
+### 11-05：留出对开环定位已完成
 
 - **文档**：方案 [HIL_MECHANISM_HELDOUT_OPEN.md](HIL_MECHANISM_HELDOUT_OPEN.md)（第 5 节在提交前冻结于 `913af3e`）→ 报告 [HIL_MECHANISM_HELDOUT_OPEN_REPORT.md](HIL_MECHANISM_HELDOUT_OPEN_REPORT.md)。批准记录在 [AGENTS.md](../../AGENTS.md) 的 Held-out open-loop localization 一段。
 - **做了什么**：只在存好的阶段 1 输入上开环推理，问修复在 LIBERO-10 1→0、Object 1→0 上为什么弱。
@@ -505,6 +527,7 @@ V5 这一轮的故事线已经走完一遍，只用了 object/II/task1 一个任
 | 11-04 | "合成一个批次先做，P4 神经元放在后面"、"可以 这个直接开始正式的吧 反正gpu够用" | 修复批次：动作匹配对照 + P5 留出 + 三种替代修复；smoke → 闸门 → 正式 2,024 次 → 报告，一次提交（11-05 完成） |
 | 11-05 | "可以 开始下一步吧 点头了" | P4 神经元：方案、钩子和测试；开环 smoke → 冻结 → 开环正式；闭环 smoke → 闸门 → 正式 1,080 次；盲测；报告（11-05 完成） |
 | 11-05 | "可以 先继续吧"（回复 Claude 推荐的留出对开环定位） | 留出对开环定位：方案（读法提交前冻结）、代码和测试；smoke → 闸门 → 正式 614 个状态 → 报告（11-05 完成） |
+| 11-07 | "可以 改 然后做第二个"（对照 Goodfire 随笔之后） | 更正 P4 对 Goodfire 的引用；单元补测：方案（读法提交前冻结）、代码和测试；smoke → 闸门 → 正式 216 个状态 → 报告（11-07 完成） |
 
 ## 故事（当前版本）
 
