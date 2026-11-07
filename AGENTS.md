@@ -177,3 +177,11 @@ Completed on 2026-11-05 (HIL_MECHANISM_HELDOUT_OPEN_REPORT.md): H1 differs (ever
 the two weak pairs are image_window, the effective 8->7 and LIBERO-10 0->1 elsewhere), H2 image_route_fades (failure 0.55, success
 1.13), H3 proxy_fails (rho -0.13), H4 nothing_to_push for both weak pairs (but the effective LIBERO-10 0->1 is equally unreadable).
 Do not rerun this batch; a closed-loop window or dose on held-out pairs, and P2b, each still need the user's go-ahead.
+
+Unit study (2026-11-07): after comparing P4 with Goodfire's "Neural Networks Are Already Clean" essay (it claims single neurons are
+legible, not that behaviours rest on a few neurons), Claude proposed correcting the P4 wording and an open-loop follow-up that ranks
+neuron x image-row units by their attributed effect on the action. The user replied "可以 改 然后做第二个". Scope
+(docs/generative_verifier/HIL_MECHANISM_UNITS.md): the wording corrections, the protocol with readings frozen before submission, the
+code and tests, then smoke (24 states) -> integrity gate -> formal (216 pilot open-loop states) on at most two GPUs, and the report.
+pi0.5 alone, inference only on stored HIL suite stage 1 inputs, no simulator, no training, no paid API, no new data, SafeLIBERO
+untouched. Stop and ask if the gate fails for a non-code reason. Using such unit sets in closed loop needs a separate go-ahead.

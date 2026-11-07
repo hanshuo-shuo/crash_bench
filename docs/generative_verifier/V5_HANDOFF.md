@@ -36,7 +36,7 @@
 - **读法**：N0 `mlp_route`（ρ_mlp 0.91–0.94），N1 `moderate`（k* 1,000–3,000），N2 `mixed`，N3 `nonspecific`（nrn2 31/90，native 20，随机方向 26），N4 `selective`，N5 `weakly_necessary`（只在 1→8 .75），N6 `interpretable`（17/23）。
 - **要点**：
   - 全部 MLP 放大 59/90，接近 amp2 67/90；全部压回 A 则 0/108，机器人做完 A；
-  - 但效果分散在几千个神经元上，前 10 名说得清，却各自只补回约 2%，不是修复位置；
+  - 但按本研究的排法（看 K/V、一个神经元跨全部图像块），效果分散在几千个神经元上，前 10 名说得清，却各自只补回约 2%，不是修复位置。11-07 更正：这和 Goodfire 的"神经元已经干净"不矛盾，补测见 [HIL_MECHANISM_UNITS.md](HIL_MECHANISM_UNITS.md)；
   - 开环里补回 K/V 差的比例（ρ）高估了对动作的作用。
 - **运行目录**（`/projects/p33100/siosio/crashbench_safelibero/mechanism/` 下）：
   - 开环 `20261105T192633Z_mech-neurons-formal_pi05_libero_34680dc8f85f`；

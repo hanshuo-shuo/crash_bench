@@ -3,7 +3,7 @@
 The prefix (VLM) pass is run layer by layer with flax method interceptors on the first expert's attention and GeGLU MLP.
 On the image rows (the valid image tokens; text tokens are never touched) they can
   - read the MLP hidden units h = gelu(x W_gate) * (x W_up) and the attention output of every layer,
-  - set chosen hidden units (mlp_sel [L, F]) to given values, add a float32 offset to every hidden unit (for gradients),
+  - set chosen hidden units (mlp_sel [L, F], or [L, n_img, F] per image row) to given values, add a float32 offset to every hidden unit (for gradients),
   - set the attention output of chosen layers (attn_sel [L]) to given values.
 The action expert then reads the resulting per-layer keys/values exactly as in patching.py.
 
@@ -54,8 +54,9 @@ def _mech_hooked_prefix(self, embedded, positions, mask, n_img, rows, mlp_sel, m
                 z = args[0]; dt = z.dtype; w = m.w_gating
                 h = nn.gelu(jnp.dot(z, w[0].astype(dt))) * jnp.dot(z, w[1].astype(dt))
                 img = h[:, :n_img]; store['h'] = img; new = img
-                if msel is not None:
-                    new = jnp.where(msel[None, None, :] & pick, mval.astype(dt), new)
+                if msel is not None:  # per layer: [F] (a neuron on every image row) or [n_img, F] (neuron x row)
+                    sel = msel[None] if msel.ndim == 2 else msel[None, None, :]
+                    new = jnp.where(sel & pick, mval.astype(dt), new)
                 if e is not None:
                     new = (new.astype(F32) + jnp.where(pick, e, 0.)).astype(dt)
                 h = jnp.concatenate([new, h[:, n_img:]], axis=1)
