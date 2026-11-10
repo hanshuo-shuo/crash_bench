@@ -1,6 +1,11 @@
-# 当前状态（2026-11-05）
+# 当前状态（2026-11-09）
 
 ## 正在进行：生成式可行性 verifier
+
+- **11-09：反向剂量 + 任务对普查（进行中）**（用户："1，2 都开始干吧 然后给我结果就可以"；方案 [HIL_MECHANISM_DOSE.md](generative_verifier/HIL_MECHANISM_DOSE.md)、[HIL_MECHANISM_CENSUS.md](generative_verifier/HIL_MECHANISM_CENSUS.md)，第 5 节在提交前冻结）。
+  - **反向剂量**：在原本换得过去的格里把第 12–14 层图像路调弱（λ = 0.75 / 0.5 / 0.25 / 0，另有全层 λ = 0、K/V 随机、动作匹配三个对照），问变淡到自然失败的水平会不会让切换失败。正式 1,504 次，重跑阶段 1 分支。
+  - **普查**：LIBERO-Goal 全部 90 个有序对，初始布置 0–9，新跑 100 条前缀；f = 0 只跑 native，0.5、0.75 跑 native 和固定的 amp2，最多 4,500 次。读普遍性、修复推广、选择性，以及物理因素之外图像路变淡能否多解释失败（用户的第 02 项）。
+  - 一次提交整条依赖链（`launch_dose_census.py`），最多两张 GPU；不训练、不调 API、不碰 SafeLIBERO。
 
 - **11-04：中途切换的机制研究，pilot 方案 + P0 + P1 代码**（[HIL_MECHANISM_IDEA.md](generative_verifier/HIL_MECHANISM_IDEA.md)）。
   - **背景**：用户和导师讨论后决定把 HIL 做深；用户看过外部评论和文献核对后说"开始改吧"。

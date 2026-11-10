@@ -189,3 +189,12 @@ Completed on 2026-11-07 (HIL_MECHANISM_UNITS_REPORT.md): C1 tool_ok; R1 moderate
 10,000 neuron x image-row units, on the boundary; P4's ranking needs ~5 million), R2 moderate (half the necessity effect needs a
 median of 300 units). Formal shard 1 first ran out of memory on a 40 GB card and was resubmitted on 80 GB (RESUBMIT.json in the root).
 Do not rerun this batch; a closed-loop necessity test with such units needs the user's go-ahead.
+
+Dose + census (2026-11-09): after Claude listed the results still missing for a minimal paper story (1 the reverse dose, 2 a
+census of LIBERO-Goal task pairs, 3 a second model), the user replied "1，2 都开始干吧 然后给我结果就可以" (start 1 and 2, then
+give me the results). Scope: docs/generative_verifier/HIL_MECHANISM_DOSE.md and HIL_MECHANISM_CENSUS.md (readings frozen before
+submission), serve_steer accepting lam < 1 for amp/rand/actrand, the code and tests, one chained submission
+(launch_dose_census.py: census prefixes for the ten Goal tasks on inits 0-9 -> census smoke -> gate; dose smoke -> gate -> formal
+1,504 reruns of stage 1 switch branches; census formal up to 4,500 runs, native and the fixed amp2), and the reports. pi0.5 alone,
+no training, no paid API, SafeLIBERO untouched, at most two GPUs. Stop and ask if a gate fails for a non-code reason or the census
+prefixes read env_suspect. A second model (pi0) and any further step still need the user's go-ahead.

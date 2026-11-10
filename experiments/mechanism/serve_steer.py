@@ -21,6 +21,9 @@ The P4 neuron arms (HIL_MECHANISM_NEURONS.md 4.2, kind nrn) change the VLM's GeG
 |h_B - h_A| on the reference set (S, or all for 'all'), along h_B - h_A of the applied units ('own') or a random direction
 ('random'). lam 2 amplifies; lam 0 sets them back to the old prompt's values. The sets come from --neurons FILE.
 
+The dose batch (HIL_MECHANISM_DOSE.md) runs amp, rand and actrand below lam 1: amp then weakens B's image-route keys/values
+toward A's (lam 0 = A's exactly at those layers), and rand / actrand match that change's size.
+
 Usage: serve_steer.py --port P --checkpoint DIR --log-dir DIR [--neurons FILE] (openpi environment, pinned openpi on PYTHONPATH)
 """
 import argparse
@@ -38,7 +41,17 @@ sys.path.insert(0, str(HERE)); sys.path.insert(0, str(HERE.parent/'feasibility')
 from serve import digest  # noqa: E402
 
 KINDS = ('native', 'amp', 'rand', 'actrand', 'actdiff', 'nrn')
+# Kinds that also take a dose below 1 (the dose batch, HIL_MECHANISM_DOSE.md): amp at lam 0 <= lam < 1 moves B's keys/values
+# toward A's (lam 0 reads A's exactly); rand and actrand then match its size (|lam - 1| times the difference).
+WEAKEN = ('amp', 'rand', 'actrand')
 ACTION_GROUPS = ((0, 3), (3, 6), (6, 7))   # environment action: translation, rotation, gripper
+
+
+def dose_ok(kind, lam):
+    """native exactly at lam 1; amp, rand and actrand at any lam >= 0 other than 1; actdiff only above 1."""
+    if kind == 'native':
+        return lam == 1
+    return (lam >= 0 and lam != 1) if kind in WEAKEN else lam > 1
 ARM_KEYS = {'name', 'kind', 'lam', 'layers', 'prompt_a', 'direction_seed'}
 NEURON_KEYS = {'neuron_set', 'neurons', 'direction'}
 
@@ -55,7 +68,7 @@ def check_arm(arm, depth, neuron_sets=None):
     if not isinstance(arm, dict) or set(arm) != ARM_KEYS:
         raise ValueError('Arm must have the keys %s' % sorted(ARM_KEYS))
     layers = arm['layers']
-    if (arm['kind'] not in KINDS or arm['kind'] == 'nrn' or not isinstance(arm['lam'], float) or arm['lam'] < 1 or (arm['kind'] == 'native') != (arm['lam'] == 1)
+    if (arm['kind'] not in KINDS or arm['kind'] == 'nrn' or not isinstance(arm['lam'], float) or not dose_ok(arm['kind'], arm['lam'])
             or not isinstance(layers, list) or not layers or layers != sorted(set(layers))
             or not all(type(x) is int and 0 <= x < depth for x in layers)
             or not isinstance(arm['prompt_a'], str) or not arm['prompt_a'].strip()

@@ -322,6 +322,35 @@ class SteeringServer(unittest.TestCase):
             with self.assertRaises(ValueError):
                 serve_steer.check_arm(self.arm(kind, 1.), 18)
 
+    def test_weakening_doses(self):
+        """Dose batch: amp, rand and actrand below lam 1 move by |lam - 1| times the difference; actdiff and negative doses refused."""
+        import serve_steer
+        for kind in ('amp', 'rand', 'actrand'):
+            for lam in (0., .25, .5, .75):
+                serve_steer.check_arm(self.arm(kind, lam), 18)
+            with self.assertRaises(ValueError):
+                serve_steer.check_arm(self.arm(kind, -.5), 18)
+        for bad in (self.arm('actdiff', .5), self.arm('actdiff', 0.), self.arm('native', 0.)):
+            with self.assertRaises(ValueError):
+                serve_steer.check_arm(bad, 18)
+        native = self.requests('weak_native', self.arm(), n=2, seed=44)
+        for name, kind, lam in (('weak0', 'amp', 0.), ('weak50', 'amp', .5), ('rnd0', 'rand', 0.)):
+            out = self.requests(name, self.arm(kind, lam), n=2, seed=44)
+            self.assertEqual([r['diagnostic']['rng_after'] for r in out], [r['diagnostic']['rng_after'] for r in native])
+            log = self.log(name)
+            self.assertGreater(log[0]['first_shift_linf'], 0)
+            for e in log:
+                self.assertAlmostEqual(e['delta_k'] / e['diff_k'], 1. - lam, places=4); self.assertAlmostEqual(e['delta_v'] / e['diff_v'], 1. - lam, places=4)
+        weak = self.requests('weak0_again', self.arm('amp', 0.), n=2, seed=44)
+        act = self.requests('act0', self.arm('actrand', 0.), n=2, seed=44)
+        directions = serve_steer.push_directions(9)
+        for a, n, w in zip(act, native, weak):
+            moved = np.asarray(a['actions'], np.float64) - n['actions']; change = np.asarray(w['actions'], np.float64) - n['actions']
+            self.assertGreater(np.abs(change).max(), 0)
+            for (lo, hi), u in zip(serve_steer.ACTION_GROUPS, directions):
+                np.testing.assert_allclose(moved[:, lo:hi], np.linalg.norm(change[:, lo:hi], axis=1, keepdims=True) * u, atol=1e-5, rtol=0)
+        self.assertLess(max(e['push_match_error'] for e in self.log('act0')), 1e-5)
+
 
 def libero_like(config):
     """A LIBERO-shaped input transform for the toy: words hashed to token ids, the two cameras, the state padded."""
