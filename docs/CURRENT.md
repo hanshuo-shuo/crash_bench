@@ -13,11 +13,11 @@
 | 步 | 做什么 | 状态 |
 |---|---|---|
 | 0 | 普查报告、两处更正、文献核对、提交推送 | **11-14 做完** |
-| 1 | "退回再做"：换指令时用脚本放下并退回起始位姿，再让 π0.5 做新任务（[方案](generative_verifier/HIL_RETREAT_PROTOCOL.md)） | 用户 11-12 说"开始吧"；方案是草稿，代码没写；提交第一条 GPU 作业前要用户说一句 |
+| 1 | "退回再做"：换指令时用脚本放下并退回起始位姿，再让 π0.5 做新任务（[方案](generative_verifier/HIL_RETREAT_PROTOCOL.md)） | 用户 11-14 批准 GPU（"我都批准"）。代码、试跑、smoke 都做完，读法已冻结，**正式批次 11-14 提交**；跑完写报告 |
 | 2 | 用模型自己生成的数据做后训练，一次教几种中途指令 | **没批准**，只有设计草图 |
-| 旁支 | 单遍修复（[设计](generative_verifier/HIL_MECHANISM_SINGLEPASS_HANDOFF.md)） | 已批准，排在第 1 步之后；Claude 建议挂起，用户还没表态 |
+| 旁支 | 单遍修复（[设计](generative_verifier/HIL_MECHANISM_SINGLEPASS_HANDOFF.md)） | 11-14 挂起（用户同意），用户说了再开始 |
 
-队列里没有 CrashBench 作业。
+队列里有第 1 步的正式批次（见[方案](generative_verifier/HIL_RETREAT_PROTOCOL.md)第 8 节）；跑完之前不要改动源码目录。
 
 ## 几个词
 
