@@ -135,4 +135,4 @@ K/V ← B + (λ − 1)(B − A)
 
 ## 8. 结果
 
-（运行后填写，见 HIL_MECHANISM_DOSE_REPORT.md。）
+2026-11-10，见 [HIL_MECHANISM_DOSE_REPORT.md](HIL_MECHANISM_DOSE_REPORT.md)。C1 `tool_ok`；D1 `nonspecific`（下降 +0.125，集中在 f = .75；act0 按 wk0 配大小，约是 wk50 动作改动的 2.5 倍），D2 `necessary`（230/232 → 6/232，act0 74/232），D3 `commits_like_natural`（215/224）。起点格 wk0 同样几乎全挡住（52/54 → 0/54）。

@@ -134,4 +134,13 @@
 
 ## 8. 结果
 
-（运行后填写，见 HIL_MECHANISM_CENSUS_REPORT.md。）
+2026-11-14 填写。完整结果见 [HIL_MECHANISM_CENSUS_REPORT.md](HIL_MECHANISM_CENSUS_REPORT.md)。
+
+| 读法 | 预测 | 结果 | 数字 |
+|---|---|---|---|
+| C1 | | `tool_ok` | 4,410 次运行 |
+| S1 | `common` | `common` | f = 0.75 时 90 格里 75 格是失败格；中途 24.1% / 21.5%，起点 98.0% |
+| S2 | `restores_switch` | `weakly_restores` | 13.1% 对 8.0%，增益 +0.051 [+0.014, +0.088] |
+| S3 | `selective` | `unclear` | 97.7% → 92.2%，改变 −0.054 [−0.204, +0.029] |
+| S4a | `fade_tracks` | `fade_tracks` | ρ 0.30 [0.08, 0.46] |
+| S4b | `beyond_physics` | `beyond_physics` | log γ 系数 0.46 [0.04, 0.90]；AUC 0.713 → 0.716 |
