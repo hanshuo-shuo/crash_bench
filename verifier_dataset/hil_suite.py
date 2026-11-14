@@ -415,6 +415,115 @@ PENETRATION = -.005
 RECOVERS = .8
 FRAGILE = .5
 DIRECTIONS = tuple((math.cos(k * math.pi / 4), math.sin(k * math.pi / 4)) for k in range(8))
+# Scripted retreat at the switch step (docs/generative_verifier/HIL_RETREAT_PROTOCOL.md section 2.3). These conditions are
+# kept out of PERTURB, which drives the stage 3 plan. Actions are OSC_POSE deltas: one unit of action commands 5 cm or 0.5 rad,
+# and the gripper opens at -1.
+#   HOME     open the gripper while backing off a few steps along the path the arm came by; rise straight up to the
+#            episode's start height; travel level to above the start position; then settle: position and orientation to the
+#            start pose (the pose after the wait steps). A lift or travel stage that stalls (the gripper caught on a handle,
+#            an obstacle in the way) hands over to the next stage.
+#   RELEASE  open the gripper while backing off the same way, then rise.
+# Why back off instead of holding still: the policy hands the arm over in motion. Reaching far (a bottle onto the cabinet),
+# the elbow is close to straight and still extending; held in place, it swung on through the straight configuration to its
+# joint limit, from where the arm could not be brought back (seen while testing the script). The way it came is the brake.
+# Until HOME settles, every step commands the orientation of the switch step. A zero rotation command would not hold it: the
+# controller only renews its orientation goal on a nonzero rotation delta, so the wrist would keep turning toward the goal
+# left by the policy's last action (seen while testing the script: it drove the elbow into its joint limit).
+RETREAT = ('HOME', 'RELEASE')
+RETREAT_PARAMS = dict(
+    open_steps=10,       # steps with the gripper commanded open before the arm leaves
+    back_steps=5,        # during them the arm returns to where it was this many steps before the switch
+    home_steps=120,      # HOME: cap on the whole scripted segment
+    release_steps=30,    # RELEASE: cap on the whole scripted segment
+    release_lift=.10,    # RELEASE: metres to rise above the switch-step height ...
+    release_tolerance=.01,   # ... reached when within this of it (a proportional approach never quite arrives)
+    lift_tolerance=.02,  # HOME: the lift stage ends within this of the start height (or above it)
+    pos_tolerance=.02,   # HOME: reached when within this distance of the start position ...
+    ori_tolerance=.1,    # ... and within this angle (rad) of the start orientation; the travel stage ends within pos_tolerance sideways
+    stall_window=5,      # HOME: a lift or travel stage has stalled when over this many steps ...
+    stall_progress=.005,  # ... it has come less than this many metres closer to its target
+    pos_gain=.05,        # metres of position error per unit of action (the controller's own scale: command = error)
+    ori_gain=.5,         # radians of orientation error per unit of action
+    max_action=1.)       # cap on the largest arm component of a scripted action
+
+
+def rotation_error(target, current):
+    """Axis-angle vector, in the world frame, of the rotation that takes orientation `current` to `target` (unit quaternions
+    as x, y, z, w). It is the delta the OSC_POSE controller applies: goal = R(delta) @ current."""
+    x1, y1, z1, w1 = target; x2, y2, z2, w2 = -current[0], -current[1], -current[2], current[3]   # target * conj(current)
+    x = w1 * x2 + x1 * w2 + y1 * z2 - z1 * y2
+    y = w1 * y2 - x1 * z2 + y1 * w2 + z1 * x2
+    z = w1 * z2 + x1 * y2 - y1 * x2 + z1 * w2
+    w = w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2
+    if w < 0:                                                                                     # the short way round
+        x, y, z, w = -x, -y, -z, -w
+    n = math.sqrt(x * x + y * y + z * z)
+    if n < 1e-12:
+        return [0., 0., 0.]
+    angle = 2 * math.atan2(n, w)
+    return [angle * x / n, angle * y / n, angle * z / n]
+
+
+class Retreat:
+    """One scripted retreat: step(eef, quat) gives the next action and the stage it belongs to ('open', 'lift', 'travel',
+    'settle'), or (None, 'reached' | 'cap') when the segment is over. 'reached' means HOME is within both tolerances of the
+    start pose, or RELEASE has risen far enough. anchor is the end-effector pose at the switch step and back_eef the position
+    held while the gripper opens (where the arm was back_steps earlier; the switch position when not given). Position and
+    orientation commands are each scaled, direction kept, to at most max_action. stalled lists the stages that gave up."""
+
+    def __init__(self, condition, home_eef, home_quat, anchor_eef, anchor_quat, back_eef=None, params=None):
+        self.condition, self.home_eef, self.home_quat = condition, list(home_eef), list(home_quat)
+        self.anchor_eef, self.anchor_quat = list(anchor_eef), list(anchor_quat)
+        self.back_eef = list(anchor_eef if back_eef is None else back_eef)
+        self.p = RETREAT_PARAMS if params is None else params
+        self.k = 0; self.stage = 'lift'; self.left = []; self.stalled = []
+
+    def capped(self, v, gain):
+        v = [x / gain for x in v]; top = max(abs(x) for x in v)
+        return [x * self.p['max_action'] / top for x in v] if top > self.p['max_action'] else v
+
+    def advance(self, left, tolerance, then):
+        """Whether the current stage goes on, given how far it still has to go; otherwise move to the next stage."""
+        self.left.append(left); w = self.p['stall_window']
+        stuck = len(self.left) > w and self.left[-1 - w] - left < self.p['stall_progress']
+        if left > tolerance and not stuck:
+            return True
+        if left > tolerance:
+            self.stalled.append(self.stage)
+        self.stage = then; self.left = []
+        return False
+
+    def step(self, eef, quat):
+        p = self.p; k = self.k; self.k += 1
+        keep = self.capped(rotation_error(self.anchor_quat, quat), p['ori_gain'])      # hold the switch-step orientation
+        if k < p['open_steps']:
+            return self.capped([b - e for b, e in zip(self.back_eef, eef)], p['pos_gain']) + keep + [-1.], 'open'
+        if self.condition == 'RELEASE':
+            rise = self.anchor_eef[2] + p['release_lift'] - eef[2]
+            if rise <= p['release_tolerance']:
+                return None, 'reached'
+            if k >= p['release_steps']:
+                return None, 'cap'
+            return self.capped([0., 0., rise], p['pos_gain']) + keep + [-1.], 'lift'
+        pos = [h - e for h, e in zip(self.home_eef, eef)]; rot = rotation_error(self.home_quat, quat)
+        if math.sqrt(sum(x * x for x in pos)) < p['pos_tolerance'] and math.sqrt(sum(x * x for x in rot)) < p['ori_tolerance']:
+            return None, 'reached'
+        if k >= p['home_steps']:
+            return None, 'cap'
+        if self.stage == 'lift' and self.advance(pos[2], p['lift_tolerance'], 'travel'):
+            return self.capped([0., 0., pos[2]], p['pos_gain']) + keep + [-1.], 'lift'
+        if self.stage == 'travel' and self.advance(math.hypot(pos[0], pos[1]), p['pos_tolerance'], 'settle'):
+            return self.capped([pos[0], pos[1], 0.], p['pos_gain']) + keep + [-1.], 'travel'
+        return self.capped(pos, p['pos_gain']) + self.capped(rot, p['ori_gain']) + [-1.], 'settle'
+
+
+def retreat_outcome(trace, unit, start):
+    """Outcome of a retreat run, read on the policy's part alone. trace[0] is the switch step, then the scripted steps (each
+    marked scripted), then the policy's steps; the hand-over record is the last scripted step. b_at_checkpoint is therefore
+    B's goal at the hand-over: such a run is not the policy's doing and is left out of the readings."""
+    h = max((i for i, x in enumerate(trace) if x.get('scripted')), default=0); other = str(unit['other'])
+    return dict(outcome(trace[h:], unit, start), scripted_steps=h, b_at_switch=bool(trace[0]['others'][other]),
+                b_in_script=any(x['others'][other] for x in trace[1:h + 1]), a_at_handover=bool(trace[h]['a']))
 
 
 def goal_parts(goal_state):

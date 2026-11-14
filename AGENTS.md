@@ -66,6 +66,10 @@ The order of work and the details are in docs/generative_verifier/HIL_METHOD_PLA
 - This is not an approval to train, to collect data, or to add scripted motions beyond step 1's `home` and `release`
   (a "lower, then release" script for "put down" needs the user's go-ahead). It did not mention GPU runs: confirm once
   before the first GPU submission of step 1.
+- Later on 2026-11-14 Claude listed two things to decide: (1) step 1 can start, and the first GPU submission needs the
+  user to say GPU runs are fine (formal batch about 25-30 GPU hours); (2) the single-pass side arm, which Claude advised
+  putting on hold. The user: "我都批准". Read as: GPU runs for step 1 (smoke, gate, formal batch) are approved, and the
+  single-pass side arm is on hold until the user says otherwise. Training and new scripted motions remain unapproved.
 
 **2. Method plan, step 1 (2026-11-12 late).**
 - What led to it: the user said the problem is found and they now want a good model-level method that can be published,
@@ -92,7 +96,8 @@ approved a single-pass batch ("可以 帮我看看怎么弄好 然后写交接�
 docs/generative_verifier/HIL_MECHANISM_SINGLEPASS_HANDOFF.md, a protocol with readings frozen before submission, code and
 tests, direction fitting and an open-loop screen on stored inputs, a closed-loop smoke -> gate -> formal batch and the
 report. It starts after step 1's formal batch has finished. Arms outside that design and a second test bed on census cells
-need the user's go-ahead. On 2026-11-14 Claude advised putting it on hold; the user has not answered, so the approval stands.
+need the user's go-ahead. On 2026-11-14 Claude advised putting it on hold and the user agreed ("我都批准"): do not start it
+until the user says so.
 
 **Not approved.** Any training (step 2 of the method plan is a design sketch only); a second model; new data collection
 beyond step 1's reruns; scripted motions beyond step 1's two arms; the two extra mechanism controls listed in section 3 of the method plan (other layer windows;

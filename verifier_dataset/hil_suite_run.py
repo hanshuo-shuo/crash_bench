@@ -276,6 +276,85 @@ def perturb(env, unit, obs, rest, last_action, physical_hash):
     return finish(receptacle, before, deep, dict(shift=shift))
 
 
+def retreat(env, unit, obs, home, tape, physical_hash, checkers, params=None):
+    """Scripted retreat at the switch step (hil_suite.Retreat; HIL_RETREAT_PROTOCOL.md section 2.3): returns
+    (obs, info, scripted). Every scripted record carries the goal checks, so the outcome can tell what the script itself
+    did; home is the pose after the wait steps, read while replaying; tape is the prefix, for the way the arm came."""
+    import numpy as np
+    e = env.env; d = env.sim.data; low, high = e.action_spec
+    eef = lambda o: [float(x) for x in o['robot0_eef_pos']]; quat = lambda o: [float(x) for x in o['robot0_eef_quat']]
+    objects = lambda: {n: np.asarray(d.body_xpos[e.obj_body_id[n]]).copy() for n in sorted(e.objects_dict)}
+    before = objects(); anchor = eef(obs); scripted = []; stages = []
+    back = tape[max(S.WAIT, unit['checkpoint'] - (S.RETREAT_PARAMS if params is None else params)['back_steps'])]['eef']
+    script = S.Retreat(unit['condition'], home['eef'], home['quat'], anchor, quat(obs), back, params)
+    while True:
+        action, status = script.step(eef(obs), quat(obs))
+        if action is None:
+            break
+        stages.append(status)
+        if any(a < l or a > h for a, l, h in zip(action, low, high)):
+            raise RuntimeError('Scripted action outside the action range')
+        obs, _, done, _ = env.step(action)
+        scripted.append(record(env, unit['checkpoint'] + len(scripted) + 1, obs, action, done, physical_hash, checkers))
+        scripted[-1]['scripted'] = True
+    after = objects()
+    info = dict(applied=True, status=status, reached=status == 'reached', steps=len(scripted), stalled=list(script.stalled),
+                stage_steps={n: stages.count(n) for n in ('open', 'lift', 'travel', 'settle')}, eef_from=anchor, eef_back=list(back), eef_to=eef(obs),
+                position_error=math.dist(eef(obs), home['eef']),
+                orientation_error=math.sqrt(sum(x * x for x in S.rotation_error(home['quat'], quat(obs)))),
+                lifted=eef(obs)[2] - anchor[2], moved={n: float(np.linalg.norm(after[n] - before[n])) for n in before})
+    return obs, info, scripted
+
+
+def retreat_dry(root):
+    """CPU dry run of the scripted segment (HIL_RETREAT_PROTOCOL.md section 2.3), no policy and no rendering. For every unit
+    of ROOT/PLAN.json and every named parameter setting in it, a fresh headless environment replays the prefix to the switch
+    step (physics hash checked at every step) and runs the script. It exists to choose the script's constants: a setting is a
+    dict of overrides of hil_suite.RETREAT_PARAMS and is used here only. Writes ROOT/DRY.json."""
+    plan = read(root/'PLAN.json'); physical_hash = configure(root); rows = []   # configure() puts the pinned LIBERO on the path
+    from libero.libero import benchmark, get_libero_path
+    from libero.libero.envs.env_wrapper import ControlEnv
+    for unit in plan['branches']:
+        _, tape = load(Path(plan['prefix_root'])/'prefix'/unit['prefix'])
+        tasks = benchmark.get_benchmark_dict()[unit['suite']](); task = tasks.get_task(unit['task'])
+        for name, override in plan['settings'].items():
+            params = dict(S.RETREAT_PARAMS, **override); started = time.monotonic(); seed_globals()
+            env = ControlEnv(bddl_file_name=str(Path(get_libero_path('bddl_files'))/task.problem_folder/task.bddl_file), use_camera_obs=False,
+                             has_offscreen_renderer=False, camera_depths=False)
+            try:
+                env.seed(S.ENV_SEED); env.reset(); obs = env.set_init_state(tasks.get_task_init_states(unit['task'])[unit['init']])
+                if physical_hash(env) != tape[0]['physics']:
+                    raise RuntimeError('Initial state differs from the prefix: ' + unit['id'])
+                for item in tape[1:unit['checkpoint'] + 1]:
+                    obs, _, done, _ = env.step(item['action'])
+                    if physical_hash(env) != item['physics']:
+                        raise RuntimeError('Replay differs from the prefix at step %d: %s' % (item['step'], unit['id']))
+                    if item['step'] == S.WAIT:
+                        home = dict(eef=[float(x) for x in obs['robot0_eef_pos']], quat=[float(x) for x in obs['robot0_eef_quat']])
+                checkers = {k: goal_checker(env, unit['suite'], k) for k in unit['record']}
+                aperture = float(obs['robot0_gripper_qpos'][0] - obs['robot0_gripper_qpos'][1])
+                obs, info, scripted = retreat(env, unit, obs, home, tape, physical_hash, checkers, params)
+                gap = lambda x: math.dist(x['eef'], home['eef'])
+                rows.append(dict(unit=unit['id'], condition=unit['condition'], pair=unit['pair'], phase=unit['phase'], setting=name, aperture=aperture,
+                                 start_gap=math.dist(info['eef_from'], home['eef']), gaps=[round(gap(x), 4) for x in scripted[::5]],
+                                 b_at_handover=bool(scripted[-1]['others'][str(unit['other'])]) if scripted else None,
+                                 a_at_handover=bool(scripted[-1]['a']) if scripted else None,
+                                 seconds=time.monotonic() - started, **info))
+            finally:
+                env.close()
+            print(json.dumps({k: rows[-1][k] for k in ('unit', 'setting', 'status', 'steps', 'stalled', 'position_error', 'orientation_error')}), flush=True)
+    table = {}
+    for name in plan['settings']:
+        for condition in S.RETREAT:
+            rs = [r for r in rows if r['setting'] == name and r['condition'] == condition]
+            if rs:
+                table['%s %s' % (name, condition)] = dict(runs=len(rs), reached=sum(r['reached'] for r in rs), steps=S.H.distribution(r['steps'] for r in rs),
+                                                         position_error_max=max(r['position_error'] for r in rs),
+                                                         orientation_error_max=max(r['orientation_error'] for r in rs))
+    write(root/'DRY.json', dict(settings=plan['settings'], table=table, rows=rows, **provenance()))
+    print(json.dumps(table, indent=1), flush=True)
+
+
 def event(env, trigger, rest, held):
     """Appendix A.2 trigger after one replayed step: (held, fires), where held counts consecutive steps with a target lifted
     and fires is None when the trigger can never fire (GOAL with a fixed receptacle)."""
@@ -309,7 +388,7 @@ def run_branch(root, index, port):
         env, task, obs = make_env(unit['suite'], unit['task'], unit['init'])
         if physical_hash(env) != tape[0]['physics']:
             raise RuntimeError('Initial state differs from the prefix')
-        rest = {}; held = 0; fires = False
+        rest = {}; held = 0; fires = False; home = None
         # An event unit replays until its trigger fires, at the latest one step before the prefix's success.
         for item in tape[1:(unit['checkpoint'] if trigger is None else tape[-1]['step'] - 1) + 1]:
             obs, _, done, _ = env.step(item['action'])
@@ -320,6 +399,9 @@ def run_branch(root, index, port):
                 rest = {n: dict(z=float(env.sim.data.body_xpos[i][2]), quat=env.sim.data.qpos[env.sim.model.jnt_qposadr[env.sim.model.joint_name2id(n + '_joint0')] + 3:
                                                                                          env.sim.model.jnt_qposadr[env.sim.model.joint_name2id(n + '_joint0')] + 7].tolist())
                         for n, i in env.env.obj_body_id.items() if n in env.env.objects_dict}
+            if item['step'] == S.WAIT and unit['condition'] in S.RETREAT:
+                # The episode's start pose (after the wait steps): where a HOME retreat returns to. The tape stores no orientation.
+                home = dict(eef=[float(x) for x in obs['robot0_eef_pos']], quat=[float(x) for x in obs['robot0_eef_quat']])
             if trigger is not None and item['step'] > S.WAIT:
                 held, fires = event(env, trigger, rest, held)
                 if fires is not False:
@@ -345,20 +427,27 @@ def run_branch(root, index, port):
                 row = dict(unit, physics_at_checkpoint=at, perturbation=info, outcome=outcome3(trace, unit, prefix_row['start_eef'], info),
                            elapsed_seconds=time.monotonic() - started, **provenance())
                 save(folder, trace, row); return
+        retreating = unit['condition'] in S.RETREAT; script = None
+        if retreating:
+            obs, script, scripted = retreat(env, unit, obs, home, tape, physical_hash, checkers)
         client = Client(port, unit['seed'], '%s_%s' % (os.environ['SLURM_JOB_ID'], unit['id']), arm=unit.get('arm'))
         other = None if unit['other'] is None else str(unit['other'])
         stop = (lambda x: x['others'][other]) if unit['stop_on'] == 'B' else (lambda x: x['done'])
         begin = unit['checkpoint'] + len(scripted)
-        tail, first, outside = policy_loop(env, obs, client, unit['prompt'], unit['suite'], begin, unit['checkpoint'] + unit['budget'], stop,
-                                           physical_hash, checkers, folder)
+        # A retreat's scripted steps do not count against the policy's budget; every other condition keeps its own rule.
+        tail, first, outside = policy_loop(env, obs, client, unit['prompt'], unit['suite'], begin, (begin if retreating else unit['checkpoint']) + unit['budget'],
+                                           stop, physical_hash, checkers, folder)
         trace = [start] + scripted + tail
-        result = S.outcome(trace, unit, prefix_row['start_eef']) if info is None else outcome3(trace, unit, prefix_row['start_eef'], info)
+        result = (S.retreat_outcome(trace, unit, prefix_row['start_eef']) if retreating else
+                  S.outcome(trace, unit, prefix_row['start_eef']) if info is None else outcome3(trace, unit, prefix_row['start_eef'], info))
         row = dict(unit, physics_at_checkpoint=at, final_state=[float(x) for x in env.sim.get_state().flatten()], perturbation=info, prefix_steps=tape[-1]['step'], start_eef=prefix_row['start_eef'],
                    outcome=result, first_policy_input_sha256=first['with_prompt'],
                    policy_input_state_sha256=first['state'], rng_reset=client.ack, policy_requests=len(client.requests),
                    replayed_outputs=sum(r['output_replayed'] for r in client.requests),
                    maximum_native_difference=max(r['native_output_linf_difference'] for r in client.requests),
                    actions_outside_spec=outside, elapsed_seconds=time.monotonic() - started, **provenance())
+        if retreating:
+            row.update(retreat=script, home=home)
         save(folder, trace, row)
     finally:
         if client is not None:
