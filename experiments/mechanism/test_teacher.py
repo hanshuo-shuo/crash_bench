@@ -2,6 +2,7 @@ import unittest
 
 import numpy as np
 
+import launch_train as L
 import teacher as T
 import train_switch as W
 
@@ -27,7 +28,15 @@ class Select(unittest.TestCase):
         self.assertEqual(rows['a']['source'], '/r/branch/a__home'); self.assertEqual(rows['b']['source'], '/c/branch/b__native')
         self.assertIsNone(rows['d']['source'])
         self.assertEqual([rows[k]['split'] for k in 'aef'], ['train', 'test', 'dev'])
-        self.assertEqual(rows['a']['prompt'], 'prompt 3')
+        self.assertEqual(rows['a']['prompt'], 'prompt 3'); self.assertEqual({r['kind'] for r in rows.values()}, {'switch'})
+
+    def test_keep_episodes_are_the_training_prefixes(self):
+        prefixes = [dict(id='p%d_%d' % (t, i), suite='libero_goal', task=t, init=i, prompt='do %d' % t) for t in (1, 4) for i in (0, 9)]
+        keep = T.keep_episodes(prefixes, '/prefix_root', 10)
+        self.assertEqual([e['id'] for e in keep], ['p1_0_KEEP'])
+        e = keep[0]
+        self.assertEqual((e['kind'], e['source'], e['prompt'], e['checkpoint'], e['other'], e['split']),
+                         ('keep', '/prefix_root/prefix/p1_0', 'do 1', 10, None, 'train'))
 
     def test_counts(self):
         c = T.counts(T.select(self.units, self.done, self.folders))
@@ -74,12 +83,36 @@ class Mix(unittest.TestCase):
 
     def test_settings(self):
         s = dict(name='x', base_checkpoint='/c', datasets=[dict(repo_id='a', root='/a', share=.25), dict(repo_id='b', root='/b', share=.75)],
-                 batch_size=32, steps=10, peak_lr=1e-5, warmup_steps=1, ema_decay=None, save_interval=5, seed=0, num_workers=2)
+                 batch_sizes=[64, 32], steps=10, peak_lr=1e-5, warmup_steps=1, ema_decay=None, save_interval=5, seed=0, num_workers=2)
         self.assertEqual(W.settings_ok(s), s)
         with self.assertRaises(ValueError):
             W.settings_ok(dict(s, datasets=[dict(repo_id='a', root='/a', share=.5)]))
         with self.assertRaises(ValueError):
             W.settings_ok({k: v for k, v in s.items() if k != 'seed'})
+        with self.assertRaises(ValueError):
+            W.settings_ok(dict(s, batch_sizes=[]))
+
+    def test_only_an_out_of_memory_failure_moves_to_the_next_batch_size(self):
+        self.assertTrue(W.out_of_memory('XlaRuntimeError: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 1.2GiB'))
+        self.assertFalse(W.out_of_memory('FileNotFoundError: no such dataset'))
+
+
+class Launcher(unittest.TestCase):
+    def test_every_training_run_is_well_formed(self):
+        for name, s in L.SETTINGS.items():
+            body = dict(s, name=name, base_checkpoint='/c', datasets=[dict(repo_id='a', root='/a', share=1 - L.NEW_SHARE),
+                                                                      dict(repo_id='b', root='/b', share=L.NEW_SHARE)])
+            self.assertEqual(W.settings_ok(body), body)
+
+    def test_checkpoints_are_where_openpi_saves_them(self):
+        from pathlib import Path
+        saved = L.checkpoints(Path('/run'), 't1')
+        self.assertEqual(list(saved), ['1000', '1999'])
+        self.assertEqual(str(saved['1999']), '/run/checkpoints/pi05_libero/t1/1999')
+
+    def test_dependencies(self):
+        self.assertEqual(L.after(), [])
+        self.assertEqual(L.after('1', '2'), ['--dependency=afterok:1,afterok:2', '--kill-on-invalid-dep=yes'])
 
 
 if __name__ == '__main__':

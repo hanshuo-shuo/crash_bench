@@ -5,6 +5,9 @@ Every mid-task state of the census (old task A, initial layout, switch step, new
 prompt B from the switch step on: the retreat to the start pose (home) and the release-and-lift (release) of the retreat
 batch, and the untouched policy (native) of the census. The teacher of a state is the first of ORDER that finished B.
 
+Besides these switch episodes, every prefix of the training split (task A done from the start under its own prompt) is a
+keep episode: the same mid-task pictures with the instruction unchanged, where the action is to carry on.
+
 Split, by state:
   test   the old task is one of HELD_OUT: never in training, evaluated once with frozen readings;
   dev    initial layout DEV_INIT of the other old tasks: never in training, used to develop;
@@ -69,11 +72,19 @@ def select(units, done, folders):
     out = []
     for u in sorted(units, key=lambda u: u['sw']):
         arm = next((a for a in ORDER if done[a][u['sw']]), None)
-        out.append(dict(id=u['sw'], sw=u['sw'], arm=arm, source=None if arm is None else str(Path(folders[arm])/('%s__%s' % (u['sw'], arm))),
+        out.append(dict(id=u['sw'], sw=u['sw'], kind='switch', arm=arm, source=None if arm is None else str(Path(folders[arm])/('%s__%s' % (u['sw'], arm))),
                         split=split(u['task'], u['init']), prefix=u['prefix'], suite=u['suite'], task=u['task'], other=u['other'],
                         init=u['init'], phase=u['phase'], checkpoint=u['checkpoint'], prompt=u['prompt'], pair=u['pair'],
                         same_object=u['covariates']['same_object']))
     return out
+
+
+def keep_episodes(prefixes, prefix_root, wait):
+    """One episode per prefix of the training split: task A under its own prompt from the end of the wait steps."""
+    return [dict(id=p['id'] + '_KEEP', sw=None, kind='keep', arm='prefix', source=str(Path(prefix_root)/'prefix'/p['id']), split='train',
+                 prefix=p['id'], suite=p['suite'], task=p['task'], other=None, init=p['init'], phase=0, checkpoint=wait, prompt=p['prompt'],
+                 pair='%d->%d' % (p['task'], p['task']), same_object=None)
+            for p in sorted(prefixes, key=lambda p: p['id']) if split(p['task'], p['init']) == 'train']
 
 
 def counts(states):
@@ -84,6 +95,7 @@ def counts(states):
 # ---------------------------------------------------------------- plan
 def plan(census_root, retreat_root, mode='formal'):
     import retreat as R
+    from verifier_dataset import hil_suite as S
     census_root = Path(census_root); retreat_root = Path(retreat_root)
     census_plan = R.finished_census(census_root); retreat_plan = read(retreat_root/'PLAN.json')
     summary = read(retreat_root/'SUMMARY.json')
@@ -102,10 +114,13 @@ def plan(census_root, retreat_root, mode='formal'):
     states = select(units, done, dict(native=census_root/'branch', home=retreat_root/'branch', release=retreat_root/'branch'))
     episodes = [s for s in states if s['split'] == 'train' and s['arm'] is not None
                 and (mode == 'formal' or (s['init'] == SMOKE_INIT and s['other'] == (s['task'] + SMOKE_SHIFT) % 10))]
+    episodes += [e for e in keep_episodes(census_plan['prefix_order'], census_plan['prefix_root'], S.WAIT)
+                 if mode == 'formal' or e['init'] == SMOKE_INIT]
     return dict(experiment='mechanism-teacher', mode=mode, order=list(ORDER), held_out=list(HELD_OUT), dev_init=DEV_INIT, repo_id=REPO_ID,
                 shards=SHARDS[mode], workers=WORKERS[mode], prefix_root=census_plan['prefix_root'], census_root=str(census_root),
                 retreat_root=str(retreat_root), census_hashes_sha256=sha(census_root/'HASHES.json'),
-                retreat_hashes_sha256=sha(retreat_root/'HASHES.json'), counts=counts(states), states=states, episodes=episodes)
+                retreat_hashes_sha256=sha(retreat_root/'HASHES.json'), counts=counts(states),
+                episodes_per_kind=dict(Counter(e['kind'] for e in episodes)), states=states, episodes=episodes)
 
 
 def write_plan(census_root, retreat_root, out_root, mode='formal'):
@@ -113,7 +128,7 @@ def write_plan(census_root, retreat_root, out_root, mode='formal'):
     if (out_root/'PLAN.json').exists():
         raise RuntimeError('Plan target already has a plan: %s' % out_root)
     body = plan(census_root, retreat_root, mode); write(out_root/'PLAN.json', body)
-    print(len(body['episodes']), 'episodes', body['counts'])
+    print(len(body['episodes']), 'episodes', body['episodes_per_kind'], body['counts'])
     return body
 
 
@@ -164,6 +179,7 @@ def convert(root):
         raise RuntimeError('Converted dataset does not match the export')
     write(root/'DATASET.json', dict(passed=True, mode=plan_['mode'], repo_id=plan_['repo_id'], path=str(target), episodes=len(plan_['episodes']), frames=frames,
                                     tasks=sorted({e['prompt'] for e in plan_['episodes']}), by_arm=dict(Counter(e['arm'] for e in plan_['episodes'])),
+                                    by_kind=plan_['episodes_per_kind'],
                                     export=reading, code_commit=os.environ.get('CB_CODE_COMMIT'), slurm_job=os.environ.get('SLURM_JOB_ID')))
     print(json.dumps(reading), flush=True)
 

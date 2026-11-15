@@ -6,7 +6,9 @@ the policy's). The physics hash is checked after every step, so a replay that di
 stores what the policy would have been shown (the two 256 px camera images in the orientation of openpi's LIBERO data and
 the 8-number state) together with the action taken.
 
-An episode of ROOT/PLAN.json: dict(id, source (the stored run's folder), prefix, suite, task, init, checkpoint, prompt).
+An episode of ROOT/PLAN.json: dict(id, kind, source (the stored run's folder), prefix, suite, task, init, checkpoint,
+prompt). kind switch is a run that took over at the switch step with prompt B; kind keep is the prefix itself, task A under
+its own prompt from the end of the wait steps: the same pictures as the switch episodes with the instruction unchanged.
 Output per episode: ROOT/episode/ID.npz (image, wrist_image, state, actions, raw_actions) and ROOT/episode/ID.json.
 
 Runs in the container's Python 3.8; the plan is written by experiments/mechanism/teacher.py.
@@ -67,7 +69,12 @@ def export(root, plan, episode, physical_hash):
     started = time.monotonic()
     source = Path(episode['source']); row, trace = H.load(source)
     _, tape = H.load(Path(plan['prefix_root'])/'prefix'/episode['prefix'])
-    if (row['prompt'] != episode['prompt'] or row['checkpoint'] != episode['checkpoint'] or trace[0]['step'] != episode['checkpoint']
+    if episode['kind'] == 'keep':
+        if (source.name != episode['prefix'] or row['prompt'] != episode['prompt'] or episode['checkpoint'] != S.WAIT or not row['success']
+                or not trace[-1]['a']):
+            raise RuntimeError('The stored prefix is not the planned episode')
+        trace = trace[S.WAIT:]
+    elif (row['prompt'] != episode['prompt'] or row['checkpoint'] != episode['checkpoint'] or trace[0]['step'] != episode['checkpoint']
             or not trace[-1]['others'][str(row['other'])]):
         raise RuntimeError('The stored run is not the planned episode')
     scripted = sum(bool(x.get('scripted')) for x in trace)

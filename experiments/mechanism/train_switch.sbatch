@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# Post-training of pi0.5 (GPU; no API). Submitted only by launch_train.py. train_switch.py runs openpi's own training
-# script from the pi05_libero checkpoint on the datasets and settings of ROOT/TRAIN.json -> ROOT/checkpoints,
-# ROOT/TRAINED.json. The peak GPU memory is sampled into ROOT/GPU_MEMORY.txt (MiB).
+# Post-training of pi0.5 (GPU; no API). Submitted only by launch_train.py. train_switch.py first chooses the batch size
+# (the first of TRAIN.json's candidates that fits this GPU -> ROOT/PROBE.json), then runs openpi's own training script
+# from the pi05_libero checkpoint on the datasets and settings of ROOT/TRAIN.json -> ROOT/checkpoints, ROOT/TRAINED.json.
+# The peak GPU memory is sampled into ROOT/GPU_MEMORY.txt (MiB).
 #SBATCH --account=p33100
 #SBATCH --partition=gengpu
 #SBATCH --gres=gpu:a100:1
@@ -38,4 +39,5 @@ nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv,noheader > 
   done ) &
 SAMPLER=$!
 trap 'kill "$SAMPLER" 2>/dev/null || true' EXIT
+/projects/p33100/siosio/envs/openpi/bin/python -u "$SOURCE/experiments/mechanism/train_switch.py" "$ROOT" --probe
 /projects/p33100/siosio/envs/openpi/bin/python -u "$SOURCE/experiments/mechanism/train_switch.py" "$ROOT"
