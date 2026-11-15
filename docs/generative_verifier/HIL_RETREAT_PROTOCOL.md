@@ -199,7 +199,19 @@ GPU 作业用现有的 `closed_loop.sbatch` 和 `serve_steer.py`（臂是 `nativ
 
 ## 8. 结果
 
-正式批次的结果见 HIL_RETREAT_REPORT.md（运行后写）。下面是冻结之前的两步，都只作描述。
+**正式批次**（11-14 至 11-15，闸门 8720619、正式 8720620 六个分片、汇总 8720621；代码 `69398de`；目录 `…/20261114T220647Z_mech-retreat-formal_pi05_libero_69398de28780`）。完整结果见 [HIL_RETREAT_REPORT.md](HIL_RETREAT_REPORT.md)。
+
+| 读法 | 预测 | 结果 |
+|---|---|---|
+| C1 | | `tool_ok`（3,708 次运行；`home` 到达 98.5%） |
+| U1 | `moderate`，约 0.7 | **`high`**：1,558 / 1,764 = 0.883 [0.834, 0.927]；不干预 0.228，amp2 0.267 |
+| U2 | `pose_matters` | `pose_matters`：失败格上 `home` 0.877，`release` 0.188，差 +0.689 [0.616, 0.755] |
+| U4 | `harmless` | **`unclear`**：成功格上 −0.034 [−0.134, +0.029] |
+| U3（只报告） | | γ_post 0.94，γ_switch 0.66；γ_post 的 AUC 在不同物体的对里 0.673，去掉旧任务 3 后 0.530 |
+
+事后发现的例外：旧任务是"打开上层抽屉并把碗放进去"时 `home` 只有 48 / 162，其余九个旧任务合计 94.3%。
+
+下面是冻结之前的两步，都只作描述。
 
 **脚本段试跑**（11-14，作业 8717137，CPU，4 分 14 秒；代码 `2794a5c`；目录 `/projects/p33100/siosio/crashbench_safelibero/mechanism/20261114T212908Z_mech-retreat-dry_pi05_libero_2794a5c74183`）：
 - smoke 的 20 个状态，不调策略。回放的物理哈希逐步等于普查前缀。

@@ -47,7 +47,7 @@ place that key in a job log. Do not silently substitute another VLM. Budget: $10
 within $5/week, the other $95 is for the user's method. Before any bulk API worker, inspect usage metadata, estimate the
 batch and add a spend guard. No provider-side key cap has been configured. No paid API call without separate approval.
 
-## Approved now (as of 2026-11-14)
+## Approved now (as of 2026-11-15)
 
 The order of work and the details are in docs/generative_verifier/HIL_METHOD_PLAN.md section 0.
 
@@ -90,6 +90,9 @@ The order of work and the details are in docs/generative_verifier/HIL_METHOD_PLA
   and plan to be tidied and the past content compressed. That is not an approval to train.
 - 2026-11-14: reading U3 of the draft protocol (does the mark recover after the retreat) was demoted to report-only before
   any freeze; the reason is in the protocol.
+- 2026-11-15: step 1 is done (HIL_RETREAT_REPORT.md). The batch is complete; do not rerun it. This authorization is used
+  up: it does not cover further GPU runs. The next decision (training, new scripted motions such as "lower, then release"
+  or "close the drawer") is the user's.
 
 **3. Single-pass repair (2026-11-12), now a side arm.** The user called the two-pass repair impractical at evaluation and
 approved a single-pass batch ("可以 帮我看看怎么弄好 然后写交接文档 我让下一个agent去行动"): the design in
@@ -121,5 +124,6 @@ replacement by the instruction mean); anything listed as "needs go-ahead" below.
 | 11-07 | Unit study (HIL_MECHANISM_UNITS_REPORT.md) | R1 moderate (about 10,000 units), R2 moderate (about 300) | A closed-loop necessity test with such units |
 | 11-10 | Reverse dose (HIL_MECHANISM_DOSE_REPORT.md) | D1 nonspecific, D2 necessary (230 -> 6 of 232), D3 commits_like_natural | |
 | 11-11 | Task-pair census (HIL_MECHANISM_CENSUS_REPORT.md, written 11-14) | S1 common, S2 weakly_restores (13.1% vs 8.0%), S3 unclear, S4a fade_tracks, S4b beyond_physics; post hoc: amplification mostly interrupts the old task | A second model |
+| 11-14 to 11-15 | Retreat and redo, step 1 of the method plan (HIL_RETREAT_REPORT.md) | U1 high (home 88.3% vs native 22.8%, amp2 26.7%), U2 pose_matters (failure cells: home 87.7%, release 18.8%), U4 unclear; post hoc: old task 3 (top drawer left open) 29.6% vs 94.3% for the other old tasks | Training (step 2); new scripted motions; a second model |
 
 What these results can and cannot carry is in docs/generative_verifier/HIL_FOUNDATION_AUDIT.md.

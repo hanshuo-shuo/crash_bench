@@ -272,8 +272,8 @@ l=l==='en'?'en':'zh';var r=document.documentElement;r.setAttribute('data-lang',l
   <h1><span data-l="zh">生成式可行性 Verifier</span><span data-l="en">Generative Feasibility Verifier</span></h1>
   <p class="lede" data-l="zh">机器人动手之前，先看两张场景图和一条规则，判断这件事在规则下到底做不做得成。这一页讲清楚四件事：数据怎么造，模型怎么训练，结果怎么样，为什么会是这个结果。</p>
   <p class="lede" data-l="en">Before the robot moves, look at two scene images and one rule, and decide whether the task can actually be done under that rule. This page covers four things: how the data was built, how the model was trained, what the results are, and why they came out this way.</p>
-  <div class="meta" data-l="zh"><span>2026-11-14 更新</span><span>模型 Qwen2.5-VL-3B + LoRA</span><span>A、P 各 3 个 seed，S 1 个</span><span>V4、V5 的测试集各只评估过一次</span></div>
-  <div class="meta" data-l="en"><span>Updated 2026-11-14</span><span>Model: Qwen2.5-VL-3B + LoRA</span><span>3 seeds for A and P, 1 for S</span><span>Locked test splits (V4, V5) each scored once</span></div>
+  <div class="meta" data-l="zh"><span>2026-11-15 更新</span><span>模型 Qwen2.5-VL-3B + LoRA</span><span>A、P 各 3 个 seed，S 1 个</span><span>V4、V5 的测试集各只评估过一次</span></div>
+  <div class="meta" data-l="en"><span>Updated 2026-11-15</span><span>Model: Qwen2.5-VL-3B + LoRA</span><span>3 seeds for A and P, 1 for S</span><span>Locked test splits (V4, V5) each scored once</span></div>
   <div class="lineup-block">
     <p data-l="zh"><b>当前主线（11-10）</b>：π0.5 学会了任务 A 和 B，可任务做到一半把指令从 A 换成 B，它为什么多半换不过去？四步看完：</p>
     <p data-l="en"><b>The current line (10 Nov)</b>: π0.5 has learned tasks A and B, yet when the instruction changes from A to B part-way through, it mostly fails to switch. Why? Four steps:</p>
@@ -283,6 +283,8 @@ l=l==='en'?'en':'zh';var r=document.documentElement;r.setAttribute('data-lang',l
       <div class="tile"><span class="k">③ <span data-l="zh">因果</span><span data-l="en">Cause</span></span><span class="v">230 → 6</span><span class="l" data-l="zh">拿掉这条路，原本换得过去的 232 个只剩 6 个；在试点失败格里补强它，19 → 65/90（同样大小的动作推动 21/90）</span><span class="l" data-l="en">Removing the route leaves 6 of 232 working switches; strengthening it in the pilot failing cells takes 19 → 65 of 90 (a push of the same size on the actions: 21/90)</span><a href="#hil-dose"><span data-l="zh">反向剂量</span><span data-l="en">Reverse dose</span></a></div>
       <div class="tile"><span class="k">④ <span data-l="zh">边界</span><span data-l="en">Limits</span></span><span class="v">+51 → +5</span><span class="l" data-l="zh">固定修复在试点失败格上 +51 个百分点，在其余任务对的失败格上 +5（全部中途状态上 22.8% → 26.7%）；调弱到自然失败的水平只少换 12.5%</span><span class="l" data-l="en">The fixed repair adds 51 points in the pilot failing cells but 5 in the failing cells of the other pairs (22.8% → 26.7% over all mid-task states); weakening the route to the natural-failure level costs only 12.5% of switches</span><a href="#hil-synthesis"><span data-l="zh">合起来看</span><span data-l="en">Putting it together</span></a></div>
     </div>
+    <p data-l="zh"><b>最新（11-15）</b>：换指令时先用脚本把手臂退回起始位姿，再让 π0.5 做新任务，1,764 个中途状态里 <b>88.3%</b> 做成（不干预 22.8%）。所以这些状态下新任务做得成，换不过去是因为手臂所处的状态。只放下、抬高 10 cm 是 30.5%。见<a href="#hil-retreat">退回再做</a>。</p>
+    <p data-l="en"><b>Latest (15 Nov)</b>: when a script first takes the arm back to its start pose and π0.5 then does the new task, <b>88.3%</b> of the 1,764 mid-task states succeed (22.8% untouched). So the new task can be done in these states, and the failure comes from the state the arm is in. Releasing and lifting 10 cm gives 30.5%. See <a href="#hil-retreat">Retreat and redo</a>.</p>
   </div>
   <details class="log"><summary><span data-l="zh">更早的更新记录（10-19 至 11-05，23 条）</span><span data-l="en">Earlier updates (19 Oct to 5 Nov, 23 entries)</span></summary><div class="fold-body">
   <p class="small" data-l="zh"><b>10-19 改版</b>：文字改成白话，新增 4 张结构图和一条排查路线。数字和结论都没有变，代码版本放在<a href="#appendix">附录</a>。</p>
@@ -338,11 +340,13 @@ l=l==='en'?'en':'zh';var r=document.documentElement;r.setAttribute('data-lang',l
   <p class="small" data-l="en"><b>10 Nov, reverse dose and task-pair census</b>: the opposite test: in states where the switch works, removing the image route at layers 12–14 leaves only 6 of 232 switching, and 96% of the failures go on to do the old task, like natural failures (reading <code>necessary</code>); weakening it only to the natural-failure level costs just 12.5% (<code>nonspecific</code>). The census of all 90 LIBERO-Goal pairs was still running then; the final result is in the next entry. See <a href="#hil-dose">Reverse dose</a>, <a href="#hil-census">Census</a> and <a href="#hil-synthesis">Putting it together</a>. Older parts of the page now open and close.</p>
   <p class="small" data-l="zh"><b>11-14 普查的正式结果、两处更正</b>：全部 90 对，开头换 98.0%，中途 22.8%（同一物体的对 59.6%，不同物体的对 16.2%）。固定修复在试点对之外的失败格上是 8.0% → 13.1%，预测的“推广得出去”不成立；全部中途状态上是 22.8% → 26.7%。事后看，修复多数时候只是把旧任务打断，手臂并没有去新任务那边。<a href="#hil-repair">修复批次</a>里“换不过去的大多换过去了”只在试点的几对上成立；HIL 套件里“π0.5 在 Goal 上早换基本能换”来自 8 个挑出来的对（6 对是同一物体），全部 90 对不是这样。见<a href="#hil-census">普查</a>。</p>
   <p class="small" data-l="en"><b>14 Nov, final census result and two corrections</b>: over all 90 pairs, switching at the start works 98.0% of the time and mid-task 22.8% (same-object pairs 59.6%, different-object pairs 16.2%). In failing cells outside the pilot pairs the fixed repair goes from 8.0% to 13.1%, so the predicted carry-over does not hold; over all mid-task states it is 22.8% → 26.7%. Post hoc, the repair mostly interrupts the old task and the arm does not go to the new one. In the <a href="#hil-repair">repair batch</a>, “most failing switches now succeed” holds only on the few pilot pairs; in the HIL suite, “π0.5 mostly switches early on Goal” came from 8 chosen pairs (6 of them same-object), and all 90 pairs do not behave that way. See <a href="#hil-census">Census</a>.</p>
+  <p class="small" data-l="zh"><b>11-15 退回再做</b>：在普查的 1,764 个中途状态上，换指令时先用脚本张开夹爪、把手臂退回本局的起始位姿，再让 π0.5 用新指令接着做：1,558 个做成（88.3%），不干预是 22.8%，固定修复 26.7%（读法 <code>high</code>，预测的是 0.7 左右）。只张开夹爪、抬高 10 cm 是 30.5%，失败格上 18.8% 对 87.7%（<code>pose_matters</code>）。例外几乎都在一个旧任务上：旧任务是“打开上层抽屉、把碗放进去”时只有 29.6%，这时抽屉还开着，脚本不关它。这是上限和最简单的基线，不是方法。见<a href="#hil-retreat">退回再做</a>。</p>
+  <p class="small" data-l="en"><b>15 Nov, retreat and redo</b>: on the census's 1,764 mid-task states, a script opens the gripper and takes the arm back to the episode's start pose when the instruction changes, and π0.5 then continues with the new instruction: 1,558 succeed (88.3%), against 22.8% untouched and 26.7% with the fixed repair (reading <code>high</code>; the prediction was about 0.7). Opening the gripper and lifting 10 cm gives 30.5%, and 18.8% against 87.7% in failing cells (<code>pose_matters</code>). The exceptions sit almost entirely with one old task: after “open the top drawer and put the bowl inside” it is only 29.6%; the drawer is still open and the script does not close it. This is an upper bound and the simplest baseline, not a method. See <a href="#hil-retreat">Retreat and redo</a>.</p>
   <nav class="toc" aria-label="目录" data-l="zh">
-    <a href="#now">现在在做什么（10-26）</a><a href="#problem">要解决的问题</a><a href="#task">一道题长什么样</a><a href="#data">数据怎么造</a><a href="#method">方法</a><a href="#result">主结果</a><a href="#diagnosis">为什么 A 学不会</a><a href="#errors">B 错在哪</a><a href="#story">结论</a><a href="#lineage">方法来源</a><a href="#limits">限制</a><a href="#v5">下一阶段：V5</a><a href="#hil-mech">中途切换的机制</a><a href="#hil-dose"><b>最新：剂量与普查</b></a><a href="#hil-synthesis"><b>合起来看</b></a><a href="#reading">精读：为什么做这个实验</a>
+    <a href="#now">现在在做什么（10-26）</a><a href="#problem">要解决的问题</a><a href="#task">一道题长什么样</a><a href="#data">数据怎么造</a><a href="#method">方法</a><a href="#result">主结果</a><a href="#diagnosis">为什么 A 学不会</a><a href="#errors">B 错在哪</a><a href="#story">结论</a><a href="#lineage">方法来源</a><a href="#limits">限制</a><a href="#v5">下一阶段：V5</a><a href="#hil-mech">中途切换的机制</a><a href="#hil-dose">剂量与普查</a><a href="#hil-retreat"><b>最新：退回再做</b></a><a href="#hil-synthesis"><b>合起来看</b></a><a href="#reading">精读：为什么做这个实验</a>
   </nav>
   <nav class="toc" aria-label="Contents" data-l="en">
-    <a href="#now">What we are doing now (26 Oct)</a><a href="#problem">The problem</a><a href="#task">One question</a><a href="#data">The data</a><a href="#method">Method</a><a href="#result">Main result</a><a href="#diagnosis">Why A fails</a><a href="#errors">Where B errs</a><a href="#story">Conclusions</a><a href="#lineage">Lineage</a><a href="#limits">Limitations</a><a href="#v5">Next phase: V5</a><a href="#hil-mech">Mid-task switching mechanism</a><a href="#hil-dose"><b>Latest: dose and census</b></a><a href="#hil-synthesis"><b>Putting it together</b></a><a href="#reading">Close reading: why this experiment</a>
+    <a href="#now">What we are doing now (26 Oct)</a><a href="#problem">The problem</a><a href="#task">One question</a><a href="#data">The data</a><a href="#method">Method</a><a href="#result">Main result</a><a href="#diagnosis">Why A fails</a><a href="#errors">Where B errs</a><a href="#story">Conclusions</a><a href="#lineage">Lineage</a><a href="#limits">Limitations</a><a href="#v5">Next phase: V5</a><a href="#hil-mech">Mid-task switching mechanism</a><a href="#hil-dose">Dose and census</a><a href="#hil-retreat"><b>Latest: retreat and redo</b></a><a href="#hil-synthesis"><b>Putting it together</b></a><a href="#reading">Close reading: why this experiment</a>
   </nav>
   <div class="foldbar"><span data-l="zh">较早的部分已收起，点标题展开。</span><span data-l="en">Older parts are collapsed; click a heading to open it.</span><button type="button" id="fold-open-all"><span data-l="zh">全部展开</span><span data-l="en">Open all</span></button><button type="button" id="fold-close-all"><span data-l="zh">全部收起</span><span data-l="en">Close all</span></button></div>
 </header>
@@ -2535,7 +2539,7 @@ Program: the pudding and the basket lie on opposite sides → separated → 0 (c
     <li><b>修复多数时候只是把旧任务打断（事后）</b>：不干预时把旧任务做完的 810 个状态，修复之后 431 个照旧，93 个换成功，286 个两边都没做成。这 286 个里能读的 205 个，手臂到过新任务干活位置 8 cm 以内的只有 26%；不理新指令、照旧把旧任务做完的运行是 24%，换成功的运行是 99%。所以不能说“听见了新指令，只是做不了”。</li>
     <li><b>对原本换得过去的格有没有损害，读不出来</b>：成功格 97.7% → 92.2%，区间 [−20.4, +2.9] 个百分点，读作 <code>unclear</code>；成功格只有 13 个，损害集中在一格。</li>
     <li><b>印记变淡解释不了失败</b>：格的印记强度和换成功率的相关是 0.30（<code>fade_tracks</code>）；加在四个物理因素之上，区分成败的 AUC 只从 0.713 到 0.716；在不同物体的对里只有 0.555。修复的增益在印记最不淡的一档最大。</li>
-    <li><b>要注意</b>：换指令后每次最多 300 步；中途换成功的中位要约 150 步，开头只要 91 步，所以有些失败可能只是慢。一个检查点，每个状态一个策略种子；同样的状态重跑，失败格里 11–19% 的状态结果会翻，所以只按格和任务对读。这批数据分不开“不听新指令”和“从这个状态做不了新任务”，下一批“退回再做”补这个见证。</li>
+    <li><b>要注意</b>：换指令后每次最多 300 步；中途换成功的中位要约 150 步，开头只要 91 步，所以有些失败可能只是慢。一个检查点，每个状态一个策略种子；同样的状态重跑，失败格里 11–19% 的状态结果会翻，所以只按格和任务对读。这批数据分不开“不听新指令”和“从这个状态做不了新任务”，下一批<a href="#hil-retreat">“退回再做”</a>补了这个见证。</li>
   </ul>
   <ul class="plain" data-l="en">
     <li><b>Switching works at the start, not mid-task</b>: at t = 0, 864 of 882 (98.0%) switch; at f = .5, 213 of 882 (24.1%); at f = .75, 190 of 882 (21.5%). At f = .75, 75 of the 90 cells are failing cells, reading <code>common</code> as predicted. In 36 of the 90 pairs no mid-task switch ever succeeds.</li>
@@ -2545,12 +2549,44 @@ Program: the pudding and the basket lie on opposite sides → separated → 0 (c
     <li><b>The repair mostly just interrupts the old task (post hoc)</b>: of the 810 states that finish the old task when untouched, after the repair 431 still do, 93 switch and 286 finish neither. Of those 286, 205 can be read, and in only 26% does the arm come within 8 cm of where the new task starts its work; for runs that ignore the new instruction and finish the old task it is 24%, and for runs that switch it is 99%. So we cannot say the new instruction was heard but could not be carried out.</li>
     <li><b>Whether it harms cells that already switch cannot be read</b>: success cells go from 97.7% to 92.2%, interval [−20.4, +2.9] points, reading <code>unclear</code>; there are only 13 success cells and the harm sits in one of them.</li>
     <li><b>The fading mark does not explain the failures</b>: across cells, mark strength and switch rate correlate at 0.30 (<code>fade_tracks</code>); added to four physical factors, the AUC for telling success from failure moves only from 0.713 to 0.716; within different-object pairs it is 0.555. The repair gains most where the mark has faded least.</li>
-    <li><b>Keep in mind</b>: each run gets at most 300 steps after the switch; successful mid-task switches take a median of about 150 steps against 91 at the start, so some failures may just be slow. One checkpoint, one policy seed per state; rerunning the same states flips 11–19% of the states in failing cells, so read cells and pairs only. This batch cannot separate “does not follow the new instruction” from “cannot do the new task from this state”; the next batch, retreat and redo, supplies that witness.</li>
+    <li><b>Keep in mind</b>: each run gets at most 300 steps after the switch; successful mid-task switches take a median of about 150 steps against 91 at the start, so some failures may just be slow. One checkpoint, one policy seed per state; rerunning the same states flips 11–19% of the states in failing cells, so read cells and pairs only. This batch cannot separate “does not follow the new instruction” from “cannot do the new task from this state”; the next batch, <a href="#hil-retreat">retreat and redo</a>, supplied that witness.</li>
+  </ul>
+  <h3 id="hil-retreat"><span data-l="zh">退回再做：先把手臂退回起始位姿，中途换指令就换得过去；只放下、抬高不够</span><span data-l="en">Retreat and redo: take the arm back to its start pose first and the mid-task switch works; releasing and lifting is not enough</span></h3>
+  <p data-l="zh">普查分不开两种解释：模型不听新指令，还是从那个中途状态根本做不了新任务。这一批补一个见证。在普查的同一批 1,764 个中途状态上，换指令的那一步先跑一段脚本，再把手臂交还给 π0.5，用新指令 B 接着做，模型内部不做任何改动。脚本有两种：<b>退回</b>是张开夹爪、抬高、回到本局开始时的位置和姿态（22–120 步，中位 40）；<b>只放下</b>是张开夹爪、抬高 10 cm。对照是普查里同一状态的不干预和固定修复。正式批次 3,708 次运行，11-15 跑完，工具核对通过（退回的脚本 98.5% 回到了起始位姿）；读法和脚本的常数在正式批次之前冻结。标“事后”的是看到结果之后做的，只作描述。</p>
+  <p data-l="en">The census could not separate two explanations: the model does not follow the new instruction, or the new task simply cannot be done from that mid-task state. This batch supplies a witness. On the same 1,764 mid-task states, a script runs at the step where the instruction changes, and the arm is then handed back to π0.5, which continues with the new instruction B; nothing inside the model is changed. There are two scripts: <b>retreat</b> opens the gripper, lifts, and returns to the position and orientation the episode started from (22–120 steps, median 40); <b>release only</b> opens the gripper and lifts 10 cm. The comparisons are the census's untouched and fixed-repair runs on the same states. The formal batch has 3,708 runs, finished on 15 Nov and passed the tool check (the retreat script got back to the start pose in 98.5% of runs); the readings and the script's constants were frozen before the formal batch. Items marked post hoc were made after the results were seen and are descriptive only.</p>
+  <div class="chart" id="c33">
+    <div class="ctitle"><span data-l="zh">退回起始位姿之后，九个旧任务都换得过去；例外是抽屉还开着的那一个</span><span data-l="en">After retreating to the start pose the switch works for nine old tasks; the exception is the one that leaves a drawer open</span></div>
+    <div class="csub"><span data-l="zh">按旧任务 A 分组，换指令后把新任务 B 做完的比例（中途两个时点、9 个新任务合并）。</span><span data-l="en">Grouped by the old task A, the share of runs that finish the new task B after the switch (both mid-task points and all 9 new tasks pooled).</span></div>
+    <div class="legend" id="c33-legend"></div>
+    <svg id="c33-svg" viewBox="0 0 720 475" role="img" aria-label="换成功的比例，按旧任务，依次为退回、只放下、不干预：把酒瓶放到架子上 98%、6%、11%；把盘子推到炉子前面 97%、15%、15%；把奶油奶酪放进碗里 96%、45%、35%；把碗放到盘子上 96%、62%、42%；把碗放到柜子顶上 95%、50%、42%；打开中间的抽屉 94%、1%、1%；把碗放到炉子上 94%、64%、39%；打开炉子 91%、6%、7%；把酒瓶放到柜子顶上 87%、30%、14%；打开上层抽屉并放碗 30%、22%、22%。" data-aria-en="Share switching by old task, in the order retreat, release only, untouched: put the wine bottle on the rack 98%, 6%, 11%; push the plate to the front of the stove 97%, 15%, 15%; put the cream cheese in the bowl 96%, 45%, 35%; put the bowl on the plate 96%, 62%, 42%; put the bowl on top of the cabinet 95%, 50%, 42%; open the middle drawer 94%, 1%, 1%; put the bowl on the stove 94%, 64%, 39%; turn on the stove 91%, 6%, 7%; put the wine bottle on top of the cabinet 87%, 30%, 14%; open the top drawer and put the bowl inside 30%, 22%, 22%."></svg>
+    <details><summary><span data-l="zh">数据表</span><span data-l="en">Data table</span></summary><div class="tablewrap"><table id="c33-table"></table></div></details>
+  </div>
+  <ul class="plain" data-l="zh">
+    <li><b>退回之后 88.3% 换得过去</b>：1,558/1,764，区间 [83.4%, 92.7%]，读作 <code>high</code>（预测的是 0.7 左右）。同一批状态不干预 22.8%，固定修复 26.7%。90 对里 82 对在 80% 以上；不干预时有 36 对一次都换不过去，退回之后只剩 4 对。</li>
+    <li><b>所以这些中途状态下新任务做得成</b>：同一个模型、同一条新指令，只是手臂换了个位置，就做成了。普查里的失败不是因为新任务在那个场景里做不了。它不说明模型在原来的状态下“听见了”还是“没听见”新指令。</li>
+    <li><b>只放下、抬高不够</b>：普查的失败格上，退回 87.7%，只放下 18.8%，不干预 8.5%。差 68.9 个百分点 [61.6, 75.5]，读作 <code>pose_matters</code>，和预测一致。全部状态上只放下是 30.5%。</li>
+    <li><b>退回之后模型照新指令做</b>（事后）：退回的 1,764 次里把旧任务做完的只有 15 次；只放下是 413 次，不干预是 810 次。</li>
+    <li><b>例外：旧任务改了场景</b>（事后）：旧任务是“打开上层抽屉、把碗放进去”时，退回只有 48/162（29.6%），其余九个旧任务合计 94.3%。这时上层抽屉已经拉开，脚本只把手臂送回去，不关抽屉。4 个一次都没成功的对全是它。有两对退回反而更差：换成“把碗放到炉子上”从 17/18 掉到 4/18，换成“把碗放到盘子上”从 8/18 掉到 1/18。原因我们只能推测（手臂在起始位姿、抽屉开着的画面，训练时没见过），没有做对照。</li>
+    <li><b>对原本换得过去的格有没有损害，读不出来</b>：成功格 146 → 141/149，区间 [−13.4, +2.9] 个百分点，读作 <code>unclear</code>（预测的是无害）。</li>
+    <li><b>和别人的数字</b>：Causeway 的方法在 π0.5 上是 26.0% → 61.6%（71 个不同物体的对）；它引用的同类参考值（把手臂直接放到新任务的入口状态，OpenVLA-OFT）是 79.2%。我们在不同物体的 76 对上，退回是 91.0%。退回用了本局真实的起始位姿和脚本控制，只能和 79.2% 那一类比，不能说比 61.6% 好。</li>
+    <li><b>它是什么、不是什么</b>：是上限、最简单的基线，也是下一步训练的老师（1,558 条成功轨迹，覆盖 86 对）。不是方法：每次多花约 40 步，手里的东西直接掉下去，旧任务改了场景时不管用，还要策略之外有东西判断“指令变了”。训练还没有批准。</li>
+    <li><b>要注意</b>：一个检查点，每个状态一个策略种子。不干预的 180 个状态重跑，11 个成败和普查不同，所以只按格和任务对读。</li>
+  </ul>
+  <ul class="plain" data-l="en">
+    <li><b>After the retreat, 88.3% switch</b>: 1,558 of 1,764, interval [83.4%, 92.7%], reading <code>high</code> (the prediction was about 0.7). On the same states, 22.8% untouched and 26.7% with the fixed repair. 82 of the 90 pairs are at 80% or above; untouched, 36 pairs never switch, and after the retreat only 4 remain.</li>
+    <li><b>So the new task can be done in these mid-task states</b>: the same model with the same new instruction succeeds once the arm is somewhere else. The census failures are not because the new task is impossible in that scene. This does not tell us whether the model “heard” the new instruction in the original state.</li>
+    <li><b>Releasing and lifting is not enough</b>: in the census's failing cells, retreat 87.7%, release only 18.8%, untouched 8.5%. The gap is 68.9 points [61.6, 75.5], reading <code>pose_matters</code> as predicted. Over all states release only gives 30.5%.</li>
+    <li><b>After the retreat the model follows the new instruction</b> (post hoc): of the 1,764 retreat runs only 15 finish the old task; with release only it is 413, and untouched 810.</li>
+    <li><b>The exception: the old task has changed the scene</b> (post hoc): when the old task is “open the top drawer and put the bowl inside”, the retreat gives only 48 of 162 (29.6%), against 94.3% for the other nine old tasks together. The top drawer is already open, and the script only takes the arm back; it does not close the drawer. All 4 pairs that never succeed are of this kind. In two pairs the retreat makes things worse: switching to “put the bowl on the stove” drops from 17 of 18 to 4 of 18, and to “put the bowl on the plate” from 8 of 18 to 1 of 18. We can only guess at the reason (the arm at its start pose with the drawer open is a picture never seen in training); no control was run.</li>
+    <li><b>Whether it harms cells that already switch cannot be read</b>: success cells go from 146 to 141 of 149, interval [−13.4, +2.9] points, reading <code>unclear</code> (the prediction was harmless).</li>
+    <li><b>Against published numbers</b>: Causeway's method takes π0.5 from 26.0% to 61.6% (71 different-object pairs); the comparable reference it cites (placing the arm directly in the new task's entry state, OpenVLA-OFT) is 79.2%. On our 76 different-object pairs the retreat gives 91.0%. The retreat uses the episode's true start pose and scripted control, so it compares with the 79.2% kind of number and cannot be called better than 61.6%.</li>
+    <li><b>What it is and is not</b>: an upper bound, the simplest baseline, and the teacher for the next step's training (1,558 successful trajectories covering 86 pairs). It is not a method: it costs about 40 extra steps each time, drops whatever is in the hand, does not help when the old task has changed the scene, and needs something outside the policy to notice that the instruction changed. Training has not been approved.</li>
+    <li><b>Keep in mind</b>: one checkpoint, one policy seed per state. Rerunning 180 untouched states, 11 differ from the census in success or failure, so read cells and pairs only.</li>
   </ul>
   <h3 id="hil-synthesis"><span data-l="zh">合起来看：现在能说什么，要和导师定什么</span><span data-l="en">Putting it together: what we can claim now, and what to settle with the advisor</span></h3>
   <div class="callout">
-    <p data-l="zh"><b>一句话</b>：π0.5 在熟悉的任务之间中途换指令，多半换不过去。动作专家在第 12–14 层从图像块读新指令的那条路，是切换必须经过的：拿掉它就换不过去，失败的样子和自然失败一样；在一部分任务对上补强它就能换过去。但这条路变淡不是失败的全部原因，固定的修复也只在少数任务对上有效。</p>
-    <p data-l="en"><b>In one sentence</b>: when π0.5 is switched mid-task between tasks it knows, it mostly fails. The route by which the action expert reads the new instruction from the image patches at layers 12–14 is one the switch must pass through: remove it and the switch fails, in the same way natural failures do; strengthen it and some task pairs switch. But the fading of this route is not the whole cause of failure, and the fixed repair works on only a few pairs.</p>
+    <p data-l="zh"><b>一句话</b>：π0.5 在熟悉的任务之间中途换指令，多半换不过去。动作专家在第 12–14 层从图像块读新指令的那条路，是切换必须经过的：拿掉它就换不过去，失败的样子和自然失败一样；在一部分任务对上补强它就能换过去。但这条路变淡不是失败的全部原因，固定的修复也只在少数任务对上有效。<b>11-15 补充</b>：先用脚本把手臂退回起始位姿，同一个模型 88.3% 做成新任务，所以失败出在手臂所处的状态，不是新任务做不成（<a href="#hil-retreat">退回再做</a>）。</p>
+    <p data-l="en"><b>In one sentence</b>: when π0.5 is switched mid-task between tasks it knows, it mostly fails. The route by which the action expert reads the new instruction from the image patches at layers 12–14 is one the switch must pass through: remove it and the switch fails, in the same way natural failures do; strengthen it and some task pairs switch. But the fading of this route is not the whole cause of failure, and the fixed repair works on only a few pairs. <b>Added 15 Nov</b>: when a script first takes the arm back to its start pose, the same model does the new task 88.3% of the time, so the failure comes from the state the arm is in, not from the new task being impossible (<a href="#hil-retreat">Retreat and redo</a>).</p>
   </div>
   <div class="answers">
     <div class="answer">
@@ -2587,7 +2623,7 @@ Program: the pudding and the basket lie on opposite sides → separated → 0 (c
   <p data-l="zh"><b>要和导师定的两件事</b></p>
   <p data-l="en"><b>Two things to settle with the advisor</b></p>
   <ol class="next" data-l="zh">
-    <li><b>论文的中心</b>：一是有边界的机制研究，讲清楚现象普遍、一条必要的通道、修复能做到哪里为止，现有数据基本够，推荐这个；二是修复方法论文，但普查说明固定修复不推广，要做成方法得另开一个项目（按状态定剂量，或训练）。<b>11-14 更新</b>：用户选了第二条，用一次后训练同时解决几种中途指令（换任务是主结果，停下、回原点、放下是覆盖面）；训练还没批准，下一步是“退回再做”批次。</li>
+    <li><b>论文的中心</b>：一是有边界的机制研究，讲清楚现象普遍、一条必要的通道、修复能做到哪里为止，现有数据基本够，推荐这个；二是修复方法论文，但普查说明固定修复不推广，要做成方法得另开一个项目（按状态定剂量，或训练）。<b>11-14 更新</b>：用户选了第二条，用一次后训练同时解决几种中途指令（换任务是主结果，停下、回原点、放下是覆盖面）；训练还没批准。<b>11-15 更新</b>：“退回再做”批次做完了（88.3%），下一个决定是要不要开始训练。</li>
     <li><b>最多再补一个实验</b>：一是和“剩一半”同样大小的动作对照，把调弱一半的特异性补干净，约 1.5 GPU 小时；二是在闭环里把按动作挑的几百个单元压回旧值，看能不能挡住切换，把单元结果从开环推进到闭环。都要先点头。</li>
   </ol>
   <ol class="next" data-l="en">
@@ -4035,6 +4071,35 @@ CHARTS.push(function(){
     R.map(r=>`<tr><td>${r.i} · ${nm(r)}</td>`+r.v.map(([k,n])=>`<td class="n">${k}/${n}</td>`).join('')+'</tr>').join('')+'</tbody>';
 });
 
+// Chart 33: retreat and redo, formal batch. Mid-task switch success by old task A (both mid-task points, 9 new tasks pooled): retreat to the start pose, release only, untouched (census).
+CHARTS.push(function(){
+  const svg=clear('c33-svg');
+  const S=[{zh:'退回起始位姿再做',en:'Retreat to the start pose, then redo',c:'--s1'},{zh:'只放下、抬高 10 cm',en:'Release and lift 10 cm only',c:'--s2'},{zh:'不干预（普查）',en:'Untouched (census)',c:'--neutral'}];
+  const R=[{zh:'打开柜子中间的抽屉',en:'open the middle drawer of the cabinet',v:[[170,180],[2,180],[2,180]]},
+    {zh:'把碗放到炉子上',en:'put the bowl on the stove',v:[[170,180],[116,180],[70,180]]},
+    {zh:'把酒瓶放到柜子顶上',en:'put the wine bottle on top of the cabinet',v:[[157,180],[54,180],[26,180]]},
+    {zh:'打开上层抽屉，把碗放进去',en:'open the top drawer and put the bowl inside',v:[[48,162],[36,162],[35,162]]},
+    {zh:'把碗放到柜子顶上',en:'put the bowl on top of the cabinet',v:[[171,180],[90,180],[75,180]]},
+    {zh:'把盘子推到炉子前面',en:'push the plate to the front of the stove',v:[[174,180],[27,180],[27,180]]},
+    {zh:'把奶油奶酪放进碗里',en:'put the cream cheese in the bowl',v:[[173,180],[81,180],[63,180]]},
+    {zh:'打开炉子',en:'turn on the stove',v:[[164,180],[11,180],[12,180]]},
+    {zh:'把碗放到盘子上',en:'put the bowl on the plate',v:[[173,180],[111,180],[75,180]]},
+    {zh:'把酒瓶放到架子上',en:'put the wine bottle on the rack',v:[[158,162],[10,162],[18,162]]}]
+    .map((r,i)=>({...r,i})).sort((a,b)=>b.v[0][0]/b.v[0][1]-a.v[0][0]/a.v[0][1]||a.i-b.i);
+  legend('c33-legend',S);
+  const x0=isEN()?310:232,x1=680,X=p=>x0+(x1-x0)*p,top=24,rh=40,bh=9,bottom=top+R.length*rh;
+  [0,0.25,0.5,0.75,1].forEach(p=>{el('line',{x1:X(p),x2:X(p),y1:top-6,y2:bottom,class:p===0?'axis':'grid'},svg);text(svg,X(p),bottom+16,Math.round(100*p)+'%','tick','middle');});
+  text(svg,(x0+x1)/2,bottom+38,T('换成功的比例','Share that switches'),'lab2','middle');
+  R.forEach((r,ri)=>{const y=top+ri*rh;
+    text(svg,x0-10,y+rh/2+2,`${r.i} · ${nm(r)}`,'lab','end');
+    [0,1,2].forEach(si=>{const [k,n]=r.v[si],p=k/n,by=y+3+si*(bh+2);
+      el('rect',{x:x0,y:by,width:Math.max(X(p)-x0,1),height:bh,fill:`var(${S[si].c})`,rx:1.5},svg);
+      text(svg,X(p)+5,by+bh-1,Math.round(100*p)+'%','tick');});
+    bindTip(el('rect',{x:0,y:y,width:720,height:rh,class:'hit'},svg),`<b>${r.i} · ${nm(r)}</b><br>`+S.map((s,si)=>`${nm(s)}${COLON()}${r.v[si][0]}/${r.v[si][1]}`).join('<br>'));});
+  document.getElementById('c33-table').innerHTML=`<thead><tr><th>${T('旧任务 A','Old task A')}</th>`+S.map(s=>`<th class="n">${nm(s)}</th>`).join('')+'</tr></thead><tbody>'+
+    R.map(r=>`<tr><td>${r.i} · ${nm(r)}</td>`+r.v.map(([k,n])=>`<td class="n">${k}/${n}</td>`).join('')+'</tr>').join('')+'</tbody>';
+});
+
 // Language switch: swap the visible copy, aria-labels, alt text and title, redraw the charts, and keep the reader's place.
 const TITLE={zh:'生成式可行性 Verifier',en:'Generative Feasibility Verifier'};
 function applyLang(l){
@@ -4062,7 +4127,7 @@ applyLang(isEN()?'en':'zh');
 // Charts draw with fixed viewBox coordinates, so they render correctly inside closed parts.
 (function(){
   const PART_SECTIONS=new Set(['v5']);
-  const OPEN_PARTS=new Set(['hil-dose','hil-census','hil-synthesis','v5-next']);
+  const OPEN_PARTS=new Set(['hil-census','hil-retreat','hil-synthesis','v5-next']);
   const folds=[];
   function fold(head,nodes,open){
     const d=document.createElement('details');d.className='fold';d.open=!!open;
