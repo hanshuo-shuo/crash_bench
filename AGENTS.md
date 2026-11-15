@@ -111,6 +111,21 @@ The order of work and the details are in docs/generative_verifier/HIL_METHOD_PLA
   script on steps (retreat 142 steps against 151 for an untouched successful switch), so the rule is "the retreat when it
   succeeds, otherwise a stored success without it".
 
+**2c. Training: step 2 of the method plan (2026-11-15).**
+- What led to it: Claude reported the revised training design (section 2.4 of the method plan) and listed three things to
+  decide: (1) the cheap first pass (downloading the LIBERO training data, replaying and rendering the stored teacher runs,
+  a training smoke, a small T1 and its evaluation on the 360 held-out states); (2) the two new scripted motions ("lower,
+  then release" and "close the drawer"); (3) new prefixes for untrained switch phases and initial layouts.
+- The user's words: "开始吧 尽量做出正面的结果 都可以写可以跑".
+- Scope: all three, that is step 2 as designed in section 2.4: the dataset download; the export of teacher data from
+  stored runs; fine-tuning pi0.5 from the pi05_libero checkpoint (T1, T2, optional T3); the evaluation batches (held-out
+  states, the other instructions, original tasks, new prefixes for untrained phases and layouts 10-19); the two scripted
+  motions; the protocol and the reports. pi0.5 alone, no paid API, no second model, at most two GPUs.
+- "尽量做出正面的结果" is read as: make the method as good as it can be, developing on states of the training old tasks.
+  It does not relax the protocol rules: the held-out states are evaluated with readings frozen beforehand, are not used to
+  choose hyperparameters or checkpoints, and every result is reported as it comes out.
+- Stop and ask if a gate fails for a non-code reason or a stop rule of the training protocol fires.
+
 **3. Single-pass repair (2026-11-12), now a side arm.** The user called the two-pass repair impractical at evaluation and
 approved a single-pass batch ("可以 帮我看看怎么弄好 然后写交接文档 我让下一个agent去行动"): the design in
 docs/generative_verifier/HIL_MECHANISM_SINGLEPASS_HANDOFF.md, a protocol with readings frozen before submission, code and
@@ -119,8 +134,8 @@ report. It starts after step 1's formal batch has finished. Arms outside that de
 need the user's go-ahead. On 2026-11-14 Claude advised putting it on hold and the user agreed ("我都批准"): do not start it
 until the user says so.
 
-**Not approved.** Any training, including the cheap first pass of section 2.4 of the method plan (step 2 is a design only); a second model; new data collection
-beyond step 1's reruns; scripted motions beyond step 1's two arms; the two extra mechanism controls listed in section 3 of the method plan (other layer windows;
+**Not approved.** A second model; training or data collection outside section 2.4 of the method plan; scripted motions
+other than step 1's two arms and the two approved on 2026-11-15; the two extra mechanism controls listed in section 3 of the method plan (other layer windows;
 replacement by the instruction mean); anything listed as "needs go-ahead" below.
 
 ## Completed work (one line each; reports under docs/generative_verifier/ unless a path is given)
