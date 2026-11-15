@@ -16,6 +16,10 @@ Tables:
 - gamma_auc: AUROC of the mark after the retreat (request 1's gap over the census f = 0 gap of the same pair and init) for B
   success, home runs that reached the start pose; all / same object / different object, with and without the exception.
 - state_check: recorded-versus-re-evaluated differences of STATE_CHECK.json by task (reported, not failed).
+- teacher (added 2026-11-15 for the training sketch): for every mid-task state, which stored run would serve as the teacher
+  under the rule "the retreat when it succeeds, otherwise a stored success without it" (ORDER); how many states have one;
+  and how many steps a success takes from the switch (scripted steps included), per arm and on the states where two arms
+  both succeed.
 
 Usage: python retreat_posthoc.py RETREAT_FORMAL_ROOT CENSUS_FORMAL_ROOT [OLD_TASK]        prints JSON
 """
@@ -28,6 +32,7 @@ from pathlib import Path
 CLOSED = .05            # same threshold as census.CLOSED
 GRASP = 5               # consecutive closed steps that count as a grasp attempt
 EXCEPTION = 3           # the old task read as the exception
+ORDER = ('home', 'native', 'release')   # teacher preference: the retreat when it succeeds, otherwise a stored success without it
 
 
 def lines(path):
@@ -116,6 +121,47 @@ def tables(runs, census, load, old=EXCEPTION):
                 gamma_auc=dict(three(reached), without=three(r for r in reached if r['task'] != old)))
 
 
+def median(values):
+    values = sorted(values); n = len(values)
+    return None if not n else values[n // 2] if n % 2 else (values[n // 2 - 1] + values[n // 2]) / 2
+
+
+def total(run):
+    """Steps from the switch to B's success: the scripted steps (none in the census) plus the policy's."""
+    return run['b_after'] + run.get('scripted_steps', 0)
+
+
+def teacher(runs, census):
+    """Which stored run would teach each mid-task state, and how long the successes take."""
+    arm = dict(native={r['sw']: r for r in census if r['arm'] == 'native' and r['phase'] > 0},
+               home={r['sw']: r for r in runs if r['arm'] == 'home'}, release={r['sw']: r for r in runs if r['arm'] == 'release'})
+    states = sorted(arm['home'])
+    pick = {s: next((a for a in ORDER if arm[a][s]['b_done']), 'none') for s in states}
+    fast = {s: min(((total(arm[a][s]), i, a) for i, a in enumerate(ORDER) if arm[a][s]['b_done']), default=(0, 0, 'none'))[2] for s in states}
+    pairs = collections.defaultdict(list)
+    for s in states:
+        pairs[arm['home'][s]['pair']].append(pick[s] != 'none')
+
+    def paired(a, b):
+        both = [s for s in states if arm[a][s]['b_done'] and arm[b][s]['b_done']]
+        return {'n': len(both), a: median(total(arm[a][s]) for s in both), b: median(total(arm[b][s]) for s in both),
+                a + '_faster': sum(total(arm[a][s]) < total(arm[b][s]) for s in both)}
+
+    def split(chosen, keep=lambda r: True):
+        return dict(collections.Counter(chosen[s] for s in states if keep(arm['home'][s])))
+
+    return dict(order=list(ORDER), states=len(states), picked=split(pick), with_teacher=sum(pick[s] != 'none' for s in states),
+                by_old_task={t: split(pick, lambda r: r['task'] == t) for t in sorted({r['task'] for r in arm['home'].values()})},
+                same_object=split(pick, lambda r: r['covariates']['same_object']),
+                different_object=split(pick, lambda r: not r['covariates']['same_object']),
+                pairs=dict(n=len(pairs), any=sum(any(v) for v in pairs.values()), most=sum(sum(v) >= .8 * len(v) for v in pairs.values())),
+                steps={a: dict(n=sum(arm[a][s]['b_done'] for s in states), median=median(total(arm[a][s]) for s in states if arm[a][s]['b_done']))
+                       for a in ORDER},
+                steps_picked=median(total(arm[pick[s]][s]) for s in states if pick[s] != 'none'),
+                paired=dict(native_home=paired('native', 'home'), release_home=paired('release', 'home')),
+                fastest=dict(picked=split(fast), median=median(total(arm[fast[s]][s]) for s in states if fast[s] != 'none')))
+
+
 def state_check(root):
     rows = json.loads((Path(root)/'STATE_CHECK.json').read_text())['rows']
     differs = [r for r in rows if r['recorded'] != r['reevaluated']]
@@ -126,8 +172,9 @@ def state_check(root):
 
 def main(root, census_root, old=EXCEPTION):
     root = Path(root); census_root = Path(census_root)
-    out = tables(lines(root/'RUNS.jsonl.gz'), lines(census_root/'RUNS.jsonl.gz'),
-                 lambda run_id: lines(root/'branch'/run_id/'STEPS.jsonl.gz'), int(old))
+    runs = lines(root/'RUNS.jsonl.gz'); census = lines(census_root/'RUNS.jsonl.gz')
+    out = tables(runs, census, lambda run_id: lines(root/'branch'/run_id/'STEPS.jsonl.gz'), int(old))
+    out['teacher'] = teacher(runs, census)
     out['state_check'] = dict(retreat=state_check(root), census=state_check(census_root))
     return out
 

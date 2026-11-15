@@ -94,6 +94,23 @@ The order of work and the details are in docs/generative_verifier/HIL_METHOD_PLA
   up: it does not cover further GPU runs. The next decision (training, new scripted motions such as "lower, then release"
   or "close the drawer") is the user's.
 
+**2b. Training design revision (2026-11-15).**
+- What led to it: the user asked whether the training method makes sense. Claude named three gaps in the sketch (the student
+  can at most match its teacher, which is the script, and "run the script whenever the instruction string changes" is a
+  zero-training baseline; the recipe is nearly ReSteer's; held-out task pairs are too easy) and proposed changes (teacher
+  data from the stored successes of each state; the main table against the script baseline; hold out whole old tasks and
+  untrained phases; a cheap first pass before any full training), and said that training itself still needs a separate yes.
+- The user's words: "都可以改 按照你的来吧".
+- Scope: revising the training design (HIL_METHOD_PLAN.md sections 1.5 and 2.4 and the documents that mirror it) and
+  read-only CPU post-hoc analysis of stored runs to check it (the `teacher` table of experiments/mechanism/retreat_posthoc.py).
+- Read as not an approval to train: Claude had said training needs a separate yes and the user gave none. Still needing the
+  user's go-ahead: the cheap first pass of section 2.4 (downloading the LIBERO training data, replaying and rendering the
+  stored teacher runs, a training smoke, a small T1 and its evaluation), new prefixes for untrained phases and layouts, and
+  the new scripted motions.
+- Done the same day. One proposal was withdrawn after the check: "shortest success first" does not let a student beat the
+  script on steps (retreat 142 steps against 151 for an untouched successful switch), so the rule is "the retreat when it
+  succeeds, otherwise a stored success without it".
+
 **3. Single-pass repair (2026-11-12), now a side arm.** The user called the two-pass repair impractical at evaluation and
 approved a single-pass batch ("可以 帮我看看怎么弄好 然后写交接文档 我让下一个agent去行动"): the design in
 docs/generative_verifier/HIL_MECHANISM_SINGLEPASS_HANDOFF.md, a protocol with readings frozen before submission, code and
@@ -102,7 +119,7 @@ report. It starts after step 1's formal batch has finished. Arms outside that de
 need the user's go-ahead. On 2026-11-14 Claude advised putting it on hold and the user agreed ("我都批准"): do not start it
 until the user says so.
 
-**Not approved.** Any training (step 2 of the method plan is a design sketch only); a second model; new data collection
+**Not approved.** Any training, including the cheap first pass of section 2.4 of the method plan (step 2 is a design only); a second model; new data collection
 beyond step 1's reruns; scripted motions beyond step 1's two arms; the two extra mechanism controls listed in section 3 of the method plan (other layer windows;
 replacement by the instruction mean); anything listed as "needs go-ahead" below.
 
