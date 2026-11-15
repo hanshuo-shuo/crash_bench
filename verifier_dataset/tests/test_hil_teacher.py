@@ -35,9 +35,11 @@ class Frame(unittest.TestCase):
         o = obs([.6, .1, -.3, .73]); stored = {k: v for k, v in policy_input(o, 'x').items() if k != 'prompt'}
         same = T.input_check(o, stored)
         self.assertTrue(same['state_equal'] and same['state_matches_frame'])
-        self.assertEqual((same['image']['linf'], same['wrist_image']['linf']), (0, 0))
-        stored['observation/wrist_image'] = stored['observation/wrist_image'] + 3
-        self.assertEqual(T.input_check(o, stored)['wrist_image'], dict(linf=3, changed=1.))
+        self.assertEqual(same['image'], dict(match=True, linf=0, changed=0)); self.assertEqual(same['wrist_image']['linf'], 0)
+        noise = stored['observation/wrist_image'].copy(); noise[0, 0, 0] += 2
+        self.assertEqual(T.input_check(o, dict(stored, **{'observation/wrist_image': noise}))['wrist_image'], dict(match=True, linf=2, changed=1))
+        other = stored['observation/wrist_image'] + 3
+        self.assertEqual(T.input_check(o, dict(stored, **{'observation/wrist_image': other}))['wrist_image'], dict(match=False, linf=3, changed=224 * 224 * 3))
 
 
 class Deal(unittest.TestCase):

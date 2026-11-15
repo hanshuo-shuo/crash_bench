@@ -46,15 +46,17 @@ def frame(obs):
 
 
 def input_check(obs, stored):
-    """The re-rendered policy input at the hand-over against the one stored by the original run."""
+    """The re-rendered policy input at the hand-over against the one stored by the original run: the state exactly, the
+    images up to rendering noise (hil_suite.images_match: GPU rendering differs by a few levels on a few values between
+    processes; a wrong scene or camera would change thousands)."""
     import numpy as np
     from .paired_policy import policy_input
     now = policy_input(obs, '')
     out = dict(state_equal=bool(np.array_equal(now['observation/state'], stored['observation/state'])),
                state_matches_frame=bool(np.array_equal(now['observation/state'], state(obs))))
     for key in ('observation/image', 'observation/wrist_image'):
-        gap = np.abs(now[key].astype(np.int16) - stored[key].astype(np.int16))
-        out[key.split('/')[1]] = dict(linf=int(gap.max()), changed=float((gap > 0).mean()))
+        match, levels, values = S.images_match(now[key], stored[key])
+        out[key.split('/')[1]] = dict(match=bool(match), linf=levels, changed=values)
     return out
 
 
@@ -100,6 +102,8 @@ def export(root, plan, episode, physical_hash):
         env.close()
     if check is None or not check['state_equal'] or not check['state_matches_frame']:
         raise RuntimeError('Policy input state differs from the stored run')
+    if not (check['image']['match'] and check['wrist_image']['match']):
+        raise RuntimeError('Policy input images differ from the stored run: %s' % json.dumps(check))
     folder = root/'episode'; raw = [item['action'] for item in trace[1:]]
     np.savez_compressed(folder/(episode['id'] + '.npz'), image=np.stack([f['image'] for f in frames]),
                         wrist_image=np.stack([f['wrist_image'] for f in frames]),

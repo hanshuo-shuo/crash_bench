@@ -46,7 +46,7 @@ class Select(unittest.TestCase):
 
 class Export(unittest.TestCase):
     def meta(self, name, linf=0, passed=True):
-        check = dict(image=dict(linf=linf, changed=0.), wrist_image=dict(linf=0, changed=0.))
+        check = dict(image=dict(match=True, linf=linf, changed=int(linf > 0)), wrist_image=dict(match=True, linf=0, changed=0))
         return dict(id=name, passed=passed, frames=10, scripted=4, clipped=1, input_check=check) if passed else dict(id=name, passed=False, error='x')
 
     def test_reading(self):
@@ -55,8 +55,8 @@ class Export(unittest.TestCase):
         self.assertTrue(ok['passed']); self.assertEqual((ok['frames'], ok['scripted_frames'], ok['clipped_steps']), (20, 8, 2))
         self.assertFalse(T.export_reading(plan, dict(a=self.meta('a')))['passed'])                       # one missing
         self.assertFalse(T.export_reading(plan, dict(a=self.meta('a'), b=self.meta('b', passed=False)))['passed'])
-        changed = T.export_reading(plan, dict(a=self.meta('a'), b=self.meta('b', linf=2)))
-        self.assertFalse(changed['passed']); self.assertEqual((changed['image_linf_max'], changed['image_unequal']), (2, 1))
+        noise = T.export_reading(plan, dict(a=self.meta('a'), b=self.meta('b', linf=2)))                 # rendering noise is reported
+        self.assertTrue(noise['passed']); self.assertEqual((noise['image_linf_max'], noise['image_not_identical']), (2, 1))
 
     def test_features_are_those_of_the_libero_dataset(self):
         f = T.features()

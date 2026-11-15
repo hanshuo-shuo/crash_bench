@@ -18,6 +18,7 @@ ema_decay (or null), save_interval, seed, num_workers).
 """
 import dataclasses
 import json
+import logging
 import os
 import shutil
 import subprocess
@@ -136,6 +137,7 @@ def main(root, trial=None, data_only=False):
             print('dataset', d['repo_id'], 'frames', len(data), 'episodes', meta.total_episodes, 'share', d['share'], flush=True)
         return Mix(parts, [d['share'] for d in s['datasets']], steps * batch, s['seed'])
 
+    logging.basicConfig(level=logging.INFO)   # openpi's main reformats the root logger's first handler: make sure there is one
     if not data_ok(config, _data_loader):
         raise RuntimeError('The data config did not load the base checkpoint\'s normalization statistics')
     _data_loader.create_torch_dataset = mixed
