@@ -2,6 +2,7 @@ import unittest
 
 import numpy as np
 
+from verifier_dataset import hil_suite as S
 from verifier_dataset import hil_teacher as T
 from verifier_dataset.paired_policy import policy_input
 
@@ -40,6 +41,61 @@ class Frame(unittest.TestCase):
         self.assertEqual(T.input_check(o, dict(stored, **{'observation/wrist_image': noise}))['wrist_image'], dict(match=True, linf=2, changed=1))
         other = stored['observation/wrist_image'] + 3
         self.assertEqual(T.input_check(o, dict(stored, **{'observation/wrist_image': other}))['wrist_image'], dict(match=False, linf=3, changed=224 * 224 * 3))
+
+
+def plant(condition, held, lift=.1, floor=0.):
+    """An ideal arm: each step it covers half of the commanded position error; a held object follows until let go and cannot
+    go below floor (something under it)."""
+    eef = [.1, .2, .3]; q = [0., 0., 0., 1.]; script = S.Instruct(condition, [0., 0., .5], q, eef, q, [.1, .2, .28], 1. if held else -1., held)
+    lift = lift if held else None; stages = []; actions = []
+    while True:
+        action, stage = script.step(eef, q, lift)
+        if action is None:
+            return script, stage, stages, actions, eef
+        move = [x * S.RETREAT_PARAMS['pos_gain'] * .5 for x in action[:3]]
+        if held and action[6] > 0:
+            move[2] = max(move[2], floor - lift); lift += move[2]
+        eef = [e + m for e, m in zip(eef, move)]; stages.append(stage); actions.append(action)
+
+
+class Scripts(unittest.TestCase):
+    def test_stop_is_zero_commands_with_the_gripper_left_as_it_was(self):
+        _, status, stages, actions, eef = plant('STOP', True)
+        self.assertEqual((status, len(actions), eef), ('still', S.INSTRUCT_PARAMS['stop_steps'], [.1, .2, .3]))
+        self.assertTrue(all(a == [0.] * 6 + [1.] for a in actions))
+        self.assertTrue(all(a[6] == -1. for a in plant('STOP', False)[3]))
+
+    def test_return_is_the_home_retreat_then_zero_commands(self):
+        _, status, stages, actions, eef = plant('RETURN', True)
+        n = S.INSTRUCT_PARAMS['after_steps']
+        self.assertEqual(status, 'reached'); self.assertEqual(stages[-n:], ['still'] * n); self.assertNotIn('still', stages[:-n])
+        self.assertTrue(all(a == [0.] * 6 + [-1.] for a in actions[-n:]))
+        self.assertLess(sum((a - b) ** 2 for a, b in zip(eef, [0., 0., .5])) ** .5, S.RETREAT_PARAMS['pos_tolerance'])
+
+    def test_cancel_lowers_what_it_holds_before_letting_go(self):
+        script, status, stages, actions, _ = plant('CANCEL', True)
+        self.assertEqual(status, 'lowered'); self.assertLessEqual(script.release_lift, S.RESTING)
+        self.assertEqual([k for k in dict.fromkeys(stages)], ['lower', 'open', 'rise', 'still'])
+        self.assertTrue(all(a[6] == 1. for a, k in zip(actions, stages) if k == 'lower'))
+        self.assertTrue(all(abs(a[2]) <= S.INSTRUCT_PARAMS['lower_action'] for a, k in zip(actions, stages) if k == 'lower'))
+
+    def test_cancel_lets_go_where_the_object_stops_descending(self):
+        script, status, _, _, _ = plant('CANCEL', True, lift=.2, floor=.12)
+        self.assertEqual(status, 'stalled'); self.assertAlmostEqual(script.release_lift, .12)
+
+    def test_cancel_with_nothing_held_opens_and_stays(self):
+        _, status, stages, _, _ = plant('CANCEL', False)
+        self.assertEqual((status, list(dict.fromkeys(stages))), ('nothing_held', ['open', 'still']))
+
+    def test_valid(self):
+        info = dict(status='reached', arm_path=.001, held='bowl', drop=.01, object_path=0.)
+        self.assertTrue(S.instruct_valid('STOP', dict(stopped=True), info)); self.assertFalse(S.instruct_valid('STOP', dict(stopped=False), info))
+        self.assertTrue(S.instruct_valid('RETURN', dict(home=True), info))
+        self.assertFalse(S.instruct_valid('RETURN', dict(home=True), dict(info, status='cap')))
+        self.assertTrue(S.instruct_valid('CANCEL', dict(a_done=False), info))
+        self.assertFalse(S.instruct_valid('CANCEL', dict(a_done=True), info))                    # putting it down finished the old task
+        self.assertFalse(S.instruct_valid('CANCEL', dict(a_done=False), dict(info, drop=.09)))   # dropped, not put down
+        self.assertTrue(S.instruct_valid('CANCEL', dict(a_done=False), dict(info, held=None, drop=None, object_path=None)))
 
 
 class Deal(unittest.TestCase):

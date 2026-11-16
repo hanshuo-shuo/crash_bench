@@ -10,7 +10,13 @@ states of one split (teacher.split):
   keep    a mid-task state with the prompt left at A, once per (old task, initial layout, switch step); stop when A holds.
           Compared with the same units run on the base checkpoint (plan --tag base, kinds keep only).
 
-  switch_eval.py plan CENSUS_ROOT RETREAT_ROOT OUT_ROOT SPLIT TAG CHECKPOINT [--kinds ...] [--base-root ROOT]
+A model taught the other mid-task instructions (protocol section 8) is also run on three more kinds, each once per (old task,
+initial layout, switch step), with the suite's prompt and rule:
+  stop, return, cancel   the prompt becomes STOP, RETURN or CANCEL at the switch step; the run did what was asked when it is
+          stopped, home, or has not finished A (hil_suite.follow). Compared with the same units on the base checkpoint and
+          with the script on the same state (--script-root, a finished teacher.py baseline).
+
+  switch_eval.py plan CENSUS_ROOT RETREAT_ROOT OUT_ROOT SPLIT TAG CHECKPOINT [--kinds ...] [--base-root ROOT] [--script-root ROOT]
   switch_eval.py summarize ROOT          tool check, readings and tables -> ROOT/SUMMARY.json
 """
 import argparse
@@ -29,13 +35,17 @@ sys.path.insert(0, str(HERE)); sys.path.insert(0, str(HERE.parents[1]))
 import closed_loop as C  # noqa: E402
 import census as K  # noqa: E402
 import teacher as T  # noqa: E402
+from verifier_dataset import hil_suite as S  # noqa: E402
 
 KINDS = ('switch', 'start', 'keep')
+INSTRUCT = {'stop': 'STOP', 'return': 'RETURN', 'cancel': 'CANCEL'}   # unit kind -> the suite's condition
+PER_STATE = ('keep',) + tuple(INSTRUCT)                               # kinds run once per (old task, initial layout, switch step)
 SHARDS = 2
 # Readings (protocol section 5).
 LEARNS = .15            # E1: fine-tuned minus untouched on the switch states
 MATCH, BELOW = -.10, -.20   # E2: fine-tuned minus the scripted retreat
 KEEPS_START, KEEPS_A = -.05, -.10   # E3: from the start; continuing the old task
+OBEYS, IGNORES = S.OBEYS, .5         # E4: share of runs that did what the instruction asks
 DRAWS, SEED = K.DRAWS, K.SEED
 
 
@@ -49,26 +59,30 @@ def units(branches, split, kinds, tag):
         kind = 'switch' if u['phase'] else 'start'
         if kind in kinds:
             out.append(dict(u, id='%s__%s' % (u['sw'], tag), kind=kind))
-    if 'keep' in kinds:
-        seen = set()
-        for u in native:
-            key = (u['prefix'], u['checkpoint'])
-            if not u['phase'] or key in seen:
-                continue
-            seen.add(key); sw = '%s_s%03d_KEEP' % key
+    states = {}
+    for u in native:
+        if u['phase']:
+            states.setdefault((u['prefix'], u['checkpoint']), u)
+    for kind in PER_STATE:
+        if kind not in kinds:
+            continue
+        condition = INSTRUCT.get(kind, 'C0')
+        for key, u in sorted(states.items()):
+            sw = '%s_s%03d_%s' % (key + ('KEEP' if kind == 'keep' else condition,)); a = prompts[u['task']]
             # The server refuses a running prompt equal to the arm's old prompt; the native arm never uses the old prompt.
             arm = dict(u['arm'], prompt_a=prompts[(u['task'] + 1) % len(prompts)])
-            out.append(dict(id='%s__%s' % (sw, tag), sw=sw, kind='keep', group=u['group'], stages=u['stages'], suite=u['suite'], task=u['task'],
-                            other=None, init=u['init'], phase=u['phase'], checkpoint=u['checkpoint'], condition='C0', prompt=prompts[u['task']],
+            out.append(dict(id='%s__%s' % (sw, tag), sw=sw, kind=kind, group=u['group'], stages=u['stages'], suite=u['suite'], task=u['task'],
+                            other=None, init=u['init'], phase=u['phase'], checkpoint=u['checkpoint'], condition=condition,
+                            prompt=dict(C0=a, STOP=S.STOP, RETURN=S.RETURN, CANCEL=S.CANCEL % a)[condition],
                             seed=u['seed'], budget=u['budget'], stop_on='A', record=[], prefix=u['prefix'],
-                            pair='%d->%d' % (u['task'], u['task']), arm=arm, covariates=u['covariates']))
+                            pair='%d->%s' % (u['task'], u['task'] if kind == 'keep' else condition), arm=arm, covariates=u['covariates']))
     return out
 
 
-def plan(census_root, retreat_root, split, tag, checkpoint, kinds=KINDS, base_root=None, shards=SHARDS):
+def plan(census_root, retreat_root, split, tag, checkpoint, kinds=KINDS, base_root=None, shards=SHARDS, script_root=None):
     import retreat as R
     census_root = Path(census_root); retreat_root = Path(retreat_root); census_plan = R.finished_census(census_root)
-    if split not in ('dev', 'test') or not set(kinds) <= set(KINDS) or not tag.isalnum():
+    if split not in ('dev', 'test') or not set(kinds) <= set(KINDS) | set(INSTRUCT) or not tag.isalnum():
         raise RuntimeError('Unknown split, kind or tag')
     chosen = units(census_plan['branches'], split, kinds, tag); used = {u['prefix'] for u in chosen}
     return dict(mode=split, experiment='mechanism-switch-eval', tag=tag, kinds=list(kinds), checkpoint=str(checkpoint), shards=shards,
@@ -76,14 +90,14 @@ def plan(census_root, retreat_root, split, tag, checkpoint, kinds=KINDS, base_ro
                 prefix_order=[p for p in census_plan['prefix_order'] if p['id'] in used], branches=chosen,
                 census_root=str(census_root), census_hashes_sha256=C.sha(census_root/'HASHES.json'), retreat_root=str(retreat_root),
                 retreat_hashes_sha256=C.sha(retreat_root/'HASHES.json'), base_root=None if base_root is None else str(base_root),
-                units_per_kind=dict(Counter(u['kind'] for u in chosen)))
+                script_root=None if script_root is None else str(script_root), units_per_kind=dict(Counter(u['kind'] for u in chosen)))
 
 
-def write_plan(census_root, retreat_root, out_root, split, tag, checkpoint, kinds=KINDS, base_root=None, shards=SHARDS):
+def write_plan(census_root, retreat_root, out_root, split, tag, checkpoint, kinds=KINDS, base_root=None, shards=SHARDS, script_root=None):
     out_root = Path(out_root)
     if (out_root/'PLAN.json').exists():
         raise RuntimeError('Plan target already has a plan: %s' % out_root)
-    body = plan(census_root, retreat_root, split, tag, checkpoint, kinds, base_root, shards); C.write(out_root/'PLAN.json', body)
+    body = plan(census_root, retreat_root, split, tag, checkpoint, kinds, base_root, shards, script_root); C.write(out_root/'PLAN.json', body)
     print(split, tag, body['units_per_kind'], len(body['prefix_order']), 'prefixes')
     return body
 
@@ -136,6 +150,22 @@ def keeps(start, keep):
     return dict(reading=reading, start=s, keep=k)
 
 
+def obeys(rows):
+    """E4, per instruction: the share of runs that did what was asked, beside the base checkpoint and the script."""
+    out = {}
+    for kind in INSTRUCT:
+        rs = [r for r in rows if r['kind'] == kind]
+        if not rs:
+            continue
+        rate = float(np.mean([bool(r['tuned']) for r in rs]))
+        out[kind] = dict(reading='obeys' if rate >= OBEYS else 'does_not_obey' if rate < IGNORES else 'partly',
+                         tuned=count(rs, 'tuned'), base=count(rs, 'base'), script=count(rs, 'script'), tuned_minus_base=flat_diff(rs, 'tuned', 'base'),
+                         released_and_still=count(rs, 'put_down'), old_task_finished=count(rs, 'tuned_a'),
+                         by_old_task={str(t): dict(tuned=count([r for r in rs if r['task'] == t], 'tuned'), base=count([r for r in rs if r['task'] == t], 'base'))
+                                      for t in sorted({r['task'] for r in rs})})
+    return out
+
+
 def count(rows, key):
     rows = [r for r in rows if r.get(key) is not None]
     return dict(done=sum(bool(r[key]) for r in rows), n=len(rows))
@@ -174,8 +204,11 @@ def tables(switch, start, keep):
                                for t in sorted({s['task'] for s in keep})}))
 
 
-def readings(switch, start, keep):
-    return dict(learns=learns(switch), against_script=against_script(switch), keeps=keeps(start, keep), tables=tables(switch, start, keep))
+def readings(switch, start, keep, instruct=()):
+    out = dict(learns=learns(switch), against_script=against_script(switch), keeps=keeps(start, keep), tables=tables(switch, start, keep))
+    if instruct:
+        out['obeys'] = obeys(instruct)
+    return out
 
 
 # ---------------------------------------------------------------- summary (CPU, reads the run roots)
@@ -196,7 +229,7 @@ def state_rows(runs, census_runs, retreat_runs, base_runs):
             keep.append(dict(row, tuned=r['a_done'], base=base[r['sw']]['a_done'] if r['sw'] in base else None))
         elif r['unit_kind'] == 'start':
             start.append(dict(row, tuned=r['b_done'], native=census[(r['sw'], 'native')]['b_done']))
-        else:
+        elif r['unit_kind'] == 'switch':
             home = retreat[(r['sw'], 'home')]
             switch.append(dict(row, tuned=r['b_done'], tuned_a=r['a_done'], tuned_steps=r['b_after'], tuned_home=r['home'],
                                native=census[(r['sw'], 'native')]['b_done'], amp2=census[(r['sw'], 'amp2')]['b_done'], home=home['b_done'],
@@ -205,12 +238,25 @@ def state_rows(runs, census_runs, retreat_runs, base_runs):
     return switch, start, keep
 
 
+def instruct_rows(runs, base_runs, script):
+    """One row per stop, return or cancel unit: whether the fine-tuned model, the base checkpoint and the script (script[sw],
+    None when not run) did what was asked. put_down: at the end the gripper is open and the arm at rest."""
+    base = {r['sw']: r for r in base_runs}
+    follow = lambda r: bool(S.follow(r['condition'], r))
+    return [dict(id=r['id'], sw=r['sw'], kind=r['unit_kind'], condition=r['condition'], task=r['task'], init=r['init'], phase=r['phase'],
+                 tuned=follow(r), base=follow(base[r['sw']]) if r['sw'] in base else None, script=script.get(r['sw']),
+                 tuned_a=r['a_done'], put_down=r['released'] and r['still'])
+            for r in runs if r['unit_kind'] in INSTRUCT]
+
+
 def run_rows(root, plan_, tapes):
     from verifier_dataset import hil_suite_run as H
-    out = []
+    out = []; w = S.INSTRUCT_PARAMS['still_window']
     for u in plan_['branches']:
-        row = K.run_row(root, u, tapes[u['prefix']]); full, _ = H.load(Path(root)/'branch'/u['id'])
-        out.append(dict(row, unit_kind=u['kind'], home=full['outcome']['home'], closest_home=full['outcome']['closest_home']))
+        row = K.run_row(root, u, tapes[u['prefix']]); full, trace = H.load(Path(root)/'branch'/u['id']); o = full['outcome']; last = trace[-1]
+        out.append(dict(row, unit_kind=u['kind'], condition=u['condition'], home=o['home'], closest_home=o['closest_home'], stopped=o['stopped'],
+                        released=last['gripper'][0] - last['gripper'][1] >= K.CLOSED,
+                        still=S.path_length(trace, last['step'] - w, last['step']) < S.INSTRUCT_PARAMS['still_path']))
     return out
 
 
@@ -236,8 +282,8 @@ def summarize(root):
     base_runs = []
     if plan_['base_root'] is not None:
         base_root = Path(plan_['base_root']); base_plan = C.read(base_root/'PLAN.json')
-        if base_plan['mode'] != plan_['mode'] or base_plan['kinds'] != ['keep']:
-            raise RuntimeError('The base root is not the keep units of this split')
+        if base_plan['mode'] != plan_['mode'] or base_plan['kinds'] != [k for k in plan_['kinds'] if k in PER_STATE]:
+            raise RuntimeError('The base root is not the per-state units of this split')
         for k in range(base_plan['shards']):
             if not C.read(base_root/('SHARD_branch_%d_COMPLETE.json' % k))['passed']:
                 raise RuntimeError('Base shard %d incomplete' % k)
@@ -247,9 +293,16 @@ def summarize(root):
         if not base_tool:
             tool = 'tool_failed'
     switch, start, keep = state_rows(runs, lines(census_root/'RUNS.jsonl.gz'), lines(retreat_root/'RUNS.jsonl.gz'), base_runs)
+    script = {}
+    if plan_.get('script_root') is not None:
+        done = C.read(Path(plan_['script_root'])/'BASELINE.json')
+        if not done['passed']:
+            raise RuntimeError('The script baseline did not pass')
+        script = {r['id']: r['valid'] for r in done['rows']}
+    instruct = instruct_rows(runs, base_runs, script)
     logs = sorted((root/'server').glob('*.jsonl'))
     summary = dict(mode=plan_['mode'], tag=plan_['tag'], checkpoint=plan_['checkpoint'], tool=tool, tool_detail=detail, runs=len(runs),
-                   units_per_kind=plan_['units_per_kind'], readings=readings(switch, start, keep) if tool == 'tool_ok' else None,
+                   units_per_kind=plan_['units_per_kind'], readings=readings(switch, start, keep, instruct) if tool == 'tool_ok' else None,
                    descriptive_only=plan_['mode'] != 'test', seconds_per_run=float(np.median([r['elapsed_seconds'] for r in runs])),
                    total_run_hours=sum(r['elapsed_seconds'] for r in runs) / 3600.,
                    server_logs_sha256=hashlib.sha256(''.join(p.name + C.sha(p) for p in logs).encode()).hexdigest(), server_logs=len(logs),
@@ -271,10 +324,11 @@ if __name__ == '__main__':
     a = sub.add_parser('plan')
     for name in ('census_root', 'retreat_root', 'out_root', 'split', 'tag', 'checkpoint'):
         a.add_argument(name)
-    a.add_argument('--kinds', nargs='+', default=list(KINDS)); a.add_argument('--base-root')
+    a.add_argument('--kinds', nargs='+', default=list(KINDS)); a.add_argument('--base-root'); a.add_argument('--script-root')
     a = sub.add_parser('summarize'); a.add_argument('root')
     args = p.parse_args()
     if args.command == 'plan':
-        write_plan(args.census_root, args.retreat_root, args.out_root, args.split, args.tag, args.checkpoint, tuple(args.kinds), args.base_root)
+        write_plan(args.census_root, args.retreat_root, args.out_root, args.split, args.tag, args.checkpoint, tuple(args.kinds), args.base_root,
+                   script_root=args.script_root)
     else:
         summarize(args.root)

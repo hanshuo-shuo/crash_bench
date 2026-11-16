@@ -627,3 +627,95 @@ def probe_reading(by_progress):
     """`fades` when the last progress bin's median d_B / d_noise is below half the first bin's (appendix B.3)."""
     a, z = by_progress['0']['B_over_noise'], by_progress[str(PROBE_BINS - 1)]['B_over_noise']
     return None if a is None or z is None else ('fades' if z < a / 2 else 'persists')
+
+
+# ---------------------------------------------------------------- scripted answers to mid-task instructions
+# HIL_TRAIN_PROTOCOL.md section 8. What obeying STOP, RETURN or CANCEL at the switch step looks like, written as a script,
+# so that a stored prefix becomes a demonstration without running a policy:
+#   STOP    zero arm command with the gripper command left as it was;
+#   RETURN  the HOME retreat, then zero commands;
+#   CANCEL  holding something: lower it until it rests or stops descending, open, rise, then zero commands;
+#           holding nothing: open while backing off the way the arm came, then zero commands.
+# Zero arm commands were compared with holding the switch pose and with holding the pose of back_steps earlier on 32 states
+# before any batch: zero commands gave the shortest path and were the only form that kept clear of the joint limits.
+INSTRUCT_PARAMS = dict(
+    stop_steps=80,       # STOP: the grace and the window of the stop rule (STOP_GRACE + STOP_WINDOW) and a margin
+    after_steps=30,      # RETURN, CANCEL: steps of zero command after the motion
+    lower_action=.4,     # CANCEL: cap on the downward command (2 cm of position error a step)
+    lower_steps=60,      # CANCEL: cap on the lowering stage
+    drop=.02,            # CANCEL counts as put down when the object was let go at most this far above where it came to rest
+    still_window=10,     # RETURN, CANCEL: at the end the arm (and a put-down object) must have moved less than ...
+    still_path=.005)     # ... this many metres over this many steps
+
+
+def scaled(v, gain, top):
+    """v / gain, shrunk (direction kept) so that its largest component is at most top."""
+    v = [x / gain for x in v]; m = max(abs(x) for x in v)
+    return [x * top / m for x in v] if m > top else v
+
+
+class Instruct:
+    """One scripted answer: step(eef, quat, lift) gives (action, stage), or (None, status) when it is over. lift is how far
+    the held object is above its resting height (None when nothing is held); grip is the sign of the gripper command at the
+    switch step. status is how the motion ended: 'still' (STOP), the retreat's 'reached' or 'cap' (RETURN), 'lowered',
+    'stalled', 'cap' or 'nothing_held' (CANCEL). release_lift is the lift at which CANCEL opened the gripper."""
+
+    def __init__(self, condition, home_eef, home_quat, anchor_eef, anchor_quat, back_eef, grip, held, params=None):
+        if condition not in INTERVENTIONS:
+            raise ValueError('Unknown instruction: %s' % condition)
+        self.condition = condition; self.p = dict(RETREAT_PARAMS, **INSTRUCT_PARAMS) if params is None else params
+        self.anchor_eef, self.anchor_quat, self.back_eef = list(anchor_eef), list(anchor_quat), list(back_eef)
+        self.grip, self.held = float(grip), bool(held)
+        self.retreat = Retreat('HOME', home_eef, home_quat, anchor_eef, anchor_quat, back_eef, self.p) if condition == 'RETURN' else None
+        self.stage = dict(STOP='still', RETURN='retreat', CANCEL='lower' if held else 'open')[condition]
+        self.status = dict(STOP='still', RETURN=None, CANCEL=None if held else 'nothing_held')[condition]
+        self.n = 0; self.left = []; self.at = None; self.top = None; self.release_lift = None
+
+    def to(self, stage):
+        self.stage = stage; self.n = 0
+
+    def step(self, eef, quat, lift=None):
+        p = self.p; self.n += 1
+        if self.stage == 'retreat':
+            action, stage = self.retreat.step(eef, quat)
+            if action is not None:
+                return action, stage
+            self.status = stage; self.to('still'); self.n = 1
+        if self.stage == 'still':
+            return self.still()
+        keep = scaled(rotation_error(self.anchor_quat, quat), p['ori_gain'], p['max_action'])   # hold the switch-step orientation
+        if self.stage == 'lower':
+            self.left.append(lift); w = p['stall_window']
+            stuck = len(self.left) > w and self.left[-1 - w] - lift < p['stall_progress']
+            if lift > RESTING and not stuck and self.n <= p['lower_steps']:
+                side = scaled([self.anchor_eef[0] - eef[0], self.anchor_eef[1] - eef[1]], p['pos_gain'], p['max_action'])
+                return side + scaled([-lift], p['pos_gain'], p['lower_action']) + keep + [1.], 'lower'
+            self.status = 'lowered' if lift <= RESTING else 'stalled' if stuck else 'cap'
+            self.at = list(eef); self.release_lift = lift; self.to('open'); self.n = 1
+        if self.stage == 'open':
+            if self.n <= p['open_steps']:
+                target = self.at if self.held else self.back_eef
+                return scaled([a - b for a, b in zip(target, eef)], p['pos_gain'], p['max_action']) + keep + [-1.], 'open'
+            self.top = eef[2] + (p['release_lift'] if self.held else 0.); self.to('rise'); self.n = 1
+        if self.stage == 'rise':
+            rise = self.top - eef[2]
+            if rise > p['release_tolerance'] and self.n <= p['release_steps']:
+                return scaled([0., 0., rise], p['pos_gain'], p['max_action']) + keep + [-1.], 'rise'
+            self.to('still'); self.n = 1
+        return self.still()
+
+    def still(self):
+        stop = self.condition == 'STOP'
+        return ([0.] * 6 + [self.grip if stop else -1.], 'still') if self.n <= self.p['stop_steps' if stop else 'after_steps'] else (None, self.status)
+
+
+def instruct_valid(condition, o, info, params=None):
+    """Whether a scripted answer did what its instruction asks: the suite's own rule (follow), and on top of it the arm at
+    rest at the end for RETURN and CANCEL, and for CANCEL an object put down, not dropped."""
+    p = INSTRUCT_PARAMS if params is None else params
+    if condition == 'STOP':
+        return bool(o['stopped'])
+    if condition == 'RETURN':
+        return bool(o['home'] and info['status'] == 'reached' and info['arm_path'] < p['still_path'])
+    return bool(not o['a_done'] and info['arm_path'] < p['still_path']
+                and (not info['held'] or (info['drop'] <= p['drop'] and info['object_path'] < p['still_path'])))

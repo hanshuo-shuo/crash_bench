@@ -45,6 +45,17 @@ class Units(unittest.TestCase):
         self.assertEqual(u['id'], 'libero_goal_t4_i00_s060_KEEP__base')
 
 
+    def test_instruction_units_use_the_suites_prompts_once_per_state(self):
+        us = E.units(branches(), 'test', ('stop', 'return', 'cancel'), 'ft')
+        self.assertEqual({k: sum(u['kind'] == k for u in us) for k in E.INSTRUCT}, {'stop': 8, 'return': 8, 'cancel': 8})
+        one = {u['kind']: u for u in us if u['task'] == 4 and u['init'] == 0 and u['phase'] == .5}
+        self.assertEqual({k: (u['condition'], u['prompt']) for k, u in one.items()},
+                         {'stop': ('STOP', E.S.STOP), 'return': ('RETURN', E.S.RETURN), 'cancel': ('CANCEL', 'do not do 4, stop doing it now')})
+        u = one['cancel']
+        self.assertEqual((u['id'], u['stop_on'], u['other'], u['pair']), ('libero_goal_t4_i00_s060_CANCEL__ft', 'A', None, '4->CANCEL'))
+        self.assertNotEqual(u['arm']['prompt_a'], u['prompt'])
+
+
 def state(pair, phase, init, tuned, native, home, task=4):
     return dict(pair=pair, phase=phase, init=init, task=task, other=int(pair[-1]), same_object=False, tuned=tuned, native=native, home=home,
                 release=False, amp2=False, tuned_a=False, tuned_steps=100 if tuned else None, home_steps=120 if home else None, tuned_home=tuned)
@@ -81,6 +92,30 @@ class Readings(unittest.TestCase):
         self.assertEqual(t['script_fails_tuned_succeeds'], 10); self.assertEqual(t['script_succeeds_tuned_fails'], 20)
         self.assertEqual(t['flow'], {'B->B': 20, 'not->B': 50, 'not->not': 30})
         self.assertEqual(t['steps']['both'], dict(n=60, tuned=100., home=120.))
+
+
+class Instructions(unittest.TestCase):
+    def run_(self, sw, kind, condition, **o):
+        return dict(dict(id=sw + '__ft', sw=sw, unit_kind=kind, condition=condition, task=4, init=0, phase=.5, b_done=False, a_done=False, stopped=False,
+                         home=False, released=True, still=True), **o)
+
+    def test_rows_read_each_instruction_by_its_own_rule(self):
+        runs = [self.run_('a', 'stop', 'STOP', stopped=True), self.run_('b', 'return', 'RETURN'), self.run_('c', 'cancel', 'CANCEL', released=False),
+                self.run_('k', 'keep', 'C0', a_done=True)]
+        base = [self.run_('a', 'stop', 'STOP'), self.run_('c', 'cancel', 'CANCEL', a_done=True)]
+        rows = E.instruct_rows(runs, base, dict(a=True, b=True, c=False))
+        self.assertEqual([(r['kind'], r['tuned'], r['base'], r['script'], r['put_down']) for r in rows],
+                         [('stop', True, False, True, True), ('return', False, None, True, True), ('cancel', True, False, False, False)])
+
+    def test_obeys(self):
+        rows = [dict(kind='stop', task=t, phase=f, tuned=True, base=False, script=True, put_down=True, tuned_a=False) for t in (4, 7) for f in (.5, .75)]
+        rows += [dict(kind='cancel', task=4, phase=.5, tuned=k < 2, base=False, script=True, put_down=False, tuned_a=k >= 2) for k in range(5)]
+        o = E.obeys(rows)
+        self.assertEqual((o['stop']['reading'], o['stop']['tuned'], o['stop']['base'], o['stop']['script']),
+                         ('obeys', dict(done=4, n=4), dict(done=0, n=4), dict(done=4, n=4)))
+        self.assertEqual(o['stop']['tuned_minus_base']['mean'], 1.)
+        self.assertEqual((o['cancel']['reading'], o['cancel']['old_task_finished']), ('does_not_obey', dict(done=3, n=5)))
+        self.assertNotIn('return', o)
 
 
 class StateRows(unittest.TestCase):

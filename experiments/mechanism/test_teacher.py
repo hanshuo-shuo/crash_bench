@@ -58,10 +58,37 @@ class Export(unittest.TestCase):
         noise = T.export_reading(plan, dict(a=self.meta('a'), b=self.meta('b', linf=2)))                 # rendering noise is reported
         self.assertTrue(noise['passed']); self.assertEqual((noise['image_linf_max'], noise['image_not_identical']), (2, 1))
 
+    def test_an_invalid_scripted_run_is_left_out_and_is_not_a_failure(self):
+        plan = dict(episodes=[dict(id='a'), dict(id='b')])
+        script = lambda name, valid: dict(id=name, passed=True, valid=valid, frames=80, scripted=80, clipped=0)
+        r = T.export_reading(plan, dict(a=script('a', True), b=script('b', False)))
+        self.assertTrue(r['passed']); self.assertEqual((r['exported'], r['invalid'], r['frames'], r['image_linf_max']), (1, 1, 80, None))
+
     def test_features_are_those_of_the_libero_dataset(self):
         f = T.features()
         self.assertEqual({k: (v['dtype'], tuple(v['shape'])) for k, v in f.items()},
                          dict(image=('image', (256, 256, 3)), wrist_image=('image', (256, 256, 3)), state=('float32', (8,)), actions=('float32', (7,))))
+
+
+class Instructions(unittest.TestCase):
+    def test_one_episode_per_switch_step_and_instruction(self):
+        units = [unit('p1_0_s070_SW_b%d' % b, 1, b, 0) for b in (2, 3)] + [unit('p4_0_s070_SW_b1', 4, 1, 0), unit('p1_9_s070_SW_b2', 1, 2, 9)]
+        text = lambda c, a: '%s/%s' % (c, a)
+        train = T.instruct_episodes(units, {1: 'one', 4: 'four'}, '/r', ('train',), ('STOP', 'RETURN'), text)
+        self.assertEqual([e['id'] for e in train], ['p1_0_s070_STOP', 'p1_0_s070_RETURN'])           # two B's of one state: one episode each
+        self.assertEqual([e['prompt'] for e in train], ['STOP/one', 'RETURN/one'])
+        self.assertEqual([e['home_source'] for e in train], [None, '/r/branch/p1_0_s070_SW_b2__home'])
+        other = T.instruct_episodes(units, {1: 'one', 4: 'four'}, '/r', ('dev', 'test'), ('STOP',), text)
+        self.assertEqual([(e['prefix'], e['split']) for e in other], [('p1_9', 'dev'), ('p4_0', 'test')])
+
+    def test_baseline_table(self):
+        episodes = [dict(id=k, split='test', condition=c) for k, c in (('a', 'STOP'), ('b', 'STOP'), ('c', 'CANCEL'))]
+        o = lambda stopped, a_done: dict(stopped=stopped, home=False, a_done=a_done)
+        metas = dict(a=dict(valid=True, outcome=o(True, False), script=dict(steps=80)), b=dict(valid=False, outcome=o(False, False), script=dict(steps=80)),
+                     c=dict(valid=False, outcome=o(False, False), script=dict(steps=50)))
+        t = T.baseline_table(episodes, metas)['test']
+        self.assertEqual(t['STOP'], dict(runs=2, valid=1, follow=1, steps_median=80))
+        self.assertEqual(t['CANCEL'], dict(runs=1, valid=0, follow=1, steps_median=50))               # not finishing A is the suite's rule
 
 
 class Mix(unittest.TestCase):
@@ -99,10 +126,15 @@ class Mix(unittest.TestCase):
 
 class Launcher(unittest.TestCase):
     def test_every_training_run_is_well_formed(self):
+        self.assertEqual(set(L.SETTINGS), set(L.DATA)); self.assertEqual(set(L.SETTINGS), set(L.KINDS))
         for name, s in L.SETTINGS.items():
-            body = dict(s, name=name, base_checkpoint='/c', datasets=[dict(repo_id='a', root='/a', share=1 - L.NEW_SHARE),
-                                                                      dict(repo_id='b', root='/b', share=L.NEW_SHARE)])
+            found = {kind: dict(repo_id=kind, root='/' + kind) for kind in L.DATA[name]}
+            body = dict(s, name=name, base_checkpoint='/c', datasets=L.datasets(name, found))
             self.assertEqual(W.settings_ok(body), body)
+            self.assertEqual(body['datasets'][0]['share'], .25)                                  # LIBERO's own demonstrations
+            self.assertLessEqual(set(L.DATA[name]), set(L.TEACHER_MODE))
+        self.assertEqual([d['share'] for d in L.datasets('t2', dict(switch={}, instruct={}))], [.25, .5, .25])
+        self.assertEqual((L.per_state('t1'), L.per_state('t2')), (['keep'], ['keep', 'stop', 'return', 'cancel']))
 
     def test_checkpoints_are_where_openpi_saves_them(self):
         from pathlib import Path
@@ -113,6 +145,16 @@ class Launcher(unittest.TestCase):
     def test_dependencies(self):
         self.assertEqual(L.after(), [])
         self.assertEqual(L.after('1', '2'), ['--dependency=afterok:1,afterok:2', '--kill-on-invalid-dep=yes'])
+        self.assertEqual(L.after('1', ended=['1', '3']), ['--dependency=afterok:1,afterany:3', '--kill-on-invalid-dep=yes'])
+        self.assertEqual(L.after(ended=['3']), ['--dependency=afterany:3', '--kill-on-invalid-dep=yes'])
+
+    def test_longer_runs_differ_in_length_alone(self):
+        from pathlib import Path
+        self.assertEqual(list(L.checkpoints(Path('/run'), 't1b')), ['2000', '4000', '5999'])
+        self.assertEqual(L.SETTINGS['t2'], L.SETTINGS['t1b'])
+        same = {k for k in L.T1 if k not in ('steps', 'save_interval', 'batch_sizes')}
+        self.assertTrue(all(L.SETTINGS['t1b'][k] == L.T1[k] for k in same))
+        self.assertEqual((L.DATA['t1b'], L.KINDS['t1b']), (L.DATA['t1'], L.KINDS['t1']))
 
 
 if __name__ == '__main__':

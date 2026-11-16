@@ -6,6 +6,9 @@ the policy's). The physics hash is checked after every step, so a replay that di
 stores what the policy would have been shown (the two 256 px camera images in the orientation of openpi's LIBERO data and
 the 8-number state) together with the action taken.
 
+A third kind, script, needs no stored run: a scripted answer to STOP, RETURN or CANCEL at a switch step of a prefix (scripted
+below; HIL_TRAIN_PROTOCOL.md section 8).
+
 An episode of ROOT/PLAN.json: dict(id, kind, source (the stored run's folder), prefix, suite, task, init, checkpoint,
 prompt). kind switch is a run that took over at the switch step with prompt B; kind keep is the prefix itself, task A under
 its own prompt from the end of the wait steps: the same pictures as the switch episodes with the instruction unchanged.
@@ -114,6 +117,95 @@ def export(root, plan, episode, physical_hash):
                 elapsed_seconds=time.monotonic() - started, slurm_job=os.environ.get('SLURM_JOB_ID'), code_commit=os.environ.get('CB_CODE_COMMIT'))
 
 
+def headless_env(suite, task_id, init):
+    """hil_suite_run.make_env without cameras: the same physics, for runs that store no pictures."""
+    from libero.libero import benchmark, get_libero_path
+    from libero.libero.envs.env_wrapper import ControlEnv
+    from . import hil_suite_run as H
+    tasks = benchmark.get_benchmark_dict()[suite](); task = tasks.get_task(task_id)
+    H.seed_globals()
+    env = ControlEnv(bddl_file_name=str(Path(get_libero_path('bddl_files'))/task.problem_folder/task.bddl_file), use_camera_obs=False,
+                     has_offscreen_renderer=False, camera_depths=False)
+    env.seed(S.ENV_SEED); env.reset()
+    return env, task, env.set_init_state(tasks.get_task_init_states(task_id)[init])
+
+
+def scripted(root, plan, episode, physical_hash, render=True):
+    """A scripted answer (hil_suite.Instruct) to STOP, RETURN or CANCEL at a switch step of a stored prefix. The prefix is
+    replayed to the switch step, the script runs to its end, and the run is read with the suite's own rule
+    (hil_suite.instruct_valid). Only a valid run is stored as an episode. A RETURN's retreat must end in the physics state of
+    the stored home run of the same state. render False runs without cameras and stores no frames: the script as a baseline
+    on states that are not exported."""
+    import numpy as np
+    from . import hil_suite_run as H
+    started = time.monotonic(); c = episode['condition']; cp = episode['checkpoint']
+    row, tape = H.load(Path(plan['prefix_root'])/'prefix'/episode['prefix'])
+    if (not row['success'] or not S.WAIT <= cp < tape[-1]['step']
+            or episode['prompt'] != dict(STOP=S.STOP, RETURN=S.RETURN, CANCEL=S.CANCEL % row['prompt'])[c]):
+        raise RuntimeError('The stored prefix is not the planned episode')
+    env, _, obs = (H.make_env if render else headless_env)(episode['suite'], episode['task'], episode['init'])
+    try:
+        e = env.env; d = env.sim.data; low, high = e.action_spec
+        xyz = lambda n: np.asarray(d.body_xpos[e.obj_body_id[n]]).copy()
+        eef = lambda o: [float(x) for x in o['robot0_eef_pos']]; quat = lambda o: [float(x) for x in o['robot0_eef_quat']]
+        if physical_hash(env) != tape[0]['physics']:
+            raise RuntimeError('Initial state differs from the prefix')
+        for item in tape[1:cp + 1]:
+            obs, _, _, _ = env.step(item['action'])
+            if physical_hash(env) != item['physics']:
+                raise RuntimeError('Replay differs from the prefix at step %d' % item['step'])
+            if item['step'] == S.WAIT:   # the start pose and the heights objects rest at, as the branch runner reads them
+                home = dict(eef=eef(obs), quat=quat(obs)); rest = {n: float(xyz(n)[2]) for n in e.objects_dict}
+        moved, _ = S.goal_parts(e.parsed_problem['goal_state'])
+        lifted = [n for n in moved if n in rest and xyz(n)[2] - rest[n] >= S.LIFTED]
+        held = min(lifted, key=lambda n: float(np.linalg.norm(xyz(n) - np.asarray(eef(obs))))) if lifted else None
+        lift = lambda: None if held is None else float(xyz(held)[2] - rest[held])
+        grip = 1. if tape[cp]['action'][6] > 0 else -1.
+        script = S.Instruct(c, home['eef'], home['quat'], eef(obs), quat(obs), tape[max(S.WAIT, cp - S.RETREAT_PARAMS['back_steps'])]['eef'], grip,
+                            held is not None)
+        trace = [H.record(env, cp, obs, None, False, physical_hash, {})]; frames = []; stages = []; lift0 = lift(); where = [None if held is None else xyz(held)]
+        while True:
+            action, stage = script.step(eef(obs), quat(obs), lift())
+            if action is None:
+                break
+            if any(a < l or a > h for a, l, h in zip(action, low, high)):
+                raise RuntimeError('Scripted action outside the action range')
+            if render:
+                frames.append(frame(obs))
+            obs, _, done, _ = env.step(action); stages.append(stage)
+            trace.append(H.record(env, cp + len(trace), obs, action, done, physical_hash, {}))
+            where.append(None if held is None else xyz(held))
+        joints = np.asarray(obs['robot0_joint_pos'])
+        limits = env.sim.model.jnt_range[[env.sim.model.joint_name2id('robot0_joint%d' % k) for k in range(1, 8)]]
+        w = S.INSTRUCT_PARAMS['still_window']; lift_end = lift()
+        info = dict(status=stage, held=held, grip=grip, steps=len(trace) - 1, stages={n: stages.count(n) for n in dict.fromkeys(stages)},
+                    motion_steps=sum(n != 'still' for n in stages) if c != 'STOP' else 0, lift_at_switch=lift0, release_lift=script.release_lift,
+                    lift_end=lift_end, drop=None if script.release_lift is None else script.release_lift - lift_end,
+                    arm_path=S.path_length(trace, trace[-1]['step'] - w, trace[-1]['step']),
+                    object_path=None if held is None else float(sum(np.linalg.norm(q - p) for p, q in zip(where[-w - 1:], where[-w:]))),
+                    joint_margin=float(np.min(np.minimum(joints - limits[:, 0], limits[:, 1] - joints))))
+    finally:
+        env.close()
+    if c == 'RETURN' and episode.get('home_source'):
+        _, stored = H.load(Path(episode['home_source'])); n = info['motion_steps']
+        if (n >= len(stored) or not stored[n].get('scripted') or (n + 1 < len(stored) and stored[n + 1].get('scripted'))
+                or stored[n]['physics'] != trace[n]['physics']):
+            raise RuntimeError('The scripted retreat differs from the stored home run')
+        info['matches_home_run'] = True
+    o = S.outcome(trace, dict(other=None), row['start_eef']); valid = S.instruct_valid(c, o, info)
+    raw = [item['action'] for item in trace[1:]]; digest = None
+    if render and valid:
+        path = root/'episode'/(episode['id'] + '.npz')
+        np.savez_compressed(path, image=np.stack([f['image'] for f in frames]), wrist_image=np.stack([f['wrist_image'] for f in frames]),
+                            state=np.stack([f['state'] for f in frames]).astype(np.float32),
+                            actions=np.asarray([label(a) for a in raw], np.float32), raw_actions=np.asarray(raw, np.float64))
+        digest = sha(path)
+    return dict(id=episode['id'], passed=True, valid=valid, condition=c, frames=len(raw), scripted=len(raw), script=info,
+                outcome={k: o[k] for k in ('stopped', 'stop_path', 'home', 'home_after', 'a_done', 'start_gap', 'closest_home')},
+                clipped=sum(any(abs(x) > 1 for x in a[:6]) for a in raw), npz_sha256=digest, rendered=bool(render),
+                elapsed_seconds=time.monotonic() - started, slurm_job=os.environ.get('SLURM_JOB_ID'), code_commit=os.environ.get('CB_CODE_COMMIT'))
+
+
 def run(root, shard, shards, worker, workers):
     from . import hil_suite_run as H
     plan = read(root/'PLAN.json'); physical_hash = H.configure(root); (root/'episode').mkdir(exist_ok=True); done = failed = 0
@@ -124,11 +216,12 @@ def run(root, shard, shards, worker, workers):
         if meta.exists() and read(meta)['passed']:
             done += 1; continue
         try:
-            info = export(root, plan, episode, physical_hash)
+            info = (scripted(root, plan, episode, physical_hash, plan.get('render', True)) if episode['kind'] == 'script' else
+                    export(root, plan, episode, physical_hash))
         except RuntimeError as error:
             info = dict(id=episode['id'], passed=False, error=str(error), slurm_job=os.environ.get('SLURM_JOB_ID')); failed += 1
         write(meta, info); done += 1
-        print(json.dumps({k: info.get(k) for k in ('id', 'passed', 'frames', 'error', 'elapsed_seconds')}), flush=True)
+        print(json.dumps({k: info.get(k) for k in ('id', 'passed', 'valid', 'frames', 'error', 'elapsed_seconds')}), flush=True)
     write(root/('EXPORT_%d_%d_COMPLETE.json' % (shard, worker)), dict(shard=shard, worker=worker, episodes=done, failed=failed,
                                                                       slurm_job=os.environ.get('SLURM_JOB_ID')))
 
